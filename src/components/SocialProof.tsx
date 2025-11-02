@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { formatStatistic } from "@/lib/contentQuality";
 
 interface CitedStat {
   statistic: string;
@@ -32,8 +33,14 @@ const SocialProof = () => {
         console.log('Using fallback stats');
         setStats([]);
       } else {
-        // Use the top 3 most impactful stats
-        setStats(data.allClaims?.slice(0, 3) || []);
+        // Format statistics properly and use top 3 most impactful
+        const formattedStats = (data.allClaims || [])
+          .slice(0, 3)
+          .map((stat: CitedStat) => ({
+            ...stat,
+            statistic: formatStatistic(stat.statistic, stat.claim)
+          }));
+        setStats(formattedStats);
       }
     } catch (error) {
       console.error('Error fetching market stats:', error);

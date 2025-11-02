@@ -6,6 +6,12 @@ import {
   transformOffer,
   generateIndustryFeatures 
 } from './contentTransformer';
+import { 
+  validatePageQuality, 
+  formatStatistic, 
+  ensureProfessionalCopy, 
+  logQualityReport 
+} from './contentQuality';
 
 export interface ConsultationData {
   industry?: string;
@@ -21,28 +27,41 @@ export interface ConsultationData {
 
 export function generateHeadline(data: ConsultationData): string {
   // Use intelligent transformation instead of templates
-  return transformChallenge(
+  const headline = transformChallenge(
     data.challenge || '', 
     data.industry || 'Professional Services',
     data.target_audience
   );
+  
+  // Ensure it's professional copy, not raw consultation text
+  return ensureProfessionalCopy(headline, 'headline');
 }
 
 export function generateSubheadline(data: ConsultationData): string {
   // Transform unique value into compelling subheadline
-  return transformUniqueValue(
+  const subheadline = transformUniqueValue(
     data.unique_value || '',
     data.industry || 'Professional Services'
   );
+  
+  // Ensure it's professional copy
+  return ensureProfessionalCopy(subheadline, 'description');
 }
 
 export function generateFeatures(data: ConsultationData) {
   // Generate industry-specific features with intelligent extraction from unique value
-  return generateIndustryFeatures(
+  const features = generateIndustryFeatures(
     data.industry || 'Professional Services',
     data.unique_value,
     data.challenge
   );
+  
+  // Ensure each feature is professional
+  return features.map(feature => ({
+    ...feature,
+    title: ensureProfessionalCopy(feature.title, 'feature'),
+    description: ensureProfessionalCopy(feature.description, 'description'),
+  }));
 }
 
 export async function generateSocialProof(data: ConsultationData) {
@@ -102,7 +121,7 @@ export async function generateSocialProof(data: ConsultationData) {
   };
 }
 
-// New function to fetch strategic market research
+// New function to fetch strategic market research with quality assurance
 export async function fetchStrategicInsights(data: ConsultationData) {
   try {
     const location = extractLocation(data.target_audience);
@@ -120,6 +139,26 @@ export async function fetchStrategicInsights(data: ConsultationData) {
     if (error || !result?.success) {
       console.log('No cited market data available, using fallback');
       return null;
+    }
+    
+    // Format statistics properly before returning
+    if (result.strategicPlacements) {
+      const { hero, problem, solution } = result.strategicPlacements;
+      
+      return {
+        hero: hero ? {
+          ...hero,
+          statistic: formatStatistic(hero.statistic, hero.claim)
+        } : null,
+        problem: problem ? {
+          ...problem,
+          statistic: formatStatistic(problem.statistic, problem.claim)
+        } : null,
+        solution: solution ? {
+          ...solution,
+          statistic: formatStatistic(solution.statistic, solution.claim)
+        } : null,
+      };
     }
     
     return result.strategicPlacements;
@@ -172,23 +211,43 @@ export function generateFOMO(data: ConsultationData) {
 }
 
 export function validateContent(headline: string, features: any[], problem?: string, solution?: string): boolean {
-  // Ensure headline is complete and not generic
-  if (headline.includes('undefined') || headline.includes('[') || headline.length < 10) {
-    console.warn('Invalid headline:', headline);
-    return false;
+  // Use the comprehensive quality validation system
+  const qualityCheck = validatePageQuality({
+    headline,
+    subheadline: '', // Will be checked separately in generateSections
+    features,
+    problem,
+    solution,
+  });
+
+  // Log the quality report for debugging
+  logQualityReport(qualityCheck, 'Generated Page Content');
+
+  // Only block generation on critical errors, not warnings
+  if (!qualityCheck.passed) {
+    console.error('❌ Page generation blocked due to quality issues. Fix errors before proceeding.');
   }
+
+  return qualityCheck.passed;
+}
+
+/**
+ * Comprehensive content validation before finalizing any page
+ * This runs after all content is generated
+ */
+export function validateGeneratedPage(pageContent: {
+  headline: string;
+  subheadline: string;
+  features: any[];
+  statistics?: any[];
+  problem?: string;
+  solution?: string;
+}): { valid: boolean; report: any } {
+  const qualityCheck = validatePageQuality(pageContent);
+  logQualityReport(qualityCheck, 'Final Page Validation');
   
-  // Ensure features are complete
-  for (const feature of features) {
-    if (!feature.title || !feature.description || feature.description.length < 20) {
-      console.warn('Incomplete feature:', feature);
-      return false;
-    }
-    if (feature.title.includes('undefined') || feature.description.includes('undefined')) {
-      console.warn('Feature contains undefined:', feature);
-      return false;
-    }
-  }
-  
-  return true;
+  return {
+    valid: qualityCheck.passed,
+    report: qualityCheck,
+  };
 }

@@ -176,21 +176,46 @@ export default function Generate() {
       generateFOMO,
       validateContent,
       fetchStrategicInsights,
+      validateGeneratedPage,
     } = await import('@/lib/contentGenerator');
 
     const headline = genHeadline(consultationData);
     const subheadline = generateSubheadline(consultationData);
     const features = genFeatures(consultationData);
-    const socialProof = await genSocialProof(consultationData); // Now async
+    const socialProof = await genSocialProof(consultationData);
     const cta = generateCTA(consultationData);
     const fomo = generateFOMO(consultationData);
     
     // Fetch strategic market insights with citations
     const strategicInsights = await fetchStrategicInsights(consultationData);
 
-    // Validate generated content
+    // Validate generated content using basic check
     if (!validateContent(headline, features, consultationData.challenge, consultationData.unique_value)) {
       console.error('Content validation failed', consultationData);
+    }
+    
+    // Comprehensive quality validation before finalizing
+    const finalValidation = validateGeneratedPage({
+      headline,
+      subheadline,
+      features,
+      statistics: strategicInsights ? [
+        strategicInsights.hero,
+        strategicInsights.problem,
+        strategicInsights.solution
+      ].filter(Boolean) : [],
+      problem: transformProblemStatement(consultationData.challenge),
+      solution: transformSolutionStatement(consultationData.unique_value, consultationData.industry),
+    });
+    
+    if (!finalValidation.valid) {
+      console.warn('⚠️ Page quality issues detected but proceeding with generation:', finalValidation.report);
+      // Show toast to user about quality issues
+      toast({
+        title: "Content Quality Notice",
+        description: `Generated page has ${finalValidation.report.errors.length} errors and ${finalValidation.report.warnings.length} warnings. Review carefully.`,
+        variant: finalValidation.report.errors.length > 0 ? "destructive" : "default",
+      });
     }
 
     const sections: Section[] = [
