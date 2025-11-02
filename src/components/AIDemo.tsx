@@ -46,6 +46,7 @@ const AIDemo = () => {
   const [selectedIndustry, setSelectedIndustry] = useState<string>("");
   const [selectedGoal, setSelectedGoal] = useState<string>("");
   const [audienceInput, setAudienceInput] = useState("");
+  const [submittedAudience, setSubmittedAudience] = useState("");
 
   const addMessage = (role: "ai" | "user", content: string) => {
     setMessages((prev) => [...prev, { role, content }]);
@@ -80,12 +81,14 @@ const AIDemo = () => {
   const handleAudienceSubmit = () => {
     if (!audienceInput.trim()) return;
     
-    addMessage("user", audienceInput);
+    const audience = audienceInput.trim();
+    setSubmittedAudience(audience);
+    addMessage("user", audience);
     
     setTimeout(() => {
       addMessage(
         "ai",
-        `Excellent! Based on our chat, here's what I'd build for you:\n\n📄 Page Structure:\n• Hero: Headline targeting ${audienceInput}\n• Problem/Solution section\n• ROI Calculator (interactive, proven to boost conversions)\n• Key Features grid\n• Social proof area\n• Clear CTA: ${selectedGoal}\n\nReady to build this for real?`
+        `Excellent! Based on our chat, here's what I'd build for you:\n\n📄 Page Structure:\n• Hero: Headline targeting ${audience}\n• Problem/Solution section\n• ROI Calculator (interactive, proven to boost conversions)\n• Key Features grid\n• Social proof area\n• Clear CTA: ${selectedGoal}\n\nReady to build this for real?`
       );
       setStep("summary");
     }, 1200);
@@ -224,7 +227,7 @@ const AIDemo = () => {
                   className="w-full text-base"
                 >
                   <Link 
-                    to={`/wizard?industry=${encodeURIComponent(selectedIndustry)}&goal=${encodeURIComponent(selectedGoal)}&audience=${encodeURIComponent(audienceInput)}`}
+                    to={`/wizard?industry=${encodeURIComponent(selectedIndustry)}&goal=${encodeURIComponent(selectedGoal)}&audience=${encodeURIComponent(submittedAudience)}`}
                   >
                     Sign Up to Build Your Page
                   </Link>

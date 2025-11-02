@@ -161,13 +161,23 @@ export default function Wizard() {
         ? `• Target Audience: ${demoAudience}\n\n` 
         : "";
       
+      const industryContext = demoIndustry?.toLowerCase().includes("professional") 
+        ? "your ideal clients"
+        : demoIndustry?.toLowerCase().includes("saas")
+        ? "your target users"
+        : demoIndustry?.toLowerCase().includes("ecommerce")
+        ? "your ideal customers"
+        : "your target audience";
+      
       addAIMessage(
         `Perfect! Based on our demo chat, here's what I understand:\n\n` +
         `• Industry: ${demoIndustry}\n` +
         `• Goal: ${demoGoal}\n` +
         audienceText +
-        `Great start! Now let me ask just ${audienceText ? '4' : '5'} more strategic questions to nail this down.\n\n` +
-        `Who exactly are you trying to reach? Be specific—their role, company type, or situation.`
+        `Great start! ${audienceText ? "Let me ask 3 more quick questions." : `Let me ask 4 more quick questions starting with:`}\n\n` +
+        (audienceText 
+          ? `What's the biggest challenge or frustration ${demoAudience} face that you solve?\n\n(Be specific - this becomes your compelling headline)`
+          : `Who exactly are ${industryContext}? Be specific about their role, situation, or what they're looking for.`)
       );
     } else {
       addAIMessage(
