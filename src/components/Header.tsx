@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import logo from "@/assets/pageconsult-logo.svg";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -21,8 +21,8 @@ const Header = () => {
     >
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-[72px]">
-          <div className="flex items-center gap-2">
-            <MessageCircle className="w-6 h-6 text-primary" />
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="PageConsult AI" className="h-10 w-auto" />
             <span className="text-xl font-bold text-foreground">
               PageConsult AI
             </span>
