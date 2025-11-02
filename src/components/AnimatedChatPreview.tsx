@@ -30,7 +30,7 @@ export function AnimatedChatPreview() {
     setTimeout(() => setIsInitialized(true), 100);
   }, []);
 
-  // Smooth scroll to bottom with debouncing
+  // Smooth scroll to show question context with options
   const smoothScroll = () => {
     if (isScrollingRef.current || !messagesContainerRef.current) return;
     
@@ -39,10 +39,28 @@ export function AnimatedChatPreview() {
     
     // Wait for content to fully render
     setTimeout(() => {
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: 'smooth'
-      });
+      // Find the last AI message to show question context
+      const messages = container.querySelectorAll('.message-bubble');
+      const lastAIMessage = Array.from(messages).reverse().find(
+        (msg) => msg.classList.contains('ai-message')
+      );
+      
+      if (lastAIMessage) {
+        // Scroll to show the AI message at the top with slight offset
+        const messageTop = (lastAIMessage as HTMLElement).offsetTop;
+        const offset = 40; // breathing room from top
+        
+        container.scrollTo({
+          top: Math.max(0, messageTop - offset),
+          behavior: 'smooth'
+        });
+      } else {
+        // Fallback to bottom scroll if no AI message found
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
       
       // Reset scroll lock after animation completes
       setTimeout(() => {
@@ -197,9 +215,11 @@ export function AnimatedChatPreview() {
               return (
                 <div
                   key={index}
-                  className={`flex gap-3 ${
-                    isUser ? "flex-row-reverse" : ""
-                  } ${isSpecial ? "justify-center" : ""}`}
+                  className={`message-bubble flex gap-3 ${
+                    step.type === "ai" ? "ai-message" : ""
+                  } ${step.type === "user" ? "user-message" : ""} ${
+                    isSpecial ? "special-message" : ""
+                  } ${isUser ? "flex-row-reverse" : ""} ${isSpecial ? "justify-center" : ""}`}
                   style={{ 
                     animation: 'fade-in 0.3s ease-out forwards',
                     opacity: 0,
