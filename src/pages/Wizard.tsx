@@ -67,6 +67,8 @@ export default function Wizard() {
   const [uniqueValue, setUniqueValue] = useState("");
   const [offer, setOffer] = useState("");
   const [wantsCalculator, setWantsCalculator] = useState<boolean | null>(null);
+  const [calculatorType, setCalculatorType] = useState("");
+  const [calculatorInputs, setCalculatorInputs] = useState<string[]>([]);
 
   // Helper functions to map demo values to wizard types
   function mapDemoIndustryToType(industry: string): IndustryType {
@@ -215,6 +217,13 @@ export default function Wizard() {
       if (existingConsultation.wants_calculator !== null) {
         setWantsCalculator(existingConsultation.wants_calculator);
       }
+      if (existingConsultation.calculator_config) {
+        const config = existingConsultation.calculator_config as any;
+        if (config && typeof config === 'object') {
+          if (config.type) setCalculatorType(config.type);
+          if (config.inputs && Array.isArray(config.inputs)) setCalculatorInputs(config.inputs);
+        }
+      }
       
       // Determine next step based on what's been answered
       let nextStep = 1;
@@ -229,7 +238,18 @@ export default function Wizard() {
       if (existingConsultation.challenge) nextStep = 6;
       if (existingConsultation.unique_value) nextStep = 7;
       if (existingConsultation.offer) nextStep = 8;
-      if (existingConsultation.wants_calculator !== null) nextStep = 9;
+      if (existingConsultation.wants_calculator !== null) {
+        if (existingConsultation.wants_calculator) {
+          nextStep = 9; // Calculator configuration
+          const config = existingConsultation.calculator_config as any;
+          if (config && typeof config === 'object') {
+            if (config.type) nextStep = 10;
+            if (config.inputs) nextStep = 11;
+          }
+        } else {
+          nextStep = 11; // Skip to summary
+        }
+      }
       
       console.log("📍 Resuming at step:", nextStep);
       setStep(nextStep);
@@ -489,18 +509,98 @@ export default function Wizard() {
     
     if (wants) {
       addUserMessage("Yes, add calculator");
-      addAIMessage("✓ Calculator configured! This will be a powerful conversion tool.");
+      setStep(selectedIndustry === "professional" ? 9 : 8);
+      
+      // Ask about calculator type based on industry
+      const calculatorOptions = selectedIndustry === "professional"
+        ? "For your service business, what should visitors calculate?\n\n" +
+          "Options:\n" +
+          "• Project cost estimate\n" +
+          "• Time savings calculator\n" +
+          "• ROI on investment\n" +
+          "• Property value increase"
+        : selectedIndustry === "b2b_saas"
+        ? "What type of calculator fits your SaaS product?\n\n" +
+          "Options:\n" +
+          "• ROI Calculator\n" +
+          "• Cost Savings Calculator\n" +
+          "• Time Savings Calculator\n" +
+          "• Custom Calculator"
+        : "What type of calculator would help your visitors?\n\n" +
+          "Options:\n" +
+          "• Cost Calculator\n" +
+          "• Savings Calculator\n" +
+          "• ROI Calculator\n" +
+          "• Comparison Calculator";
+      
+      addAIMessage(`Great choice! Let me configure your calculator.\n\n${calculatorOptions}`);
     } else {
       addUserMessage("Not now");
       addAIMessage("No problem! You can always add a calculator later from the editor.");
+      setTimeout(() => showSummary(), 1500);
     }
+  };
+
+  const handleCalculatorTypeSelect = async (type: string) => {
+    setCalculatorType(type);
+    addUserMessage(type);
+    
+    setStep(selectedIndustry === "professional" ? 10 : 9);
+    
+    // Ask about inputs based on calculator type
+    const inputOptions = type.toLowerCase().includes("cost") || type.toLowerCase().includes("project")
+      ? "What inputs should visitors provide?\n\n" +
+        "Select the relevant fields:\n" +
+        "• Square footage / Size\n" +
+        "• Current condition\n" +
+        "• Material preference\n" +
+        "• Timeline urgency\n" +
+        "• Location/Zip code"
+      : type.toLowerCase().includes("roi") || type.toLowerCase().includes("savings")
+      ? "What inputs should visitors provide?\n\n" +
+        "Select the relevant fields:\n" +
+        "• Current monthly cost\n" +
+        "• Team size\n" +
+        "• Hours spent per week\n" +
+        "• Current solution cost"
+      : "What inputs should visitors provide?\n\n" +
+        "Select the relevant fields:\n" +
+        "• Budget range\n" +
+        "• Quantity/Volume\n" +
+        "• Time period\n" +
+        "• Custom field";
+    
+    addAIMessage(inputOptions);
+  };
+
+  const handleCalculatorInputsSubmit = async () => {
+    if (calculatorInputs.length === 0) {
+      toast({
+        title: "Select inputs",
+        description: "Please select at least one input field for the calculator.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    addUserMessage(`Selected inputs: ${calculatorInputs.join(", ")}`);
+    
+    // Save calculator config
+    await saveProgress({
+      calculator_config: {
+        type: calculatorType,
+        inputs: calculatorInputs
+      }
+    });
+    
+    addAIMessage("✓ Calculator configured! This will be a powerful conversion tool.");
     
     setTimeout(() => showSummary(), 1500);
   };
 
   const showSummary = async () => {
     await saveProgress({ status: "completed" });
-    const finalStep = selectedIndustry === "professional" ? 9 : 8;
+    const finalStep = selectedIndustry === "professional" ? 11 : 10;
     setStep(finalStep);
     addAIMessage("Perfect! I have everything I need. Here's your custom landing page strategy:");
   };
@@ -537,8 +637,9 @@ export default function Wizard() {
     }, 500);
   };
 
-  const totalSteps = selectedIndustry === "professional" ? 8 : 7;
-  const progressPercentage = (step / totalSteps) * 100;
+  const totalSteps = selectedIndustry === "professional" ? 10 : 9;
+  const currentStep = step > totalSteps ? totalSteps : step;
+  const progressPercentage = (currentStep / totalSteps) * 100;
 
   if (loading) {
     return (
@@ -559,7 +660,7 @@ export default function Wizard() {
         
         <div className="flex-1 max-w-md mx-8">
           <div className="text-sm text-muted-foreground mb-1 text-center">
-            {step <= totalSteps ? `Question ${step} of ${totalSteps}` : "Complete"}
+            {currentStep <= totalSteps ? `Question ${currentStep} of ${totalSteps}` : "Complete"}
           </div>
           <Progress value={progressPercentage} className="h-2" />
         </div>
@@ -811,8 +912,191 @@ export default function Wizard() {
                 </div>
               )}
 
-              {/* Step 8/9: Summary */}
-              {(step === 8 || step === 9) && (
+              {/* Step 8/9: Calculator Type Selection */}
+              {((step === 8 && selectedIndustry !== "professional") || (step === 9 && selectedIndustry === "professional")) && wantsCalculator && !calculatorType && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                  {selectedIndustry === "professional" ? (
+                    <>
+                      <button
+                        onClick={() => handleCalculatorTypeSelect("Project Cost Estimate")}
+                        className="bg-card border-2 border-border rounded-xl p-6 text-center hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      >
+                        <div className="text-4xl mb-3">💰</div>
+                        <div className="font-semibold mb-2">Project Cost Estimate</div>
+                        <div className="text-sm text-muted-foreground">Help visitors estimate project costs</div>
+                      </button>
+                      <button
+                        onClick={() => handleCalculatorTypeSelect("Time Savings Calculator")}
+                        className="bg-card border-2 border-border rounded-xl p-6 text-center hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      >
+                        <div className="text-4xl mb-3">⏱️</div>
+                        <div className="font-semibold mb-2">Time Savings</div>
+                        <div className="text-sm text-muted-foreground">Show time saved vs DIY</div>
+                      </button>
+                      <button
+                        onClick={() => handleCalculatorTypeSelect("ROI Calculator")}
+                        className="bg-card border-2 border-border rounded-xl p-6 text-center hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      >
+                        <div className="text-4xl mb-3">📈</div>
+                        <div className="font-semibold mb-2">ROI Calculator</div>
+                        <div className="text-sm text-muted-foreground">Calculate return on investment</div>
+                      </button>
+                      <button
+                        onClick={() => handleCalculatorTypeSelect("Property Value Increase")}
+                        className="bg-card border-2 border-border rounded-xl p-6 text-center hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      >
+                        <div className="text-4xl mb-3">🏠</div>
+                        <div className="font-semibold mb-2">Property Value</div>
+                        <div className="text-sm text-muted-foreground">Show home value increase</div>
+                      </button>
+                    </>
+                  ) : selectedIndustry === "b2b_saas" ? (
+                    <>
+                      <button
+                        onClick={() => handleCalculatorTypeSelect("ROI Calculator")}
+                        className="bg-card border-2 border-border rounded-xl p-6 text-center hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      >
+                        <div className="text-4xl mb-3">📈</div>
+                        <div className="font-semibold mb-2">ROI Calculator</div>
+                      </button>
+                      <button
+                        onClick={() => handleCalculatorTypeSelect("Cost Savings Calculator")}
+                        className="bg-card border-2 border-border rounded-xl p-6 text-center hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      >
+                        <div className="text-4xl mb-3">💵</div>
+                        <div className="font-semibold mb-2">Cost Savings</div>
+                      </button>
+                      <button
+                        onClick={() => handleCalculatorTypeSelect("Time Savings Calculator")}
+                        className="bg-card border-2 border-border rounded-xl p-6 text-center hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      >
+                        <div className="text-4xl mb-3">⏱️</div>
+                        <div className="font-semibold mb-2">Time Savings</div>
+                      </button>
+                      <button
+                        onClick={() => handleCalculatorTypeSelect("Custom Calculator")}
+                        className="bg-card border-2 border-border rounded-xl p-6 text-center hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      >
+                        <div className="text-4xl mb-3">🔧</div>
+                        <div className="font-semibold mb-2">Custom</div>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleCalculatorTypeSelect("Cost Calculator")}
+                        className="bg-card border-2 border-border rounded-xl p-6 text-center hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      >
+                        <div className="text-4xl mb-3">💰</div>
+                        <div className="font-semibold mb-2">Cost Calculator</div>
+                      </button>
+                      <button
+                        onClick={() => handleCalculatorTypeSelect("Savings Calculator")}
+                        className="bg-card border-2 border-border rounded-xl p-6 text-center hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      >
+                        <div className="text-4xl mb-3">💵</div>
+                        <div className="font-semibold mb-2">Savings Calculator</div>
+                      </button>
+                      <button
+                        onClick={() => handleCalculatorTypeSelect("ROI Calculator")}
+                        className="bg-card border-2 border-border rounded-xl p-6 text-center hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      >
+                        <div className="text-4xl mb-3">📈</div>
+                        <div className="font-semibold mb-2">ROI Calculator</div>
+                      </button>
+                      <button
+                        onClick={() => handleCalculatorTypeSelect("Comparison Calculator")}
+                        className="bg-card border-2 border-border rounded-xl p-6 text-center hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      >
+                        <div className="text-4xl mb-3">⚖️</div>
+                        <div className="font-semibold mb-2">Comparison</div>
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Step 9/10: Calculator Inputs Selection */}
+              {((step === 9 && selectedIndustry !== "professional") || (step === 10 && selectedIndustry === "professional")) && calculatorType && (
+                <div className="space-y-4 animate-fade-in">
+                  <div className="bg-card border border-border rounded-xl p-6">
+                    <h4 className="font-semibold mb-4">Select input fields for your {calculatorType}:</h4>
+                    <div className="space-y-2">
+                      {(calculatorType.toLowerCase().includes("cost") || calculatorType.toLowerCase().includes("project")) ? (
+                        <>
+                          {["Square footage / Size", "Current condition", "Material preference", "Timeline urgency", "Location/Zip code"].map((input) => (
+                            <label key={input} className="flex items-center gap-3 p-3 hover:bg-accent rounded-lg cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={calculatorInputs.includes(input)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setCalculatorInputs([...calculatorInputs, input]);
+                                  } else {
+                                    setCalculatorInputs(calculatorInputs.filter(i => i !== input));
+                                  }
+                                }}
+                                className="w-4 h-4"
+                              />
+                              <span className="text-sm">{input}</span>
+                            </label>
+                          ))}
+                        </>
+                      ) : calculatorType.toLowerCase().includes("roi") || calculatorType.toLowerCase().includes("savings") || calculatorType.toLowerCase().includes("time") ? (
+                        <>
+                          {["Current monthly cost", "Team size", "Hours spent per week", "Current solution cost"].map((input) => (
+                            <label key={input} className="flex items-center gap-3 p-3 hover:bg-accent rounded-lg cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={calculatorInputs.includes(input)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setCalculatorInputs([...calculatorInputs, input]);
+                                  } else {
+                                    setCalculatorInputs(calculatorInputs.filter(i => i !== input));
+                                  }
+                                }}
+                                className="w-4 h-4"
+                              />
+                              <span className="text-sm">{input}</span>
+                            </label>
+                          ))}
+                        </>
+                      ) : (
+                        <>
+                          {["Budget range", "Quantity/Volume", "Time period", "Custom field"].map((input) => (
+                            <label key={input} className="flex items-center gap-3 p-3 hover:bg-accent rounded-lg cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={calculatorInputs.includes(input)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setCalculatorInputs([...calculatorInputs, input]);
+                                  } else {
+                                    setCalculatorInputs(calculatorInputs.filter(i => i !== input));
+                                  }
+                                }}
+                                className="w-4 h-4"
+                              />
+                              <span className="text-sm">{input}</span>
+                            </label>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={handleCalculatorInputsSubmit}
+                    disabled={calculatorInputs.length === 0}
+                    className="w-full"
+                  >
+                    Continue
+                  </Button>
+                </div>
+              )}
+
+              {/* Step 10/11: Summary */}
+              {(step === 10 || step === 11) && (
                 <div className="space-y-6 animate-fade-in">
                   <div className="bg-card border-2 border-border rounded-xl p-6">
                     <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
