@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bot, User } from "lucide-react";
 
 const conversationSteps = [
@@ -17,6 +17,25 @@ export function AnimatedChatPreview() {
   const [visibleMessages, setVisibleMessages] = useState<number>(0);
   const [isTyping, setIsTyping] = useState(false);
   const [visibleChecks, setVisibleChecks] = useState<number>(0);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Smooth scroll to bottom when new messages appear
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      
+      if (isNearBottom || visibleMessages === 1) {
+        // Scroll smoothly to bottom
+        setTimeout(() => {
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth'
+          });
+        }, 100);
+      }
+    }
+  }, [visibleMessages]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -46,8 +65,13 @@ export function AnimatedChatPreview() {
           }, 400);
         }
         
-        setIsTyping(true);
-        setTimeout(() => setIsTyping(false), 800);
+        // Only show typing indicator before AI messages
+        const nextStep = conversationSteps[prev];
+        if (nextStep?.type === "ai" || nextStep?.type === "thinking" || nextStep?.type === "building") {
+          setIsTyping(true);
+          setTimeout(() => setIsTyping(false), 800);
+        }
+        
         return prev + 1;
       });
     }, 2000);
@@ -62,7 +86,7 @@ export function AnimatedChatPreview() {
       
       {/* Chat container */}
       <div className="relative bg-card/90 backdrop-blur-sm rounded-2xl border border-border/50 p-6 transform hover:scale-[1.02] transition-transform duration-300 h-[400px] md:h-[500px] flex flex-col" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)' }}>
-        <div className="flex-1 overflow-y-auto space-y-3">
+        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto space-y-3" style={{ scrollBehavior: 'smooth' }}>
           {/* Header */}
           <div className="flex items-center gap-3 pb-4 border-b border-border/50">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
