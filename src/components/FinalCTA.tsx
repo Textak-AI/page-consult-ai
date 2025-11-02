@@ -15,14 +15,15 @@ const FinalCTA = () => {
             Start with strategy. Launch with confidence.
           </p>
           
-          <Link to="/wizard">
-            <Button
-              size="lg"
-              className="bg-white text-primary hover:bg-white/90 text-lg px-10 py-6 h-auto shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
-            >
+          <Button
+            asChild
+            size="lg"
+            className="bg-white text-primary hover:bg-white/90 text-lg px-10 py-6 h-auto shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+          >
+            <Link to="/wizard">
               Start Free Trial
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           
           <p className="text-white/80 mt-4 text-sm">
             No credit card required • 14-day trial

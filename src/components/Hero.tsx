@@ -17,17 +17,17 @@ const Hero = () => {
               pages proven to convert. No templates. No guesswork.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/wizard">
-                <Button variant="hero" size="lg" className="text-base w-full sm:w-auto">
+              <Button asChild variant="hero" size="lg" className="text-base w-full sm:w-auto">
+                <Link to="/wizard">
                   Try AI Consultant - Free Demo
-                </Button>
-              </Link>
-              <a href="#demo">
-                <Button variant="outline" size="lg" className="text-base w-full sm:w-auto">
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="text-base w-full sm:w-auto">
+                <a href="#demo">
                   <Play className="w-4 h-4 mr-2" />
                   Watch How It Works
-                </Button>
-              </a>
+                </a>
+              </Button>
             </div>
           </div>
 
