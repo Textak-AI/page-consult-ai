@@ -16,6 +16,13 @@ interface SocialProofSectionProps {
       title: string;
       stats: string[];
       facts?: string[];
+      valueProps?: string[];
+      credentials?: string[];
+      extractedStats?: {
+        marketSize: string | null;
+        growthRate: string | null;
+        customerCount: string | null;
+      };
     };
   };
   onUpdate: (content: any) => void;
@@ -45,26 +52,99 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
 
         {/* Industry Insights Section */}
         {content.industryInsights && (
-          <div className="mb-12 p-6 bg-card rounded-lg border">
-            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-              📊 {content.industryInsights.title}
-            </h3>
-            <div className="space-y-3">
-              {content.industryInsights.stats.map((stat: string, i: number) => (
-                <div key={i} className="flex items-start gap-3">
-                  <span className="text-primary font-bold mt-1">•</span>
-                  <p className="text-sm">{stat}</p>
+          <div className="mb-12 space-y-6">
+            {/* Market Overview Card */}
+            <div className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg border border-primary/20">
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                📊 Market Overview
+              </h3>
+              
+              {/* Extracted Key Stats */}
+              {content.industryInsights.extractedStats && (
+                <div className="grid md:grid-cols-3 gap-4 mb-4">
+                  {content.industryInsights.extractedStats.marketSize && (
+                    <div className="bg-card/80 rounded-lg p-4 border">
+                      <div className="text-sm text-muted-foreground mb-1">Market Size</div>
+                      <div className="text-lg font-bold text-primary">
+                        {content.industryInsights.extractedStats.marketSize}
+                      </div>
+                    </div>
+                  )}
+                  {content.industryInsights.extractedStats.growthRate && (
+                    <div className="bg-card/80 rounded-lg p-4 border">
+                      <div className="text-sm text-muted-foreground mb-1">Growth Rate</div>
+                      <div className="text-lg font-bold text-primary">
+                        {content.industryInsights.extractedStats.growthRate}
+                      </div>
+                    </div>
+                  )}
+                  {content.industryInsights.extractedStats.customerCount && (
+                    <div className="bg-card/80 rounded-lg p-4 border">
+                      <div className="text-sm text-muted-foreground mb-1">Market Activity</div>
+                      <div className="text-lg font-bold text-primary">
+                        {content.industryInsights.extractedStats.customerCount}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ))}
+              )}
+              
+              {/* Market Stats */}
+              <div className="space-y-2">
+                {content.industryInsights.stats.slice(0, 3).map((stat: string, i: number) => (
+                  <div key={i} className="flex items-start gap-3 text-sm">
+                    <span className="text-primary font-bold mt-0.5">•</span>
+                    <p>{stat}</p>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* Value Propositions */}
+            {content.industryInsights.valueProps && content.industryInsights.valueProps.length > 0 && (
+              <div className="p-6 bg-card rounded-lg border">
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  💎 Why Choose Professional Service
+                </h4>
+                <div className="space-y-3">
+                  {content.industryInsights.valueProps.map((prop: string, i: number) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
+                      <p className="text-sm">{prop}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Pain Points / Industry Facts */}
             {content.industryInsights.facts && content.industryInsights.facts.length > 0 && (
-              <div className="mt-6 pt-6 border-t">
-                <h4 className="font-semibold mb-3">Key Industry Facts:</h4>
-                <div className="space-y-2">
+              <div className="p-6 bg-card rounded-lg border">
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  ⚠️ Industry Insights
+                </h4>
+                <div className="space-y-3">
                   {content.industryInsights.facts.map((fact: string, i: number) => (
-                    <div key={i} className="flex items-start gap-2">
-                      <span className="text-secondary">✓</span>
+                    <div key={i} className="flex items-start gap-3">
+                      <span className="text-orange-600 dark:text-orange-400">►</span>
                       <p className="text-sm text-muted-foreground">{fact}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Credentials */}
+            {content.industryInsights.credentials && content.industryInsights.credentials.length > 0 && (
+              <div className="p-6 bg-accent/20 rounded-lg border">
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  🏆 Professional Standards
+                </h4>
+                <div className="space-y-2">
+                  {content.industryInsights.credentials.map((cred: string, i: number) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <span className="text-blue-600 dark:text-blue-400">✦</span>
+                      <p className="text-sm">{cred}</p>
                     </div>
                   ))}
                 </div>

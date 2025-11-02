@@ -4,7 +4,14 @@ export interface IndustryInsights {
   industry: string;
   stats: string[];
   facts: string[];
-  trustSignals: string[];
+  valueProps?: string[];
+  credentials?: string[];
+  trustSignals?: string[];
+  extractedStats?: {
+    marketSize: string | null;
+    growthRate: string | null;
+    customerCount: string | null;
+  };
   rawText: string;
 }
 
@@ -93,7 +100,7 @@ export function enhanceSocialProofWithInsights(
   };
 
   // Add trust signals if available
-  const trustSection = insights.trustSignals.length > 0 ? {
+  const trustSection = insights.trustSignals && insights.trustSignals.length > 0 ? {
     title: 'Why Professional Service Matters',
     items: insights.trustSignals.slice(0, 3).map(signal => ({
       icon: '✓',

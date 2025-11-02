@@ -109,9 +109,12 @@ export async function generateSocialProof(data: ConsultationData) {
     
     if (insights) {
       industryInsights = {
-        title: `${insights.industry} Industry Context`,
-        stats: insights.stats.slice(0, 3),
-        facts: insights.facts.slice(0, 3),
+        title: `${insights.industry} Market Intelligence`,
+        stats: insights.stats || [],
+        facts: insights.facts || [],
+        valueProps: insights.valueProps || [],
+        credentials: insights.credentials || [],
+        extractedStats: insights.extractedStats || null,
       };
     }
   }
