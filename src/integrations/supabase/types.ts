@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      consultations: {
+        Row: {
+          calculator_config: Json | null
+          challenge: string | null
+          created_at: string
+          goal: string | null
+          id: string
+          industry: string | null
+          offer: string | null
+          status: string
+          target_audience: string | null
+          unique_value: string | null
+          updated_at: string
+          user_id: string
+          wants_calculator: boolean | null
+        }
+        Insert: {
+          calculator_config?: Json | null
+          challenge?: string | null
+          created_at?: string
+          goal?: string | null
+          id?: string
+          industry?: string | null
+          offer?: string | null
+          status?: string
+          target_audience?: string | null
+          unique_value?: string | null
+          updated_at?: string
+          user_id: string
+          wants_calculator?: boolean | null
+        }
+        Update: {
+          calculator_config?: Json | null
+          challenge?: string | null
+          created_at?: string
+          goal?: string | null
+          id?: string
+          industry?: string | null
+          offer?: string | null
+          status?: string
+          target_audience?: string | null
+          unique_value?: string | null
+          updated_at?: string
+          user_id?: string
+          wants_calculator?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

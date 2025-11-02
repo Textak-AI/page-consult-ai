@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const FinalCTA = () => {
   return (
@@ -14,12 +15,14 @@ const FinalCTA = () => {
             Start with strategy. Launch with confidence.
           </p>
           
-          <Button
-            size="lg"
-            className="bg-white text-primary hover:bg-white/90 text-lg px-10 py-6 h-auto shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
-          >
-            Start Free Trial
-          </Button>
+          <Link to="/wizard">
+            <Button
+              size="lg"
+              className="bg-white text-primary hover:bg-white/90 text-lg px-10 py-6 h-auto shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+            >
+              Start Free Trial
+            </Button>
+          </Link>
           
           <p className="text-white/80 mt-4 text-sm">
             No credit card required • 14-day trial

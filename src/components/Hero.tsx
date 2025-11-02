@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
@@ -16,13 +17,17 @@ const Hero = () => {
               pages proven to convert. No templates. No guesswork.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="hero" size="lg" className="text-base">
-                Try AI Consultant - Free Demo
-              </Button>
-              <Button variant="outline" size="lg" className="text-base">
-                <Play className="w-4 h-4 mr-2" />
-                Watch How It Works
-              </Button>
+              <Link to="/wizard">
+                <Button variant="hero" size="lg" className="text-base w-full sm:w-auto">
+                  Try AI Consultant - Free Demo
+                </Button>
+              </Link>
+              <a href="#demo">
+                <Button variant="outline" size="lg" className="text-base w-full sm:w-auto">
+                  <Play className="w-4 h-4 mr-2" />
+                  Watch How It Works
+                </Button>
+              </a>
             </div>
           </div>
 
