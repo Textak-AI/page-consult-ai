@@ -88,6 +88,7 @@ export default function Wizard() {
   }, []);
 
   const checkAuth = async () => {
+    console.log("🔍 Starting checkAuth, hasPrefilledData:", hasPrefilledData);
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
@@ -97,25 +98,18 @@ export default function Wizard() {
     
     setUserId(session.user.id);
     
-    // Check for existing in-progress consultation
-    const { data: existingConsultation } = await supabase
-      .from("consultations")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .eq("status", "in_progress")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    
-    // If coming from demo, start fresh instead of resuming
-    if (existingConsultation && hasPrefilledData) {
-      // Mark old consultation as abandoned
+    // If coming from demo, ALWAYS start fresh
+    if (hasPrefilledData) {
+      console.log("📝 Demo mode: clearing existing consultations");
+      
+      // Mark ALL existing consultations as abandoned
       await supabase
         .from("consultations")
         .update({ status: "abandoned" })
-        .eq("id", existingConsultation.id);
-        
-      // Create new consultation with demo data
+        .eq("user_id", session.user.id)
+        .eq("status", "in_progress");
+      
+      // Create fresh consultation with ONLY demo data
       const { data: newConsultation, error } = await supabase
         .from("consultations")
         .insert({ 
@@ -128,6 +122,7 @@ export default function Wizard() {
         .single();
       
       if (error) {
+        console.error("❌ Error creating consultation:", error);
         toast({
           title: "Error",
           description: "Failed to start consultation. Please try again.",
@@ -136,17 +131,47 @@ export default function Wizard() {
         return;
       }
       
+      console.log("✅ Created new consultation:", newConsultation.id);
       setConsultationId(newConsultation.id);
-      setSelectedIndustry(mapDemoIndustryToType(demoIndustry));
-      setSelectedGoal(mapDemoGoalToType(demoGoal));
-      if (demoAudience && demoAudience !== ".") {
-        setTargetAudience(demoAudience);
-        setStep(4); // Skip to challenge question
-      } else {
-        setStep(3); // Ask for target audience
-      }
-    } else if (existingConsultation) {
-      // Resume existing consultation (no demo data)
+      
+      // Determine starting step based on what demo provided
+      const startStep = (demoAudience && demoAudience !== ".") ? 4 : 3;
+      console.log("📍 Starting at step:", startStep);
+      setStep(startStep);
+      
+      setLoading(false);
+      
+      // Show SINGLE contextual message
+      const audienceText = demoAudience && demoAudience !== "." 
+        ? `• Target Audience: ${demoAudience}\n\n` 
+        : "";
+      
+      addAIMessage(
+        `Perfect! Based on our demo chat, here's what I understand:\n\n` +
+        `• Industry: ${demoIndustry}\n` +
+        `• Goal: ${demoGoal}\n` +
+        audienceText +
+        `Great start! Let me ask ${audienceText ? "4" : "5"} more strategic questions.\n\n` +
+        (audienceText 
+          ? `What's the biggest challenge or frustration ${demoAudience} face that you solve?\n\n(Be specific - this becomes your compelling headline)`
+          : `Who exactly are your ideal clients? Be specific about their role, situation, or what they're looking for.`)
+      );
+      
+      return; // Exit early for demo flow
+    }
+    
+    // Non-demo flow: check for existing consultation
+    const { data: existingConsultation } = await supabase
+      .from("consultations")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .eq("status", "in_progress")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    if (existingConsultation) {
+      console.log("📂 Resuming existing consultation");
       setConsultationId(existingConsultation.id);
       
       // Load existing answers
@@ -182,26 +207,36 @@ export default function Wizard() {
       if (existingConsultation.offer) nextStep = 7;
       if (existingConsultation.wants_calculator !== null) nextStep = 8;
       
+      console.log("📍 Resuming at step:", nextStep);
       setStep(nextStep);
-    } else {
-      // Create new consultation with pre-filled data if available
-      const initialData: any = { 
-        user_id: session.user.id 
+      setLoading(false);
+      
+      // Show appropriate message for current step
+      const stepMessages: Record<number, string> = {
+        1: "Hey! I'm excited to help you build a landing page that converts.\n\nBefore we jump into design, let's have a quick strategy chat—this ensures we build exactly what your business needs.\n\nFirst up: What industry are you in?",
+        2: "What's your main goal for this landing page?",
+        3: "Who exactly are you trying to reach?\n\nBe specific—their role, company type, or situation. The clearer you are, the better I can help.",
+        4: `What's the biggest problem or challenge your audience faces that your solution solves?\n\n(This becomes your compelling headline)`,
+        5: "What makes your solution uniquely valuable?\n\nWhy should they choose you over alternatives?",
+        6: `What are you offering to capture ${existingConsultation.goal || "conversions"}?`,
+        7: "Want to add an interactive calculator? These boost conversions by 40%+ because visitors get personalized value.",
+        8: "Perfect! I have everything I need. Here's your custom landing page strategy:"
       };
       
-      if (hasPrefilledData) {
-        if (demoIndustry) initialData.industry = demoIndustry;
-        if (demoGoal) initialData.goal = demoGoal;
-        if (demoAudience && demoAudience !== ".") initialData.target_audience = demoAudience;
+      if (stepMessages[nextStep]) {
+        addAIMessage(stepMessages[nextStep], 300);
       }
-      
+    } else {
+      // Create new consultation (non-demo)
+      console.log("🆕 Creating new consultation");
       const { data: newConsultation, error } = await supabase
         .from("consultations")
-        .insert(initialData)
+        .insert({ user_id: session.user.id })
         .select()
         .single();
       
       if (error) {
+        console.error("❌ Error creating consultation:", error);
         toast({
           title: "Error",
           description: "Failed to start consultation. Please try again.",
@@ -211,49 +246,13 @@ export default function Wizard() {
       }
       
       setConsultationId(newConsultation.id);
-    }
-    
-    setLoading(false);
-    
-    // Show appropriate initial message based on the step
-    if (hasPrefilledData) {
-      // Coming from demo - show contextual message
-      const audienceText = demoAudience && demoAudience !== "." 
-        ? `• Target Audience: ${demoAudience}\n\n` 
-        : "";
+      setLoading(false);
       
-      addAIMessage(
-        `Perfect! Based on our demo chat, here's what I understand:\n\n` +
-        `• Industry: ${demoIndustry}\n` +
-        `• Goal: ${demoGoal}\n` +
-        audienceText +
-        `Great start! Let me ask ${audienceText ? "3" : "4"} more quick questions.\n\n` +
-        (audienceText 
-          ? `What's the biggest challenge or frustration ${demoAudience} face that you solve?\n\n(Be specific - this becomes your compelling headline)`
-          : `Who exactly are your ideal clients? Be specific about their role, situation, or what they're looking for.`)
-      );
-    } else if (step === 1) {
-      // Starting fresh or resuming from beginning
       addAIMessage(
         "Hey! I'm excited to help you build a landing page that converts.\n\n" +
         "Before we jump into design, let's have a quick strategy chat—this ensures we build exactly what your business needs.\n\n" +
         "First up: What industry are you in?"
       );
-    } else {
-      // Resuming mid-consultation - show appropriate message for current step
-      const stepMessages: Record<number, string> = {
-        2: "What's your main goal for this landing page?",
-        3: "Who exactly are you trying to reach?\n\nBe specific—their role, company type, or situation. The clearer you are, the better I can help.",
-        4: `What's the biggest problem or challenge your audience faces that your solution solves?\n\n(This becomes your compelling headline)`,
-        5: "What makes your solution uniquely valuable?\n\nWhy should they choose you over alternatives?",
-        6: `What are you offering to capture ${selectedGoal === "leads" ? "leads" : selectedGoal === "sales" ? "sales" : selectedGoal === "signups" ? "signups" : "meetings"}?`,
-        7: "Want to add an interactive calculator? These boost conversions by 40%+ because visitors get personalized value.",
-        8: "Perfect! I have everything I need. Here's your custom landing page strategy:"
-      };
-      
-      if (stepMessages[step]) {
-        addAIMessage(stepMessages[step], 300);
-      }
     }
   };
 
@@ -341,10 +340,12 @@ export default function Wizard() {
       return;
     }
     
+    console.log("💬 Submitting audience:", targetAudience);
     addUserMessage(targetAudience);
     await saveProgress({ target_audience: targetAudience });
     
     setStep(4);
+    setChallenge(""); // Clear input for next question
     addAIMessage(`Thanks! ${targetAudience.split(" ")[0]}s are worth understanding deeply.\n\nNow here's the key question:\n\nWhat's the biggest problem or challenge your audience faces that your solution solves?\n\n(This becomes your compelling headline)`);
   };
 
@@ -358,10 +359,12 @@ export default function Wizard() {
       return;
     }
     
+    console.log("💬 Submitting challenge:", challenge);
     addUserMessage(challenge);
     await saveProgress({ challenge });
     
     setStep(5);
+    setUniqueValue(""); // Clear input for next question
     addAIMessage("That's a real pain point. Strong foundation for your headline.\n\nWhat makes your solution uniquely valuable?\n\nWhy should they choose you over alternatives?");
   };
 
@@ -375,10 +378,12 @@ export default function Wizard() {
       return;
     }
     
+    console.log("💬 Submitting unique value:", uniqueValue);
     addUserMessage(uniqueValue);
     await saveProgress({ unique_value: uniqueValue });
     
     setStep(6);
+    setOffer(""); // Clear input for next question
     addAIMessage(`Almost there! What are you offering to capture ${selectedGoal === "leads" ? "leads" : selectedGoal === "sales" ? "sales" : selectedGoal === "signups" ? "signups" : "meetings"}?`);
   };
 
@@ -392,6 +397,7 @@ export default function Wizard() {
       return;
     }
     
+    console.log("💬 Submitting offer:", offer);
     addUserMessage(offer);
     await saveProgress({ offer });
     
