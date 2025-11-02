@@ -1,4 +1,5 @@
 import { getIndustryTemplate } from './contentTemplates';
+import { getIndustryInsights, hasWeakCredentials, extractLocation } from './industryInsights';
 
 export interface ConsultationData {
   industry?: string;
@@ -68,7 +69,7 @@ export function generateFeatures(data: ConsultationData) {
   return features;
 }
 
-export function generateSocialProof(data: ConsultationData) {
+export async function generateSocialProof(data: ConsultationData) {
   const template = getIndustryTemplate(data.industry);
   
   // Generate realistic stats based on industry
@@ -94,9 +95,31 @@ export function generateSocialProof(data: ConsultationData) {
     { name: 'Michael R.', action: 'left a 5-star review', time: '12 minutes ago', location: 'Florida' },
   ];
   
+  // Check if we should enhance with industry insights
+  let industryInsights = null;
+  if (hasWeakCredentials(data)) {
+    console.log('Weak credentials detected, fetching industry insights...');
+    const location = extractLocation(data.target_audience);
+    const insights = await getIndustryInsights(
+      data.industry || 'Professional Services',
+      data.service_type,
+      location,
+      data.target_audience
+    );
+    
+    if (insights) {
+      industryInsights = {
+        title: `${insights.industry} Industry Context`,
+        stats: insights.stats.slice(0, 3),
+        facts: insights.facts.slice(0, 3),
+      };
+    }
+  }
+  
   return {
     stats: baseStats,
     recentActivity,
+    industryInsights,
   };
 }
 

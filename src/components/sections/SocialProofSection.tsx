@@ -12,6 +12,11 @@ interface SocialProofSectionProps {
       time: string;
       location: string;
     }>;
+    industryInsights?: {
+      title: string;
+      stats: string[];
+      facts?: string[];
+    };
   };
   onUpdate: (content: any) => void;
 }
@@ -37,6 +42,36 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
             </div>
           ))}
         </div>
+
+        {/* Industry Insights Section */}
+        {content.industryInsights && (
+          <div className="mb-12 p-6 bg-card rounded-lg border">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              📊 {content.industryInsights.title}
+            </h3>
+            <div className="space-y-3">
+              {content.industryInsights.stats.map((stat: string, i: number) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="text-primary font-bold mt-1">•</span>
+                  <p className="text-sm">{stat}</p>
+                </div>
+              ))}
+            </div>
+            {content.industryInsights.facts && content.industryInsights.facts.length > 0 && (
+              <div className="mt-6 pt-6 border-t">
+                <h4 className="font-semibold mb-3">Key Industry Facts:</h4>
+                <div className="space-y-2">
+                  {content.industryInsights.facts.map((fact: string, i: number) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="text-secondary">✓</span>
+                      <p className="text-sm text-muted-foreground">{fact}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {content.recentActivity && content.recentActivity.length > 0 && (
           <div className="mt-8 p-6 bg-card rounded-lg border">

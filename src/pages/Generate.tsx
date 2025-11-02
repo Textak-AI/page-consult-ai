@@ -83,7 +83,7 @@ export default function Generate() {
   };
 
   const animatePageBuild = async (consultationData: any, userId: string) => {
-    const generatedSections = generateSections(consultationData);
+    const generatedSections = await generateSections(consultationData);
     
     // Animate each section appearing
     const steps = [0, 1, 2, 3, 4, 5];
@@ -124,7 +124,7 @@ export default function Generate() {
     }, 5500);
   };
 
-  const generateSections = (consultationData: any): Section[] => {
+  const generateSections = async (consultationData: any): Promise<Section[]> => {
     // Import generator functions
     const { 
       generateHeadline: genHeadline,
@@ -134,12 +134,12 @@ export default function Generate() {
       generateCTA,
       generateFOMO,
       validateContent,
-    } = require('@/lib/contentGenerator');
+    } = await import('@/lib/contentGenerator');
 
     const headline = genHeadline(consultationData);
     const subheadline = generateSubheadline(consultationData);
     const features = genFeatures(consultationData);
-    const socialProof = genSocialProof(consultationData);
+    const socialProof = await genSocialProof(consultationData); // Now async
     const cta = generateCTA(consultationData);
     const fomo = generateFOMO(consultationData);
 
