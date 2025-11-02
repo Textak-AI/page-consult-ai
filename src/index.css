@@ -164,4 +164,160 @@ All colors MUST be HSL.
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out;
   }
+
+  /* Text Effects */
+  
+  /* Animated Gradient */
+  .text-effect-gradient-animate {
+    background: linear-gradient(-45deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--accent)), hsl(var(--primary)));
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientShift 3s ease infinite;
+    font-weight: 700;
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Glow Pulse */
+  .text-effect-glow-pulse {
+    animation: glowPulse 2s ease-in-out infinite;
+    font-weight: 600;
+  }
+
+  @keyframes glowPulse {
+    0% { 
+      text-shadow: 0 0 10px hsl(var(--secondary) / 0.5);
+    }
+    50% { 
+      text-shadow: 0 0 20px hsl(var(--secondary) / 0.8), 
+                   0 0 30px hsl(var(--secondary) / 0.6);
+    }
+    100% { 
+      text-shadow: 0 0 10px hsl(var(--secondary) / 0.5);
+    }
+  }
+
+  /* Typewriter */
+  .text-effect-typewriter {
+    overflow: hidden;
+    border-right: 0.15em solid hsl(var(--primary));
+    white-space: nowrap;
+    animation: 
+      typing 3.5s steps(40, end),
+      blink-caret 0.75s step-end infinite;
+    display: inline-block;
+  }
+
+  @keyframes typing {
+    from { max-width: 0; }
+    to { max-width: 100%; }
+  }
+
+  @keyframes blink-caret {
+    from, to { border-color: transparent; }
+    50% { border-color: hsl(var(--primary)); }
+  }
+
+  /* Highlight Sweep */
+  .text-effect-highlight-sweep {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+  }
+
+  .text-effect-highlight-sweep::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: hsl(var(--secondary) / 0.3);
+    animation: sweep 3s infinite;
+  }
+
+  @keyframes sweep {
+    0% { left: -100%; }
+    50% { left: 0; }
+    100% { left: 100%; }
+  }
+
+  /* 3D Float */
+  .text-effect-float-3d {
+    animation: float3d 3s ease-in-out infinite;
+    display: inline-block;
+    transform-style: preserve-3d;
+  }
+
+  @keyframes float3d {
+    0%, 100% { 
+      transform: translateY(0px) rotateX(0deg);
+      text-shadow: 0 2px 4px hsl(var(--foreground) / 0.2);
+    }
+    50% { 
+      transform: translateY(-10px) rotateX(5deg);
+      text-shadow: 0 10px 20px hsl(var(--foreground) / 0.3);
+    }
+  }
+
+  /* Bounce */
+  .text-effect-bounce {
+    animation: bounce 2s ease-in-out infinite;
+    display: inline-block;
+  }
+
+  @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-10px);
+    }
+    60% {
+      transform: translateY(-5px);
+    }
+  }
+
+  /* Scale Pulse */
+  .text-effect-scale-pulse {
+    animation: scalePulse 2s ease-in-out infinite;
+    display: inline-block;
+  }
+
+  @keyframes scalePulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  /* Shimmer */
+  .text-effect-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--foreground)) 0%,
+      hsl(var(--primary)) 50%,
+      hsl(var(--foreground)) 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s linear infinite;
+  }
+
+  @keyframes shimmer {
+    to {
+      background-position: 200% center;
+    }
+  }
 }
