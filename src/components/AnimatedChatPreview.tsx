@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Bot, User } from "lucide-react";
+import { User } from "lucide-react";
+import aiChatIcon from "@/assets/ai-chat-icon.png";
 
 const conversationSteps = [
   { type: "ai", message: "What industry are you in?" },
@@ -179,9 +180,9 @@ export function AnimatedChatPreview() {
         >
           {/* Header */}
           <div className="flex items-center gap-3 pb-4 border-b border-border/50">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <Bot className="w-5 h-5 text-primary-foreground" />
-            </div>
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center overflow-hidden">
+            <img src={aiChatIcon} alt="AI" className="w-6 h-6 object-contain" />
+          </div>
             <div>
               <div className="font-semibold text-foreground">AI Consultant</div>
               <div className="text-xs text-muted-foreground">Building your strategy...</div>
@@ -212,19 +213,19 @@ export function AnimatedChatPreview() {
                   }}
                 >
                   {!isSpecial && (
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        step.type === "ai"
-                          ? "bg-primary/10 text-primary"
-                          : "bg-[#1e293b] text-white"
-                      }`}
-                    >
-                      {step.type === "ai" ? (
-                        <Bot className="w-4 h-4" />
-                      ) : (
-                        <User className="w-4 h-4" />
-                      )}
-                    </div>
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      step.type === "ai"
+                        ? "bg-primary/10 text-primary overflow-hidden"
+                        : "bg-[#1e293b] text-white"
+                    }`}
+                  >
+                    {step.type === "ai" ? (
+                      <img src={aiChatIcon} alt="AI" className="w-5 h-5 object-contain" />
+                    ) : (
+                      <User className="w-4 h-4" />
+                    )}
+                  </div>
                   )}
                   <div
                     className={`rounded-xl px-4 py-2 ${
@@ -268,8 +269,8 @@ export function AnimatedChatPreview() {
             {/* Typing indicator */}
             {isTyping && visibleMessages < conversationSteps.length && (
               <div className="flex gap-3 animate-fade-in">
-                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <img src={aiChatIcon} alt="AI" className="w-5 h-5 object-contain" />
                 </div>
                 <div className="bg-muted rounded-xl px-4 py-3">
                   <div className="flex gap-1">
