@@ -3,6 +3,14 @@ import { ImagePicker } from "@/components/editor/ImagePicker";
 import { useState } from "react";
 import { ImagePlus } from "lucide-react";
 
+interface CitedStat {
+  statistic: string;
+  claim: string;
+  source: string;
+  year: number;
+  fullCitation: string;
+}
+
 interface HeroSectionProps {
   content: {
     headline: string;
@@ -18,6 +26,7 @@ interface HeroSectionProps {
       badge?: string;
       urgency?: string;
     };
+    citedStat?: CitedStat;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -81,7 +90,21 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           </div>
         )}
         
-        <h1 
+        {content.citedStat && (
+          <div className="inline-block bg-card/80 backdrop-blur-sm border border-border rounded-lg p-4 mb-4">
+            <div className="text-4xl font-bold text-primary mb-1">
+              {content.citedStat.statistic}
+            </div>
+            <div className="text-sm text-muted-foreground mb-2">
+              {content.citedStat.claim}
+            </div>
+            <cite className="text-xs text-muted-foreground/70 not-italic">
+              Source: {content.citedStat.fullCitation}
+            </cite>
+          </div>
+        )}
+        
+        <h1
           className={`text-5xl font-bold leading-tight ${
             isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
           }`}

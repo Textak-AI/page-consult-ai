@@ -102,6 +102,33 @@ export async function generateSocialProof(data: ConsultationData) {
   };
 }
 
+// New function to fetch strategic market research
+export async function fetchStrategicInsights(data: ConsultationData) {
+  try {
+    const location = extractLocation(data.target_audience);
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    const { data: result, error } = await supabase.functions.invoke('perplexity-research', {
+      body: {
+        service: data.service_type || data.industry,
+        location,
+        industry: data.industry,
+        concerns: data.challenge,
+      }
+    });
+    
+    if (error || !result?.success) {
+      console.log('No cited market data available, using fallback');
+      return null;
+    }
+    
+    return result.strategicPlacements;
+  } catch (error) {
+    console.error('Error fetching strategic insights:', error);
+    return null;
+  }
+}
+
 export function generateCTA(data: ConsultationData) {
   const template = getIndustryTemplate(data.industry);
   

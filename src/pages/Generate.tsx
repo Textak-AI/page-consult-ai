@@ -175,6 +175,7 @@ export default function Generate() {
       generateCTA,
       generateFOMO,
       validateContent,
+      fetchStrategicInsights,
     } = await import('@/lib/contentGenerator');
 
     const headline = genHeadline(consultationData);
@@ -183,6 +184,9 @@ export default function Generate() {
     const socialProof = await genSocialProof(consultationData); // Now async
     const cta = generateCTA(consultationData);
     const fomo = generateFOMO(consultationData);
+    
+    // Fetch strategic market insights with citations
+    const strategicInsights = await fetchStrategicInsights(consultationData);
 
     // Validate generated content
     if (!validateContent(headline, features, consultationData.challenge, consultationData.unique_value)) {
@@ -200,6 +204,7 @@ export default function Generate() {
           ctaText: cta.text,
           ctaLink: cta.link,
           fomo,
+          citedStat: strategicInsights?.hero,
         },
       },
       {
@@ -209,6 +214,8 @@ export default function Generate() {
         content: {
           problem: transformProblemStatement(consultationData.challenge),
           solution: transformSolutionStatement(consultationData.unique_value, consultationData.industry),
+          problemStat: strategicInsights?.problem,
+          solutionStat: strategicInsights?.solution,
         },
       },
     ];

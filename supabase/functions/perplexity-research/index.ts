@@ -12,49 +12,91 @@ interface ResearchRequest {
   concerns?: string;
 }
 
+interface CitedClaim {
+  statistic: string;
+  claim: string;
+  source: string;
+  year: number;
+  fullCitation: string;
+  context: 'hero' | 'problem' | 'solution' | 'general';
+}
+
 interface MarketInsights {
-  statistics: string[];
-  keyPoints: string[];
+  claims: CitedClaim[];
   fullText: string;
-  structuredData: {
-    costOfDelay?: string;
-    roi?: string;
-    marketSize?: string;
-    failureRate?: string;
-    propertyValue?: string;
-  };
 }
 
 function parseMarketData(text: string): MarketInsights {
-  // Extract statistics, percentages, and dollar amounts
-  const stats = text.match(/\d+(?:\.\d+)?%|\$[\d,]+(?:\.\d+)?[KMB]?|\d+(?:,\d{3})*(?:\.\d+)?/g) || [];
+  const claims: CitedClaim[] = [];
+  const currentYear = new Date().getFullYear();
   
-  // Extract bullet points
-  const lines = text.split('\n');
-  const bulletPoints = lines
-    .filter(line => line.trim().startsWith('•') || line.trim().startsWith('-') || line.trim().match(/^\d+\./))
-    .map(line => line.trim());
+  // Split into sentences
+  const sentences = text.split(/[.!?]+\s+/);
   
-  // Try to extract structured data
-  const structuredData: MarketInsights['structuredData'] = {};
-  
-  // Look for cost patterns
-  const costMatch = text.match(/(?:cost|delay|repair).*?\$?([\d,]+(?:\.\d+)?[KMB]?)/i);
-  if (costMatch) structuredData.costOfDelay = costMatch[1];
-  
-  // Look for ROI/property value
-  const roiMatch = text.match(/(?:ROI|property value|adds).*?\$?([\d,]+(?:\.\d+)?[KMB]?)/i);
-  if (roiMatch) structuredData.propertyValue = roiMatch[1];
-  
-  // Look for failure rates
-  const failureMatch = text.match(/(\d+(?:\.\d+)?)%.*?(?:fail|crack|problem)/i);
-  if (failureMatch) structuredData.failureRate = failureMatch[1] + '%';
+  for (const sentence of sentences) {
+    // Match patterns like "According to [Source] (Year), [claim]"
+    // or "[Claim] - [Source], Year" or similar variations
+    const patterns = [
+      /according to ([^(,]+)(?:\s*\((\d{4})\)|,\s*(\d{4}))[,:]?\s*(.+)/i,
+      /([^-]+)\s*-\s*([^,]+),?\s*(\d{4})/i,
+      /([\d.]+%|[\d,]+|[\$][\d,]+(?:[KMB])?)[^(]*\(([^,)]+),?\s*(\d{4})\)/i,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = sentence.match(pattern);
+      if (match) {
+        let source, year, claim, statistic;
+        
+        if (pattern.source.includes('according to')) {
+          source = match[1].trim();
+          year = parseInt(match[2] || match[3]);
+          claim = match[4].trim();
+          statistic = claim.match(/\d+(?:\.\d+)?%|\$[\d,]+[KMB]?|\d+(?:,\d{3})*(?:\.\d+)?x?/)?.[0] || '';
+        } else if (pattern.source.includes('-')) {
+          claim = match[1].trim();
+          source = match[2].trim();
+          year = parseInt(match[3]);
+          statistic = claim.match(/\d+(?:\.\d+)?%|\$[\d,]+[KMB]?|\d+(?:,\d{3})*(?:\.\d+)?x?/)?.[0] || '';
+        } else {
+          statistic = match[1].trim();
+          source = match[2].trim();
+          year = parseInt(match[3]);
+          claim = sentence.trim();
+        }
+        
+        // Only include recent sources (2023+)
+        if (year >= 2023 && year <= currentYear) {
+          // Determine context based on keywords
+          let context: CitedClaim['context'] = 'general';
+          const lowerClaim = claim.toLowerCase();
+          
+          if (lowerClaim.includes('never') || lowerClaim.includes('leave') || lowerClaim.includes('abandon')) {
+            context = 'hero';
+          } else if (lowerClaim.includes('cost') || lowerClaim.includes('loss') || lowerClaim.includes('lose') || lowerClaim.includes('problem')) {
+            context = 'problem';
+          } else if (lowerClaim.includes('roi') || lowerClaim.includes('increase') || lowerClaim.includes('improve') || lowerClaim.includes('conversion')) {
+            context = 'solution';
+          }
+          
+          claims.push({
+            statistic: statistic || claim.match(/\d+(?:\.\d+)?%|\$[\d,]+[KMB]?/)?.[0] || '',
+            claim: claim.trim(),
+            source: source.trim(),
+            year,
+            fullCitation: `${source.trim()}, ${year}`,
+            context,
+          });
+        }
+        break;
+      }
+    }
+  }
   
   return {
-    statistics: stats,
-    keyPoints: bulletPoints,
-    fullText: text,
-    structuredData
+    claims: claims.filter((claim, index, self) => 
+      index === self.findIndex(c => c.statistic === claim.statistic && c.source === claim.source)
+    ),
+    fullText: text
   };
 }
 
@@ -76,16 +118,23 @@ serve(async (req) => {
     const currentYear = new Date().getFullYear();
     const locationContext = location ? `in ${location}` : '';
     
-    // Build comprehensive query
-    const query = `Provide specific, current statistics and data points for ${service} businesses ${locationContext}. 
-Focus on providing actual numbers for:
-1. Average cost to homeowners when delaying or avoiding professional ${service} (specific dollar amounts)
-2. Percentage of DIY or poor quality ${service} that fails or needs repair within 5 years
-3. Property value increase or ROI from professional ${service} (dollar amounts per sq ft or percentage)
-4. ${location ? `Local market size and demand for ${service} in ${location}` : `Market size for ${service}`}
-5. Common pain points and problems that occur without professional service
+    // Build comprehensive query with citation requirements
+    const query = `Find specific statistics with sources about ${service} businesses ${locationContext}. 
 
-Please provide specific numbers, percentages, and dollar amounts. Focus on ${currentYear} data when available.`;
+CRITICAL REQUIREMENTS:
+- Every statistic MUST include: source name, year (2023-${currentYear}), and the claim
+- Format: "According to [Source Name] (Year), [specific claim with numbers]"
+- Only use reputable sources: Gartner, Forrester, McKinsey, HubSpot, industry reports, academic studies
+- Include specific percentages, dollar amounts, and multipliers (e.g., "3.2x")
+
+Find data for these specific angles:
+1. ABANDONMENT/FRICTION: What % of potential customers leave or never return? (For hero impact)
+2. COST OF INACTION: How much money/time do businesses lose without this solution? (For problem section)
+3. ROI/IMPROVEMENT: What conversion rate increase, revenue growth, or efficiency gain does the solution provide? (For solution section)
+4. ${location ? `MARKET DEMAND: Local market size and demand for ${service} in ${location}` : `Market size for ${service} industry`}
+
+Example format: "According to HubSpot (2024), 73% of website visitors never return after leaving a site."`;
+
 
     console.log('Calling Perplexity API with query:', query);
 
@@ -120,10 +169,21 @@ Please provide specific numbers, percentages, and dollar amounts. Focus on ${cur
     const insights = data.choices[0].message.content;
     const parsedData = parseMarketData(insights);
 
+    // Separate claims by context for strategic placement
+    const heroClaim = parsedData.claims.find(c => c.context === 'hero');
+    const problemClaim = parsedData.claims.find(c => c.context === 'problem');
+    const solutionClaim = parsedData.claims.find(c => c.context === 'solution');
+    
     return new Response(
       JSON.stringify({
         success: true,
         insights: parsedData,
+        strategicPlacements: {
+          hero: heroClaim || parsedData.claims[0],
+          problem: problemClaim || parsedData.claims[1],
+          solution: solutionClaim || parsedData.claims[2],
+        },
+        allClaims: parsedData.claims,
         raw: insights
       }),
       {

@@ -1,9 +1,19 @@
 import { AlertCircle, CheckCircle } from "lucide-react";
 
+interface CitedStat {
+  statistic: string;
+  claim: string;
+  source: string;
+  year: number;
+  fullCitation: string;
+}
+
 interface ProblemSolutionSectionProps {
   content: {
     problem: string;
     solution: string;
+    problemStat?: CitedStat;
+    solutionStat?: CitedStat;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -39,6 +49,20 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
             >
               {content.problem}
             </p>
+            
+            {content.problemStat && (
+              <div className="mt-4 p-4 bg-destructive/5 border border-destructive/20 rounded-lg">
+                <div className="text-2xl font-bold text-destructive mb-1">
+                  {content.problemStat.statistic}
+                </div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  {content.problemStat.claim}
+                </p>
+                <cite className="text-xs text-muted-foreground/70 not-italic block">
+                  Source: {content.problemStat.fullCitation}
+                </cite>
+              </div>
+            )}
           </div>
 
           <div className="space-y-4 p-6 rounded-lg border bg-card">
@@ -56,6 +80,20 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
             >
               {content.solution}
             </p>
+            
+            {content.solutionStat && (
+              <div className="mt-4 p-4 bg-secondary/5 border border-secondary/20 rounded-lg">
+                <div className="text-2xl font-bold text-secondary mb-1">
+                  {content.solutionStat.statistic}
+                </div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  {content.solutionStat.claim}
+                </p>
+                <cite className="text-xs text-muted-foreground/70 not-italic block">
+                  Source: {content.solutionStat.fullCitation}
+                </cite>
+              </div>
+            )}
           </div>
         </div>
       </div>
