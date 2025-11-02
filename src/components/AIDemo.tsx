@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Bot, User, Send } from "lucide-react";
+import { Link } from "react-router-dom";
 
 type Message = {
   role: "ai" | "user";
@@ -216,8 +217,10 @@ const AIDemo = () => {
 
             {step === "summary" && (
               <div className="pt-4 animate-fade-in">
-                <Button variant="hero" size="lg" className="w-full text-base">
-                  Sign Up to Build Your Page
+                <Button asChild variant="hero" size="lg" className="w-full text-base">
+                  <Link to="/wizard">
+                    Sign Up to Build Your Page
+                  </Link>
                 </Button>
                 <p className="text-center text-sm text-muted-foreground mt-3">
                   Full consultation takes 7 more minutes
