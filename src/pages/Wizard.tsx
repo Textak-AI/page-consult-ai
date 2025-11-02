@@ -107,33 +107,49 @@ export default function Wizard() {
       .limit(1)
       .maybeSingle();
     
-    if (existingConsultation) {
-      // Resume existing consultation
-      setConsultationId(existingConsultation.id);
-      
-      // Update with demo data if available and not already set
-      if (hasPrefilledData) {
-        const updates: any = {};
-        if (demoIndustry && !existingConsultation.industry) updates.industry = demoIndustry;
-        if (demoGoal && !existingConsultation.goal) updates.goal = demoGoal;
-        if (demoAudience && demoAudience !== "." && !existingConsultation.target_audience) {
-          updates.target_audience = demoAudience;
-        }
+    // If coming from demo, start fresh instead of resuming
+    if (existingConsultation && hasPrefilledData) {
+      // Mark old consultation as abandoned
+      await supabase
+        .from("consultations")
+        .update({ status: "abandoned" })
+        .eq("id", existingConsultation.id);
         
-        if (Object.keys(updates).length > 0) {
-          await supabase
-            .from("consultations")
-            .update(updates)
-            .eq("id", existingConsultation.id);
-            
-          // Update local state with demo data
-          if (updates.industry) setSelectedIndustry(mapDemoIndustryToType(updates.industry));
-          if (updates.goal) setSelectedGoal(mapDemoGoalToType(updates.goal));
-          if (updates.target_audience) setTargetAudience(updates.target_audience);
-        }
+      // Create new consultation with demo data
+      const { data: newConsultation, error } = await supabase
+        .from("consultations")
+        .insert({ 
+          user_id: session.user.id,
+          industry: demoIndustry,
+          goal: demoGoal,
+          ...(demoAudience && demoAudience !== "." ? { target_audience: demoAudience } : {})
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to start consultation. Please try again.",
+          variant: "destructive"
+        });
+        return;
       }
       
-      // Load existing answers and determine where to resume
+      setConsultationId(newConsultation.id);
+      setSelectedIndustry(mapDemoIndustryToType(demoIndustry));
+      setSelectedGoal(mapDemoGoalToType(demoGoal));
+      if (demoAudience && demoAudience !== ".") {
+        setTargetAudience(demoAudience);
+        setStep(4); // Skip to challenge question
+      } else {
+        setStep(3); // Ask for target audience
+      }
+    } else if (existingConsultation) {
+      // Resume existing consultation (no demo data)
+      setConsultationId(existingConsultation.id);
+      
+      // Load existing answers
       if (existingConsultation.industry) {
         setSelectedIndustry(mapDemoIndustryToType(existingConsultation.industry));
       }
@@ -158,8 +174,8 @@ export default function Wizard() {
       
       // Determine next step based on what's been answered
       let nextStep = 1;
-      if (existingConsultation.industry || (hasPrefilledData && demoIndustry)) nextStep = 2;
-      if (existingConsultation.goal || (hasPrefilledData && demoGoal)) nextStep = 3;
+      if (existingConsultation.industry) nextStep = 2;
+      if (existingConsultation.goal) nextStep = 3;
       if (existingConsultation.target_audience) nextStep = 4;
       if (existingConsultation.challenge) nextStep = 5;
       if (existingConsultation.unique_value) nextStep = 6;
@@ -199,13 +215,33 @@ export default function Wizard() {
     
     setLoading(false);
     
-    // Show appropriate initial message based on current step
-    if (existingConsultation) {
-      // Resuming - show message based on where we are
+    // Show appropriate initial message based on the step
+    if (hasPrefilledData) {
+      // Coming from demo - show contextual message
+      const audienceText = demoAudience && demoAudience !== "." 
+        ? `• Target Audience: ${demoAudience}\n\n` 
+        : "";
+      
+      addAIMessage(
+        `Perfect! Based on our demo chat, here's what I understand:\n\n` +
+        `• Industry: ${demoIndustry}\n` +
+        `• Goal: ${demoGoal}\n` +
+        audienceText +
+        `Great start! Let me ask ${audienceText ? "3" : "4"} more quick questions.\n\n` +
+        (audienceText 
+          ? `What's the biggest challenge or frustration ${demoAudience} face that you solve?\n\n(Be specific - this becomes your compelling headline)`
+          : `Who exactly are your ideal clients? Be specific about their role, situation, or what they're looking for.`)
+      );
+    } else if (step === 1) {
+      // Starting fresh or resuming from beginning
+      addAIMessage(
+        "Hey! I'm excited to help you build a landing page that converts.\n\n" +
+        "Before we jump into design, let's have a quick strategy chat—this ensures we build exactly what your business needs.\n\n" +
+        "First up: What industry are you in?"
+      );
+    } else {
+      // Resuming mid-consultation - show appropriate message for current step
       const stepMessages: Record<number, string> = {
-        1: "Hey! I'm excited to help you build a landing page that converts.\n\n" +
-           "Before we jump into design, let's have a quick strategy chat—this ensures we build exactly what your business needs.\n\n" +
-           "First up: What industry are you in?",
         2: "What's your main goal for this landing page?",
         3: "Who exactly are you trying to reach?\n\nBe specific—their role, company type, or situation. The clearer you are, the better I can help.",
         4: `What's the biggest problem or challenge your audience faces that your solution solves?\n\n(This becomes your compelling headline)`,
@@ -218,35 +254,6 @@ export default function Wizard() {
       if (stepMessages[step]) {
         addAIMessage(stepMessages[step], 300);
       }
-    } else if (hasPrefilledData) {
-      const audienceText = demoAudience && demoAudience !== "." 
-        ? `• Target Audience: ${demoAudience}\n\n` 
-        : "";
-      
-      const industryContext = demoIndustry?.toLowerCase().includes("professional") 
-        ? "your ideal clients"
-        : demoIndustry?.toLowerCase().includes("saas")
-        ? "your target users"
-        : demoIndustry?.toLowerCase().includes("ecommerce")
-        ? "your ideal customers"
-        : "your target audience";
-      
-      addAIMessage(
-        `Perfect! Based on our demo chat, here's what I understand:\n\n` +
-        `• Industry: ${demoIndustry}\n` +
-        `• Goal: ${demoGoal}\n` +
-        audienceText +
-        `Great start! ${audienceText ? "Let me ask 3 more quick questions." : `Let me ask 4 more quick questions starting with:`}\n\n` +
-        (audienceText 
-          ? `What's the biggest challenge or frustration ${demoAudience} face that you solve?\n\n(Be specific - this becomes your compelling headline)`
-          : `Who exactly are ${industryContext}? Be specific about their role, situation, or what they're looking for.`)
-      );
-    } else {
-      addAIMessage(
-        "Hey! I'm excited to help you build a landing page that converts.\n\n" +
-        "Before we jump into design, let's have a quick strategy chat—this ensures we build exactly what your business needs.\n\n" +
-        "First up: What industry are you in?"
-      );
     }
   };
 
