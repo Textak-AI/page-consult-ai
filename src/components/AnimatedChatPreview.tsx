@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { User } from "lucide-react";
 import aiChatIcon from "@/assets/ai-chat-icon.png";
+import aiChatIconInChat from "@/assets/ai-chat-icon-inchat.png";
 
 const conversationSteps = [
   { type: "ai", message: "What industry are you in?" },
@@ -221,7 +222,7 @@ export function AnimatedChatPreview() {
                     }`}
                   >
                     {step.type === "ai" ? (
-                      <img src={aiChatIcon} alt="AI" className="w-5 h-5 object-contain" />
+                      <img src={aiChatIconInChat} alt="AI" className="w-5 h-5 object-contain" />
                     ) : (
                       <User className="w-4 h-4" />
                     )}
@@ -270,7 +271,7 @@ export function AnimatedChatPreview() {
             {isTyping && visibleMessages < conversationSteps.length && (
               <div className="flex gap-3 animate-fade-in">
                 <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 overflow-hidden">
-                  <img src={aiChatIcon} alt="AI" className="w-5 h-5 object-contain" />
+                  <img src={aiChatIconInChat} alt="AI" className="w-5 h-5 object-contain" />
                 </div>
                 <div className="bg-muted rounded-xl px-4 py-3">
                   <div className="flex gap-1">
