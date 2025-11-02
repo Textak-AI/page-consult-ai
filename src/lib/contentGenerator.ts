@@ -1,5 +1,11 @@
 import { getIndustryTemplate } from './contentTemplates';
 import { getIndustryInsights, hasWeakCredentials, extractLocation } from './industryInsights';
+import { 
+  transformChallenge, 
+  transformUniqueValue, 
+  transformOffer,
+  generateIndustryFeatures 
+} from './contentTransformer';
 
 export interface ConsultationData {
   industry?: string;
@@ -14,59 +20,29 @@ export interface ConsultationData {
 }
 
 export function generateHeadline(data: ConsultationData): string {
-  const template = getIndustryTemplate(data.industry);
-  
-  // Extract location from target audience if present
-  const audience = data.target_audience || 'businesses';
-  const locationMatch = audience.match(/in\s+([A-Z][a-zA-Z\s]+)/);
-  const location = locationMatch ? locationMatch[1].trim() : undefined;
-  
-  // Use service_type if available, otherwise use challenge or industry
-  const service = data.service_type || data.challenge?.split('.')[0] || data.industry || 'Services';
-  
-  // Clean up the service name
-  const cleanService = service
-    .replace(/^(What|How|Why)\s+/i, '')
-    .replace(/\?$/, '')
-    .trim();
-  
-  return template.heroPattern(cleanService, audience, location);
+  // Use intelligent transformation instead of templates
+  return transformChallenge(
+    data.challenge || '', 
+    data.industry || 'Professional Services',
+    data.target_audience
+  );
 }
 
 export function generateSubheadline(data: ConsultationData): string {
-  const template = getIndustryTemplate(data.industry);
-  const value = data.unique_value || 'Quality service you can trust';
-  return template.subheadlinePattern(value);
+  // Transform unique value into compelling subheadline
+  return transformUniqueValue(
+    data.unique_value || '',
+    data.industry || 'Professional Services'
+  );
 }
 
 export function generateFeatures(data: ConsultationData) {
-  const template = getIndustryTemplate(data.industry);
-  
-  // Use template features but customize titles based on unique_value if available
-  const features = [...template.features];
-  
-  // If unique_value has specific points, try to incorporate them
-  if (data.unique_value) {
-    const valuePoints = data.unique_value
-      .split(/[.!?]+/)
-      .filter(s => s.trim() && s.length > 10)
-      .slice(0, 3);
-    
-    // Replace first few features with custom ones if we have specific value points
-    valuePoints.forEach((point, i) => {
-      if (i < features.length && point.length < 100) {
-        const words = point.trim().split(' ');
-        const title = words.slice(0, 4).join(' ');
-        features[i] = {
-          ...features[i],
-          title: title,
-          description: point.trim() + '. ' + features[i].description.split('.').slice(1).join('.'),
-        };
-      }
-    });
-  }
-  
-  return features;
+  // Generate industry-specific features with intelligent extraction from unique value
+  return generateIndustryFeatures(
+    data.industry || 'Professional Services',
+    data.unique_value,
+    data.challenge
+  );
 }
 
 export async function generateSocialProof(data: ConsultationData) {
@@ -130,7 +106,7 @@ export function generateCTA(data: ConsultationData) {
   const template = getIndustryTemplate(data.industry);
   
   return {
-    text: data.offer || template.ctaText,
+    text: transformOffer(data.offer || '', data.industry || 'Professional Services'),
     urgency: template.urgencyText,
     link: '#signup',
   };

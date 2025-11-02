@@ -11,6 +11,43 @@ import { AIConsultantSidebar } from "@/components/editor/AIConsultantSidebar";
 import { StylePicker } from "@/components/editor/StylePicker";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
 
+// Helper functions for transforming problem/solution statements
+function transformProblemStatement(challenge?: string): string {
+  if (!challenge) return "Are you struggling to achieve your business goals?";
+  
+  // Transform raw challenge into a compelling problem statement
+  const cleaned = challenge
+    .replace(/^they\s+/i, 'Are you ')
+    .replace(/^customers?\s+/i, 'Do you ')
+    .replace(/don't have/i, 'struggling to find')
+    .replace(/can't/i, 'unable to')
+    .replace(/lack/i, 'missing')
+    .trim();
+  
+  // Make it a question if it isn't already
+  if (!cleaned.endsWith('?')) {
+    return `${cleaned}?`;
+  }
+  
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
+
+function transformSolutionStatement(uniqueValue?: string, industry?: string): string {
+  if (!uniqueValue) {
+    return "We provide professional solutions designed to solve your specific challenges and deliver measurable results.";
+  }
+  
+  // Transform into a clear solution statement
+  const cleaned = uniqueValue
+    .replace(/^(we|our)\s+/i, 'Our ')
+    .replace(/^have\s+/i, '')
+    .replace(/^a\s+/i, '')
+    .trim();
+  
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1) + 
+    '. Proven results you can measure, backed by expert support every step of the way.';
+}
+
 type Phase = "loading" | "building" | "editor";
 type Section = {
   type: string;
@@ -170,8 +207,8 @@ export default function Generate() {
         order: 1,
         visible: true,
         content: {
-          problem: consultationData.challenge || 'Facing challenges in your business?',
-          solution: consultationData.unique_value || 'We provide professional solutions tailored to your needs.',
+          problem: transformProblemStatement(consultationData.challenge),
+          solution: transformSolutionStatement(consultationData.unique_value, consultationData.industry),
         },
       },
     ];
