@@ -1,4 +1,7 @@
 import { Button } from "@/components/ui/button";
+import { ImagePicker } from "@/components/editor/ImagePicker";
+import { useState } from "react";
+import { ImagePlus } from "lucide-react";
 
 interface HeroSectionProps {
   content: {
@@ -6,6 +9,11 @@ interface HeroSectionProps {
     subheadline: string;
     ctaText: string;
     ctaLink: string;
+    backgroundImage?: string;
+    imageAttribution?: {
+      photographerName: string;
+      photographerLink: string;
+    };
     fomo?: {
       badge?: string;
       urgency?: string;
@@ -16,6 +24,8 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) {
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
+
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
       ...content,
@@ -23,14 +33,46 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
     });
   };
 
+  const handleImageSelect = (image: any) => {
+    onUpdate({
+      ...content,
+      backgroundImage: image.urls.regular,
+      imageAttribution: {
+        photographerName: image.user.name,
+        photographerLink: image.user.link,
+      },
+    });
+  };
+
+  const backgroundStyle = content.backgroundImage
+    ? {
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${content.backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }
+    : {};
+
   return (
     <section 
-      className={`py-20 px-4 bg-gradient-to-br from-primary/10 via-background to-secondary/10 ${
-        isEditing ? "relative" : ""
-      }`}
+      className={`py-20 px-4 ${
+        content.backgroundImage 
+          ? 'text-white' 
+          : 'bg-gradient-to-br from-primary/10 via-background to-secondary/10'
+      } ${isEditing ? "relative" : ""}`}
+      style={backgroundStyle}
     >
       {isEditing && (
-        <div className="absolute inset-0 border-2 border-primary/50 rounded-lg pointer-events-none" />
+        <>
+          <div className="absolute inset-0 border-2 border-primary/50 rounded-lg pointer-events-none" />
+          <Button
+            className="absolute top-4 right-4 z-10"
+            size="sm"
+            onClick={() => setImagePickerOpen(true)}
+          >
+            <ImagePlus className="h-4 w-4 mr-2" />
+            {content.backgroundImage ? 'Change' : 'Add'} Background Image
+          </Button>
+        </>
       )}
       <div className="container mx-auto max-w-4xl text-center space-y-6">
         {content.fomo?.badge && (
@@ -82,7 +124,29 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             </p>
           )}
         </div>
+
+        {content.imageAttribution && (
+          <p className="text-xs opacity-70 mt-8">
+            Photo by{' '}
+            <a
+              href={content.imageAttribution.photographerLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              {content.imageAttribution.photographerName}
+            </a>
+            {' '}on Unsplash
+          </p>
+        )}
       </div>
+
+      <ImagePicker
+        open={imagePickerOpen}
+        onClose={() => setImagePickerOpen(false)}
+        onSelect={handleImageSelect}
+        defaultQuery="business professional"
+      />
     </section>
   );
 }

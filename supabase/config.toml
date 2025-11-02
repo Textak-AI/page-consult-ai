@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.ai-consultant]
 verify_jwt = false
+
+[functions.unsplash-search]
+verify_jwt = false
