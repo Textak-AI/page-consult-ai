@@ -60,7 +60,10 @@ const AIDemo = () => {
     setMessages((prev) => [...prev, { role, content }]);
   };
 
-  const handleIndustrySelect = (industry: string) => {
+  const handleIndustrySelect = (e: React.MouseEvent, industry: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     setSelectedIndustry(industry);
     addMessage("user", industry);
     
@@ -73,7 +76,10 @@ const AIDemo = () => {
     }, 800);
   };
 
-  const handleGoalSelect = (goal: string) => {
+  const handleGoalSelect = (e: React.MouseEvent, goal: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     setSelectedGoal(goal);
     addMessage("user", goal);
     
@@ -162,7 +168,7 @@ const AIDemo = () => {
                 {industries.map((industry) => (
                   <button
                     key={industry.title}
-                    onClick={() => handleIndustrySelect(industry.title)}
+                    onClick={(e) => handleIndustrySelect(e, industry.title)}
                     className="bg-card border border-border rounded-xl p-4 text-left hover-lift hover:border-primary transition-all"
                   >
                     <div className="text-2xl mb-2">{industry.icon}</div>
@@ -182,7 +188,7 @@ const AIDemo = () => {
                 {goals.map((goal) => (
                   <button
                     key={goal.title}
-                    onClick={() => handleGoalSelect(goal.title)}
+                    onClick={(e) => handleGoalSelect(e, goal.title)}
                     className="bg-card border border-border rounded-xl p-4 text-left hover-lift hover:border-primary transition-all"
                   >
                     <div className="flex items-center gap-3">
