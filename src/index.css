@@ -129,7 +129,12 @@ All colors MUST be HSL.
   }
   
   .hover-lift {
-    @apply transition-all duration-300 ease-[cubic-bezier(0.4,0.0,0.2,1)] hover:-translate-y-1 hover:shadow-lg;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px hsl(220 16% 16% / 0.1);
   }
   
   .animate-in {
