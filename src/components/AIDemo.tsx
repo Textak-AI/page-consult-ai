@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Bot, User, Send } from "lucide-react";
@@ -36,6 +36,7 @@ const goals: GoalOption[] = [
 ];
 
 const AIDemo = () => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
@@ -47,6 +48,13 @@ const AIDemo = () => {
   const [selectedGoal, setSelectedGoal] = useState<string>("");
   const [audienceInput, setAudienceInput] = useState("");
   const [submittedAudience, setSubmittedAudience] = useState("");
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  }, [messages]);
 
   const addMessage = (role: "ai" | "user", content: string) => {
     setMessages((prev) => [...prev, { role, content }]);
@@ -116,7 +124,7 @@ const AIDemo = () => {
             </span>
           </div>
 
-          <div className="p-6 space-y-4 max-h-[520px] overflow-y-auto">
+          <div className="p-6 space-y-4 max-h-[520px] overflow-y-auto pb-8">
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -237,6 +245,9 @@ const AIDemo = () => {
                 </p>
               </div>
             )}
+            
+            {/* Scroll anchor */}
+            <div ref={messagesEndRef} />
           </div>
         </div>
       </div>
