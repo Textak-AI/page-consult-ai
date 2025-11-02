@@ -134,6 +134,10 @@ export default function Generate() {
           subheadline: consultationData.unique_value,
           ctaText: consultationData.offer || "Get Started",
           ctaLink: "#signup",
+          fomo: {
+            badge: "🔥 127 people viewed this in the last hour",
+            urgency: "Limited spots available - 23 left this month",
+          },
         },
       },
       {
@@ -171,9 +175,14 @@ export default function Generate() {
         visible: true,
         content: {
           stats: [
-            { label: "Happy Clients", value: "500+" },
-            { label: "Success Rate", value: "95%" },
-            { label: "Hours Saved", value: "10k+" },
+            { label: "Active Users Today", value: "2,847" },
+            { label: "Avg. ROI Increase", value: "340%" },
+            { label: "Customer Retention", value: "98.2%" },
+          ],
+          recentActivity: [
+            { name: "Sarah M.", action: "signed up", time: "2 minutes ago", location: "San Francisco" },
+            { name: "James K.", action: "upgraded", time: "5 minutes ago", location: "New York" },
+            { name: "Lisa T.", action: "joined", time: "8 minutes ago", location: "Austin" },
           ],
         },
       },

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,22 +36,52 @@ const goals = [
 
 export default function Wizard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [consultationId, setConsultationId] = useState<string | null>(null);
   
-  const [step, setStep] = useState(1);
+  // Check for pre-filled data from demo
+  const demoIndustry = searchParams.get("industry");
+  const demoGoal = searchParams.get("goal");
+  const demoAudience = searchParams.get("audience");
+  const hasPrefilledData = !!(demoIndustry && demoGoal && demoAudience);
+  
+  const [step, setStep] = useState(hasPrefilledData ? 4 : 1); // Skip to question 4 if we have demo data
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   
-  const [selectedIndustry, setSelectedIndustry] = useState<IndustryType | null>(null);
+  const [selectedIndustry, setSelectedIndustry] = useState<IndustryType | null>(
+    demoIndustry ? mapDemoIndustryToType(demoIndustry) : null
+  );
   const [customIndustry, setCustomIndustry] = useState("");
-  const [selectedGoal, setSelectedGoal] = useState<GoalType | null>(null);
-  const [targetAudience, setTargetAudience] = useState("");
+  const [selectedGoal, setSelectedGoal] = useState<GoalType | null>(
+    demoGoal ? mapDemoGoalToType(demoGoal) : null
+  );
+  const [targetAudience, setTargetAudience] = useState(demoAudience || "");
   const [challenge, setChallenge] = useState("");
   const [uniqueValue, setUniqueValue] = useState("");
   const [offer, setOffer] = useState("");
   const [wantsCalculator, setWantsCalculator] = useState<boolean | null>(null);
+
+  // Helper functions to map demo values to wizard types
+  function mapDemoIndustryToType(industry: string): IndustryType {
+    const map: Record<string, IndustryType> = {
+      "B2B SaaS": "b2b_saas",
+      "E-commerce": "ecommerce",
+      "Professional Services": "professional",
+    };
+    return map[industry] || "other";
+  }
+
+  function mapDemoGoalToType(goal: string): GoalType {
+    const map: Record<string, GoalType> = {
+      "Generate Leads": "leads",
+      "Drive Sales": "sales",
+      "Book Meetings": "meetings",
+    };
+    return map[goal] || "leads";
+  }
 
   useEffect(() => {
     checkAuth();
@@ -98,11 +128,29 @@ export default function Wizard() {
         return;
       }
       
-      setConsultationId(newConsultation.id);
+    setConsultationId(newConsultation.id);
     }
     
     setLoading(false);
-    addAIMessage("Hey! I'm excited to help you build a landing page that converts.\n\nBefore we jump into design, let's have a quick strategy chat—this ensures we build exactly what your business needs.\n\nFirst up: What industry are you in?");
+    
+    // Show appropriate initial message
+    if (hasPrefilledData) {
+      addAIMessage(
+        `Perfect! Based on our demo chat, here's what I understand:\n\n` +
+        `• Industry: ${demoIndustry}\n` +
+        `• Goal: ${demoGoal}\n` +
+        `• Target Audience: ${demoAudience}\n\n` +
+        `Great start! Now let me ask just 3 more strategic questions to nail this down.\n\n` +
+        `What's the biggest challenge or problem your audience faces that your solution solves?\n\n` +
+        `(This becomes your compelling headline - be specific!)`
+      );
+    } else {
+      addAIMessage(
+        "Hey! I'm excited to help you build a landing page that converts.\n\n" +
+        "Before we jump into design, let's have a quick strategy chat—this ensures we build exactly what your business needs.\n\n" +
+        "First up: What industry are you in?"
+      );
+    }
   };
 
   const addAIMessage = (content: string, delay = 800) => {

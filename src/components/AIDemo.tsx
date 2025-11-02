@@ -217,13 +217,20 @@ const AIDemo = () => {
 
             {step === "summary" && (
               <div className="pt-4 animate-fade-in">
-                <Button asChild variant="hero" size="lg" className="w-full text-base">
-                  <Link to="/wizard">
+                <Button 
+                  asChild 
+                  variant="hero" 
+                  size="lg" 
+                  className="w-full text-base"
+                >
+                  <Link 
+                    to={`/wizard?industry=${encodeURIComponent(selectedIndustry)}&goal=${encodeURIComponent(selectedGoal)}&audience=${encodeURIComponent(audienceInput)}`}
+                  >
                     Sign Up to Build Your Page
                   </Link>
                 </Button>
                 <p className="text-center text-sm text-muted-foreground mt-3">
-                  Full consultation takes 7 more minutes
+                  Just 3 more quick questions to refine your strategy
                 </p>
               </div>
             )}
