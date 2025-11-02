@@ -17,6 +17,8 @@ export function AnimatedChatPreview() {
   const [visibleMessages, setVisibleMessages] = useState<number>(0);
   const [isTyping, setIsTyping] = useState(false);
   const [visibleChecks, setVisibleChecks] = useState<number>(0);
+  const [typedText, setTypedText] = useState<string>("");
+  const [isTypingText, setIsTypingText] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const currentIndexRef = useRef<number>(0);
 
@@ -24,7 +26,7 @@ export function AnimatedChatPreview() {
   useEffect(() => {
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current;
-      // Wait for message to render, then scroll smoothly
+      // Wait for message to render, then scroll smoothly with easing
       setTimeout(() => {
         container.scrollTo({
           top: container.scrollHeight,
@@ -33,6 +35,24 @@ export function AnimatedChatPreview() {
       }, 150);
     }
   }, [visibleMessages, isTyping]);
+
+  // Typing effect for AI messages
+  const typeMessage = (text: string, callback: () => void) => {
+    setIsTypingText(true);
+    setTypedText("");
+    let currentChar = 0;
+    
+    const typeInterval = setInterval(() => {
+      if (currentChar < text.length) {
+        setTypedText(text.substring(0, currentChar + 1));
+        currentChar++;
+      } else {
+        clearInterval(typeInterval);
+        setIsTypingText(false);
+        callback();
+      }
+    }, 35); // 35ms per character for natural typing speed
+  };
 
   useEffect(() => {
     const showNextMessage = () => {
@@ -44,8 +64,9 @@ export function AnimatedChatPreview() {
           currentIndexRef.current = 0;
           setVisibleMessages(0);
           setVisibleChecks(0);
+          setTypedText("");
           showNextMessage();
-        }, 2000);
+        }, 3000);
         return;
       }
 
@@ -56,35 +77,51 @@ export function AnimatedChatPreview() {
         // User messages appear instantly - NO typing indicator
         setVisibleMessages(index + 1);
         currentIndexRef.current++;
-        // Brief pause before AI starts "thinking"
-        setTimeout(showNextMessage, 500);
-      } else if (currentStep.type === "ai" || currentStep.type === "thinking" || currentStep.type === "building") {
-        // AI messages: show typing FIRST, then message
+        // Pause to let user read their answer
+        setTimeout(showNextMessage, 800);
+      } else if (currentStep.type === "thinking" || currentStep.type === "building") {
+        // Thinking/building messages with sequential checkmarks
+        setVisibleMessages(index + 1);
+        
+        // Pause before showing first check
+        setTimeout(() => {
+          setVisibleChecks(0);
+          
+          // Show checks one by one with pauses
+          const showChecks = (checkIndex: number) => {
+            if (checkIndex < currentStep.checks!.length) {
+              setVisibleChecks(checkIndex + 1);
+              // Longer pause for building sequence, shorter for thinking
+              const delay = currentStep.type === "building" ? 800 : 600;
+              setTimeout(() => showChecks(checkIndex + 1), delay);
+            } else {
+              // All checks shown, pause before next message
+              const finalPause = currentStep.type === "building" ? 1000 : 300;
+              setTimeout(() => {
+                currentIndexRef.current++;
+                showNextMessage();
+              }, finalPause);
+            }
+          };
+          
+          showChecks(0);
+        }, 400);
+      } else if (currentStep.type === "ai") {
+        // AI messages: show typing dots, then type out message
         setIsTyping(true);
         
         setTimeout(() => {
           setIsTyping(false);
           
           setTimeout(() => {
-            // NOW show the message
             setVisibleMessages(index + 1);
             
-            // Handle checks for thinking/building
-            if ((currentStep.type === "thinking" || currentStep.type === "building") && currentStep.checks) {
-              setVisibleChecks(0);
-              const checkInterval = setInterval(() => {
-                setVisibleChecks((prev) => {
-                  if (prev >= currentStep.checks!.length) {
-                    clearInterval(checkInterval);
-                    return prev;
-                  }
-                  return prev + 1;
-                });
-              }, 400);
-            }
-            
-            currentIndexRef.current++;
-            setTimeout(showNextMessage, 1500); // Pause before next
+            // Type out the message character by character
+            typeMessage(currentStep.message, () => {
+              currentIndexRef.current++;
+              // Pause to let user read the full message
+              setTimeout(showNextMessage, 1200);
+            });
           }, 200);
         }, 1500);
       }
@@ -106,7 +143,8 @@ export function AnimatedChatPreview() {
           className="flex-1 overflow-y-auto space-y-3" 
           style={{ 
             scrollBehavior: 'smooth',
-            scrollPaddingBottom: '20px'
+            scrollPaddingBottom: '20px',
+            transition: 'scroll 0.5s cubic-bezier(0.4, 0.0, 0.2, 1)'
           }}
         >
           {/* Header */}
@@ -168,7 +206,11 @@ export function AnimatedChatPreview() {
                         : "bg-gradient-to-r from-primary/10 to-secondary/10 text-foreground font-medium px-6 py-3"
                     }`}
                   >
-                    <div>{step.message}</div>
+                    <div>
+                      {step.type === "ai" && isTypingText && index === visibleMessages - 1 
+                        ? typedText 
+                        : step.message}
+                    </div>
                     {isSpecial && step.checks && (
                       <div className="mt-3 space-y-1.5">
                         {step.checks.slice(0, index === visibleMessages - 1 ? visibleChecks : step.checks.length).map((check, checkIndex) => (
