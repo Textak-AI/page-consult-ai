@@ -15,7 +15,7 @@ const stats = [
 
 const SocialProof = () => {
   return (
-    <section className="py-20 px-6 bg-muted/30">
+    <section className="py-24 px-6 bg-muted/30">
       <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-12 animate-fade-in">
           <h2 className="text-4xl font-bold text-foreground mb-4">

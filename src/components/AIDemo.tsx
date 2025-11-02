@@ -134,7 +134,7 @@ const AIDemo = () => {
   };
 
   return (
-    <section id="demo" className="py-20 px-6 bg-background">
+    <section id="demo" className="py-24 px-6 bg-background">
       <div className="container mx-auto max-w-4xl">
         <div className="text-center mb-12 animate-fade-in">
           <h2 className="text-4xl font-bold text-foreground mb-4">
@@ -148,7 +148,7 @@ const AIDemo = () => {
         <div className="bg-card rounded-2xl shadow-xl overflow-hidden max-w-2xl mx-auto animate-scale-in">
           <div className="bg-primary text-primary-foreground px-6 py-4 flex items-center justify-between">
             <h3 className="font-semibold">AI Consultant Demo</h3>
-            <span className="text-xs bg-secondary text-secondary-foreground px-3 py-1 rounded-full">
+            <span className="text-xs bg-secondary text-secondary-foreground px-3 py-1 rounded-full font-medium">
               Try free
             </span>
           </div>
