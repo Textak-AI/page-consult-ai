@@ -125,20 +125,40 @@ export default function Generate() {
   };
 
   const generateSections = (consultationData: any): Section[] => {
+    // Import generator functions
+    const { 
+      generateHeadline: genHeadline,
+      generateSubheadline,
+      generateFeatures: genFeatures,
+      generateSocialProof: genSocialProof,
+      generateCTA,
+      generateFOMO,
+      validateContent,
+    } = require('@/lib/contentGenerator');
+
+    const headline = genHeadline(consultationData);
+    const subheadline = generateSubheadline(consultationData);
+    const features = genFeatures(consultationData);
+    const socialProof = genSocialProof(consultationData);
+    const cta = generateCTA(consultationData);
+    const fomo = generateFOMO(consultationData);
+
+    // Validate generated content
+    if (!validateContent(headline, features, consultationData.challenge, consultationData.unique_value)) {
+      console.error('Content validation failed', consultationData);
+    }
+
     const sections: Section[] = [
       {
         type: "hero",
         order: 0,
         visible: true,
         content: {
-          headline: generateHeadline(consultationData),
-          subheadline: consultationData.unique_value,
-          ctaText: consultationData.offer || "Get Started",
-          ctaLink: "#signup",
-          fomo: {
-            badge: "🔥 127 people viewed this in the last hour",
-            urgency: "Limited spots available - 23 left this month",
-          },
+          headline,
+          subheadline,
+          ctaText: cta.text,
+          ctaLink: cta.link,
+          fomo,
         },
       },
       {
@@ -146,8 +166,8 @@ export default function Generate() {
         order: 1,
         visible: true,
         content: {
-          problem: consultationData.challenge,
-          solution: consultationData.unique_value,
+          problem: consultationData.challenge || 'Facing challenges in your business?',
+          solution: consultationData.unique_value || 'We provide professional solutions tailored to your needs.',
         },
       },
     ];
@@ -167,55 +187,28 @@ export default function Generate() {
         order: 3,
         visible: true,
         content: {
-          features: extractFeatures(consultationData.unique_value),
+          features,
         },
       },
       {
         type: "social-proof",
         order: 4,
         visible: true,
-        content: {
-          stats: [
-            { label: "Active Users Today", value: "2,847" },
-            { label: "Avg. ROI Increase", value: "340%" },
-            { label: "Customer Retention", value: "98.2%" },
-          ],
-          recentActivity: [
-            { name: "Sarah M.", action: "signed up", time: "2 minutes ago", location: "San Francisco" },
-            { name: "James K.", action: "upgraded", time: "5 minutes ago", location: "New York" },
-            { name: "Lisa T.", action: "joined", time: "8 minutes ago", location: "Austin" },
-          ],
-        },
+        content: socialProof,
       },
       {
         type: "final-cta",
         order: 5,
         visible: true,
         content: {
-          headline: `Ready to ${consultationData.goal?.toLowerCase()}?`,
-          ctaText: consultationData.offer || "Get Started Now",
-          ctaLink: "#signup",
+          headline: `Ready to ${consultationData.goal?.toLowerCase() || 'get started'}?`,
+          ctaText: cta.text,
+          ctaLink: cta.link,
         },
       }
     );
 
     return sections;
-  };
-
-  const generateHeadline = (data: any) => {
-    if (data.target_audience && data.challenge) {
-      return `${data.challenge.split(" ").slice(0, 6).join(" ")}`;
-    }
-    return `Transform Your ${data.industry} Business`;
-  };
-
-  const extractFeatures = (uniqueValue: string) => {
-    const sentences = uniqueValue.split(/[.!?]+/).filter((s) => s.trim());
-    return sentences.slice(0, 6).map((feature, i) => ({
-      title: feature.trim().split(" ").slice(0, 4).join(" "),
-      description: feature.trim(),
-      icon: ["Zap", "Target", "Shield", "TrendingUp", "Users", "Award"][i] || "Check",
-    }));
   };
 
   const handleSave = async () => {
