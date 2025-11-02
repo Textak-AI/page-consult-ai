@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Eye, EyeOff, Trash2, GripVertical } from "lucide-react";
 import { useState } from "react";
+import { useEditing } from "@/contexts/EditingContext";
 
 type Section = {
   type: string;
@@ -21,6 +22,7 @@ export function SectionManager({
   onSave,
 }: SectionManagerProps) {
   const [expandedSection, setExpandedSection] = useState<number | null>(null);
+  const { setEditingSection } = useEditing();
 
   const toggleSection = (index: number) => {
     setExpandedSection(expandedSection === index ? null : index);
@@ -96,7 +98,12 @@ export function SectionManager({
 
             {expandedSection === index && (
               <div className="p-3 border-t bg-muted/30 space-y-2">
-                <Button variant="ghost" size="sm" className="w-full justify-start">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full justify-start"
+                  onClick={() => setEditingSection(index)}
+                >
                   Edit content
                 </Button>
                 <Button variant="ghost" size="sm" className="w-full justify-start">

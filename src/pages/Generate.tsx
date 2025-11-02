@@ -7,6 +7,7 @@ import { Loader2, Check, Sparkles } from "lucide-react";
 import { SectionManager } from "@/components/editor/SectionManager";
 import { LivePreview } from "@/components/editor/LivePreview";
 import { PublishModal } from "@/components/editor/PublishModal";
+import { EditingProvider } from "@/contexts/EditingContext";
 
 type Phase = "loading" | "building" | "editor";
 type Section = {
@@ -360,6 +361,7 @@ export default function Generate() {
 
   // Phase 3: Editor
   return (
+    <EditingProvider>
     <div className="h-screen flex flex-col bg-background">
       {/* Top toolbar */}
       <header className="h-14 border-b flex items-center justify-between px-4">
@@ -401,5 +403,6 @@ export default function Generate() {
         }}
       />
     </div>
+    </EditingProvider>
   );
 }

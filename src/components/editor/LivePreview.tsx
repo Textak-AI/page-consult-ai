@@ -4,6 +4,8 @@ import { CalculatorSection } from "@/components/sections/CalculatorSection";
 import { FeaturesSection } from "@/components/sections/FeaturesSection";
 import { SocialProofSection } from "@/components/sections/SocialProofSection";
 import { FinalCTASection } from "@/components/sections/FinalCTASection";
+import { useEditing } from "@/contexts/EditingContext";
+import { EditingToolbar } from "@/components/editor/EditingToolbar";
 
 type Section = {
   type: string;
@@ -18,6 +20,16 @@ interface LivePreviewProps {
 }
 
 export function LivePreview({ sections, onSectionsChange }: LivePreviewProps) {
+  const { editingSection, setEditingSection, isEditing } = useEditing();
+
+  const handleSaveEdit = () => {
+    setEditingSection(null);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSection(null);
+  };
+
   const renderSection = (section: Section, index: number) => {
     if (!section.visible) return null;
 
@@ -34,6 +46,7 @@ export function LivePreview({ sections, onSectionsChange }: LivePreviewProps) {
             key={index}
             content={section.content}
             onUpdate={updateSection}
+            isEditing={editingSection === index}
           />
         );
       case "problem-solution":
@@ -42,6 +55,7 @@ export function LivePreview({ sections, onSectionsChange }: LivePreviewProps) {
             key={index}
             content={section.content}
             onUpdate={updateSection}
+            isEditing={editingSection === index}
           />
         );
       case "calculator":
@@ -74,6 +88,7 @@ export function LivePreview({ sections, onSectionsChange }: LivePreviewProps) {
             key={index}
             content={section.content}
             onUpdate={updateSection}
+            isEditing={editingSection === index}
           />
         );
       default:
@@ -83,6 +98,9 @@ export function LivePreview({ sections, onSectionsChange }: LivePreviewProps) {
 
   return (
     <div className="flex-1 bg-muted/30 overflow-y-auto">
+      {isEditing && (
+        <EditingToolbar onSave={handleSaveEdit} onCancel={handleCancelEdit} />
+      )}
       <div className="min-h-full bg-background">
         {sections
           .sort((a, b) => a.order - b.order)
