@@ -30,7 +30,7 @@ export function AnimatedChatPreview() {
     setTimeout(() => setIsInitialized(true), 100);
   }, []);
 
-  // Smooth scroll to bottom with debouncing
+  // Smooth scroll to show AI message with context
   const smoothScroll = () => {
     if (isScrollingRef.current || !messagesContainerRef.current) return;
     
@@ -39,10 +39,26 @@ export function AnimatedChatPreview() {
     
     // Wait for content to fully render
     setTimeout(() => {
-      container.scrollTo({
-        top: container.scrollHeight,
-        behavior: 'smooth'
-      });
+      // Find the last AI message to keep it in view
+      const allMessages = container.querySelectorAll('.ai-message, .user-message, .special-message');
+      const lastMessage = allMessages[allMessages.length - 1];
+      
+      if (lastMessage) {
+        // Scroll to show the message with some padding from top
+        const messagePosition = (lastMessage as HTMLElement).offsetTop;
+        const offset = 60; // padding from top to keep message visible
+        
+        container.scrollTo({
+          top: Math.max(0, messagePosition - offset),
+          behavior: 'smooth'
+        });
+      } else {
+        // Fallback to bottom if no messages found
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
       
       // Reset scroll lock after animation completes
       setTimeout(() => {
@@ -212,29 +228,29 @@ export function AnimatedChatPreview() {
                   }}
                 >
                   {!isSpecial && (
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        step.type === "ai"
-                          ? "bg-primary/10 text-primary"
-                          : "bg-[#1e293b] text-white"
-                      }`}
-                    >
-                      {step.type === "ai" ? (
-                        <Bot className="w-4 h-4" />
-                      ) : (
-                        <User className="w-4 h-4" />
-                      )}
-                    </div>
-                  )}
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      step.type === "ai"
+                        ? "bg-primary/10 text-primary"
+                        : "bg-[#1e293b] text-white"
+                    }`}
+                  >
+                    {step.type === "ai" ? (
+                      <Bot className="w-4 h-4" />
+                    ) : (
+                      <User className="w-4 h-4" />
+                    )}
+                  </div>
+                )}
                   <div
                     className={`rounded-xl px-4 py-2 ${
                       step.type === "ai"
-                        ? "bg-[#f3f4f6] text-[#1f2937]"
+                        ? "bg-[#f3f4f6] text-[#1f2937] ai-message"
                         : step.type === "user"
-                        ? "bg-[#1e293b] text-white"
+                        ? "bg-[#1e293b] text-white user-message"
                         : step.type === "thinking"
-                        ? "bg-muted/50 text-foreground font-medium px-6 py-3"
-                        : "bg-gradient-to-r from-primary/10 to-secondary/10 text-foreground font-medium px-6 py-3"
+                        ? "bg-muted/50 text-foreground font-medium px-6 py-3 special-message"
+                        : "bg-gradient-to-r from-primary/10 to-secondary/10 text-foreground font-medium px-6 py-3 special-message"
                     }`}
                   >
                     <div>
