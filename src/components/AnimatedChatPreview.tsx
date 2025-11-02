@@ -19,21 +19,41 @@ export function AnimatedChatPreview() {
   const [visibleChecks, setVisibleChecks] = useState<number>(0);
   const [typedText, setTypedText] = useState<string>("");
   const [isTypingText, setIsTypingText] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const currentIndexRef = useRef<number>(0);
+  const isScrollingRef = useRef(false);
 
-  // Smooth scroll to bottom when new messages appear
+  // Initialize demo smoothly
   useEffect(() => {
-    if (messagesContainerRef.current) {
-      const container = messagesContainerRef.current;
-      // Wait for message to render, then scroll smoothly with easing
+    // Fade in after mount
+    setTimeout(() => setIsInitialized(true), 100);
+  }, []);
+
+  // Smooth scroll to bottom with debouncing
+  const smoothScroll = () => {
+    if (isScrollingRef.current || !messagesContainerRef.current) return;
+    
+    isScrollingRef.current = true;
+    const container = messagesContainerRef.current;
+    
+    // Wait for content to fully render
+    setTimeout(() => {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+      });
+      
+      // Reset scroll lock after animation completes
       setTimeout(() => {
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior: 'smooth'
-        });
-      }, 150);
-    }
+        isScrollingRef.current = false;
+      }, 600);
+    }, 200);
+  };
+
+  // Trigger smooth scroll when content changes
+  useEffect(() => {
+    smoothScroll();
   }, [visibleMessages, isTyping]);
 
   // Typing effect for AI messages
@@ -51,7 +71,7 @@ export function AnimatedChatPreview() {
         setIsTypingText(false);
         callback();
       }
-    }, 35); // 35ms per character for natural typing speed
+    }, 35);
   };
 
   useEffect(() => {
@@ -74,10 +94,10 @@ export function AnimatedChatPreview() {
 
       // Handle different message types
       if (currentStep.type === "user") {
-        // User messages appear instantly - NO typing indicator
+        // User messages appear after a natural pause
         setVisibleMessages(index + 1);
         currentIndexRef.current++;
-        // Pause to let user read their answer
+        // Pause to let user "confirm" their choice
         setTimeout(showNextMessage, 800);
       } else if (currentStep.type === "thinking" || currentStep.type === "building") {
         // Thinking/building messages with sequential checkmarks
@@ -119,25 +139,35 @@ export function AnimatedChatPreview() {
             // Type out the message character by character
             typeMessage(currentStep.message, () => {
               currentIndexRef.current++;
-              // Pause to let user read the full message
-              setTimeout(showNextMessage, 1200);
+              // Longer pause after AI message for user to "read" next question
+              setTimeout(showNextMessage, index === 0 ? 1000 : 1200);
             });
           }, 200);
         }, 1500);
       }
     };
 
-    // Start the animation
-    showNextMessage();
-  }, []);
+    // Start the animation after initialization
+    if (isInitialized) {
+      showNextMessage();
+    }
+  }, [isInitialized]);
 
   return (
     <div className="relative">
       {/* Glow effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 blur-3xl rounded-full -z-10"></div>
       
-      {/* Chat container */}
-      <div className="relative bg-card/90 backdrop-blur-sm rounded-2xl border border-border/50 p-6 transform hover:scale-[1.02] transition-transform duration-300 h-[400px] md:h-[500px] flex flex-col" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)' }}>
+      {/* Chat container with smooth initialization */}
+      <div 
+        className={`relative bg-card/90 backdrop-blur-sm rounded-2xl border border-border/50 p-6 transform hover:scale-[1.02] transition-all duration-300 h-[400px] md:h-[500px] flex flex-col ${
+          isInitialized ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{ 
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+          transition: 'opacity 300ms ease-in, transform 300ms ease-out'
+        }}
+      >
         <div 
           ref={messagesContainerRef} 
           className="flex-1 overflow-y-auto space-y-3" 
@@ -167,17 +197,18 @@ export function AnimatedChatPreview() {
               return (
                 <div
                   key={index}
-                  className={`flex gap-3 animate-fade-in ${
+                  className={`flex gap-3 ${
                     isUser ? "flex-row-reverse" : ""
                   } ${isSpecial ? "justify-center" : ""}`}
                   style={{ 
-                    animation: 'fade-in 0.4s ease-out forwards',
-                    animationDelay: `${index * 0.1}s`,
+                    animation: 'fade-in 0.3s ease-out forwards',
                     opacity: 0,
                     marginLeft: isUser ? 'auto' : '0',
                     marginRight: isUser ? '0' : 'auto',
                     maxWidth: isUser ? '80%' : isSpecial ? '90%' : '85%',
-                    width: isUser ? 'fit-content' : 'auto'
+                    width: isUser ? 'fit-content' : 'auto',
+                    transform: 'translateY(0)',
+                    transition: 'transform 0.3s ease-out'
                   }}
                 >
                   {!isSpecial && (
