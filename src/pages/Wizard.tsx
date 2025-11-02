@@ -47,7 +47,7 @@ export default function Wizard() {
   const demoAudience = searchParams.get("audience");
   const hasPrefilledData = !!(demoIndustry && demoGoal); // Only require industry + goal
   
-  const [step, setStep] = useState(hasPrefilledData ? 3 : 1); // Skip to question 3 if we have demo data
+  const [step, setStep] = useState(1); // Will be updated after loading existing consultation
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   
@@ -108,21 +108,65 @@ export default function Wizard() {
       .maybeSingle();
     
     if (existingConsultation) {
-      // Resume existing consultation but update with prefilled data if available
+      // Resume existing consultation
       setConsultationId(existingConsultation.id);
       
+      // Update with demo data if available and not already set
       if (hasPrefilledData) {
         const updates: any = {};
-        if (demoIndustry) updates.industry = demoIndustry;
-        if (demoGoal) updates.goal = demoGoal;
-        if (demoAudience && demoAudience !== ".") updates.target_audience = demoAudience;
+        if (demoIndustry && !existingConsultation.industry) updates.industry = demoIndustry;
+        if (demoGoal && !existingConsultation.goal) updates.goal = demoGoal;
+        if (demoAudience && demoAudience !== "." && !existingConsultation.target_audience) {
+          updates.target_audience = demoAudience;
+        }
         
-        // Update the consultation with demo data
-        await supabase
-          .from("consultations")
-          .update(updates)
-          .eq("id", existingConsultation.id);
+        if (Object.keys(updates).length > 0) {
+          await supabase
+            .from("consultations")
+            .update(updates)
+            .eq("id", existingConsultation.id);
+            
+          // Update local state with demo data
+          if (updates.industry) setSelectedIndustry(mapDemoIndustryToType(updates.industry));
+          if (updates.goal) setSelectedGoal(mapDemoGoalToType(updates.goal));
+          if (updates.target_audience) setTargetAudience(updates.target_audience);
+        }
       }
+      
+      // Load existing answers and determine where to resume
+      if (existingConsultation.industry) {
+        setSelectedIndustry(mapDemoIndustryToType(existingConsultation.industry));
+      }
+      if (existingConsultation.goal) {
+        setSelectedGoal(mapDemoGoalToType(existingConsultation.goal));
+      }
+      if (existingConsultation.target_audience) {
+        setTargetAudience(existingConsultation.target_audience);
+      }
+      if (existingConsultation.challenge) {
+        setChallenge(existingConsultation.challenge);
+      }
+      if (existingConsultation.unique_value) {
+        setUniqueValue(existingConsultation.unique_value);
+      }
+      if (existingConsultation.offer) {
+        setOffer(existingConsultation.offer);
+      }
+      if (existingConsultation.wants_calculator !== null) {
+        setWantsCalculator(existingConsultation.wants_calculator);
+      }
+      
+      // Determine next step based on what's been answered
+      let nextStep = 1;
+      if (existingConsultation.industry || (hasPrefilledData && demoIndustry)) nextStep = 2;
+      if (existingConsultation.goal || (hasPrefilledData && demoGoal)) nextStep = 3;
+      if (existingConsultation.target_audience) nextStep = 4;
+      if (existingConsultation.challenge) nextStep = 5;
+      if (existingConsultation.unique_value) nextStep = 6;
+      if (existingConsultation.offer) nextStep = 7;
+      if (existingConsultation.wants_calculator !== null) nextStep = 8;
+      
+      setStep(nextStep);
     } else {
       // Create new consultation with pre-filled data if available
       const initialData: any = { 
@@ -155,8 +199,26 @@ export default function Wizard() {
     
     setLoading(false);
     
-    // Show appropriate initial message
-    if (hasPrefilledData) {
+    // Show appropriate initial message based on current step
+    if (existingConsultation) {
+      // Resuming - show message based on where we are
+      const stepMessages: Record<number, string> = {
+        1: "Hey! I'm excited to help you build a landing page that converts.\n\n" +
+           "Before we jump into design, let's have a quick strategy chat—this ensures we build exactly what your business needs.\n\n" +
+           "First up: What industry are you in?",
+        2: "What's your main goal for this landing page?",
+        3: "Who exactly are you trying to reach?\n\nBe specific—their role, company type, or situation. The clearer you are, the better I can help.",
+        4: `What's the biggest problem or challenge your audience faces that your solution solves?\n\n(This becomes your compelling headline)`,
+        5: "What makes your solution uniquely valuable?\n\nWhy should they choose you over alternatives?",
+        6: `What are you offering to capture ${selectedGoal === "leads" ? "leads" : selectedGoal === "sales" ? "sales" : selectedGoal === "signups" ? "signups" : "meetings"}?`,
+        7: "Want to add an interactive calculator? These boost conversions by 40%+ because visitors get personalized value.",
+        8: "Perfect! I have everything I need. Here's your custom landing page strategy:"
+      };
+      
+      if (stepMessages[step]) {
+        addAIMessage(stepMessages[step], 300);
+      }
+    } else if (hasPrefilledData) {
       const audienceText = demoAudience && demoAudience !== "." 
         ? `• Target Audience: ${demoAudience}\n\n` 
         : "";
