@@ -4,22 +4,46 @@ import { Bot, User } from "lucide-react";
 const conversationSteps = [
   { type: "ai", message: "What industry are you in?" },
   { type: "user", message: "B2B SaaS" },
-  { type: "ai", message: "Who is your target audience?" },
-  { type: "user", message: "Marketing directors" },
-  { type: "building", message: "✨ Building your strategic landing page..." },
+  { type: "thinking", message: "🧠 Analyzing your response...", checks: ["Industry patterns identified", "Audience insights extracted"] },
+  { type: "ai", message: "Perfect! B2B SaaS buyers are ROI-focused. Who is your target audience?" },
+  { type: "user", message: "Marketing directors at mid-size companies" },
+  { type: "thinking", message: "🧠 Analyzing your response...", checks: ["Audience insights extracted", "Optimizing strategy"] },
+  { type: "ai", message: "Excellent! I'll emphasize measurable results. What's your main value proposition?" },
+  { type: "user", message: "Save 20 hours/week on reporting" },
+  { type: "building", message: "✨ Building your strategic page...", checks: ["Hero optimized for B2B SaaS", "ROI Calculator (B2B needs proof)", "Trust signals added", "Strategic CTA aligned to goal"] },
 ];
 
 export function AnimatedChatPreview() {
   const [visibleMessages, setVisibleMessages] = useState<number>(0);
   const [isTyping, setIsTyping] = useState(false);
+  const [visibleChecks, setVisibleChecks] = useState<number>(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setVisibleMessages((prev) => {
         if (prev >= conversationSteps.length) {
           // Reset animation
-          setTimeout(() => setVisibleMessages(0), 2000);
+          setTimeout(() => {
+            setVisibleMessages(0);
+            setVisibleChecks(0);
+          }, 2000);
           return prev;
+        }
+        
+        const currentStep = conversationSteps[prev];
+        
+        // For thinking/building messages, show checks sequentially
+        if ((currentStep?.type === "thinking" || currentStep?.type === "building") && currentStep.checks) {
+          setVisibleChecks(0);
+          const checkInterval = setInterval(() => {
+            setVisibleChecks((checkPrev) => {
+              if (checkPrev >= currentStep.checks!.length) {
+                clearInterval(checkInterval);
+                return checkPrev;
+              }
+              return checkPrev + 1;
+            });
+          }, 400);
         }
         
         setIsTyping(true);
@@ -57,19 +81,19 @@ export function AnimatedChatPreview() {
                 key={index}
                 className={`flex gap-3 animate-fade-in ${
                   step.type === "user" ? "flex-row-reverse justify-end" : "justify-start"
-                } ${step.type === "building" ? "justify-center" : ""}`}
+                } ${step.type === "building" || step.type === "thinking" ? "justify-center" : ""}`}
                 style={{ 
                   animation: 'fade-in 0.4s ease-out forwards',
                   animationDelay: `${index * 0.1}s`,
                   opacity: 0
                 }}
               >
-                {step.type !== "building" && (
+                {step.type !== "building" && step.type !== "thinking" && (
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                       step.type === "ai"
                         ? "bg-primary/10 text-primary"
-                        : "bg-secondary/10 text-secondary"
+                        : "bg-[#1e293b] text-white"
                     }`}
                   >
                     {step.type === "ai" ? (
@@ -80,15 +104,35 @@ export function AnimatedChatPreview() {
                   </div>
                 )}
                 <div
-                  className={`rounded-xl px-4 py-2 max-w-[80%] ${
+                  className={`rounded-xl px-4 py-2 ${
                     step.type === "ai"
-                      ? "bg-muted text-foreground"
+                      ? "bg-[#f3f4f6] text-[#1f2937] max-w-[80%]"
                       : step.type === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-gradient-to-r from-primary/10 to-secondary/10 text-foreground font-medium px-6 py-3"
+                      ? "bg-[#1e293b] text-white max-w-[75%]"
+                      : step.type === "thinking"
+                      ? "bg-muted/50 text-foreground font-medium px-6 py-3 max-w-[85%]"
+                      : "bg-gradient-to-r from-primary/10 to-secondary/10 text-foreground font-medium px-6 py-3 max-w-[90%]"
                   }`}
                 >
-                  {step.message}
+                  <div>{step.message}</div>
+                  {(step.type === "thinking" || step.type === "building") && step.checks && (
+                    <div className="mt-3 space-y-1.5">
+                      {step.checks.slice(0, index === visibleMessages - 1 ? visibleChecks : step.checks.length).map((check, checkIndex) => (
+                        <div 
+                          key={checkIndex} 
+                          className="flex items-center gap-2 text-sm animate-fade-in"
+                          style={{
+                            animation: 'fade-in 0.3s ease-out forwards',
+                            animationDelay: `${checkIndex * 0.1}s`,
+                            opacity: 0
+                          }}
+                        >
+                          <span className="text-green-500">✓</span>
+                          <span className="text-muted-foreground">{check}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
