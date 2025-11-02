@@ -56,7 +56,7 @@ export function AnimatedChatPreview() {
               <div
                 key={index}
                 className={`flex gap-3 animate-fade-in ${
-                  step.type === "user" ? "flex-row-reverse" : ""
+                  step.type === "user" ? "flex-row-reverse justify-end" : "justify-start"
                 } ${step.type === "building" ? "justify-center" : ""}`}
                 style={{ 
                   animation: 'fade-in 0.4s ease-out forwards',
