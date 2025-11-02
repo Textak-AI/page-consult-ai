@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check, Sparkles } from "lucide-react";
+import { Loader2, Check, Sparkles, Wand2 } from "lucide-react";
 import { SectionManager } from "@/components/editor/SectionManager";
 import { LivePreview } from "@/components/editor/LivePreview";
 import { PublishModal } from "@/components/editor/PublishModal";
+import { AIConsultantSidebar } from "@/components/editor/AIConsultantSidebar";
 import { EditingProvider } from "@/contexts/EditingContext";
 
 type Phase = "loading" | "building" | "editor";
@@ -28,6 +29,7 @@ export default function Generate() {
   const [sections, setSections] = useState<Section[]>([]);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
 
   const loadingMessages = [
     { icon: Check, text: "Analyzing your strategy" },
@@ -362,6 +364,15 @@ export default function Generate() {
           <span className="font-bold text-primary">PageConsult AI</span>
         </div>
         <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setAiConsultantOpen(true)}
+            className="gap-2"
+          >
+            <Wand2 className="w-4 h-4" />
+            AI Improve
+          </Button>
           <Button variant="outline" size="sm" onClick={handleSave}>
             Save Draft
           </Button>
@@ -393,6 +404,24 @@ export default function Generate() {
             title: "🎉 Your Page is Live!",
             description: "Your landing page has been published successfully.",
           });
+        }}
+      />
+
+      <AIConsultantSidebar
+        isOpen={aiConsultantOpen}
+        onClose={() => setAiConsultantOpen(false)}
+        pageContent={{
+          headline: sections.find(s => s.type === 'hero')?.content?.headline,
+          subheadline: sections.find(s => s.type === 'hero')?.content?.subheadline,
+          features: sections.find(s => s.type === 'features')?.content?.features,
+          cta: sections.find(s => s.type === 'hero')?.content?.cta?.text,
+          industry: consultation?.industry,
+          serviceType: consultation?.service_type,
+          targetAudience: consultation?.target_audience,
+        }}
+        onApplySuggestion={(suggestion) => {
+          // TODO: Implement applying AI suggestions
+          console.log('Apply suggestion:', suggestion);
         }}
       />
     </div>

@@ -2,3 +2,6 @@ project_id = "wopnfuzevpldhkshkmrk"
 
 [functions.industry-insights]
 verify_jwt = false
+
+[functions.ai-consultant]
+verify_jwt = false
