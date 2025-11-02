@@ -24,12 +24,13 @@ export function AnimatedChatPreview() {
   useEffect(() => {
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current;
+      // Wait for message to render, then scroll smoothly
       setTimeout(() => {
         container.scrollTo({
           top: container.scrollHeight,
           behavior: 'smooth'
         });
-      }, 100);
+      }, 150);
     }
   }, [visibleMessages, isTyping]);
 
@@ -52,10 +53,11 @@ export function AnimatedChatPreview() {
 
       // Handle different message types
       if (currentStep.type === "user") {
-        // User messages appear instantly
+        // User messages appear instantly - NO typing indicator
         setVisibleMessages(index + 1);
         currentIndexRef.current++;
-        setTimeout(showNextMessage, 800); // Short pause before next
+        // Brief pause before AI starts "thinking"
+        setTimeout(showNextMessage, 500);
       } else if (currentStep.type === "ai" || currentStep.type === "thinking" || currentStep.type === "building") {
         // AI messages: show typing FIRST, then message
         setIsTyping(true);
@@ -99,7 +101,14 @@ export function AnimatedChatPreview() {
       
       {/* Chat container */}
       <div className="relative bg-card/90 backdrop-blur-sm rounded-2xl border border-border/50 p-6 transform hover:scale-[1.02] transition-transform duration-300 h-[400px] md:h-[500px] flex flex-col" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)' }}>
-        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto space-y-3" style={{ scrollBehavior: 'smooth' }}>
+        <div 
+          ref={messagesContainerRef} 
+          className="flex-1 overflow-y-auto space-y-3" 
+          style={{ 
+            scrollBehavior: 'smooth',
+            scrollPaddingBottom: '20px'
+          }}
+        >
           {/* Header */}
           <div className="flex items-center gap-3 pb-4 border-b border-border/50">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
