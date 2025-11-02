@@ -62,6 +62,71 @@ export type Database = {
         }
         Relationships: []
       }
+      landing_pages: {
+        Row: {
+          analytics_enabled: boolean | null
+          consultation_id: string | null
+          created_at: string
+          id: string
+          is_published: boolean | null
+          meta_description: string | null
+          meta_title: string | null
+          published_at: string | null
+          published_url: string | null
+          sections: Json
+          slug: string
+          status: string
+          styles: Json | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analytics_enabled?: boolean | null
+          consultation_id?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          published_at?: string | null
+          published_url?: string | null
+          sections?: Json
+          slug: string
+          status?: string
+          styles?: Json | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analytics_enabled?: boolean | null
+          consultation_id?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
+          published_at?: string | null
+          published_url?: string | null
+          sections?: Json
+          slug?: string
+          status?: string
+          styles?: Json | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "landing_pages_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
