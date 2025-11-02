@@ -18,65 +18,78 @@ export function AnimatedChatPreview() {
   const [isTyping, setIsTyping] = useState(false);
   const [visibleChecks, setVisibleChecks] = useState<number>(0);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const currentIndexRef = useRef<number>(0);
 
   // Smooth scroll to bottom when new messages appear
   useEffect(() => {
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current;
-      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-      
-      if (isNearBottom || visibleMessages === 1) {
-        // Scroll smoothly to bottom
-        setTimeout(() => {
-          container.scrollTo({
-            top: container.scrollHeight,
-            behavior: 'smooth'
-          });
-        }, 100);
-      }
+      setTimeout(() => {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 100);
     }
-  }, [visibleMessages]);
+  }, [visibleMessages, isTyping]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setVisibleMessages((prev) => {
-        if (prev >= conversationSteps.length) {
-          // Reset animation
-          setTimeout(() => {
-            setVisibleMessages(0);
-            setVisibleChecks(0);
-          }, 2000);
-          return prev;
-        }
-        
-        const currentStep = conversationSteps[prev];
-        
-        // For thinking/building messages, show checks sequentially
-        if ((currentStep?.type === "thinking" || currentStep?.type === "building") && currentStep.checks) {
+    const showNextMessage = () => {
+      const index = currentIndexRef.current;
+      
+      if (index >= conversationSteps.length) {
+        // Reset animation after pause
+        setTimeout(() => {
+          currentIndexRef.current = 0;
+          setVisibleMessages(0);
           setVisibleChecks(0);
-          const checkInterval = setInterval(() => {
-            setVisibleChecks((checkPrev) => {
-              if (checkPrev >= currentStep.checks!.length) {
-                clearInterval(checkInterval);
-                return checkPrev;
-              }
-              return checkPrev + 1;
-            });
-          }, 400);
-        }
-        
-        // Only show typing indicator before AI messages
-        const nextStep = conversationSteps[prev];
-        if (nextStep?.type === "ai" || nextStep?.type === "thinking" || nextStep?.type === "building") {
-          setIsTyping(true);
-          setTimeout(() => setIsTyping(false), 800);
-        }
-        
-        return prev + 1;
-      });
-    }, 2000);
+          showNextMessage();
+        }, 2000);
+        return;
+      }
 
-    return () => clearInterval(interval);
+      const currentStep = conversationSteps[index];
+
+      // Handle different message types
+      if (currentStep.type === "user") {
+        // User messages appear instantly
+        setVisibleMessages(index + 1);
+        currentIndexRef.current++;
+        setTimeout(showNextMessage, 800); // Short pause before next
+      } else if (currentStep.type === "ai" || currentStep.type === "thinking" || currentStep.type === "building") {
+        // AI messages: show typing FIRST, then message
+        setIsTyping(true);
+        
+        setTimeout(() => {
+          setIsTyping(false);
+          
+          setTimeout(() => {
+            // NOW show the message
+            setVisibleMessages(index + 1);
+            
+            // Handle checks for thinking/building
+            if ((currentStep.type === "thinking" || currentStep.type === "building") && currentStep.checks) {
+              setVisibleChecks(0);
+              const checkInterval = setInterval(() => {
+                setVisibleChecks((prev) => {
+                  if (prev >= currentStep.checks!.length) {
+                    clearInterval(checkInterval);
+                    return prev;
+                  }
+                  return prev + 1;
+                });
+              }, 400);
+            }
+            
+            currentIndexRef.current++;
+            setTimeout(showNextMessage, 1500); // Pause before next
+          }, 200);
+        }, 1500);
+      }
+    };
+
+    // Start the animation
+    showNextMessage();
   }, []);
 
   return (
@@ -100,66 +113,75 @@ export function AnimatedChatPreview() {
 
           {/* Messages */}
           <div className="space-y-2.5">
-            {conversationSteps.slice(0, visibleMessages).map((step, index) => (
-              <div
-                key={index}
-                className={`flex gap-3 animate-fade-in ${
-                  step.type === "user" ? "flex-row-reverse justify-end" : "justify-start"
-                } ${step.type === "building" || step.type === "thinking" ? "justify-center" : ""}`}
-                style={{ 
-                  animation: 'fade-in 0.4s ease-out forwards',
-                  animationDelay: `${index * 0.1}s`,
-                  opacity: 0
-                }}
-              >
-                {step.type !== "building" && step.type !== "thinking" && (
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      step.type === "ai"
-                        ? "bg-primary/10 text-primary"
-                        : "bg-[#1e293b] text-white"
-                    }`}
-                  >
-                    {step.type === "ai" ? (
-                      <Bot className="w-4 h-4" />
-                    ) : (
-                      <User className="w-4 h-4" />
-                    )}
-                  </div>
-                )}
+            {conversationSteps.slice(0, visibleMessages).map((step, index) => {
+              const isUser = step.type === "user";
+              const isSpecial = step.type === "building" || step.type === "thinking";
+              
+              return (
                 <div
-                  className={`rounded-xl px-4 py-2 ${
-                    step.type === "ai"
-                      ? "bg-[#f3f4f6] text-[#1f2937] max-w-[80%]"
-                      : step.type === "user"
-                      ? "bg-[#1e293b] text-white max-w-[75%]"
-                      : step.type === "thinking"
-                      ? "bg-muted/50 text-foreground font-medium px-6 py-3 max-w-[85%]"
-                      : "bg-gradient-to-r from-primary/10 to-secondary/10 text-foreground font-medium px-6 py-3 max-w-[90%]"
-                  }`}
+                  key={index}
+                  className={`flex gap-3 animate-fade-in ${
+                    isUser ? "flex-row-reverse" : ""
+                  } ${isSpecial ? "justify-center" : ""}`}
+                  style={{ 
+                    animation: 'fade-in 0.4s ease-out forwards',
+                    animationDelay: `${index * 0.1}s`,
+                    opacity: 0,
+                    marginLeft: isUser ? 'auto' : '0',
+                    marginRight: isUser ? '0' : 'auto',
+                    maxWidth: isUser ? '80%' : isSpecial ? '90%' : '85%',
+                    width: isUser ? 'fit-content' : 'auto'
+                  }}
                 >
-                  <div>{step.message}</div>
-                  {(step.type === "thinking" || step.type === "building") && step.checks && (
-                    <div className="mt-3 space-y-1.5">
-                      {step.checks.slice(0, index === visibleMessages - 1 ? visibleChecks : step.checks.length).map((check, checkIndex) => (
-                        <div 
-                          key={checkIndex} 
-                          className="flex items-center gap-2 text-sm animate-fade-in"
-                          style={{
-                            animation: 'fade-in 0.3s ease-out forwards',
-                            animationDelay: `${checkIndex * 0.1}s`,
-                            opacity: 0
-                          }}
-                        >
-                          <span className="text-green-500">✓</span>
-                          <span className="text-muted-foreground">{check}</span>
-                        </div>
-                      ))}
+                  {!isSpecial && (
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        step.type === "ai"
+                          ? "bg-primary/10 text-primary"
+                          : "bg-[#1e293b] text-white"
+                      }`}
+                    >
+                      {step.type === "ai" ? (
+                        <Bot className="w-4 h-4" />
+                      ) : (
+                        <User className="w-4 h-4" />
+                      )}
                     </div>
                   )}
+                  <div
+                    className={`rounded-xl px-4 py-2 ${
+                      step.type === "ai"
+                        ? "bg-[#f3f4f6] text-[#1f2937]"
+                        : step.type === "user"
+                        ? "bg-[#1e293b] text-white"
+                        : step.type === "thinking"
+                        ? "bg-muted/50 text-foreground font-medium px-6 py-3"
+                        : "bg-gradient-to-r from-primary/10 to-secondary/10 text-foreground font-medium px-6 py-3"
+                    }`}
+                  >
+                    <div>{step.message}</div>
+                    {isSpecial && step.checks && (
+                      <div className="mt-3 space-y-1.5">
+                        {step.checks.slice(0, index === visibleMessages - 1 ? visibleChecks : step.checks.length).map((check, checkIndex) => (
+                          <div 
+                            key={checkIndex} 
+                            className="flex items-center gap-2 text-sm animate-fade-in"
+                            style={{
+                              animation: 'fade-in 0.3s ease-out forwards',
+                              animationDelay: `${checkIndex * 0.1}s`,
+                              opacity: 0
+                            }}
+                          >
+                            <span className="text-green-500">✓</span>
+                            <span className="text-muted-foreground">{check}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {/* Typing indicator */}
             {isTyping && visibleMessages < conversationSteps.length && (
