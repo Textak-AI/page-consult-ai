@@ -5,9 +5,7 @@ const conversationSteps = [
   { type: "ai", message: "What industry are you in?" },
   { type: "user", message: "B2B SaaS" },
   { type: "ai", message: "Who is your target audience?" },
-  { type: "user", message: "Marketing directors at mid-size companies" },
-  { type: "ai", message: "What's your main value proposition?" },
-  { type: "user", message: "Save 20 hours/week on reporting" },
+  { type: "user", message: "Marketing directors" },
   { type: "building", message: "✨ Building your strategic landing page..." },
 ];
 
@@ -39,8 +37,8 @@ export function AnimatedChatPreview() {
       <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 blur-3xl rounded-full -z-10"></div>
       
       {/* Chat container */}
-      <div className="relative bg-card/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-border/50 p-6 transform hover:scale-[1.02] transition-transform duration-300 h-[400px] md:h-[500px] flex flex-col">
-        <div className="flex-1 overflow-y-auto space-y-4">
+      <div className="relative bg-card/90 backdrop-blur-sm rounded-2xl border border-border/50 p-6 transform hover:scale-[1.02] transition-transform duration-300 h-[400px] md:h-[500px] flex flex-col" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)' }}>
+        <div className="flex-1 overflow-y-auto space-y-3">
           {/* Header */}
           <div className="flex items-center gap-3 pb-4 border-b border-border/50">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
@@ -53,13 +51,18 @@ export function AnimatedChatPreview() {
           </div>
 
           {/* Messages */}
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {conversationSteps.slice(0, visibleMessages).map((step, index) => (
               <div
                 key={index}
                 className={`flex gap-3 animate-fade-in ${
                   step.type === "user" ? "flex-row-reverse" : ""
                 } ${step.type === "building" ? "justify-center" : ""}`}
+                style={{ 
+                  animation: 'fade-in 0.4s ease-out forwards',
+                  animationDelay: `${index * 0.1}s`,
+                  opacity: 0
+                }}
               >
                 {step.type !== "building" && (
                   <div
@@ -118,8 +121,11 @@ export function AnimatedChatPreview() {
             </div>
             <div className="h-1.5 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 ease-out"
-                style={{ width: `${Math.min((visibleMessages / conversationSteps.length) * 100, 100)}%` }}
+                className="h-full bg-gradient-to-r from-primary to-secondary ease-out"
+                style={{ 
+                  width: `${Math.min((visibleMessages / conversationSteps.length) * 100, 100)}%`,
+                  transition: 'width 2s ease-out'
+                }}
               ></div>
             </div>
           </div>
