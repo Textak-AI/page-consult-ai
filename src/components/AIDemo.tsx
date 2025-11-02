@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bot, User, Send, Loader2 } from "lucide-react";
+import { User, Send, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import aiChatIcon from "@/assets/ai-chat-icon.png";
+import aiChatIconInChat from "@/assets/ai-chat-icon-inchat.png";
 
 type Message = {
   role: "ai" | "user";
@@ -445,44 +447,53 @@ const AIDemo = () => {
           </p>
         </div>
 
-        <div className="bg-card rounded-2xl shadow-xl overflow-hidden max-w-2xl mx-auto animate-scale-in">
-          <div className="bg-primary text-primary-foreground px-6 py-4 flex items-center justify-between">
-            <h3 className="font-semibold">AI Consultant Demo</h3>
-            <span className="text-xs bg-secondary text-secondary-foreground px-3 py-1 rounded-full font-medium">
+        <div 
+          className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/50 overflow-hidden max-w-2xl mx-auto animate-scale-in"
+          style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)' }}
+        >
+          <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50" style={{ background: '#2c3e50' }}>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center overflow-hidden">
+              <img src={aiChatIcon} alt="AI" className="w-6 h-6 object-contain" />
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold text-white">AI Consultant Demo</div>
+              <div className="text-xs text-white/70">Building your strategy...</div>
+            </div>
+            <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ background: '#06B6D6', color: 'white' }}>
               Try free
             </span>
           </div>
 
           <div 
             ref={chatContainerRef}
-            className="p-6 space-y-4 max-h-[520px] overflow-y-auto pb-8"
-            style={{ scrollBehavior: 'auto' }}
+            className="p-6 space-y-3 max-h-[520px] overflow-y-auto"
+            style={{ scrollBehavior: 'smooth' }}
           >
             {messages.map((message, index) => (
               <div
                 key={index}
-                className={`flex gap-3 animate-slide-up ${
+                className={`flex gap-3 animate-fade-in ${
                   message.role === "user" ? "flex-row-reverse" : ""
                 }`}
               >
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                     message.role === "ai"
-                      ? "bg-primary/10 text-primary"
-                      : "bg-secondary/10 text-secondary"
+                      ? "bg-primary/10 text-primary overflow-hidden"
+                      : "bg-[#1e293b] text-white"
                   }`}
                 >
                   {message.role === "ai" ? (
-                    <Bot className="w-4 h-4" />
+                    <img src={aiChatIconInChat} alt="AI" className="w-5 h-5 object-contain" />
                   ) : (
                     <User className="w-4 h-4" />
                   )}
                 </div>
                 <div
-                  className={`flex-1 rounded-2xl p-4 whitespace-pre-line ${
+                  className={`flex-1 rounded-xl px-4 py-2 whitespace-pre-line ${
                     message.role === "ai"
-                      ? "bg-muted text-foreground"
-                      : "bg-secondary/20 text-foreground"
+                      ? "bg-[#f3f4f6] text-[#1f2937]"
+                      : "bg-[#1e293b] text-white"
                   }`}
                 >
                   {message.isLoading ? (
@@ -769,6 +780,38 @@ const AIDemo = () => {
             {/* Scroll anchor */}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* Progress indicator */}
+          {messages.length > 1 && step !== "summary" && (
+            <div className="px-6 pb-6 pt-4 border-t border-border/50">
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                <span>Consultation Progress</span>
+                <span>
+                  {step === "industry" ? "10%" : 
+                   step === "specificService" ? "25%" :
+                   step === "hesitation" ? "40%" :
+                   step === "credentials" ? "55%" :
+                   step === "insightSelection" ? "70%" :
+                   step === "goal" ? "80%" :
+                   step === "audience" ? "90%" : "100%"}
+                </span>
+              </div>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 ease-out"
+                  style={{ 
+                    width: step === "industry" ? "10%" : 
+                           step === "specificService" ? "25%" :
+                           step === "hesitation" ? "40%" :
+                           step === "credentials" ? "55%" :
+                           step === "insightSelection" ? "70%" :
+                           step === "goal" ? "80%" :
+                           step === "audience" ? "90%" : "100%"
+                  }}
+                ></div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>
