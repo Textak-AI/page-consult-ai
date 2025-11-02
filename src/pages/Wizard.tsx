@@ -363,6 +363,26 @@ export default function Wizard() {
     navigate("/");
   };
 
+  const handleStartFresh = async () => {
+    if (consultationId) {
+      // Mark current consultation as abandoned
+      await supabase
+        .from("consultations")
+        .update({ status: "abandoned" })
+        .eq("id", consultationId);
+    }
+    
+    toast({
+      title: "Starting fresh",
+      description: "Redirecting to homepage..."
+    });
+    
+    // Redirect to homepage to start over
+    setTimeout(() => {
+      navigate("/");
+    }, 500);
+  };
+
   const progressPercentage = (step / 7) * 100;
 
   if (loading) {
@@ -389,9 +409,14 @@ export default function Wizard() {
           <Progress value={progressPercentage} className="h-2" />
         </div>
         
-        <Button variant="outline" onClick={handleSaveExit}>
-          Save & Exit
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={handleStartFresh}>
+            Start Fresh
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleSaveExit}>
+            Save & Exit
+          </Button>
+        </div>
       </header>
 
       {/* Main Content */}
