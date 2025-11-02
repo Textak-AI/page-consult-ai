@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check, Sparkles, Wand2 } from "lucide-react";
+import { Loader2, Check, Sparkles, Wand2, Palette } from "lucide-react";
 import { SectionManager } from "@/components/editor/SectionManager";
 import { LivePreview } from "@/components/editor/LivePreview";
 import { PublishModal } from "@/components/editor/PublishModal";
 import { AIConsultantSidebar } from "@/components/editor/AIConsultantSidebar";
-import { EditingProvider } from "@/contexts/EditingContext";
+import { StylePicker } from "@/components/editor/StylePicker";
+import { EditingProvider, useEditing } from "@/contexts/EditingContext";
 
 type Phase = "loading" | "building" | "editor";
 type Section = {
@@ -30,6 +31,7 @@ export default function Generate() {
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
+  const [stylePickerOpen, setStylePickerOpen] = useState(false);
 
   const loadingMessages = [
     { icon: Check, text: "Analyzing your strategy" },
@@ -357,6 +359,42 @@ export default function Generate() {
   // Phase 3: Editor
   return (
     <EditingProvider>
+      <EditorContent
+        consultation={consultation}
+        pageData={pageData}
+        sections={sections}
+        setSections={setSections}
+        handleSave={handleSave}
+        handlePreview={handlePreview}
+        publishModalOpen={publishModalOpen}
+        setPublishModalOpen={setPublishModalOpen}
+        aiConsultantOpen={aiConsultantOpen}
+        setAiConsultantOpen={setAiConsultantOpen}
+        stylePickerOpen={stylePickerOpen}
+        setStylePickerOpen={setStylePickerOpen}
+      />
+    </EditingProvider>
+  );
+}
+
+function EditorContent({
+  consultation,
+  pageData,
+  sections,
+  setSections,
+  handleSave,
+  handlePreview,
+  publishModalOpen,
+  setPublishModalOpen,
+  aiConsultantOpen,
+  setAiConsultantOpen,
+  stylePickerOpen,
+  setStylePickerOpen,
+}: any) {
+  const { toast } = useToast();
+  const { pageStyle, setPageStyle } = useEditing();
+
+  return (
     <div className="h-screen flex flex-col bg-background">
       {/* Top toolbar */}
       <header className="h-14 border-b flex items-center justify-between px-4">
@@ -372,6 +410,15 @@ export default function Generate() {
           >
             <Wand2 className="w-4 h-4" />
             AI Improve
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setStylePickerOpen(true)}
+            className="gap-2"
+          >
+            <Palette className="w-4 h-4" />
+            Change Style
           </Button>
           <Button variant="outline" size="sm" onClick={handleSave}>
             Save Draft
@@ -424,7 +471,19 @@ export default function Generate() {
           console.log('Apply suggestion:', suggestion);
         }}
       />
+
+      <StylePicker
+        open={stylePickerOpen}
+        onOpenChange={setStylePickerOpen}
+        currentStyle={pageStyle}
+        onStyleSelect={(style) => {
+          setPageStyle(style);
+          toast({
+            title: "Style updated",
+            description: `Applied ${style} style to all sections`,
+          });
+        }}
+      />
     </div>
-    </EditingProvider>
   );
 }

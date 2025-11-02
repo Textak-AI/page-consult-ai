@@ -97,7 +97,7 @@ export function SectionManager({
             </div>
 
             {expandedSection === index && (
-              <div className="p-3 border-t bg-muted/30 space-y-2">
+              <div className="p-3 border-t bg-muted/30">
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -105,9 +105,6 @@ export function SectionManager({
                   onClick={() => setEditingSection(index)}
                 >
                   Edit content
-                </Button>
-                <Button variant="ghost" size="sm" className="w-full justify-start">
-                  Change style
                 </Button>
               </div>
             )}
