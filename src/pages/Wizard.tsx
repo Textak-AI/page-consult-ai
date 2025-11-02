@@ -108,9 +108,21 @@ export default function Wizard() {
       .maybeSingle();
     
     if (existingConsultation) {
-      // Resume existing consultation
+      // Resume existing consultation but update with prefilled data if available
       setConsultationId(existingConsultation.id);
-      // TODO: Restore state from existing consultation
+      
+      if (hasPrefilledData) {
+        const updates: any = {};
+        if (demoIndustry) updates.industry = demoIndustry;
+        if (demoGoal) updates.goal = demoGoal;
+        if (demoAudience && demoAudience !== ".") updates.target_audience = demoAudience;
+        
+        // Update the consultation with demo data
+        await supabase
+          .from("consultations")
+          .update(updates)
+          .eq("id", existingConsultation.id);
+      }
     } else {
       // Create new consultation with pre-filled data if available
       const initialData: any = { 
@@ -140,6 +152,8 @@ export default function Wizard() {
       
       setConsultationId(newConsultation.id);
     }
+    
+    setLoading(false);
     
     // Show appropriate initial message
     if (hasPrefilledData) {
