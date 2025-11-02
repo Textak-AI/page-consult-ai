@@ -45,9 +45,9 @@ export default function Wizard() {
   const demoIndustry = searchParams.get("industry");
   const demoGoal = searchParams.get("goal");
   const demoAudience = searchParams.get("audience");
-  const hasPrefilledData = !!(demoIndustry && demoGoal && demoAudience);
+  const hasPrefilledData = !!(demoIndustry && demoGoal); // Only require industry + goal
   
-  const [step, setStep] = useState(hasPrefilledData ? 4 : 1); // Skip to question 4 if we have demo data
+  const [step, setStep] = useState(hasPrefilledData ? 3 : 1); // Skip to question 3 if we have demo data
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   
@@ -58,7 +58,7 @@ export default function Wizard() {
   const [selectedGoal, setSelectedGoal] = useState<GoalType | null>(
     demoGoal ? mapDemoGoalToType(demoGoal) : null
   );
-  const [targetAudience, setTargetAudience] = useState(demoAudience || "");
+  const [targetAudience, setTargetAudience] = useState(demoAudience && demoAudience !== "." ? demoAudience : "");
   const [challenge, setChallenge] = useState("");
   const [uniqueValue, setUniqueValue] = useState("");
   const [offer, setOffer] = useState("");
@@ -112,10 +112,20 @@ export default function Wizard() {
       setConsultationId(existingConsultation.id);
       // TODO: Restore state from existing consultation
     } else {
-      // Create new consultation
+      // Create new consultation with pre-filled data if available
+      const initialData: any = { 
+        user_id: session.user.id 
+      };
+      
+      if (hasPrefilledData) {
+        if (demoIndustry) initialData.industry = demoIndustry;
+        if (demoGoal) initialData.goal = demoGoal;
+        if (demoAudience && demoAudience !== ".") initialData.target_audience = demoAudience;
+      }
+      
       const { data: newConsultation, error } = await supabase
         .from("consultations")
-        .insert({ user_id: session.user.id })
+        .insert(initialData)
         .select()
         .single();
       
@@ -128,21 +138,22 @@ export default function Wizard() {
         return;
       }
       
-    setConsultationId(newConsultation.id);
+      setConsultationId(newConsultation.id);
     }
-    
-    setLoading(false);
     
     // Show appropriate initial message
     if (hasPrefilledData) {
+      const audienceText = demoAudience && demoAudience !== "." 
+        ? `• Target Audience: ${demoAudience}\n\n` 
+        : "";
+      
       addAIMessage(
         `Perfect! Based on our demo chat, here's what I understand:\n\n` +
         `• Industry: ${demoIndustry}\n` +
         `• Goal: ${demoGoal}\n` +
-        `• Target Audience: ${demoAudience}\n\n` +
-        `Great start! Now let me ask just 3 more strategic questions to nail this down.\n\n` +
-        `What's the biggest challenge or problem your audience faces that your solution solves?\n\n` +
-        `(This becomes your compelling headline - be specific!)`
+        audienceText +
+        `Great start! Now let me ask just ${audienceText ? '4' : '5'} more strategic questions to nail this down.\n\n` +
+        `Who exactly are you trying to reach? Be specific—their role, company type, or situation.`
       );
     } else {
       addAIMessage(
