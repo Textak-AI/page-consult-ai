@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { Link } from "react-router-dom";
+import { AnimatedChatPreview } from "@/components/AnimatedChatPreview";
 
 const Hero = () => {
   return (
@@ -32,30 +33,7 @@ const Hero = () => {
           </div>
 
           <div className="animate-scale-in">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 blur-3xl rounded-full"></div>
-              <div className="relative bg-card rounded-2xl shadow-xl p-6 transform rotate-2 hover:rotate-0 transition-transform duration-300">
-                <div className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl p-8 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                      <span className="text-xl">🤖</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="h-3 bg-muted rounded-full w-3/4 mb-2"></div>
-                      <div className="h-3 bg-muted rounded-full w-1/2"></div>
-                    </div>
-                  </div>
-                  <div className="bg-card rounded-lg p-4 shadow-sm">
-                    <div className="h-2 bg-muted rounded-full w-full mb-2"></div>
-                    <div className="h-2 bg-muted rounded-full w-5/6"></div>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="flex-1 bg-muted rounded-lg h-20"></div>
-                    <div className="flex-1 bg-muted rounded-lg h-20"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <AnimatedChatPreview />
           </div>
         </div>
       </div>
