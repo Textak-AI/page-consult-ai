@@ -62,6 +62,7 @@ export default function Wizard() {
     demoGoal ? mapDemoGoalToType(demoGoal) : null
   );
   const [targetAudience, setTargetAudience] = useState(demoAudience && demoAudience !== "." ? demoAudience : "");
+  const [serviceType, setServiceType] = useState("");
   const [challenge, setChallenge] = useState("");
   const [uniqueValue, setUniqueValue] = useState("");
   const [offer, setOffer] = useState("");
@@ -153,15 +154,23 @@ export default function Wizard() {
         ? `• Target Audience: ${demoAudience}\n\n` 
         : "";
       
+      // Determine next question based on industry and what's filled
+      const isProfessional = mapDemoIndustryToType(demoIndustry) === "professional";
+      const nextQuestion = (demoAudience && demoAudience !== ".") 
+        ? (isProfessional 
+          ? "What type of professional service do you provide?\n\n(Examples: driveway replacement, legal services, accounting, home improvement, consulting...)"
+          : `What's the biggest challenge or frustration ${demoAudience} face that you solve?\n\n(Be specific - this becomes your compelling headline)`)
+        : "Who exactly are your ideal clients? Be specific about their role, situation, or what they're looking for.";
+      
+      const questionsRemaining = isProfessional ? (audienceText ? "5" : "6") : (audienceText ? "4" : "5");
+      
       addAIMessage(
         `Perfect! Based on our demo chat, here's what I understand:\n\n` +
         `• Industry: ${demoIndustry}\n` +
         `• Goal: ${demoGoal}\n` +
         audienceText +
-        `Great start! Let me ask ${audienceText ? "4" : "5"} more strategic questions.\n\n` +
-        (audienceText 
-          ? `What's the biggest challenge or frustration ${demoAudience} face that you solve?\n\n(Be specific - this becomes your compelling headline)`
-          : `Who exactly are your ideal clients? Be specific about their role, situation, or what they're looking for.`)
+        `Great start! Let me ask ${questionsRemaining} more strategic questions.\n\n` +
+        nextQuestion
       );
       
       return; // Exit early for demo flow
@@ -191,6 +200,9 @@ export default function Wizard() {
       if (existingConsultation.target_audience) {
         setTargetAudience(existingConsultation.target_audience);
       }
+      if (existingConsultation.service_type) {
+        setServiceType(existingConsultation.service_type);
+      }
       if (existingConsultation.challenge) {
         setChallenge(existingConsultation.challenge);
       }
@@ -208,26 +220,37 @@ export default function Wizard() {
       let nextStep = 1;
       if (existingConsultation.industry) nextStep = 2;
       if (existingConsultation.goal) nextStep = 3;
-      if (existingConsultation.target_audience) nextStep = 4;
-      if (existingConsultation.challenge) nextStep = 5;
-      if (existingConsultation.unique_value) nextStep = 6;
-      if (existingConsultation.offer) nextStep = 7;
-      if (existingConsultation.wants_calculator !== null) nextStep = 8;
+      if (existingConsultation.target_audience) {
+        // For professional services, check if service_type is filled
+        const isProfessional = mapDemoIndustryToType(existingConsultation.industry) === "professional";
+        nextStep = isProfessional && !existingConsultation.service_type ? 4 : (isProfessional ? 5 : 4);
+      }
+      if (existingConsultation.service_type) nextStep = 5;
+      if (existingConsultation.challenge) nextStep = 6;
+      if (existingConsultation.unique_value) nextStep = 7;
+      if (existingConsultation.offer) nextStep = 8;
+      if (existingConsultation.wants_calculator !== null) nextStep = 9;
       
       console.log("📍 Resuming at step:", nextStep);
       setStep(nextStep);
       setLoading(false);
       
       // Show appropriate message for current step
+      const isProfessional = mapDemoIndustryToType(existingConsultation.industry) === "professional";
       const stepMessages: Record<number, string> = {
         1: "Hey! I'm excited to help you build a landing page that converts.\n\nBefore we jump into design, let's have a quick strategy chat—this ensures we build exactly what your business needs.\n\nFirst up: What industry are you in?",
         2: "What's your main goal for this landing page?",
         3: "Who exactly are you trying to reach?\n\nBe specific—their role, company type, or situation. The clearer you are, the better I can help.",
-        4: `What's the biggest problem or challenge your audience faces that your solution solves?\n\n(This becomes your compelling headline)`,
-        5: "What makes your solution uniquely valuable?\n\nWhy should they choose you over alternatives?",
-        6: `What are you offering to capture ${existingConsultation.goal || "conversions"}?`,
-        7: "Want to add an interactive calculator? These boost conversions by 40%+ because visitors get personalized value.",
-        8: "Perfect! I have everything I need. Here's your custom landing page strategy:"
+        4: isProfessional 
+          ? "What type of professional service do you provide?\n\n(Examples: driveway replacement, legal services, accounting, home improvement, consulting...)"
+          : `What's the biggest problem or challenge your audience faces that your solution solves?\n\n(This becomes your compelling headline)`,
+        5: isProfessional && existingConsultation.service_type
+          ? `What's the biggest challenge ${existingConsultation.target_audience || "your audience"} face with ${existingConsultation.service_type}?\n\n(This becomes your compelling headline)`
+          : `What's the biggest problem or challenge your audience faces that your solution solves?\n\n(This becomes your compelling headline)`,
+        6: "What makes your solution uniquely valuable?\n\nWhy should they choose you over alternatives?",
+        7: `What are you offering to capture ${existingConsultation.goal || "conversions"}?`,
+        8: "Want to add an interactive calculator? These boost conversions by 40%+ because visitors get personalized value.",
+        9: "Perfect! I have everything I need. Here's your custom landing page strategy:"
       };
       
       if (stepMessages[nextStep]) {
@@ -359,9 +382,49 @@ export default function Wizard() {
     addUserMessage(targetAudience);
     await saveProgress({ target_audience: targetAudience });
     
-    setStep(4);
+    // Check if this is professional services - if so, ask for service type
+    if (selectedIndustry === "professional") {
+      setStep(4);
+      setServiceType(""); // Clear input for next question
+      addAIMessage(
+        `Thanks! ${targetAudience.split(" ")[0]}s are a clear target.\n\n` +
+        `Before we continue, what type of professional service do you provide?\n\n` +
+        `(Examples: driveway replacement, legal services, accounting, home improvement, consulting...)`
+      );
+    } else {
+      setStep(4);
+      setChallenge(""); // Clear input for next question
+      addAIMessage(
+        `Thanks! ${targetAudience.split(" ")[0]}s are worth understanding deeply.\n\n` +
+        `Now here's the key question:\n\n` +
+        `What's the biggest problem or challenge your audience faces that your solution solves?\n\n` +
+        `(This becomes your compelling headline)`
+      );
+    }
+  };
+
+  const handleServiceTypeSubmit = async () => {
+    if (serviceType.trim().length < 5) {
+      toast({
+        title: "Too short",
+        description: "Please describe your service type.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    console.log("💬 Submitting service type:", serviceType);
+    addUserMessage(serviceType);
+    await saveProgress({ service_type: serviceType });
+    
+    setStep(5);
     setChallenge(""); // Clear input for next question
-    addAIMessage(`Thanks! ${targetAudience.split(" ")[0]}s are worth understanding deeply.\n\nNow here's the key question:\n\nWhat's the biggest problem or challenge your audience faces that your solution solves?\n\n(This becomes your compelling headline)`);
+    addAIMessage(
+      `Perfect! ${serviceType} is a valuable service.\n\n` +
+      `Now here's the key question:\n\n` +
+      `What's the biggest challenge ${targetAudience} face with ${serviceType}?\n\n` +
+      `(This becomes your compelling headline)`
+    );
   };
 
   const handleChallengeSubmit = async () => {
@@ -378,7 +441,7 @@ export default function Wizard() {
     addUserMessage(challenge);
     await saveProgress({ challenge });
     
-    setStep(5);
+    setStep(selectedIndustry === "professional" ? 6 : 5);
     setUniqueValue(""); // Clear input for next question
     addAIMessage("That's a real pain point. Strong foundation for your headline.\n\nWhat makes your solution uniquely valuable?\n\nWhy should they choose you over alternatives?");
   };
@@ -397,7 +460,7 @@ export default function Wizard() {
     addUserMessage(uniqueValue);
     await saveProgress({ unique_value: uniqueValue });
     
-    setStep(6);
+    setStep(selectedIndustry === "professional" ? 7 : 6);
     setOffer(""); // Clear input for next question
     addAIMessage(`Almost there! What are you offering to capture ${selectedGoal === "leads" ? "leads" : selectedGoal === "sales" ? "sales" : selectedGoal === "signups" ? "signups" : "meetings"}?`);
   };
@@ -416,7 +479,7 @@ export default function Wizard() {
     addUserMessage(offer);
     await saveProgress({ offer });
     
-    setStep(7);
+    setStep(selectedIndustry === "professional" ? 8 : 7);
     addAIMessage(`Perfect offer for ${targetAudience}. That aligns well with your goal.\n\nOne more thing—and this is where it gets interesting.\n\nWant to add an interactive calculator? These boost conversions by 40%+ because visitors get personalized value.\n\nFor your audience, I'd recommend an ROI Calculator.`);
   };
 
@@ -437,7 +500,8 @@ export default function Wizard() {
 
   const showSummary = async () => {
     await saveProgress({ status: "completed" });
-    setStep(8);
+    const finalStep = selectedIndustry === "professional" ? 9 : 8;
+    setStep(finalStep);
     addAIMessage("Perfect! I have everything I need. Here's your custom landing page strategy:");
   };
 
@@ -473,7 +537,8 @@ export default function Wizard() {
     }, 500);
   };
 
-  const progressPercentage = (step / 7) * 100;
+  const totalSteps = selectedIndustry === "professional" ? 8 : 7;
+  const progressPercentage = (step / totalSteps) * 100;
 
   if (loading) {
     return (
@@ -494,7 +559,7 @@ export default function Wizard() {
         
         <div className="flex-1 max-w-md mx-8">
           <div className="text-sm text-muted-foreground mb-1 text-center">
-            {step <= 7 ? `Question ${step} of 7` : "Complete"}
+            {step <= totalSteps ? `Question ${step} of ${totalSteps}` : "Complete"}
           </div>
           <Progress value={progressPercentage} className="h-2" />
         </div>
@@ -627,8 +692,33 @@ export default function Wizard() {
                 </div>
               )}
 
-              {/* Step 4: Challenge */}
-              {step === 4 && (
+              {/* Step 4: Service Type (Professional Services Only) */}
+              {step === 4 && selectedIndustry === "professional" && (
+                <div className="space-y-4 animate-fade-in">
+                  <Textarea
+                    placeholder="e.g., driveway replacement and repair, legal services, accounting, home improvement, business consulting..."
+                    value={serviceType}
+                    onChange={(e) => setServiceType(e.target.value)}
+                    maxLength={100}
+                    className="min-h-[100px]"
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      {serviceType.length}/100
+                    </span>
+                  </div>
+                  <Button 
+                    onClick={handleServiceTypeSubmit}
+                    disabled={serviceType.trim().length < 5}
+                    className="w-full"
+                  >
+                    Continue
+                  </Button>
+                </div>
+              )}
+
+              {/* Step 4/5: Challenge */}
+              {((step === 4 && selectedIndustry !== "professional") || (step === 5 && selectedIndustry === "professional")) && (
                 <div className="space-y-4 animate-fade-in">
                   <Textarea
                     placeholder="e.g., Wasting 10 hours per week on manual tasks, Struggling to prove ROI to leadership..."
@@ -652,8 +742,8 @@ export default function Wizard() {
                 </div>
               )}
 
-              {/* Step 5: Unique Value */}
-              {step === 5 && (
+              {/* Step 5/6: Unique Value */}
+              {((step === 5 && selectedIndustry !== "professional") || (step === 6 && selectedIndustry === "professional")) && (
                 <div className="space-y-4 animate-fade-in">
                   <Textarea
                     placeholder="e.g., Automates workflows in 5 minutes vs 2 hours manually, Integrates with existing tools..."
@@ -677,8 +767,8 @@ export default function Wizard() {
                 </div>
               )}
 
-              {/* Step 6: Offer */}
-              {step === 6 && (
+              {/* Step 6/7: Offer */}
+              {((step === 6 && selectedIndustry !== "professional") || (step === 7 && selectedIndustry === "professional")) && (
                 <div className="space-y-4 animate-fade-in">
                   <Textarea
                     placeholder="e.g., Free 14-day trial, Free consultation (30 min), Limited-time discount..."
@@ -697,8 +787,8 @@ export default function Wizard() {
                 </div>
               )}
 
-              {/* Step 7: Calculator Choice */}
-              {step === 7 && wantsCalculator === null && (
+              {/* Step 7/8: Calculator Choice */}
+              {((step === 7 && selectedIndustry !== "professional") || (step === 8 && selectedIndustry === "professional")) && wantsCalculator === null && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
                   <button
                     onClick={() => handleCalculatorChoice(true)}
@@ -721,8 +811,8 @@ export default function Wizard() {
                 </div>
               )}
 
-              {/* Step 8: Summary */}
-              {step === 8 && (
+              {/* Step 8/9: Summary */}
+              {(step === 8 || step === 9) && (
                 <div className="space-y-6 animate-fade-in">
                   <div className="bg-card border-2 border-border rounded-xl p-6">
                     <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
@@ -738,6 +828,11 @@ export default function Wizard() {
                       <div>
                         <span className="font-semibold">Target Audience:</span> {targetAudience}
                       </div>
+                      {serviceType && (
+                        <div>
+                          <span className="font-semibold">Service:</span> {serviceType}
+                        </div>
+                      )}
                       <div className="pt-3 border-t border-border">
                         <div className="font-semibold mb-2">Page Structure:</div>
                         <ul className="space-y-1 ml-4">

@@ -23,6 +23,7 @@ export type Database = {
           id: string
           industry: string | null
           offer: string | null
+          service_type: string | null
           status: string
           target_audience: string | null
           unique_value: string | null
@@ -38,6 +39,7 @@ export type Database = {
           id?: string
           industry?: string | null
           offer?: string | null
+          service_type?: string | null
           status?: string
           target_audience?: string | null
           unique_value?: string | null
@@ -53,6 +55,7 @@ export type Database = {
           id?: string
           industry?: string | null
           offer?: string | null
+          service_type?: string | null
           status?: string
           target_audience?: string | null
           unique_value?: string | null
