@@ -60,25 +60,57 @@ const SocialProof = () => {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : stats.length > 0 ? (
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            {stats.map((stat, index) => (
-              <div
-                key={index}
-                className="text-center animate-scale-in bg-card rounded-xl p-6 border border-border shadow-sm hover:shadow-md transition-shadow"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="text-5xl font-bold text-primary mb-3">
-                  {stat.statistic}
-                </div>
-                <div className="text-base text-foreground mb-3 min-h-[48px]">
-                  {stat.claim}
-                </div>
-                <cite className="text-xs text-muted-foreground not-italic block">
-                  Source: {stat.fullCitation}
-                </cite>
-              </div>
-            ))}
-          </div>
+          <>
+            <div className="grid md:grid-cols-3 gap-8 mb-12">
+              {stats.map((stat, index) => {
+                // Extract additional context from the claim
+                const getStatContext = (claim: string) => {
+                  // Try to split claim into main point and context
+                  const parts = claim.split(/(?:,|;|\s-\s)/);
+                  if (parts.length > 1) {
+                    return {
+                      main: parts[0].trim(),
+                      context: parts.slice(1).join(', ').trim()
+                    };
+                  }
+                  return { main: claim, context: '' };
+                };
+
+                const { main, context } = getStatContext(stat.claim);
+
+                return (
+                  <div
+                    key={index}
+                    className="animate-scale-in bg-card rounded-xl p-6 border border-border shadow-sm hover:shadow-md transition-shadow"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="text-center mb-4">
+                      <div className="text-5xl font-bold text-primary mb-2">
+                        {stat.statistic || 'N/A'}
+                      </div>
+                      <div className="text-base font-semibold text-foreground mb-2">
+                        {main}
+                      </div>
+                      {context && (
+                        <div className="text-sm text-muted-foreground mb-3">
+                          {context}
+                        </div>
+                      )}
+                    </div>
+                    <cite className="text-xs text-muted-foreground/70 not-italic block text-center border-t border-border pt-3">
+                      Source: {stat.fullCitation}
+                    </cite>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="max-w-3xl mx-auto text-center mb-12 p-6 bg-primary/5 rounded-xl border border-primary/20">
+              <p className="text-base text-foreground leading-relaxed">
+                <strong>Why These Numbers Matter:</strong> Most businesses struggle with high bounce rates and limited landing pages due to cost and complexity. PageConsult AI ensures every page you create is optimized from the start—combining professional design, strategic messaging, and conversion-focused features based on real market insights.
+              </p>
+            </div>
+          </>
         ) : (
           <div className="grid md:grid-cols-3 gap-8 mb-16">
             <div className="text-center bg-card rounded-xl p-6 border border-border">

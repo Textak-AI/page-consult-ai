@@ -30,16 +30,18 @@ function parseMarketData(text: string): MarketInsights {
   const claims: CitedClaim[] = [];
   const currentYear = new Date().getFullYear();
   
-  // Split into sentences
+  // Split into sentences and paragraphs
   const sentences = text.split(/[.!?]+\s+/);
   
   for (const sentence of sentences) {
-    // Match patterns like "According to [Source] (Year), [claim]"
-    // or "[Claim] - [Source], Year" or similar variations
+    // Match patterns with full context preservation
     const patterns = [
-      /according to ([^(,]+)(?:\s*\((\d{4})\)|,\s*(\d{4}))[,:]?\s*(.+)/i,
+      // "According to [Source] (Year), [full claim]"
+      /according to ([^(,]+)(?:\s*\((\d{4})\)|,?\s*(\d{4}))[,:]?\s*(.+)/i,
+      // "[Full claim] - [Source], Year"
       /([^-]+)\s*-\s*([^,]+),?\s*(\d{4})/i,
-      /([\d.]+%|[\d,]+|[\$][\d,]+(?:[KMB])?)[^(]*\(([^,)]+),?\s*(\d{4})\)/i,
+      // More flexible pattern for embedded citations
+      /(.+?)\s*\(([^,)]+),?\s*(\d{4})\)/i,
     ];
     
     for (const pattern of patterns) {
@@ -51,35 +53,41 @@ function parseMarketData(text: string): MarketInsights {
           source = match[1].trim();
           year = parseInt(match[2] || match[3]);
           claim = match[4].trim();
-          statistic = claim.match(/\d+(?:\.\d+)?%|\$[\d,]+[KMB]?|\d+(?:,\d{3})*(?:\.\d+)?x?/)?.[0] || '';
         } else if (pattern.source.includes('-')) {
           claim = match[1].trim();
           source = match[2].trim();
           year = parseInt(match[3]);
-          statistic = claim.match(/\d+(?:\.\d+)?%|\$[\d,]+[KMB]?|\d+(?:,\d{3})*(?:\.\d+)?x?/)?.[0] || '';
         } else {
-          statistic = match[1].trim();
+          claim = match[1].trim();
           source = match[2].trim();
           year = parseInt(match[3]);
-          claim = sentence.trim();
+        }
+        
+        // Extract statistic - preserve ranges, percentages, dollar amounts
+        const statMatches = claim.match(/\d+(?:\.\d+)?(?:-\d+(?:\.\d+)?)?%|\$[\d,]+(?:-\$[\d,]+)?[KMB]?|\d+(?:,\d{3})*(?:\.\d+)?(?:-\d+(?:,\d{3})*(?:\.\d+)?)?x?/g);
+        statistic = statMatches ? statMatches[0] : '';
+        
+        // Ensure percentage symbol is included
+        if (statistic && !statistic.includes('%') && claim.toLowerCase().includes('percent')) {
+          statistic = statistic + '%';
         }
         
         // Only include recent sources (2023+)
-        if (year >= 2023 && year <= currentYear) {
+        if (year >= 2023 && year <= currentYear && claim.length > 10) {
           // Determine context based on keywords
           let context: CitedClaim['context'] = 'general';
           const lowerClaim = claim.toLowerCase();
           
-          if (lowerClaim.includes('never') || lowerClaim.includes('leave') || lowerClaim.includes('abandon')) {
+          if (lowerClaim.includes('bounce') || lowerClaim.includes('leave') || lowerClaim.includes('abandon')) {
             context = 'hero';
-          } else if (lowerClaim.includes('cost') || lowerClaim.includes('loss') || lowerClaim.includes('lose') || lowerClaim.includes('problem')) {
+          } else if (lowerClaim.includes('cost') || lowerClaim.includes('price') || lowerClaim.includes('investment')) {
             context = 'problem';
-          } else if (lowerClaim.includes('roi') || lowerClaim.includes('increase') || lowerClaim.includes('improve') || lowerClaim.includes('conversion')) {
+          } else if (lowerClaim.includes('lead') || lowerClaim.includes('more') || lowerClaim.includes('increase') || lowerClaim.includes('conversion')) {
             context = 'solution';
           }
           
           claims.push({
-            statistic: statistic || claim.match(/\d+(?:\.\d+)?%|\$[\d,]+[KMB]?/)?.[0] || '',
+            statistic: statistic || claim.match(/\d+(?:\.\d+)?(?:-\d+)?%|\$[\d,]+[KMB]?/)?.[0] || '',
             claim: claim.trim(),
             source: source.trim(),
             year,
@@ -92,10 +100,16 @@ function parseMarketData(text: string): MarketInsights {
     }
   }
   
+  // Remove duplicates and ensure we have quality data
+  const uniqueClaims = claims.filter((claim, index, self) => 
+    index === self.findIndex(c => 
+      c.claim.toLowerCase() === claim.claim.toLowerCase() || 
+      (c.statistic === claim.statistic && c.source === claim.source)
+    )
+  );
+  
   return {
-    claims: claims.filter((claim, index, self) => 
-      index === self.findIndex(c => c.statistic === claim.statistic && c.source === claim.source)
-    ),
+    claims: uniqueClaims,
     fullText: text
   };
 }
