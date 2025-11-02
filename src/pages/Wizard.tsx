@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,9 @@ export default function Wizard() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [consultationId, setConsultationId] = useState<string | null>(null);
+  
+  // Prevent duplicate initialization in React StrictMode
+  const initializedRef = useRef(false);
   
   // Check for pre-filled data from demo
   const demoIndustry = searchParams.get("industry");
@@ -84,6 +87,10 @@ export default function Wizard() {
   }
 
   useEffect(() => {
+    // Prevent double execution in React StrictMode
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+    
     checkAuth();
   }, []);
 
@@ -260,7 +267,15 @@ export default function Wizard() {
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
-      setMessages(prev => [...prev, { role: "ai", content }]);
+      setMessages(prev => {
+        // Prevent duplicate messages
+        const messageExists = prev.some(msg => msg.content === content && msg.role === "ai");
+        if (messageExists) {
+          console.log("⚠️ Duplicate message prevented:", content.substring(0, 50));
+          return prev;
+        }
+        return [...prev, { role: "ai", content }];
+      });
     }, delay);
   };
 
