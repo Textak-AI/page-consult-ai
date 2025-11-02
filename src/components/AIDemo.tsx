@@ -37,6 +37,7 @@ const goals: GoalOption[] = [
 
 const AIDemo = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
@@ -49,10 +50,16 @@ const AIDemo = () => {
   const [audienceInput, setAudienceInput] = useState("");
   const [submittedAudience, setSubmittedAudience] = useState("");
 
-  // Auto-scroll to latest message
+  // Auto-scroll within chat container only
   useEffect(() => {
     setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      if (chatContainerRef.current && messagesEndRef.current) {
+        const container = chatContainerRef.current;
+        const scrollTarget = messagesEndRef.current;
+        
+        // Scroll within container, not the page
+        container.scrollTop = scrollTarget.offsetTop;
+      }
     }, 100);
   }, [messages]);
 
@@ -64,6 +71,12 @@ const AIDemo = () => {
     e.preventDefault();
     e.stopPropagation();
     
+    // Prevent any default behavior
+    if (window.event) {
+      window.event.preventDefault();
+      window.event.stopPropagation();
+    }
+    
     setSelectedIndustry(industry);
     addMessage("user", industry);
     
@@ -74,11 +87,19 @@ const AIDemo = () => {
       );
       setStep("goal");
     }, 800);
+    
+    return false;
   };
 
   const handleGoalSelect = (e: React.MouseEvent, goal: string) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Prevent any default behavior
+    if (window.event) {
+      window.event.preventDefault();
+      window.event.stopPropagation();
+    }
     
     setSelectedGoal(goal);
     addMessage("user", goal);
@@ -90,6 +111,8 @@ const AIDemo = () => {
       );
       setStep("audience");
     }, 800);
+    
+    return false;
   };
 
   const handleAudienceSubmit = () => {
@@ -130,7 +153,11 @@ const AIDemo = () => {
             </span>
           </div>
 
-          <div className="p-6 space-y-4 max-h-[520px] overflow-y-auto pb-8">
+          <div 
+            ref={chatContainerRef}
+            className="p-6 space-y-4 max-h-[520px] overflow-y-auto pb-8"
+            style={{ scrollBehavior: 'auto' }}
+          >
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -168,7 +195,12 @@ const AIDemo = () => {
                 {industries.map((industry) => (
                   <button
                     key={industry.title}
-                    onClick={(e) => handleIndustrySelect(e, industry.title)}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleIndustrySelect(e, industry.title);
+                    }}
                     className="bg-card border border-border rounded-xl p-4 text-left hover-lift hover:border-primary transition-all"
                   >
                     <div className="text-2xl mb-2">{industry.icon}</div>
@@ -188,7 +220,12 @@ const AIDemo = () => {
                 {goals.map((goal) => (
                   <button
                     key={goal.title}
-                    onClick={(e) => handleGoalSelect(e, goal.title)}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleGoalSelect(e, goal.title);
+                    }}
                     className="bg-card border border-border rounded-xl p-4 text-left hover-lift hover:border-primary transition-all"
                   >
                     <div className="flex items-center gap-3">
