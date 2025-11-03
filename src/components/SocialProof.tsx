@@ -36,10 +36,11 @@ const SocialProof = () => {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="bg-card rounded-xl p-8 shadow-md hover:-translate-y-1 transition-all duration-300 animate-scale-in"
+              className="bg-card rounded-xl p-8 shadow-md hover:-translate-y-1 transition-all duration-300 animate-scale-in border-b-2"
               style={{ 
                 animationDelay: `${index * 100}ms`,
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                borderBottomColor: '#06B6D6'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.boxShadow = '0 8px 24px rgba(6, 182, 214, 0.15)';
@@ -51,12 +52,7 @@ const SocialProof = () => {
               <div className="text-center">
                 <div 
                   className="text-[64px] font-bold mb-3" 
-                  style={{ 
-                    background: 'linear-gradient(135deg, #2563EB 0%, #06B6D6 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text'
-                  }}
+                  style={{ color: '#1e293b' }}
                 >
                   {stat.number}
                 </div>
