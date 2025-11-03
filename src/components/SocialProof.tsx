@@ -1,148 +1,61 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
-import { formatStatistic } from "@/lib/contentQuality";
-
-interface CitedStat {
-  statistic: string;
-  claim: string;
-  source: string;
-  year: number;
-  fullCitation: string;
-}
-
 const SocialProof = () => {
-  const [stats, setStats] = useState<CitedStat[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchMarketStats();
-  }, []);
-
-  const fetchMarketStats = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('perplexity-research', {
-        body: {
-          service: 'landing page optimization and conversion rate optimization',
-          industry: 'Digital Marketing',
-          concerns: 'conversion rates, page effectiveness, lead generation',
-        }
-      });
-
-      if (error || !data?.success) {
-        console.log('Using fallback stats');
-        setStats([]);
-      } else {
-        // Format statistics properly and use top 3 most impactful
-        const formattedStats = (data.allClaims || [])
-          .slice(0, 3)
-          .map((stat: CitedStat) => ({
-            ...stat,
-            statistic: formatStatistic(stat.statistic, stat.claim)
-          }));
-        setStats(formattedStats);
-      }
-    } catch (error) {
-      console.error('Error fetching market stats:', error);
-      setStats([]);
-    } finally {
-      setIsLoading(false);
+  const stats = [
+    {
+      number: "60-90%",
+      label: "Typical Bounce Rate",
+      description: "Most landing pages lose the majority of visitors without any engagement",
+      source: "Meetanshi, 2025"
+    },
+    {
+      number: "90%",
+      label: "Faster Creation",
+      description: "Modern tools reduce landing page creation time from days to hours",
+      source: "Hostinger, 2025"
+    },
+    {
+      number: "7x",
+      label: "More Leads Generated",
+      description: "Companies with 31+ landing pages see dramatically higher conversion rates",
+      source: "Industry Benchmarks, 2025"
     }
-  };
+  ];
 
   return (
     <section className="py-24 px-6 bg-muted/30">
       <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-12 animate-fade-in">
           <h2 className="text-4xl font-bold text-foreground mb-4">
-            Why Professional Landing Pages Matter
+            Market Insights
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Real market data on landing page effectiveness
+            Understanding the landing page landscape
           </p>
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : stats.length > 0 ? (
-          <>
-            <div className="grid md:grid-cols-3 gap-8 mb-12">
-              {stats.map((stat, index) => {
-                // Extract additional context from the claim
-                const getStatContext = (claim: string) => {
-                  // Try to split claim into main point and context
-                  const parts = claim.split(/(?:,|;|\s-\s)/);
-                  if (parts.length > 1) {
-                    return {
-                      main: parts[0].trim(),
-                      context: parts.slice(1).join(', ').trim()
-                    };
-                  }
-                  return { main: claim, context: '' };
-                };
-
-                const { main, context } = getStatContext(stat.claim);
-
-                return (
-                  <div
-                    key={index}
-                    className="animate-scale-in bg-card rounded-xl p-6 border border-border shadow-sm hover:shadow-md transition-shadow"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="text-center mb-4">
-                      <div className="text-5xl font-bold text-primary mb-2">
-                        {stat.statistic || 'N/A'}
-                      </div>
-                      <div className="text-base font-semibold text-foreground mb-2">
-                        {main}
-                      </div>
-                      {context && (
-                        <div className="text-sm text-muted-foreground mb-3">
-                          {context}
-                        </div>
-                      )}
-                    </div>
-                    <cite className="text-xs text-muted-foreground/70 not-italic block text-center border-t border-border pt-3">
-                      Source: {stat.fullCitation}
-                    </cite>
-                  </div>
-                );
-              })}
-            </div>
-            
-            <div className="max-w-3xl mx-auto text-center mb-12 p-6 bg-primary/5 rounded-xl border border-primary/20">
-              <p className="text-base text-foreground leading-relaxed">
-                <strong>Why These Numbers Matter:</strong> Most businesses struggle with high bounce rates and limited landing pages due to cost and complexity. PageConsult AI ensures every page you create is optimized from the start—combining professional design, strategic messaging, and conversion-focused features based on real market insights.
-              </p>
-            </div>
-          </>
-        ) : (
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            <div className="text-center bg-card rounded-xl p-6 border border-border">
-              <div className="text-5xl font-bold text-primary mb-3">10x</div>
-              <div className="text-base text-foreground mb-3">
-                Faster than traditional page builders
+        <div className="grid md:grid-cols-3 gap-8 mb-12">
+          {stats.map((stat, index) => (
+            <div
+              key={index}
+              className="bg-card rounded-xl p-8 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 animate-scale-in"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className="text-center">
+                <div className="text-[64px] font-bold mb-3" style={{ color: '#78A22F' }}>
+                  {stat.number}
+                </div>
+                <div className="text-lg font-semibold text-foreground mb-4">
+                  {stat.label}
+                </div>
+                <p className="text-[15px] text-muted-foreground leading-relaxed mb-6">
+                  {stat.description}
+                </p>
+                <cite className="text-xs text-muted-foreground/70 italic not-italic block">
+                  Source: {stat.source}
+                </cite>
               </div>
-              <p className="text-xs text-muted-foreground">AI-powered efficiency</p>
             </div>
-            <div className="text-center bg-card rounded-xl p-6 border border-border">
-              <div className="text-5xl font-bold text-primary mb-3">100%</div>
-              <div className="text-base text-foreground mb-3">
-                Tailored to your audience
-              </div>
-              <p className="text-xs text-muted-foreground">Consultation-driven approach</p>
-            </div>
-            <div className="text-center bg-card rounded-xl p-6 border border-border">
-              <div className="text-5xl font-bold text-primary mb-3">24/7</div>
-              <div className="text-base text-foreground mb-3">
-                AI consultant availability
-              </div>
-              <p className="text-xs text-muted-foreground">Always ready to help</p>
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
 
         <div className="max-w-3xl mx-auto bg-card rounded-2xl p-8 shadow-xl animate-slide-up border border-border">
           <div className="flex items-start gap-4">
