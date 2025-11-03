@@ -6,6 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { MessageCircle, Loader2 } from "lucide-react";
+import { useSession } from "@/contexts/SessionContext";
+import { EmailCaptureModal } from "@/components/editor/EmailCaptureModal";
+import { WelcomeBackModal } from "@/components/editor/WelcomeBackModal";
 
 type Message = {
   role: "ai" | "user";
@@ -37,9 +40,16 @@ const goals = [
 export default function Wizard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { saveSession, setUserEmail, loadSession, sessionToken } = useSession();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [consultationId, setConsultationId] = useState<string | null>(null);
+  
+  // Session modals
+  const [emailCaptureOpen, setEmailCaptureOpen] = useState(false);
+  const [welcomeBackOpen, setWelcomeBackOpen] = useState(false);
+  const [welcomeBackData, setWelcomeBackData] = useState<any>(null);
+  const [hasShownEmailCapture, setHasShownEmailCapture] = useState(false);
   
   // Prevent duplicate initialization in React StrictMode
   const initializedRef = useRef(false);
@@ -190,6 +200,28 @@ export default function Wizard() {
     
     if (existingConsultation) {
       console.log("📂 Resuming existing consultation");
+      
+      // Check if this is a returning visitor (has progress beyond step 1)
+      const hasProgress = existingConsultation.industry || existingConsultation.goal || existingConsultation.target_audience;
+      
+      if (hasProgress) {
+        // Show welcome back modal
+        const progressText = existingConsultation.offer 
+          ? "Almost done - just need to finalize"
+          : existingConsultation.unique_value 
+          ? "Halfway through - 3 questions left"
+          : existingConsultation.target_audience
+          ? "Started - 5 questions to go"
+          : "Just beginning";
+        
+        setWelcomeBackData({
+          industry: existingConsultation.industry,
+          goal: existingConsultation.goal,
+          progress: progressText
+        });
+        setWelcomeBackOpen(true);
+      }
+      
       setConsultationId(existingConsultation.id);
       
       // Load existing answers
@@ -329,10 +361,20 @@ export default function Wizard() {
   const saveProgress = async (updates: any) => {
     if (!consultationId) return;
     
+    // Save to consultations table
     await supabase
       .from("consultations")
       .update(updates)
       .eq("id", consultationId);
+    
+    // Also save to session
+    await saveSession({
+      consultation_answers: {
+        ...updates,
+        step
+      },
+      current_step: `step_${step}`
+    });
   };
 
   const handleIndustrySelect = async (industry: IndustryType) => {
@@ -401,6 +443,12 @@ export default function Wizard() {
     console.log("💬 Submitting audience:", targetAudience);
     addUserMessage(targetAudience);
     await saveProgress({ target_audience: targetAudience });
+    
+    // Show email capture modal after question 3 (first time only)
+    if (!hasShownEmailCapture && step === 3) {
+      setHasShownEmailCapture(true);
+      setTimeout(() => setEmailCaptureOpen(true), 1000);
+    }
     
     // Check if this is professional services - if so, ask for service type
     if (selectedIndustry === "professional") {
@@ -1153,6 +1201,45 @@ export default function Wizard() {
           )}
         </div>
       </main>
+      
+      {/* Email capture modal */}
+      <EmailCaptureModal
+        open={emailCaptureOpen}
+        onOpenChange={setEmailCaptureOpen}
+        onEmailSubmit={async (email) => {
+          await setUserEmail(email);
+          toast({
+            title: "✓ Email saved",
+            description: "Your progress is bookmarked. You can return anytime!",
+            duration: 3000
+          });
+        }}
+      />
+      
+      {/* Welcome back modal */}
+      <WelcomeBackModal
+        open={welcomeBackOpen}
+        onOpenChange={setWelcomeBackOpen}
+        sessionData={welcomeBackData || { progress: "" }}
+        onContinue={() => {
+          setWelcomeBackOpen(false);
+          // Continue with loaded session
+        }}
+        onStartNew={async () => {
+          setWelcomeBackOpen(false);
+          // Clear session and start fresh
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase
+              .from("consultations")
+              .update({ status: "abandoned" })
+              .eq("user_id", user.id)
+              .eq("status", "in_progress");
+            
+            window.location.reload();
+          }
+        }}
+      />
     </div>
   );
 }
