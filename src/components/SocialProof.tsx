@@ -36,11 +36,28 @@ const SocialProof = () => {
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="bg-card rounded-xl p-8 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 animate-scale-in"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="bg-card rounded-xl p-8 shadow-md hover:-translate-y-1 transition-all duration-300 animate-scale-in"
+              style={{ 
+                animationDelay: `${index * 100}ms`,
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(6, 182, 214, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+              }}
             >
               <div className="text-center">
-                <div className="text-[64px] font-bold mb-3" style={{ color: '#78A22F' }}>
+                <div 
+                  className="text-[64px] font-bold mb-3" 
+                  style={{ 
+                    background: 'linear-gradient(135deg, #2563EB 0%, #06B6D6 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text'
+                  }}
+                >
                   {stat.number}
                 </div>
                 <div className="text-lg font-semibold text-foreground mb-4">
