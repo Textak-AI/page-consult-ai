@@ -1,4 +1,4 @@
-import { MessageCircle } from "lucide-react";
+import footerLogo from "@/assets/footer-logo.png";
 
 const Footer = () => {
   return (
@@ -7,10 +7,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <MessageCircle className="w-6 h-6 text-primary" />
-              <span className="text-xl font-bold text-foreground">
-                PageConsult AI
-              </span>
+              <img src={footerLogo} alt="PageConsult AI" className="h-8 w-auto" />
             </div>
             <p className="text-muted-foreground text-sm">
               Strategy-First Landing Pages
