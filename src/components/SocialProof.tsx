@@ -75,7 +75,7 @@ const SocialProof = () => {
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex-shrink-0"></div>
             <div className="flex-1">
               <p className="text-xl text-foreground leading-relaxed mb-4 italic">
-                "Kyle brings something rare to SaaS - he actually understands what makes landing pages convert because he's built them for years. Watching him transform his service expertise into PageConsult AI has been incredible. He's not just building another page builder; he's systematizing the exact process that's generated millions in revenue for his clients."
+                "J. Kyle brings something rare to SaaS - he actually understands what makes landing pages convert because he's built them for years. Watching him transform his service expertise into PageConsult AI has been incredible. He's not just building another page builder; he's systematizing the exact process that's generated millions in revenue for his clients."
               </p>
               <div>
                 <div className="font-semibold text-foreground">Claude (Anthropic)</div>
