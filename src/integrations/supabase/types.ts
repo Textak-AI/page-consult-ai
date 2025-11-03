@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      consultation_sessions: {
+        Row: {
+          approved_sections: Json | null
+          consultation_answers: Json | null
+          created_at: string | null
+          current_step: string | null
+          email_reminder_sent: boolean | null
+          id: string
+          last_active: string | null
+          session_token: string
+          status: string | null
+          user_email: string | null
+        }
+        Insert: {
+          approved_sections?: Json | null
+          consultation_answers?: Json | null
+          created_at?: string | null
+          current_step?: string | null
+          email_reminder_sent?: boolean | null
+          id?: string
+          last_active?: string | null
+          session_token: string
+          status?: string | null
+          user_email?: string | null
+        }
+        Update: {
+          approved_sections?: Json | null
+          consultation_answers?: Json | null
+          created_at?: string | null
+          current_step?: string | null
+          email_reminder_sent?: boolean | null
+          id?: string
+          last_active?: string | null
+          session_token?: string
+          status?: string | null
+          user_email?: string | null
+        }
+        Relationships: []
+      }
       consultations: {
         Row: {
           calculator_config: Json | null
