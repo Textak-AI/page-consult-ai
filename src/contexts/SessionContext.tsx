@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
+import { emailSchema, sessionTokenSchema } from '@/lib/validationSchemas';
+import { z } from 'zod';
 
 type SessionContextType = {
   sessionToken: string | null;
@@ -96,6 +98,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const saveSession = async (updates: Partial<SessionData>) => {
     if (!sessionToken || isSaving) return;
     
+    // Priority 1 Security Fix: Validate session token format
+    try {
+      sessionTokenSchema.parse(sessionToken);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('Invalid session token:', error);
+      }
+      toast({
+        title: "⚠️ Invalid session",
+        description: "Please refresh the page to start a new session.",
+        variant: "destructive",
+        duration: 3000
+      });
+      return;
+    }
+    
     setIsSaving(true);
     
     const { error } = await supabase
@@ -107,7 +125,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       .eq('session_token', sessionToken);
     
     if (error) {
-      console.error('Error saving session:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error saving session:', error);
+      }
       toast({
         title: "⚠️ Connection issue",
         description: "Changes not saved. Please check your connection.",
@@ -128,6 +148,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const setUserEmail = async (email: string) => {
     if (!sessionToken) return;
+    
+    // Priority 1 Security Fix: Validate email format
+    try {
+      emailSchema.parse(email);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Invalid email",
+          description: error.errors[0].message,
+          variant: "destructive",
+          duration: 3000
+        });
+      }
+      return;
+    }
     
     const { error } = await supabase
       .from('consultation_sessions')

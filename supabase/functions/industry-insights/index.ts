@@ -6,6 +6,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Priority 1 Security Fix: Rate limiting
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const RATE_LIMIT_MAX = 10; // 10 requests per minute
+
+function checkRateLimit(identifier: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(identifier);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
 interface InsightsRequest {
   industry: string;
   serviceType?: string;
@@ -19,23 +41,27 @@ serve(async (req) => {
   }
 
   try {
+    // Priority 1 Security Fix: Rate limiting check
+    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    if (!checkRateLimit(clientIp)) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }), 
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { industry, serviceType, location, audience }: InsightsRequest = await req.json();
     const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
 
     if (!perplexityApiKey) {
-      console.error('PERPLEXITY_API_KEY not configured');
       return new Response(
         JSON.stringify({ error: 'API key not configured' }), 
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Generating industry insights for:', { industry, serviceType, location });
-
     // Build contextual query based on industry type
     const query = buildQuery(industry, serviceType, location, audience);
-
-    console.log('Perplexity query:', query);
 
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
@@ -63,7 +89,6 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Perplexity API error:', response.status, errorText);
       return new Response(
         JSON.stringify({ error: 'Failed to get industry insights', details: errorText }), 
         { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -74,14 +99,11 @@ serve(async (req) => {
     const insights = data.choices?.[0]?.message?.content;
 
     if (!insights) {
-      console.error('No insights in response:', data);
       return new Response(
         JSON.stringify({ error: 'No insights generated' }), 
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log('Generated insights:', insights);
 
     // Parse the insights into structured data
     const structuredInsights = parseInsights(insights, industry, serviceType);
@@ -92,7 +114,6 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in industry-insights function:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), 
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

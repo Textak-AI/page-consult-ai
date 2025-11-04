@@ -5,6 +5,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Priority 1 Security Fix: Rate limiting
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const RATE_LIMIT_MAX = 10; // 10 requests per minute
+
+function checkRateLimit(identifier: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(identifier);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
 interface ResearchRequest {
   service: string;
   location?: string;
@@ -120,9 +142,16 @@ serve(async (req) => {
   }
 
   try {
+    // Priority 1 Security Fix: Rate limiting check
+    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    if (!checkRateLimit(clientIp)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Rate limit exceeded. Please try again in a moment.' }), 
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { service, location, industry, concerns }: ResearchRequest = await req.json();
-    
-    console.log('Research request:', { service, location, industry, concerns });
     
     const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');
     if (!PERPLEXITY_API_KEY) {
@@ -149,9 +178,6 @@ Find data for these specific angles:
 
 Example format: "According to HubSpot (2024), 73% of website visitors never return after leaving a site."`;
 
-
-    console.log('Calling Perplexity API with query:', query);
-
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
@@ -173,12 +199,10 @@ Example format: "According to HubSpot (2024), 73% of website visitors never retu
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Perplexity API error:', response.status, errorText);
       throw new Error(`Perplexity API error: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('Perplexity response:', data);
     
     const insights = data.choices[0].message.content;
     const parsedData = parseMarketData(insights);
@@ -205,7 +229,6 @@ Example format: "According to HubSpot (2024), 73% of website visitors never retu
       }
     );
   } catch (error) {
-    console.error('Error in perplexity-research function:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({
