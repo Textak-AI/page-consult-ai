@@ -67,13 +67,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     // No existing session, create a new one
     const token = uuidv4();
 
+    // Get current user if authenticated
+    const { data: { session: authSession } } = await supabase.auth.getSession();
+
     // Create new session in database
     const { data, error } = await supabase
       .from('consultation_sessions')
       .insert({
         session_token: token,
         current_step: 'consultation',
-        status: 'in_progress'
+        status: 'in_progress',
+        user_id: authSession?.user?.id || null
       })
       .select()
       .single();
