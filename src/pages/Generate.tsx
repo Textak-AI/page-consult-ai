@@ -70,12 +70,22 @@ export default function Generate() {
   const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
   const [stylePickerOpen, setStylePickerOpen] = useState(false);
 
-  const loadingMessages = [
-    { icon: Check, text: "Analyzing your strategy" },
-    { icon: Check, text: "Writing compelling copy" },
-    { icon: Check, text: "Configuring calculator" },
-    { icon: Check, text: "Optimizing for conversion" },
-  ];
+  // Dynamic loading messages based on whether calculator is included
+  const getLoadingMessages = () => {
+    const messages = [
+      { icon: Check, text: "Analyzing your strategy" },
+      { icon: Check, text: "Writing compelling copy" },
+    ];
+    
+    if (consultation?.wants_calculator) {
+      messages.push({ icon: Check, text: "Configuring calculator" });
+    }
+    
+    messages.push({ icon: Check, text: "Optimizing for conversion" });
+    return messages;
+  };
+  
+  const loadingMessages = getLoadingMessages();
 
   useEffect(() => {
     loadConsultation();
