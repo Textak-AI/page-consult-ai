@@ -26,8 +26,39 @@ export interface ConsultationData {
   calculator_config?: any;
 }
 
+// AI-powered content generation with fallback to templates
+export async function generatePageContentWithAI(data: ConsultationData): Promise<{
+  headline: string;
+  subheadline: string;
+  features: Array<{title: string; description: string; icon: string}>;
+  ctaText: string;
+  problemStatement: string;
+  solutionStatement: string;
+} | null> {
+  try {
+    const { supabase } = await import('@/integrations/supabase/client');
+    const headers = await getAuthHeaders();
+    
+    const { data: result, error } = await supabase.functions.invoke('generate-page-content', {
+      body: data,
+      headers,
+    });
+    
+    if (error || !result?.success) {
+      console.log('AI content generation failed, using fallback templates');
+      return null;
+    }
+    
+    console.log('✅ AI-generated content:', result.content);
+    return result.content;
+  } catch (error) {
+    console.error('Error generating AI content:', error);
+    return null;
+  }
+}
+
 export function generateHeadline(data: ConsultationData): string {
-  // Use intelligent transformation instead of templates
+  // Fallback template-based generation
   const headline = transformChallenge(
     data.challenge || '', 
     data.industry || 'Professional Services',

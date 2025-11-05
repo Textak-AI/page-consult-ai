@@ -182,6 +182,7 @@ export default function Generate() {
   const generateSections = async (consultationData: any): Promise<Section[]> => {
     // Import generator functions
     const { 
+      generatePageContentWithAI,
       generateHeadline: genHeadline,
       generateSubheadline,
       generateFeatures: genFeatures,
@@ -193,11 +194,38 @@ export default function Generate() {
       validateGeneratedPage,
     } = await import('@/lib/contentGenerator');
 
-    const headline = genHeadline(consultationData);
-    const subheadline = generateSubheadline(consultationData);
-    const features = genFeatures(consultationData);
+    // Try AI-powered content generation first
+    const aiContent = await generatePageContentWithAI(consultationData);
+    
+    let headline: string;
+    let subheadline: string;
+    let features: any[];
+    let ctaText: string;
+    let problemStatement: string;
+    let solutionStatement: string;
+    
+    if (aiContent) {
+      // Use AI-generated content
+      console.log('✅ Using AI-generated content');
+      headline = aiContent.headline;
+      subheadline = aiContent.subheadline;
+      features = aiContent.features;
+      ctaText = aiContent.ctaText;
+      problemStatement = aiContent.problemStatement;
+      solutionStatement = aiContent.solutionStatement;
+    } else {
+      // Fallback to template-based generation
+      console.log('⚠️ Using fallback template generation');
+      headline = genHeadline(consultationData);
+      subheadline = generateSubheadline(consultationData);
+      features = genFeatures(consultationData);
+      const cta = generateCTA(consultationData);
+      ctaText = cta.text;
+      problemStatement = transformProblemStatement(consultationData.challenge);
+      solutionStatement = transformSolutionStatement(consultationData.unique_value, consultationData.industry);
+    }
+    
     const socialProof = await genSocialProof(consultationData);
-    const cta = generateCTA(consultationData);
     const fomo = generateFOMO(consultationData);
     
     // Fetch strategic market insights with citations
@@ -240,8 +268,8 @@ export default function Generate() {
         content: {
           headline,
           subheadline,
-          ctaText: cta.text,
-          ctaLink: cta.link,
+          ctaText,
+          ctaLink: '#signup',
           fomo,
           citedStat: strategicInsights?.hero,
         },
@@ -251,8 +279,8 @@ export default function Generate() {
         order: 1,
         visible: true,
         content: {
-          problem: transformProblemStatement(consultationData.challenge),
-          solution: transformSolutionStatement(consultationData.unique_value, consultationData.industry),
+          problem: problemStatement,
+          solution: solutionStatement,
           problemStat: strategicInsights?.problem,
           solutionStat: strategicInsights?.solution,
         },
@@ -289,8 +317,8 @@ export default function Generate() {
         visible: true,
         content: {
           headline: `Ready to ${consultationData.goal?.toLowerCase() || 'get started'}?`,
-          ctaText: cta.text,
-          ctaLink: cta.link,
+          ctaText,
+          ctaLink: '#signup',
         },
       }
     );
