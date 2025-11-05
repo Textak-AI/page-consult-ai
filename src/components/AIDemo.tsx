@@ -104,8 +104,12 @@ const AIDemo = () => {
         const container = chatContainerRef.current;
         const scrollTarget = messagesEndRef.current;
         
-        // Scroll within container, not the page
-        container.scrollTop = scrollTarget.offsetTop;
+        // Calculate scroll position that shows both question and buttons
+        // Subtract 200px to keep the last AI message (question) visible above buttons
+        const targetScrollTop = scrollTarget.offsetTop - 200;
+        
+        // Use smooth scrolling and ensure we don't scroll above content
+        container.scrollTop = Math.max(0, targetScrollTop);
       }
     }, 100);
   }, [messages]);
