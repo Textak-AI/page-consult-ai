@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { getAuthHeaders } from './authHelpers';
 
 export interface IndustryInsights {
   industry: string;
@@ -24,6 +25,8 @@ export async function getIndustryInsights(
   try {
     console.log('Fetching industry insights:', { industry, serviceType, location, audience });
     
+    const headers = await getAuthHeaders();
+    
     const { data, error } = await supabase.functions.invoke('industry-insights', {
       body: {
         industry,
@@ -31,6 +34,7 @@ export async function getIndustryInsights(
         location,
         audience,
       },
+      headers,
     });
 
     if (error) {

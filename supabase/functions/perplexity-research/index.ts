@@ -1,31 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Priority 1 Security Fix: Rate limiting
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const RATE_LIMIT_MAX = 10; // 10 requests per minute
-
-function checkRateLimit(identifier: string): boolean {
-  const now = Date.now();
-  const record = rateLimitMap.get(identifier);
-  
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-  
-  if (record.count >= RATE_LIMIT_MAX) {
-    return false;
-  }
-  
-  record.count++;
-  return true;
-}
 
 interface ResearchRequest {
   service: string;
@@ -142,11 +121,43 @@ serve(async (req) => {
   }
 
   try {
-    // Priority 1 Security Fix: Rate limiting check
-    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    if (!checkRateLimit(clientIp)) {
+    // Authentication check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Rate limit exceeded. Please try again in a moment.' }), 
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check user's API usage limit
+    const { data: userPlan, error: planError } = await supabaseClient
+      .from('user_plans')
+      .select('plan_name, api_calls_remaining')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (planError) {
+      console.error('Error fetching user plan:', planError);
+    }
+
+    if (userPlan && userPlan.api_calls_remaining <= 0) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'API rate limit exceeded. Please upgrade your plan or wait for the next billing cycle.' }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -212,6 +223,14 @@ Example format: "According to HubSpot (2024), 73% of website visitors never retu
     const problemClaim = parsedData.claims.find(c => c.context === 'problem');
     const solutionClaim = parsedData.claims.find(c => c.context === 'solution');
     
+    // Decrement API calls for the user
+    if (userPlan) {
+      await supabaseClient
+        .from('user_plans')
+        .update({ api_calls_remaining: userPlan.api_calls_remaining - 1 })
+        .eq('user_id', user.id);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

@@ -172,12 +172,45 @@ export type Database = {
           },
         ]
       }
+      user_plans: {
+        Row: {
+          api_calls_limit: number
+          api_calls_remaining: number
+          created_at: string
+          id: string
+          plan_name: string
+          reset_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_calls_limit?: number
+          api_calls_remaining?: number
+          created_at?: string
+          id?: string
+          plan_name?: string
+          reset_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_calls_limit?: number
+          api_calls_remaining?: number
+          created_at?: string
+          id?: string
+          plan_name?: string
+          reset_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      reset_api_calls: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

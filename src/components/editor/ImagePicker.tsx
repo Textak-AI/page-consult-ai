@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Search, Loader2 } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Search, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { getAuthHeaders } from '@/lib/authHelpers';
 
 interface UnsplashImage {
   id: string;
@@ -48,7 +49,6 @@ export function ImagePicker({ open, onClose, onSelect, defaultQuery }: ImagePick
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (open && defaultQuery) {
@@ -61,8 +61,11 @@ export function ImagePicker({ open, onClose, onSelect, defaultQuery }: ImagePick
 
     setLoading(true);
     try {
+      const headers = await getAuthHeaders();
+      
       const { data, error } = await supabase.functions.invoke('unsplash-search', {
-        body: { query: query.trim(), page: pageNum, perPage: 12 }
+        body: { query: query.trim(), page: pageNum, perPage: 12 },
+        headers,
       });
 
       if (error) throw error;

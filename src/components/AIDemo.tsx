@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { User, Send, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthHeaders } from "@/lib/authHelpers";
 import aiChatIcon from "@/assets/ai-chat-icon.png";
 import aiChatIconInChat from "@/assets/ai-chat-icon-inchat.png";
 
@@ -245,13 +246,16 @@ const AIDemo = () => {
     setIsResearching(true);
     
     try {
+      const headers = await getAuthHeaders();
+      
       const { data, error } = await supabase.functions.invoke('perplexity-research', {
         body: {
           service: submittedService,
           location: submittedAudience || 'nationwide',
           industry: selectedIndustry,
           concerns: selectedHesitation
-        }
+        },
+        headers,
       });
 
       if (error) throw error;

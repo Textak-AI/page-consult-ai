@@ -12,6 +12,7 @@ import {
   ensureProfessionalCopy, 
   logQualityReport 
 } from './contentQuality';
+import { getAuthHeaders } from './authHelpers';
 
 export interface ConsultationData {
   industry?: string;
@@ -127,13 +128,16 @@ export async function fetchStrategicInsights(data: ConsultationData) {
     const location = extractLocation(data.target_audience);
     const { supabase } = await import('@/integrations/supabase/client');
     
+    const headers = await getAuthHeaders();
+    
     const { data: result, error } = await supabase.functions.invoke('perplexity-research', {
       body: {
         service: data.service_type || data.industry,
         location,
         industry: data.industry,
         concerns: data.challenge,
-      }
+      },
+      headers,
     });
     
     if (error || !result?.success) {

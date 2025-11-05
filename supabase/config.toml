@@ -1,16 +1,16 @@
 project_id = "wopnfuzevpldhkshkmrk"
 
 [functions.perplexity-research]
-verify_jwt = false
+verify_jwt = true
 
 [functions.industry-insights]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ai-consultant]
-verify_jwt = false
+verify_jwt = true
 
 [functions.unsplash-search]
-verify_jwt = false
+verify_jwt = true
 
 [functions.set-session-cookie]
 verify_jwt = false

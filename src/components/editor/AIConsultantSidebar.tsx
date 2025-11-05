@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { getAuthHeaders } from "@/lib/authHelpers";
 
 interface Message {
   role: "user" | "assistant";
@@ -36,6 +38,7 @@ export function AIConsultantSidebar({
   const [isLoading, setIsLoading] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -56,14 +59,13 @@ export function AIConsultantSidebar({
     setShowQuickActions(false);
 
     try {
+      const headers = await getAuthHeaders();
+      
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-consultant`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
+          headers,
           body: JSON.stringify({
             messages: [],
             pageContent,
@@ -79,9 +81,15 @@ export function AIConsultantSidebar({
       await streamResponse(response.body);
     } catch (error) {
       console.error('Error analyzing page:', error);
+      const errorMessage = error instanceof Error ? error.message : "I'm having trouble connecting right now. Please try again in a moment.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: "I'm having trouble connecting right now. Please try again in a moment."
+        content: errorMessage
       }]);
     } finally {
       setIsLoading(false);
@@ -98,14 +106,13 @@ export function AIConsultantSidebar({
     setShowQuickActions(false);
 
     try {
+      const headers = await getAuthHeaders();
+      
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-consultant`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
+          headers,
           body: JSON.stringify({
             messages: [...messages, { role: 'user', content: userMessage }],
             pageContent,
