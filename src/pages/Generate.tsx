@@ -316,8 +316,8 @@ export default function Generate() {
         order: 5,
         visible: true,
         content: {
-          headline: `Ready to ${consultationData.goal?.toLowerCase() || 'get started'}?`,
-          ctaText,
+          headline: `Ready to Get Started?`,
+          ctaText, // Uses offer-based CTA, not goal
           ctaLink: '#signup',
         },
       }

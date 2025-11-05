@@ -57,7 +57,7 @@ function createCompellingHeadline(solution: string, industry: string, audience?:
   
   // Professional services headlines (trust-focused)
   if (industryKey?.includes('professional')) {
-    return `${capitalize(solution)} You Can Trust`;
+    return `Professional ${industry} You Can Trust`;
   }
   
   // E-commerce headlines (benefit-focused)
@@ -70,8 +70,8 @@ function createCompellingHeadline(solution: string, industry: string, audience?:
     return `${capitalize(solution)} With Expert Care`;
   }
   
-  // Default compelling format
-  return `The ${capitalize(solution)} Platform`;
+  // Default: Never use "Platform" for services
+  return `Expert ${industry} Services`;
 }
 
 function generateDefaultHeadline(industry: string, audience?: string): string {

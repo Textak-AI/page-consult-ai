@@ -97,30 +97,8 @@ export function generateFeatures(data: ConsultationData) {
 }
 
 export async function generateSocialProof(data: ConsultationData) {
-  const template = getIndustryTemplate(data.industry);
-  
-  // Generate realistic stats based on industry
-  const baseStats = [
-    { label: template.statsLabels[0], value: '2,847+' },
-    { label: template.statsLabels[1], value: '98.5%' },
-    { label: template.statsLabels[2], value: '12+' },
-  ];
-  
-  // Generate activity based on industry and service type
-  const activityType = template.ctaText.toLowerCase().includes('quote') 
-    ? 'requested a quote'
-    : template.ctaText.toLowerCase().includes('trial')
-    ? 'started a trial'
-    : template.ctaText.toLowerCase().includes('shop')
-    ? 'made a purchase'
-    : 'signed up';
-  
-  const recentActivity = [
-    { name: 'Sarah M.', action: activityType, time: '2 minutes ago', location: 'California' },
-    { name: 'James K.', action: 'became a customer', time: '5 minutes ago', location: 'Texas' },
-    { name: 'Lisa T.', action: activityType, time: '8 minutes ago', location: 'New York' },
-    { name: 'Michael R.', action: 'left a 5-star review', time: '12 minutes ago', location: 'Florida' },
-  ];
+  // REMOVED: No longer generating fake stats or activity
+  // Social proof should only be shown if user provides real data
   
   // Check if we should enhance with industry insights
   let industryInsights = null;
@@ -147,8 +125,8 @@ export async function generateSocialProof(data: ConsultationData) {
   }
   
   return {
-    stats: baseStats,
-    recentActivity,
+    stats: [], // No fake stats
+    recentActivity: [], // No fake activity
     industryInsights,
   };
 }
@@ -214,34 +192,12 @@ export function generateCTA(data: ConsultationData) {
 }
 
 export function generateFOMO(data: ConsultationData) {
-  const template = getIndustryTemplate(data.industry);
-  
-  // Industry-specific FOMO badges
-  const badges = {
-    professional_services: '🔥 127 homeowners requested quotes today',
-    b2b_saas: '🔥 89 companies started their free trial today',
-    ecommerce: '🔥 234 customers shopping right now',
-    healthcare: '🔥 45 appointments booked today',
-    education: '🔥 156 students enrolled this week',
-    real_estate: '🔥 78 showings scheduled this week',
-    default: '🔥 127 people viewed this in the last hour',
-  };
-  
-  const urgencies = {
-    professional_services: 'Limited availability - only 8 slots left this month',
-    b2b_saas: '14-day free trial - no credit card required',
-    ecommerce: 'Sale ends tonight - save up to 40%',
-    healthcare: 'Same-day appointments available',
-    education: 'Early bird discount ends Friday',
-    real_estate: 'New properties added daily',
-    default: 'Limited spots available - 23 left this month',
-  };
-  
-  const industryKey = data.industry?.toLowerCase().replace(/\s+/g, '_') as keyof typeof badges || 'default';
+  // REMOVED: No longer generating fake urgency badges or viewer counts
+  // FOMO should only be shown if user provides real urgency (limited spots, sale dates, etc.)
   
   return {
-    badge: badges[industryKey] || badges.default,
-    urgency: urgencies[industryKey] || urgencies.default,
+    badge: '', // No fake badges
+    urgency: '', // No fake urgency
   };
 }
 
