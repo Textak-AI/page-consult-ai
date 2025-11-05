@@ -202,10 +202,12 @@ export default function Wizard() {
       console.log("📂 Resuming existing consultation");
       
       // Check if this is a returning visitor (has progress beyond step 1)
+      // AND is coming from outside the wizard (not already in the flow)
       const hasProgress = existingConsultation.industry || existingConsultation.goal || existingConsultation.target_audience;
+      const isReturningFromOutside = !sessionStorage.getItem('wizard_active');
       
-      if (hasProgress) {
-        // Show welcome back modal
+      if (hasProgress && isReturningFromOutside) {
+        // Show welcome back modal only when returning from outside
         const progressText = existingConsultation.offer 
           ? "Almost done - just need to finalize"
           : existingConsultation.unique_value 
@@ -221,6 +223,9 @@ export default function Wizard() {
         });
         setWelcomeBackOpen(true);
       }
+      
+      // Mark that wizard is active
+      sessionStorage.setItem('wizard_active', 'true');
       
       setConsultationId(existingConsultation.id);
       
@@ -653,7 +658,32 @@ export default function Wizard() {
     addAIMessage("Perfect! I have everything I need. Here's your custom landing page strategy:");
   };
 
-  const handleBuildPage = () => {
+  const handleBuildPage = async () => {
+    if (!consultationId) {
+      toast({
+        title: "Error",
+        description: "Session not found. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Mark consultation as completed before navigating
+    const { error } = await supabase
+      .from("consultations")
+      .update({ status: "completed" })
+      .eq("id", consultationId);
+
+    if (error) {
+      console.error("Error marking consultation as completed:", error);
+      toast({
+        title: "Error",
+        description: "Could not complete consultation. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     navigate("/generate");
   };
 
