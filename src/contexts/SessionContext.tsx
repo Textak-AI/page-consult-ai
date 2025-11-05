@@ -95,11 +95,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Set the session cookie via edge function
+    // Set session token and ID immediately (works without cookie)
+    setSessionToken(token);
+    setSessionId(data.id);
+
+    // Try to set the session cookie via edge function (optional enhancement)
     try {
       const response = await fetch(`${SUPABASE_URL}/functions/v1/set-session-cookie`, {
         method: 'POST',
-        credentials: 'include', // Important: includes cookies
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -107,21 +111,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to set session cookie');
+        // Log but don't fail - session works without cookie
+        if (import.meta.env.DEV) {
+          console.warn('Cookie setting failed, but session created successfully');
+        }
       }
-
-      setSessionToken(token);
-      setSessionId(data.id);
     } catch (error) {
+      // Cookie is optional - session already works via state
       if (import.meta.env.DEV) {
-        console.error('Error setting session cookie:', error);
+        console.warn('Could not set session cookie (non-critical):', error);
       }
-      toast({
-        title: "⚠️ Session error",
-        description: "Could not save session. Please refresh the page.",
-        variant: "destructive",
-        duration: 5000
-      });
     }
   };
 
