@@ -8,6 +8,7 @@ import { SectionManager } from "@/components/editor/SectionManager";
 import { LivePreview } from "@/components/editor/LivePreview";
 import { PublishModal } from "@/components/editor/PublishModal";
 import { AIConsultantSidebar } from "@/components/editor/AIConsultantSidebar";
+import { CalculatorUpgradeModal } from "@/components/editor/CalculatorUpgradeModal";
 import { StylePicker } from "@/components/editor/StylePicker";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
 
@@ -69,6 +70,7 @@ export default function Generate() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
   const [stylePickerOpen, setStylePickerOpen] = useState(false);
+  const [calculatorUpgradeOpen, setCalculatorUpgradeOpen] = useState(false);
 
   // Dynamic loading messages based on whether calculator is included
   const getLoadingMessages = () => {
@@ -172,6 +174,8 @@ export default function Generate() {
     setTimeout(() => {
       setPhase("editor");
       setShowConfetti(false);
+      // Show calculator upgrade offer after 2 seconds in editor
+      setTimeout(() => setCalculatorUpgradeOpen(true), 2000);
     }, 5500);
   };
 
@@ -451,6 +455,8 @@ export default function Generate() {
         setAiConsultantOpen={setAiConsultantOpen}
         stylePickerOpen={stylePickerOpen}
         setStylePickerOpen={setStylePickerOpen}
+        calculatorUpgradeOpen={calculatorUpgradeOpen}
+        setCalculatorUpgradeOpen={setCalculatorUpgradeOpen}
       />
     </EditingProvider>
   );
@@ -469,9 +475,45 @@ function EditorContent({
   setAiConsultantOpen,
   stylePickerOpen,
   setStylePickerOpen,
+  calculatorUpgradeOpen,
+  setCalculatorUpgradeOpen,
 }: any) {
   const { toast } = useToast();
   const { pageStyle, setPageStyle } = useEditing();
+
+  const handleAddCalculator = async (config: { type: string; inputs: string[] }) => {
+    // Add calculator section to the page
+    const newCalculatorSection = {
+      type: "calculator",
+      order: 2,
+      visible: true,
+      content: config,
+    };
+
+    // Insert calculator after problem-solution section
+    const updatedSections = [...sections];
+    updatedSections.splice(2, 0, newCalculatorSection);
+    
+    // Reorder remaining sections
+    updatedSections.forEach((section, index) => {
+      section.order = index;
+    });
+
+    setSections(updatedSections);
+
+    // Save to database
+    if (pageData) {
+      await supabase
+        .from("landing_pages")
+        .update({ sections: updatedSections })
+        .eq("id", pageData.id);
+    }
+
+    toast({
+      title: "Calculator added!",
+      description: "Your interactive calculator has been added to the page.",
+    });
+  };
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -562,6 +604,13 @@ function EditorContent({
             description: `Applied ${style} style to all sections`,
           });
         }}
+      />
+
+      <CalculatorUpgradeModal
+        open={calculatorUpgradeOpen}
+        onOpenChange={setCalculatorUpgradeOpen}
+        onAddCalculator={handleAddCalculator}
+        industry={consultation?.industry}
       />
     </div>
   );
