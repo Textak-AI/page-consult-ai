@@ -5,6 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { emailSchema, sessionTokenSchema } from '@/lib/validationSchemas';
 import { z } from 'zod';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
 type SessionContextType = {
   sessionToken: string | null;
   sessionId: string | null;
@@ -23,8 +25,6 @@ type SessionData = {
   status: string;
 };
 
-const SESSION_TOKEN_KEY = 'pageconsult_session_token';
-
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -40,42 +40,84 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const initializeSession = async () => {
-    // Check for existing session token
-    let token = localStorage.getItem(SESSION_TOKEN_KEY);
-    
-    if (!token) {
-      // Generate new session token
-      token = uuidv4();
-      localStorage.setItem(SESSION_TOKEN_KEY, token);
-      
-      // Create new session in database
-      const { data, error } = await supabase
-        .from('consultation_sessions')
-        .insert({
-          session_token: token,
-          current_step: 'consultation',
-          status: 'in_progress'
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error creating session:', error);
+    try {
+      // Try to get existing session from httpOnly cookie via edge function
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/get-session`, {
+        method: 'GET',
+        credentials: 'include', // Important: includes cookies
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSessionToken(data.session_token);
+        setSessionId(data.session_id);
+        setUserEmailState(data.user_email);
+        setCurrentStep(data.current_step);
         return;
       }
-      
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.log('No existing session found, creating new one');
+      }
+    }
+
+    // No existing session, create a new one
+    const token = uuidv4();
+
+    // Create new session in database
+    const { data, error } = await supabase
+      .from('consultation_sessions')
+      .insert({
+        session_token: token,
+        current_step: 'consultation',
+        status: 'in_progress'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      if (import.meta.env.DEV) {
+        console.error('Error creating session:', error);
+      }
+      toast({
+        title: "⚠️ Session error",
+        description: "Could not create session. Please refresh the page.",
+        variant: "destructive",
+        duration: 5000
+      });
+      return;
+    }
+
+    // Set the session cookie via edge function
+    try {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/set-session-cookie`, {
+        method: 'POST',
+        credentials: 'include', // Important: includes cookies
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ session_token: token }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to set session cookie');
+      }
+
       setSessionToken(token);
       setSessionId(data.id);
-    } else {
-      // Load existing session
-      setSessionToken(token);
-      const sessionData = await loadSessionFromDb(token);
-      
-      if (sessionData) {
-        setSessionId(sessionData.id);
-        setUserEmailState(sessionData.user_email);
-        setCurrentStep(sessionData.current_step);
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('Error setting session cookie:', error);
       }
+      toast({
+        title: "⚠️ Session error",
+        description: "Could not save session. Please refresh the page.",
+        variant: "destructive",
+        duration: 5000
+      });
     }
   };
 
@@ -186,8 +228,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     } : null;
   };
 
-  const clearSession = () => {
-    localStorage.removeItem(SESSION_TOKEN_KEY);
+  const clearSession = async () => {
+    // Clear the httpOnly cookie via edge function
+    try {
+      await fetch(`${SUPABASE_URL}/functions/v1/clear-session-cookie`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('Error clearing session cookie:', error);
+      }
+    }
+
     setSessionToken(null);
     setSessionId(null);
     setUserEmailState(null);

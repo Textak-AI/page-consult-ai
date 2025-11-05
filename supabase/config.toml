@@ -11,3 +11,12 @@ verify_jwt = false
 
 [functions.unsplash-search]
 verify_jwt = false
+
+[functions.set-session-cookie]
+verify_jwt = false
+
+[functions.get-session]
+verify_jwt = false
+
+[functions.clear-session-cookie]
+verify_jwt = false
