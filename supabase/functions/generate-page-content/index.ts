@@ -22,7 +22,21 @@ serve(async (req) => {
   }
 
   try {
-    const consultationData: ConsultationData = await req.json();
+    let consultationData: ConsultationData;
+    
+    try {
+      const body = await req.text();
+      console.log('Received body:', body);
+      consultationData = JSON.parse(body);
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body format' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    console.log('Consultation data:', JSON.stringify(consultationData, null, 2));
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
     if (!lovableApiKey) {

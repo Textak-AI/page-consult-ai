@@ -24,54 +24,51 @@ function extractPainPoint(text: string): string {
 }
 
 function frameSolution(painPoint: string, industry: string): string {
-  // Transform problem into solution-oriented language
-  const transformations: Record<string, string> = {
-    'track': 'tracking that works',
-    'manage': 'management made simple',
-    'organize': 'organization you can rely on',
-    'find': 'discovery made easy',
-    'understand': 'clarity at your fingertips',
-    'save time': 'time savings on autopilot',
-    'reduce cost': 'costs cut automatically',
-    'improve': 'improvement delivered',
-    'grow': 'growth accelerated',
-    'scale': 'scalability built-in',
-  };
-  
-  for (const [problem, solution] of Object.entries(transformations)) {
-    if (painPoint.includes(problem)) {
-      return solution;
-    }
-  }
-  
-  return painPoint;
+  // Return the industry name for simple, professional headlines
+  // Don't try to be clever with transformations - AI will handle this
+  return industry;
 }
 
 function createCompellingHeadline(solution: string, industry: string, audience?: string): string {
   const industryKey = industry?.toLowerCase().replace(/\s+/g, '_');
   
+  // Wedding DJ specific
+  if (industryKey?.includes('wedding') || industryKey?.includes('dj')) {
+    return `Your Perfect Wedding DJ`;
+  }
+  
   // B2B SaaS headlines (executive-focused)
   if (industryKey?.includes('saas') || industryKey?.includes('software')) {
-    return `Finally, ${capitalize(solution)} That Actually Works`;
+    return `The Smart Solution for ${audience || 'Your Business'}`;
   }
   
   // Professional services headlines (trust-focused)
-  if (industryKey?.includes('professional')) {
+  if (industryKey?.includes('professional') || industryKey?.includes('legal') || industryKey?.includes('law')) {
     return `Professional ${industry} You Can Trust`;
+  }
+  
+  // Home services
+  if (industryKey?.includes('plumb') || industryKey?.includes('hvac') || industryKey?.includes('electric') || industryKey?.includes('contractor')) {
+    return `Trusted ${industry} Services`;
   }
   
   // E-commerce headlines (benefit-focused)
   if (industryKey?.includes('commerce') || industryKey?.includes('retail')) {
-    return `${capitalize(solution)} - Shop Smart, Save More`;
+    return `Quality Products at Great Prices`;
   }
   
   // Healthcare headlines (care-focused)
   if (industryKey?.includes('health') || industryKey?.includes('medical')) {
-    return `${capitalize(solution)} With Expert Care`;
+    return `Expert Healthcare When You Need It`;
   }
   
-  // Default: Never use "Platform" for services
-  return `Expert ${industry} Services`;
+  // Consulting
+  if (industryKey?.includes('consult')) {
+    return `Strategic ${industry} That Drives Growth`;
+  }
+  
+  // Default: Simple and professional
+  return `Professional ${industry}`;
 }
 
 function generateDefaultHeadline(industry: string, audience?: string): string {
