@@ -892,7 +892,7 @@ export default function Wizard() {
                       Build My Page
                     </Button>
                     <button 
-                      onClick={() => setStep(1)}
+                      onClick={() => navigate("/wizard/review")}
                       className="block w-full md:w-auto mx-auto mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                       Let me adjust something

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SessionProvider } from "@/contexts/SessionContext";
 import Index from "./pages/Index";
 import Wizard from "./pages/Wizard";
+import WizardReview from "./pages/WizardReview";
 import Signup from "./pages/Signup";
 import Generate from "./pages/Generate";
 import NotFound from "./pages/NotFound";
@@ -29,6 +30,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/wizard" element={<Wizard />} />
+            <Route path="/wizard/review" element={<WizardReview />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/generate" element={<Generate />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
