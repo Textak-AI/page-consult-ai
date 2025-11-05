@@ -72,22 +72,11 @@ export default function Generate() {
   const [stylePickerOpen, setStylePickerOpen] = useState(false);
   const [calculatorUpgradeOpen, setCalculatorUpgradeOpen] = useState(false);
 
-  // Dynamic loading messages based on whether calculator is included
-  const getLoadingMessages = () => {
-    const messages = [
-      { icon: Check, text: "Analyzing your strategy" },
-      { icon: Check, text: "Writing compelling copy" },
-    ];
-    
-    if (consultation?.wants_calculator) {
-      messages.push({ icon: Check, text: "Configuring calculator" });
-    }
-    
-    messages.push({ icon: Check, text: "Optimizing for conversion" });
-    return messages;
-  };
-  
-  const loadingMessages = getLoadingMessages();
+  const loadingMessages = [
+    { icon: Check, text: "Analyzing your strategy" },
+    { icon: Check, text: "Writing compelling copy" },
+    { icon: Check, text: "Optimizing for conversion" },
+  ];
 
   useEffect(() => {
     loadConsultation();
@@ -287,14 +276,6 @@ export default function Generate() {
       },
     ];
 
-    if (consultationData.wants_calculator && consultationData.calculator_config) {
-      sections.push({
-        type: "calculator",
-        order: 2,
-        visible: true,
-        content: consultationData.calculator_config,
-      });
-    }
 
     sections.push(
       {
@@ -407,7 +388,6 @@ export default function Generate() {
                 <p>Building your page with:</p>
                 <ul className="list-disc list-inside space-y-1">
                   <li>Strategic headline</li>
-                  {consultation?.wants_calculator && <li>ROI calculator</li>}
                   <li>6 conversion sections</li>
                 </ul>
               </div>
@@ -428,12 +408,7 @@ export default function Generate() {
                 <h2 className="text-2xl font-bold">Problem / Solution</h2>
               </div>
             )}
-            {buildStep >= 3 && consultation?.wants_calculator && (
-              <div className="animate-slide-up bg-card p-8 rounded-lg border">
-                <h2 className="text-2xl font-bold">Calculator</h2>
-              </div>
-            )}
-            {buildStep >= 4 && (
+            {buildStep >= 3 && (
               <div className="animate-slide-up bg-card p-8 rounded-lg border">
                 <h2 className="text-2xl font-bold">Features</h2>
               </div>
@@ -456,8 +431,7 @@ export default function Generate() {
                 <Sparkles className="w-12 h-12 text-secondary mx-auto" />
                 <h2 className="text-3xl font-bold">✨ Your Page is Ready! ✨</h2>
                 <p className="text-muted-foreground">
-                  Built with strategic headline, {consultation?.wants_calculator ? "ROI calculator, " : ""}
-                  and 6 conversion-optimized sections
+                  Built with strategic headline and 6 conversion-optimized sections
                 </p>
               </div>
             </div>
