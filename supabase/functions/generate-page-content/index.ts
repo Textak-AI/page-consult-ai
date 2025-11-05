@@ -1,6 +1,120 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+// Industry patterns for intelligent content generation
+type IndustryPattern = {
+  name: string;
+  tone: string;
+  audienceType: string;
+  targetLanguage?: {
+    audience: string[];
+    avoid: string[];
+  };
+  features: string[];
+  headlineFormulas?: string[];
+  ctaPatterns?: string[];
+};
+
+const industryPatterns: Record<string, IndustryPattern> = {
+  wedding_dj: {
+    name: "Wedding DJ",
+    tone: "emotional, celebratory, romantic, warm",
+    audienceType: "b2c_emotional",
+    targetLanguage: {
+      audience: ["couples", "brides", "grooms", "wedding planners", "engaged couples"],
+      avoid: ["businesses", "companies", "clients", "ROI", "metrics"]
+    },
+    features: [
+      "Professional DJ equipment and sound systems",
+      "Extensive music library spanning all genres and decades",
+      "Master of Ceremonies (MC) services",
+      "Custom playlist creation and song requests",
+      "Wireless microphones for speeches and toasts",
+      "Mood lighting and dance floor effects",
+      "Backup equipment for guaranteed reliability",
+      "Reception timeline planning and coordination",
+      "Smooth transitions between key moments",
+      "Experience with venue acoustics"
+    ],
+    headlineFormulas: [
+      "Your Perfect Wedding DJ - {credential}",
+      "Make Your Reception Unforgettable",
+      "{years} Years Creating Magical Wedding Celebrations"
+    ],
+    ctaPatterns: [
+      "Check Availability for Your Date",
+      "Book Your DJ & Get {offer}",
+      "Schedule Your Free Consultation"
+    ]
+  },
+  b2b_saas: {
+    name: "B2B SaaS",
+    tone: "professional, confident, roi-focused, efficient",
+    audienceType: "b2b_rational",
+    features: [
+      "Seamless integrations with existing tools",
+      "Enterprise-grade security and compliance",
+      "Real-time analytics dashboard",
+      "Automated workflows",
+      "API access for custom integrations"
+    ]
+  },
+  legal_services: {
+    name: "Legal Services",
+    tone: "authoritative, trustworthy, professional",
+    audienceType: "b2c_trust",
+    features: [
+      "Free initial consultation",
+      "Licensed attorneys",
+      "Proven case outcomes",
+      "Clear communication throughout"
+    ]
+  },
+  home_services: {
+    name: "Home Services",
+    tone: "reliable, trustworthy, local",
+    audienceType: "b2c_practical",
+    features: [
+      "Licensed and insured",
+      "Upfront transparent pricing",
+      "Same-day service available",
+      "Satisfaction guarantee"
+    ]
+  },
+  healthcare: {
+    name: "Healthcare",
+    tone: "caring, professional, knowledgeable",
+    audienceType: "b2c_trust",
+    features: [
+      "Board-certified physicians",
+      "Accepting new patients",
+      "Most insurance accepted",
+      "Evening and weekend hours"
+    ]
+  }
+};
+
+function detectIndustry(consultationData: ConsultationData): string {
+  const industry = consultationData.industry?.toLowerCase() || '';
+  const service = consultationData.service_type?.toLowerCase() || '';
+  const combined = `${industry} ${service}`;
+  
+  if (combined.includes('wedding') || combined.includes('dj')) return 'wedding_dj';
+  if (combined.includes('saas') || combined.includes('software')) return 'b2b_saas';
+  if (combined.includes('legal') || combined.includes('law') || combined.includes('attorney')) return 'legal_services';
+  if (combined.includes('plumb') || combined.includes('hvac') || combined.includes('electric')) return 'home_services';
+  if (combined.includes('health') || combined.includes('medical') || combined.includes('doctor')) return 'healthcare';
+  
+  return 'b2b_saas'; // default
+}
+
+function extractCredentials(text: string) {
+  const years = text.match(/(\d+)\+?\s*years?/i)?.[1];
+  const rating = text.match(/(\d+(?:\.\d+)?)\s*[-\s]?star/i)?.[1];
+  const count = text.match(/(\d+)\+?\s*(customer|client|wedding|project)/i)?.[1];
+  return { years, rating, count };
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -46,80 +160,47 @@ serve(async (req) => {
       );
     }
 
-    // Build a comprehensive prompt with deep industry intelligence
-    const systemPrompt = `You are an elite conversion copywriter with deep expertise across industries. Your mission: Transform raw consultation data into professional, industry-specific landing page copy that converts.
+    // Detect industry and load patterns
+    const industryKey = detectIndustry(consultationData);
+    const pattern = industryPatterns[industryKey];
+    const credentials = extractCredentials(consultationData.unique_value || '');
+    
+    console.log(`Detected industry: ${industryKey}`, { pattern: pattern.name, credentials });
+
+    // Build intelligent, pattern-based prompt
+    const systemPrompt = `You are an expert landing page copywriter specializing in ${pattern.name}.
 
 ═══════════════════════════════════════════════════════════
-INDUSTRY INTELLIGENCE LIBRARY
+INDUSTRY: ${pattern.name}
+TONE: ${pattern.tone}
+AUDIENCE TYPE: ${pattern.audienceType}
 ═══════════════════════════════════════════════════════════
 
-WEDDING DJ:
-- Tone: Emotional, personal, celebration-focused
-- Audience: B2C (couples, wedding planners)
-- Features: Professional equipment, music library, MC services, wireless mics, backup systems, timeline management, lighting, dance floor coordination
-- Credentials: Years experience, weddings performed, star rating, testimonials
-- Language: "Your special day", "unforgettable reception", "perfect soundtrack", "first dance to last call"
-- CTA Style: "Check Availability", "Book Your Date", "Get Free Quote"
+CRITICAL TRANSFORMATION RULES:
+1. NEVER copy user's exact words verbatim - always transform professionally
+2. Use ONLY credentials the user actually provided
+3. Match tone to ${pattern.audienceType} audience
+4. Generate features from this industry-specific list:
+   ${pattern.features.slice(0, 6).map((f: string, i: number) => `   ${i + 1}. ${f}`).join('\n')}
 
-B2B SaaS:
-- Tone: Professional, ROI-focused, efficiency-driven
-- Audience: B2B (companies, teams, decision-makers)
-- Features: Quick setup, real-time analytics, automation, integrations, security (SOC 2), scalability, API access, white-label
-- Credentials: Companies using, time saved, ROI improvement, integrations available
-- Language: "Your team", "save hours weekly", "enterprise-grade", "measurable ROI", "workflow automation"
-- CTA Style: "Start Free Trial", "Get Demo", "See It in Action"
+CREDENTIAL TRANSFORMATION:
+User provided: ${consultationData.unique_value || 'Not specified'}
+Extracted: ${credentials.years ? `${credentials.years} years` : ''} ${credentials.rating ? `${credentials.rating}-star rating` : ''} ${credentials.count ? `${credentials.count}+ projects` : ''}
 
-Legal Services:
-- Tone: Formal, trustworthy, authoritative
-- Audience: B2C (individuals needing legal help)
-- Features: Free consultation, experienced attorneys, case results, no-win-no-fee, responsive, personalized strategy
-- Credentials: Years practice, cases won, settlement amounts, awards, bar associations
-- Language: "Protecting your rights", "expert legal help", "proven results", "aggressive representation"
-- CTA Style: "Get Free Consultation", "Discuss Your Case", "Speak to Attorney"
+${pattern.headlineFormulas ? `HEADLINE FORMULAS (choose one):
+${pattern.headlineFormulas.map((f: string, i: number) => `${i + 1}. ${f}`).join('\n')}` : ''}
 
-Home Services (Plumbing, HVAC, Electrical, Contractor):
-- Tone: Friendly, trustworthy, local
-- Audience: B2C (homeowners)
-- Features: Licensed & insured, upfront pricing, same-day service, satisfaction guarantee, local/family-owned, quality work
-- Credentials: Years serving, jobs completed, star rating, reviews, licenses
-- Language: "Your home", "trusted local", "professional service", "licensed professionals"
-- CTA Style: "Get Free Quote", "Schedule Service", "Request Estimate"
+${pattern.ctaPatterns ? `CTA PATTERNS (choose one):
+${pattern.ctaPatterns.map((c: string, i: number) => `${i + 1}. ${c}`).join('\n')}` : ''}
 
-Healthcare/Medical:
-- Tone: Professional, caring, patient-focused
-- Audience: B2C (patients)
-- Features: Accepting new patients, insurance accepted, evening/weekend hours, board-certified, comprehensive care, same-week appointments
-- Credentials: Years practice, patients served, certifications, specialties
-- Language: "Your health", "compassionate care", "quality healthcare", "board-certified"
-- CTA Style: "Book Appointment", "Schedule Consultation", "Become a Patient"
-
-Consulting:
-- Tone: Professional, strategic, results-oriented
-- Audience: B2B (businesses, executives)
-- Features: Customized strategy, proven methods, industry expertise, measurable results, flexible engagement, C-suite experience
-- Credentials: Clients served, industries, average ROI, years experience
-- Language: "Your organization", "strategic guidance", "drive growth", "measurable impact"
-- CTA Style: "Schedule Discovery Call", "Get Strategic Assessment"
-
-E-commerce:
-- Tone: Energetic, value-focused, customer-centric
-- Audience: B2C (shoppers)
-- Features: Free shipping, easy returns, secure checkout, quality guarantee, fast delivery, customer reviews
-- Credentials: Customers, products sold, star rating, reviews
-- Language: "You'll love", "shop smart", "quality products", "great prices"
-- CTA Style: "Shop Now", "Browse Collection", "Start Shopping"
+AUDIENCE LANGUAGE:
+✓ Use: ${pattern.targetLanguage?.audience?.join(', ') || 'appropriate audience terms'}
+✗ AVOID: ${pattern.targetLanguage?.avoid?.join(', ') || 'inappropriate terms'}
 
 ═══════════════════════════════════════════════════════════
-MANDATORY TRANSFORMATION RULES
-═══════════════════════════════════════════════════════════
+MANDATORY OUTPUT RULES
 
-1. DETECT INDUSTRY & LOAD APPROPRIATE INTELLIGENCE
-   - Read industry, service_type, target_audience
-   - Identify which industry pattern matches (Wedding DJ, B2B SaaS, Legal, etc.)
-   - Apply that industry's tone, language, and feature types
-   - If unclear, use context clues from other fields
-
-2. NEVER COPY RAW TEXT VERBATIM
+1. NEVER COPY RAW TEXT VERBATIM
    ❌ INPUT: "I have 10 years experience as a wedding DJ"
    ❌ BAD: "I have 10 years experience as a wedding DJ"
    ✅ GOOD: "A Decade of Making Wedding Receptions Unforgettable"
