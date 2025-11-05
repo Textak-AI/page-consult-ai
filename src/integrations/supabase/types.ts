@@ -26,6 +26,7 @@ export type Database = {
           session_token: string
           status: string | null
           user_email: string | null
+          user_id: string | null
         }
         Insert: {
           approved_sections?: Json | null
@@ -38,6 +39,7 @@ export type Database = {
           session_token: string
           status?: string | null
           user_email?: string | null
+          user_id?: string | null
         }
         Update: {
           approved_sections?: Json | null
@@ -50,6 +52,7 @@ export type Database = {
           session_token?: string
           status?: string | null
           user_email?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
