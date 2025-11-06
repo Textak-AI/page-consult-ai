@@ -13,6 +13,8 @@ import {
   logQualityReport 
 } from './contentQuality';
 import { getAuthHeaders } from './authHelpers';
+// Direct Claude API integration (no edge functions)
+import { generateIntelligentContent } from './generateIntelligentContent';
 
 export interface ConsultationData {
   industry?: string;
@@ -26,7 +28,7 @@ export interface ConsultationData {
   calculator_config?: any;
 }
 
-// AI-powered content generation with fallback to templates
+// AI-powered content generation using direct Claude API
 export async function generatePageContentWithAI(data: ConsultationData): Promise<{
   headline: string;
   subheadline: string;
@@ -36,23 +38,40 @@ export async function generatePageContentWithAI(data: ConsultationData): Promise
   solutionStatement: string;
 } | null> {
   try {
-    const { supabase } = await import('@/integrations/supabase/client');
-    const headers = await getAuthHeaders();
+    // Use direct Claude API integration (bypasses edge functions)
+    const { generateIntelligentContent } = await import('./generateIntelligentContent');
+    const result = await generateIntelligentContent(data);
     
-    const { data: result, error } = await supabase.functions.invoke('generate-page-content', {
-      body: data,
-      headers,
+    console.log('✅ AI-generated content via Claude API:', {
+      headline: result.headline,
+      features: result.features.length
     });
     
-    if (error || !result?.success) {
-      console.log('AI content generation failed, using fallback templates');
-      return null;
+    return {
+      headline: result.headline,
+      subheadline: result.subheadline,
+      features: result.features.map(f => ({
+        title: f.title,
+        description: f.description,
+        icon: f.icon || '✓'
+      })),
+      ctaText: result.ctaText,
+      problemStatement: result.problemStatement,
+      solutionStatement: result.solutionStatement
+    };
+  } catch (error) {
+    console.error('❌ Claude API content generation failed:', error);
+    
+    // Show user-friendly error message
+    if (error instanceof Error) {
+      if (error.message.includes('VITE_ANTHROPIC_API_KEY')) {
+        console.error('⚠️ Anthropic API key not configured');
+      } else {
+        console.error('⚠️ AI generation error:', error.message);
+      }
     }
     
-    console.log('✅ AI-generated content:', result.content);
-    return result.content;
-  } catch (error) {
-    console.error('Error generating AI content:', error);
+    // Return null to trigger fallback templates
     return null;
   }
 }
