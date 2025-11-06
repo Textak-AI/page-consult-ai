@@ -60,6 +60,7 @@ export async function generateIntelligentContent(
 
   try {
     // Call edge function - it securely proxies to Claude API
+    console.log('📤 Invoking anthropic-proxy edge function...');
     const { data, error } = await supabase.functions.invoke('anthropic-proxy', {
       body: {
         systemPrompt,
@@ -68,15 +69,38 @@ export async function generateIntelligentContent(
     });
     
     console.timeEnd('⏱️ Claude API call');
+    
+    console.log('📥 Edge function response:', {
+      hasData: !!data,
+      hasError: !!error,
+      data: data ? { success: data.success, hasContent: !!data.content, errorMessage: data.error } : null,
+      error: error,
+    });
 
     if (error) {
-      console.error('❌ Edge function error:', error);
-      throw new Error(error.message || 'Failed to call content generation service');
+      console.error('❌ Supabase edge function invocation error:', {
+        message: error.message,
+        details: error,
+      });
+      throw new Error(`Edge function call failed: ${error.message || 'Unknown Supabase error'}`);
+    }
+
+    if (!data) {
+      console.error('❌ No data returned from edge function');
+      throw new Error('No response from edge function. Check function deployment and logs.');
     }
 
     if (!data.success) {
-      console.error('❌ Content generation failed:', data.error);
-      throw new Error(data.error || 'Content generation failed');
+      console.error('❌ Edge function returned failure:', {
+        error: data.error,
+        errorType: data.errorType,
+      });
+      throw new Error(data.error || 'Content generation service failed');
+    }
+
+    if (!data.content) {
+      console.error('❌ Edge function returned success but no content');
+      throw new Error('Empty response from content generation service');
     }
 
     console.log('✅ Claude response received via edge function');
@@ -93,11 +117,15 @@ export async function generateIntelligentContent(
     return generated;
 
   } catch (error) {
-    console.error('❌ Content generation error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ FULL CONTENT GENERATION ERROR STACK:', {
+      message: errorMessage,
+      error: error,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     
-    throw new Error(
-      `Failed to generate content: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+    // Re-throw with detailed context
+    throw new Error(errorMessage);
   }
 }
 

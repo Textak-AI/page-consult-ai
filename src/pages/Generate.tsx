@@ -323,7 +323,18 @@ export default function Generate() {
       return mappedSections;
 
     } catch (error) {
-      console.error('❌ Intelligent generation failed, falling back:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ AI CONTENT GENERATION FAILED:', {
+        error: errorMessage,
+        fullError: error,
+      });
+      
+      // Show error to user instead of silently falling back
+      toast({
+        title: "AI Content Generation Failed",
+        description: `Error: ${errorMessage}. Using template content instead.`,
+        variant: "destructive",
+      });
       
       // Fallback to template-based generation
       const { 
