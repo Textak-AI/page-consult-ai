@@ -1,5 +1,8 @@
 project_id = "wopnfuzevpldhkshkmrk"
 
+[functions.generate-page-content]
+verify_jwt = true
+
 [functions.perplexity-research]
 verify_jwt = true
 

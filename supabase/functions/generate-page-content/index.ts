@@ -136,15 +136,23 @@ serve(async (req) => {
   }
 
   try {
-    let consultationData: ConsultationData;
+    // Parse request body - Supabase functions.invoke sends JSON stringified body
+    const bodyText = await req.text();
+    console.log('Raw body received:', bodyText.substring(0, 200));
     
+    let consultationData: ConsultationData;
     try {
-      consultationData = await req.json();
-      console.log('Received consultation data:', JSON.stringify(consultationData, null, 2));
+      consultationData = JSON.parse(bodyText);
+      console.log('✅ Successfully parsed consultation data:', {
+        industry: consultationData.industry,
+        service_type: consultationData.service_type,
+        goal: consultationData.goal
+      });
     } catch (parseError) {
-      console.error('Failed to parse request body:', parseError);
+      console.error('❌ JSON parse error:', parseError);
+      console.error('Body that failed to parse:', bodyText);
       return new Response(
-        JSON.stringify({ error: 'Invalid request body format' }), 
+        JSON.stringify({ error: 'Invalid JSON in request body', details: String(parseError) }), 
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
