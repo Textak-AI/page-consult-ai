@@ -136,18 +136,32 @@ CRITICAL TRANSFORMATION RULES:
 4. Match tone to ${pattern.audienceType}
 5. Generate ${pattern.features?.length || 5} industry-specific features
 
+CREDENTIAL EXTRACTION (from Unique Value field):
+✓ Look for review counts: "225 reviews" → extract 225
+✓ Look for star ratings: "5-star" or "five star" → extract rating
+✓ Look for metrics: "10+ years", "500+ clients" → extract numbers
+✓ Transform using credentialTransform patterns above
+
+SOCIAL PROOF INSTRUCTIONS:
+✓ Use EXACT format from pattern: "${pattern.socialProof?.format || 'Trusted by satisfied customers'}"
+✓ Extract number from unique_value (look for digits + 'review', 'client', 'couple', etc.)
+✓ Extract rating if mentioned (5-star, five star, etc.)
+✓ Example: "225, 5-Star Google reviews" → "225+ Five-Star Google Reviews"
+✓ Match industry terminology exactly (couples for weddings, clients for B2B, etc.)
+${pattern.socialProof?.avoid ? `✗ AVOID: ${pattern.socialProof.avoid}` : ''}
+
+CTA OPTIMIZATION:
+✓ Use patterns: ${pattern.ctaPatterns?.map((c: string) => `${c}`).join(', ') || 'Create action-oriented CTA'}
+✓ If offer is provided, subtly incorporate it into the CTA
+✓ Example: Offer "Free consultation" → "Schedule Your Free Consultation"
+✓ Example: Offer "Free recording" → "Check Availability & Claim Your Free Recording"
+✓ Keep CTA action-oriented and benefit-focused
+
 INDUSTRY-SPECIFIC FEATURES TO CONSIDER:
 ${pattern.features?.map((f: string) => `- ${f}`).join('\n') || '- Generate relevant features'}
 
 HEADLINE FORMULAS (choose one that fits):
 ${pattern.headlineFormulas?.map((f: string) => `- ${f}`).join('\n') || '- Create compelling headline'}
-
-CTA PATTERNS (choose most appropriate):
-${pattern.ctaPatterns?.map((c: string) => `- ${c}`).join('\n') || '- Create action-oriented CTA'}
-
-SOCIAL PROOF FORMAT:
-${pattern.socialProof?.format || 'Trusted by satisfied customers'}
-${pattern.socialProof?.avoid ? `AVOID: ${pattern.socialProof.avoid}` : ''}
 
 OUTPUT REQUIREMENTS:
 ✓ Use industry-appropriate language and tone
@@ -170,8 +184,8 @@ You must respond with ONLY a JSON object in this exact format:
   ],
   "problemStatement": "Compelling problem statement as a question",
   "solutionStatement": "Clear solution statement with benefits",
-  "socialProof": "Format: ${pattern.socialProof?.format || 'Social proof statement'}",
-  "ctaText": "Clear, action-oriented CTA"
+  "socialProof": "Format exactly as: ${pattern.socialProof?.format || 'Social proof statement'} (extract numbers from unique_value)",
+  "ctaText": "Clear, action-oriented CTA (incorporate offer if provided)"
 }`;
 }
 
