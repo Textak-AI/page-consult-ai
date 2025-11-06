@@ -12,6 +12,7 @@ import Signup from "./pages/Signup";
 import Generate from "./pages/Generate";
 import GalleryTest from "./pages/GalleryTest";
 import HeroShowcase from "./pages/HeroShowcase";
+import SectionSelectorDemo from "./pages/SectionSelectorDemo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/generate" element={<Generate />} />
             <Route path="/gallery-test" element={<GalleryTest />} />
             <Route path="/hero-showcase" element={<HeroShowcase />} />
+            <Route path="/section-selector" element={<SectionSelectorDemo />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
