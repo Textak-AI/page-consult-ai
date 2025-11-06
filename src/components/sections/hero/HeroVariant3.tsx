@@ -17,19 +17,19 @@ export function HeroVariant3({ headline, subheadline, ctaText, ctaLink, backgrou
         backgroundPosition: 'center',
       }
     : {
-        background: 'linear-gradient(135deg, hsl(var(--primary)/0.2) 0%, hsl(var(--secondary)/0.2) 100%)',
+        background: 'linear-gradient(135deg, hsl(var(--primary)/0.15) 0%, hsl(var(--secondary)/0.15) 100%)',
       };
 
   return (
     <section 
-      className="relative py-20 md:py-28 px-6 min-h-[700px] flex items-end"
+      className="relative py-20 md:py-20 px-6 min-h-[700px] flex items-end"
       style={backgroundStyle}
     >
       <div className="container mx-auto max-w-6xl">
         {/* Text Content - Bottom Left */}
-        <div className="max-w-2xl space-y-6 pb-8">
+        <div className="max-w-2xl space-y-6 pb-12">
           <h1 
-            className="text-4xl md:text-5xl font-bold text-white leading-tight"
+            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight"
             style={{ textShadow: '2px 2px 12px rgba(0,0,0,0.9)' }}
           >
             {headline}
@@ -43,7 +43,7 @@ export function HeroVariant3({ headline, subheadline, ctaText, ctaLink, backgrou
           </p>
 
           {/* Trust Signals */}
-          <div className="flex flex-wrap gap-6 text-white/90">
+          <div className="flex flex-wrap gap-6 text-white/95">
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5" />
               <span className="text-sm font-medium" style={{ textShadow: '2px 2px 12px rgba(0,0,0,0.9)' }}>
@@ -63,7 +63,7 @@ export function HeroVariant3({ headline, subheadline, ctaText, ctaLink, backgrou
             <Button 
               asChild 
               size="lg" 
-              className="bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 shadow-lg"
+              className="bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 shadow-lg transition-all duration-300 hover:scale-105"
             >
               <a href={ctaLink}>{ctaText}</a>
             </Button>

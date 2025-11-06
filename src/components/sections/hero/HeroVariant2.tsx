@@ -22,13 +22,13 @@ export function HeroVariant2({ headline, subheadline, ctaText, ctaLink, backgrou
 
   return (
     <section 
-      className="py-20 md:py-32 px-6 min-h-[600px] flex items-center justify-center"
+      className="py-20 md:py-32 px-6 min-h-[700px] flex items-center justify-center"
       style={backgroundStyle}
     >
       <div className="container mx-auto max-w-6xl text-center">
         <div className="space-y-8">
           <h1 
-            className="text-5xl md:text-6xl font-bold text-white leading-tight max-w-4xl mx-auto"
+            className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight max-w-4xl mx-auto"
             style={{ textShadow: '2px 2px 12px rgba(0,0,0,0.9)' }}
           >
             {headline}
@@ -46,7 +46,7 @@ export function HeroVariant2({ headline, subheadline, ctaText, ctaLink, backgrou
             <Button 
               asChild 
               size="lg" 
-              className="text-xl px-12 py-7 bg-white text-primary hover:bg-white/90 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105"
+              className="text-xl px-12 py-7 bg-white text-primary hover:bg-white/90 shadow-2xl transition-all duration-300 hover:scale-105"
             >
               <a href={ctaLink}>{ctaText}</a>
             </Button>
@@ -60,7 +60,7 @@ export function HeroVariant2({ headline, subheadline, ctaText, ctaLink, backgrou
               ))}
             </div>
             <span 
-              className="text-white/90 font-medium"
+              className="text-white/95 font-medium"
               style={{ textShadow: '2px 2px 12px rgba(0,0,0,0.9)' }}
             >
               4.9/5 from 2,500+ customers
