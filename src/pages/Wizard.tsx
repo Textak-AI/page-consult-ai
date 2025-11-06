@@ -9,6 +9,7 @@ import { MessageCircle, Loader2 } from "lucide-react";
 import { useSession } from "@/contexts/SessionContext";
 import { EmailCaptureModal } from "@/components/editor/EmailCaptureModal";
 import { WelcomeBackModal } from "@/components/editor/WelcomeBackModal";
+import logo from "@/assets/pageconsult-logo.svg";
 
 type Message = {
   role: "ai" | "user";
@@ -611,10 +612,13 @@ export default function Wizard() {
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
       <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-card">
-        <div className="flex items-center gap-2">
-          <MessageCircle className="w-6 h-6 text-primary" />
-          <span className="font-bold text-lg">PageConsult AI</span>
-        </div>
+        <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <img 
+            src={logo} 
+            alt="PageConsult AI" 
+            className="h-8 w-auto"
+          />
+        </a>
         
         <div className="flex-1 max-w-md mx-8">
           <div className="text-sm text-muted-foreground mb-1 text-center">

@@ -11,6 +11,7 @@ import { AIConsultantSidebar } from "@/components/editor/AIConsultantSidebar";
 import { CalculatorUpgradeModal } from "@/components/editor/CalculatorUpgradeModal";
 import { StylePicker } from "@/components/editor/StylePicker";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
+import logo from "@/assets/pageconsult-logo.svg";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -261,6 +262,7 @@ export default function Generate() {
               visible: true,
               content: {
                 stats: [{ label: generated.socialProof, value: '' }],
+                industry: consultationData.industry,
               },
             };
           
@@ -342,7 +344,10 @@ export default function Generate() {
           type: "social-proof",
           order: 3,
           visible: true,
-          content: socialProof,
+          content: {
+            ...socialProof,
+            industry: consultationData.industry,
+          },
         },
         {
           type: "final-cta",
@@ -572,16 +577,21 @@ function EditorContent({
     <div className="h-screen flex flex-col bg-background">
       {/* Top toolbar */}
       <header className="h-14 border-b flex items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-primary">PageConsult AI</span>
-        </div>
+        <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <img 
+            src={logo} 
+            alt="PageConsult AI" 
+            className="h-8 w-auto"
+          />
+        </a>
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => setAiConsultantOpen(true)}
-            className="gap-2"
+            className="gap-2 relative pl-5 builder-button ai-improve-btn"
           >
+            <span className="absolute left-0 top-0 w-1 h-full bg-[#F97316] rounded-l"></span>
             <Wand2 className="w-4 h-4" />
             AI Improve
           </Button>
@@ -589,18 +599,36 @@ function EditorContent({
             variant="outline" 
             size="sm" 
             onClick={() => setStylePickerOpen(true)}
-            className="gap-2"
+            className="gap-2 relative pl-5 builder-button change-style-btn"
           >
+            <span className="absolute left-0 top-0 w-1 h-full bg-[#A855F7] rounded-l"></span>
             <Palette className="w-4 h-4" />
             Change Style
           </Button>
-          <Button variant="outline" size="sm" onClick={handleSave}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleSave}
+            className="relative pl-5 builder-button save-draft-btn"
+          >
+            <span className="absolute left-0 top-0 w-1 h-full bg-[#EAB308] rounded-l"></span>
             Save Draft
           </Button>
-          <Button variant="outline" size="sm" onClick={handlePreview}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handlePreview}
+            className="relative pl-5 builder-button preview-btn"
+          >
+            <span className="absolute left-0 top-0 w-1 h-full bg-[#06B6D6] rounded-l"></span>
             Preview
           </Button>
-          <Button size="sm" onClick={() => setPublishModalOpen(true)}>
+          <Button 
+            size="sm" 
+            onClick={() => setPublishModalOpen(true)}
+            className="relative pl-5 builder-button publish-btn"
+          >
+            <span className="absolute left-0 top-0 w-1 h-full bg-[#22C55E] rounded-l"></span>
             Publish
           </Button>
         </div>

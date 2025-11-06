@@ -116,9 +116,14 @@ export function SectionManager({
       </div>
 
       <div className="p-4 border-t space-y-2">
-        <Button variant="outline" className="w-full justify-start">
-          + Add Section
-        </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full justify-start relative pl-6"
+          >
+            <span className="absolute left-0 top-0 w-1 h-full bg-[#3B82F6] rounded-l"></span>
+            + Add Section
+          </Button>
         {onAddCalculator && (
           <Button 
             variant="outline" 

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import logo from "@/assets/pageconsult-logo-white.png";
+import logo from "@/assets/pageconsult-logo.svg";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -21,7 +21,7 @@ const Header = () => {
     >
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-[72px]">
-          <a href="/" className="flex items-center py-2">
+          <a href="/" className="flex items-center py-2 hover:opacity-80 transition-opacity">
             <img src={logo} alt="PageConsult AI" className="h-10 w-auto" />
           </a>
 

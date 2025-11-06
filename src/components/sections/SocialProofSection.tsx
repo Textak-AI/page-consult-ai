@@ -24,18 +24,63 @@ interface SocialProofSectionProps {
         customerCount: string | null;
       };
     };
+    industry?: string;
   };
   onUpdate: (content: any) => void;
 }
 
+function getSocialProofHeader(industry?: string): { title: string; subtitle: string } {
+  const industryLower = industry?.toLowerCase() || '';
+  
+  // Wedding/Events
+  if (industryLower.includes('wedding') || industryLower.includes('dj')) {
+    return { title: 'Trusted by Happy Couples', subtitle: 'See what couples are saying' };
+  }
+  
+  // B2B/SaaS
+  if (industryLower.includes('b2b') || industryLower.includes('saas') || industryLower.includes('software')) {
+    return { title: 'Trusted by Companies', subtitle: 'Join leading teams' };
+  }
+  
+  // E-commerce
+  if (industryLower.includes('ecommerce') || industryLower.includes('shop') || industryLower.includes('store')) {
+    return { title: 'What Customers Are Saying', subtitle: 'Join thousands of satisfied shoppers' };
+  }
+  
+  // Legal
+  if (industryLower.includes('legal') || industryLower.includes('law') || industryLower.includes('attorney')) {
+    return { title: 'Client Success Stories', subtitle: 'Proven results you can trust' };
+  }
+  
+  // Home Services
+  if (industryLower.includes('home') || industryLower.includes('contractor') || industryLower.includes('repair')) {
+    return { title: 'Trusted by Homeowners', subtitle: 'See what neighbors are saying' };
+  }
+  
+  // Healthcare
+  if (industryLower.includes('health') || industryLower.includes('medical') || industryLower.includes('doctor')) {
+    return { title: 'What Patients Are Saying', subtitle: 'Real testimonials from real patients' };
+  }
+  
+  // Consulting
+  if (industryLower.includes('consult')) {
+    return { title: 'Client Results', subtitle: 'Trusted by industry leaders' };
+  }
+  
+  // Default
+  return { title: 'Trusted by Customers', subtitle: 'Join thousands of satisfied clients' };
+}
+
 export function SocialProofSection({ content }: SocialProofSectionProps) {
+  const header = getSocialProofHeader(content.industry);
+  
   return (
     <section className="py-16 px-4 bg-muted/30">
       <div className="container mx-auto max-w-4xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-2">Trusted by Businesses</h2>
+          <h2 className="text-3xl font-bold mb-2">{header.title}</h2>
           <p className="text-muted-foreground">
-            Join thousands of satisfied customers
+            {header.subtitle}
           </p>
         </div>
 
