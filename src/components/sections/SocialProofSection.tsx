@@ -75,22 +75,22 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
   const header = getSocialProofHeader(content.industry);
   
   return (
-    <section className="py-16 px-4 bg-muted/30">
-      <div className="container mx-auto max-w-4xl">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-2">{header.title}</h2>
-          <p className="text-muted-foreground">
+    <section className="py-20 px-4 bg-muted/30">
+      <div className="container mx-auto max-w-6xl">
+        <div className="text-center mb-16 mx-auto max-w-3xl">
+          <h2 className="text-4xl font-bold mb-4">{header.title}</h2>
+          <p className="text-lg text-muted-foreground">
             {header.subtitle}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
+        <div className="grid md:grid-cols-3 gap-8 mb-16 max-w-5xl mx-auto">
           {content.stats.map((stat, i) => (
-            <div key={i} className="text-center">
-              <div className="text-4xl font-bold text-primary mb-2">
+            <div key={i} className="text-center p-6 bg-card rounded-lg border hover:shadow-lg transition-shadow">
+              <div className="text-5xl font-bold text-primary mb-3">
                 {stat.value}
               </div>
-              <div className="text-muted-foreground">{stat.label}</div>
+              <div className="text-base text-muted-foreground font-medium">{stat.label}</div>
             </div>
           ))}
         </div>

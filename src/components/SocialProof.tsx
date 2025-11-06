@@ -21,48 +21,39 @@ const SocialProof = () => {
   ];
 
   return (
-    <section className="py-24 px-6 bg-muted/30">
-      <div className="container mx-auto max-w-7xl">
-        <div className="text-center mb-12 animate-fade-in">
+    <section className="py-20 px-6 bg-muted/30">
+      <div className="container mx-auto max-w-6xl">
+        <div className="text-center mb-16 animate-fade-in mx-auto max-w-3xl">
           <h2 className="text-4xl font-bold text-foreground mb-4">
             Market Insights
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-muted-foreground">
             Understanding the landing page landscape
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
+        <div className="grid md:grid-cols-3 gap-8 mb-16 max-w-5xl mx-auto">
           {stats.map((stat, index) => (
             <div
               key={index}
-              className="bg-card rounded-xl p-8 shadow-md hover:-translate-y-1 transition-all duration-300 animate-scale-in border-b-2"
+              className="bg-card rounded-xl p-8 shadow-md hover:-translate-y-1 transition-all duration-300 animate-scale-in border hover:shadow-xl"
               style={{ 
-                animationDelay: `${index * 100}ms`,
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                borderBottomColor: '#06B6D6'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(6, 182, 214, 0.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                animationDelay: `${index * 100}ms`
               }}
             >
               <div className="text-center">
                 <div 
-                  className="text-[64px] font-bold mb-3" 
-                  style={{ color: '#1e293b' }}
+                  className="text-5xl font-bold mb-3 text-primary"
                 >
                   {stat.number}
                 </div>
                 <div className="text-lg font-semibold text-foreground mb-4">
                   {stat.label}
                 </div>
-                <p className="text-[15px] text-muted-foreground leading-relaxed mb-6">
+                <p className="text-base text-muted-foreground leading-relaxed mb-6">
                   {stat.description}
                 </p>
-                <cite className="text-xs text-muted-foreground/70 italic not-italic block">
+                <cite className="text-xs text-muted-foreground/70 not-italic block">
                   Source: {stat.source}
                 </cite>
               </div>

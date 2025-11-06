@@ -5,7 +5,7 @@ import { AnimatedChatPreview } from "@/components/AnimatedChatPreview";
 
 const Hero = () => {
   return (
-    <section className="pt-32 pb-24 px-6 bg-gradient-to-b from-[hsl(var(--hero-gradient-start))] to-[hsl(var(--hero-gradient-end))]">
+    <section className="pt-32 pb-20 px-6 bg-gradient-to-b from-[hsl(var(--hero-gradient-start))] to-[hsl(var(--hero-gradient-end))]">
       <div className="container mx-auto max-w-7xl">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="animate-slide-up">
