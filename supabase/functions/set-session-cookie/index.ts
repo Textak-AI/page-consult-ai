@@ -1,12 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://page-consult-ai.lovable.app',
+const allowedOrigins = [
+  'https://page-consult-ai.lovable.app',
+  'https://preview--page-consult-ai.lovable.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:8080'
+];
+
+const corsHeaders = (origin: string | null) => ({
+  'Access-Control-Allow-Origin': origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Credentials': 'true',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS'
-};
+});
 
 interface SetSessionRequest {
   session_token: string;
@@ -14,8 +22,11 @@ interface SetSessionRequest {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const headers = corsHeaders(origin);
+  
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers });
   }
 
   try {
@@ -24,7 +35,7 @@ serve(async (req) => {
     if (!session_token || typeof session_token !== 'string') {
       return new Response(
         JSON.stringify({ error: 'Invalid session_token' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -33,7 +44,7 @@ serve(async (req) => {
     if (!uuidRegex.test(session_token)) {
       return new Response(
         JSON.stringify({ error: 'Invalid session token format' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -54,14 +65,14 @@ serve(async (req) => {
       console.error('Database error:', error);
       return new Response(
         JSON.stringify({ error: 'Failed to validate session' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
     if (!session) {
       return new Response(
         JSON.stringify({ error: 'Session not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 404, headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -80,7 +91,7 @@ serve(async (req) => {
       {
         status: 200,
         headers: {
-          ...corsHeaders,
+          ...headers,
           'Content-Type': 'application/json',
           'Set-Cookie': cookieOptions,
         },
@@ -90,7 +101,7 @@ serve(async (req) => {
     console.error('Error in set-session-cookie:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
     );
   }
 });
