@@ -12,34 +12,31 @@ serve(async (req) => {
   }
 
   try {
-    // Authentication check
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    // Get user from JWT (already verified by Supabase since verify_jwt = true)
+    const authHeader = req.headers.get('Authorization')!;
+    const token = authHeader.replace('Bearer ', '');
+    const [, payload] = token.split('.');
+    const decodedPayload = JSON.parse(atob(payload));
+    const userId = decodedPayload.sub;
+
+    if (!userId) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Use service role key for database operations
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
 
     // Check user's API usage limit
     const { data: userPlan, error: planError } = await supabaseClient
       .from('user_plans')
       .select('plan_name, api_calls_remaining')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .maybeSingle();
 
     if (planError) {
@@ -106,7 +103,7 @@ serve(async (req) => {
       await supabaseClient
         .from('user_plans')
         .update({ api_calls_remaining: userPlan.api_calls_remaining - 1 })
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
     }
 
     return new Response(
