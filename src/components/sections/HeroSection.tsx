@@ -55,7 +55,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
 
   const backgroundStyle = content.backgroundImage
     ? {
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${content.backgroundImage})`,
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url(${content.backgroundImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }
@@ -108,6 +108,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           className={`text-5xl font-bold leading-tight ${
             isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
           }`}
+          style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.8)' }}
           contentEditable={isEditing}
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("headline", e)}
@@ -115,9 +116,12 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           {content.headline}
         </h1>
         <p 
-          className={`text-xl text-muted-foreground max-w-2xl mx-auto ${
+          className={`text-xl max-w-2xl mx-auto ${
+            content.backgroundImage ? 'text-white' : 'text-muted-foreground'
+          } ${
             isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
           }`}
+          style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.8)' }}
           contentEditable={isEditing}
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("subheadline", e)}
