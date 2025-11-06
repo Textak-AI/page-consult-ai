@@ -56,6 +56,7 @@ export async function generateIntelligentContent(
   const userPrompt = buildUserPrompt(consultation);
 
   console.log('📤 Calling edge function (secure Claude proxy)...');
+  console.time('⏱️ Claude API call');
 
   try {
     // Call edge function - it securely proxies to Claude API
@@ -65,6 +66,8 @@ export async function generateIntelligentContent(
         userPrompt
       }
     });
+    
+    console.timeEnd('⏱️ Claude API call');
 
     if (error) {
       console.error('❌ Edge function error:', error);

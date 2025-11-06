@@ -114,31 +114,38 @@ export default function Generate() {
   };
 
   const startGeneration = async (consultationData: any, userId: string) => {
-    // Phase 1: Loading animation (3 seconds)
-    for (let i = 0; i <= 3; i++) {
-      setTimeout(() => setProgress((i / 3) * 100), i * 750);
-    }
+    // Start generation immediately, show loading UI
+    setPhase("building");
+    
+    // Animate progress bar while API calls happen
+    let progressInterval = setInterval(() => {
+      setProgress(prev => Math.min(prev + 2, 90));
+    }, 200);
 
-    setTimeout(() => {
-      setPhase("building");
-      animatePageBuild(consultationData, userId);
-    }, 3000);
+    try {
+      await animatePageBuild(consultationData, userId);
+      clearInterval(progressInterval);
+      setProgress(100);
+    } catch (error) {
+      clearInterval(progressInterval);
+      throw error;
+    }
   };
 
   const animatePageBuild = async (consultationData: any, userId: string) => {
-    const generatedSections = await generateSections(consultationData);
-    
-    // Animate each section appearing
-    const steps = [0, 1, 2, 3, 4, 5];
-    for (let i = 0; i < steps.length; i++) {
-      setTimeout(() => setBuildStep(i + 1), i * 500);
-    }
+    try {
+      // Generate content (parallel API calls inside)
+      console.time('⚡ Total generation time');
+      const generatedSections = await generateSections(consultationData);
+      console.timeEnd('⚡ Total generation time');
+      
+      // Animate sections appearing quickly
+      for (let i = 1; i <= generatedSections.length; i++) {
+        setBuildStep(i);
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
 
-    // Show confetti after all sections
-    setTimeout(() => setShowConfetti(true), 3200);
-
-    // Create page in database
-    setTimeout(async () => {
+      // Create page in database
       const slug = `${consultationData.industry?.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
       const { data: pageData, error } = await supabase
         .from("landing_pages")
@@ -158,13 +165,23 @@ export default function Generate() {
         setPageData(pageData);
         setSections(generatedSections);
       }
-    }, 3500);
 
-    // Transition to editor
-    setTimeout(() => {
+      // Quick confetti then transition
+      setShowConfetti(true);
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       setPhase("editor");
       setShowConfetti(false);
-    }, 5500);
+      
+    } catch (error) {
+      console.error('Generation failed:', error);
+      toast({
+        title: "Generation failed",
+        description: "Please try again or contact support if the issue persists.",
+        variant: "destructive"
+      });
+      navigate("/wizard");
+    }
   };
 
   const generateSections = async (consultationData: any): Promise<Section[]> => {
@@ -186,25 +203,37 @@ export default function Generate() {
       console.log('✅ Generated content with sections:', generated.sections);
       console.log('🖼️ Image queries:', generated.images);
 
-      // Fetch Unsplash images based on queries
-      const { data: heroImageData } = await supabase.functions.invoke('unsplash-search', {
-        body: { query: generated.images.hero || `${consultationData.industry} professional`, count: 1 }
-      });
+      // Fetch all images in parallel for speed
+      const imagePromises: Promise<any>[] = [];
+      
+      // Hero image
+      imagePromises.push(
+        supabase.functions.invoke('unsplash-search', {
+          body: { query: generated.images.hero || `${consultationData.industry} professional`, count: 1 }
+        })
+      );
 
-      const heroImageUrl = heroImageData?.results?.[0]?.urls?.regular || '';
-
-      // Fetch gallery images if needed
-      let galleryImages: string[] = [];
-      if (generated.images.gallery && generated.images.gallery.length > 0) {
-        for (const query of generated.images.gallery) {
-          const { data: imgData } = await supabase.functions.invoke('unsplash-search', {
+      // Gallery images (limit to 3 for speed)
+      const galleryQueries = generated.images.gallery?.slice(0, 3) || [];
+      for (const query of galleryQueries) {
+        imagePromises.push(
+          supabase.functions.invoke('unsplash-search', {
             body: { query, count: 1 }
-          });
-          if (imgData?.results?.[0]?.urls?.regular) {
-            galleryImages.push(imgData.results[0].urls.regular);
-          }
-        }
+          })
+        );
       }
+
+      // Wait for all images in parallel (much faster!)
+      const imageResults = await Promise.allSettled(imagePromises);
+      
+      const heroImageUrl = imageResults[0]?.status === 'fulfilled' 
+        ? imageResults[0].value?.data?.results?.[0]?.urls?.regular || ''
+        : '';
+
+      const galleryImages: string[] = imageResults.slice(1)
+        .filter(r => r.status === 'fulfilled')
+        .map(r => (r as any).value?.data?.results?.[0]?.urls?.regular)
+        .filter(Boolean);
 
       // Map generated sections to Section format
       const mappedSections: Section[] = generated.sections.map((sectionType, index) => {
