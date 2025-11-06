@@ -163,8 +163,6 @@ export default function Generate() {
     setTimeout(() => {
       setPhase("editor");
       setShowConfetti(false);
-      // Show calculator upgrade offer after 2 seconds in editor
-      setTimeout(() => setCalculatorUpgradeOpen(true), 2000);
     }, 5500);
   };
 
@@ -561,6 +559,7 @@ function EditorContent({
           sections={sections}
           onSectionsChange={setSections}
           onSave={handleSave}
+          onAddCalculator={() => setCalculatorUpgradeOpen(true)}
         />
         <LivePreview sections={sections} onSectionsChange={setSections} />
       </div>

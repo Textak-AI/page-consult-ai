@@ -14,12 +14,14 @@ interface SectionManagerProps {
   sections: Section[];
   onSectionsChange: (sections: Section[]) => void;
   onSave: () => void;
+  onAddCalculator?: () => void;
 }
 
 export function SectionManager({
   sections,
   onSectionsChange,
   onSave,
+  onAddCalculator,
 }: SectionManagerProps) {
   const [expandedSection, setExpandedSection] = useState<number | null>(null);
   const { setEditingSection } = useEditing();
@@ -116,6 +118,15 @@ export function SectionManager({
         <Button variant="outline" className="w-full justify-start">
           + Add Section
         </Button>
+        {onAddCalculator && (
+          <Button 
+            variant="outline" 
+            className="w-full justify-start"
+            onClick={onAddCalculator}
+          >
+            + Calculator
+          </Button>
+        )}
         <Button variant="outline" className="w-full justify-start">
           💡 AI Improve
         </Button>
