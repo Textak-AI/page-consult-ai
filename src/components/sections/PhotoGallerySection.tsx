@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
 import { useState } from "react";
-import { ImagePlus, X } from "lucide-react";
+import { ImagePlus, X, Image as ImageIcon } from "lucide-react";
 
 interface PhotoGallerySectionProps {
   content: {
@@ -67,11 +67,15 @@ export function PhotoGallerySection({ content, onUpdate, isEditing }: PhotoGalle
           </h2>
         )}
 
-        {(!content.images || content.images.length === 0) && (
+        {(!content.images || content.images.length === 0) ? (
           <div className="text-center py-12 text-muted-foreground">
-            <p>No images yet. Add images to showcase your work.</p>
+            <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-20" />
+            <p className="text-lg">No images yet</p>
+            {isEditing && (
+              <p className="text-sm mt-2">Click "Add Image" to showcase your work</p>
+            )}
           </div>
-        )}
+        ) : null}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {content.images?.map((imageUrl, index) => (

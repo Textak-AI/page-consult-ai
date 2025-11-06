@@ -7,6 +7,7 @@ import { FinalCTASection } from "@/components/sections/FinalCTASection";
 import { PhotoGallerySection } from "@/components/sections/PhotoGallerySection";
 import { useEditing } from "@/contexts/EditingContext";
 import { EditingToolbar } from "@/components/editor/EditingToolbar";
+import { styleVariants } from "@/lib/styleVariants";
 
 type Section = {
   type: string;
@@ -21,7 +22,8 @@ interface LivePreviewProps {
 }
 
 export function LivePreview({ sections, onSectionsChange }: LivePreviewProps) {
-  const { editingSection, setEditingSection, isEditing } = useEditing();
+  const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();
+  const currentStyle = styleVariants[pageStyle];
 
   const handleSaveEdit = () => {
     setEditingSection(null);
@@ -107,11 +109,52 @@ export function LivePreview({ sections, onSectionsChange }: LivePreviewProps) {
   };
 
   return (
-    <div className="flex-1 bg-muted/30 overflow-y-auto">
+    <div 
+      className="flex-1 bg-muted/30 overflow-y-auto transition-all duration-500"
+      style={{
+        '--style-primary': currentStyle.colors.primary,
+        '--style-secondary': currentStyle.colors.secondary,
+        '--style-accent': currentStyle.colors.accent,
+        '--style-radius': currentStyle.borders.radius,
+        '--style-shadow': currentStyle.effects.shadow,
+        '--style-padding': currentStyle.spacing.sectionPadding,
+        fontFamily: currentStyle.typography.bodyFont,
+      } as React.CSSProperties}
+    >
+      <style>{`
+        .live-preview-container h1, 
+        .live-preview-container h2, 
+        .live-preview-container h3 {
+          font-weight: ${currentStyle.typography.headingWeight};
+          font-size: calc(1em * ${currentStyle.typography.headingSize});
+          font-family: ${currentStyle.typography.headingFont};
+        }
+        .live-preview-container section {
+          padding-top: calc(${currentStyle.spacing.sectionPadding} * 0.75);
+          padding-bottom: calc(${currentStyle.spacing.sectionPadding} * 0.75);
+        }
+        .live-preview-container .btn-primary,
+        .live-preview-container button[type="submit"],
+        .live-preview-container a[href="#signup"] {
+          background: hsl(var(--style-primary)) !important;
+          color: white !important;
+          border-radius: var(--style-radius) !important;
+          box-shadow: var(--style-shadow);
+          transition: all 0.3s ease;
+        }
+        .live-preview-container .btn-primary:hover,
+        .live-preview-container button[type="submit"]:hover {
+          transform: ${currentStyle.effects.hover};
+        }
+        .live-preview-container .card,
+        .live-preview-container [class*="rounded"] {
+          border-radius: var(--style-radius);
+        }
+      `}</style>
       {isEditing && (
         <EditingToolbar onSave={handleSaveEdit} onCancel={handleCancelEdit} />
       )}
-      <div className="min-h-full bg-background">
+      <div className="min-h-full bg-background live-preview-container">
         {sections
           .sort((a, b) => a.order - b.order)
           .map((section, index) => renderSection(section, index))}

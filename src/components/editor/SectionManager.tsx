@@ -126,15 +126,22 @@ export function SectionManager({
           </Button>
         {onAddCalculator && (
           <Button 
-            variant="outline" 
-            className="w-full justify-start"
+            variant="outline"
+            size="sm"
+            className="w-full justify-start relative pl-6"
             onClick={onAddCalculator}
           >
+            <span className="absolute left-0 top-0 w-1 h-full bg-[#A855F7] rounded-l"></span>
             + Calculator
           </Button>
         )}
-        <Button variant="outline" className="w-full justify-start">
-          💡 AI Improve
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="w-full justify-start relative pl-6"
+        >
+          <span className="absolute left-0 top-0 w-1 h-full bg-[#F97316] rounded-l"></span>
+          ⚡ AI Improve
         </Button>
       </div>
     </div>
