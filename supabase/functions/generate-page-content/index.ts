@@ -139,9 +139,8 @@ serve(async (req) => {
     let consultationData: ConsultationData;
     
     try {
-      const body = await req.text();
-      console.log('Received body:', body);
-      consultationData = JSON.parse(body);
+      consultationData = await req.json();
+      console.log('Received consultation data:', JSON.stringify(consultationData, null, 2));
     } catch (parseError) {
       console.error('Failed to parse request body:', parseError);
       return new Response(
