@@ -11,6 +11,7 @@ import WizardReview from "./pages/WizardReview";
 import Signup from "./pages/Signup";
 import Generate from "./pages/Generate";
 import GalleryTest from "./pages/GalleryTest";
+import HeroShowcase from "./pages/HeroShowcase";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/generate" element={<Generate />} />
             <Route path="/gallery-test" element={<GalleryTest />} />
+            <Route path="/hero-showcase" element={<HeroShowcase />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
