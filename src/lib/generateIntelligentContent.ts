@@ -1,5 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { industryPatterns, getIndustryPattern, type Industry } from '@/data/industry-patterns';
+import { supabase } from '@/integrations/supabase/client';
+import { getIndustryPattern } from '@/data/industry-patterns';
 
 export interface ConsultationData {
   industry?: string;
@@ -32,14 +32,6 @@ export interface GeneratedContent {
 export async function generateIntelligentContent(
   consultation: ConsultationData
 ): Promise<GeneratedContent> {
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-  
-  if (!apiKey) {
-    throw new Error(
-      'VITE_ANTHROPIC_API_KEY not configured. Please add your Anthropic API key to environment variables.'
-    );
-  }
-
   // Detect industry and load patterns
   const industryKey = detectIndustry(consultation);
   const pattern = getIndustryPattern(industryKey);
@@ -56,35 +48,31 @@ export async function generateIntelligentContent(
   // Build user prompt with consultation data
   const userPrompt = buildUserPrompt(consultation);
 
-  console.log('📤 Calling Claude API with industry-specific prompt...');
+  console.log('📤 Calling edge function (secure Claude proxy)...');
 
   try {
-    const anthropic = new Anthropic({
-      apiKey,
-      dangerouslyAllowBrowser: true // Required for client-side usage
+    // Call edge function - it securely proxies to Claude API
+    const { data, error } = await supabase.functions.invoke('anthropic-proxy', {
+      body: {
+        systemPrompt,
+        userPrompt
+      }
     });
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 4096,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: userPrompt
-        }
-      ]
-    });
-
-    const content = response.content[0];
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Claude');
+    if (error) {
+      console.error('❌ Edge function error:', error);
+      throw new Error(error.message || 'Failed to call content generation service');
     }
 
-    console.log('✅ Claude response received');
+    if (!data.success) {
+      console.error('❌ Content generation failed:', data.error);
+      throw new Error(data.error || 'Content generation failed');
+    }
+
+    console.log('✅ Claude response received via edge function');
 
     // Parse Claude's JSON response
-    const generated = parseClaudeResponse(content.text);
+    const generated = parseClaudeResponse(data.content);
     
     console.log('✅ Successfully generated intelligent content:', {
       headline: generated.headline.substring(0, 50) + '...',
@@ -95,13 +83,7 @@ export async function generateIntelligentContent(
     return generated;
 
   } catch (error) {
-    console.error('❌ Claude API error:', error);
-    
-    if (error instanceof Anthropic.APIError) {
-      throw new Error(
-        `Claude API error (${error.status}): ${error.message}. Please check your API key and try again.`
-      );
-    }
+    console.error('❌ Content generation error:', error);
     
     throw new Error(
       `Failed to generate content: ${error instanceof Error ? error.message : 'Unknown error'}`
