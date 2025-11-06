@@ -49,10 +49,11 @@ export function SectionManager({
       "problem-solution": "Problem/Solution",
       calculator: "ROI Calculator",
       features: "Features Grid",
+      "photo-gallery": "Photo Gallery",
       "social-proof": "Social Proof",
       "final-cta": "Final CTA",
     };
-    return titles[type] || type;
+    return titles[type] || type.replace(/_/g, ' ').replace(/-/g, ' ').toUpperCase();
   };
 
   return (

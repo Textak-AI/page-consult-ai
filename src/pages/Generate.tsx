@@ -167,142 +167,195 @@ export default function Generate() {
   };
 
   const generateSections = async (consultationData: any): Promise<Section[]> => {
-    // Import generator functions
-    const { 
-      generatePageContentWithAI,
-      generateHeadline: genHeadline,
-      generateSubheadline,
-      generateFeatures: genFeatures,
-      generateSocialProof: genSocialProof,
-      generateCTA,
-      generateFOMO,
-      validateContent,
-      fetchStrategicInsights,
-      validateGeneratedPage,
-    } = await import('@/lib/contentGenerator');
-
-    // Try AI-powered content generation first
-    const aiContent = await generatePageContentWithAI(consultationData);
-    
-    let headline: string;
-    let subheadline: string;
-    let features: any[];
-    let ctaText: string;
-    let problemStatement: string;
-    let solutionStatement: string;
-    
-    if (aiContent) {
-      // Use AI-generated content
-      console.log('✅ Using AI-generated content');
-      headline = aiContent.headline;
-      subheadline = aiContent.subheadline;
-      features = aiContent.features;
-      ctaText = aiContent.ctaText;
-      problemStatement = aiContent.problemStatement;
-      solutionStatement = aiContent.solutionStatement;
-    } else {
-      // Fallback to template-based generation
-      console.log('⚠️ Using fallback template generation');
-      headline = genHeadline(consultationData);
-      subheadline = generateSubheadline(consultationData);
-      features = genFeatures(consultationData);
-      const cta = generateCTA(consultationData);
-      ctaText = cta.text;
-      problemStatement = transformProblemStatement(consultationData.challenge);
-      solutionStatement = transformSolutionStatement(consultationData.unique_value, consultationData.industry);
-    }
-    
-    const socialProof = await genSocialProof(consultationData);
-    const fomo = generateFOMO(consultationData);
-    
-    // Fetch strategic market insights with citations
-    const strategicInsights = await fetchStrategicInsights(consultationData);
-
-    // Validate generated content using basic check
-    if (!validateContent(headline, features, consultationData.challenge, consultationData.unique_value)) {
-      console.error('Content validation failed', consultationData);
-    }
-    
-    // Comprehensive quality validation before finalizing
-    const finalValidation = validateGeneratedPage({
-      headline,
-      subheadline,
-      features,
-      statistics: strategicInsights ? [
-        strategicInsights.hero,
-        strategicInsights.problem,
-        strategicInsights.solution
-      ].filter(Boolean) : [],
-      problem: transformProblemStatement(consultationData.challenge),
-      solution: transformSolutionStatement(consultationData.unique_value, consultationData.industry),
-    });
-    
-    if (!finalValidation.valid) {
-      console.warn('⚠️ Page quality issues detected but proceeding with generation:', finalValidation.report);
-      // Show toast to user about quality issues
-      toast({
-        title: "Content Quality Notice",
-        description: `Generated page has ${finalValidation.report.errors.length} errors and ${finalValidation.report.warnings.length} warnings. Review carefully.`,
-        variant: finalValidation.report.errors.length > 0 ? "destructive" : "default",
+    try {
+      // Use new intelligent content generation
+      const { generateIntelligentContent } = await import('@/lib/generateIntelligentContent');
+      
+      console.log('🚀 Starting intelligent content generation...');
+      const generated = await generateIntelligentContent({
+        industry: consultationData.industry,
+        service_type: consultationData.service_type,
+        goal: consultationData.goal,
+        target_audience: consultationData.target_audience,
+        challenge: consultationData.challenge,
+        unique_value: consultationData.unique_value,
+        offer: consultationData.offer,
       });
-    }
 
-    const sections: Section[] = [
-      {
-        type: "hero",
-        order: 0,
-        visible: true,
-        content: {
-          headline,
-          subheadline,
-          ctaText,
-          ctaLink: '#signup',
-          fomo,
-          citedStat: strategicInsights?.hero,
-        },
-      },
-      {
-        type: "problem-solution",
-        order: 1,
-        visible: true,
-        content: {
-          problem: problemStatement,
-          solution: solutionStatement,
-          problemStat: strategicInsights?.problem,
-          solutionStat: strategicInsights?.solution,
-        },
-      },
-    ];
+      console.log('✅ Generated content with sections:', generated.sections);
+      console.log('🖼️ Image queries:', generated.images);
 
+      // Fetch Unsplash images based on queries
+      const { data: heroImageData } = await supabase.functions.invoke('unsplash-search', {
+        body: { query: generated.images.hero || `${consultationData.industry} professional`, count: 1 }
+      });
 
-    sections.push(
-      {
-        type: "features",
-        order: 3,
-        visible: true,
-        content: {
-          features,
-        },
-      },
-      {
-        type: "social-proof",
-        order: 4,
-        visible: true,
-        content: socialProof,
-      },
-      {
-        type: "final-cta",
-        order: 5,
-        visible: true,
-        content: {
-          headline: `Ready to Get Started?`,
-          ctaText, // Uses offer-based CTA, not goal
-          ctaLink: '#signup',
-        },
+      const heroImageUrl = heroImageData?.results?.[0]?.urls?.regular || '';
+
+      // Fetch gallery images if needed
+      let galleryImages: string[] = [];
+      if (generated.images.gallery && generated.images.gallery.length > 0) {
+        for (const query of generated.images.gallery) {
+          const { data: imgData } = await supabase.functions.invoke('unsplash-search', {
+            body: { query, count: 1 }
+          });
+          if (imgData?.results?.[0]?.urls?.regular) {
+            galleryImages.push(imgData.results[0].urls.regular);
+          }
+        }
       }
-    );
 
-    return sections;
+      // Map generated sections to Section format
+      const mappedSections: Section[] = generated.sections.map((sectionType, index) => {
+        switch (sectionType) {
+          case 'hero':
+            return {
+              type: 'hero',
+              order: index,
+              visible: true,
+              content: {
+                headline: generated.headline,
+                subheadline: generated.subheadline,
+                ctaText: generated.ctaText,
+                ctaLink: '#signup',
+                backgroundImage: heroImageUrl,
+              },
+            };
+          
+          case 'features':
+            return {
+              type: 'features',
+              order: index,
+              visible: true,
+              content: {
+                features: generated.features,
+              },
+            };
+          
+          case 'problem-solution':
+            return {
+              type: 'problem-solution',
+              order: index,
+              visible: true,
+              content: {
+                problem: generated.problemStatement,
+                solution: generated.solutionStatement,
+              },
+            };
+          
+          case 'photo_gallery':
+            return {
+              type: 'photo-gallery',
+              order: index,
+              visible: true,
+              content: {
+                images: galleryImages,
+                title: `${consultationData.industry} Gallery`,
+              },
+            };
+          
+          case 'testimonials':
+            return {
+              type: 'social-proof',
+              order: index,
+              visible: true,
+              content: {
+                stats: [{ label: generated.socialProof, value: '' }],
+              },
+            };
+          
+          case 'final_cta':
+            return {
+              type: 'final-cta',
+              order: index,
+              visible: true,
+              content: {
+                headline: 'Ready to Get Started?',
+                ctaText: generated.ctaText,
+                ctaLink: '#signup',
+              },
+            };
+          
+          default:
+            // For other section types, create placeholder
+            return {
+              type: sectionType,
+              order: index,
+              visible: true,
+              content: {
+                title: sectionType.replace(/_/g, ' ').toUpperCase(),
+              },
+            };
+        }
+      });
+
+      return mappedSections;
+
+    } catch (error) {
+      console.error('❌ Intelligent generation failed, falling back:', error);
+      
+      // Fallback to template-based generation
+      const { 
+        generateHeadline: genHeadline,
+        generateSubheadline,
+        generateFeatures: genFeatures,
+        generateSocialProof: genSocialProof,
+        generateCTA,
+      } = await import('@/lib/contentGenerator');
+
+      const headline = genHeadline(consultationData);
+      const subheadline = generateSubheadline(consultationData);
+      const features = genFeatures(consultationData);
+      const cta = generateCTA(consultationData);
+      const socialProof = await genSocialProof(consultationData);
+      const problemStatement = transformProblemStatement(consultationData.challenge);
+      const solutionStatement = transformSolutionStatement(consultationData.unique_value, consultationData.industry);
+
+      return [
+        {
+          type: "hero",
+          order: 0,
+          visible: true,
+          content: {
+            headline,
+            subheadline,
+            ctaText: cta.text,
+            ctaLink: '#signup',
+          },
+        },
+        {
+          type: "problem-solution",
+          order: 1,
+          visible: true,
+          content: {
+            problem: problemStatement,
+            solution: solutionStatement,
+          },
+        },
+        {
+          type: "features",
+          order: 2,
+          visible: true,
+          content: { features },
+        },
+        {
+          type: "social-proof",
+          order: 3,
+          visible: true,
+          content: socialProof,
+        },
+        {
+          type: "final-cta",
+          order: 4,
+          visible: true,
+          content: {
+            headline: 'Ready to Get Started?',
+            ctaText: cta.text,
+            ctaLink: '#signup',
+          },
+        },
+      ];
+    }
   };
 
   const handleSave = async () => {

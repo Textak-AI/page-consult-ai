@@ -23,6 +23,13 @@ export interface GeneratedContent {
   solutionStatement: string;
   socialProof: string;
   ctaText: string;
+  sections: string[];
+  images: {
+    hero: string;
+    gallery?: string[];
+    features?: string;
+    background?: string;
+  };
 }
 
 /**
@@ -157,6 +164,47 @@ CTA OPTIMIZATION:
 ✓ Example: Offer "Free recording" → "Check Availability & Claim Your Free Recording"
 ✓ Keep CTA action-oriented and benefit-focused
 
+DYNAMIC SECTION SELECTION:
+Based on industry and provided data, select 6-8 sections from these options:
+
+ALWAYS INCLUDE (in this order):
+✓ "hero" - Always first section
+✓ "features" - Core value propositions  
+✓ "final_cta" - Always last section
+
+OPTIONAL SECTIONS (choose based on relevance):
+- "photo_gallery" - For visual industries: weddings, restaurants, real estate, photography
+- "video_hero" - For service-based: consulting, coaching, speaking
+- "testimonials" - If user provided reviews, ratings, or testimonials
+- "case_study" - If user provided success stories or results
+- "process_timeline" - For multi-step services: legal, consulting, construction
+- "pricing_table" - If user mentioned packages, tiers, or pricing
+- "faq" - For complex offerings needing explanation
+- "stats_bar" - If user provided metrics: years in business, clients served, completion rate
+- "team_section" - For personal services: consulting, legal, medical
+- "portfolio_grid" - For creative work: design, photography, architecture
+- "comparison_table" - For competitive markets needing differentiation
+- "calculator" - For ROI/savings relevant industries: B2B, home services, financial
+
+INDUSTRY TEMPLATES:
+Wedding DJ → ["hero", "photo_gallery", "features", "testimonials", "pricing_table", "faq", "final_cta"]
+B2B SaaS → ["hero", "stats_bar", "features", "process_timeline", "case_study", "pricing_table", "final_cta"]
+Legal Services → ["hero", "practice_areas", "process_timeline", "case_results", "testimonials", "final_cta"]
+E-commerce → ["hero", "product_showcase", "features", "testimonials", "shipping_info", "final_cta"]
+Home Services → ["hero", "photo_gallery", "features", "process_timeline", "calculator", "testimonials", "final_cta"]
+
+IMAGE SEARCH QUERIES:
+Generate Unsplash search queries for key sections. Be specific and industry-relevant.
+
+Examples:
+- Wedding DJ hero: "wedding dj dance floor reception party lights"
+- B2B SaaS hero: "modern office team collaboration software"
+- Legal hero: "professional law office consultation"
+- Home Services hero: "[specific service] professional quality work"
+
+For gallery images (if applicable), provide 3-6 specific search terms.
+For feature background (if applicable), provide subtle, professional search term.
+
 INDUSTRY-SPECIFIC FEATURES TO CONSIDER:
 ${pattern.features?.map((f: string) => `- ${f}`).join('\n') || '- Generate relevant features'}
 
@@ -185,7 +233,14 @@ You must respond with ONLY a JSON object in this exact format:
   "problemStatement": "Compelling problem statement as a question",
   "solutionStatement": "Clear solution statement with benefits",
   "socialProof": "Format exactly as: ${pattern.socialProof?.format || 'Social proof statement'} (extract numbers from unique_value)",
-  "ctaText": "Clear, action-oriented CTA (incorporate offer if provided)"
+  "ctaText": "Clear, action-oriented CTA (incorporate offer if provided)",
+  "sections": ["hero", "selected_section_2", "features", "selected_section_3", "final_cta"],
+  "images": {
+    "hero": "Specific Unsplash search query for hero image",
+    "gallery": ["Search query 1", "Search query 2", "Search query 3"],
+    "features": "Subtle background image search query",
+    "background": "Professional background pattern search"
+  }
 }`;
 }
 
@@ -256,7 +311,14 @@ function parseClaudeResponse(responseText: string): GeneratedContent {
       problemStatement: parsed.problemStatement || parsed.problem || '',
       solutionStatement: parsed.solutionStatement || parsed.solution || '',
       socialProof: parsed.socialProof || '',
-      ctaText: parsed.ctaText || parsed.cta?.primary || 'Get Started'
+      ctaText: parsed.ctaText || parsed.cta?.primary || 'Get Started',
+      sections: parsed.sections || ['hero', 'features', 'final_cta'],
+      images: {
+        hero: parsed.images?.hero || '',
+        gallery: parsed.images?.gallery || [],
+        features: parsed.images?.features || '',
+        background: parsed.images?.background || ''
+      }
     };
 
   } catch (error) {
