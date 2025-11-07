@@ -22,7 +22,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-[72px]">
           <a href="/" className="flex items-center py-2 hover:opacity-80 transition-opacity">
             <img 
-              src="/logo/whiteAsset_8icon.png" 
+              src="/logo/whiteAsset_10combimark.svg" 
               alt="PageConsult AI" 
               className="h-8 w-auto"
             />
