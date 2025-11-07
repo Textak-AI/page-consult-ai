@@ -39,7 +39,7 @@ const AnimatedStatsCard = () => {
       setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % stats.length);
         setIsAnimating(false);
-      }, 400);
+      }, 500);
       
     }, 3000);
 
@@ -50,7 +50,7 @@ const AnimatedStatsCard = () => {
   const nextStat = stats[(currentIndex + 1) % stats.length];
 
   return (
-    <div className="absolute bottom-12 left-4 z-0 hidden lg:block" style={{ animation: 'float 6s ease-in-out 2s infinite', animationFillMode: 'forwards', willChange: 'transform', opacity: 1 }}>
+    <div className="absolute bottom-12 left-4 z-0 hidden lg:block">
       <div className="w-64 h-20 bg-slate-800/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl overflow-hidden">
         
         {/* Animation container - fixed height for smooth transitions */}
@@ -60,7 +60,7 @@ const AnimatedStatsCard = () => {
           <div
             className={`
               absolute inset-0 flex items-center gap-3
-              transition-all duration-[400ms] ease-in-out
+              transition-all duration-500 ease-in-out
               ${isAnimating 
                 ? '-translate-y-full opacity-0' 
                 : 'translate-y-0 opacity-100'
@@ -80,7 +80,7 @@ const AnimatedStatsCard = () => {
           <div
             className={`
               absolute inset-0 flex items-center gap-3
-              transition-all duration-[400ms] ease-in-out
+              transition-all duration-500 ease-in-out
               ${isAnimating 
                 ? 'translate-y-0 opacity-100' 
                 : 'translate-y-full opacity-0'
