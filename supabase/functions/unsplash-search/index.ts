@@ -64,7 +64,21 @@ serve(async (req) => {
       );
     }
 
-    const { query, page = 1, perPage = 12 } = await req.json();
+    // Parse request body with better error handling
+    let requestBody;
+    try {
+      const bodyText = await req.text();
+      console.log('Raw request body:', bodyText);
+      requestBody = JSON.parse(bodyText);
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { query, page = 1, perPage = 12 } = requestBody;
     
     console.log('Unsplash search query:', query, 'page:', page);
     
