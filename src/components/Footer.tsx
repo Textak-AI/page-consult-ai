@@ -1,5 +1,3 @@
-import footerLogo from "@/assets/footer-logo.png";
-
 const Footer = () => {
   return (
     <footer className="bg-muted/30 border-t border-border py-12 px-6">
@@ -7,7 +5,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <img src={footerLogo} alt="PageConsult AI" className="h-8 w-auto" />
+              <img src="/logo/whiteAsset_8icon.png" alt="PageConsult AI" className="h-8 w-auto" />
             </div>
             <p className="text-muted-foreground text-sm">
               Strategy-First Landing Pages

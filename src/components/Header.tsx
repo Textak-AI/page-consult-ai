@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import logo from "@/assets/pageconsult-logo.svg";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -21,9 +20,12 @@ const Header = () => {
     >
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-[72px]">
-          <a href="/" className="flex items-center gap-3 py-2 hover:opacity-80 transition-opacity">
-            <img src={logo} alt="PageConsult AI" className="h-12 w-auto" />
-            <span className="text-2xl font-bold text-foreground hidden sm:inline">PageConsult AI</span>
+          <a href="/" className="flex items-center py-2 hover:opacity-80 transition-opacity">
+            <img 
+              src="/logo/whiteAsset_8icon.png" 
+              alt="PageConsult AI" 
+              className="h-8 w-auto"
+            />
           </a>
 
           <nav className="hidden md:flex items-center gap-8">
