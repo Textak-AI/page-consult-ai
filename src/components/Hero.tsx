@@ -14,8 +14,8 @@ const Hero = () => {
         <div className="absolute top-1/2 right-1/4 w-72 h-72 bg-pink-500 rounded-full blur-[90px] opacity-10 animate-pulse-slow" style={{ animationDelay: '2s', animationDuration: '5s' }} />
       </div>
       
-      {/* Floating ambient cards - Decorative layer */}
-      <div className="absolute -top-6 left-12 w-56 h-24 hidden lg:block z-5" style={{ animation: 'fade-in 800ms ease-out 1000ms forwards, float 4s ease-in-out infinite', animationFillMode: 'forwards', willChange: 'transform', opacity: 0 }}>
+      {/* Floating ambient cards - Decorative layer behind content */}
+      <div className="absolute -top-6 left-12 w-56 h-24 hidden lg:block z-0" style={{ animation: 'fade-in 800ms ease-out 1000ms forwards, float 4s ease-in-out infinite', animationFillMode: 'forwards', willChange: 'transform', opacity: 0 }}>
         <div className="bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-2xl">
           <div className="flex items-center gap-3">
             <div className="w-6 h-6 rounded-full bg-green-400/20 flex items-center justify-center">
@@ -26,7 +26,7 @@ const Hero = () => {
         </div>
       </div>
       
-      <div className="absolute bottom-24 right-12 w-48 h-20 hidden lg:block z-5" style={{ animation: 'fade-in 800ms ease-out 1000ms forwards, float 5s ease-in-out 1s infinite', animationFillMode: 'forwards', willChange: 'transform', opacity: 0 }}>
+      <div className="absolute bottom-24 right-12 w-48 h-20 hidden lg:block z-0" style={{ animation: 'fade-in 800ms ease-out 1000ms forwards, float 5s ease-in-out 1s infinite', animationFillMode: 'forwards', willChange: 'transform', opacity: 0 }}>
         <div className="bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-2xl">
           <div className="flex items-center gap-3">
             <span className="text-lg" style={{ filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.3))' }}>✨</span>
@@ -37,12 +37,12 @@ const Hero = () => {
         </div>
       </div>
       
-      <div className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-64 h-28 hidden lg:block z-5" style={{ animation: 'fade-in 800ms ease-out 1000ms forwards, float 6s ease-in-out 2s infinite', animationFillMode: 'forwards', willChange: 'transform', opacity: 0 }}>
+      <div className="absolute left-4 md:left-8 bottom-32 w-48 h-24 hidden lg:block z-0" style={{ animation: 'fade-in 800ms ease-out 1000ms forwards, float 6s ease-in-out 2s infinite', animationFillMode: 'forwards', willChange: 'transform', opacity: 0 }}>
         <div className="bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-2xl">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-2xl" style={{ filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.3))' }}>📊</span>
             <div>
-              <div className="text-sm text-purple-400 font-medium">40% higher conversion</div>
+              <div className="text-sm text-cyan-400 font-medium">40% higher conversion</div>
               <div className="text-xs text-gray-500">with AI-generated pages</div>
             </div>
           </div>
@@ -51,19 +51,19 @@ const Hero = () => {
 
       {/* Main content layer - VISIBLE and ABOVE background */}
       <div className="container mx-auto max-w-7xl relative z-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="max-w-2xl" style={{ animation: 'slide-up 800ms ease-out 200ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
-            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white mb-2 leading-tight tracking-tight antialiased" style={{ textRendering: 'optimizeLegibility' }}>
+        <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-center">
+          <div className="max-w-2xl space-y-8 pb-2" style={{ animation: 'slide-up 800ms ease-out 200ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight antialiased" style={{ textRendering: 'optimizeLegibility' }}>
               Landing Pages That Start With{" "}
               <span className="block mt-2 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient-x" style={{ backgroundSize: '200% auto', textShadow: '0 0 40px rgba(6, 182, 212, 0.3)', willChange: 'background-position' }}>
                 Strategy
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed mt-6 max-w-xl antialiased" style={{ textRendering: 'optimizeLegibility', animation: 'fade-in 800ms ease-out 400ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
+            <p className="relative z-10 text-xl md:text-2xl text-gray-300 leading-relaxed max-w-xl antialiased" style={{ textRendering: 'optimizeLegibility', animation: 'fade-in 800ms ease-out 400ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
               AI consultant asks intelligent questions, then builds professional
               pages proven to convert. No templates. No guesswork.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 mt-12" style={{ animation: 'fade-in 800ms ease-out 600ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
+            <div className="flex flex-col sm:flex-row gap-4 pt-6" style={{ animation: 'fade-in 800ms ease-out 600ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
               <Button asChild size="lg" className="relative group text-lg px-8 py-4 bg-white text-slate-900 font-bold rounded-xl shadow-xl shadow-white/20 hover:shadow-2xl hover:shadow-white/40 hover:scale-105 transition-all duration-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900" aria-label="Start free demo consultation">
                 <Link to="/wizard">
                   <span className="relative z-10">Try AI Consultant - Free Demo</span>
@@ -76,7 +76,7 @@ const Hero = () => {
                 </a>
               </Button>
             </div>
-            <p className="text-gray-500 text-sm text-center sm:text-left mt-3" style={{ animation: 'fade-in 800ms ease-out 700ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
+            <p className="text-gray-500 text-sm text-center sm:text-left mt-4" style={{ animation: 'fade-in 800ms ease-out 700ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
               No credit card required • See results in 2 minutes
             </p>
           </div>
