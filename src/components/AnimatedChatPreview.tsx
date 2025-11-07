@@ -155,18 +155,20 @@ export function AnimatedChatPreview() {
   }, [isInitialized]);
 
   return (
-    <div className="relative group">
+    <div className="relative group cursor-default">
       {/* Glow effect on hover */}
-      <div className="absolute inset-0 -m-1 bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 rounded-3xl blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-700 z-0" />
+      <div className="absolute inset-0 -m-1 bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 rounded-3xl blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-700 z-0" style={{ willChange: 'opacity' }} />
       
       {/* Chat container with smooth initialization */}
       <div 
-        className={`relative z-10 bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-white/10 p-8 transform transition-all duration-300 h-[400px] md:h-[500px] flex flex-col shadow-2xl shadow-black/50 ${
+        className={`relative z-10 bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-white/10 p-6 md:p-8 transform transition-all duration-500 h-[400px] md:h-[500px] flex flex-col shadow-2xl shadow-black/50 group-hover:-translate-y-0.5 group-hover:shadow-3xl ${
           isInitialized ? 'opacity-100' : 'opacity-0'
         }`}
         style={{ 
-          transition: 'opacity 300ms ease-in, transform 300ms ease-out'
+          transition: 'opacity 300ms ease-in, transform 500ms ease-out, box-shadow 500ms ease-out',
+          willChange: 'transform'
         }}
+        aria-live="polite"
       >
         <div 
           ref={messagesContainerRef} 
@@ -182,14 +184,21 @@ export function AnimatedChatPreview() {
           {/* Header */}
           <div className="flex items-center gap-3 pb-4 border-b border-white/10">
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center overflow-hidden shadow-lg shadow-cyan-500/30 animate-pulse-slow">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center overflow-hidden shadow-lg shadow-cyan-500/40 animate-pulse-slow">
                 <img src={aiChatIcon} alt="AI" className="w-6 h-6 object-contain" />
               </div>
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-900" />
             </div>
             <div>
-              <div className="font-semibold text-white">AI Consultant</div>
-              <div className="text-xs text-gray-400">Building your strategy...</div>
+              <div className="font-semibold text-white antialiased">AI Consultant</div>
+              <div className="flex items-center gap-1 text-xs text-gray-400 antialiased">
+                <span>Building your strategy</span>
+                <span className="inline-flex gap-0.5 ml-0.5">
+                  <span className="w-1 h-1 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1 h-1 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '200ms' }} />
+                  <span className="w-1 h-1 bg-gray-400 rounded-full animate-pulse" style={{ animationDelay: '400ms' }} />
+                </span>
+              </div>
             </div>
           </div>
 
@@ -232,15 +241,16 @@ export function AnimatedChatPreview() {
                   </div>
                   )}
                   <div
-                    className={`rounded-xl px-4 py-2 ${
+                    className={`rounded-xl px-4 py-2 antialiased ${
                       step.type === "ai"
-                        ? "bg-slate-800/60 backdrop-blur-sm border border-white/5 text-gray-200 shadow-lg"
+                        ? "bg-slate-800/60 backdrop-blur-sm border border-white/5 text-gray-200 shadow-lg font-medium"
                         : step.type === "user"
-                        ? "bg-gradient-to-br from-cyan-600 to-cyan-700 text-white shadow-lg shadow-cyan-500/40"
+                        ? "bg-gradient-to-br from-cyan-600 to-cyan-700 text-white shadow-lg shadow-cyan-500/40 font-semibold"
                         : step.type === "thinking"
                         ? "bg-slate-800/60 backdrop-blur-sm border border-purple-500/20 text-white font-medium px-6 py-3"
                         : "bg-slate-800/60 backdrop-blur-sm border border-cyan-500/20 text-white font-medium px-6 py-3"
                     }`}
+                    style={{ textRendering: 'optimizeLegibility' }}
                   >
                     <div>
                       {step.type === "ai" && isTypingText && index === visibleMessages - 1 
@@ -293,7 +303,7 @@ export function AnimatedChatPreview() {
         {/* Progress indicator - Fixed at bottom */}
         {visibleMessages > 0 && visibleMessages <= conversationSteps.length && (
           <div className="pt-4 border-t border-white/10 mt-4">
-            <div className="flex items-center justify-between text-xs mb-2">
+            <div className="flex items-center justify-between text-xs mb-2 antialiased">
               <span className="text-gray-400 font-medium">Consultation Progress</span>
               <span className="text-cyan-400 font-semibold">{Math.min(Math.round((visibleMessages / conversationSteps.length) * 100), 100)}%</span>
             </div>
@@ -302,12 +312,17 @@ export function AnimatedChatPreview() {
                 className="h-full bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 rounded-full shadow-lg shadow-cyan-400/60 relative overflow-hidden ease-out"
                 style={{ 
                   width: `${Math.min((visibleMessages / conversationSteps.length) * 100, 100)}%`,
-                  transition: 'width 2s ease-out'
+                  transition: 'width 700ms ease-out',
+                  willChange: 'width'
                 }}
               >
                 <div 
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"
-                  style={{ backgroundSize: '200% 100%' }}
+                  className="absolute inset-0 animate-shimmer"
+                  style={{ 
+                    backgroundSize: '200% 100%',
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+                    willChange: 'background-position'
+                  }}
                 />
               </div>
             </div>

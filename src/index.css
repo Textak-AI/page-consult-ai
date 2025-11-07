@@ -323,4 +323,33 @@ All colors MUST be HSL.
       background-position: 200% center;
     }
   }
+
+  /* Scroll pill animation */
+  @keyframes scroll-pill {
+    0% { 
+      transform: translateY(0);
+      opacity: 1;
+    }
+    100% { 
+      transform: translateY(12px);
+      opacity: 0;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-float,
+    .animate-pulse-slow,
+    .animate-gradient-x,
+    .animate-shimmer,
+    .animate-bounce-slow,
+    .animate-pulse {
+      animation: none !important;
+    }
+    
+    * {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
 }
