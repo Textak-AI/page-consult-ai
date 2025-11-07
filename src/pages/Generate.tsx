@@ -625,17 +625,7 @@ function EditorContent({
           />
         </a>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setAiConsultantOpen(true)}
-            className="gap-2 relative pl-5 builder-button ai-improve-btn"
-          >
-            <span className="absolute left-0 top-0 w-1 h-full bg-[#F97316] rounded-l"></span>
-            <Wand2 className="w-4 h-4" />
-            AI Improve
-          </Button>
-          <Button 
+          <Button
             variant="outline" 
             size="sm" 
             onClick={() => setStylePickerOpen(true)}
