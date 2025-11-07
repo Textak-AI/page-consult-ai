@@ -21,8 +21,9 @@ const Header = () => {
     >
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-[72px]">
-          <a href="/" className="flex items-center py-2 hover:opacity-80 transition-opacity">
-            <img src={logo} alt="PageConsult AI" className="h-10 w-auto" />
+          <a href="/" className="flex items-center gap-3 py-2 hover:opacity-80 transition-opacity">
+            <img src={logo} alt="PageConsult AI" className="h-12 w-auto" />
+            <span className="text-2xl font-bold text-foreground hidden sm:inline">PageConsult AI</span>
           </a>
 
           <nav className="hidden md:flex items-center gap-8">
