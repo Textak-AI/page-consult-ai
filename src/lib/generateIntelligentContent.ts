@@ -39,6 +39,20 @@ export interface GeneratedContent {
 export async function generateIntelligentContent(
   consultation: ConsultationData
 ): Promise<GeneratedContent> {
+  console.log('🔍 DIAGNOSTIC: Starting page generation');
+  console.log('📋 Consultation data:', {
+    industry: consultation.industry,
+    serviceType: consultation.service_type,
+    goal: consultation.goal,
+    audience: consultation.target_audience,
+    challenge: consultation.challenge,
+    uniqueValue: consultation.unique_value,
+    offer: consultation.offer,
+    hasAllFields: !!(consultation.industry && 
+                     consultation.goal && 
+                     consultation.target_audience)
+  });
+
   // Detect industry and load patterns
   const industryKey = detectIndustry(consultation);
   const pattern = getIndustryPattern(industryKey);
@@ -49,13 +63,50 @@ export async function generateIntelligentContent(
 
   console.log(`🎯 Detected industry: ${pattern.name}`, { industryKey });
 
+  console.log('🏗️ Building prompts from consultation data...');
+  
   // Build comprehensive system prompt with industry intelligence
   const systemPrompt = buildSystemPrompt(pattern, consultation);
   
   // Build user prompt with consultation data
   const userPrompt = buildUserPrompt(consultation);
 
-  console.log('📤 Calling edge function (secure Claude proxy)...');
+  console.log('✅ Prompts built:', {
+    systemPromptLength: systemPrompt?.length || 0,
+    userPromptLength: userPrompt?.length || 0,
+    systemPromptValid: !!(systemPrompt && systemPrompt.length > 50),
+    userPromptValid: !!(userPrompt && userPrompt.length > 50),
+    systemPromptPreview: systemPrompt?.substring(0, 150) + '...',
+    userPromptPreview: userPrompt?.substring(0, 150) + '...'
+  });
+
+  // Validate prompts before proceeding
+  if (!systemPrompt || systemPrompt.trim().length < 50) {
+    console.error('❌ FAILED: System prompt is empty or too short', {
+      length: systemPrompt?.length || 0,
+      pattern: pattern.name,
+      consultation
+    });
+    throw new Error('System prompt validation failed. Check buildSystemPrompt function.');
+  }
+  
+  if (!userPrompt || userPrompt.trim().length < 50) {
+    console.error('❌ FAILED: User prompt is empty or too short', {
+      length: userPrompt?.length || 0,
+      consultation
+    });
+    throw new Error('User prompt validation failed. Check buildUserPrompt function.');
+  }
+  
+  console.log('✅ PASSED: Both prompts are valid and ready');
+
+  console.log('📤 Calling anthropic-proxy edge function...');
+  console.log('📊 Request payload:', {
+    hasSystemPrompt: !!systemPrompt,
+    hasUserPrompt: !!userPrompt,
+    systemLength: systemPrompt.length,
+    userLength: userPrompt.length
+  });
   console.time('⏱️ Claude API call');
 
   try {
@@ -103,12 +154,15 @@ export async function generateIntelligentContent(
       throw new Error('Empty response from content generation service');
     }
 
+    console.log('📥 Response received from anthropic-proxy');
     console.log('✅ Claude response received via edge function');
 
     // Parse Claude's JSON response
     const generated = parseClaudeResponse(data.content);
     
-    console.log('✅ Successfully generated intelligent content:', {
+    console.log('✅ SUCCESS: AI generated content:', {
+      contentLength: data.content?.length || 0,
+      contentPreview: data.content?.substring(0, 200) + '...',
       headline: generated.headline.substring(0, 50) + '...',
       featuresCount: generated.features.length,
       industry: pattern.name
@@ -118,10 +172,12 @@ export async function generateIntelligentContent(
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('❌ FULL CONTENT GENERATION ERROR STACK:', {
-      message: errorMessage,
-      error: error,
-      stack: error instanceof Error ? error.stack : undefined,
+    console.error('❌ ERROR in page generation:', {
+      errorMessage: errorMessage,
+      errorName: error instanceof Error ? error.name : 'Unknown',
+      errorStack: error instanceof Error ? error.stack : undefined,
+      consultationData: consultation,
+      promptsWereBuilt: !!(systemPrompt && userPrompt)
     });
     
     // Re-throw with detailed context
