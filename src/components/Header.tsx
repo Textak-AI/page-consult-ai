@@ -15,7 +15,7 @@ const Header = () => {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white shadow-lg" : "bg-white/95 backdrop-blur-sm shadow-sm"
+        isScrolled ? "bg-slate-900/95 backdrop-blur-sm shadow-lg shadow-black/20" : "bg-slate-900/80 backdrop-blur-sm shadow-sm"
       }`}
     >
       <div className="container mx-auto px-6">
@@ -31,25 +31,32 @@ const Header = () => {
           <nav className="hidden md:flex items-center gap-8">
             <a
               href="#features"
-              className="text-foreground hover:text-primary transition-colors duration-200"
+              className="text-gray-300 hover:text-white transition-all duration-300 relative group"
             >
               Features
+              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full" />
             </a>
             <a
               href="#pricing"
-              className="text-foreground hover:text-primary transition-colors duration-200"
+              className="text-gray-300 hover:text-white transition-all duration-300 relative group"
             >
               Pricing
+              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full" />
             </a>
             <a
               href="#demo"
-              className="text-foreground hover:text-primary transition-colors duration-200"
+              className="text-gray-300 hover:text-white transition-all duration-300 relative group"
             >
               Demo
+              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full" />
             </a>
           </nav>
 
-          <Button variant="hero" size="default">
+          <Button 
+            variant="default" 
+            size="default" 
+            className="bg-white text-slate-900 font-semibold px-6 py-2.5 rounded-xl shadow-xl shadow-white/20 hover:shadow-2xl hover:shadow-white/30 hover:scale-105 transition-all duration-300"
+          >
             Start Free
           </Button>
         </div>

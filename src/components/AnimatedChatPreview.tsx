@@ -156,17 +156,16 @@ export function AnimatedChatPreview() {
   }, [isInitialized]);
 
   return (
-    <div className="relative">
-      {/* Glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 blur-3xl rounded-full -z-10"></div>
+    <div className="relative group">
+      {/* Glow effect on hover */}
+      <div className="absolute inset-0 -m-1 bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 rounded-3xl blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-700 z-0" />
       
       {/* Chat container with smooth initialization */}
       <div 
-        className={`relative bg-card/90 backdrop-blur-sm rounded-2xl border border-border/50 p-6 transform hover:scale-[1.02] transition-all duration-300 h-[400px] md:h-[500px] flex flex-col ${
+        className={`relative z-10 bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-white/10 p-8 transform transition-all duration-300 h-[400px] md:h-[500px] flex flex-col shadow-2xl shadow-black/50 ${
           isInitialized ? 'opacity-100' : 'opacity-0'
         }`}
         style={{ 
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
           transition: 'opacity 300ms ease-in, transform 300ms ease-out'
         }}
       >
@@ -176,17 +175,22 @@ export function AnimatedChatPreview() {
           style={{ 
             scrollBehavior: 'smooth',
             scrollPaddingBottom: '20px',
-            transition: 'scroll 0.5s cubic-bezier(0.4, 0.0, 0.2, 1)'
+            transition: 'scroll 0.5s cubic-bezier(0.4, 0.0, 0.2, 1)',
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#06b6d4 rgba(255,255,255,0.1)'
           }}
         >
           {/* Header */}
-          <div className="flex items-center gap-3 pb-4 border-b border-border/50">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center overflow-hidden">
-            <img src={aiChatIcon} alt="AI" className="w-6 h-6 object-contain" />
-          </div>
+          <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+            <div className="relative">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center overflow-hidden shadow-lg shadow-cyan-500/30 animate-pulse-slow">
+                <img src={aiChatIcon} alt="AI" className="w-6 h-6 object-contain" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-900" />
+            </div>
             <div>
-              <div className="font-semibold text-foreground">AI Consultant</div>
-              <div className="text-xs text-muted-foreground">Building your strategy...</div>
+              <div className="font-semibold text-white">AI Consultant</div>
+              <div className="text-xs text-gray-400">Building your strategy...</div>
             </div>
           </div>
 
@@ -217,26 +221,26 @@ export function AnimatedChatPreview() {
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                       step.type === "ai"
-                        ? "bg-primary/10 text-primary overflow-hidden"
-                        : "bg-[#1e293b] text-white"
+                        ? "bg-gradient-to-br from-cyan-500 to-purple-600 shadow-lg shadow-cyan-500/30 overflow-hidden"
+                        : "bg-slate-700"
                     }`}
                   >
                     {step.type === "ai" ? (
                       <img src={aiChatIconInChat} alt="AI" className="w-5 h-5 object-contain" />
                     ) : (
-                      <User className="w-4 h-4" />
+                      <User className="w-4 h-4 text-gray-300" />
                     )}
                   </div>
                   )}
                   <div
                     className={`rounded-xl px-4 py-2 ${
                       step.type === "ai"
-                        ? "bg-[#f3f4f6] text-[#1f2937]"
+                        ? "bg-slate-800/60 backdrop-blur-sm border border-white/5 text-gray-200 shadow-lg"
                         : step.type === "user"
-                        ? "bg-[#1e293b] text-white"
+                        ? "bg-gradient-to-br from-cyan-600 to-cyan-700 text-white shadow-lg shadow-cyan-500/40"
                         : step.type === "thinking"
-                        ? "bg-muted/50 text-foreground font-medium px-6 py-3"
-                        : "bg-gradient-to-r from-primary/10 to-secondary/10 text-foreground font-medium px-6 py-3"
+                        ? "bg-slate-800/60 backdrop-blur-sm border border-purple-500/20 text-white font-medium px-6 py-3"
+                        : "bg-slate-800/60 backdrop-blur-sm border border-cyan-500/20 text-white font-medium px-6 py-3"
                     }`}
                   >
                     <div>
@@ -253,11 +257,12 @@ export function AnimatedChatPreview() {
                             style={{
                               animation: 'fade-in 0.3s ease-out forwards',
                               animationDelay: `${checkIndex * 0.1}s`,
-                              opacity: 0
+                              opacity: 0,
+                              textShadow: '0 0 20px rgba(74, 222, 128, 0.4)'
                             }}
                           >
-                            <span className="text-green-500">✓</span>
-                            <span className="text-muted-foreground">{check}</span>
+                            <span className="text-green-400 font-bold">✓</span>
+                            <span className="text-green-400 font-medium">{check}</span>
                           </div>
                         ))}
                       </div>
@@ -270,14 +275,14 @@ export function AnimatedChatPreview() {
             {/* Typing indicator */}
             {isTyping && visibleMessages < conversationSteps.length && (
               <div className="flex gap-3 animate-fade-in">
-                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center flex-shrink-0 overflow-hidden shadow-lg shadow-cyan-500/30">
                   <img src={aiChatIconInChat} alt="AI" className="w-5 h-5 object-contain" />
                 </div>
-                <div className="bg-muted rounded-xl px-4 py-3">
+                <div className="bg-slate-800/60 backdrop-blur-sm border border-white/5 rounded-xl px-4 py-3 shadow-lg">
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                    <div className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                    <div className="w-2 h-2 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: "300ms" }}></div>
                   </div>
                 </div>
               </div>
@@ -288,19 +293,24 @@ export function AnimatedChatPreview() {
         
         {/* Progress indicator - Fixed at bottom */}
         {visibleMessages > 0 && visibleMessages <= conversationSteps.length && (
-          <div className="pt-4 border-t border-border/50 mt-4">
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-              <span>Consultation Progress</span>
-              <span>{Math.min(Math.round((visibleMessages / conversationSteps.length) * 100), 100)}%</span>
+          <div className="pt-4 border-t border-white/10 mt-4">
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="text-gray-400 font-medium">Consultation Progress</span>
+              <span className="text-cyan-400 font-semibold">{Math.min(Math.round((visibleMessages / conversationSteps.length) * 100), 100)}%</span>
             </div>
-            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <div className="h-2.5 bg-slate-800/60 border border-white/5 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-primary to-secondary ease-out"
+                className="h-full bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 rounded-full shadow-lg shadow-cyan-400/60 relative overflow-hidden ease-out"
                 style={{ 
                   width: `${Math.min((visibleMessages / conversationSteps.length) * 100, 100)}%`,
                   transition: 'width 2s ease-out'
                 }}
-              ></div>
+              >
+                <div 
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"
+                  style={{ backgroundSize: '200% 100%' }}
+                />
+              </div>
             </div>
           </div>
         )}
