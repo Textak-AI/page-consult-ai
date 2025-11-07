@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AnimatedChatPreview } from "@/components/AnimatedChatPreview";
+import AnimatedStatsCard from "@/components/AnimatedStatsCard";
 
 const Hero = () => {
   return (
@@ -37,17 +38,8 @@ const Hero = () => {
         </div>
       </div>
       
-      <div className="absolute left-4 md:left-8 bottom-32 w-48 h-24 hidden lg:block z-0" style={{ animation: 'fade-in 800ms ease-out 1000ms forwards, float 6s ease-in-out 2s infinite', animationFillMode: 'forwards', willChange: 'transform', opacity: 0 }}>
-        <div className="bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-2xl">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl" style={{ filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.3))' }}>📊</span>
-            <div>
-              <div className="text-sm text-cyan-400 font-medium">40% higher conversion</div>
-              <div className="text-xs text-gray-500">with AI-generated pages</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Animated rotating stats card */}
+      <AnimatedStatsCard />
 
       {/* Main content layer - VISIBLE and ABOVE background */}
       <div className="container mx-auto max-w-7xl relative z-20">
