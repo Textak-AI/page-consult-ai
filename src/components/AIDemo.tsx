@@ -478,7 +478,7 @@ const AIDemo = () => {
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto relative group">
+        <div className="max-w-5xl lg:max-w-7xl mx-auto relative group">
           {/* Glow effect */}
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-purple-500/20 to-pink-500/20 blur-3xl opacity-60 rounded-3xl" />
           
@@ -501,7 +501,7 @@ const AIDemo = () => {
 
             <div 
               ref={chatContainerRef}
-              className="p-8 space-y-6 max-h-[520px] overflow-y-auto"
+              className="p-8 space-y-6 max-h-[500px] md:max-h-[560px] lg:max-h-[600px] overflow-y-auto"
               style={{ scrollBehavior: 'smooth' }}
             >
               {messages.map((message, index) => (
@@ -544,29 +544,26 @@ const AIDemo = () => {
               ))}
 
               {step === "industry" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto mt-8 animate-fade-in">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-full mt-8 animate-fade-in">
                   {industries.map((industry) => (
                     <button
                       key={industry.title}
                       onClick={(e) => handleIndustrySelect(e, industry.title)}
-                      className="group relative bg-slate-800/40 backdrop-blur-sm border border-white/10 hover:border-cyan-400/50 rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/20 text-left"
+                      className="group relative bg-slate-800/40 backdrop-blur-sm border border-white/10 hover:border-cyan-400/50 rounded-2xl p-5 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/20 text-center"
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-purple-500/0 group-hover:from-cyan-500/10 group-hover:to-purple-500/10 rounded-2xl transition-all duration-300" />
                       
-                      <div className="relative flex items-start gap-4">
-                        <div className="text-4xl group-hover:scale-110 transition-transform duration-300" style={{ filter: 'drop-shadow(0 0 12px rgba(6, 182, 212, 0.4))' }}>
+                      <div className="relative space-y-3">
+                        <div className="text-4xl group-hover:scale-110 transition-transform duration-300 mx-auto w-fit" style={{ filter: 'drop-shadow(0 0 12px rgba(6, 182, 212, 0.4))' }}>
                           {industry.icon}
                         </div>
-                        <div className="flex-1">
-                          <div className="text-white font-bold text-lg mb-1 group-hover:text-cyan-400 transition-colors">
+                        <div>
+                          <div className="text-white font-bold text-base mb-1 group-hover:text-cyan-400 transition-colors">
                             {industry.title}
                           </div>
-                          <div className="text-gray-400 text-sm">
+                          <div className="text-gray-400 text-xs">
                             {industry.subtitle}
                           </div>
-                        </div>
-                        <div className="text-cyan-400 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300">
-                          →
                         </div>
                       </div>
                     </button>
@@ -575,7 +572,7 @@ const AIDemo = () => {
               )}
 
               {step === "goal" && (
-                <div className="grid grid-cols-1 gap-4 max-w-3xl mx-auto mt-8 animate-fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-full mt-8 animate-fade-in">
                   {goals.map((goal) => (
                     <button
                       key={goal.title}
@@ -843,11 +840,24 @@ const AIDemo = () => {
                   </div>
                   
                   <Link
-                    to="/wizard"
+                    to="/generate"
+                    state={{
+                      consultationData: {
+                        industry: selectedIndustry,
+                        specificService: submittedService,
+                        goal: selectedGoal,
+                        targetAudience: submittedAudience,
+                        hesitation: selectedHesitation,
+                        credentials: selectedCredentials,
+                        insights: selectedInsights,
+                        marketInsights: marketInsights,
+                        timestamp: new Date().toISOString()
+                      }
+                    }}
                     className="block w-full"
                   >
                     <Button className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold text-lg py-6 rounded-xl hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/50">
-                      Start Building My Page - Free
+                      Generate My Page Now
                     </Button>
                   </Link>
                   
