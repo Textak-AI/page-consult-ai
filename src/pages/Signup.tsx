@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,9 @@ import { MessageCircle, Loader2 } from "lucide-react";
 
 export default function Signup() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const consultationData = location.state?.consultationData;
+  const redirectTo = location.state?.redirectTo || "/wizard";
   const [isLogin, setIsLogin] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -29,15 +32,25 @@ export default function Signup() {
 
         toast({
           title: "Welcome back!",
-          description: "Redirecting to wizard..."
+          description: "Redirecting..."
         });
-        navigate("/wizard");
+        
+        // If we have consultation data, save it and redirect to generate
+        if (consultationData) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await saveConsultationData(user.id);
+          }
+          navigate(redirectTo, { state: { consultationData } });
+        } else {
+          navigate(redirectTo);
+        }
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/wizard`
+            emailRedirectTo: `${window.location.origin}${redirectTo}`
           }
         });
 
@@ -45,9 +58,16 @@ export default function Signup() {
 
         toast({
           title: "Account created!",
-          description: "Redirecting to wizard..."
+          description: "Redirecting..."
         });
-        navigate("/wizard");
+        
+        // If we have consultation data, save it and redirect to generate
+        if (consultationData && data.user) {
+          await saveConsultationData(data.user.id);
+          navigate(redirectTo, { state: { consultationData } });
+        } else {
+          navigate(redirectTo);
+        }
       }
     } catch (error: any) {
       toast({
@@ -57,6 +77,32 @@ export default function Signup() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveConsultationData = async (userId: string) => {
+    if (!consultationData) return;
+
+    try {
+      const { error } = await supabase
+        .from("consultations")
+        .insert({
+          user_id: userId,
+          industry: consultationData.industry,
+          service_type: consultationData.specificService,
+          goal: consultationData.goal,
+          target_audience: consultationData.targetAudience,
+          challenge: consultationData.challenge,
+          unique_value: consultationData.uniqueValue,
+          offer: consultationData.goal,
+          status: "completed"
+        });
+
+      if (error) {
+        console.error("Failed to save consultation:", error);
+      }
+    } catch (error) {
+      console.error("Failed to save consultation:", error);
     }
   };
 

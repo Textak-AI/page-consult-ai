@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -63,6 +63,7 @@ type Section = {
 
 export default function Generate() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [phase, setPhase] = useState<Phase>("loading");
   const [progress, setProgress] = useState(0);
@@ -110,8 +111,8 @@ export default function Generate() {
         service_type: demoData.specificService,
         goal: demoData.goal,
         target_audience: demoData.targetAudience,
-        challenge: demoData.hesitation,
-        unique_value: demoData.credentials?.join(", "),
+        challenge: demoData.challenge,
+        unique_value: demoData.uniqueValue,
         offer: demoData.goal,
         status: "completed",
         created_at: demoData.timestamp,
