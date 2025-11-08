@@ -46,10 +46,14 @@ type MarketInsight = {
 };
 
 const industries: IndustryOption[] = [
-  { icon: "🖥️", title: "B2B SaaS", subtitle: "Software, platforms, tools" },
+  { icon: "💼", title: "B2B SaaS", subtitle: "Software, platforms, tools" },
   { icon: "🛒", title: "E-commerce", subtitle: "Products, retail, online stores" },
   { icon: "💼", title: "Professional Services", subtitle: "Consulting, legal, finance" },
-  { icon: "🏢", title: "Other", subtitle: "Tell me more..." },
+  { icon: "🏥", title: "Healthcare", subtitle: "Medical, wellness, dental" },
+  { icon: "🏠", title: "Real Estate", subtitle: "Residential, commercial, property" },
+  { icon: "📚", title: "Education", subtitle: "Courses, training, coaching" },
+  { icon: "🍔", title: "Food & Beverage", subtitle: "Restaurants, CPG, catering" },
+  { icon: "⚡", title: "Other", subtitle: "Tell me more..." },
 ];
 
 const goals: GoalOption[] = [
@@ -105,7 +109,6 @@ const AIDemo = () => {
         const scrollTarget = messagesEndRef.current;
         
         // Calculate scroll position that shows both question and buttons
-        // Subtract 200px to keep the last AI message (question) visible above buttons
         const targetScrollTop = scrollTarget.offsetTop - 200;
         
         // Use smooth scrolling and ensure we don't scroll above content
@@ -153,7 +156,6 @@ const AIDemo = () => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Prevent any default behavior
     if (window.event) {
       window.event.preventDefault();
       window.event.stopPropagation();
@@ -201,7 +203,6 @@ const AIDemo = () => {
     }
     
     if (hesitation === "Other") {
-      // Show text input for other
       return false;
     }
     
@@ -265,12 +266,10 @@ const AIDemo = () => {
       if (error) throw error;
 
       if (data?.success && data?.insights) {
-        // Parse insights into structured format
         const insights: MarketInsight[] = [];
         const structuredData = data.insights.structuredData || {};
         const fullText = data.insights.fullText || '';
 
-        // Extract insights from the response
         if (structuredData.costOfDelay || fullText.includes('cost') || fullText.includes('delay')) {
           insights.push({
             type: 'cost_of_delay',
@@ -314,7 +313,6 @@ const AIDemo = () => {
         return insights;
       }
       
-      // Fallback insights if API fails
       return generateFallbackInsights();
       
     } catch (error) {
@@ -374,10 +372,8 @@ const AIDemo = () => {
       if (hasNoCredentials) {
         addMessage("ai", "No problem! New businesses can build trust using market data. Let me find some industry statistics that will help establish your credibility...", true);
         
-        // Fetch real market insights
         const insights = await fetchMarketInsights();
         
-        // Show insights in a formatted message
         const insightsSummary = insights.map(i => 
           `• ${i.title}: ${i.value} - ${i.description}`
         ).join('\n');
@@ -444,382 +440,457 @@ const AIDemo = () => {
   };
 
   return (
-    <section id="demo" className="py-24 px-6 bg-background">
-      <div className="container mx-auto max-w-4xl">
-        <div className="text-center mb-12 animate-fade-in">
-          <h2 className="text-4xl font-bold text-foreground mb-4">
-            Experience It Yourself
+    <section id="demo" className="relative py-24 md:py-32 px-8 bg-gradient-to-b from-slate-950 via-purple-950 to-slate-950 overflow-hidden">
+      
+      {/* Background ambient elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl" />
+      </div>
+
+      {/* Live Demo floating badge */}
+      <div className="absolute top-8 right-8 hidden lg:block z-10">
+        <div className="bg-green-500/20 border border-green-400/30 rounded-full px-4 py-2 backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            <span className="text-green-400 text-sm font-semibold">Live Demo</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Floating stat card */}
+      <div className="absolute bottom-8 left-8 hidden lg:block z-10">
+        <div className="bg-slate-800/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl">
+          <div className="text-cyan-400 text-sm font-semibold">60 seconds</div>
+          <div className="text-gray-400 text-xs">Average demo time</div>
+        </div>
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto">
+        <div className="text-center mb-16 animate-fade-in">
+          <h2 className="text-5xl md:text-6xl font-extrabold text-center mb-4">
+            <span className="bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-transparent" style={{ textShadow: '0 0 40px rgba(168, 85, 247, 0.3)' }}>
+              See the AI Consultant in Action
+            </span>
           </h2>
-          <p className="text-lg text-muted-foreground">
-            See how AI consultation works in 60 seconds - no signup required
+          <p className="text-xl md:text-2xl text-gray-300 text-center max-w-3xl mx-auto leading-relaxed">
+            Watch the AI ask intelligent questions and build your strategy in real-time. No signup, no email, just pure proof.
           </p>
         </div>
 
-        <div 
-          className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/50 overflow-hidden max-w-2xl mx-auto animate-scale-in"
-          style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)' }}
-        >
-          <div className="flex items-center gap-3 px-6 py-4 border-b border-border/50" style={{ background: '#2c3e50' }}>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center overflow-hidden">
-              <img src={aiChatIcon} alt="AI" className="w-6 h-6 object-contain" />
-            </div>
-            <div className="flex-1">
-              <div className="font-semibold text-white">AI Consultant Demo</div>
-              <div className="text-xs text-white/70">Building your strategy...</div>
-            </div>
-            <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ background: '#06B6D6', color: 'white' }}>
-              Try free
-            </span>
-          </div>
-
-          <div 
-            ref={chatContainerRef}
-            className="p-6 space-y-3 max-h-[520px] overflow-y-auto"
-            style={{ scrollBehavior: 'smooth' }}
-          >
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex gap-3 animate-fade-in ${
-                  message.role === "user" ? "flex-row-reverse" : ""
-                }`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    message.role === "ai"
-                      ? "bg-primary/10 text-primary overflow-hidden"
-                      : "bg-[#1e293b] text-white"
-                  }`}
-                >
-                  {message.role === "ai" ? (
-                    <img src={aiChatIconInChat} alt="AI" className="w-5 h-5 object-contain" />
-                  ) : (
-                    <User className="w-4 h-4" />
-                  )}
+        <div className="max-w-4xl mx-auto relative group">
+          {/* Glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-purple-500/20 to-pink-500/20 blur-3xl opacity-60 rounded-3xl" />
+          
+          {/* Demo card */}
+          <div className="relative bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-slate-800 to-slate-900 border-b border-white/10 p-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center overflow-hidden">
+                  <img src={aiChatIcon} alt="AI" className="w-6 h-6 object-contain" />
                 </div>
-                <div
-                  className={`flex-1 rounded-xl px-4 py-2 whitespace-pre-line ${
-                    message.role === "ai"
-                      ? "bg-[#f3f4f6] text-[#1f2937]"
-                      : "bg-[#1e293b] text-white"
-                  }`}
-                >
-                  {message.isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                      <span>Searching industry data...</span>
-                    </div>
-                  ) : (
-                    message.content
-                  )}
+                <div>
+                  <div className="text-white font-bold text-lg">AI Consultant Demo</div>
+                  <div className="text-cyan-400 text-sm font-medium">Building your strategy...</div>
                 </div>
               </div>
-            ))}
+              <button className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-cyan-500/50 hover:scale-105 transform transition-all duration-300">
+                → Try Free
+              </button>
+            </div>
 
-            {step === "industry" && (
-              <div className="grid grid-cols-2 gap-3 pt-2 animate-fade-in">
-                {industries.map((industry) => (
-                  <button
-                    key={industry.title}
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleIndustrySelect(e, industry.title);
-                    }}
-                    className="bg-card border border-border rounded-xl p-4 text-left hover-lift hover:border-primary transition-all"
+            <div 
+              ref={chatContainerRef}
+              className="p-8 space-y-6 max-h-[520px] overflow-y-auto"
+              style={{ scrollBehavior: 'smooth' }}
+            >
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`flex gap-4 animate-fade-in ${
+                    message.role === "user" ? "flex-row-reverse" : ""
+                  }`}
+                >
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      message.role === "ai"
+                        ? "bg-gradient-to-br from-cyan-400 to-purple-500 overflow-hidden"
+                        : "bg-slate-700 text-white"
+                    }`}
                   >
-                    <div className="text-2xl mb-2">{industry.icon}</div>
-                    <div className="font-semibold text-foreground mb-1">
-                      {industry.title}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {industry.subtitle}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+                    {message.role === "ai" ? (
+                      <img src={aiChatIconInChat} alt="AI" className="w-5 h-5 object-contain" />
+                    ) : (
+                      <User className="w-4 h-4" />
+                    )}
+                  </div>
+                  <div
+                    className={`rounded-2xl px-6 py-4 max-w-md ${
+                      message.role === "ai"
+                        ? "bg-slate-800/60 backdrop-blur-sm border border-white/5 text-gray-200"
+                        : "bg-cyan-500 text-slate-900 ml-auto"
+                    }`}
+                  >
+                    {message.isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="text-sm">Researching...</span>
+                      </div>
+                    ) : (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
 
-            {step === "goal" && (
-              <div className="grid grid-cols-1 gap-3 pt-2 animate-fade-in">
-                {goals.map((goal) => (
-                  <button
-                    key={goal.title}
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleGoalSelect(e, goal.title);
-                    }}
-                    className="bg-card border border-border rounded-xl p-4 text-left hover-lift hover:border-primary transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="text-2xl">{goal.icon}</div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-foreground mb-1">
-                          {goal.title}
+              {step === "industry" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto mt-8 animate-fade-in">
+                  {industries.map((industry) => (
+                    <button
+                      key={industry.title}
+                      onClick={(e) => handleIndustrySelect(e, industry.title)}
+                      className="group relative bg-slate-800/40 backdrop-blur-sm border border-white/10 hover:border-cyan-400/50 rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/20 text-left"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-purple-500/0 group-hover:from-cyan-500/10 group-hover:to-purple-500/10 rounded-2xl transition-all duration-300" />
+                      
+                      <div className="relative flex items-start gap-4">
+                        <div className="text-4xl group-hover:scale-110 transition-transform duration-300" style={{ filter: 'drop-shadow(0 0 12px rgba(6, 182, 212, 0.4))' }}>
+                          {industry.icon}
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {goal.subtitle}
+                        <div className="flex-1">
+                          <div className="text-white font-bold text-lg mb-1 group-hover:text-cyan-400 transition-colors">
+                            {industry.title}
+                          </div>
+                          <div className="text-gray-400 text-sm">
+                            {industry.subtitle}
+                          </div>
+                        </div>
+                        <div className="text-cyan-400 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300">
+                          →
                         </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+                    </button>
+                  ))}
+                </div>
+              )}
 
-            {step === "specificService" && (
-              <div className="pt-2 animate-fade-in">
-                <div className="flex gap-2">
+              {step === "goal" && (
+                <div className="grid grid-cols-1 gap-4 max-w-3xl mx-auto mt-8 animate-fade-in">
+                  {goals.map((goal) => (
+                    <button
+                      key={goal.title}
+                      onClick={(e) => handleGoalSelect(e, goal.title)}
+                      className="group relative bg-slate-800/40 backdrop-blur-sm border border-white/10 hover:border-cyan-400/50 rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/20 text-left"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-purple-500/0 group-hover:from-cyan-500/10 group-hover:to-purple-500/10 rounded-2xl transition-all duration-300" />
+                      
+                      <div className="relative flex items-start gap-4">
+                        <div className="text-4xl group-hover:scale-110 transition-transform duration-300" style={{ filter: 'drop-shadow(0 0 12px rgba(6, 182, 212, 0.4))' }}>
+                          {goal.icon}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-white font-bold text-lg mb-1 group-hover:text-cyan-400 transition-colors">
+                            {goal.title}
+                          </div>
+                          <div className="text-gray-400 text-sm">
+                            {goal.subtitle}
+                          </div>
+                        </div>
+                        <div className="text-cyan-400 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300">
+                          →
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {step === "specificService" && (
+                <div className="animate-fade-in space-y-4 max-w-xl mx-auto">
                   <Input
+                    placeholder="e.g., Roofing, Plumbing, Electrical..."
                     value={specificService}
                     onChange={(e) => setSpecificService(e.target.value)}
-                    placeholder="e.g., driveway and concrete installation..."
-                    className="flex-1"
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSpecificServiceSubmit();
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSpecificServiceSubmit();
+                      }
                     }}
-                    autoFocus
+                    className="bg-slate-800/60 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400 rounded-xl px-6 py-3"
                   />
                   <Button
                     onClick={handleSpecificServiceSubmit}
-                    variant="hero"
-                    size="icon"
+                    className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold rounded-xl py-3"
                     disabled={!specificService.trim()}
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-4 h-4 mr-2" />
+                    Submit
                   </Button>
                 </div>
-              </div>
-            )}
+              )}
 
-            {step === "hesitation" && (
-              <div className="grid grid-cols-1 gap-3 pt-2 animate-fade-in">
-                {hesitations.map((hesitation) => (
-                  <button
-                    key={hesitation.title}
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (hesitation.title === "Other") {
-                        // Just show the input, don't call handler
-                      } else {
-                        handleHesitationSelect(e, hesitation.title);
-                      }
-                    }}
-                    className="bg-card border border-border rounded-xl p-4 text-left hover-lift hover:border-primary transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="text-2xl">{hesitation.icon}</div>
-                      <div className="font-semibold text-foreground">
-                        {hesitation.title}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-                <div className="flex gap-2 mt-2">
+              {step === "audience" && (
+                <div className="animate-fade-in space-y-4 max-w-xl mx-auto">
                   <Input
-                    value={otherHesitation}
-                    onChange={(e) => setOtherHesitation(e.target.value)}
-                    placeholder="Describe the main concern..."
-                    className="flex-1"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleOtherHesitationSubmit();
-                    }}
-                  />
-                  <Button
-                    onClick={handleOtherHesitationSubmit}
-                    variant="hero"
-                    size="icon"
-                    disabled={!otherHesitation.trim()}
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {step === "credentials" && (
-              <div className="pt-2 animate-fade-in space-y-3">
-                {credentials.map((credential) => (
-                  <button
-                    key={credential.title}
-                    type="button"
-                    onClick={() => handleCredentialToggle(credential.title)}
-                    className={`w-full bg-card border-2 rounded-xl p-4 text-left transition-all ${
-                      selectedCredentials.includes(credential.title)
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                        selectedCredentials.includes(credential.title)
-                          ? "border-primary bg-primary"
-                          : "border-border"
-                      }`}>
-                        {selectedCredentials.includes(credential.title) && (
-                          <span className="text-primary-foreground text-xs">✓</span>
-                        )}
-                      </div>
-                      <div className="text-xl">{credential.icon}</div>
-                      <div className="font-semibold text-foreground">
-                        {credential.title}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-                <Button
-                  onClick={handleCredentialsSubmit}
-                  variant="hero"
-                  className="w-full mt-4"
-                  disabled={selectedCredentials.length === 0 || isResearching}
-                >
-                  {isResearching ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Researching...
-                    </>
-                  ) : (
-                    'Continue'
-                  )}
-                </Button>
-              </div>
-            )}
-
-            {step === "insightSelection" && marketInsights.length > 0 && (
-              <div className="pt-2 animate-fade-in space-y-3">
-                {marketInsights.map((insight) => (
-                  <button
-                    key={insight.type}
-                    type="button"
-                    onClick={() => handleInsightToggle(insight.type)}
-                    className={`w-full bg-card border-2 rounded-xl p-4 text-left transition-all ${
-                      selectedInsights.includes(insight.type)
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
-                        selectedInsights.includes(insight.type)
-                          ? "border-primary bg-primary"
-                          : "border-border"
-                      }`}>
-                        {selectedInsights.includes(insight.type) && (
-                          <span className="text-primary-foreground text-xs">✓</span>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-foreground mb-1">
-                          {insight.title}: {insight.value}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {insight.description}
-                        </div>
-                        {insight.source && (
-                          <div className="text-xs text-muted-foreground mt-1 italic">
-                            Source: {insight.source}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-                <Button
-                  onClick={handleInsightsSubmit}
-                  variant="hero"
-                  className="w-full mt-4"
-                  disabled={selectedInsights.length === 0}
-                >
-                  Continue with Selected Insights
-                </Button>
-              </div>
-            )}
-
-            {step === "audience" && (
-              <div className="pt-2 animate-fade-in">
-                <div className="flex gap-2">
-                  <Input
+                    placeholder="e.g., Homeowners in Austin, CTOs at Series B startups..."
                     value={audienceInput}
                     onChange={(e) => setAudienceInput(e.target.value)}
-                    placeholder="e.g., homeowners in Lakewood..."
-                    className="flex-1"
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") handleAudienceSubmit();
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAudienceSubmit();
+                      }
                     }}
-                    autoFocus
+                    className="bg-slate-800/60 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400 rounded-xl px-6 py-3"
                   />
                   <Button
                     onClick={handleAudienceSubmit}
-                    variant="hero"
-                    size="icon"
+                    className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold rounded-xl py-3"
                     disabled={!audienceInput.trim()}
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-4 h-4 mr-2" />
+                    Submit
                   </Button>
+                </div>
+              )}
+
+              {step === "hesitation" && (
+                <div className="space-y-4 animate-fade-in max-w-3xl mx-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {hesitations.filter(h => h.title !== "Other").map((hesitation) => (
+                      <button
+                        key={hesitation.title}
+                        onClick={(e) => handleHesitationSelect(e, hesitation.title)}
+                        className="group relative bg-slate-800/40 backdrop-blur-sm border border-white/10 hover:border-cyan-400/50 rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/20 text-left"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-purple-500/0 group-hover:from-cyan-500/10 group-hover:to-purple-500/10 rounded-2xl transition-all duration-300" />
+                        
+                        <div className="relative flex items-center gap-4">
+                          <div className="text-3xl group-hover:scale-110 transition-transform duration-300">
+                            {hesitation.icon}
+                          </div>
+                          <div className="font-semibold text-white text-base group-hover:text-cyan-400 transition-colors">
+                            {hesitation.title}
+                          </div>
+                          <div className="ml-auto text-cyan-400 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300">
+                            →
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        const otherButton = document.getElementById('other-hesitation-input');
+                        if (otherButton) otherButton.focus();
+                      }}
+                      className="group relative w-full bg-slate-800/40 backdrop-blur-sm border border-white/10 hover:border-cyan-400/50 rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/20 text-left"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-purple-500/0 group-hover:from-cyan-500/10 group-hover:to-purple-500/10 rounded-2xl transition-all duration-300" />
+                      
+                      <div className="relative flex items-center gap-4">
+                        <span className="text-3xl group-hover:scale-110 transition-transform duration-300">✏️</span>
+                        <div className="font-semibold text-white text-base group-hover:text-cyan-400 transition-colors">
+                          Other (specify below)
+                        </div>
+                      </div>
+                    </button>
+                    
+                    <div className="flex gap-2">
+                      <Input
+                        id="other-hesitation-input"
+                        placeholder="Describe the main hesitation..."
+                        value={otherHesitation}
+                        onChange={(e) => setOtherHesitation(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleOtherHesitationSubmit();
+                          }
+                        }}
+                        className="bg-slate-800/60 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400 rounded-xl px-6 py-3"
+                      />
+                      <Button
+                        onClick={handleOtherHesitationSubmit}
+                        disabled={!otherHesitation.trim()}
+                        size="icon"
+                        className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 rounded-xl"
+                      >
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {step === "credentials" && (
+                <div className="space-y-4 animate-fade-in max-w-3xl mx-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {credentials.map((credential) => {
+                      const isSelected = selectedCredentials.includes(credential.title);
+                      return (
+                        <button
+                          key={credential.title}
+                          onClick={() => handleCredentialToggle(credential.title)}
+                          className={`group relative backdrop-blur-sm rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl text-left ${
+                            isSelected
+                              ? "bg-cyan-500/20 border-2 border-cyan-400 shadow-cyan-500/30"
+                              : "bg-slate-800/40 border border-white/10 hover:border-cyan-400/50 hover:shadow-cyan-500/20"
+                          }`}
+                        >
+                          <div className={`absolute inset-0 bg-gradient-to-br rounded-2xl transition-all duration-300 ${
+                            isSelected 
+                              ? "from-cyan-500/20 to-purple-500/20" 
+                              : "from-cyan-500/0 to-purple-500/0 group-hover:from-cyan-500/10 group-hover:to-purple-500/10"
+                          }`} />
+                          
+                          <div className="relative flex items-center gap-4">
+                            <div className="text-3xl group-hover:scale-110 transition-transform duration-300">
+                              {credential.icon}
+                            </div>
+                            <div className={`font-semibold text-base transition-colors ${
+                              isSelected ? "text-cyan-400" : "text-white group-hover:text-cyan-400"
+                            }`}>
+                              {credential.title}
+                            </div>
+                            {isSelected && (
+                              <div className="ml-auto text-cyan-400">✓</div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    onClick={handleCredentialsSubmit}
+                    className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold rounded-xl py-3"
+                  >
+                    Continue
+                  </Button>
+                </div>
+              )}
+
+              {step === "insightSelection" && (
+                <div className="space-y-4 animate-fade-in max-w-3xl mx-auto">
+                  <div className="grid grid-cols-1 gap-4">
+                    {marketInsights.map((insight) => {
+                      const isSelected = selectedInsights.includes(insight.type);
+                      return (
+                        <button
+                          key={insight.type}
+                          onClick={() => handleInsightToggle(insight.type)}
+                          className={`group relative backdrop-blur-sm rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl text-left ${
+                            isSelected
+                              ? "bg-cyan-500/20 border-2 border-cyan-400 shadow-cyan-500/30"
+                              : "bg-slate-800/40 border border-white/10 hover:border-cyan-400/50 hover:shadow-cyan-500/20"
+                          }`}
+                        >
+                          <div className={`absolute inset-0 bg-gradient-to-br rounded-2xl transition-all duration-300 ${
+                            isSelected 
+                              ? "from-cyan-500/20 to-purple-500/20" 
+                              : "from-cyan-500/0 to-purple-500/0 group-hover:from-cyan-500/10 group-hover:to-purple-500/10"
+                          }`} />
+                          
+                          <div className="relative space-y-3">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className={`font-bold text-lg transition-colors ${
+                                isSelected ? "text-cyan-400" : "text-white"
+                              }`}>
+                                {insight.title}
+                              </div>
+                              <div className="text-3xl font-bold text-cyan-400">{insight.value}</div>
+                            </div>
+                            <div className="text-sm text-gray-300">
+                              {insight.description}
+                            </div>
+                            {insight.source && (
+                              <div className="text-xs text-gray-500">
+                                Source: {insight.source}
+                              </div>
+                            )}
+                            {isSelected && (
+                              <div className="absolute top-0 right-0 text-cyan-400 text-2xl">✓</div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    onClick={handleInsightsSubmit}
+                    className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold rounded-xl py-3"
+                    disabled={selectedInsights.length === 0}
+                  >
+                    Use Selected Insights
+                  </Button>
+                </div>
+              )}
+
+              {step === "summary" && (
+                <div className="animate-fade-in space-y-6 max-w-xl mx-auto">
+                  <div className="bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-400/30 rounded-2xl p-8 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl">✨</span>
+                      <span className="font-bold text-2xl text-white">Your Strategy is Ready</span>
+                    </div>
+                    <p className="text-base text-gray-200 leading-relaxed">
+                      I've analyzed your business and built a conversion-optimized structure. 
+                      Ready to see your page come to life?
+                    </p>
+                  </div>
+                  
+                  <Link
+                    to="/wizard"
+                    className="block w-full"
+                  >
+                    <Button className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold text-lg py-6 rounded-xl hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/50">
+                      Start Building My Page - Free
+                    </Button>
+                  </Link>
+                  
+                  <p className="text-sm text-center text-gray-400">
+                    No credit card required • Takes 2 minutes
+                  </p>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+
+            {messages.length > 1 && step !== "summary" && (
+              <div className="px-8 pb-6 pt-4 border-t border-white/10">
+                <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+                  <span>Consultation Progress</span>
+                  <span>
+                    {step === "industry" ? "10%" : 
+                     step === "specificService" ? "25%" :
+                     step === "hesitation" ? "40%" :
+                     step === "credentials" ? "55%" :
+                     step === "insightSelection" ? "70%" :
+                     step === "goal" ? "80%" :
+                     step === "audience" ? "90%" : "100%"}
+                  </span>
+                </div>
+                <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-500 ease-out"
+                    style={{ 
+                      width: step === "industry" ? "10%" : 
+                             step === "specificService" ? "25%" :
+                             step === "hesitation" ? "40%" :
+                             step === "credentials" ? "55%" :
+                             step === "insightSelection" ? "70%" :
+                             step === "goal" ? "80%" :
+                             step === "audience" ? "90%" : "100%"
+                    }}
+                  ></div>
                 </div>
               </div>
             )}
-
-            {step === "summary" && (
-              <div className="pt-4 animate-fade-in">
-                <Button 
-                  asChild 
-                  variant="hero" 
-                  size="lg" 
-                  className="w-full text-base"
-                >
-                  <Link 
-                    to={`/wizard?industry=${encodeURIComponent(selectedIndustry)}&goal=${encodeURIComponent(selectedGoal)}&audience=${encodeURIComponent(submittedAudience)}`}
-                  >
-                    Sign Up to Build Your Page
-                  </Link>
-                </Button>
-                <p className="text-center text-sm text-muted-foreground mt-3">
-                  Just 3 more quick questions to refine your strategy
-                </p>
-              </div>
-            )}
-            
-            {/* Scroll anchor */}
-            <div ref={messagesEndRef} />
           </div>
-
-          {/* Progress indicator */}
-          {messages.length > 1 && step !== "summary" && (
-            <div className="px-6 pb-6 pt-4 border-t border-border/50">
-              <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-                <span>Consultation Progress</span>
-                <span>
-                  {step === "industry" ? "10%" : 
-                   step === "specificService" ? "25%" :
-                   step === "hesitation" ? "40%" :
-                   step === "credentials" ? "55%" :
-                   step === "insightSelection" ? "70%" :
-                   step === "goal" ? "80%" :
-                   step === "audience" ? "90%" : "100%"}
-                </span>
-              </div>
-              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 ease-out"
-                  style={{ 
-                    width: step === "industry" ? "10%" : 
-                           step === "specificService" ? "25%" :
-                           step === "hesitation" ? "40%" :
-                           step === "credentials" ? "55%" :
-                           step === "insightSelection" ? "70%" :
-                           step === "goal" ? "80%" :
-                           step === "audience" ? "90%" : "100%"
-                  }}
-                ></div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </section>
