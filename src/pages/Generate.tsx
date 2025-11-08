@@ -16,21 +16,21 @@ import logo from "@/assets/pageconsult-logo.svg";
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
   if (!challenge) return "Are you struggling to achieve your business goals?";
-  
+
   // Transform raw challenge into a compelling problem statement
   const cleaned = challenge
-    .replace(/^they\s+/i, 'Are you ')
-    .replace(/^customers?\s+/i, 'Do you ')
-    .replace(/don't have/i, 'struggling to find')
-    .replace(/can't/i, 'unable to')
-    .replace(/lack/i, 'missing')
+    .replace(/^they\s+/i, "Are you ")
+    .replace(/^customers?\s+/i, "Do you ")
+    .replace(/don't have/i, "struggling to find")
+    .replace(/can't/i, "unable to")
+    .replace(/lack/i, "missing")
     .trim();
-  
+
   // Make it a question if it isn't already
-  if (!cleaned.endsWith('?')) {
+  if (!cleaned.endsWith("?")) {
     return `${cleaned}?`;
   }
-  
+
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
 
@@ -38,16 +38,19 @@ function transformSolutionStatement(uniqueValue?: string, industry?: string): st
   if (!uniqueValue) {
     return "We provide professional solutions designed to solve your specific challenges and deliver measurable results.";
   }
-  
+
   // Transform into a clear solution statement
   const cleaned = uniqueValue
-    .replace(/^(we|our)\s+/i, 'Our ')
-    .replace(/^have\s+/i, '')
-    .replace(/^a\s+/i, '')
+    .replace(/^(we|our)\s+/i, "Our ")
+    .replace(/^have\s+/i, "")
+    .replace(/^a\s+/i, "")
     .trim();
-  
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1) + 
-    '. Proven results you can measure, backed by expert support every step of the way.';
+
+  return (
+    cleaned.charAt(0).toUpperCase() +
+    cleaned.slice(1) +
+    ". Proven results you can measure, backed by expert support every step of the way."
+  );
 }
 
 type Phase = "loading" | "building" | "editor";
@@ -84,7 +87,45 @@ export default function Generate() {
   }, []);
 
   const loadConsultation = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    // FIRST: Check if data was passed from demo via React Router state
+    const demoData = location.state?.consultationData;
+
+    if (demoData) {
+      // Data came from demo - use it directly
+      console.log("✅ Using consultation data from demo:", demoData);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/signup");
+        return;
+      }
+
+      // Transform demo data to match expected format
+      const transformedData = {
+        id: `demo-${Date.now()}`,
+        user_id: user.id,
+        industry: demoData.industry,
+        service_type: demoData.specificService,
+        goal: demoData.goal,
+        target_audience: demoData.targetAudience,
+        challenge: demoData.hesitation,
+        unique_value: demoData.credentials?.join(", "),
+        offer: demoData.goal,
+        status: "completed",
+        created_at: demoData.timestamp,
+      };
+
+      setConsultation(transformedData);
+      startGeneration(transformedData, user.id);
+      return;
+    }
+
+    // FALLBACK: If no demo data, try loading from database (old wizard flow)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       navigate("/signup");
       return;
@@ -102,10 +143,10 @@ export default function Generate() {
     if (error || !data) {
       toast({
         title: "No consultation found",
-        description: "Please complete the consultation wizard first.",
+        description: "Please complete the consultation demo on the homepage first.",
         variant: "destructive",
       });
-      navigate("/wizard");
+      navigate("/#demo"); // ← Send them back to demo instead of wizard
       return;
     }
 
@@ -116,10 +157,10 @@ export default function Generate() {
   const startGeneration = async (consultationData: any, userId: string) => {
     // Start generation immediately, show loading UI
     setPhase("building");
-    
+
     // Animate progress bar while API calls happen
     let progressInterval = setInterval(() => {
-      setProgress(prev => Math.min(prev + 2, 90));
+      setProgress((prev) => Math.min(prev + 2, 90));
     }, 200);
 
     try {
@@ -135,14 +176,14 @@ export default function Generate() {
   const animatePageBuild = async (consultationData: any, userId: string) => {
     try {
       // Generate content (parallel API calls inside)
-      console.time('⚡ Total generation time');
+      console.time("⚡ Total generation time");
       const generatedSections = await generateSections(consultationData);
-      console.timeEnd('⚡ Total generation time');
-      
+      console.timeEnd("⚡ Total generation time");
+
       // Animate sections appearing quickly
       for (let i = 1; i <= generatedSections.length; i++) {
         setBuildStep(i);
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
       // Create page in database
@@ -168,17 +209,16 @@ export default function Generate() {
 
       // Quick confetti then transition
       setShowConfetti(true);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       setPhase("editor");
       setShowConfetti(false);
-      
     } catch (error) {
-      console.error('Generation failed:', error);
+      console.error("Generation failed:", error);
       toast({
         title: "Generation failed",
         description: "Please try again or contact support if the issue persists.",
-        variant: "destructive"
+        variant: "destructive",
       });
       navigate("/wizard");
     }
@@ -187,9 +227,9 @@ export default function Generate() {
   const generateSections = async (consultationData: any): Promise<Section[]> => {
     try {
       // Use new intelligent content generation
-      const { generateIntelligentContent } = await import('@/lib/generateIntelligentContent');
-      
-      console.log('🚀 Starting intelligent content generation...');
+      const { generateIntelligentContent } = await import("@/lib/generateIntelligentContent");
+
+      console.log("🚀 Starting intelligent content generation...");
       const generated = await generateIntelligentContent({
         industry: consultationData.industry,
         service_type: consultationData.service_type,
@@ -200,71 +240,71 @@ export default function Generate() {
         offer: consultationData.offer,
       });
 
-      console.log('✅ Generated content with sections:', generated.sections);
-      console.log('🖼️ Image queries:', generated.images);
+      console.log("✅ Generated content with sections:", generated.sections);
+      console.log("🖼️ Image queries:", generated.images);
 
       // Fetch all images in parallel for speed
       const imagePromises: Promise<any>[] = [];
-      
+
       // Hero image
       imagePromises.push(
-        supabase.functions.invoke('unsplash-search', {
-          body: { query: generated.images.hero || `${consultationData.industry} professional`, count: 1 }
-        })
+        supabase.functions.invoke("unsplash-search", {
+          body: { query: generated.images.hero || `${consultationData.industry} professional`, count: 1 },
+        }),
       );
 
       // Gallery images (limit to 3 for speed)
       const galleryQueries = generated.images.gallery?.slice(0, 3) || [];
       for (const query of galleryQueries) {
         imagePromises.push(
-          supabase.functions.invoke('unsplash-search', {
-            body: { query, count: 1 }
-          })
+          supabase.functions.invoke("unsplash-search", {
+            body: { query, count: 1 },
+          }),
         );
       }
 
       // Wait for all images in parallel (much faster!)
       const imageResults = await Promise.allSettled(imagePromises);
-      
-      const heroImageUrl = imageResults[0]?.status === 'fulfilled' 
-        ? imageResults[0].value?.data?.results?.[0]?.urls?.regular || ''
-        : '';
 
-      const galleryImages: string[] = imageResults.slice(1)
-        .filter(r => r.status === 'fulfilled')
-        .map(r => (r as any).value?.data?.results?.[0]?.urls?.regular)
+      const heroImageUrl =
+        imageResults[0]?.status === "fulfilled" ? imageResults[0].value?.data?.results?.[0]?.urls?.regular || "" : "";
+
+      const galleryImages: string[] = imageResults
+        .slice(1)
+        .filter((r) => r.status === "fulfilled")
+        .map((r) => (r as any).value?.data?.results?.[0]?.urls?.regular)
         .filter(Boolean);
 
       // Map generated sections to Section format
       const mappedSections: Section[] = generated.sections.map((sectionType, index) => {
         switch (sectionType) {
-          case 'hero':
+          case "hero":
             return {
-              type: 'hero',
+              type: "hero",
               order: index,
               visible: true,
               content: {
                 headline: generated.headline,
                 subheadline: generated.subheadline,
                 ctaText: generated.ctaText,
-                ctaLink: '#signup',
+                ctaLink: "#signup",
                 backgroundImage: heroImageUrl,
               },
             };
-          
-          case 'features':
+
+          case "features":
             return {
-              type: 'features',
+              type: "features",
               order: index,
               visible: true,
               content: {
                 features: generated.features,
               },
             };
-          
-          case 'problem-solution':
+
+          case "problem-solution":
             return {
-              type: 'problem-solution',
+              type: "problem-solution",
               order: index,
               visible: true,
               content: {
@@ -272,10 +312,10 @@ export default function Generate() {
                 solution: generated.solutionStatement,
               },
             };
-          
-          case 'photo_gallery':
+
+          case "photo_gallery":
             return {
-              type: 'photo-gallery',
+              type: "photo-gallery",
               order: index,
               visible: true,
               content: {
@@ -283,30 +323,30 @@ export default function Generate() {
                 title: `${consultationData.industry} Gallery`,
               },
             };
-          
-          case 'testimonials':
+
+          case "testimonials":
             return {
-              type: 'social-proof',
+              type: "social-proof",
               order: index,
               visible: true,
               content: {
-                stats: [{ label: generated.socialProof, value: '' }],
+                stats: [{ label: generated.socialProof, value: "" }],
                 industry: consultationData.industry,
               },
             };
-          
-          case 'final_cta':
+
+          case "final_cta":
             return {
-              type: 'final-cta',
+              type: "final-cta",
               order: index,
               visible: true,
               content: {
-                headline: 'Ready to Get Started?',
+                headline: "Ready to Get Started?",
                 ctaText: generated.ctaText,
-                ctaLink: '#signup',
+                ctaLink: "#signup",
               },
             };
-          
+
           default:
             // For other section types, create placeholder
             return {
@@ -314,36 +354,35 @@ export default function Generate() {
               order: index,
               visible: true,
               content: {
-                title: sectionType.replace(/_/g, ' ').toUpperCase(),
+                title: sectionType.replace(/_/g, " ").toUpperCase(),
               },
             };
         }
       });
 
       return mappedSections;
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('❌ AI CONTENT GENERATION FAILED:', {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("❌ AI CONTENT GENERATION FAILED:", {
         error: errorMessage,
         fullError: error,
       });
-      
+
       // Show error to user instead of silently falling back
       toast({
         title: "AI Content Generation Failed",
         description: `Error: ${errorMessage}. Using template content instead.`,
         variant: "destructive",
       });
-      
+
       // Fallback to template-based generation
-      const { 
+      const {
         generateHeadline: genHeadline,
         generateSubheadline,
         generateFeatures: genFeatures,
         generateSocialProof: genSocialProof,
         generateCTA,
-      } = await import('@/lib/contentGenerator');
+      } = await import("@/lib/contentGenerator");
 
       const headline = genHeadline(consultationData);
       const subheadline = generateSubheadline(consultationData);
@@ -362,7 +401,7 @@ export default function Generate() {
             headline,
             subheadline,
             ctaText: cta.text,
-            ctaLink: '#signup',
+            ctaLink: "#signup",
           },
         },
         {
@@ -394,9 +433,9 @@ export default function Generate() {
           order: 4,
           visible: true,
           content: {
-            headline: 'Ready to Get Started?',
+            headline: "Ready to Get Started?",
             ctaText: cta.text,
-            ctaLink: '#signup',
+            ctaLink: "#signup",
           },
         },
       ];
@@ -439,17 +478,15 @@ export default function Generate() {
           <div className="flex justify-center">
             <Loader2 className="w-16 h-16 text-primary animate-spin" />
           </div>
-          
+
           <h2 className="text-2xl font-bold">Crafting your page...</h2>
-          
+
           <div className="space-y-4">
             {loadingMessages.map((msg, i) => (
               <div
                 key={i}
                 className={`flex items-center gap-3 transition-opacity duration-300 ${
-                  progress > (i / loadingMessages.length) * 100
-                    ? "opacity-100"
-                    : "opacity-30"
+                  progress > (i / loadingMessages.length) * 100 ? "opacity-100" : "opacity-30"
                 }`}
               >
                 <msg.icon className="w-5 h-5 text-secondary" />
@@ -457,7 +494,7 @@ export default function Generate() {
               </div>
             ))}
           </div>
-          
+
           <div className="w-full bg-muted rounded-full h-2">
             <div
               className="bg-primary h-2 rounded-full transition-all duration-300"
@@ -477,9 +514,15 @@ export default function Generate() {
           <div className="space-y-4">
             <h3 className="text-xl font-bold mb-4">📄 Your Strategy</h3>
             <div className="space-y-2 text-sm">
-              <p><strong>Industry:</strong> {consultation?.industry}</p>
-              <p><strong>Goal:</strong> {consultation?.goal}</p>
-              <p><strong>Audience:</strong> {consultation?.target_audience?.slice(0, 50)}...</p>
+              <p>
+                <strong>Industry:</strong> {consultation?.industry}
+              </p>
+              <p>
+                <strong>Goal:</strong> {consultation?.goal}
+              </p>
+              <p>
+                <strong>Audience:</strong> {consultation?.target_audience?.slice(0, 50)}...
+              </p>
               <div className="mt-6 space-y-2 text-muted-foreground">
                 <p>Building your page with:</p>
                 <ul className="list-disc list-inside space-y-1">
@@ -591,7 +634,7 @@ function EditorContent({
     // Insert calculator after problem-solution section
     const updatedSections = [...sections];
     updatedSections.splice(2, 0, newCalculatorSection);
-    
+
     // Reorder remaining sections
     updatedSections.forEach((section, index) => {
       section.order = index;
@@ -601,10 +644,7 @@ function EditorContent({
 
     // Save to database
     if (pageData) {
-      await supabase
-        .from("landing_pages")
-        .update({ sections: updatedSections })
-        .eq("id", pageData.id);
+      await supabase.from("landing_pages").update({ sections: updatedSections }).eq("id", pageData.id);
     }
 
     toast({
@@ -618,16 +658,12 @@ function EditorContent({
       {/* Top toolbar */}
       <header className="h-14 border-b flex items-center justify-between px-4">
         <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <img 
-            src={logo} 
-            alt="PageConsult AI" 
-            className="h-8 w-auto"
-          />
+          <img src={logo} alt="PageConsult AI" className="h-8 w-auto" />
         </a>
         <div className="flex items-center gap-2">
           <Button
-            variant="outline" 
-            size="sm" 
+            variant="outline"
+            size="sm"
             onClick={() => setStylePickerOpen(true)}
             className="gap-2 relative pl-5 builder-button change-style-btn"
           >
@@ -635,26 +671,26 @@ function EditorContent({
             <Palette className="w-4 h-4" />
             Change Style
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleSave}
             className="relative pl-5 builder-button save-draft-btn"
           >
             <span className="absolute left-0 top-0 w-1 h-full bg-[#EAB308] rounded-l"></span>
             Save Draft
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handlePreview}
             className="relative pl-5 builder-button preview-btn"
           >
             <span className="absolute left-0 top-0 w-1 h-full bg-[#06B6D6] rounded-l"></span>
             Preview
           </Button>
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             onClick={() => setPublishModalOpen(true)}
             className="relative pl-5 builder-button publish-btn"
           >
@@ -691,17 +727,17 @@ function EditorContent({
         isOpen={aiConsultantOpen}
         onClose={() => setAiConsultantOpen(false)}
         pageContent={{
-          headline: sections.find(s => s.type === 'hero')?.content?.headline,
-          subheadline: sections.find(s => s.type === 'hero')?.content?.subheadline,
-          features: sections.find(s => s.type === 'features')?.content?.features,
-          cta: sections.find(s => s.type === 'hero')?.content?.cta?.text,
+          headline: sections.find((s) => s.type === "hero")?.content?.headline,
+          subheadline: sections.find((s) => s.type === "hero")?.content?.subheadline,
+          features: sections.find((s) => s.type === "features")?.content?.features,
+          cta: sections.find((s) => s.type === "hero")?.content?.cta?.text,
           industry: consultation?.industry,
           serviceType: consultation?.service_type,
           targetAudience: consultation?.target_audience,
         }}
         onApplySuggestion={(suggestion) => {
           // TODO: Implement applying AI suggestions
-          console.log('Apply suggestion:', suggestion);
+          console.log("Apply suggestion:", suggestion);
         }}
       />
 
