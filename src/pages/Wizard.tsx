@@ -568,6 +568,16 @@ export default function Wizard() {
     navigate("/generate");
   };
 
+  const handleBack = () => {
+    if (step > 1) {
+      setStep(step - 1);
+      // Don't clear any state - preserve all answers when going back
+    } else {
+      // On step 1, go back to landing page
+      navigate("/");
+    }
+  };
+
   const handleSaveExit = async () => {
     toast({
       title: "✓ Progress saved",
@@ -628,6 +638,11 @@ export default function Wizard() {
         </div>
         
         <div className="flex items-center gap-2">
+          {step > 1 && step < 8 && (
+            <Button variant="ghost" size="sm" onClick={handleBack}>
+              ← Back
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={handleStartFresh}>
             Start Fresh
           </Button>
