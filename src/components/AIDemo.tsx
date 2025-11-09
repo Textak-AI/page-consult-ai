@@ -67,7 +67,18 @@ const AIDemo = () => {
   }, [messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Smart scroll: keep 250px visible above bottom to show questions
+    if (chatContainerRef.current) {
+      const scrollHeight = chatContainerRef.current.scrollHeight;
+      const clientHeight = chatContainerRef.current.clientHeight;
+      const maxScroll = scrollHeight - clientHeight;
+      const targetScroll = Math.max(0, maxScroll - 250); // Keep 250px visible
+      
+      chatContainerRef.current.scrollTo({
+        top: targetScroll,
+        behavior: "smooth"
+      });
+    }
   };
 
   const addMessage = (role: "ai" | "user", content: string, isTyping = false) => {

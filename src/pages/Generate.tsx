@@ -91,6 +91,10 @@ export default function Generate() {
     // FIRST: Check if data was passed from demo via React Router state
     const demoData = location.state?.consultationData;
 
+    console.log('🔍 Generate page load - checking for consultation data...');
+    console.log('📦 location.state:', location.state);
+    console.log('📦 demoData:', demoData);
+
     if (demoData) {
       // Data came from demo - use it directly
       console.log("✅ Using consultation data from demo:", demoData);

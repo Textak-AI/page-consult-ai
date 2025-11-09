@@ -41,9 +41,10 @@ export default function Signup() {
           if (user) {
             await saveConsultationData(user.id);
           }
-          navigate(redirectTo, { state: { consultationData } });
+          console.log('🚀 Login: Redirecting to', redirectTo, 'with consultation data:', consultationData);
+          navigate(redirectTo, { state: { consultationData }, replace: true });
         } else {
-          navigate(redirectTo);
+          navigate(redirectTo, { replace: true });
         }
       } else {
         const { data, error } = await supabase.auth.signUp({
@@ -64,9 +65,10 @@ export default function Signup() {
         // If we have consultation data, save it and redirect to generate
         if (consultationData && data.user) {
           await saveConsultationData(data.user.id);
-          navigate(redirectTo, { state: { consultationData } });
+          console.log('🚀 Signup: Redirecting to', redirectTo, 'with consultation data:', consultationData);
+          navigate(redirectTo, { state: { consultationData }, replace: true });
         } else {
-          navigate(redirectTo);
+          navigate(redirectTo, { replace: true });
         }
       }
     } catch (error: any) {
