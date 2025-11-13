@@ -1,24 +1,24 @@
 const Footer = () => {
   return (
-    <footer className="bg-muted/30 border-t border-border py-12 px-6">
+    <footer className="bg-slate-950 border-t border-white/10 py-12 px-6">
       <div className="container mx-auto max-w-7xl">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
               <img src="/logo/whiteAsset_8icon.png" alt="PageConsult AI" className="h-8 w-auto" />
             </div>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-gray-400 text-sm">
               Strategy-First Landing Pages
             </p>
           </div>
 
           <div>
-            <h4 className="font-semibold text-foreground mb-3">Product</h4>
+            <h4 className="font-semibold text-white mb-3">Product</h4>
             <ul className="space-y-2">
               <li>
                 <a
                   href="#features"
-                  className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                  className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
                 >
                   Features
                 </a>
@@ -26,7 +26,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#pricing"
-                  className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                  className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
                 >
                   Pricing
                 </a>
@@ -34,7 +34,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#demo"
-                  className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                  className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
                 >
                   Templates
                 </a>
@@ -43,12 +43,12 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold text-foreground mb-3">Resources</h4>
+            <h4 className="font-semibold text-white mb-3">Resources</h4>
             <ul className="space-y-2">
               <li>
                 <a
                   href="#"
-                  className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                  className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
                 >
                   Docs
                 </a>
@@ -56,7 +56,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                  className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
                 >
                   Blog
                 </a>
@@ -64,7 +64,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                  className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
                 >
                   Support
                 </a>
@@ -73,12 +73,12 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold text-foreground mb-3">Company</h4>
+            <h4 className="font-semibold text-white mb-3">Company</h4>
             <ul className="space-y-2">
               <li>
                 <a
                   href="#"
-                  className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                  className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
                 >
                   About
                 </a>
@@ -86,7 +86,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                  className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
                 >
                   Careers
                 </a>
@@ -94,7 +94,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                  className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
                 >
                   Contact
                 </a>
@@ -103,14 +103,14 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">
+        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-gray-500">
             © 2025 PageConsult AI. All rights reserved.
           </p>
           <div className="flex gap-4">
             <a
               href="#"
-              className="text-muted-foreground hover:text-primary transition-colors"
+              className="text-gray-400 hover:text-cyan-400 transition-colors"
               aria-label="Twitter"
             >
               <svg
