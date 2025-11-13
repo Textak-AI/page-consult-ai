@@ -180,9 +180,9 @@ export function AnimatedChatPreview() {
           ref={messagesContainerRef} 
           className="overflow-y-auto overflow-x-hidden space-y-3"
           style={{ 
-            height: '340px',
-            maxHeight: '340px',
-            minHeight: '340px',
+            height: '280px',
+            maxHeight: '280px',
+            minHeight: '280px',
             scrollBehavior: 'smooth',
             scrollPaddingBottom: '20px',
             scrollbarWidth: 'thin',
@@ -315,7 +315,7 @@ export function AnimatedChatPreview() {
         
         {/* Progress indicator - Fixed at bottom */}
         {visibleMessages > 0 && visibleMessages <= conversationSteps.length && (
-          <div className="pt-4 border-t border-white/10 mt-4">
+          <div className="pt-6 border-t border-white/10 mt-6">
             <div className="flex items-center justify-between text-xs mb-2 antialiased">
               <span className="text-gray-400 font-medium">Consultation Progress</span>
               <span className="text-cyan-400 font-semibold">{Math.min(Math.round((visibleMessages / conversationSteps.length) * 100), 100)}%</span>
