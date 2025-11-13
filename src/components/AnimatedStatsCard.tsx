@@ -41,8 +41,8 @@ const AnimatedStatsCard = () => {
   }, [stats.length]);
 
   return (
-    <div className="absolute bottom-12 left-4 z-0 hidden lg:block">
-      <div className="w-64 h-20 bg-slate-800/60 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl overflow-hidden">
+    <div className="absolute bottom-24 left-12 z-0 hidden lg:block">
+      <div className="w-64 h-20 bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-2xl overflow-hidden">
         {/* Single container with smooth vertical scrolling */}
         <div className="relative h-full" role="status" aria-live="polite" aria-atomic="true">
           {stats.map((stat, index) => {

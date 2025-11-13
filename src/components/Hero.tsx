@@ -44,10 +44,10 @@ const Hero = () => {
       {/* Main content layer - VISIBLE and ABOVE background */}
       <div className="container mx-auto max-w-7xl relative z-20">
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-center">
-          <div className="max-w-2xl space-y-8 pb-4" style={{ animation: 'slide-up 800ms ease-out 200ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
-            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white leading-[1.2] tracking-tight antialiased pb-2" style={{ textRendering: 'optimizeLegibility' }}>
+          <div className="max-w-2xl space-y-8 pb-4 overflow-visible" style={{ animation: 'slide-up 800ms ease-out 200ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white leading-[1.35] tracking-tight antialiased pb-8 overflow-visible" style={{ textRendering: 'optimizeLegibility', display: 'block' }}>
               Landing Pages That Start With{" "}
-              <span className="block mt-2 pb-1 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient-x" style={{ backgroundSize: '200% auto', textShadow: '0 0 40px rgba(6, 182, 212, 0.3)', willChange: 'background-position' }}>
+              <span className="block mt-2 pb-8 overflow-visible bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient-x" style={{ backgroundSize: '200% auto', textShadow: '0 0 40px rgba(6, 182, 212, 0.3)', willChange: 'background-position', display: 'block' }}>
                 Strategy
               </span>
             </h1>

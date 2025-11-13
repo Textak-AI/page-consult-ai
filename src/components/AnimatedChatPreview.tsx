@@ -156,12 +156,12 @@ export function AnimatedChatPreview() {
 
   return (
     <div className="relative group cursor-default">
-      {/* Glow effect on hover */}
-      <div className="absolute inset-0 -m-1 bg-gradient-to-br from-cyan-500 via-purple-500 to-pink-500 rounded-3xl blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-700 z-0" style={{ willChange: 'opacity' }} />
+      {/* Enhanced glow effect - always visible */}
+      <div className="absolute inset-0 -m-2 bg-gradient-to-br from-cyan-500/30 via-purple-500/30 to-pink-500/30 rounded-3xl blur-3xl opacity-60 group-hover:opacity-80 transition-opacity duration-700 z-0 animate-pulse-slow" style={{ willChange: 'opacity' }} />
       
-      {/* Chat container with smooth initialization */}
+      {/* Chat container with smooth initialization - LARGER */}
       <div 
-        className={`relative z-10 bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-white/10 p-6 md:p-8 transform transition-all duration-500 h-[400px] md:h-[500px] flex flex-col shadow-2xl shadow-black/50 group-hover:-translate-y-0.5 group-hover:shadow-3xl ${
+        className={`relative z-10 bg-slate-900/90 backdrop-blur-2xl rounded-3xl border border-white/10 p-6 md:p-8 transform transition-all duration-500 h-[450px] md:h-[580px] flex flex-col shadow-2xl shadow-cyan-500/20 group-hover:-translate-y-1 group-hover:shadow-cyan-500/30 ${
           isInitialized ? 'opacity-100' : 'opacity-0'
         }`}
         style={{ 
@@ -247,15 +247,20 @@ export function AnimatedChatPreview() {
                         : step.type === "user"
                         ? "bg-gradient-to-br from-cyan-600 to-cyan-700 text-white shadow-lg shadow-cyan-500/40 font-semibold"
                         : step.type === "thinking"
-                        ? "bg-slate-800/60 backdrop-blur-sm border border-purple-500/20 text-white font-medium px-6 py-3"
+                        ? "bg-slate-800/60 backdrop-blur-sm border border-purple-500/30 text-white font-medium px-6 py-3 animate-pulse-slow"
                         : "bg-slate-800/60 backdrop-blur-sm border border-cyan-500/20 text-white font-medium px-6 py-3"
                     }`}
                     style={{ textRendering: 'optimizeLegibility' }}
                   >
-                    <div>
-                      {step.type === "ai" && isTypingText && index === visibleMessages - 1 
-                        ? typedText 
-                        : step.message}
+                    <div className={step.type === "thinking" ? "flex items-center gap-2" : ""}>
+                      {step.type === "thinking" && (
+                        <span className="inline-block animate-pulse text-purple-400">●</span>
+                      )}
+                      <span>
+                        {step.type === "ai" && isTypingText && index === visibleMessages - 1 
+                          ? typedText 
+                          : step.message}
+                      </span>
                     </div>
                     {isSpecial && step.checks && (
                       <div className="mt-3 space-y-1.5">
