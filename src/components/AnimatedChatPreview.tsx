@@ -156,15 +156,21 @@ export function AnimatedChatPreview() {
 
   return (
     <div className="relative group cursor-default">
-      {/* Enhanced glow effect - always visible */}
-      <div className="absolute inset-0 -m-2 bg-gradient-to-br from-cyan-500/30 via-purple-500/30 to-pink-500/30 rounded-3xl blur-3xl opacity-60 group-hover:opacity-80 transition-opacity duration-700 z-0 animate-pulse-slow" style={{ willChange: 'opacity' }} />
+      {/* Enhanced glow effect - always visible and more prominent */}
+      <div className="absolute inset-0 -m-4 bg-gradient-to-br from-cyan-500/40 via-purple-500/40 to-pink-500/40 rounded-3xl blur-3xl opacity-70 group-hover:opacity-90 transition-opacity duration-700 z-0 animate-pulse-slow" style={{ willChange: 'opacity' }} />
       
-      {/* Chat container with smooth initialization - LARGER */}
+      {/* Secondary glow for depth */}
+      <div className="absolute inset-0 bg-cyan-500/10 rounded-3xl blur-2xl z-0" />
+      
+      {/* Chat container with FIXED height to prevent layout shift */}
       <div 
-        className={`relative z-10 bg-slate-900/90 backdrop-blur-2xl rounded-3xl border border-white/10 p-6 md:p-8 transform transition-all duration-500 h-[450px] md:h-[580px] flex flex-col shadow-2xl shadow-cyan-500/20 group-hover:-translate-y-1 group-hover:shadow-cyan-500/30 ${
+        className={`relative z-10 bg-slate-900/90 backdrop-blur-2xl rounded-3xl border border-cyan-500/20 p-6 md:p-8 transform transition-all duration-500 flex flex-col shadow-[0_0_60px_rgba(6,182,212,0.15),0_4px_24px_rgba(0,0,0,0.3)] group-hover:-translate-y-1 group-hover:shadow-[0_0_80px_rgba(6,182,212,0.25),0_6px_30px_rgba(0,0,0,0.4)] ${
           isInitialized ? 'opacity-100' : 'opacity-0'
         }`}
         style={{ 
+          height: '420px',
+          maxHeight: '420px',
+          minHeight: '420px',
           transition: 'opacity 300ms ease-in, transform 500ms ease-out, box-shadow 500ms ease-out',
           willChange: 'transform'
         }}
@@ -172,11 +178,13 @@ export function AnimatedChatPreview() {
       >
         <div 
           ref={messagesContainerRef} 
-          className="flex-1 overflow-y-auto space-y-3" 
+          className="overflow-y-auto overflow-x-hidden space-y-3"
           style={{ 
+            height: '340px',
+            maxHeight: '340px',
+            minHeight: '340px',
             scrollBehavior: 'smooth',
             scrollPaddingBottom: '20px',
-            transition: 'scroll 0.5s cubic-bezier(0.4, 0.0, 0.2, 1)',
             scrollbarWidth: 'thin',
             scrollbarColor: '#06b6d4 rgba(255,255,255,0.1)'
           }}
