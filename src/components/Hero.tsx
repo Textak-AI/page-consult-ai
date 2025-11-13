@@ -41,22 +41,64 @@ const Hero = () => {
       {/* Animated rotating stats card */}
       <AnimatedStatsCard />
 
-      {/* Main content layer - VISIBLE and ABOVE background */}
+      {/* Main content grid - 60/40 split */}
       <div className="container mx-auto max-w-7xl relative z-20">
-        <div className="grid lg:grid-cols-2 gap-16 lg:gap-20 items-center">
-          <div className="max-w-2xl space-y-8 pb-12 overflow-visible" style={{ animation: 'slide-up 800ms ease-out 200ms forwards', animationFillMode: 'forwards', opacity: 0, minHeight: 'auto', height: 'auto' }}>
-            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white tracking-tight antialiased pb-12 overflow-visible" style={{ textRendering: 'optimizeLegibility', display: 'block', lineHeight: '1.4', minHeight: 'auto', height: 'auto', marginBottom: '0' }}>
+        <div className="grid lg:grid-cols-[60%_40%] gap-12 lg:gap-16 items-center">
+          
+          {/* Left content - 60% */}
+          <div 
+            className="max-w-2xl"
+            style={{ 
+              animation: 'slide-up 800ms ease-out 200ms forwards', 
+              animationFillMode: 'forwards', 
+              opacity: 0 
+            }}
+          >
+            {/* Headline */}
+            <h1 
+              className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white tracking-tight antialiased mb-6"
+              style={{ 
+                lineHeight: '1.2',
+                textRendering: 'optimizeLegibility'
+              }}
+            >
               Landing Pages That Start With{" "}
-              <span className="block mt-2 pb-12 mb-4 overflow-visible bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient-x" style={{ backgroundSize: '200% auto', textShadow: '0 0 40px rgba(6, 182, 212, 0.3)', willChange: 'background-position', display: 'block', minHeight: 'auto', height: 'auto' }}>
+              <span 
+                className="block mt-2 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient-x" 
+                style={{ 
+                  backgroundSize: '200% auto', 
+                  textShadow: '0 0 40px rgba(6, 182, 212, 0.3)',
+                  lineHeight: '1.2'
+                }}
+              >
                 Strategy
               </span>
             </h1>
-            <p className="relative z-10 text-xl md:text-2xl text-gray-300 leading-relaxed max-w-xl antialiased" style={{ textRendering: 'optimizeLegibility', animation: 'fade-in 800ms ease-out 400ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
+            
+            {/* Subheadline */}
+            <p 
+              className="text-xl md:text-2xl text-gray-300 leading-relaxed mb-12"
+              style={{ 
+                textRendering: 'optimizeLegibility',
+                animation: 'fade-in 800ms ease-out 400ms forwards', 
+                animationFillMode: 'forwards', 
+                opacity: 0 
+              }}
+            >
               AI consultant asks intelligent questions, then builds professional
               pages proven to convert. No templates. No guesswork.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 pt-6" style={{ animation: 'fade-in 800ms ease-out 600ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
-              <Button asChild size="lg" className="relative group text-lg px-8 py-4 bg-white text-slate-900 font-bold rounded-xl shadow-xl shadow-white/20 hover:shadow-2xl hover:shadow-white/40 hover:scale-105 transition-all duration-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900" aria-label="Start free demo consultation">
+            
+            {/* CTA buttons */}
+            <div 
+              className="flex flex-col sm:flex-row gap-4 mb-6"
+              style={{ 
+                animation: 'fade-in 800ms ease-out 600ms forwards', 
+                animationFillMode: 'forwards', 
+                opacity: 0 
+              }}
+            >
+              <Button asChild size="lg" className="text-lg px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white border-0 shadow-[0_0_30px_rgba(6,182,212,0.4)] hover:shadow-[0_0_40px_rgba(6,182,212,0.6)] rounded-xl font-semibold transition-all duration-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900" aria-label="Start free AI consultation demo">
                 <Link to="/wizard">
                   <span className="relative z-10">Try AI Consultant - Free Demo</span>
                 </Link>
@@ -68,14 +110,32 @@ const Hero = () => {
                 </a>
               </Button>
             </div>
-            <p className="text-gray-500 text-sm text-center sm:text-left mt-4" style={{ animation: 'fade-in 800ms ease-out 700ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
+            
+            {/* Credit card disclaimer */}
+            <p 
+              className="text-gray-500 text-sm text-center sm:text-left"
+              style={{ 
+                animation: 'fade-in 800ms ease-out 700ms forwards', 
+                animationFillMode: 'forwards', 
+                opacity: 0 
+              }}
+            >
               No credit card required • See results in 2 minutes
             </p>
           </div>
 
-          <div className="relative" style={{ animation: 'scale-in 1000ms ease-out 800ms forwards', animationFillMode: 'forwards', opacity: 0 }}>
+          {/* Right demo - 40% */}
+          <div 
+            className="relative"
+            style={{ 
+              animation: 'scale-in 1000ms ease-out 800ms forwards', 
+              animationFillMode: 'forwards', 
+              opacity: 0 
+            }}
+          >
             <AnimatedChatPreview />
           </div>
+          
         </div>
       </div>
       
