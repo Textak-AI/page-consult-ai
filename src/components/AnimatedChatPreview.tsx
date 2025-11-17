@@ -31,7 +31,7 @@ export function AnimatedChatPreview() {
     setTimeout(() => setIsInitialized(true), 100);
   }, []);
 
-  // Smooth scroll to bottom with debouncing
+  // Smart scroll - keeps content visible at top while showing new messages
   const smoothScroll = () => {
     if (isScrollingRef.current || !messagesContainerRef.current) return;
     
@@ -40,8 +40,10 @@ export function AnimatedChatPreview() {
     
     // Wait for content to fully render
     setTimeout(() => {
+      // Keep 100px of content visible at top for context
+      const scrollTarget = Math.max(0, container.scrollHeight - container.clientHeight - 100);
       container.scrollTo({
-        top: container.scrollHeight,
+        top: scrollTarget,
         behavior: 'smooth'
       });
       
@@ -180,9 +182,9 @@ export function AnimatedChatPreview() {
           ref={messagesContainerRef} 
           className="overflow-y-auto overflow-x-hidden space-y-3"
           style={{ 
-            height: '280px',
-            maxHeight: '280px',
-            minHeight: '280px',
+            height: '300px',
+            maxHeight: '300px',
+            minHeight: '300px',
             scrollBehavior: 'smooth',
             scrollPaddingBottom: '20px',
             scrollbarWidth: 'thin',
