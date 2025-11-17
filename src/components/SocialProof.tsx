@@ -32,7 +32,7 @@ const SocialProof = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mb-16 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
           {stats.map((stat, index) => (
             <div
               key={index}
