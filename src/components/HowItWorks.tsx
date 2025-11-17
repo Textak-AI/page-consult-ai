@@ -26,8 +26,8 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-24 px-6 bg-gradient-to-b from-background to-muted/30">
-      <div className="container mx-auto max-w-7xl">
+    <section className="py-24 bg-gradient-to-b from-background to-muted/30">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl font-bold text-foreground mb-4">
             From Strategy to Launch in 10 Minutes

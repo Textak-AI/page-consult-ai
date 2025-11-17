@@ -6,7 +6,7 @@ import AnimatedStatsCard from "@/components/AnimatedStatsCard";
 
 const Hero = () => {
   return (
-    <section className="relative pt-32 pb-20 px-6 min-h-screen overflow-x-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]">
+    <section className="relative pt-32 pb-20 min-h-screen overflow-x-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]">
       {/* Background layer - BEHIND everything */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         {/* Animated ambient orbs */}
@@ -42,7 +42,7 @@ const Hero = () => {
       <AnimatedStatsCard />
 
       {/* Main content grid - 60/40 split */}
-      <div className="container mx-auto max-w-7xl relative z-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
         <div className="grid lg:grid-cols-[60%_40%] gap-12 lg:gap-16 items-center">
           
           {/* Left content - 60% */}
