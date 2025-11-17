@@ -180,7 +180,7 @@ const AIDemo = () => {
   };
 
   return (
-    <section id="demo" className="relative py-24 md:py-32 px-8 bg-gradient-to-b from-slate-950 via-purple-950 to-slate-950 overflow-hidden">
+    <section id="demo" className="relative py-24 md:py-32 bg-gradient-to-b from-slate-950 via-purple-950 to-slate-950 overflow-hidden">
       
       {/* Background ambient elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -206,7 +206,7 @@ const AIDemo = () => {
         </div>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-5xl md:text-6xl font-extrabold text-center mb-4">
             <span className="bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-transparent" style={{ textShadow: '0 0 40px rgba(168, 85, 247, 0.3)' }}>

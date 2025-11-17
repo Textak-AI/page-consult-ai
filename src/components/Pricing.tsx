@@ -50,12 +50,12 @@ const plans = [
 
 const Pricing = () => {
   return (
-    <section id="pricing" className="py-24 px-6 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden">
+    <section id="pricing" className="py-24 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden">
       {/* Decorative glow effects */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
       
-      <div className="container mx-auto max-w-7xl relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Simple, Transparent Pricing
