@@ -40,8 +40,8 @@ export function AnimatedChatPreview() {
     
     // Wait for content to fully render
     setTimeout(() => {
-      // Keep 100px of content visible at top for context
-      const scrollTarget = Math.max(0, container.scrollHeight - container.clientHeight - 100);
+      // Keep 250px of content visible at top to show response and next question
+      const scrollTarget = Math.max(0, container.scrollHeight - container.clientHeight - 250);
       container.scrollTo({
         top: scrollTarget,
         behavior: 'smooth'
