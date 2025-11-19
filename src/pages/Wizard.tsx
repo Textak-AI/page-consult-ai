@@ -9,7 +9,6 @@ import { MessageCircle, Loader2 } from "lucide-react";
 import { useSession } from "@/contexts/SessionContext";
 import { EmailCaptureModal } from "@/components/editor/EmailCaptureModal";
 import { WelcomeBackModal } from "@/components/editor/WelcomeBackModal";
-import logo from "@/assets/pageconsult-logo.svg";
 
 type Message = {
   role: "ai" | "user";
@@ -612,48 +611,70 @@ export default function Wizard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f0a1f] via-[#1a1332] to-[#0f0a1f]">
+        <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-[#0f0a1f] via-[#1a1332] to-[#0f0a1f]">
+      {/* Ambient Background Effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-cyan-500/20 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-40 right-20 w-80 h-80 bg-purple-500/20 rounded-full blur-[100px] animate-pulse delay-1000" />
+        <div className="absolute top-1/2 left-1/3 w-72 h-72 bg-pink-500/10 rounded-full blur-[90px] animate-pulse delay-2000" />
+      </div>
+
       {/* Header */}
-      <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-card">
+      <header className="relative z-10 h-20 border-b border-white/10 flex items-center justify-between px-6 backdrop-blur-xl bg-black/30">
         <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <img 
-            src={logo} 
+            src="/public/logo/whiteAsset_3combimark_darkmode.svg" 
             alt="PageConsult AI" 
-            className="h-8 w-auto"
+            className="h-10 w-auto brightness-110"
           />
         </a>
         
         <div className="flex-1 max-w-md mx-8">
-          <div className="text-sm text-muted-foreground mb-1 text-center">
+          <div className="text-sm text-white/70 mb-2 text-center font-medium">
             {currentStep <= totalSteps ? `Question ${currentStep} of ${totalSteps}` : "Complete"}
           </div>
-          <Progress value={progressPercentage} className="h-2" />
+          <Progress value={progressPercentage} className="h-2 bg-white/10" />
         </div>
         
         <div className="flex items-center gap-2">
           {step > 1 && step < 8 && (
-            <Button variant="ghost" size="sm" onClick={handleBack}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleBack}
+              className="text-white hover:bg-white/10"
+            >
               ← Back
             </Button>
           )}
-          <Button variant="ghost" size="sm" onClick={handleStartFresh}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleStartFresh}
+            className="text-white hover:bg-white/10"
+          >
             Start Fresh
           </Button>
-          <Button variant="outline" size="sm" onClick={handleSaveExit}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleSaveExit}
+            className="border-white/20 text-white hover:bg-white/10"
+          >
             Save & Exit
           </Button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="relative z-10 flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto py-8 px-4">
           {/* Messages */}
           <div className="space-y-4 mb-8">
@@ -663,24 +684,24 @@ export default function Wizard() {
                 className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                  className={`max-w-[80%] rounded-2xl px-5 py-4 ${
                     message.role === "user"
-                      ? "bg-primary text-primary-foreground ml-auto"
-                      : "bg-muted text-foreground"
+                      ? "bg-gradient-to-r from-cyan-500/90 to-purple-500/90 text-white ml-auto shadow-lg shadow-cyan-500/20"
+                      : "bg-white/5 backdrop-blur-xl border border-white/10 text-white"
                   } animate-fade-in`}
                 >
-                  <p className="whitespace-pre-line">{message.content}</p>
+                  <p className="whitespace-pre-line leading-relaxed">{message.content}</p>
                 </div>
               </div>
             ))}
             
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-muted rounded-2xl px-4 py-3">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-5 py-4">
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" />
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-75" />
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse delay-150" />
+                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse delay-75" />
+                    <div className="w-2 h-2 bg-pink-400 rounded-full animate-pulse delay-150" />
                   </div>
                 </div>
               </div>
@@ -697,11 +718,11 @@ export default function Wizard() {
                     <button
                       key={industry.id}
                       onClick={() => handleIndustrySelect(industry.id as IndustryType)}
-                      className="bg-card border-2 border-border rounded-xl p-4 text-center hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      className="group bg-white/5 backdrop-blur-xl border-2 border-white/10 rounded-xl p-4 text-center hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/20 hover:border-cyan-500/50 transition-all duration-300"
                     >
-                      <div className="text-4xl mb-2">{industry.icon}</div>
-                      <div className="font-semibold text-sm mb-1">{industry.title}</div>
-                      <div className="text-xs text-muted-foreground">{industry.subtitle}</div>
+                      <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">{industry.icon}</div>
+                      <div className="font-semibold text-white">{industry.title}</div>
+                      <div className="text-sm text-white/60">{industry.subtitle}</div>
                     </button>
                   ))}
                 </div>
@@ -713,12 +734,12 @@ export default function Wizard() {
                     placeholder="e.g., Nonprofit, Government..."
                     value={customIndustry}
                     onChange={(e) => setCustomIndustry(e.target.value)}
-                    className="min-h-[60px]"
+                    className="min-h-[60px] bg-white/5 backdrop-blur-xl border-white/10 text-white placeholder:text-white/40 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   />
                   <Button 
                     onClick={handleCustomIndustry}
                     disabled={customIndustry.trim().length < 3}
-                    className="w-full"
+                    className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white shadow-lg shadow-cyan-500/20"
                   >
                     Continue
                   </Button>
@@ -732,11 +753,11 @@ export default function Wizard() {
                     <button
                       key={goal.id}
                       onClick={() => handleGoalSelect(goal.id as GoalType)}
-                      className="bg-card border-2 border-border rounded-xl p-6 text-left hover:-translate-y-1 hover:shadow-lg hover:border-primary transition-all duration-200"
+                      className="group bg-white/5 backdrop-blur-xl border-2 border-white/10 rounded-xl p-6 text-left hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/20 hover:border-purple-500/50 transition-all duration-300"
                     >
-                      <div className="text-4xl mb-3">{goal.icon}</div>
-                      <div className="font-semibold mb-1">{goal.title}</div>
-                      <div className="text-sm text-muted-foreground">{goal.subtitle}</div>
+                      <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">{goal.icon}</div>
+                      <div className="font-semibold text-lg text-white mb-1">{goal.title}</div>
+                      <div className="text-sm text-white/60">{goal.subtitle}</div>
                     </button>
                   ))}
                 </div>
@@ -750,20 +771,20 @@ export default function Wizard() {
                     value={targetAudience}
                     onChange={(e) => setTargetAudience(e.target.value)}
                     maxLength={200}
-                    className="min-h-[120px]"
+                    className="min-h-[120px] bg-white/5 backdrop-blur-xl border-white/10 text-white placeholder:text-white/40 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   />
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-white/60">
                       {targetAudience.length}/200
                     </span>
                     {targetAudience.length >= 10 && (
-                      <span className="text-sm text-green-600">✓ That's specific and powerful!</span>
+                      <span className="text-sm text-green-400">✓ That's specific and powerful!</span>
                     )}
                   </div>
                   <Button 
                     onClick={handleAudienceSubmit}
                     disabled={targetAudience.trim().length < 10}
-                    className="w-full"
+                    className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white shadow-lg shadow-cyan-500/20"
                   >
                     Continue
                   </Button>
@@ -778,17 +799,17 @@ export default function Wizard() {
                     value={serviceType}
                     onChange={(e) => setServiceType(e.target.value)}
                     maxLength={100}
-                    className="min-h-[100px]"
+                    className="min-h-[100px] bg-white/5 backdrop-blur-xl border-white/10 text-white placeholder:text-white/40 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   />
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-white/60">
                       {serviceType.length}/100
                     </span>
                   </div>
                   <Button 
                     onClick={handleServiceTypeSubmit}
                     disabled={serviceType.trim().length < 5}
-                    className="w-full"
+                    className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white shadow-lg shadow-cyan-500/20"
                   >
                     Continue
                   </Button>
@@ -803,17 +824,17 @@ export default function Wizard() {
                     value={challenge}
                     onChange={(e) => setChallenge(e.target.value)}
                     maxLength={150}
-                    className="min-h-[120px]"
+                    className="min-h-[120px] bg-white/5 backdrop-blur-xl border-white/10 text-white placeholder:text-white/40 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   />
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-white/60">
                       {challenge.length}/150
                     </span>
                   </div>
                   <Button 
                     onClick={handleChallengeSubmit}
                     disabled={challenge.trim().length < 10}
-                    className="w-full"
+                    className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white shadow-lg shadow-cyan-500/20"
                   >
                     Continue
                   </Button>
@@ -828,17 +849,17 @@ export default function Wizard() {
                     value={uniqueValue}
                     onChange={(e) => setUniqueValue(e.target.value)}
                     maxLength={200}
-                    className="min-h-[120px]"
+                    className="min-h-[120px] bg-white/5 backdrop-blur-xl border-white/10 text-white placeholder:text-white/40 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   />
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-white/60">
                       {uniqueValue.length}/200
                     </span>
                   </div>
                   <Button 
                     onClick={handleValueSubmit}
                     disabled={uniqueValue.trim().length < 10}
-                    className="w-full"
+                    className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white shadow-lg shadow-cyan-500/20"
                   >
                     Continue
                   </Button>
@@ -853,12 +874,12 @@ export default function Wizard() {
                     value={offer}
                     onChange={(e) => setOffer(e.target.value)}
                     maxLength={150}
-                    className="min-h-[100px]"
+                    className="min-h-[100px] bg-white/5 backdrop-blur-xl border-white/10 text-white placeholder:text-white/40 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   />
                   <Button 
                     onClick={handleOfferSubmit}
                     disabled={offer.trim().length < 5}
-                    className="w-full"
+                    className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white shadow-lg shadow-cyan-500/20"
                   >
                     Continue
                   </Button>
@@ -869,28 +890,28 @@ export default function Wizard() {
               {/* Step 7/8: Summary */}
               {(step === 7 || step === 8) && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="bg-card border-2 border-border rounded-xl p-6">
-                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                  <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
+                    <h3 className="font-bold text-xl mb-6 flex items-center gap-2 text-white">
                       📄 Your Landing Page Strategy
                     </h3>
-                    <div className="space-y-3 text-sm">
+                    <div className="space-y-4 text-sm">
                       <div>
-                        <span className="font-semibold">Industry:</span> {selectedIndustry === "other" ? customIndustry : industries.find(i => i.id === selectedIndustry)?.title}
+                        <span className="font-semibold text-white/70">Industry:</span> <span className="text-white">{selectedIndustry === "other" ? customIndustry : industries.find(i => i.id === selectedIndustry)?.title}</span>
                       </div>
                       <div>
-                        <span className="font-semibold">Goal:</span> {goals.find(g => g.id === selectedGoal)?.title}
+                        <span className="font-semibold text-white/70">Goal:</span> <span className="text-white">{goals.find(g => g.id === selectedGoal)?.title}</span>
                       </div>
                       <div>
-                        <span className="font-semibold">Target Audience:</span> {targetAudience}
+                        <span className="font-semibold text-white/70">Target Audience:</span> <span className="text-white">{targetAudience}</span>
                       </div>
                       {serviceType && (
                         <div>
-                          <span className="font-semibold">Service:</span> {serviceType}
+                          <span className="font-semibold text-white/70">Service:</span> <span className="text-white">{serviceType}</span>
                         </div>
                       )}
-                      <div className="pt-3 border-t border-border">
-                        <div className="font-semibold mb-2">Page Structure:</div>
-                        <ul className="space-y-1 ml-4">
+                      <div className="pt-3 border-t border-white/10">
+                        <div className="font-semibold mb-3 text-white">Page Structure:</div>
+                        <ul className="space-y-2 ml-4 text-white/80">
                           <li>✓ Hero: Headline targeting {targetAudience.split(",")[0]}</li>
                           <li>✓ Problem/Solution showing {uniqueValue.substring(0, 30)}...</li>
                           <li>✓ Key Features highlighting value prop</li>
@@ -898,21 +919,25 @@ export default function Wizard() {
                           <li>✓ Clear CTA: {offer}</li>
                         </ul>
                       </div>
-                      <div className="pt-3 border-t border-border text-muted-foreground">
+                      <div className="pt-3 border-t border-white/10 text-white/60">
                         Optimized for: {selectedIndustry === "other" ? customIndustry : industries.find(i => i.id === selectedIndustry)?.title} best practices + conversion
                       </div>
                     </div>
                   </div>
 
                   <div className="text-center">
-                    <p className="mb-4 text-muted-foreground">Ready to see this built?</p>
-                    <p className="mb-6 text-sm">Watch your page come together in the next 10 seconds...</p>
-                    <Button onClick={handleBuildPage} size="lg" className="w-full md:w-auto">
+                    <p className="mb-4 text-white/70 text-lg">Ready to see this built?</p>
+                    <p className="mb-6 text-sm text-white/60">Watch your page come together in the next 10 seconds...</p>
+                    <Button 
+                      onClick={handleBuildPage} 
+                      size="lg" 
+                      className="w-full md:w-auto bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white shadow-lg shadow-cyan-500/20"
+                    >
                       Build My Page
                     </Button>
                     <button 
                       onClick={() => navigate("/wizard/review")}
-                      className="block w-full md:w-auto mx-auto mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      className="block w-full md:w-auto mx-auto mt-4 text-sm text-white/60 hover:text-white transition-colors"
                     >
                       Let me adjust something
                     </button>
