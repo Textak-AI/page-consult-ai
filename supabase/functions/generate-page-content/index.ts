@@ -1,5 +1,22 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
+
+// Validation schema
+const GenerateContentRequestSchema = z.object({
+  industry: z.string().trim().min(2).max(100),
+  specificService: z.string().trim().min(2).max(200).optional(),
+  service_type: z.string().trim().min(2).max(200).optional(),
+  goal: z.string().trim().min(2).max(200),
+  targetAudience: z.string().trim().min(5).max(500),
+  target_audience: z.string().trim().min(5).max(500).optional(),
+  challenge: z.string().trim().min(10).max(1000),
+  uniqueValue: z.string().trim().min(10).max(1000),
+  unique_value: z.string().trim().min(10).max(1000).optional(),
+  credentials: z.string().trim().max(500).optional(),
+  insights: z.string().max(10000).optional(),
+  marketInsights: z.any().optional(),
+});
 
 // Industry patterns for intelligent content generation
 type IndustryPattern = {
@@ -153,6 +170,16 @@ serve(async (req) => {
       console.error('Body that failed to parse:', bodyText);
       return new Response(
         JSON.stringify({ error: 'Invalid JSON in request body', details: String(parseError) }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Validate request body against schema
+    const validation = GenerateContentRequestSchema.safeParse(consultationData);
+    if (!validation.success) {
+      console.error('❌ Validation error:', validation.error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid consultation data', details: 'Request validation failed' }), 
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

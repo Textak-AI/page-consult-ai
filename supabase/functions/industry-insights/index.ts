@@ -1,11 +1,19 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Validation schema
+const InsightsRequestSchema = z.object({
+  industry: z.string().trim().min(2).max(100),
+  serviceType: z.string().trim().max(200).optional(),
+  location: z.string().trim().max(200).optional(),
+  audience: z.string().trim().max(500).optional(),
+});
 
 interface InsightsRequest {
   industry: string;
@@ -61,7 +69,29 @@ serve(async (req) => {
       );
     }
 
-    const { industry, serviceType, location, audience }: InsightsRequest = await req.json();
+    // Parse and validate request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (error) {
+      console.error('JSON parse error:', error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate request body against schema
+    const validation = InsightsRequestSchema.safeParse(requestBody);
+    if (!validation.success) {
+      console.error('Validation error:', validation.error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request parameters', details: 'Request validation failed' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { industry, serviceType, location, audience }: InsightsRequest = validation.data;
     const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
 
     if (!perplexityApiKey) {

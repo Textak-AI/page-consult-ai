@@ -1,11 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 };
+
+// Validation schema
+const UnsplashSearchSchema = z.object({
+  query: z.string().trim().min(1).max(200),
+  page: z.number().int().min(1).max(100).default(1),
+  perPage: z.number().int().min(1).max(30).default(12),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -64,7 +72,7 @@ serve(async (req) => {
       );
     }
 
-    // Parse request body with better error handling
+    // Parse and validate request body
     let requestBody;
     try {
       const bodyText = await req.text();
@@ -73,12 +81,29 @@ serve(async (req) => {
     } catch (parseError) {
       console.error('Failed to parse request body:', parseError);
       return new Response(
-        JSON.stringify({ error: 'Invalid request body' }),
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { query, page = 1, perPage = 12 } = requestBody;
+    // Validate request body against schema
+    const validation = UnsplashSearchSchema.safeParse(requestBody);
+    if (!validation.success) {
+      console.error('Validation error:', validation.error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request parameters', details: 'Request validation failed' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { query, page, perPage } = validation.data;
+    
+    if (!query) {
+      return new Response(
+        JSON.stringify({ error: 'Query parameter is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     console.log('Unsplash search query:', query, 'page:', page);
     
