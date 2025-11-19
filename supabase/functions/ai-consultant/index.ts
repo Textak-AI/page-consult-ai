@@ -1,11 +1,36 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Validation schemas
+const MessageSchema = z.object({
+  role: z.enum(['user', 'assistant', 'system']),
+  content: z.string().min(1).max(50000),
+});
+
+const PageContentSchema = z.object({
+  headline: z.string().max(500).optional(),
+  subheadline: z.string().max(1000).optional(),
+  features: z.array(z.object({
+    title: z.string().max(200),
+    description: z.string().max(1000),
+  })).max(20).optional(),
+  cta: z.string().max(200).optional(),
+  industry: z.string().max(100).optional(),
+  serviceType: z.string().max(200).optional(),
+  targetAudience: z.string().max(500).optional(),
+}).optional();
+
+const ConsultRequestSchema = z.object({
+  messages: z.array(MessageSchema).min(1).max(100),
+  pageContent: PageContentSchema,
+  action: z.enum(['analyze', 'improve_headline', 'improve_features', 'improve_cta', 'add_social_proof', 'general_review']).optional(),
+});
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -73,7 +98,29 @@ serve(async (req) => {
       );
     }
 
-    const { messages, pageContent, action }: ConsultRequest = await req.json();
+    // Parse and validate request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (error) {
+      console.error('JSON parse error:', error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate request body against schema
+    const validation = ConsultRequestSchema.safeParse(requestBody);
+    if (!validation.success) {
+      console.error('Validation error:', validation.error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request parameters', details: 'Request validation failed' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { messages, pageContent, action }: ConsultRequest = validation.data;
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
     if (!lovableApiKey) {

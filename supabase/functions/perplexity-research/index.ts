@@ -1,16 +1,28 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Validation schema
+const ResearchRequestSchema = z.object({
+  service: z.string().trim().min(2).max(200),
+  location: z.string().trim().max(200).optional(),
+  industry: z.string().trim().max(100),
+  concerns: z.union([
+    z.string().max(500),
+    z.array(z.string().max(500)).max(10)
+  ]).optional(),
+});
+
 interface ResearchRequest {
   service: string;
   location?: string;
   industry: string;
-  concerns?: string;
+  concerns?: string | string[];
 }
 
 interface CitedClaim {
@@ -162,7 +174,29 @@ serve(async (req) => {
       );
     }
 
-    const { service, location, industry, concerns }: ResearchRequest = await req.json();
+    // Parse and validate request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (error) {
+      console.error('JSON parse error:', error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate request body against schema
+    const validation = ResearchRequestSchema.safeParse(requestBody);
+    if (!validation.success) {
+      console.error('Validation error:', validation.error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request parameters', details: 'Request validation failed' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { service, location, industry, concerns }: ResearchRequest = validation.data;
     
     const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');
     if (!PERPLEXITY_API_KEY) {

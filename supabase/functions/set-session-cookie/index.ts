@@ -1,5 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
+
+// Validation schema
+const SetSessionSchema = z.object({
+  session_token: z.string().uuid('Invalid session token format'),
+});
 
 const allowedOrigins = [
   'https://page-consult-ai.lovable.app',
@@ -30,23 +36,29 @@ serve(async (req) => {
   }
 
   try {
-    const { session_token, user_id }: SetSessionRequest = await req.json();
-
-    if (!session_token || typeof session_token !== 'string') {
+    // Parse and validate request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (error) {
+      console.error('JSON parse error:', error);
       return new Response(
-        JSON.stringify({ error: 'Invalid session_token' }),
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
         { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Validate UUID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(session_token)) {
+    // Validate request body against schema
+    const validation = SetSessionSchema.safeParse(requestBody);
+    if (!validation.success) {
+      console.error('Validation error:', validation.error);
       return new Response(
         JSON.stringify({ error: 'Invalid session token format' }),
         { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
+
+    const { session_token } = validation.data;
 
     // Initialize Supabase client
     const supabaseClient = createClient(
