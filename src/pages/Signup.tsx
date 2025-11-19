@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { MessageCircle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -121,16 +121,12 @@ export default function Signup() {
       <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="relative">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                <MessageCircle className="w-6 h-6 text-white" />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 via-purple-600 to-pink-500 rounded-xl blur-xl opacity-50 animate-pulse-slow" />
-            </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              PageConsult AI
-            </h1>
+          <div className="flex items-center justify-center mb-4">
+            <img 
+              src="/logo/whiteAsset_3combimark_darkmode.svg" 
+              alt="PageConsult AI" 
+              className="h-12 w-auto"
+            />
           </div>
           <p className="text-gray-300 text-lg">
             {isLogin ? "Welcome back" : "Create your account to start building"}
