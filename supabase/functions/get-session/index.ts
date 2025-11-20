@@ -79,6 +79,18 @@ serve(async (req) => {
       );
     }
 
+    // Check session expiration (7 days)
+    const sessionAge = Date.now() - new Date(session.created_at).getTime();
+    const MAX_SESSION_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+    
+    if (sessionAge > MAX_SESSION_AGE) {
+      console.log('Session expired:', session_token);
+      return new Response(
+        JSON.stringify({ error: 'Session expired' }),
+        { status: 401, headers: { ...headers, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Update last_active timestamp
     await supabaseClient
       .from('consultation_sessions')
