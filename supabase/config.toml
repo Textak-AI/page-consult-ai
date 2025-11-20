@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.clear-session-cookie]
 verify_jwt = false
+
+[functions.migrate-anonymous-session]
+verify_jwt = true

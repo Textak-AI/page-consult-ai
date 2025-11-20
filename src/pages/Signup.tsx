@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function Signup() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { sessionToken } = useSession();
   const consultationData = location.state?.consultationData;
   const redirectTo = location.state?.redirectTo || "/wizard";
   const [isLogin, setIsLogin] = useState(false);
@@ -29,6 +31,11 @@ export default function Signup() {
         });
 
         if (error) throw error;
+
+        // Migrate anonymous session if exists
+        if (sessionToken) {
+          await migrateAnonymousSession(sessionToken);
+        }
 
         toast({
           title: "Welcome back!",
@@ -57,6 +64,11 @@ export default function Signup() {
 
         if (error) throw error;
 
+        // Migrate anonymous session if exists
+        if (sessionToken && data.user) {
+          await migrateAnonymousSession(sessionToken);
+        }
+
         toast({
           title: "Account created!",
           description: "Redirecting..."
@@ -79,6 +91,25 @@ export default function Signup() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const migrateAnonymousSession = async (sessionToken: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await supabase.functions.invoke('migrate-anonymous-session', {
+        body: { session_token: sessionToken }
+      });
+
+      if (response.error) {
+        console.error('Failed to migrate session:', response.error);
+      } else {
+        console.log('✅ Anonymous session migrated successfully');
+      }
+    } catch (error) {
+      console.error('Failed to migrate session:', error);
     }
   };
 
