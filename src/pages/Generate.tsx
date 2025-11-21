@@ -110,7 +110,7 @@ export default function Generate() {
 
       // Transform demo data to match expected format
       const transformedData = {
-        id: `demo-${Date.now()}`,
+        id: demoData.id,
         user_id: user.id,
         industry: demoData.industry,
         service_type: demoData.specificService,
@@ -118,7 +118,7 @@ export default function Generate() {
         target_audience: demoData.targetAudience,
         challenge: demoData.challenge,
         unique_value: demoData.uniqueValue,
-        offer: demoData.goal,
+        offer: demoData.offer || demoData.goal,
         status: "completed",
         created_at: demoData.timestamp,
       };
