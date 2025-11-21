@@ -564,7 +564,31 @@ export default function Wizard() {
       return;
     }
 
-    navigate("/generate");
+    // Pass consultation data via navigation state for immediate access
+    const industryTitle = selectedIndustry === "other" 
+      ? customIndustry 
+      : industries.find(i => i.id === selectedIndustry)?.title || "";
+    
+    const goalTitle = goals.find(g => g.id === selectedGoal)?.title || "";
+
+    navigate("/generate", {
+      state: {
+        consultationData: {
+          id: consultationId,
+          industry: industryTitle,
+          specificService: serviceType,
+          service_type: serviceType,
+          goal: goalTitle,
+          targetAudience: targetAudience,
+          target_audience: targetAudience,
+          challenge: challenge,
+          uniqueValue: uniqueValue,
+          unique_value: uniqueValue,
+          offer: offer,
+          timestamp: new Date().toISOString()
+        }
+      }
+    });
   };
 
   const handleBack = () => {
