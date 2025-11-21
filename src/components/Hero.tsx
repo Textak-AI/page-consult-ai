@@ -76,13 +76,15 @@ const Hero = () => {
               lineHeight: '1.2',
               textRendering: 'optimizeLegibility'
             }}>
-              <span className="block">Landing Pages That Start With</span>
-              <span className="block mt-2 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient-x" style={{
-                backgroundSize: '200% auto',
-                textShadow: '0 0 40px rgba(6, 182, 212, 0.3)',
-                lineHeight: '1.2'
-              }}>
-                Strategy
+              <span className="block">Landing Pages</span>
+              <span className="block mt-2">
+                That Start With{' '}
+                <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient-x" style={{
+                  backgroundSize: '200% auto',
+                  textShadow: '0 0 40px rgba(6, 182, 212, 0.3)'
+                }}>
+                  Strategy
+                </span>
               </span>
             </h1>
             
