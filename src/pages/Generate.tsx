@@ -88,16 +88,17 @@ export default function Generate() {
   }, []);
 
   const loadConsultation = async () => {
-    // FIRST: Check if data was passed from demo via React Router state
-    const demoData = location.state?.consultationData;
+    try {
+      // FIRST: Check if data was passed from demo via React Router state
+      const demoData = location.state?.consultationData;
 
-    console.log('🔍 Generate page load - checking for consultation data...');
-    console.log('📦 location.state:', location.state);
-    console.log('📦 demoData:', demoData);
+      console.log('🔍 Generate page load - checking for consultation data...');
+      console.log('📦 location.state:', location.state);
+      console.log('📦 demoData:', demoData);
 
-    if (demoData) {
-      // Data came from demo - use it directly
-      console.log("✅ Using consultation data from demo:", demoData);
+      if (demoData) {
+        // Data came from demo - use it directly
+        console.log("✅ Using consultation data from demo:", demoData);
 
       const {
         data: { user },
@@ -122,41 +123,52 @@ export default function Generate() {
         created_at: demoData.timestamp,
       };
 
-      setConsultation(transformedData);
-      startGeneration(transformedData, user.id);
-      return;
-    }
+        setConsultation(transformedData);
+        startGeneration(transformedData, user.id);
+        return;
+      }
 
-    // FALLBACK: If no demo data, try loading from database (old wizard flow)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      navigate("/signup");
-      return;
-    }
+      // FALLBACK: If no demo data, try loading from database (old wizard flow)
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/signup");
+        return;
+      }
 
-    const { data, error } = await supabase
-      .from("consultations")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("status", "completed")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      const { data, error } = await supabase
+        .from("consultations")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    if (error || !data) {
+      if (error || !data) {
+        console.error("❌ No consultation found in database");
+        toast({
+          title: "No consultation found",
+          description: "Please complete the consultation demo on the homepage first.",
+          variant: "destructive",
+        });
+        navigate("/#demo");
+        return;
+      }
+
+      console.log("✅ Using consultation data from database:", data);
+      setConsultation(data);
+      startGeneration(data, user.id);
+    } catch (error) {
+      console.error("❌ Error loading consultation:", error);
       toast({
-        title: "No consultation found",
-        description: "Please complete the consultation demo on the homepage first.",
+        title: "Error loading page",
+        description: "Failed to load consultation data. Please try again.",
         variant: "destructive",
       });
-      navigate("/#demo"); // ← Send them back to demo instead of wizard
-      return;
+      navigate("/#demo");
     }
-
-    setConsultation(data);
-    startGeneration(data, user.id);
   };
 
   const startGeneration = async (consultationData: any, userId: string) => {
@@ -181,9 +193,15 @@ export default function Generate() {
   const animatePageBuild = async (consultationData: any, userId: string) => {
     try {
       // Generate content (parallel API calls inside)
+      console.log("🎨 Starting page generation with data:", consultationData);
       console.time("⚡ Total generation time");
       const generatedSections = await generateSections(consultationData);
       console.timeEnd("⚡ Total generation time");
+      console.log("✅ Generated sections:", generatedSections);
+
+      if (!generatedSections || generatedSections.length === 0) {
+        throw new Error("No sections were generated");
+      }
 
       // Animate sections appearing quickly
       for (let i = 1; i <= generatedSections.length; i++) {
@@ -193,6 +211,8 @@ export default function Generate() {
 
       // Create page in database
       const slug = `${consultationData.industry?.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
+      console.log("💾 Saving page to database with slug:", slug);
+      
       const { data: pageData, error } = await supabase
         .from("landing_pages")
         .insert({
@@ -207,7 +227,13 @@ export default function Generate() {
         .select()
         .single();
 
-      if (!error && pageData) {
+      if (error) {
+        console.error("❌ Database save error:", error);
+        throw error;
+      }
+
+      if (pageData) {
+        console.log("✅ Page saved successfully:", pageData.id);
         setPageData(pageData);
         setSections(generatedSections);
       }
@@ -216,16 +242,18 @@ export default function Generate() {
       setShowConfetti(true);
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
+      console.log("🎉 Transitioning to editor with", generatedSections.length, "sections");
       setPhase("editor");
       setShowConfetti(false);
     } catch (error) {
-      console.error("Generation failed:", error);
+      console.error("❌ Generation failed:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       toast({
         title: "Generation failed",
-        description: "Please try again or contact support if the issue persists.",
+        description: `Error: ${errorMessage}. Please try again.`,
         variant: "destructive",
       });
-      navigate("/wizard");
+      navigate("/#demo");
     }
   };
 
