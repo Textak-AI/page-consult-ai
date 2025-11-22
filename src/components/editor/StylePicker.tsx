@@ -57,10 +57,10 @@ export function StylePicker({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl bg-[#1a1332] border-white/20 text-white">
         <DialogHeader>
-          <DialogTitle>Choose Page Style</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-white">Choose Page Style</DialogTitle>
+          <DialogDescription className="text-gray-400">
             Select a style to apply consistently across your entire landing page
           </DialogDescription>
         </DialogHeader>
@@ -70,28 +70,28 @@ export function StylePicker({
             <button
               key={style.value}
               onClick={() => handleSelect(style.value)}
-              className={`relative p-6 border-2 rounded-lg text-left transition-all hover:border-primary ${
+              className={`relative p-6 border-2 rounded-lg text-left transition-all hover:border-cyan-500 bg-white/5 backdrop-blur-sm ${
                 currentStyle === style.value
-                  ? "border-primary bg-primary/5"
-                  : "border-border"
+                  ? "border-cyan-500 bg-cyan-500/10"
+                  : "border-white/10"
               }`}
             >
               {currentStyle === style.value && (
                 <div className="absolute top-3 right-3">
-                  <Check className="w-5 h-5 text-primary" />
+                  <Check className="w-5 h-5 text-cyan-400" />
                 </div>
               )}
-              <h3 className="font-semibold text-lg mb-2">{style.label}</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="font-semibold text-lg mb-2 text-white">{style.label}</h3>
+              <p className="text-sm text-gray-400">
                 {style.description}
               </p>
             </button>
           ))}
         </div>
 
-        <div className="mt-6 p-4 bg-muted rounded-lg">
-          <p className="text-sm text-muted-foreground">
-            💡 <strong>Tip:</strong> The selected style will be applied to all
+        <div className="mt-6 p-4 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
+          <p className="text-sm text-gray-300">
+            💡 <strong className="text-cyan-400">Tip:</strong> The selected style will be applied to all
             sections, ensuring a cohesive and professional appearance throughout
             your landing page.
           </p>

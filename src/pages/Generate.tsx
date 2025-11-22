@@ -506,13 +506,17 @@ export default function Generate() {
   // Phase 1: Loading
   if (phase === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-8 max-w-md px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f0a1f] via-[#1a1332] to-[#0f0a1f] relative overflow-hidden">
+        {/* Ambient orbs */}
+        <div className="absolute top-20 left-20 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
+        
+        <div className="text-center space-y-8 max-w-md px-4 relative z-10">
           <div className="flex justify-center">
-            <Loader2 className="w-16 h-16 text-primary animate-spin" />
+            <Loader2 className="w-16 h-16 text-cyan-400 animate-spin" />
           </div>
 
-          <h2 className="text-2xl font-bold">Crafting your page...</h2>
+          <h2 className="text-2xl font-bold text-white">Crafting your page...</h2>
 
           <div className="space-y-4">
             {loadingMessages.map((msg, i) => (
@@ -522,15 +526,15 @@ export default function Generate() {
                   progress > (i / loadingMessages.length) * 100 ? "opacity-100" : "opacity-30"
                 }`}
               >
-                <msg.icon className="w-5 h-5 text-secondary" />
-                <span className="text-muted-foreground">{msg.text}</span>
+                <msg.icon className="w-5 h-5 text-cyan-400" />
+                <span className="text-gray-300">{msg.text}</span>
               </div>
             ))}
           </div>
 
-          <div className="w-full bg-muted rounded-full h-2">
+          <div className="w-full bg-white/10 backdrop-blur-sm rounded-full h-2">
             <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -542,21 +546,25 @@ export default function Generate() {
   // Phase 2: Building animation
   if (phase === "building") {
     return (
-      <div className="min-h-screen flex bg-background">
-        <div className="w-1/3 p-8 border-r flex items-center justify-center">
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold mb-4">📄 Your Strategy</h3>
+      <div className="min-h-screen flex bg-gradient-to-br from-[#0f0a1f] via-[#1a1332] to-[#0f0a1f] relative overflow-hidden">
+        {/* Ambient orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
+        
+        <div className="w-1/3 p-8 border-r border-white/10 flex items-center justify-center relative z-10">
+          <div className="space-y-4 bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
+            <h3 className="text-xl font-bold mb-4 text-white">📄 Your Strategy</h3>
             <div className="space-y-2 text-sm">
-              <p>
-                <strong>Industry:</strong> {consultation?.industry}
+              <p className="text-gray-300">
+                <strong className="text-cyan-400">Industry:</strong> {consultation?.industry}
               </p>
-              <p>
-                <strong>Goal:</strong> {consultation?.goal}
+              <p className="text-gray-300">
+                <strong className="text-cyan-400">Goal:</strong> {consultation?.goal}
               </p>
-              <p>
-                <strong>Audience:</strong> {consultation?.target_audience?.slice(0, 50)}...
+              <p className="text-gray-300">
+                <strong className="text-cyan-400">Audience:</strong> {consultation?.target_audience?.slice(0, 50)}...
               </p>
-              <div className="mt-6 space-y-2 text-muted-foreground">
+              <div className="mt-6 space-y-2 text-gray-400">
                 <p>Building your page with:</p>
                 <ul className="list-disc list-inside space-y-1">
                   <li>Strategic headline</li>
@@ -567,42 +575,42 @@ export default function Generate() {
           </div>
         </div>
 
-        <div className="flex-1 p-8 relative overflow-hidden">
+        <div className="flex-1 p-8 relative overflow-hidden z-10">
           <div className="space-y-4">
             {buildStep >= 1 && (
-              <div className="animate-slide-up bg-card p-8 rounded-lg border">
-                <h1 className="text-4xl font-bold mb-4">Hero Section</h1>
-                <p className="text-muted-foreground">Headline and CTA</p>
+              <div className="animate-slide-up bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10">
+                <h1 className="text-4xl font-bold mb-4 text-white">Hero Section</h1>
+                <p className="text-gray-400">Headline and CTA</p>
               </div>
             )}
             {buildStep >= 2 && (
-              <div className="animate-slide-up bg-card p-8 rounded-lg border">
-                <h2 className="text-2xl font-bold">Problem / Solution</h2>
+              <div className="animate-slide-up bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10">
+                <h2 className="text-2xl font-bold text-white">Problem / Solution</h2>
               </div>
             )}
             {buildStep >= 3 && (
-              <div className="animate-slide-up bg-card p-8 rounded-lg border">
-                <h2 className="text-2xl font-bold">Features</h2>
+              <div className="animate-slide-up bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10">
+                <h2 className="text-2xl font-bold text-white">Features</h2>
               </div>
             )}
             {buildStep >= 5 && (
-              <div className="animate-slide-up bg-card p-8 rounded-lg border">
-                <h2 className="text-2xl font-bold">Social Proof</h2>
+              <div className="animate-slide-up bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10">
+                <h2 className="text-2xl font-bold text-white">Social Proof</h2>
               </div>
             )}
             {buildStep >= 6 && (
-              <div className="animate-slide-up bg-card p-8 rounded-lg border">
-                <h2 className="text-2xl font-bold">Final CTA</h2>
+              <div className="animate-slide-up bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10">
+                <h2 className="text-2xl font-bold text-white">Final CTA</h2>
               </div>
             )}
           </div>
 
           {showConfetti && (
-            <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50 animate-fade-in">
-              <div className="bg-card p-8 rounded-lg shadow-lg max-w-lg text-center space-y-4">
-                <Sparkles className="w-12 h-12 text-secondary mx-auto" />
-                <h2 className="text-3xl font-bold">✨ Your Page is Ready! ✨</h2>
-                <p className="text-muted-foreground">
+            <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50 animate-fade-in">
+              <div className="bg-white/10 backdrop-blur-xl p-8 rounded-2xl shadow-lg max-w-lg text-center space-y-4 border border-white/20">
+                <Sparkles className="w-12 h-12 text-cyan-400 mx-auto" />
+                <h2 className="text-3xl font-bold text-white">✨ Your Page is Ready! ✨</h2>
+                <p className="text-gray-300">
                   Built with strategic headline and 6 conversion-optimized sections
                 </p>
               </div>
@@ -687,9 +695,13 @@ function EditorContent({
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-[#0f0a1f] via-[#1a1332] to-[#0f0a1f] relative overflow-hidden">
+      {/* Ambient orbs */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse-slow" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
+      
       {/* Top toolbar */}
-      <header className="h-14 border-b flex items-center justify-between px-4">
+      <header className="h-14 border-b border-white/10 backdrop-blur-md bg-white/5 flex items-center justify-between px-4 relative z-10">
         <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <img src={logo} alt="PageConsult AI" className="h-8 w-auto" />
         </a>
@@ -698,9 +710,9 @@ function EditorContent({
             variant="outline"
             size="sm"
             onClick={() => setStylePickerOpen(true)}
-            className="gap-2 relative pl-5 builder-button change-style-btn"
+            className="gap-2 relative pl-5 builder-button change-style-btn bg-white/5 border-white/10 text-white hover:bg-white/10"
           >
-            <span className="absolute left-0 top-0 w-1 h-full bg-[#A855F7] rounded-l"></span>
+            <span className="absolute left-0 top-0 w-1 h-full bg-purple-500 rounded-l"></span>
             <Palette className="w-4 h-4" />
             Change Style
           </Button>
@@ -708,33 +720,33 @@ function EditorContent({
             variant="outline"
             size="sm"
             onClick={handleSave}
-            className="relative pl-5 builder-button save-draft-btn"
+            className="relative pl-5 builder-button save-draft-btn bg-white/5 border-white/10 text-white hover:bg-white/10"
           >
-            <span className="absolute left-0 top-0 w-1 h-full bg-[#EAB308] rounded-l"></span>
+            <span className="absolute left-0 top-0 w-1 h-full bg-yellow-500 rounded-l"></span>
             Save Draft
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={handlePreview}
-            className="relative pl-5 builder-button preview-btn"
+            className="relative pl-5 builder-button preview-btn bg-white/5 border-white/10 text-white hover:bg-white/10"
           >
-            <span className="absolute left-0 top-0 w-1 h-full bg-[#06B6D6] rounded-l"></span>
+            <span className="absolute left-0 top-0 w-1 h-full bg-cyan-500 rounded-l"></span>
             Preview
           </Button>
           <Button
             size="sm"
             onClick={() => setPublishModalOpen(true)}
-            className="relative pl-5 builder-button publish-btn"
+            className="relative pl-5 builder-button publish-btn bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white border-0"
           >
-            <span className="absolute left-0 top-0 w-1 h-full bg-[#22C55E] rounded-l"></span>
+            <span className="absolute left-0 top-0 w-1 h-full bg-green-500 rounded-l"></span>
             Publish
           </Button>
         </div>
       </header>
 
       {/* Editor layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative z-10">
         <SectionManager
           sections={sections}
           onSectionsChange={setSections}

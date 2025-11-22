@@ -57,22 +57,22 @@ export function SectionManager({
   };
 
   return (
-    <div className="w-80 border-r bg-card overflow-y-auto">
-      <div className="p-4 border-b">
-        <h2 className="font-semibold text-lg">Sections</h2>
+    <div className="w-80 border-r border-white/10 backdrop-blur-md bg-white/5 overflow-y-auto">
+      <div className="p-4 border-b border-white/10">
+        <h2 className="font-semibold text-lg text-white">Sections</h2>
       </div>
 
       <div className="p-4 space-y-2">
         {sections.map((section, index) => (
           <div
             key={index}
-            className="border rounded-lg overflow-hidden bg-background"
+            className="border border-white/10 rounded-lg overflow-hidden bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors"
           >
             <div className="flex items-center p-3 gap-2">
-              <GripVertical className="w-4 h-4 text-muted-foreground cursor-move" />
+              <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
               <button
                 onClick={() => toggleSection(index)}
-                className="flex-1 flex items-center gap-2 text-left hover:text-primary transition-colors"
+                className="flex-1 flex items-center gap-2 text-left hover:text-cyan-400 transition-colors text-white"
               >
                 <ChevronRight
                   className={`w-4 h-4 transition-transform ${
@@ -83,28 +83,28 @@ export function SectionManager({
               </button>
               <button
                 onClick={() => toggleVisibility(index)}
-                className="p-1 hover:bg-muted rounded transition-colors"
+                className="p-1 hover:bg-white/10 rounded transition-colors"
               >
                 {section.visible ? (
-                  <Eye className="w-4 h-4" />
+                  <Eye className="w-4 h-4 text-cyan-400" />
                 ) : (
-                  <EyeOff className="w-4 h-4 text-muted-foreground" />
+                  <EyeOff className="w-4 h-4 text-gray-500" />
                 )}
               </button>
               <button
                 onClick={() => deleteSection(index)}
-                className="p-1 hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
+                className="p-1 hover:bg-red-500/20 hover:text-red-400 rounded transition-colors text-gray-400"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
 
             {expandedSection === index && (
-              <div className="p-3 border-t bg-muted/30">
+              <div className="p-3 border-t border-white/10 bg-white/5">
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="w-full justify-start"
+                  className="w-full justify-start text-white hover:bg-white/10 hover:text-cyan-400"
                   onClick={() => setEditingSection(index)}
                 >
                   Edit content
@@ -115,32 +115,32 @@ export function SectionManager({
         ))}
       </div>
 
-      <div className="p-4 border-t space-y-2">
+      <div className="p-4 border-t border-white/10 space-y-2">
           <Button 
             variant="outline" 
             size="sm" 
-            className="w-full justify-start relative pl-6"
+            className="w-full justify-start relative pl-6 bg-white/5 border-white/10 text-white hover:bg-white/10"
           >
-            <span className="absolute left-0 top-0 w-1 h-full bg-[#3B82F6] rounded-l"></span>
+            <span className="absolute left-0 top-0 w-1 h-full bg-blue-500 rounded-l"></span>
             + Add Section
           </Button>
         {onAddCalculator && (
           <Button 
             variant="outline"
             size="sm"
-            className="w-full justify-start relative pl-6"
+            className="w-full justify-start relative pl-6 bg-white/5 border-white/10 text-white hover:bg-white/10"
             onClick={onAddCalculator}
           >
-            <span className="absolute left-0 top-0 w-1 h-full bg-[#A855F7] rounded-l"></span>
+            <span className="absolute left-0 top-0 w-1 h-full bg-purple-500 rounded-l"></span>
             + Calculator
           </Button>
         )}
         <Button 
           variant="outline" 
           size="sm"
-          className="w-full justify-start relative pl-6"
+          className="w-full justify-start relative pl-6 bg-white/5 border-white/10 text-white hover:bg-white/10"
         >
-          <span className="absolute left-0 top-0 w-1 h-full bg-[#F97316] rounded-l"></span>
+          <span className="absolute left-0 top-0 w-1 h-full bg-orange-500 rounded-l"></span>
           ⚡ AI Improve
         </Button>
       </div>
