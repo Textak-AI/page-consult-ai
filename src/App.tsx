@@ -36,6 +36,7 @@ const App = () => (
             <Route path="/wizard/review" element={<WizardReview />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/generate" element={<Generate />} />
+            <Route path="/generate/:pageId" element={<Generate />} />
             <Route path="/gallery-test" element={<GalleryTest />} />
             <Route path="/hero-showcase" element={<HeroShowcase />} />
             <Route path="/section-selector" element={<SectionSelectorDemo />} />
