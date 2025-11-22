@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -62,8 +62,17 @@ type Section = {
 };
 
 export default function Generate() {
+  return (
+    <EditingProvider>
+      <GenerateContent />
+    </EditingProvider>
+  );
+}
+
+function GenerateContent() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { pageId } = useParams();
   const { toast } = useToast();
   const [phase, setPhase] = useState<Phase>("loading");
   const [progress, setProgress] = useState(0);
@@ -89,7 +98,41 @@ export default function Generate() {
 
   const loadConsultation = async () => {
     try {
-      // FIRST: Check if data was passed from demo via React Router state
+      // FIRST: Check if we're loading an existing page by ID
+      if (pageId) {
+        console.log('🔍 Loading existing page:', pageId);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          navigate("/signup");
+          return;
+        }
+
+        const { data: existingPage, error } = await supabase
+          .from("landing_pages")
+          .select("*")
+          .eq("id", pageId)
+          .eq("user_id", user.id)
+          .single();
+
+        if (error || !existingPage) {
+          console.error("❌ Page not found:", error);
+          toast({
+            title: "Page not found",
+            description: "Could not find the requested page.",
+            variant: "destructive",
+          });
+          navigate("/");
+          return;
+        }
+
+        console.log("✅ Loaded existing page:", existingPage);
+        setPageData(existingPage);
+        setSections((existingPage.sections as Section[]) || []);
+        setPhase("editor");
+        return;
+      }
+
+      // SECOND: Check if data was passed from demo via React Router state
       const demoData = location.state?.consultationData;
 
       console.log('🔍 Generate page load - checking for consultation data...');
