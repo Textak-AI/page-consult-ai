@@ -11,7 +11,7 @@ import { AIConsultantSidebar } from "@/components/editor/AIConsultantSidebar";
 import { CalculatorUpgradeModal } from "@/components/editor/CalculatorUpgradeModal";
 import { StylePicker } from "@/components/editor/StylePicker";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
-import logo from "@/assets/pageconsult-logo.svg";
+import logo from "/logo/whiteAsset_3combimark_darkmode.svg";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
