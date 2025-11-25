@@ -9,6 +9,7 @@ import { MessageCircle, Loader2 } from "lucide-react";
 import { useSession } from "@/contexts/SessionContext";
 import { EmailCaptureModal } from "@/components/editor/EmailCaptureModal";
 import { WelcomeBackModal } from "@/components/editor/WelcomeBackModal";
+import iconmark from "@/assets/iconmark-darkmode.svg";
 
 type Message = {
   role: "ai" | "user";
@@ -705,8 +706,13 @@ export default function Wizard() {
             {messages.map((message, index) => (
               <div
                 key={index}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex gap-3 items-start ${message.role === "user" ? "justify-end" : "justify-start"}`}
               >
+                {message.role === "ai" && (
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center p-1.5">
+                    <img src={iconmark} alt="AI" className="w-full h-full object-contain" />
+                  </div>
+                )}
                 <div
                   className={`max-w-[80%] rounded-2xl px-5 py-4 ${
                     message.role === "user"
@@ -720,7 +726,10 @@ export default function Wizard() {
             ))}
             
             {isTyping && (
-              <div className="flex justify-start">
+              <div className="flex gap-3 items-start justify-start">
+                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center p-1.5">
+                  <img src={iconmark} alt="AI" className="w-full h-full object-contain" />
+                </div>
                 <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-5 py-4">
                   <div className="flex gap-1">
                     <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
