@@ -656,7 +656,7 @@ export default function Wizard() {
           <img 
             src="/public/logo/whiteAsset_3combimark_darkmode.svg" 
             alt="PageConsult AI" 
-            className="h-10 w-auto brightness-110"
+            className="h-7 w-auto brightness-110"
           />
         </a>
         
