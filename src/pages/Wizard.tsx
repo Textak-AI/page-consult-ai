@@ -7,7 +7,6 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { MessageCircle, Loader2 } from "lucide-react";
 import { useSession } from "@/contexts/SessionContext";
-import { EmailCaptureModal } from "@/components/editor/EmailCaptureModal";
 import { WelcomeBackModal } from "@/components/editor/WelcomeBackModal";
 import iconmark from "@/assets/iconmark-darkmode.svg";
 
@@ -47,10 +46,8 @@ export default function Wizard() {
   const [consultationId, setConsultationId] = useState<string | null>(null);
   
   // Session modals
-  const [emailCaptureOpen, setEmailCaptureOpen] = useState(false);
   const [welcomeBackOpen, setWelcomeBackOpen] = useState(false);
   const [welcomeBackData, setWelcomeBackData] = useState<any>(null);
-  const [hasShownEmailCapture, setHasShownEmailCapture] = useState(false);
   
   // Prevent duplicate initialization in React StrictMode
   const initializedRef = useRef(false);
@@ -423,11 +420,7 @@ export default function Wizard() {
     addUserMessage(targetAudience);
     await saveProgress({ target_audience: targetAudience });
     
-    // Show email capture modal after question 3 (first time only)
-    if (!hasShownEmailCapture && step === 3) {
-      setHasShownEmailCapture(true);
-      setTimeout(() => setEmailCaptureOpen(true), 1000);
-    }
+    // Note: Email capture not needed - users are already authenticated
     
     // Check if this is professional services - if so, ask for service type
     if (selectedIndustry === "professional") {
@@ -982,21 +975,7 @@ export default function Wizard() {
         </div>
       </main>
       
-      {/* Email capture modal */}
-      <EmailCaptureModal
-        open={emailCaptureOpen}
-        onOpenChange={setEmailCaptureOpen}
-        onEmailSubmit={async (email) => {
-          await setUserEmail(email);
-          toast({
-            title: "✓ Email saved",
-            description: "Your progress is bookmarked. You can return anytime!",
-            duration: 3000
-          });
-        }}
-      />
-      
-      {/* Welcome back modal */}
+      {/* Modals removed - users are already authenticated */}
       <WelcomeBackModal
         open={welcomeBackOpen}
         onOpenChange={setWelcomeBackOpen}
