@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -52,13 +53,23 @@ const Header = () => {
             </a>
           </nav>
 
-          <Button 
-            variant="default" 
-            size="default" 
-            className="bg-white text-slate-900 font-semibold px-6 py-2.5 rounded-xl shadow-xl shadow-white/20 hover:shadow-2xl hover:shadow-white/30 hover:scale-105 transition-all duration-300"
-          >
-            Start Free
-          </Button>
+          <div className="flex items-center gap-4">
+            <Link 
+              to="/signup?mode=login"
+              className="text-gray-300 hover:text-white transition-colors font-medium"
+            >
+              Login
+            </Link>
+            <Link to="/signup">
+              <Button 
+                variant="default" 
+                size="default" 
+                className="bg-white text-slate-900 font-semibold px-6 py-2.5 rounded-xl shadow-xl shadow-white/20 hover:shadow-2xl hover:shadow-white/30 hover:scale-105 transition-all duration-300"
+              >
+                Start Free
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </header>

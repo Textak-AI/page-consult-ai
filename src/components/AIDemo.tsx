@@ -234,15 +234,24 @@ const AIDemo = () => {
                   <div className="text-cyan-400 text-sm font-medium">Building your strategy...</div>
                 </div>
               </div>
-              <button className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-cyan-500/50 hover:scale-105 transform transition-all duration-300">
-                → Try Free
-              </button>
+              <div className="flex items-center gap-3">
+                <Link 
+                  to="/signup?mode=login" 
+                  className="text-cyan-400 hover:text-cyan-300 font-semibold text-sm transition-colors"
+                >
+                  Login
+                </Link>
+                <Link to="/signup">
+                  <button className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-cyan-500/50 hover:scale-105 transform transition-all duration-300">
+                    → Try Free
+                  </button>
+                </Link>
+              </div>
             </div>
 
             <div 
               ref={chatContainerRef}
-              className="p-8 space-y-6 max-h-[500px] md:max-h-[560px] lg:max-h-[600px] overflow-y-auto"
-              style={{ scrollBehavior: 'smooth' }}
+              className="p-8 space-y-6 max-h-[500px] md:max-h-[560px] lg:max-h-[600px] overflow-y-auto scroll-smooth"
             >
               {messages.map((message, index) => (
                 <div
