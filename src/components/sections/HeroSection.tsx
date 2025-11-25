@@ -105,7 +105,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         )}
         
         <h1
-          className={`text-5xl font-bold leading-tight ${
+          className={`text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight ${
             isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
           }`}
           style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.8)' }}
@@ -116,8 +116,8 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           {content.headline}
         </h1>
         <p 
-          className={`text-xl max-w-2xl mx-auto ${
-            content.backgroundImage ? 'text-white' : 'text-muted-foreground'
+          className={`text-lg md:text-xl lg:text-2xl leading-relaxed max-w-3xl mx-auto ${
+            content.backgroundImage ? 'text-white/95' : 'text-muted-foreground'
           } ${
             isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
           }`}
