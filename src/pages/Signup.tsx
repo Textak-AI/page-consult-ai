@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,8 @@ export default function Signup() {
   const { sessionToken } = useSession();
   const consultationData = location.state?.consultationData;
   const redirectTo = location.state?.redirectTo || "/wizard";
-  const [isLogin, setIsLogin] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [isLogin, setIsLogin] = useState(searchParams.get('mode') === 'login');
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
