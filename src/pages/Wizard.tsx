@@ -687,10 +687,10 @@ export default function Wizard() {
             Start Fresh
           </Button>
           <Button 
-            variant="outline" 
+            variant="ghost" 
             size="sm" 
             onClick={handleSaveExit}
-            className="border-white/20 text-white hover:bg-white/10"
+            className="text-white hover:bg-white/10 border border-white/20"
           >
             Save & Exit
           </Button>
