@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
 import { Link } from "react-router-dom";
-import aiChatIcon from "@/assets/ai-chat-icon.png";
-import aiChatIconInChat from "@/assets/ai-chat-icon-inchat.png";
+import iconmark from "@/assets/iconmark.svg";
 
 type Message = {
   role: "ai" | "user";
@@ -226,8 +225,8 @@ const AIDemo = () => {
           <div className="relative bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
             <div className="bg-gradient-to-r from-slate-800 to-slate-900 border-b border-white/10 p-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center overflow-hidden">
-                  <img src={aiChatIcon} alt="AI" className="w-6 h-6 object-contain" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center overflow-hidden p-2">
+                  <img src={iconmark} alt="AI" className="w-full h-full object-contain" />
                 </div>
                 <div>
                   <div className="text-white font-bold text-lg">AI Consultant Demo</div>
@@ -259,8 +258,8 @@ const AIDemo = () => {
                   className={`flex gap-4 ${message.role === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
                 >
                   {message.role === "ai" && (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                      <img src={aiChatIconInChat} alt="AI" className="w-5 h-5 object-contain" />
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center flex-shrink-0 overflow-hidden p-2">
+                      <img src={iconmark} alt="AI" className="w-full h-full object-contain" />
                     </div>
                   )}
                   
