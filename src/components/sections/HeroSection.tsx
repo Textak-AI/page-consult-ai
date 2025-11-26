@@ -57,7 +57,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
     ? {
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url(${content.backgroundImage})`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundPosition: 'center 40%',
       }
     : {};
 
