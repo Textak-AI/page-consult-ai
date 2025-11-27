@@ -43,9 +43,28 @@ export default function Signup() {
           description: "Redirecting..."
         });
         
+        // Check for existing completed consultation
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && !consultationData) {
+          const { data: existingConsultation } = await supabase
+            .from("consultations")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("status", "completed")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (existingConsultation) {
+            // User has a completed consultation, redirect to generate
+            console.log('🚀 Login: Found completed consultation, redirecting to /generate');
+            navigate("/generate", { replace: true });
+            return;
+          }
+        }
+        
         // If we have consultation data, save it and redirect to generate
         if (consultationData) {
-          const { data: { user } } = await supabase.auth.getUser();
           if (user) {
             await saveConsultationData(user.id);
           }
