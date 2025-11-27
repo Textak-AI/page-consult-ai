@@ -1,6 +1,13 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 
 export type PageStyle = "professional" | "modern" | "bold" | "minimal" | "elegant";
+
+export type Section = {
+  type: string;
+  order: number;
+  visible: boolean;
+  content: any;
+};
 
 interface EditingContextType {
   editingSection: number | null;
@@ -8,6 +15,15 @@ interface EditingContextType {
   isEditing: boolean;
   pageStyle: PageStyle;
   setPageStyle: (style: PageStyle) => void;
+  // History management
+  history: Section[][];
+  historyIndex: number;
+  canUndo: boolean;
+  canRedo: boolean;
+  pushHistory: (sections: Section[]) => void;
+  undo: () => Section[] | null;
+  redo: () => Section[] | null;
+  clearHistory: () => void;
 }
 
 const EditingContext = createContext<EditingContextType | undefined>(undefined);
@@ -15,6 +31,40 @@ const EditingContext = createContext<EditingContextType | undefined>(undefined);
 export function EditingProvider({ children }: { children: ReactNode }) {
   const [editingSection, setEditingSection] = useState<number | null>(null);
   const [pageStyle, setPageStyle] = useState<PageStyle>("professional");
+  const [history, setHistory] = useState<Section[][]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
+  const pushHistory = useCallback((sections: Section[]) => {
+    setHistory(prev => {
+      // Remove any "future" history if we're not at the end
+      const newHistory = prev.slice(0, historyIndex + 1);
+      // Add new state, limit to 50 states
+      const updatedHistory = [...newHistory, JSON.parse(JSON.stringify(sections))];
+      return updatedHistory.slice(-50);
+    });
+    setHistoryIndex(prev => Math.min(prev + 1, 49));
+  }, [historyIndex]);
+
+  const undo = useCallback((): Section[] | null => {
+    if (historyIndex > 0) {
+      setHistoryIndex(prev => prev - 1);
+      return history[historyIndex - 1];
+    }
+    return null;
+  }, [history, historyIndex]);
+
+  const redo = useCallback((): Section[] | null => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(prev => prev + 1);
+      return history[historyIndex + 1];
+    }
+    return null;
+  }, [history, historyIndex]);
+
+  const clearHistory = useCallback(() => {
+    setHistory([]);
+    setHistoryIndex(-1);
+  }, []);
 
   return (
     <EditingContext.Provider
@@ -24,6 +74,14 @@ export function EditingProvider({ children }: { children: ReactNode }) {
         isEditing: editingSection !== null,
         pageStyle,
         setPageStyle,
+        history,
+        historyIndex,
+        canUndo: historyIndex > 0,
+        canRedo: historyIndex < history.length - 1,
+        pushHistory,
+        undo,
+        redo,
+        clearHistory,
       }}
     >
       {children}

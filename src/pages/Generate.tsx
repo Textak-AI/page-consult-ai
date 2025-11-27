@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import iconmark from "@/assets/iconmark.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check, Sparkles, Wand2, Palette } from "lucide-react";
+import { Loader2, Check, Sparkles, Wand2, Palette, Undo2, Redo2 } from "lucide-react";
 import { SectionManager } from "@/components/editor/SectionManager";
 import { LivePreview } from "@/components/editor/LivePreview";
 import { PublishModal } from "@/components/editor/PublishModal";
@@ -75,6 +75,7 @@ function GenerateContent() {
   const location = useLocation();
   const { pageId } = useParams();
   const { toast } = useToast();
+  const { pushHistory, undo, redo, canUndo, canRedo, clearHistory } = useEditing();
   const [phase, setPhase] = useState<Phase>("loading");
   const [progress, setProgress] = useState(0);
   const [buildStep, setBuildStep] = useState(0);
@@ -86,6 +87,8 @@ function GenerateContent() {
   const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
   const [stylePickerOpen, setStylePickerOpen] = useState(false);
   const [calculatorUpgradeOpen, setCalculatorUpgradeOpen] = useState(false);
+  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const loadingMessages = [
     { icon: Check, text: "Analyzing your strategy" },
@@ -96,6 +99,35 @@ function GenerateContent() {
   useEffect(() => {
     loadConsultation();
   }, []);
+
+  // Auto-save when sections change (with debounce)
+  useEffect(() => {
+    if (phase === "editor" && pageData && sections.length > 0) {
+      // Clear existing timeout
+      if (autoSaveTimeout) {
+        clearTimeout(autoSaveTimeout);
+      }
+
+      // Set new timeout for auto-save after 2 seconds of no changes
+      const timeout = setTimeout(() => {
+        handleAutoSave();
+      }, 2000);
+
+      setAutoSaveTimeout(timeout);
+
+      return () => {
+        if (timeout) clearTimeout(timeout);
+      };
+    }
+  }, [sections, phase, pageData]);
+
+  // Initialize history when sections first load
+  useEffect(() => {
+    if (phase === "editor" && sections.length > 0 && !canUndo && !canRedo) {
+      clearHistory();
+      pushHistory(sections);
+    }
+  }, [phase]);
 
   const loadConsultation = async () => {
     try {
@@ -236,6 +268,22 @@ function GenerateContent() {
 
   const animatePageBuild = async (consultationData: any, userId: string) => {
     try {
+      // Check if a page already exists for this consultation
+      const { data: existingPage } = await supabase
+        .from("landing_pages")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("consultation_id", consultationData.id)
+        .maybeSingle();
+
+      if (existingPage) {
+        console.log("✅ Found existing page for consultation, loading it:", existingPage.id);
+        setPageData(existingPage);
+        setSections((existingPage.sections as Section[]) || []);
+        setPhase("editor");
+        return;
+      }
+
       // Generate content (parallel API calls inside)
       console.log("🎨 Starting page generation with data:", consultationData);
       console.time("⚡ Total generation time");
@@ -253,9 +301,9 @@ function GenerateContent() {
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
-      // Create page in database
+      // Create NEW page in database
       const slug = `${consultationData.industry?.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
-      console.log("💾 Saving page to database with slug:", slug);
+      console.log("💾 Creating new page in database with slug:", slug);
       
       const { data: pageData, error } = await supabase
         .from("landing_pages")
@@ -519,6 +567,25 @@ function GenerateContent() {
     }
   };
 
+  const handleAutoSave = async () => {
+    if (!pageData) return;
+
+    setIsSaving(true);
+    const { error } = await supabase
+      .from("landing_pages")
+      .update({ sections, updated_at: new Date().toISOString() })
+      .eq("id", pageData.id);
+
+    if (error) {
+      console.error("Auto-save failed:", error);
+    } else {
+      console.log("✓ Auto-saved");
+    }
+    
+    // Show saved indicator for 2 seconds
+    setTimeout(() => setIsSaving(false), 2000);
+  };
+
   const handleSave = async () => {
     if (!pageData) return;
 
@@ -539,6 +606,33 @@ function GenerateContent() {
         description: "Your changes have been saved.",
       });
     }
+  };
+
+  const handleUndo = () => {
+    const previousState = undo();
+    if (previousState) {
+      setSections(previousState);
+      toast({
+        title: "Undone",
+        description: "Reverted to previous version",
+      });
+    }
+  };
+
+  const handleRedo = () => {
+    const nextState = redo();
+    if (nextState) {
+      setSections(nextState);
+      toast({
+        title: "Redone",
+        description: "Restored next version",
+      });
+    }
+  };
+
+  const updateSections = (newSections: Section[]) => {
+    setSections(newSections);
+    pushHistory(newSections);
   };
 
   const handlePreview = () => {
@@ -684,8 +778,13 @@ function GenerateContent() {
         consultation={consultation}
         pageData={pageData}
         sections={sections}
-        setSections={setSections}
+        setSections={updateSections}
         handleSave={handleSave}
+        handleUndo={handleUndo}
+        handleRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        isSaving={isSaving}
         handlePreview={handlePreview}
         publishModalOpen={publishModalOpen}
         setPublishModalOpen={setPublishModalOpen}
@@ -706,6 +805,11 @@ function EditorContent({
   sections,
   setSections,
   handleSave,
+  handleUndo,
+  handleRedo,
+  canUndo,
+  canRedo,
+  isSaving,
   handlePreview,
   publishModalOpen,
   setPublishModalOpen,
@@ -718,6 +822,22 @@ function EditorContent({
 }: any) {
   const { toast } = useToast();
   const { pageStyle, setPageStyle } = useEditing();
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        if (canUndo) handleUndo();
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        if (canRedo) handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canUndo, canRedo, handleUndo, handleRedo]);
 
   const handleAddCalculator = async (config: { type: string; inputs: string[] }) => {
     // Add calculator section to the page
@@ -765,6 +885,27 @@ function EditorContent({
           <Button
             variant="outline"
             size="sm"
+            onClick={handleUndo}
+            disabled={!canUndo}
+            className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 disabled:opacity-30"
+            title="Undo (Ctrl+Z)"
+          >
+            <Undo2 className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRedo}
+            disabled={!canRedo}
+            className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 disabled:opacity-30"
+            title="Redo (Ctrl+Y)"
+          >
+            <Redo2 className="w-4 h-4" />
+          </Button>
+          <div className="w-px h-6 bg-white/10 mx-1" />
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setStylePickerOpen(true)}
             className="gap-2 relative pl-5 builder-button change-style-btn bg-white/5 border-white/10 text-white hover:bg-white/10"
           >
@@ -779,7 +920,7 @@ function EditorContent({
             className="relative pl-5 builder-button save-draft-btn bg-white/5 border-white/10 text-white hover:bg-white/10"
           >
             <span className="absolute left-0 top-0 w-1 h-full bg-yellow-500 rounded-l"></span>
-            Save Draft
+            {isSaving ? "Saving..." : "Save Draft"}
           </Button>
           <Button
             variant="outline"
