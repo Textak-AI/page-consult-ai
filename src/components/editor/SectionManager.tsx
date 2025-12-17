@@ -86,19 +86,19 @@ export function SectionManager({
                 />
                 <span className="font-medium">{getSectionTitle(section.type)}</span>
               </button>
-              {onRegenerateSection && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRegenerateSection(section.type);
-                  }}
-                  disabled={isRegenerating}
-                  className="p-1 hover:bg-purple-500/20 hover:text-purple-400 rounded transition-all opacity-0 group-hover:opacity-100"
-                  title="Regenerate this section"
-                >
-                  <RefreshCw className={cn("w-4 h-4 text-gray-400", isRegenerating && "animate-spin")} />
-                </button>
-              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRegenerateSection?.(section.type);
+                }}
+                disabled={isRegenerating}
+                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-cyan-500/20 hover:text-cyan-400"
+                title={`Regenerate ${section.type.replace(/-/g, ' ')}`}
+              >
+                <RefreshCw className={cn("h-3.5 w-3.5", isRegenerating && "animate-spin")} />
+              </Button>
               <button
                 onClick={() => toggleVisibility(index)}
                 className="p-1 hover:bg-white/10 rounded transition-colors"
