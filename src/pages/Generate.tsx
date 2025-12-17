@@ -99,7 +99,10 @@ function GenerateContent() {
     consultationData?: any;
     intelligenceData?: PersonaIntelligence;
     generatedContentData?: GeneratedContent;
+    devMode?: boolean; // Bypass auth for testing
   } | null;
+  
+  const isDevMode = navigationState?.devMode === true;
   
   const [intelligence, setIntelligence] = useState<PersonaIntelligence | null>(
     navigationState?.intelligenceData || null
@@ -190,33 +193,60 @@ function GenerateContent() {
       console.log('🔍 Generate page load - checking for consultation data...');
       console.log('📦 location.state:', location.state);
       console.log('📦 demoData:', demoData);
+      console.log('🔧 devMode:', isDevMode);
 
       if (demoData) {
-        // Data came from demo - use it directly
+        // DEV MODE: Skip auth check for testing
+        if (isDevMode) {
+          console.log("🔧 DEV MODE: Bypassing authentication");
+          const devUserId = "dev-test-user-" + Date.now();
+          
+          // Transform demo data to match expected format
+          const transformedData = {
+            id: demoData.id || "dev-consultation-" + Date.now(),
+            user_id: devUserId,
+            industry: demoData.industry,
+            service_type: demoData.specificService || demoData.service_type,
+            goal: demoData.goal,
+            target_audience: demoData.targetAudience || demoData.target_audience,
+            challenge: demoData.challenge,
+            unique_value: demoData.uniqueValue || demoData.unique_value,
+            offer: demoData.offer || demoData.goal,
+            status: "completed",
+            created_at: demoData.timestamp || new Date().toISOString(),
+          };
+
+          setConsultation(transformedData);
+          // In dev mode, skip database operations
+          await startDevGeneration(transformedData);
+          return;
+        }
+
+        // Data came from demo - use it directly (normal flow)
         console.log("✅ Using consultation data from demo:", demoData);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        navigate("/signup");
-        return;
-      }
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          navigate("/signup");
+          return;
+        }
 
-      // Transform demo data to match expected format
-      const transformedData = {
-        id: demoData.id,
-        user_id: user.id,
-        industry: demoData.industry,
-        service_type: demoData.specificService,
-        goal: demoData.goal,
-        target_audience: demoData.targetAudience,
-        challenge: demoData.challenge,
-        unique_value: demoData.uniqueValue,
-        offer: demoData.offer || demoData.goal,
-        status: "completed",
-        created_at: demoData.timestamp,
-      };
+        // Transform demo data to match expected format
+        const transformedData = {
+          id: demoData.id,
+          user_id: user.id,
+          industry: demoData.industry,
+          service_type: demoData.specificService,
+          goal: demoData.goal,
+          target_audience: demoData.targetAudience,
+          challenge: demoData.challenge,
+          unique_value: demoData.uniqueValue,
+          offer: demoData.offer || demoData.goal,
+          status: "completed",
+          created_at: demoData.timestamp,
+        };
 
         setConsultation(transformedData);
         startGeneration(transformedData, user.id);
@@ -282,6 +312,56 @@ function GenerateContent() {
     } catch (error) {
       clearInterval(progressInterval);
       throw error;
+    }
+  };
+
+  // Dev mode generation - skips database operations
+  const startDevGeneration = async (consultationData: any) => {
+    setPhase("building");
+
+    let progressInterval = setInterval(() => {
+      setProgress((prev) => Math.min(prev + 2, 90));
+    }, 200);
+
+    try {
+      console.log("🔧 DEV MODE: Starting generation without database");
+      console.time("⚡ Dev generation time");
+      const generatedSections = await generateSections(consultationData);
+      console.timeEnd("⚡ Dev generation time");
+
+      if (!generatedSections || generatedSections.length === 0) {
+        throw new Error("No sections were generated");
+      }
+
+      // Animate sections appearing
+      for (let i = 1; i <= generatedSections.length; i++) {
+        setBuildStep(i);
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+
+      // Set page data without saving to database
+      setPageData({
+        id: "dev-page-" + Date.now(),
+        title: `${consultationData.industry} Landing Page`,
+        slug: "dev-test",
+        sections: generatedSections,
+      });
+      setSections(generatedSections);
+
+      clearInterval(progressInterval);
+      setProgress(100);
+      setShowConfetti(true);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      setPhase("editor");
+      setShowConfetti(false);
+    } catch (error) {
+      clearInterval(progressInterval);
+      console.error("❌ Dev generation failed:", error);
+      toast({
+        title: "Generation failed",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
     }
   };
 
