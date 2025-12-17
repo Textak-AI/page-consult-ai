@@ -30,6 +30,7 @@ export function SectionManager({
   isRegenerating,
 }: SectionManagerProps) {
   const [regeneratingSection, setRegeneratingSection] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
   const { setEditingSection } = useEditing();
 
   const toggleVisibility = (index: number) => {
@@ -64,6 +65,29 @@ export function SectionManager({
     setRegeneratingSection(null);
   };
 
+  const handleSectionClick = (section: Section, index: number) => {
+    setEditingSection(index);
+    setActiveSection(section.type);
+    
+    // Get the section ID for scrolling
+    const sectionId = getSectionId(section.type);
+    const sectionElement = document.getElementById(sectionId);
+    
+    if (sectionElement) {
+      // Smooth scroll to section
+      sectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Add glow effect
+      sectionElement.classList.add('section-highlight-glow');
+      
+      // Remove glow after 2 seconds
+      setTimeout(() => {
+        sectionElement.classList.remove('section-highlight-glow');
+        setActiveSection(null);
+      }, 2000);
+    }
+  };
+
   const getSectionTitle = (type: string) => {
     const titles: { [key: string]: string } = {
       hero: "Hero",
@@ -78,7 +102,9 @@ export function SectionManager({
     return titles[type] || type.replace(/_/g, ' ').replace(/-/g, ' ');
   };
 
-  // Removed emoji icons - using action icons on hover instead
+  const getSectionId = (type: string) => {
+    return `section-${type}`;
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -91,6 +117,7 @@ export function SectionManager({
       <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
         {sections.map((section, index) => {
           const isCurrentlyRegenerating = regeneratingSection === section.type;
+          const isActive = activeSection === section.type;
           return (
             <div
               key={index}
@@ -98,9 +125,10 @@ export function SectionManager({
                 "group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all cursor-pointer",
                 section.visible 
                   ? "bg-white/5 hover:bg-white/10 border border-white/10" 
-                  : "bg-white/[0.02] opacity-50 border border-white/5"
+                  : "bg-white/[0.02] opacity-50 border border-white/5",
+                isActive && "ring-2 ring-cyan-400/50 bg-cyan-500/10"
               )}
-              onClick={() => setEditingSection(index)}
+              onClick={() => handleSectionClick(section, index)}
             >
               {/* Title - no emoji, just text */}
               <span className={cn(

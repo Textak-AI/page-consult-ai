@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Brain, User, AlertTriangle, Sparkles, HelpCircle, BarChart3, MessageSquare, ChevronDown, Lightbulb, Zap, XCircle, MousePointerClick } from "lucide-react";
+import { Brain, User, AlertTriangle, Sparkles, HelpCircle, BarChart3, MessageSquare, ChevronDown, Lightbulb, Zap, XCircle, MousePointerClick, Link2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import type { PersonaIntelligence } from "@/services/intelligence/types";
@@ -15,6 +15,63 @@ interface LandingPageBestPractices {
 interface PersonaInsightsPanelProps {
   intelligence: PersonaIntelligence;
   landingPageBestPractices?: LandingPageBestPractices | null;
+}
+
+// Helper function to strip citations like [1], [2], etc. and markdown
+function cleanText(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/\[\d+\]/g, '') // Remove [1], [2], etc.
+    .replace(/\*\*/g, '') // Remove markdown bold
+    .replace(/\*/g, '') // Remove markdown italic
+    .replace(/\s{2,}/g, ' ') // Collapse multiple spaces
+    .trim();
+}
+
+// Extract numeric value from a stat claim
+function extractStatValue(claim: string): { value: string; label: string } | null {
+  // Match patterns like "$22,500", "36", "21,714", "85%", etc.
+  const patterns = [
+    /(\$[\d,]+(?:\.\d+)?)/,  // Dollar amounts
+    /([\d,]+(?:\.\d+)?%)/,   // Percentages
+    /([\d,]+(?:\.\d+)?)/,    // Plain numbers
+  ];
+  
+  for (const pattern of patterns) {
+    const match = claim.match(pattern);
+    if (match) {
+      const value = match[1];
+      // Extract the label (text after the number)
+      const labelMatch = claim.replace(match[0], '').trim();
+      const cleanLabel = cleanText(labelMatch)
+        .replace(/^[-–—:,.\s]+/, '')
+        .replace(/[-–—:,.\s]+$/, '')
+        .trim();
+      
+      if (cleanLabel && cleanLabel.length > 2) {
+        return { value, label: cleanLabel.slice(0, 30) };
+      }
+    }
+  }
+  return null;
+}
+
+// Parse CTA examples - filter out citation-only entries
+function parseCtaExamples(examples: string[]): string[] {
+  return examples
+    .map(cta => cleanText(cta))
+    .filter(cta => {
+      // Filter out empty strings, citations-only, or too short
+      return cta.length > 3 && !/^\[\d+\]$/.test(cta) && !/^\d+$/.test(cta);
+    });
+}
+
+// Parse headline formulas
+function parseHeadlineFormula(item: { formula: string; example?: string }): { formula: string; example?: string } {
+  return {
+    formula: cleanText(item.formula),
+    example: item.example ? cleanText(item.example) : undefined,
+  };
 }
 
 export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }: PersonaInsightsPanelProps) {
@@ -33,6 +90,7 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
     ctas: false,
     mistakes: false,
     headlines: false,
+    sources: false,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -41,13 +99,21 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
 
   if (!persona) return null;
 
-  // Extract market statistics
-  const statistics = marketResearch?.claims
+  // Extract market statistics and parse them into clean stat cards
+  const rawStatistics = marketResearch?.claims
     ?.filter((c: any) => c.category === 'statistic' || c.claim?.match(/\d/))
-    ?.slice(0, 4) || [];
+    ?.slice(0, 6) || [];
   
-  // Get unique sources
-  const sources = [...new Set(statistics.map((s: any) => s.source).filter(Boolean))];
+  const parsedStats = rawStatistics
+    .map((s: any) => extractStatValue(s.claim))
+    .filter(Boolean)
+    .slice(0, 4);
+  
+  // Get unique sources for collapsed sources section
+  const allSources = [...new Set([
+    ...rawStatistics.map((s: any) => s.source).filter(Boolean),
+    ...(marketResearch?.sources || []),
+  ])];
 
   // Check if we have any best practices content
   const hasBestPractices = landingPageBestPractices && (
@@ -57,10 +123,30 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
     landingPageBestPractices.commonMistakes?.length
   );
 
+  // Parse CTA examples
+  const cleanCtaExamples = landingPageBestPractices?.ctaExamples 
+    ? parseCtaExamples(landingPageBestPractices.ctaExamples) 
+    : [];
+
+  // Parse headline formulas
+  const cleanHeadlines = landingPageBestPractices?.headlineFormulas
+    ?.map(parseHeadlineFormula)
+    .filter(h => h.formula.length > 5) || [];
+
+  // Parse conversion tips
+  const cleanTips = landingPageBestPractices?.conversionTips
+    ?.map(cleanText)
+    .filter(t => t.length > 5) || [];
+
+  // Parse common mistakes
+  const cleanMistakes = landingPageBestPractices?.commonMistakes
+    ?.map(cleanText)
+    .filter(m => m.length > 5) || [];
+
   return (
     <div className="border-b border-white/10 max-h-[50vh] overflow-y-auto">
-      {/* Compact Header */}
-      <div className="px-4 py-2.5 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border-b border-white/10 sticky top-0 z-10 backdrop-blur-sm">
+      {/* Compact Persona Header - FULLY OPAQUE */}
+      <div className="px-4 py-2.5 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border-b border-white/10 sticky top-0 z-10 bg-slate-900">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-purple-500/20 flex items-center justify-center">
@@ -86,19 +172,24 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
       {/* Best Practices Section */}
       {hasBestPractices && (
         <>
+          {/* LANDING PAGE STRATEGY Header */}
+          <div className="px-3 py-1.5 bg-white/[0.02] border-b border-white/5">
+            <span className="text-[10px] font-semibold text-gray-500 tracking-wider uppercase">Landing Page Strategy</span>
+          </div>
+
           {/* Conversion Tips */}
-          {landingPageBestPractices?.conversionTips && landingPageBestPractices.conversionTips.length > 0 && (
+          {cleanTips.length > 0 && (
             <CompactInsightSection
               icon={Zap}
               iconColor="text-yellow-400"
               bgColor="bg-yellow-500/10"
               title="Conversion Tips"
-              count={landingPageBestPractices.conversionTips.length}
+              count={cleanTips.length}
               isOpen={openSections.tips}
               onToggle={() => toggleSection('tips')}
             >
               <ul className="space-y-1.5">
-                {landingPageBestPractices.conversionTips.slice(0, 4).map((tip, i) => (
+                {cleanTips.slice(0, 4).map((tip, i) => (
                   <li key={i} className="flex items-start gap-2 text-xs">
                     <span className="text-yellow-400 mt-0.5">→</span>
                     <span className="text-gray-300">{tip}</span>
@@ -109,68 +200,79 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
           )}
 
           {/* CTA Suggestions */}
-          {landingPageBestPractices?.ctaExamples && landingPageBestPractices.ctaExamples.length > 0 && (
+          {cleanCtaExamples.length > 0 && (
             <CompactInsightSection
               icon={MousePointerClick}
               iconColor="text-green-400"
               bgColor="bg-green-500/10"
               title="CTA Ideas"
-              count={landingPageBestPractices.ctaExamples.length}
+              count={cleanCtaExamples.length}
               isOpen={openSections.ctas}
               onToggle={() => toggleSection('ctas')}
             >
               <div className="flex flex-wrap gap-1.5">
-                {landingPageBestPractices.ctaExamples.slice(0, 5).map((cta, i) => (
-                  <span 
+                {cleanCtaExamples.slice(0, 5).map((cta, i) => (
+                  <button 
                     key={i} 
-                    className="px-2 py-1 text-[10px] bg-green-500/10 border border-green-500/20 rounded-full text-green-300"
+                    className="px-2.5 py-1.5 text-[11px] bg-green-500/10 border border-green-500/30 rounded-md text-green-300 hover:bg-green-500/20 hover:border-green-500/50 transition-colors cursor-pointer"
+                    onClick={() => navigator.clipboard.writeText(cta)}
+                    title="Click to copy"
                   >
                     {cta}
-                  </span>
+                  </button>
                 ))}
               </div>
             </CompactInsightSection>
           )}
 
           {/* Headline Ideas */}
-          {landingPageBestPractices?.headlineFormulas && landingPageBestPractices.headlineFormulas.length > 0 && (
+          {cleanHeadlines.length > 0 && (
             <CompactInsightSection
               icon={Lightbulb}
               iconColor="text-orange-400"
               bgColor="bg-orange-500/10"
               title="Headline Ideas"
-              count={landingPageBestPractices.headlineFormulas.length}
+              count={cleanHeadlines.length}
               isOpen={openSections.headlines}
               onToggle={() => toggleSection('headlines')}
             >
-              <ul className="space-y-2">
-                {landingPageBestPractices.headlineFormulas.slice(0, 3).map((item, i) => (
-                  <li key={i} className="text-xs">
-                    <p className="text-gray-300">{item.formula}</p>
+              <div className="space-y-2">
+                {cleanHeadlines.slice(0, 3).map((item, i) => (
+                  <div 
+                    key={i} 
+                    className="p-2 bg-white/5 border border-white/10 rounded-md"
+                  >
+                    <p className="text-xs text-white font-medium">"{item.formula}"</p>
                     {item.example && (
-                      <p className="mt-0.5 text-[10px] text-orange-400/70 italic">
-                        "{item.example}"
+                      <p className="mt-1 text-[10px] text-orange-400/80 italic">
+                        Example: {item.example}
                       </p>
                     )}
-                  </li>
+                    <button 
+                      className="mt-1.5 text-[10px] text-cyan-400 hover:text-cyan-300"
+                      onClick={() => navigator.clipboard.writeText(item.formula)}
+                    >
+                      Copy formula
+                    </button>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </CompactInsightSection>
           )}
 
           {/* Common Mistakes */}
-          {landingPageBestPractices?.commonMistakes && landingPageBestPractices.commonMistakes.length > 0 && (
+          {cleanMistakes.length > 0 && (
             <CompactInsightSection
               icon={XCircle}
               iconColor="text-red-400"
               bgColor="bg-red-500/10"
               title="Avoid"
-              count={landingPageBestPractices.commonMistakes.length}
+              count={cleanMistakes.length}
               isOpen={openSections.mistakes}
               onToggle={() => toggleSection('mistakes')}
             >
               <ul className="space-y-1.5">
-                {landingPageBestPractices.commonMistakes.slice(0, 3).map((mistake, i) => (
+                {cleanMistakes.slice(0, 4).map((mistake, i) => (
                   <li key={i} className="flex items-start gap-2 text-xs">
                     <span className="text-red-400">✗</span>
                     <span className="text-gray-400">{mistake}</span>
@@ -184,7 +286,7 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
 
       {/* Persona Insights Divider */}
       <div className="px-3 py-1.5 bg-white/[0.02] border-y border-white/5">
-        <span className="text-[10px] font-semibold text-gray-600 tracking-wider uppercase">Persona Insights</span>
+        <span className="text-[10px] font-semibold text-gray-500 tracking-wider uppercase">Persona Insights</span>
       </div>
 
       {/* Primary Pain */}
@@ -198,7 +300,7 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
           onToggle={() => toggleSection('pain')}
         >
           <p className="text-xs text-gray-300 leading-relaxed">
-            {persona.painPoints[0].pain}
+            {cleanText(persona.painPoints[0].pain)}
           </p>
         </CompactInsightSection>
       )}
@@ -214,7 +316,7 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
           onToggle={() => toggleSection('desire')}
         >
           <p className="text-xs text-gray-300 leading-relaxed">
-            {persona.desires[0].desire}
+            {cleanText(persona.desires[0].desire)}
           </p>
         </CompactInsightSection>
       )}
@@ -230,42 +332,37 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
           onToggle={() => toggleSection('objection')}
         >
           <p className="text-xs text-gray-300 italic mb-2">
-            "{persona.objections[0].objection}"
+            "{cleanText(persona.objections[0].objection)}"
           </p>
           {persona.objections[0].counterArgument && (
             <div className="pl-2 border-l-2 border-cyan-500/50">
               <p className="text-xs text-cyan-300">
-                {persona.objections[0].counterArgument}
+                {cleanText(persona.objections[0].counterArgument)}
               </p>
             </div>
           )}
         </CompactInsightSection>
       )}
 
-      {/* Market Stats */}
-      {statistics.length > 0 && (
+      {/* Market Stats - Clean stat cards */}
+      {parsedStats.length > 0 && (
         <CompactInsightSection
           icon={BarChart3}
           iconColor="text-cyan-400"
           bgColor="bg-cyan-500/10"
           title="Market Stats"
-          count={statistics.length}
+          count={parsedStats.length}
           isOpen={openSections.stats}
           onToggle={() => toggleSection('stats')}
         >
-          <ul className="space-y-1.5">
-            {statistics.map((stat: any, i: number) => (
-              <li key={i} className="flex items-start gap-2 text-xs">
-                <span className="text-cyan-400">•</span>
-                <span className="text-gray-300">{stat.claim}</span>
-              </li>
+          <div className="grid grid-cols-2 gap-2">
+            {parsedStats.map((stat: any, i: number) => (
+              <div key={i} className="p-2 bg-white/5 border border-white/10 rounded-md text-center">
+                <p className="text-sm font-bold text-cyan-400">{stat.value}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">{stat.label}</p>
+              </div>
             ))}
-          </ul>
-          {sources.length > 0 && (
-            <p className="mt-2 text-[10px] text-gray-600">
-              Sources: {sources.join(', ')}
-            </p>
-          )}
+          </div>
         </CompactInsightSection>
       )}
 
@@ -286,10 +383,31 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
                 key={i} 
                 className="px-2 py-0.5 text-[10px] bg-white/5 border border-white/10 rounded text-gray-400"
               >
-                {pattern}
+                {cleanText(pattern)}
               </span>
             ))}
           </div>
+        </CompactInsightSection>
+      )}
+
+      {/* Collapsed Sources Section */}
+      {allSources.length > 0 && (
+        <CompactInsightSection
+          icon={Link2}
+          iconColor="text-gray-500"
+          bgColor="bg-gray-500/10"
+          title="Sources"
+          count={allSources.length}
+          isOpen={openSections.sources}
+          onToggle={() => toggleSection('sources')}
+        >
+          <ul className="space-y-1">
+            {allSources.slice(0, 5).map((source: string, i: number) => (
+              <li key={i} className="text-[10px] text-gray-500 truncate">
+                {source}
+              </li>
+            ))}
+          </ul>
         </CompactInsightSection>
       )}
     </div>

@@ -34,6 +34,10 @@ export function LivePreview({ sections, onSectionsChange }: LivePreviewProps) {
     setEditingSection(null);
   };
 
+  const getSectionId = (type: string) => {
+    return `section-${type}`;
+  };
+
   const renderSection = (section: Section, index: number) => {
     if (!section.visible) return null;
 
@@ -43,73 +47,83 @@ export function LivePreview({ sections, onSectionsChange }: LivePreviewProps) {
       onSectionsChange(updated);
     };
 
+    const sectionId = getSectionId(section.type);
+
     switch (section.type) {
       case "hero":
         return (
-          <HeroSection
-            key={index}
-            content={section.content}
-            onUpdate={updateSection}
-            isEditing={editingSection === index}
-          />
+          <div key={index} id={sectionId} className="transition-all duration-300">
+            <HeroSection
+              content={section.content}
+              onUpdate={updateSection}
+              isEditing={editingSection === index}
+            />
+          </div>
         );
       case "stats-bar":
         return (
-          <StatsBarSection
-            key={index}
-            statistics={section.content.statistics || []}
-          />
+          <div key={index} id={sectionId} className="transition-all duration-300">
+            <StatsBarSection
+              statistics={section.content.statistics || []}
+            />
+          </div>
         );
       case "problem-solution":
         return (
-          <ProblemSolutionSection
-            key={index}
-            content={section.content}
-            onUpdate={updateSection}
-            isEditing={editingSection === index}
-          />
+          <div key={index} id={sectionId} className="transition-all duration-300">
+            <ProblemSolutionSection
+              content={section.content}
+              onUpdate={updateSection}
+              isEditing={editingSection === index}
+            />
+          </div>
         );
       case "calculator":
         return (
-          <CalculatorSection
-            key={index}
-            content={section.content}
-            onUpdate={updateSection}
-          />
+          <div key={index} id={sectionId} className="transition-all duration-300">
+            <CalculatorSection
+              content={section.content}
+              onUpdate={updateSection}
+            />
+          </div>
         );
       case "features":
         return (
-          <FeaturesSection
-            key={index}
-            content={section.content}
-            onUpdate={updateSection}
-          />
+          <div key={index} id={sectionId} className="transition-all duration-300">
+            <FeaturesSection
+              content={section.content}
+              onUpdate={updateSection}
+            />
+          </div>
         );
       case "photo-gallery":
         return (
-          <PhotoGallerySection
-            key={index}
-            content={section.content}
-            onUpdate={updateSection}
-            isEditing={editingSection === index}
-          />
+          <div key={index} id={sectionId} className="transition-all duration-300">
+            <PhotoGallerySection
+              content={section.content}
+              onUpdate={updateSection}
+              isEditing={editingSection === index}
+            />
+          </div>
         );
       case "social-proof":
         return (
-          <SocialProofSection
-            key={index}
-            content={section.content}
-            onUpdate={updateSection}
-          />
+          <div key={index} id={sectionId} className="transition-all duration-300">
+            <SocialProofSection
+              content={section.content}
+              onUpdate={updateSection}
+            />
+          </div>
         );
       case "final-cta":
         return (
-          <FinalCTASection
-            key={index}
-            content={section.content}
-            onUpdate={updateSection}
-            isEditing={editingSection === index}
-          />
+          <div key={index} id={sectionId} className="transition-all duration-300">
+            <FinalCTASection
+              content={section.content}
+              onUpdate={updateSection}
+              isEditing={editingSection === index}
+            />
+          </div>
         );
       default:
         return null;
@@ -157,6 +171,31 @@ export function LivePreview({ sections, onSectionsChange }: LivePreviewProps) {
         .live-preview-container .card,
         .live-preview-container [class*="rounded"] {
           border-radius: var(--style-radius);
+        }
+        
+        /* Section highlight glow animation */
+        .section-highlight-glow {
+          animation: section-glow 2s ease-out forwards;
+          position: relative;
+        }
+        .section-highlight-glow::before {
+          content: '';
+          position: absolute;
+          inset: -4px;
+          border-radius: 8px;
+          border: 2px solid hsl(187, 92%, 60%);
+          box-shadow: 0 0 20px hsl(187, 92%, 60%, 0.4);
+          pointer-events: none;
+          animation: glow-fade 2s ease-out forwards;
+        }
+        @keyframes section-glow {
+          0% { background-color: hsl(187, 92%, 60%, 0.05); }
+          100% { background-color: transparent; }
+        }
+        @keyframes glow-fade {
+          0% { opacity: 1; }
+          70% { opacity: 1; }
+          100% { opacity: 0; }
         }
       `}</style>
       {isEditing && (
