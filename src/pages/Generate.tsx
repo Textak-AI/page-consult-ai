@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import iconmark from "@/assets/iconmark.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +11,7 @@ import { PublishModal } from "@/components/editor/PublishModal";
 import { AIConsultantSidebar } from "@/components/editor/AIConsultantSidebar";
 import { CalculatorUpgradeModal } from "@/components/editor/CalculatorUpgradeModal";
 import { StylePicker } from "@/components/editor/StylePicker";
+import { PageGenerationLoader } from "@/components/editor/PageGenerationLoader";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
 import { generateIntelligentContent, runIntelligencePipeline } from "@/services/intelligence";
 import type { PersonaIntelligence, GeneratedContent } from "@/services/intelligence/types";
@@ -1055,93 +1055,10 @@ function GenerateContent() {
     );
   }
 
-  // Phase 2: Building animation
+  // Phase 2: Building animation - Premium loader
   if (phase === "building") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#0f0a1f] via-[#1a1332] to-[#0f0a1f] relative overflow-hidden">
-        {/* Ambient orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
-        
-        {/* Animated iconmark */}
-        <div className="relative z-10 flex flex-col items-center space-y-8">
-          <div className="w-32 h-32 animate-pulse">
-            <img 
-              src={iconmark} 
-              alt="Loading" 
-              className="w-full h-full object-contain animate-[spin_3s_ease-in-out_infinite]"
-            />
-          </div>
-          
-          <div className="text-center space-y-3">
-            <h2 className="text-3xl font-bold text-white animate-fade-in">
-              Generating Your Page...
-            </h2>
-            <p className="text-lg text-gray-300 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              Crafting conversion-optimized sections with AI
-            </p>
-          </div>
-
-          {/* Strategy preview card */}
-          <div className="mt-8 space-y-4 bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 animate-fade-in max-w-md" style={{ animationDelay: '0.4s' }}>
-            <h3 className="text-lg font-bold text-white">📄 Your Strategy</h3>
-            <div className="space-y-2 text-sm">
-              <p className="text-gray-300">
-                <strong className="text-cyan-400">Industry:</strong> {consultation?.industry}
-              </p>
-              <p className="text-gray-300">
-                <strong className="text-cyan-400">Goal:</strong> {consultation?.goal}
-              </p>
-              <p className="text-gray-300">
-                <strong className="text-cyan-400">Audience:</strong> {consultation?.target_audience?.slice(0, 50)}...
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 p-8 relative overflow-hidden z-10 hidden">
-          <div className="space-y-4 hidden">
-            {buildStep >= 1 && (
-              <div className="animate-slide-up bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10">
-                <h1 className="text-4xl font-bold mb-4 text-white">Hero Section</h1>
-                <p className="text-gray-400">Headline and CTA</p>
-              </div>
-            )}
-            {buildStep >= 2 && (
-              <div className="animate-slide-up bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10">
-                <h2 className="text-2xl font-bold text-white">Problem / Solution</h2>
-              </div>
-            )}
-            {buildStep >= 3 && (
-              <div className="animate-slide-up bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10">
-                <h2 className="text-2xl font-bold text-white">Features</h2>
-              </div>
-            )}
-            {buildStep >= 5 && (
-              <div className="animate-slide-up bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10">
-                <h2 className="text-2xl font-bold text-white">Social Proof</h2>
-              </div>
-            )}
-            {buildStep >= 6 && (
-              <div className="animate-slide-up bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10">
-                <h2 className="text-2xl font-bold text-white">Final CTA</h2>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {showConfetti && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/80 backdrop-blur-sm z-50 animate-fade-in">
-            <div className="bg-white/10 backdrop-blur-xl p-8 rounded-2xl shadow-lg max-w-lg text-center space-y-4 border border-white/20">
-              <Sparkles className="w-12 h-12 text-cyan-400 mx-auto" />
-              <h2 className="text-3xl font-bold text-white">✨ Your Page is Ready! ✨</h2>
-              <p className="text-gray-300">
-                Built with strategic headline and 6 conversion-optimized sections
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+      <PageGenerationLoader consultation={consultation} />
     );
   }
 
