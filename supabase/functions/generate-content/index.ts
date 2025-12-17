@@ -422,24 +422,27 @@ async function handleSectionRegeneration(
 
   // Section-specific prompts
   const sectionPrompts: Record<string, string> = {
-    'hero': `Generate a new compelling headline and subheadline for the hero section.
-Return JSON: { "headline": "...", "subheadline": "...", "ctaText": "..." }`,
+    'hero': `Generate a NEW compelling headline and subheadline for the hero section.
+Return ONLY valid JSON: { "headline": "...", "subheadline": "...", "ctaText": "..." }`,
     
-    'features': `Generate 5 new benefit-focused features with icons.
-Return JSON: { "features": [{ "title": "...", "description": "...", "icon": "..." }, ...] }`,
+    'features': `Generate 5 NEW benefit-focused features.
+Return ONLY valid JSON: { "features": [{ "title": "...", "description": "...", "icon": "star" }, ...] }`,
     
-    'problem-solution': `Generate a new problem statement and solution.
-Return JSON: { "problem": "...", "solution": "..." }`,
+    'problem-solution': `Generate a NEW problem statement and solution.
+Return ONLY valid JSON: { "problem": "...", "solution": "..." }`,
     
-    'social-proof': `Generate new social proof content with statistics.
-Return JSON: { "stats": [{ "label": "...", "value": "..." }] }`,
+    'social-proof': `Generate NEW social proof content.
+Return ONLY valid JSON: { "stats": [{ "label": "...", "value": "..." }] }`,
     
-    'final-cta': `Generate a new call-to-action section.
-Return JSON: { "headline": "...", "ctaText": "..." }`,
+    'final-cta': `Generate a NEW call-to-action section.
+Return ONLY valid JSON: { "headline": "...", "ctaText": "..." }`,
+    
+    'photo-gallery': `Generate a NEW gallery title.
+Return ONLY valid JSON: { "title": "..." }`,
   };
   
   const sectionPrompt = sectionPrompts[sectionType] || 
-    `Regenerate content for the ${sectionType} section. Return appropriate JSON.`;
+    `Regenerate content for the ${sectionType} section. Return appropriate JSON only.`;
   
   // Build context from intelligence if available
   let contextInfo = '';
@@ -448,58 +451,86 @@ Return JSON: { "headline": "...", "ctaText": "..." }`,
 TARGET PERSONA: ${intelligenceContext.persona.name || 'Target Customer'}
 Primary Pain: ${intelligenceContext.persona.primaryPain || 'Not specified'}
 Primary Desire: ${intelligenceContext.persona.primaryDesire || 'Not specified'}
-Key Objections: ${intelligenceContext.persona.keyObjections?.join(', ') || 'None specified'}
-Language Patterns: ${intelligenceContext.persona.languagePatterns?.join(', ') || 'Standard'}
+Key Objections: ${(intelligenceContext.persona.keyObjections || []).join(', ') || 'None specified'}
+Language Patterns: ${(intelligenceContext.persona.languagePatterns || []).slice(0, 5).join(', ') || 'Standard professional'}
 `;
   }
   
-  const systemPrompt = `You are an expert landing page copywriter.
-Generate fresh, compelling content for a ${sectionType} section.
+  const systemPrompt = `You are an expert landing page copywriter specializing in high-converting copy.
+Generate fresh, compelling content for a ${sectionType.replace(/-/g, ' ')} section.
 
 BUSINESS CONTEXT:
-Industry: ${consultationData?.industry || 'Not specified'}
-Target Audience: ${consultationData?.target_audience || consultationData?.targetAudience || 'Not specified'}
+Industry: ${consultationData?.industry || 'General'}
+Target Audience: ${consultationData?.target_audience || consultationData?.targetAudience || 'General audience'}
 Service/Product: ${consultationData?.service_type || consultationData?.serviceType || consultationData?.challenge || 'Not specified'}
-Unique Value: ${consultationData?.unique_value || consultationData?.uniqueValue || 'Not specified'}
-Goal: ${consultationData?.goal || 'Not specified'}
+Unique Value: ${consultationData?.unique_value || consultationData?.uniqueValue || 'Quality service'}
+Goal: ${consultationData?.goal || 'Generate leads'}
 ${contextInfo}
 
-RULES:
-- Write benefit-focused, not feature-focused
-- Use specific numbers and outcomes when possible
-- Mirror the target audience's language
-- Address their primary pain point
-- Never copy the current content verbatim - create something fresh and different
+CRITICAL RULES:
+1. Write benefit-focused copy, not feature-focused
+2. Use specific numbers and outcomes when possible
+3. Mirror the target audience's language patterns
+4. Address their primary pain point directly
+5. Create something COMPLETELY DIFFERENT from the current content
+6. Return ONLY valid JSON, no markdown, no explanation
 
-CURRENT CONTENT (for reference, do NOT copy):
-${JSON.stringify(currentContent, null, 2)}
+CURRENT CONTENT (for reference - DO NOT copy or closely paraphrase):
+${JSON.stringify(currentContent || {}, null, 2)}
 
 ${sectionPrompt}`;
 
   try {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: 'Generate fresh content for this section.' }],
+      max_tokens: 1500,
+      messages: [{ 
+        role: 'user', 
+        content: 'Generate completely fresh, different content for this section. Return only JSON.' 
+      }],
       system: systemPrompt,
     });
     
     const textContent = response.content.find((c: any) => c.type === 'text');
     const rawText = (textContent as any)?.text || '{}';
     
-    // Extract JSON from response
-    const content = parseJSON(rawText);
+    console.log('📝 Raw section response:', rawText.substring(0, 200));
     
-    console.log('✅ Section regenerated:', sectionType);
+    // Extract JSON from response (handle potential markdown wrapping)
+    let content = {};
+    try {
+      // Try to find JSON in the response
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        content = JSON.parse(jsonMatch[0]);
+      }
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      // Return error if we can't parse
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Failed to parse generated content',
+          raw: rawText.substring(0, 500)
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    console.log('✅ Parsed section content:', content);
     
     return new Response(
       JSON.stringify({ success: true, content, sectionType }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+    
   } catch (error) {
     console.error('❌ Section regeneration error:', error);
     return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Regeneration failed' }),
+      JSON.stringify({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
