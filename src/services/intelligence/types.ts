@@ -160,6 +160,7 @@ export interface GeneratedContent {
   ctaText: string;
   sections: string[];
   images: ImageQueries;
+  statistics?: Array<{ value: string; label: string; source?: string }>;
   
   // Intelligence references
   intelligenceUsed: IntelligenceReference;
