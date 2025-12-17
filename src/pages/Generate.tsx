@@ -732,6 +732,82 @@ function GenerateContent() {
     }
   };
 
+  // Handle regeneration of a single section
+  const handleRegenerateSection = async (sectionType: string) => {
+    setIsRegenerating(true);
+    
+    try {
+      const consultationData = navigationState?.consultationData || consultation;
+      
+      // Build intelligence context for the API
+      const intelligenceContext = intelligence ? {
+        persona: {
+          name: intelligence.synthesizedPersona?.name,
+          primaryPain: intelligence.synthesizedPersona?.painPoints?.[0]?.pain,
+          primaryDesire: intelligence.synthesizedPersona?.desires?.[0]?.desire,
+          keyObjections: intelligence.synthesizedPersona?.objections?.map((o: any) => o.objection),
+          languagePatterns: intelligence.synthesizedPersona?.languagePatterns,
+        },
+        market: {
+          topPainPoints: intelligence.marketResearch?.painPoints,
+          keyStatistics: intelligence.marketResearch?.claims?.map((c: any) => c.claim),
+        }
+      } : null;
+      
+      // Get current section content for context
+      const currentSection = sections.find(s => s.type === sectionType);
+      
+      // Call edge function for section-specific regeneration
+      const { data, error } = await supabase.functions.invoke('generate-content', {
+        body: {
+          action: 'regenerate_section',
+          sectionType,
+          consultationData: {
+            industry: consultationData.industry,
+            target_audience: consultationData.target_audience,
+            service_type: consultationData.service_type,
+            challenge: consultationData.challenge,
+            goal: consultationData.goal,
+            unique_value: consultationData.unique_value,
+            offer: consultationData.offer,
+          },
+          intelligenceContext,
+          currentContent: currentSection?.content
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.success && data?.content) {
+        // Update just that section
+        setSections(prev => prev.map(section => 
+          section.type === sectionType 
+            ? { ...section, content: { ...section.content, ...data.content } }
+            : section
+        ));
+        
+        // Save to undo history
+        pushHistory(sections);
+        
+        toast({
+          title: 'Section Regenerated',
+          description: `${sectionType.replace(/-/g, ' ')} updated with fresh content`,
+        });
+      } else {
+        throw new Error(data?.error || 'Regeneration failed');
+      }
+    } catch (err) {
+      console.error('Section regeneration error:', err);
+      toast({
+        title: 'Regeneration Failed',
+        description: err instanceof Error ? err.message : 'Please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
   const handleAutoSave = async () => {
     if (!pageData) return;
 
@@ -1277,6 +1353,8 @@ function EditorContent({
               onSectionsChange={setSections}
               onSave={handleSave}
               onAddCalculator={() => setCalculatorUpgradeOpen(true)}
+              onRegenerateSection={handleRegenerateSection}
+              isRegenerating={isRegenerating}
             />
           </div>
         </div>
