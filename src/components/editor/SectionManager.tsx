@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Eye, EyeOff, Trash2, GripVertical } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, Trash2, GripVertical, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { useEditing } from "@/contexts/EditingContext";
+import { cn } from "@/lib/utils";
 
 type Section = {
   type: string;
@@ -15,6 +16,8 @@ interface SectionManagerProps {
   onSectionsChange: (sections: Section[]) => void;
   onSave: () => void;
   onAddCalculator?: () => void;
+  onRegenerateSection?: (sectionType: string) => void;
+  isRegenerating?: boolean;
 }
 
 export function SectionManager({
@@ -22,6 +25,8 @@ export function SectionManager({
   onSectionsChange,
   onSave,
   onAddCalculator,
+  onRegenerateSection,
+  isRegenerating,
 }: SectionManagerProps) {
   const [expandedSection, setExpandedSection] = useState<number | null>(null);
   const { setEditingSection } = useEditing();
@@ -66,7 +71,7 @@ export function SectionManager({
         {sections.map((section, index) => (
           <div
             key={index}
-            className="border border-white/10 rounded-lg overflow-hidden bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors"
+            className="group border border-white/10 rounded-lg overflow-hidden bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors"
           >
             <div className="flex items-center p-3 gap-2">
               <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
@@ -81,6 +86,19 @@ export function SectionManager({
                 />
                 <span className="font-medium">{getSectionTitle(section.type)}</span>
               </button>
+              {onRegenerateSection && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRegenerateSection(section.type);
+                  }}
+                  disabled={isRegenerating}
+                  className="p-1 hover:bg-purple-500/20 hover:text-purple-400 rounded transition-all opacity-0 group-hover:opacity-100"
+                  title="Regenerate this section"
+                >
+                  <RefreshCw className={cn("w-4 h-4 text-gray-400", isRegenerating && "animate-spin")} />
+                </button>
+              )}
               <button
                 onClick={() => toggleVisibility(index)}
                 className="p-1 hover:bg-white/10 rounded transition-colors"

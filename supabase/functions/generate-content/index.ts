@@ -37,14 +37,16 @@ const MarketContextSchema = z.object({
 });
 
 const RequestSchema = z.object({
-  action: z.enum(['generate_content', 'synthesize_persona']),
+  action: z.enum(['generate_content', 'synthesize_persona', 'regenerate_section']),
   consultationData: ConsultationDataSchema.optional(),
   intelligenceContext: z.object({
-    persona: PersonaContextSchema,
-    market: MarketContextSchema,
+    persona: PersonaContextSchema.partial(),
+    market: MarketContextSchema.partial(),
   }).optional().nullable(),
   inputs: z.any().optional(),
   marketResearch: z.any().optional(),
+  sectionType: z.string().optional(),
+  currentContent: z.any().optional(),
 });
 
 serve(async (req) => {
@@ -64,7 +66,7 @@ serve(async (req) => {
       );
     }
 
-    const { action, consultationData, intelligenceContext, inputs, marketResearch } = parsed.data;
+    const { action, consultationData, intelligenceContext, inputs, marketResearch, sectionType, currentContent } = parsed.data;
     
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     if (!ANTHROPIC_API_KEY) {
@@ -83,6 +85,10 @@ serve(async (req) => {
 
     if (action === 'generate_content') {
       return await handleContentGeneration(anthropic, consultationData, intelligenceContext, corsHeaders);
+    }
+
+    if (action === 'regenerate_section') {
+      return await handleSectionRegeneration(anthropic, sectionType!, consultationData, intelligenceContext, currentContent, corsHeaders);
     }
 
     return new Response(
@@ -398,5 +404,103 @@ function parseJSON(text: string): any {
       return JSON.parse(jsonMatch[0]);
     }
     throw new Error('Failed to parse JSON response');
+  }
+}
+
+/**
+ * Handle section-specific regeneration
+ */
+async function handleSectionRegeneration(
+  anthropic: Anthropic,
+  sectionType: string,
+  consultationData: any,
+  intelligenceContext: any,
+  currentContent: any,
+  corsHeaders: Record<string, string>
+) {
+  console.log('🔄 Regenerating section:', sectionType);
+
+  // Section-specific prompts
+  const sectionPrompts: Record<string, string> = {
+    'hero': `Generate a new compelling headline and subheadline for the hero section.
+Return JSON: { "headline": "...", "subheadline": "...", "ctaText": "..." }`,
+    
+    'features': `Generate 5 new benefit-focused features with icons.
+Return JSON: { "features": [{ "title": "...", "description": "...", "icon": "..." }, ...] }`,
+    
+    'problem-solution': `Generate a new problem statement and solution.
+Return JSON: { "problem": "...", "solution": "..." }`,
+    
+    'social-proof': `Generate new social proof content with statistics.
+Return JSON: { "stats": [{ "label": "...", "value": "..." }] }`,
+    
+    'final-cta': `Generate a new call-to-action section.
+Return JSON: { "headline": "...", "ctaText": "..." }`,
+  };
+  
+  const sectionPrompt = sectionPrompts[sectionType] || 
+    `Regenerate content for the ${sectionType} section. Return appropriate JSON.`;
+  
+  // Build context from intelligence if available
+  let contextInfo = '';
+  if (intelligenceContext?.persona) {
+    contextInfo = `
+TARGET PERSONA: ${intelligenceContext.persona.name || 'Target Customer'}
+Primary Pain: ${intelligenceContext.persona.primaryPain || 'Not specified'}
+Primary Desire: ${intelligenceContext.persona.primaryDesire || 'Not specified'}
+Key Objections: ${intelligenceContext.persona.keyObjections?.join(', ') || 'None specified'}
+Language Patterns: ${intelligenceContext.persona.languagePatterns?.join(', ') || 'Standard'}
+`;
+  }
+  
+  const systemPrompt = `You are an expert landing page copywriter.
+Generate fresh, compelling content for a ${sectionType} section.
+
+BUSINESS CONTEXT:
+Industry: ${consultationData?.industry || 'Not specified'}
+Target Audience: ${consultationData?.target_audience || consultationData?.targetAudience || 'Not specified'}
+Service/Product: ${consultationData?.service_type || consultationData?.serviceType || consultationData?.challenge || 'Not specified'}
+Unique Value: ${consultationData?.unique_value || consultationData?.uniqueValue || 'Not specified'}
+Goal: ${consultationData?.goal || 'Not specified'}
+${contextInfo}
+
+RULES:
+- Write benefit-focused, not feature-focused
+- Use specific numbers and outcomes when possible
+- Mirror the target audience's language
+- Address their primary pain point
+- Never copy the current content verbatim - create something fresh and different
+
+CURRENT CONTENT (for reference, do NOT copy):
+${JSON.stringify(currentContent, null, 2)}
+
+${sectionPrompt}`;
+
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: 'Generate fresh content for this section.' }],
+      system: systemPrompt,
+    });
+    
+    const textContent = response.content.find((c: any) => c.type === 'text');
+    const rawText = (textContent as any)?.text || '{}';
+    
+    // Extract JSON from response
+    const content = parseJSON(rawText);
+    
+    console.log('✅ Section regenerated:', sectionType);
+    
+    return new Response(
+      JSON.stringify({ success: true, content, sectionType }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('❌ Section regeneration error:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Regeneration failed' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 }
