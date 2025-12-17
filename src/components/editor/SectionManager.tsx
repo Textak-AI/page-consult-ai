@@ -57,7 +57,7 @@ export function SectionManager({
   };
 
   return (
-    <div className="w-80 border-r border-white/10 backdrop-blur-md bg-white/5 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto">
       <div className="p-4 border-b border-white/10">
         <h2 className="font-semibold text-lg text-white">Sections</h2>
       </div>
