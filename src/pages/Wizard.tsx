@@ -346,27 +346,14 @@ export default function Wizard() {
     console.log('✅ Intelligence gathering complete', { hasIntelligence: !!intelligence, hasContent: !!content });
     setIntelligenceData(intelligence);
     setGeneratedContentData(content);
-    
-    // Auto-advance to next step (step 5: service type for professional, or challenge for others)
-    const isProfessional = selectedIndustry === "professional";
-    setStep(5);
-    
-    addAIMessage(
-      intelligence 
-        ? `I've researched your market and built a detailed customer persona.\n\n` +
-          (isProfessional 
-            ? `Now, what type of professional service do you provide?\n\n(Examples: driveway replacement, legal services, accounting, home improvement...)`
-            : `What's the biggest problem or challenge your audience faces that your solution solves?\n\n(This becomes your compelling headline)`)
-        : (isProfessional
-            ? `What type of professional service do you provide?\n\n(Examples: driveway replacement, legal services, accounting, home improvement...)`
-            : `What's the biggest challenge your audience faces that you solve?\n\n(This becomes your compelling headline)`)
-    );
-  }, [selectedIndustry]);
+    // Don't auto-advance - user clicks "Continue" button
+  }, []);
   
   const {
     stage: intelligenceStage,
     progress: intelligenceProgress,
     error: intelligenceError,
+    intelligence: liveIntelligence,
     gatherIntelligence,
     isGathering,
     isComplete: isIntelligenceComplete
@@ -375,6 +362,32 @@ export default function Wizard() {
     userId,
     onComplete: handleIntelligenceComplete
   });
+  
+  // Build persona preview for the UI
+  const personaPreview = liveIntelligence?.synthesizedPersona ? {
+    name: liveIntelligence.synthesizedPersona.name,
+    primaryPain: liveIntelligence.synthesizedPersona.painPoints?.[0]?.pain,
+    primaryDesire: liveIntelligence.synthesizedPersona.desires?.[0]?.desire,
+    keyObjection: liveIntelligence.synthesizedPersona.objections?.[0]?.objection,
+    confidenceScore: liveIntelligence.confidenceScore
+  } : undefined;
+  
+  // Handle continue from intelligence gathering
+  const handleIntelligenceContinue = useCallback(() => {
+    const isProfessional = selectedIndustry === "professional";
+    setStep(5);
+    
+    addAIMessage(
+      liveIntelligence 
+        ? `I've researched your market and built a detailed customer persona.\n\n` +
+          (isProfessional 
+            ? `Now, what type of professional service do you provide?\n\n(Examples: driveway replacement, legal services, accounting, home improvement...)`
+            : `What's the biggest problem or challenge your audience faces that your solution solves?\n\n(This becomes your compelling headline)`)
+        : (isProfessional
+            ? `What type of professional service do you provide?\n\n(Examples: driveway replacement, legal services, accounting, home improvement...)`
+            : `What's the biggest challenge your audience faces that you solve?\n\n(This becomes your compelling headline)`)
+    );
+  }, [selectedIndustry, liveIntelligence]);
   
   // Trigger intelligence gathering when entering step 4
   useEffect(() => {
@@ -866,15 +879,15 @@ export default function Wizard() {
                 </div>
               )}
 
-              {/* Step 4: Intelligence Gathering */}
+              {/* Step 4: Intelligence Gathering - Full Screen Overlay */}
               {step === 4 && (
-                <div className="animate-fade-in">
-                  <IntelligenceGathering
-                    stage={intelligenceStage}
-                    progress={intelligenceProgress}
-                    error={intelligenceError || undefined}
-                  />
-                </div>
+                <IntelligenceGathering
+                  stage={intelligenceStage}
+                  progress={intelligenceProgress}
+                  error={intelligenceError || undefined}
+                  persona={personaPreview}
+                  onContinue={handleIntelligenceContinue}
+                />
               )}
 
               {/* Step 5: Service Type (Professional Services Only) */}
