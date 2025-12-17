@@ -99,6 +99,7 @@ function GenerateContent() {
     consultationData?: any;
     intelligenceData?: PersonaIntelligence;
     generatedContentData?: GeneratedContent;
+    landingPageBestPractices?: any;
     devMode?: boolean; // Bypass auth for testing
   } | null;
   
@@ -109,6 +110,9 @@ function GenerateContent() {
   );
   const [preGeneratedContent, setPreGeneratedContent] = useState<GeneratedContent | null>(
     navigationState?.generatedContentData || null
+  );
+  const [landingPageBestPractices, setLandingPageBestPractices] = useState<any>(
+    navigationState?.landingPageBestPractices || null
   );
   const [isRegenerating, setIsRegenerating] = useState(false);
 
@@ -1347,7 +1351,10 @@ function EditorContent({
         <div className="w-72 border-r border-white/10 bg-white/5 backdrop-blur-md flex flex-col overflow-hidden">
           {/* Persona Insights Panel */}
           {intelligence?.synthesizedPersona && (
-            <PersonaInsightsPanel intelligence={intelligence} />
+            <PersonaInsightsPanel 
+              intelligence={intelligence} 
+              landingPageBestPractices={landingPageBestPractices}
+            />
           )}
           
           {/* Section Manager */}

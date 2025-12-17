@@ -291,6 +291,7 @@ export default function DevTest() {
       state: { 
         consultationData,
         intelligenceData,
+        landingPageBestPractices: intelligenceResult?.landingPageBestPractices || null,
         devMode: true
       } 
     });
