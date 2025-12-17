@@ -10,14 +10,83 @@ interface StatsBarSectionProps {
   statistics: Statistic[];
 }
 
+// Validate and clean a statistic entry
+function isCleanStat(stat: Statistic): boolean {
+  if (!stat.value || !stat.label) return false;
+  
+  // Value should be short (number-like): e.g., "85%", "$1,200", "21,714"
+  const valueClean = stat.value.trim();
+  if (valueClean.length > 15) return false;
+  
+  // Label should be under ~40 chars (5-6 words max)
+  const labelClean = stat.label.trim();
+  if (labelClean.length > 50) return false;
+  
+  // Reject if value contains sentence-like content
+  if (valueClean.includes('(') || valueClean.includes('with') || valueClean.includes('aged')) {
+    return false;
+  }
+  
+  return true;
+}
+
+// Extract a clean value from messy text (best effort)
+function extractCleanValue(text: string): string | null {
+  if (!text) return null;
+  
+  // Try to find percentage
+  const percentMatch = text.match(/(\d+(?:\.\d+)?%)/);
+  if (percentMatch) return percentMatch[1];
+  
+  // Try to find dollar amount
+  const dollarMatch = text.match(/(\$[\d,]+(?:\.\d{2})?)/);
+  if (dollarMatch) return dollarMatch[1];
+  
+  // Try to find plain number with commas
+  const numberMatch = text.match(/^([\d,]+)/);
+  if (numberMatch && numberMatch[1].length <= 10) return numberMatch[1];
+  
+  return null;
+}
+
+// Clean up a statistic entry
+function cleanStat(stat: Statistic): Statistic | null {
+  if (isCleanStat(stat)) {
+    return {
+      value: stat.value.trim(),
+      label: stat.label.trim(),
+      source: stat.source?.trim()
+    };
+  }
+  
+  // Try to salvage by extracting clean value
+  const cleanValue = extractCleanValue(stat.value);
+  if (cleanValue && stat.label && stat.label.length < 50) {
+    return {
+      value: cleanValue,
+      label: stat.label.trim().slice(0, 40),
+      source: stat.source?.trim()
+    };
+  }
+  
+  return null;
+}
+
 export function StatsBarSection({ statistics }: StatsBarSectionProps) {
-  if (!statistics || statistics.length === 0) return null;
+  // Clean and filter statistics
+  const cleanStats = (statistics || [])
+    .map(cleanStat)
+    .filter((s): s is Statistic => s !== null)
+    .slice(0, 3);
+  
+  // Don't render if no clean stats
+  if (cleanStats.length === 0) return null;
 
   return (
     <section className="py-12 md:py-16 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-800/80 dark:via-slate-900 dark:to-slate-800/80 border-y border-slate-200 dark:border-slate-700/50">
       <div className="container mx-auto max-w-6xl px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-          {statistics.slice(0, 3).map((stat, i) => (
+          {cleanStats.map((stat, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
@@ -29,7 +98,7 @@ export function StatsBarSection({ statistics }: StatsBarSectionProps) {
               <div className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-500 dark:from-cyan-400 dark:to-cyan-300 bg-clip-text text-transparent mb-3">
                 {stat.value}
               </div>
-              <div className="text-slate-700 dark:text-slate-300 font-medium text-sm md:text-base mb-2">
+              <div className="text-slate-700 dark:text-slate-300 font-medium text-sm md:text-base mb-2 line-clamp-2">
                 {stat.label}
               </div>
               {stat.source && (
