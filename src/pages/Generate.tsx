@@ -4,7 +4,7 @@ import iconmark from "@/assets/iconmark.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check, Sparkles, Wand2, Palette, Undo2, Redo2 } from "lucide-react";
+import { Loader2, Check, Sparkles, Wand2, Palette, Undo2, Redo2, Brain, Target } from "lucide-react";
 import { SectionManager } from "@/components/editor/SectionManager";
 import { LivePreview } from "@/components/editor/LivePreview";
 import { PublishModal } from "@/components/editor/PublishModal";
@@ -12,6 +12,8 @@ import { AIConsultantSidebar } from "@/components/editor/AIConsultantSidebar";
 import { CalculatorUpgradeModal } from "@/components/editor/CalculatorUpgradeModal";
 import { StylePicker } from "@/components/editor/StylePicker";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
+import { generateIntelligentContent, runIntelligencePipeline } from "@/services/intelligence";
+import type { PersonaIntelligence, GeneratedContent } from "@/services/intelligence/types";
 import logo from "/logo/whiteAsset_3combimark_darkmode.svg";
 
 // Helper functions for transforming problem/solution statements
@@ -89,6 +91,21 @@ function GenerateContent() {
   const [calculatorUpgradeOpen, setCalculatorUpgradeOpen] = useState(false);
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Intelligence data from wizard
+  const navigationState = location.state as {
+    consultationData?: any;
+    intelligenceData?: PersonaIntelligence;
+    generatedContentData?: GeneratedContent;
+  } | null;
+  
+  const [intelligence, setIntelligence] = useState<PersonaIntelligence | null>(
+    navigationState?.intelligenceData || null
+  );
+  const [preGeneratedContent, setPreGeneratedContent] = useState<GeneratedContent | null>(
+    navigationState?.generatedContentData || null
+  );
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   const loadingMessages = [
     { icon: Check, text: "Analyzing your strategy" },
@@ -351,11 +368,41 @@ function GenerateContent() {
 
   const generateSections = async (consultationData: any): Promise<Section[]> => {
     try {
-      // Use new intelligent content generation
-      const { generateIntelligentContent } = await import("@/lib/generateIntelligentContent");
+      // PRIORITY 1: Use pre-generated content from wizard if available
+      if (preGeneratedContent) {
+        console.log('✅ Using pre-generated content from wizard');
+        return await mapGeneratedContentToSections(preGeneratedContent, consultationData);
+      }
 
-      console.log("🚀 Starting intelligent content generation...");
-      const generated = await generateIntelligentContent({
+      // PRIORITY 2: Generate with intelligence if available
+      if (intelligence) {
+        console.log('🧠 Generating with market intelligence');
+        const result = await generateIntelligentContent(
+          {
+            industry: consultationData.industry,
+            targetAudience: consultationData.target_audience,
+            serviceType: consultationData.service_type,
+            challenge: consultationData.challenge,
+            goal: consultationData.goal,
+            uniqueValue: consultationData.unique_value,
+            offer: consultationData.offer,
+          },
+          intelligence
+        );
+
+        if (result.success && result.content) {
+          console.log('✅ Intelligence-generated content:', result.content);
+          return await mapGeneratedContentToSections(result.content, consultationData);
+        } else {
+          console.warn('⚠️ Intelligence generation failed, falling back:', result.error);
+        }
+      }
+
+      // PRIORITY 3: Use old intelligent content generation (no persona)
+      const { generateIntelligentContent: oldGenerate } = await import("@/lib/generateIntelligentContent");
+
+      console.log("🚀 Starting fallback content generation...");
+      const generated = await oldGenerate({
         industry: consultationData.industry,
         service_type: consultationData.service_type,
         goal: consultationData.goal,
@@ -366,126 +413,7 @@ function GenerateContent() {
       });
 
       console.log("✅ Generated content with sections:", generated.sections);
-      console.log("🖼️ Image queries:", generated.images);
-
-      // Fetch all images in parallel for speed
-      const imagePromises: Promise<any>[] = [];
-
-      // Hero image
-      imagePromises.push(
-        supabase.functions.invoke("unsplash-search", {
-          body: { query: generated.images.hero || `${consultationData.industry} professional`, count: 1 },
-        }),
-      );
-
-      // Gallery images (limit to 3 for speed)
-      const galleryQueries = generated.images.gallery?.slice(0, 3) || [];
-      for (const query of galleryQueries) {
-        imagePromises.push(
-          supabase.functions.invoke("unsplash-search", {
-            body: { query, count: 1 },
-          }),
-        );
-      }
-
-      // Wait for all images in parallel (much faster!)
-      const imageResults = await Promise.allSettled(imagePromises);
-
-      const heroImageUrl =
-        imageResults[0]?.status === "fulfilled" ? imageResults[0].value?.data?.results?.[0]?.urls?.regular || "" : "";
-
-      const galleryImages: string[] = imageResults
-        .slice(1)
-        .filter((r) => r.status === "fulfilled")
-        .map((r) => (r as any).value?.data?.results?.[0]?.urls?.regular)
-        .filter(Boolean);
-
-      // Map generated sections to Section format
-      const mappedSections: Section[] = generated.sections.map((sectionType, index) => {
-        switch (sectionType) {
-          case "hero":
-            return {
-              type: "hero",
-              order: index,
-              visible: true,
-              content: {
-                headline: generated.headline,
-                subheadline: generated.subheadline,
-                ctaText: generated.ctaText,
-                ctaLink: "#signup",
-                backgroundImage: heroImageUrl,
-              },
-            };
-
-          case "features":
-            return {
-              type: "features",
-              order: index,
-              visible: true,
-              content: {
-                features: generated.features,
-              },
-            };
-
-          case "problem-solution":
-            return {
-              type: "problem-solution",
-              order: index,
-              visible: true,
-              content: {
-                problem: generated.problemStatement,
-                solution: generated.solutionStatement,
-              },
-            };
-
-          case "photo_gallery":
-            return {
-              type: "photo-gallery",
-              order: index,
-              visible: true,
-              content: {
-                images: galleryImages,
-                title: `${consultationData.industry} Gallery`,
-              },
-            };
-
-          case "testimonials":
-            return {
-              type: "social-proof",
-              order: index,
-              visible: true,
-              content: {
-                stats: [{ label: generated.socialProof, value: "" }],
-                industry: consultationData.industry,
-              },
-            };
-
-          case "final_cta":
-            return {
-              type: "final-cta",
-              order: index,
-              visible: true,
-              content: {
-                headline: "Ready to Get Started?",
-                ctaText: generated.ctaText,
-                ctaLink: "#signup",
-              },
-            };
-
-          default:
-            // For other section types, create placeholder
-            return {
-              type: sectionType,
-              order: index,
-              visible: true,
-              content: {
-                title: sectionType.replace(/_/g, " ").toUpperCase(),
-              },
-            };
-        }
-      });
-
-      return mappedSections;
+      return await mapOldGeneratedContent(generated, consultationData);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       console.error("❌ AI CONTENT GENERATION FAILED:", {
@@ -493,7 +421,7 @@ function GenerateContent() {
         fullError: error,
       });
 
-      // Show error to user instead of silently falling back
+      // Show error to user
       toast({
         title: "AI Content Generation Failed",
         description: `Error: ${errorMessage}. Using template content instead.`,
@@ -501,69 +429,300 @@ function GenerateContent() {
       });
 
       // Fallback to template-based generation
-      const {
-        generateHeadline: genHeadline,
-        generateSubheadline,
-        generateFeatures: genFeatures,
-        generateSocialProof: genSocialProof,
-        generateCTA,
-      } = await import("@/lib/contentGenerator");
+      return await generateFallbackSections(consultationData);
+    }
+  };
 
-      const headline = genHeadline(consultationData);
-      const subheadline = generateSubheadline(consultationData);
-      const features = genFeatures(consultationData);
-      const cta = generateCTA(consultationData);
-      const socialProof = await genSocialProof(consultationData);
-      const problemStatement = transformProblemStatement(consultationData.challenge);
-      const solutionStatement = transformSolutionStatement(consultationData.unique_value, consultationData.industry);
+  // Map new GeneratedContent format to Section[]
+  const mapGeneratedContentToSections = async (
+    content: GeneratedContent, 
+    consultationData: any
+  ): Promise<Section[]> => {
+    // Fetch images
+    const heroImageUrl = await fetchHeroImage(content.images?.hero || consultationData.industry);
+    const galleryImages = await fetchGalleryImages(content.images?.gallery || []);
 
-      return [
-        {
-          type: "hero",
-          order: 0,
-          visible: true,
-          content: {
-            headline,
-            subheadline,
-            ctaText: cta.text,
-            ctaLink: "#signup",
-          },
+    const sections: Section[] = [];
+    let order = 0;
+
+    // Hero
+    sections.push({
+      type: "hero",
+      order: order++,
+      visible: true,
+      content: {
+        headline: content.headline,
+        subheadline: content.subheadline,
+        ctaText: content.ctaText,
+        ctaLink: "#signup",
+        backgroundImage: heroImageUrl,
+      },
+    });
+
+    // Problem-Solution
+    sections.push({
+      type: "problem-solution",
+      order: order++,
+      visible: true,
+      content: {
+        problem: content.problemStatement,
+        solution: content.solutionStatement,
+      },
+    });
+
+    // Features
+    sections.push({
+      type: "features",
+      order: order++,
+      visible: true,
+      content: {
+        features: content.features,
+      },
+    });
+
+    // Gallery (if we have images)
+    if (galleryImages.length > 0) {
+      sections.push({
+        type: "photo-gallery",
+        order: order++,
+        visible: true,
+        content: {
+          images: galleryImages,
+          title: `${consultationData.industry} Gallery`,
         },
+      });
+    }
+
+    // Social Proof
+    sections.push({
+      type: "social-proof",
+      order: order++,
+      visible: true,
+      content: {
+        stats: [{ label: content.socialProof, value: "" }],
+        industry: consultationData.industry,
+      },
+    });
+
+    // Final CTA
+    sections.push({
+      type: "final-cta",
+      order: order++,
+      visible: true,
+      content: {
+        headline: "Ready to Get Started?",
+        ctaText: content.ctaText,
+        ctaLink: "#signup",
+      },
+    });
+
+    return sections;
+  };
+
+  // Map old generation format
+  const mapOldGeneratedContent = async (generated: any, consultationData: any): Promise<Section[]> => {
+    const heroImageUrl = await fetchHeroImage(generated.images?.hero || consultationData.industry);
+    const galleryImages = await fetchGalleryImages(generated.images?.gallery || []);
+
+    const mappedSections: Section[] = generated.sections.map((sectionType: string, index: number) => {
+      switch (sectionType) {
+        case "hero":
+          return {
+            type: "hero",
+            order: index,
+            visible: true,
+            content: {
+              headline: generated.headline,
+              subheadline: generated.subheadline,
+              ctaText: generated.ctaText,
+              ctaLink: "#signup",
+              backgroundImage: heroImageUrl,
+            },
+          };
+        case "features":
+          return {
+            type: "features",
+            order: index,
+            visible: true,
+            content: { features: generated.features },
+          };
+        case "problem-solution":
+          return {
+            type: "problem-solution",
+            order: index,
+            visible: true,
+            content: {
+              problem: generated.problemStatement,
+              solution: generated.solutionStatement,
+            },
+          };
+        case "photo_gallery":
+          return {
+            type: "photo-gallery",
+            order: index,
+            visible: true,
+            content: {
+              images: galleryImages,
+              title: `${consultationData.industry} Gallery`,
+            },
+          };
+        case "testimonials":
+          return {
+            type: "social-proof",
+            order: index,
+            visible: true,
+            content: {
+              stats: [{ label: generated.socialProof, value: "" }],
+              industry: consultationData.industry,
+            },
+          };
+        case "final_cta":
+          return {
+            type: "final-cta",
+            order: index,
+            visible: true,
+            content: {
+              headline: "Ready to Get Started?",
+              ctaText: generated.ctaText,
+              ctaLink: "#signup",
+            },
+          };
+        default:
+          return {
+            type: sectionType,
+            order: index,
+            visible: true,
+            content: { title: sectionType.replace(/_/g, " ").toUpperCase() },
+          };
+      }
+    });
+    return mappedSections;
+  };
+
+  // Fetch hero image from Unsplash
+  const fetchHeroImage = async (query: string): Promise<string> => {
+    try {
+      const { data } = await supabase.functions.invoke("unsplash-search", {
+        body: { query: `${query} professional`, count: 1 },
+      });
+      return data?.results?.[0]?.urls?.regular || "";
+    } catch {
+      return "";
+    }
+  };
+
+  // Fetch gallery images from Unsplash
+  const fetchGalleryImages = async (queries: string[]): Promise<string[]> => {
+    if (!queries.length) return [];
+    try {
+      const results = await Promise.allSettled(
+        queries.slice(0, 3).map(query =>
+          supabase.functions.invoke("unsplash-search", {
+            body: { query, count: 1 },
+          })
+        )
+      );
+      return results
+        .filter((r) => r.status === "fulfilled")
+        .map((r) => (r as any).value?.data?.results?.[0]?.urls?.regular)
+        .filter(Boolean);
+    } catch {
+      return [];
+    }
+  };
+
+  // Fallback template generation
+  const generateFallbackSections = async (consultationData: any): Promise<Section[]> => {
+    const {
+      generateHeadline: genHeadline,
+      generateSubheadline,
+      generateFeatures: genFeatures,
+      generateSocialProof: genSocialProof,
+      generateCTA,
+    } = await import("@/lib/contentGenerator");
+
+    const headline = genHeadline(consultationData);
+    const subheadline = generateSubheadline(consultationData);
+    const features = genFeatures(consultationData);
+    const cta = generateCTA(consultationData);
+    const socialProof = await genSocialProof(consultationData);
+    const problemStatement = transformProblemStatement(consultationData.challenge);
+    const solutionStatement = transformSolutionStatement(consultationData.unique_value, consultationData.industry);
+
+    return [
+      {
+        type: "hero",
+        order: 0,
+        visible: true,
+        content: { headline, subheadline, ctaText: cta.text, ctaLink: "#signup" },
+      },
+      {
+        type: "problem-solution",
+        order: 1,
+        visible: true,
+        content: { problem: problemStatement, solution: solutionStatement },
+      },
+      {
+        type: "features",
+        order: 2,
+        visible: true,
+        content: { features },
+      },
+      {
+        type: "social-proof",
+        order: 3,
+        visible: true,
+        content: { ...socialProof, industry: consultationData.industry },
+      },
+      {
+        type: "final-cta",
+        order: 4,
+        visible: true,
+        content: { headline: "Ready to Get Started?", ctaText: cta.text, ctaLink: "#signup" },
+      },
+    ];
+  };
+
+  // Handle regeneration with intelligence
+  const handleRegenerate = async () => {
+    setIsRegenerating(true);
+    try {
+      const consultationData = navigationState?.consultationData || consultation;
+      
+      const result = await generateIntelligentContent(
         {
-          type: "problem-solution",
-          order: 1,
-          visible: true,
-          content: {
-            problem: problemStatement,
-            solution: solutionStatement,
-          },
+          industry: consultationData.industry,
+          targetAudience: consultationData.target_audience,
+          serviceType: consultationData.service_type,
+          challenge: consultationData.challenge,
+          goal: consultationData.goal,
+          uniqueValue: consultationData.unique_value,
+          offer: consultationData.offer,
         },
-        {
-          type: "features",
-          order: 2,
-          visible: true,
-          content: { features },
-        },
-        {
-          type: "social-proof",
-          order: 3,
-          visible: true,
-          content: {
-            ...socialProof,
-            industry: consultationData.industry,
-          },
-        },
-        {
-          type: "final-cta",
-          order: 4,
-          visible: true,
-          content: {
-            headline: "Ready to Get Started?",
-            ctaText: cta.text,
-            ctaLink: "#signup",
-          },
-        },
-      ];
+        intelligence
+      );
+
+      if (result.success && result.content) {
+        const newSections = await mapGeneratedContentToSections(result.content, consultationData);
+        setSections(newSections);
+        toast({
+          title: "Content Regenerated",
+          description: intelligence 
+            ? "New content generated using market intelligence" 
+            : "New content generated",
+        });
+      } else {
+        throw new Error(result.error || "Regeneration failed");
+      }
+    } catch (err) {
+      console.error("Regeneration error:", err);
+      toast({
+        title: "Regeneration Failed",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRegenerating(false);
     }
   };
 
@@ -794,6 +953,10 @@ function GenerateContent() {
         setStylePickerOpen={setStylePickerOpen}
         calculatorUpgradeOpen={calculatorUpgradeOpen}
         setCalculatorUpgradeOpen={setCalculatorUpgradeOpen}
+        intelligence={intelligence}
+        preGeneratedContent={preGeneratedContent}
+        isRegenerating={isRegenerating}
+        handleRegenerate={handleRegenerate}
       />
     </EditingProvider>
   );
@@ -819,6 +982,10 @@ function EditorContent({
   setStylePickerOpen,
   calculatorUpgradeOpen,
   setCalculatorUpgradeOpen,
+  intelligence,
+  preGeneratedContent,
+  isRegenerating,
+  handleRegenerate,
 }: any) {
   const { toast } = useToast();
   const { pageStyle, setPageStyle } = useEditing();
@@ -878,10 +1045,46 @@ function EditorContent({
       
       {/* Top toolbar */}
       <header className="h-14 border-b border-white/10 backdrop-blur-md bg-white/5 flex items-center justify-between px-4 relative z-10">
-        <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <img src={logo} alt="PageConsult AI" className="h-8 w-auto" />
-        </a>
+        <div className="flex items-center gap-4">
+          <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img src={logo} alt="PageConsult AI" className="h-8 w-auto" />
+          </a>
+          
+          {/* Intelligence badge */}
+          {intelligence && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/30">
+              <Brain className="w-4 h-4 text-purple-400" />
+              <span className="text-xs text-purple-300">
+                Persona: {intelligence.synthesizedPersona?.name || "Custom"}
+              </span>
+              {preGeneratedContent?.intelligenceUsed?.confidenceScore > 0 && (
+                <span className="text-xs text-purple-400/80">
+                  ({Math.round(preGeneratedContent.intelligenceUsed.confidenceScore * 100)}%)
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        
         <div className="flex items-center gap-2">
+          {/* Regenerate button */}
+          {intelligence && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRegenerate}
+              disabled={isRegenerating}
+              className="gap-2 bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20"
+            >
+              {isRegenerating ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Wand2 className="w-4 h-4" />
+              )}
+              Regenerate
+            </Button>
+          )}
+          
           <Button
             variant="outline"
             size="sm"
