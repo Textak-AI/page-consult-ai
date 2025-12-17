@@ -551,26 +551,42 @@ function GenerateContent() {
       },
     });
 
-    // Stats Bar (after hero) - extract statistics from intelligence data
-    const statisticsFromResearch = intelligence?.marketResearch?.claims
-      ?.filter(c => c.category === 'statistic')
-      ?.slice(0, 3)
-      ?.map(stat => {
-        // Parse the claim to extract value and label
-        const match = stat.claim.match(/^([\d,.$%KMB]+(?:\s*[-–]\s*[\d,.$%KMB]+)?)\s*(.*)$/i);
+    // Stats Bar (after hero) - use clean statistics from generated content or intelligence
+    let statisticsToShow: Array<{ value: string; label: string; source?: string }> = [];
+    
+    // First priority: use statistics from generated content
+    if (content.statistics && Array.isArray(content.statistics) && content.statistics.length > 0) {
+      statisticsToShow = content.statistics.slice(0, 3);
+    } 
+    // Fallback: try to extract from intelligence claims
+    else if (intelligence?.marketResearch?.claims) {
+      const statClaims = intelligence.marketResearch.claims
+        .filter((c: any) => c.category === 'statistic')
+        .slice(0, 3);
+      
+      statisticsToShow = statClaims.map((stat: any) => {
+        // Try to parse "21,714 wedding businesses" -> { value: "21,714", label: "wedding businesses" }
+        const match = stat.claim.match(/^([\d,.$%]+(?:[KMB])?)\s+(.*)$/i);
         if (match) {
           return { value: match[1], label: match[2], source: stat.source };
         }
-        return { value: "", label: stat.claim, source: stat.source };
-      }) || [];
+        // If no match, try to find number anywhere
+        const numMatch = stat.claim.match(/([\d,.$%]+(?:[KMB])?)/);
+        if (numMatch) {
+          const label = stat.claim.replace(numMatch[0], '').trim();
+          return { value: numMatch[1], label: label || 'Market statistic', source: stat.source };
+        }
+        return null;
+      }).filter(Boolean);
+    }
     
-    if (statisticsFromResearch.length > 0) {
+    if (statisticsToShow.length > 0) {
       sections.push({
         type: "stats-bar",
         order: order++,
         visible: true,
         content: {
-          statistics: statisticsFromResearch,
+          statistics: statisticsToShow,
         },
       });
     }
@@ -609,13 +625,13 @@ function GenerateContent() {
       });
     }
 
-    // Social Proof with testimonial
+    // Social Proof with testimonial (no duplicate stats)
     sections.push({
       type: "social-proof",
       order: order++,
       visible: true,
       content: {
-        stats: [{ label: content.socialProof, value: "" }],
+        stats: [], // Stats are shown in stats-bar section
         industry: consultationData.industry,
         testimonial: {
           quote: content.socialProof || `${consultationData.industry} professionals across the region trust us for their most important needs.`,
