@@ -1,6 +1,6 @@
-import { PageStyle } from "@/contexts/EditingContext";
+import { StylePresetName } from "@/styles/presets";
 
-export const styleVariants: Record<PageStyle, {
+export const styleVariants: Record<StylePresetName, {
   colors: {
     primary: string;
     secondary: string;
@@ -28,43 +28,14 @@ export const styleVariants: Record<PageStyle, {
     hover: string;
   };
 }> = {
-  professional: {
+  premium: {
     colors: {
-      primary: "217 33% 17%",      // Navy blue
+      primary: "217 33% 17%",      // Slate dark
       secondary: "189 95% 43%",     // Cyan
-      accent: "189 95% 43%",        // Cyan
-      background: "0 0% 100%",      // White
-      foreground: "217 33% 17%",    // Navy blue
+      accent: "264 83% 62%",        // Purple
+      background: "222 47% 11%",    // Dark slate
+      foreground: "0 0% 100%",      // White
       muted: "220 13% 95%",         // Light gray
-    },
-    typography: {
-      headingFont: "Inter",
-      bodyFont: "Inter",
-      headingWeight: "600",
-      headingSize: "1.0",           // Multiplier
-    },
-    spacing: {
-      sectionPadding: "4rem",
-      elementSpacing: "1.5rem",
-    },
-    borders: {
-      radius: "0.5rem",
-      width: "1px",
-    },
-    effects: {
-      shadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-      hover: "translateY(-2px)",
-    },
-  },
-  
-  modern: {
-    colors: {
-      primary: "264 83% 62%",       // Purple
-      secondary: "189 95% 43%",     // Cyan
-      accent: "339 90% 51%",        // Hot pink
-      background: "0 0% 100%",      // White
-      foreground: "0 0% 10%",       // Almost black
-      muted: "240 5% 96%",          // Very light gray
     },
     typography: {
       headingFont: "Inter",
@@ -78,85 +49,85 @@ export const styleVariants: Record<PageStyle, {
     },
     borders: {
       radius: "1rem",
-      width: "2px",
+      width: "1px",
     },
     effects: {
-      shadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-      hover: "scale(1.02)",
-    },
-  },
-  
-  bold: {
-    colors: {
-      primary: "0 0% 0%",           // Black
-      secondary: "45 93% 47%",      // Bright yellow
-      accent: "0 84% 60%",          // Red
-      background: "0 0% 100%",      // White
-      foreground: "0 0% 0%",        // Black
-      muted: "0 0% 90%",            // Light gray
-    },
-    typography: {
-      headingFont: "Inter",
-      bodyFont: "Inter",
-      headingWeight: "800",
-      headingSize: "1.2",
-    },
-    spacing: {
-      sectionPadding: "3rem",
-      elementSpacing: "1.25rem",
-    },
-    borders: {
-      radius: "0.25rem",
-      width: "3px",
-    },
-    effects: {
-      shadow: "0 20px 25px -5px rgb(0 0 0 / 0.2)",
+      shadow: "0 10px 30px -10px rgb(6 182 212 / 0.3)",
       hover: "translateY(-4px)",
     },
   },
   
   minimal: {
     colors: {
-      primary: "0 0% 20%",          // Dark gray
+      primary: "0 0% 10%",          // Almost black
       secondary: "0 0% 40%",        // Medium gray
       accent: "0 0% 30%",           // Gray
       background: "0 0% 100%",      // White
-      foreground: "0 0% 20%",       // Dark gray
+      foreground: "0 0% 10%",       // Almost black
       muted: "0 0% 96%",            // Off-white
     },
     typography: {
       headingFont: "Inter",
       bodyFont: "Inter",
-      headingWeight: "300",
-      headingSize: "0.95",
+      headingWeight: "500",
+      headingSize: "1.0",
+    },
+    spacing: {
+      sectionPadding: "4rem",
+      elementSpacing: "2rem",
+    },
+    borders: {
+      radius: "0.5rem",
+      width: "1px",
+    },
+    effects: {
+      shadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+      hover: "opacity: 0.9",
+    },
+  },
+  
+  bold: {
+    colors: {
+      primary: "0 0% 0%",           // Black
+      secondary: "48 96% 53%",      // Bright yellow
+      accent: "48 96% 53%",         // Yellow
+      background: "0 0% 0%",        // Black
+      foreground: "0 0% 100%",      // White
+      muted: "0 0% 15%",            // Dark gray
+    },
+    typography: {
+      headingFont: "Inter",
+      bodyFont: "Inter",
+      headingWeight: "900",
+      headingSize: "1.3",
     },
     spacing: {
       sectionPadding: "6rem",
-      elementSpacing: "3rem",
+      elementSpacing: "2.5rem",
     },
     borders: {
       radius: "0rem",
-      width: "0px",
+      width: "2px",
     },
     effects: {
-      shadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-      hover: "opacity: 0.8",
+      shadow: "0 0 40px rgb(250 204 21 / 0.4)",
+      hover: "translateY(-4px) scale(1.02)",
     },
   },
   
   elegant: {
     colors: {
-      primary: "25 20% 25%",        // Warm brown
-      secondary: "45 29% 64%",      // Warm beige
-      accent: "25 40% 50%",         // Warm accent
+      primary: "25 40% 35%",        // Warm brown
+      secondary: "36 33% 75%",      // Warm beige
+      accent: "36 55% 50%",         // Amber
       background: "43 13% 98%",     // Cream
       foreground: "25 20% 25%",     // Warm brown
       muted: "43 13% 90%",          // Light cream
     },
     typography: {
-      headingFont: "Inter",
+      headingFont: "Playfair Display",
       bodyFont: "Inter",
-      headingWeight: "500",
+      headingWeight: "400",
       headingSize: "1.05",
     },
     spacing: {
@@ -164,12 +135,12 @@ export const styleVariants: Record<PageStyle, {
       elementSpacing: "2.5rem",
     },
     borders: {
-      radius: "0.75rem",
+      radius: "0.25rem",
       width: "1px",
     },
     effects: {
       shadow: "0 4px 20px rgb(0 0 0 / 0.08)",
-      hover: "translateY(-3px)",
+      hover: "translateY(-2px)",
     },
   },
 };

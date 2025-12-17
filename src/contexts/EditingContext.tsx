@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
+import { StylePresetName, StylePreset, stylePresets } from "@/styles/presets";
 
-export type PageStyle = "professional" | "modern" | "bold" | "minimal" | "elegant";
+export type PageStyle = StylePresetName;
 
 export type Section = {
   type: string;
@@ -15,6 +16,7 @@ interface EditingContextType {
   isEditing: boolean;
   pageStyle: PageStyle;
   setPageStyle: (style: PageStyle) => void;
+  styles: StylePreset;
   // History management
   history: Section[][];
   historyIndex: number;
@@ -30,7 +32,7 @@ const EditingContext = createContext<EditingContextType | undefined>(undefined);
 
 export function EditingProvider({ children }: { children: ReactNode }) {
   const [editingSection, setEditingSection] = useState<number | null>(null);
-  const [pageStyle, setPageStyle] = useState<PageStyle>("professional");
+  const [pageStyle, setPageStyle] = useState<PageStyle>("premium");
   const [history, setHistory] = useState<Section[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
@@ -74,6 +76,7 @@ export function EditingProvider({ children }: { children: ReactNode }) {
         isEditing: editingSection !== null,
         pageStyle,
         setPageStyle,
+        styles: stylePresets[pageStyle],
         history,
         historyIndex,
         canUndo: historyIndex > 0,
