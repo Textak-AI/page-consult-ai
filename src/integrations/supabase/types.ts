@@ -107,6 +107,63 @@ export type Database = {
         }
         Relationships: []
       }
+      generation_logs: {
+        Row: {
+          confidence_score: number | null
+          consultation_id: string | null
+          created_at: string
+          generated_content: Json
+          generation_type: string
+          id: string
+          input_data: Json
+          intelligence_used: Json | null
+          persona_intelligence_id: string | null
+          regeneration_count: number | null
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          consultation_id?: string | null
+          created_at?: string
+          generated_content?: Json
+          generation_type: string
+          id?: string
+          input_data?: Json
+          intelligence_used?: Json | null
+          persona_intelligence_id?: string | null
+          regeneration_count?: number | null
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          consultation_id?: string | null
+          created_at?: string
+          generated_content?: Json
+          generation_type?: string
+          id?: string
+          input_data?: Json
+          intelligence_used?: Json | null
+          persona_intelligence_id?: string | null
+          regeneration_count?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generation_logs_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generation_logs_persona_intelligence_id_fkey"
+            columns: ["persona_intelligence_id"]
+            isOneToOne: false
+            referencedRelation: "persona_intelligence"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       landing_pages: {
         Row: {
           analytics_enabled: boolean | null
@@ -165,6 +222,68 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "landing_pages_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      persona_intelligence: {
+        Row: {
+          completed_at: string | null
+          confidence_score: number | null
+          consultation_id: string | null
+          created_at: string
+          id: string
+          industry: string | null
+          location: string | null
+          market_research: Json | null
+          research_sources: string[] | null
+          research_status: string | null
+          service_type: string | null
+          synthesized_persona: Json | null
+          target_audience: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          confidence_score?: number | null
+          consultation_id?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          location?: string | null
+          market_research?: Json | null
+          research_sources?: string[] | null
+          research_status?: string | null
+          service_type?: string | null
+          synthesized_persona?: Json | null
+          target_audience?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          confidence_score?: number | null
+          consultation_id?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          location?: string | null
+          market_research?: Json | null
+          research_sources?: string[] | null
+          research_status?: string | null
+          service_type?: string | null
+          synthesized_persona?: Json | null
+          target_audience?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_intelligence_consultation_id_fkey"
             columns: ["consultation_id"]
             isOneToOne: false
             referencedRelation: "consultations"

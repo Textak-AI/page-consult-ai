@@ -29,3 +29,9 @@ verify_jwt = false
 
 [functions.migrate-anonymous-session]
 verify_jwt = true
+
+[functions.market-intelligence]
+verify_jwt = true
+
+[functions.generate-content]
+verify_jwt = true
