@@ -369,6 +369,10 @@ function GenerateContent() {
   };
 
   const generateSections = async (consultationData: any): Promise<Section[]> => {
+    // Content Generation Priority:
+    // 1. Pre-generated content from wizard (fastest, already done)
+    // 2. Generate with intelligence context (best quality, uses market research + persona)
+    // 3. Fallback to old generation without intelligence (backwards compatibility)
     try {
       // PRIORITY 1: Use pre-generated content from wizard if available
       if (preGeneratedContent) {
