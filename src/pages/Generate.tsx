@@ -111,6 +111,7 @@ function GenerateContent() {
   const [preGeneratedContent, setPreGeneratedContent] = useState<GeneratedContent | null>(
     navigationState?.generatedContentData || null
   );
+  // Landing page best practices from market research
   const [landingPageBestPractices, setLandingPageBestPractices] = useState<any>(
     navigationState?.landingPageBestPractices || null
   );
@@ -1156,6 +1157,7 @@ function GenerateContent() {
         isRegenerating={isRegenerating}
         handleRegenerate={handleRegenerate}
         handleRegenerateSection={handleRegenerateSection}
+        landingPageBestPractices={landingPageBestPractices}
       />
     </EditingProvider>
   );
@@ -1186,6 +1188,7 @@ function EditorContent({
   isRegenerating,
   handleRegenerate,
   handleRegenerateSection,
+  landingPageBestPractices,
 }: any) {
   const { toast } = useToast();
   const { pageStyle, setPageStyle } = useEditing();
