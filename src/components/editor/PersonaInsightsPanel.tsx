@@ -1,14 +1,23 @@
 import { useState } from "react";
-import { Brain, User, AlertTriangle, Sparkles, HelpCircle, BarChart3, MessageSquare, ChevronDown } from "lucide-react";
+import { Brain, User, AlertTriangle, Sparkles, HelpCircle, BarChart3, MessageSquare, ChevronDown, Lightbulb, Zap, XCircle, MousePointerClick } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import type { PersonaIntelligence } from "@/services/intelligence/types";
 
-interface PersonaInsightsPanelProps {
-  intelligence: PersonaIntelligence;
+interface LandingPageBestPractices {
+  headlineFormulas?: Array<{ formula: string; example?: string }>;
+  ctaExamples?: string[];
+  conversionTips?: string[];
+  commonMistakes?: string[];
+  calculatorIdeas?: Array<{ idea: string; description?: string }>;
 }
 
-export function PersonaInsightsPanel({ intelligence }: PersonaInsightsPanelProps) {
+interface PersonaInsightsPanelProps {
+  intelligence: PersonaIntelligence;
+  landingPageBestPractices?: LandingPageBestPractices | null;
+}
+
+export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }: PersonaInsightsPanelProps) {
   const persona = intelligence.synthesizedPersona;
   const marketResearch = intelligence.marketResearch;
   const confidenceScore = intelligence.confidenceScore || 0;
@@ -19,6 +28,10 @@ export function PersonaInsightsPanel({ intelligence }: PersonaInsightsPanelProps
     objection: false,
     stats: false,
     language: false,
+    tips: true,
+    ctas: false,
+    mistakes: false,
+    headlines: false,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -63,6 +76,103 @@ export function PersonaInsightsPanel({ intelligence }: PersonaInsightsPanelProps
           <Brain className="w-5 h-5 text-purple-400/60" />
         </div>
       </div>
+
+      {/* Conversion Tips */}
+      {landingPageBestPractices?.conversionTips && landingPageBestPractices.conversionTips.length > 0 && (
+        <InsightSection
+          icon={Zap}
+          iconColor="text-yellow-400"
+          bgColor="bg-yellow-500/10"
+          title="CONVERSION TIPS"
+          isOpen={openSections.tips}
+          onToggle={() => toggleSection('tips')}
+        >
+          <ul className="space-y-2">
+            {landingPageBestPractices.conversionTips.slice(0, 5).map((tip, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm">
+                <span className="text-yellow-400 mt-0.5 font-bold">→</span>
+                <span className="text-gray-200">{tip}</span>
+              </li>
+            ))}
+          </ul>
+        </InsightSection>
+      )}
+
+      {/* CTA Suggestions */}
+      {landingPageBestPractices?.ctaExamples && landingPageBestPractices.ctaExamples.length > 0 && (
+        <InsightSection
+          icon={MousePointerClick}
+          iconColor="text-green-400"
+          bgColor="bg-green-500/10"
+          title="CTA SUGGESTIONS"
+          isOpen={openSections.ctas}
+          onToggle={() => toggleSection('ctas')}
+        >
+          <div className="flex flex-wrap gap-2">
+            {landingPageBestPractices.ctaExamples.slice(0, 6).map((cta, i) => (
+              <span 
+                key={i} 
+                className="px-3 py-1.5 text-xs bg-green-500/10 border border-green-500/20 rounded-full text-green-300 hover:bg-green-500/20 transition-colors cursor-default"
+              >
+                {cta}
+              </span>
+            ))}
+          </div>
+        </InsightSection>
+      )}
+
+      {/* Headline Formulas */}
+      {landingPageBestPractices?.headlineFormulas && landingPageBestPractices.headlineFormulas.length > 0 && (
+        <InsightSection
+          icon={Lightbulb}
+          iconColor="text-orange-400"
+          bgColor="bg-orange-500/10"
+          title="HEADLINE IDEAS"
+          isOpen={openSections.headlines}
+          onToggle={() => toggleSection('headlines')}
+        >
+          <ul className="space-y-3">
+            {landingPageBestPractices.headlineFormulas.slice(0, 3).map((item, i) => (
+              <li key={i} className="text-sm">
+                <p className="text-gray-200">{item.formula}</p>
+                {item.example && (
+                  <p className="mt-1 text-xs text-orange-400/80 italic">
+                    e.g., "{item.example}"
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </InsightSection>
+      )}
+
+      {/* Common Mistakes */}
+      {landingPageBestPractices?.commonMistakes && landingPageBestPractices.commonMistakes.length > 0 && (
+        <InsightSection
+          icon={XCircle}
+          iconColor="text-red-400"
+          bgColor="bg-red-500/10"
+          title="AVOID THESE MISTAKES"
+          isOpen={openSections.mistakes}
+          onToggle={() => toggleSection('mistakes')}
+        >
+          <ul className="space-y-2">
+            {landingPageBestPractices.commonMistakes.slice(0, 4).map((mistake, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm">
+                <span className="text-red-400 mt-0.5">✗</span>
+                <span className="text-gray-300">{mistake}</span>
+              </li>
+            ))}
+          </ul>
+        </InsightSection>
+      )}
+
+      {/* Divider for persona section */}
+      {landingPageBestPractices && (
+        <div className="px-4 py-2 bg-white/5 border-y border-white/10">
+          <span className="text-xs font-semibold text-gray-500 tracking-wider">PERSONA INSIGHTS</span>
+        </div>
+      )}
 
       {/* Primary Pain */}
       {persona.painPoints?.[0] && (

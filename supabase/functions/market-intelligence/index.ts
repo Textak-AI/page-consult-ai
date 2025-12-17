@@ -47,12 +47,13 @@ serve(async (req) => {
       );
     }
 
-    // Build research query
+    // Build research queries
     const locationContext = location ? ` in ${location}` : '';
     const serviceContext = serviceType ? ` offering ${serviceType}` : '';
     const challengeContext = challenge ? ` Their main challenge is: ${challenge}` : '';
     
-    const researchPrompt = `Research the following target audience for a ${industry} business${serviceContext}${locationContext}:
+    // QUERY 1: Market/Audience Research
+    const marketResearchPrompt = `Research the following target audience for a ${industry} business${serviceContext}${locationContext}:
 
 Target Audience: ${targetAudience}
 ${challengeContext}
@@ -70,54 +71,113 @@ Provide detailed, factual market research including:
 
 Format your response as structured data that can be parsed. Focus on ACTIONABLE insights that can inform marketing copy.`;
 
-    console.log('📤 Calling Perplexity API...');
-    
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${PERPLEXITY_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'sonar',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are a market research analyst. Provide factual, data-driven insights with citations. Focus on actionable information for marketing and sales.'
-          },
-          { role: 'user', content: researchPrompt }
-        ],
-      }),
-    });
+    // QUERY 2: Landing Page Best Practices Research
+    const landingPagePrompt = `What are the best landing page practices for ${industry} service providers targeting ${targetAudience}?
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Perplexity API error:', response.status, errorText);
+Provide specific, actionable advice including:
+
+1. HEADLINE FORMULAS: Top 3 most effective headline formulas for this industry (with examples)
+2. RECOMMENDED SECTIONS: Which page sections convert best? Rank these by importance:
+   - Hero with value proposition
+   - Stats/credibility bar
+   - Problem/solution
+   - Features/benefits
+   - Social proof/testimonials
+   - Pricing/packages
+   - FAQ
+   - Final CTA
+3. OPTIMAL PAGE STRUCTURE: Best order for sections and why
+4. SOCIAL PROOF TYPES: What types of social proof work best for this audience? (testimonials, case studies, badges, numbers, awards)
+5. CTA LANGUAGE: Most effective call-to-action phrases for this industry (provide 5 examples)
+6. CALCULATOR IDEAS: Interactive calculator concepts that boost conversions for this industry
+7. COMMON MISTAKES: Top 5 landing page mistakes to avoid for this industry
+8. CONVERSION TIPS: 3-5 quick wins that could boost conversion rate
+
+Be specific to the ${industry} industry. Include real examples where possible.`;
+
+    console.log('📤 Calling Perplexity API for both queries...');
+    
+    // Execute both queries in parallel
+    const [marketResponse, landingPageResponse] = await Promise.all([
+      fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${PERPLEXITY_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'sonar',
+          messages: [
+            { 
+              role: 'system', 
+              content: 'You are a market research analyst. Provide factual, data-driven insights with citations. Focus on actionable information for marketing and sales.'
+            },
+            { role: 'user', content: marketResearchPrompt }
+          ],
+        }),
+      }),
+      fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${PERPLEXITY_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'sonar',
+          messages: [
+            { 
+              role: 'system', 
+              content: 'You are a conversion rate optimization expert specializing in landing pages. Provide specific, actionable recommendations backed by industry best practices.'
+            },
+            { role: 'user', content: landingPagePrompt }
+          ],
+        }),
+      })
+    ]);
+
+    if (!marketResponse.ok) {
+      const errorText = await marketResponse.text();
+      console.error('❌ Perplexity API error (market):', marketResponse.status, errorText);
       return new Response(
         JSON.stringify({ success: false, error: 'Research service unavailable' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const data = await response.json();
-    const researchContent = data.choices?.[0]?.message?.content;
-    const citations = data.citations || [];
+    const marketData = await marketResponse.json();
+    const marketContent = marketData.choices?.[0]?.message?.content;
+    const marketCitations = marketData.citations || [];
     
-    console.log('📥 Research received, parsing...');
+    console.log('📥 Market research received, parsing...');
 
-    // Parse the research into structured format
-    const research = parseResearchResponse(researchContent, citations);
+    // Parse market research
+    const research = parseResearchResponse(marketContent, marketCitations);
+    
+    // Parse landing page research if successful
+    let landingPageBestPractices = null;
+    if (landingPageResponse.ok) {
+      const lpData = await landingPageResponse.json();
+      const lpContent = lpData.choices?.[0]?.message?.content;
+      const lpCitations = lpData.citations || [];
+      
+      console.log('📥 Landing page research received, parsing...');
+      landingPageBestPractices = parseLandingPageResponse(lpContent, lpCitations);
+    } else {
+      console.warn('⚠️ Landing page research failed, continuing without it');
+    }
     
     console.log('✅ Market research complete:', {
       claimsCount: research.claims.length,
       painPointsCount: research.painPoints.length,
-      sourcesCount: research.sources.length
+      sourcesCount: research.sources.length,
+      hasLandingPageResearch: !!landingPageBestPractices
     });
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        research 
+        research,
+        landingPageBestPractices
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -256,4 +316,147 @@ function parseResearchResponse(content: string, citations: string[]): {
   }
 
   return research;
+}
+
+/**
+ * Parse landing page best practices response
+ */
+function parseLandingPageResponse(content: string, citations: string[]): {
+  headlineFormulas: Array<{ formula: string; example?: string }>;
+  recommendedSections: Array<{ name: string; importance: number; reason?: string }>;
+  optimalOrder: string[];
+  socialProofTypes: Array<{ type: string; effectiveness: string }>;
+  ctaExamples: string[];
+  calculatorIdeas: Array<{ idea: string; description?: string }>;
+  commonMistakes: string[];
+  conversionTips: string[];
+  sources: string[];
+} {
+  const result = {
+    headlineFormulas: [] as any[],
+    recommendedSections: [] as any[],
+    optimalOrder: [] as string[],
+    socialProofTypes: [] as any[],
+    ctaExamples: [] as string[],
+    calculatorIdeas: [] as any[],
+    commonMistakes: [] as string[],
+    conversionTips: [] as string[],
+    sources: citations
+  };
+
+  // Extract headline formulas
+  const headlineSection = content.match(/headline[s]?\s*formula[s]?:?([\s\S]*?)(?=\d\.\s*[A-Z]|recommended|optimal|$)/i);
+  if (headlineSection) {
+    const formulas = headlineSection[1].match(/[-•*\d.]\s*([^\n]+)/g);
+    if (formulas) {
+      result.headlineFormulas = formulas
+        .map(f => {
+          const text = f.replace(/^[-•*\d.]\s*/, '').trim();
+          const exampleMatch = text.match(/(?:example|e\.g\.)[:\s]*[""']?([^""'\n]+)[""']?/i);
+          return {
+            formula: text.replace(/(?:example|e\.g\.)[:\s]*[""']?([^""'\n]+)[""']?/i, '').trim(),
+            example: exampleMatch ? exampleMatch[1].trim() : undefined
+          };
+        })
+        .filter(f => f.formula.length > 5)
+        .slice(0, 5);
+    }
+  }
+
+  // Extract recommended sections with importance
+  const sectionsSection = content.match(/(?:recommended\s*)?section[s]?:?([\s\S]*?)(?=\d\.\s*[A-Z]|optimal|social|$)/i);
+  if (sectionsSection) {
+    const sectionNames = ['hero', 'stats', 'problem', 'solution', 'features', 'benefits', 'social proof', 'testimonials', 'pricing', 'faq', 'cta'];
+    const sectionText = sectionsSection[1].toLowerCase();
+    
+    sectionNames.forEach((name, idx) => {
+      if (sectionText.includes(name)) {
+        result.recommendedSections.push({
+          name: name.charAt(0).toUpperCase() + name.slice(1),
+          importance: 10 - idx,
+          reason: undefined
+        });
+      }
+    });
+  }
+
+  // Extract optimal order
+  const orderSection = content.match(/optimal\s*(?:page\s*)?(?:structure|order):?([\s\S]*?)(?=\d\.\s*[A-Z]|social|cta|$)/i);
+  if (orderSection) {
+    const items = orderSection[1].match(/[-•*\d.]\s*([^\n]+)/g);
+    if (items) {
+      result.optimalOrder = items
+        .map(i => i.replace(/^[-•*\d.]\s*/, '').trim())
+        .filter(i => i.length > 3)
+        .slice(0, 8);
+    }
+  }
+
+  // Extract social proof types
+  const socialSection = content.match(/social\s*proof[^:]*:?([\s\S]*?)(?=\d\.\s*[A-Z]|cta|calculator|$)/i);
+  if (socialSection) {
+    const types = socialSection[1].match(/[-•*\d.]\s*([^\n]+)/g);
+    if (types) {
+      result.socialProofTypes = types
+        .map(t => ({
+          type: t.replace(/^[-•*\d.]\s*/, '').trim(),
+          effectiveness: 'high'
+        }))
+        .filter(t => t.type.length > 3)
+        .slice(0, 5);
+    }
+  }
+
+  // Extract CTA examples
+  const ctaSection = content.match(/cta[^:]*:?([\s\S]*?)(?=\d\.\s*[A-Z]|calculator|mistake|$)/i);
+  if (ctaSection) {
+    const ctas = ctaSection[1].match(/[""][^""]+[""]|[-•*\d.]\s*([^\n]+)/g);
+    if (ctas) {
+      result.ctaExamples = ctas
+        .map(c => c.replace(/^[-•*\d.]\s*/, '').replace(/[""]/g, '').trim())
+        .filter(c => c.length > 3 && c.length < 50)
+        .slice(0, 7);
+    }
+  }
+
+  // Extract calculator ideas
+  const calcSection = content.match(/calculator[^:]*:?([\s\S]*?)(?=\d\.\s*[A-Z]|mistake|common|$)/i);
+  if (calcSection) {
+    const ideas = calcSection[1].match(/[-•*\d.]\s*([^\n]+)/g);
+    if (ideas) {
+      result.calculatorIdeas = ideas
+        .map(i => ({
+          idea: i.replace(/^[-•*\d.]\s*/, '').trim(),
+          description: undefined
+        }))
+        .filter(i => i.idea.length > 5)
+        .slice(0, 5);
+    }
+  }
+
+  // Extract common mistakes
+  const mistakesSection = content.match(/(?:common\s*)?mistake[s]?[^:]*:?([\s\S]*?)(?=\d\.\s*[A-Z]|conversion|tip|$)/i);
+  if (mistakesSection) {
+    const mistakes = mistakesSection[1].match(/[-•*\d.]\s*([^\n]+)/g);
+    if (mistakes) {
+      result.commonMistakes = mistakes
+        .map(m => m.replace(/^[-•*\d.]\s*/, '').trim())
+        .filter(m => m.length > 10)
+        .slice(0, 5);
+    }
+  }
+
+  // Extract conversion tips
+  const tipsSection = content.match(/(?:conversion\s*)?tip[s]?[^:]*:?([\s\S]*?)$/i);
+  if (tipsSection) {
+    const tips = tipsSection[1].match(/[-•*\d.]\s*([^\n]+)/g);
+    if (tips) {
+      result.conversionTips = tips
+        .map(t => t.replace(/^[-•*\d.]\s*/, '').trim())
+        .filter(t => t.length > 10)
+        .slice(0, 5);
+    }
+  }
+
+  return result;
 }
