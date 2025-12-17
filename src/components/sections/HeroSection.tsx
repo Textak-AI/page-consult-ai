@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
 import { useState } from "react";
-import { ImagePlus, Shield, Clock, Award } from "lucide-react";
+import { ImagePlus, Shield, Clock, Award, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface CitedStat {
@@ -29,6 +29,10 @@ interface HeroSectionProps {
     };
     citedStat?: CitedStat;
     trustBadges?: string[];
+    credibilityBar?: Array<{
+      icon?: string;
+      text: string;
+    }>;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -57,11 +61,18 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
 
   const backgroundStyle = content.backgroundImage
     ? {
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url(${content.backgroundImage})`,
+        backgroundImage: `linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.75)), url(${content.backgroundImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center 40%',
       }
     : {};
+
+  // Default credibility items
+  const credibilityItems = content.credibilityBar || [
+    { icon: "check", text: "25+ Years Excellence" },
+    { icon: "check", text: "5-Star Rated Service" },
+    { icon: "check", text: "Locally Owned & Operated" }
+  ];
 
   const defaultTrustBadges = content.trustBadges || [
     "100% Satisfaction Guarantee",
@@ -71,7 +82,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
 
   return (
     <section 
-      className={`min-h-[80vh] flex items-center py-24 px-4 ${
+      className={`min-h-[85vh] flex items-center py-20 md:py-28 lg:py-32 px-4 ${
         content.backgroundImage 
           ? 'text-white' 
           : 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
@@ -91,13 +102,13 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           </Button>
         </>
       )}
-      <div className="container mx-auto max-w-5xl text-center space-y-8">
+      <div className="container mx-auto max-w-6xl text-center space-y-8">
         {content.fomo?.badge && (
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-sm text-cyan-300"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-sm font-medium text-cyan-300 backdrop-blur-sm"
           >
             <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
             {content.fomo.badge}
@@ -109,12 +120,12 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="inline-block bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-5"
+            className="inline-block bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-xl"
           >
-            <div className="text-4xl font-bold text-cyan-400 mb-1">
+            <div className="text-4xl md:text-5xl font-bold text-cyan-400 mb-2">
               {content.citedStat.statistic}
             </div>
-            <div className="text-sm text-gray-300 mb-2">
+            <div className="text-base text-gray-300 mb-3">
               {content.citedStat.claim}
             </div>
             <cite className="text-xs text-gray-400 not-italic">
@@ -127,14 +138,17 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className={`text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight ${
+          className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.1] tracking-tight ${
             isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
           }`}
           contentEditable={isEditing}
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("headline", e)}
+          style={{ 
+            textShadow: content.backgroundImage ? '0 4px 30px rgba(0,0,0,0.5), 0 2px 10px rgba(0,0,0,0.3)' : 'none' 
+          }}
         >
-          <span className="bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent drop-shadow-lg">
+          <span className="bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent">
             {content.headline}
           </span>
         </motion.h1>
@@ -149,6 +163,9 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           contentEditable={isEditing}
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("subheadline", e)}
+          style={{ 
+            textShadow: content.backgroundImage ? '0 2px 10px rgba(0,0,0,0.4)' : 'none' 
+          }}
         >
           {content.subheadline}
         </motion.p>
@@ -157,11 +174,11 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="pt-4 space-y-6"
+          className="pt-6 space-y-8"
         >
           <Button 
             size="lg" 
-            className={`text-lg px-10 py-6 h-auto bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all duration-300 hover:scale-105 ${
+            className={`text-lg px-12 py-7 h-auto font-semibold bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 shadow-xl shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 hover:scale-105 ${
               isEditing ? "outline-dashed outline-2 outline-primary/30" : ""
             }`}
           >
@@ -180,14 +197,30 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             </p>
           )}
 
-          {/* Trust Badges */}
-          <div className="flex flex-wrap justify-center gap-6 pt-4">
+          {/* Credibility Bar */}
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 pt-4">
+            {credibilityItems.map((item, i) => (
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.5 + i * 0.1 }}
+                className="flex items-center gap-2 text-sm md:text-base text-gray-300"
+              >
+                <CheckCircle className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+                <span className="font-medium">{item.text}</span>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Trust Badges - smaller, below credibility */}
+          <div className="flex flex-wrap justify-center gap-6 pt-2">
             {defaultTrustBadges.map((badge, i) => {
               const icons = [Shield, Clock, Award];
               const Icon = icons[i % icons.length];
               return (
-                <div key={i} className="flex items-center gap-2 text-sm text-gray-400">
-                  <Icon className="w-4 h-4 text-cyan-500" />
+                <div key={i} className="flex items-center gap-2 text-xs text-gray-500">
+                  <Icon className="w-3.5 h-3.5 text-cyan-600" />
                   <span>{badge}</span>
                 </div>
               );

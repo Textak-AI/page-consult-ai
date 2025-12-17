@@ -107,19 +107,19 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
   };
   
   return (
-    <section className="py-24 px-4 bg-white dark:bg-slate-900">
+    <section className="py-20 md:py-28 px-4 bg-white dark:bg-slate-900">
       <div className="container mx-auto max-w-6xl">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-16 mx-auto max-w-3xl"
+          className="text-center mb-16 md:mb-20 mx-auto max-w-3xl"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-5 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
             {header.title}
           </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400">
             {header.subtitle}
           </p>
         </motion.div>
@@ -130,29 +130,29 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="max-w-3xl mx-auto mb-16"
+          className="max-w-4xl mx-auto mb-16"
         >
-          <div className="relative p-8 md:p-12 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-700">
-            <Quote className="absolute top-6 left-6 w-12 h-12 text-cyan-500/20" />
+          <div className="relative p-8 md:p-12 lg:p-16 bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-800/80 dark:to-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/30">
+            <Quote className="absolute top-6 left-6 md:top-8 md:left-8 w-12 h-12 md:w-16 md:h-16 text-cyan-500/15" />
             
             {/* Star Rating */}
-            <div className="flex gap-1 mb-6">
+            <div className="flex gap-1.5 mb-8">
               {[...Array(testimonial.rating || 5)].map((_, i) => (
-                <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                <Star key={i} className="w-6 h-6 md:w-7 md:h-7 fill-yellow-400 text-yellow-400" />
               ))}
             </div>
             
-            <blockquote className="text-xl md:text-2xl text-slate-700 dark:text-slate-200 leading-relaxed mb-8 relative z-10">
+            <blockquote className="text-xl md:text-2xl lg:text-3xl text-slate-700 dark:text-slate-200 leading-relaxed mb-10 relative z-10 font-medium italic">
               "{testimonial.quote}"
             </blockquote>
             
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
-                <User className="w-7 h-7 text-white" />
+            <div className="flex items-center gap-5">
+              <div className="w-16 h-16 md:w-18 md:h-18 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center ring-4 ring-white dark:ring-slate-800 shadow-lg">
+                <User className="w-8 h-8 md:w-9 md:h-9 text-white" />
               </div>
               <div>
-                <div className="font-semibold text-slate-900 dark:text-white">{testimonial.name}</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">
+                <div className="font-bold text-lg md:text-xl text-slate-900 dark:text-white">{testimonial.name}</div>
+                <div className="text-sm md:text-base text-slate-500 dark:text-slate-400">
                   {testimonial.title}{testimonial.company && `, ${testimonial.company}`}
                 </div>
               </div>
@@ -161,16 +161,16 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
         </motion.div>
 
         {/* Stats Grid */}
-        {content.stats && content.stats.length > 0 && (
-          <div className="grid md:grid-cols-3 gap-8 mb-16 max-w-4xl mx-auto">
-            {content.stats.map((stat, i) => (
+        {content.stats && content.stats.length > 0 && content.stats.some(s => s.value) && (
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8 mb-16 max-w-4xl mx-auto">
+            {content.stats.filter(s => s.value).map((stat, i) => (
               <motion.div 
                 key={i} 
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="text-center p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/50"
+                className="text-center p-8 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-lg transition-shadow duration-300"
               >
                 <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-500 to-purple-600 bg-clip-text text-transparent mb-3">
                   {stat.value}
@@ -187,20 +187,20 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/50 max-w-2xl mx-auto"
+            className="p-6 md:p-8 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/50 max-w-2xl mx-auto"
           >
-            <div className="flex items-center gap-2 mb-4 text-sm font-medium text-slate-700 dark:text-slate-300">
-              <Clock className="w-4 h-4 text-cyan-500" />
+            <div className="flex items-center gap-2 mb-5 text-sm font-semibold text-slate-700 dark:text-slate-300">
+              <Clock className="w-5 h-5 text-cyan-500" />
               <span>Recent Activity</span>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {content.recentActivity.map((activity, i) => (
                 <div
                   key={i}
                   className="flex items-center justify-between text-sm"
                 >
                   <div>
-                    <span className="font-medium text-slate-900 dark:text-white">{activity.name}</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{activity.name}</span>
                     <span className="text-slate-500 dark:text-slate-400"> {activity.action}</span>
                     <span className="text-slate-500 dark:text-slate-400"> from {activity.location}</span>
                   </div>
