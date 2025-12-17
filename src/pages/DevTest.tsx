@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, FlaskConical, Sparkles, ArrowRight } from "lucide-react";
+import { Loader2, FlaskConical, Sparkles, ArrowRight, Brain, Zap } from "lucide-react";
 
 const industries = [
   "Professional Services",
@@ -36,7 +36,7 @@ export default function DevTest() {
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
-    industry: "Professional Services",
+    industry: "Events & Entertainment",
     goal: "Generate Leads",
     audience: "Wedding planners looking for reliable DJs",
     service: "Wedding DJ services",
@@ -49,6 +49,8 @@ export default function DevTest() {
   const [contentResult, setContentResult] = useState<any>(null);
   const [contentError, setContentError] = useState<string | null>(null);
   const [contentLoading, setContentLoading] = useState(false);
+
+  const [fullPipelineLoading, setFullPipelineLoading] = useState(false);
 
   const testIntelligencePipeline = async () => {
     setIntelligenceLoading(true);
@@ -66,19 +68,76 @@ export default function DevTest() {
       
       if (error) throw error;
       setIntelligenceResult(data);
+      return data;
     } catch (err: any) {
       setIntelligenceError(err.message || 'Unknown error');
+      return null;
     } finally {
       setIntelligenceLoading(false);
     }
   };
 
-  const testContentGeneration = async () => {
+  // Transform market research into intelligence context for content generation
+  const buildIntelligenceContext = (research: any) => {
+    if (!research?.research) return null;
+    
+    const { claims, painPoints, demographics, competitors } = research.research;
+    
+    // Extract statistics from claims
+    const statistics = (claims || [])
+      .filter((c: any) => c.category === 'statistic')
+      .slice(0, 5)
+      .map((c: any) => ({
+        claim: c.claim,
+        source: c.source || 'Industry Research',
+        confidence: c.confidence || 'medium'
+      }));
+    
+    return {
+      persona: {
+        name: "The Overwhelmed Planner", // Default until persona synthesis
+        primaryPain: painPoints?.[0] || "Finding reliable vendors",
+        primaryDesire: "Peace of mind on the big day",
+        keyObjections: [
+          "How do I know they'll show up?",
+          "What if the music is wrong?",
+          "Is this worth the cost?"
+        ],
+        languagePatterns: [
+          "I need someone reliable",
+          "My clients expect perfection",
+          "I can't afford mistakes"
+        ],
+        emotionalTriggers: [
+          "stress of event planning",
+          "reputation on the line",
+          "client satisfaction"
+        ],
+        demographics: demographics || {}
+      },
+      market: {
+        topPainPoints: painPoints?.slice(0, 5) || [],
+        keyStatistics: statistics,
+        competitorGaps: competitors?.[0]?.marketGaps || [],
+        audienceLanguage: demographics?.decisionFactors || []
+      },
+      rawResearch: research.research
+    };
+  };
+
+  const testContentGeneration = async (useIntelligence = false) => {
     setContentLoading(true);
     setContentError(null);
     setContentResult(null);
     
     try {
+      // Build intelligence context if we have research data
+      let intelligenceContext = null;
+      if (useIntelligence && intelligenceResult?.research) {
+        intelligenceContext = buildIntelligenceContext(intelligenceResult);
+        console.log('🧠 Using intelligence context:', intelligenceContext);
+      }
+      
       const { data, error } = await supabase.functions.invoke('generate-content', {
         body: {
           action: 'generate_content',
@@ -90,7 +149,7 @@ export default function DevTest() {
             challenge: "Finding reliable, professional service",
             uniqueValue: "Years of experience and customer satisfaction",
           },
-          intelligenceContext: null,
+          intelligenceContext,
         },
       });
       
@@ -103,7 +162,120 @@ export default function DevTest() {
     }
   };
 
+  // Run full pipeline: Intelligence -> Content Generation
+  const testFullPipeline = async () => {
+    setFullPipelineLoading(true);
+    setContentError(null);
+    setContentResult(null);
+    
+    try {
+      // Step 1: Get intelligence
+      const intelligenceData = await testIntelligencePipeline();
+      
+      if (!intelligenceData?.research) {
+        throw new Error('Intelligence pipeline failed');
+      }
+      
+      // Step 2: Generate content with intelligence
+      await testContentGeneration(true);
+    } catch (err: any) {
+      setContentError(err.message || 'Full pipeline failed');
+    } finally {
+      setFullPipelineLoading(false);
+    }
+  };
+
   const goToGeneratePage = () => {
+    // Build properly structured intelligence data if available
+    let intelligenceData = null;
+    
+    if (intelligenceResult?.research) {
+      const research = intelligenceResult.research;
+      
+      // Map to PersonaIntelligence structure
+      intelligenceData = {
+        id: 'dev-intelligence-' + Date.now(),
+        consultationId: 'dev-consultation-' + Date.now(),
+        userId: 'dev-user',
+        industry: formData.industry,
+        targetAudience: formData.audience,
+        serviceType: formData.service,
+        
+        // Market research data
+        marketResearch: {
+          claims: research.claims || [],
+          demographics: research.demographics || {},
+          competitors: research.competitors || [],
+          painPoints: research.painPoints || [],
+          trends: research.trends || [],
+          researchedAt: research.researchedAt || new Date().toISOString(),
+          sources: research.sources || []
+        },
+        
+        // Synthesized persona
+        synthesizedPersona: {
+          name: "The Overwhelmed Planner",
+          demographics: {
+            primaryAge: research.demographics?.ageRange || "25-45",
+            income: research.demographics?.income || "$50,000-$150,000",
+            location: "Urban/Suburban",
+            occupation: "Event Professional"
+          },
+          psychographics: {
+            values: ["reliability", "professionalism", "peace of mind"],
+            fears: ["vendor no-shows", "unhappy clients", "event disasters"],
+            aspirations: ["flawless events", "repeat business", "industry recognition"],
+            decisionStyle: "Research-driven, seeks recommendations",
+            trustSignals: ["reviews", "referrals", "experience"]
+          },
+          languagePatterns: [
+            "I need someone reliable",
+            "My clients expect perfection",
+            "I can't afford mistakes",
+            "Looking for a professional who gets it"
+          ],
+          painPoints: (research.painPoints || []).slice(0, 5).map((p: string) => ({
+            pain: p,
+            intensity: "high" as const,
+            trigger: "Event planning stress",
+            languageUsed: [p]
+          })),
+          desires: [
+            {
+              desire: "Peace of mind on the big day",
+              priority: "must_have" as const,
+              emotionalBenefit: "Relief from vendor stress"
+            },
+            {
+              desire: "Professional who handles everything",
+              priority: "must_have" as const,
+              emotionalBenefit: "Confidence in vendor choice"
+            }
+          ],
+          objections: [
+            {
+              objection: "How do I know they'll show up?",
+              likelihood: "common" as const,
+              counterArgument: "Backup equipment and contingency plans"
+            },
+            {
+              objection: "Is this worth the cost?",
+              likelihood: "common" as const,
+              counterArgument: "Value of professional experience and equipment"
+            }
+          ],
+          buyingJourney: []
+        },
+        
+        researchSources: research.sources || [],
+        confidenceScore: 0.85,
+        researchStatus: 'complete' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        completedAt: new Date().toISOString()
+      };
+    }
+
     const consultationData = {
       id: "dev-test-" + Date.now(),
       industry: formData.industry,
@@ -118,13 +290,11 @@ export default function DevTest() {
     navigate('/generate', { 
       state: { 
         consultationData,
-        devMode: true // Bypass authentication
+        intelligenceData,
+        devMode: true
       } 
     });
   };
-
-  // Note: In a real production deployment, you might want to hide this page
-  // For now, keeping it accessible for testing purposes
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -199,7 +369,7 @@ export default function DevTest() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <Button 
             onClick={testIntelligencePipeline}
             disabled={intelligenceLoading}
@@ -210,11 +380,11 @@ export default function DevTest() {
             ) : (
               <FlaskConical className="h-4 w-4 mr-2" />
             )}
-            Test Intelligence Pipeline
+            1. Test Intelligence
           </Button>
           
           <Button 
-            onClick={testContentGeneration}
+            onClick={() => testContentGeneration(!!intelligenceResult)}
             disabled={contentLoading}
             className="bg-cyan-600 hover:bg-cyan-700"
           >
@@ -223,7 +393,20 @@ export default function DevTest() {
             ) : (
               <Sparkles className="h-4 w-4 mr-2" />
             )}
-            Test Content Generation
+            2. Test Content {intelligenceResult ? '(with intelligence)' : '(no intelligence)'}
+          </Button>
+
+          <Button 
+            onClick={testFullPipeline}
+            disabled={fullPipelineLoading}
+            className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700"
+          >
+            {fullPipelineLoading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Zap className="h-4 w-4 mr-2" />
+            )}
+            Full Pipeline (1+2)
           </Button>
           
           <Button 
@@ -237,7 +420,14 @@ export default function DevTest() {
 
         {/* Intelligence Results */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Intelligence Pipeline Result</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Intelligence Pipeline Result</h2>
+            {intelligenceResult && (
+              <span className="text-xs bg-green-900/50 text-green-400 px-2 py-1 rounded">
+                {intelligenceResult.research?.claims?.length || 0} claims, {intelligenceResult.research?.painPoints?.length || 0} pain points
+              </span>
+            )}
+          </div>
           
           {intelligenceError && (
             <div className="bg-red-950/50 border border-red-500 rounded-lg p-4 text-red-400">
@@ -253,14 +443,22 @@ export default function DevTest() {
           
           {!intelligenceResult && !intelligenceError && !intelligenceLoading && (
             <p className="text-muted-foreground text-sm">
-              Click "Test Intelligence Pipeline" to see results
+              Click "Test Intelligence" to see results
             </p>
           )}
         </div>
 
         {/* Content Generation Results */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Content Generation Result</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Content Generation Result</h2>
+            {contentResult?.content && (
+              <span className="text-xs bg-cyan-900/50 text-cyan-400 px-2 py-1 rounded flex items-center gap-1">
+                <Brain className="h-3 w-3" />
+                {contentResult.content.statistics?.length || 0} stats included
+              </span>
+            )}
+          </div>
           
           {contentError && (
             <div className="bg-red-950/50 border border-red-500 rounded-lg p-4 text-red-400">
@@ -276,7 +474,7 @@ export default function DevTest() {
           
           {!contentResult && !contentError && !contentLoading && (
             <p className="text-muted-foreground text-sm">
-              Click "Test Content Generation" to see results
+              Click "Test Content" to see results
             </p>
           )}
         </div>

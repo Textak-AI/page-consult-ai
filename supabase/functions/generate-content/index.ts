@@ -240,63 +240,92 @@ async function handleContentGeneration(
 ) {
   console.log('✍️ Generating content with intelligence');
   console.log('Intelligence available:', !!intelligenceContext);
+  console.log('Intelligence context:', JSON.stringify(intelligenceContext, null, 2));
 
   let systemPrompt = `You are an expert landing page copywriter who creates high-converting content.`;
+  let statisticsToInclude: any[] = [];
   
   // Enhance system prompt with intelligence if available
-  if (intelligenceContext?.persona) {
-    const { persona, market } = intelligenceContext;
+  if (intelligenceContext?.persona || intelligenceContext?.market) {
+    const persona = intelligenceContext.persona || {};
+    const market = intelligenceContext.market || {};
     
-    systemPrompt = `You are an expert landing page copywriter creating content for: "${persona.name}"
+    // Extract real statistics to include
+    if (market.keyStatistics?.length > 0) {
+      statisticsToInclude = market.keyStatistics.slice(0, 3).map((s: any) => {
+        if (typeof s === 'string') {
+          // Parse statistic string to extract value
+          const numMatch = s.match(/(\d[\d,]*(?:\.\d+)?%?|\$[\d,]+(?:\.\d+)?[BMK]?)/);
+          return {
+            value: numMatch ? numMatch[1] : s.split(' ')[0],
+            label: s.replace(/^\d[\d,]*(?:\.\d+)?%?\s*/, '').substring(0, 50),
+            source: 'Industry Research'
+          };
+        }
+        return {
+          value: s.claim?.match(/(\d[\d,]*(?:\.\d+)?%?|\$[\d,]+(?:\.\d+)?[BMK]?)/)?.[1] || s.claim?.split(' ')[0] || 'N/A',
+          label: s.claim?.replace(/^\d[\d,]*(?:\.\d+)?%?\s*/, '').substring(0, 50) || 'Industry statistic',
+          source: s.source || 'Industry Research'
+        };
+      });
+    }
+    
+    systemPrompt = `You are an expert landing page copywriter creating content for: "${persona.name || 'Target Customer'}"
 
 ═══════════════════════════════════════════════════════════
 PERSONA INTELLIGENCE
 ═══════════════════════════════════════════════════════════
 
-PRIMARY PAIN: ${persona.primaryPain}
-PRIMARY DESIRE: ${persona.primaryDesire}
+PRIMARY PAIN: ${persona.primaryPain || 'Finding reliable service'}
+PRIMARY DESIRE: ${persona.primaryDesire || 'Peace of mind and quality results'}
 
 KEY OBJECTIONS TO ADDRESS:
-${persona.keyObjections.map((o: string) => `• ${o}`).join('\n')}
+${(persona.keyObjections || ['Is this worth the cost?', 'Can I trust them?']).map((o: string) => `• ${o}`).join('\n')}
 
-LANGUAGE PATTERNS THEY USE:
-${persona.languagePatterns.map((l: string) => `• "${l}"`).join('\n')}
+LANGUAGE PATTERNS THEY USE (mirror these in copy):
+${(persona.languagePatterns || ['I need someone reliable', 'I want quality']).map((l: string) => `• "${l}"`).join('\n')}
 
 EMOTIONAL TRIGGERS:
-${persona.emotionalTriggers.map((t: string) => `• ${t}`).join('\n')}
+${(persona.emotionalTriggers || ['trust', 'reliability', 'professionalism']).map((t: string) => `• ${t}`).join('\n')}
 
 ═══════════════════════════════════════════════════════════
 MARKET INTELLIGENCE
 ═══════════════════════════════════════════════════════════
 
 TOP PAIN POINTS IN MARKET:
-${market.topPainPoints.map((p: string) => `• ${p}`).join('\n')}
+${(market.topPainPoints || []).slice(0, 5).map((p: string) => `• ${p}`).join('\n') || '• No specific pain points provided'}
 
-KEY STATISTICS (use sparingly, only if highly relevant):
-${market.keyStatistics.map((s: string) => `• ${s}`).join('\n')}
+REAL STATISTICS TO USE IN CONTENT (include 2-3 in the stats section):
+${(market.keyStatistics || []).slice(0, 5).map((s: any) => {
+  if (typeof s === 'string') return `• ${s}`;
+  return `• ${s.claim} (Source: ${s.source || 'Industry Research'})`;
+}).join('\n') || '• No statistics available'}
 
 COMPETITOR GAPS (opportunities to differentiate):
-${market.competitorGaps.map((g: string) => `• ${g}`).join('\n')}
+${(market.competitorGaps || []).slice(0, 3).map((g: string) => `• ${g}`).join('\n') || '• No competitor gaps identified'}
 
 ═══════════════════════════════════════════════════════════
 CONTENT GENERATION RULES
 ═══════════════════════════════════════════════════════════
 
-1. HEADLINE: Address the primary pain point using their language patterns
+1. HEADLINE: Address the primary pain point using their exact language patterns
 2. SUBHEADLINE: Promise the primary desire with emotional benefit
-3. FEATURES: Solve the top pain points and address objections
-4. PROBLEM STATEMENT: Use their exact language to describe the pain
+3. FEATURES: Each feature should solve a specific pain point and address an objection. Write COMPLETE sentences (no truncation).
+4. PROBLEM STATEMENT: Use their exact language to describe the pain - make them feel understood
 5. SOLUTION: Position around competitor gaps and emotional triggers
-6. CTA: Remove friction around the most common objection
+6. STATISTICS: Include 3 real statistics with sources in the stats array
+7. CTA: Remove friction around the most common objection
 
-CRITICAL:
-• Use ONLY user-provided credentials (no fabrication)
-• Mirror their language patterns naturally
-• Address objections proactively in copy
-• Focus on emotional benefits over features`;
+CRITICAL RULES:
+• Use ONLY user-provided credentials (no fabrication of reviews, years, or numbers)
+• Mirror their language patterns naturally in headlines and copy
+• Address objections proactively in feature descriptions
+• Focus on emotional benefits over technical features
+• Write COMPLETE sentences - never truncate mid-sentence
+• Include the real statistics provided above in the output`;
   }
 
-  const userPrompt = buildUserPrompt(consultationData);
+  const userPrompt = buildUserPrompt(consultationData, intelligenceContext, statisticsToInclude);
 
   try {
     const response = await anthropic.messages.create({
@@ -315,9 +344,15 @@ CRITICAL:
 
     const generated = parseJSON(content.text);
     
+    // Ensure statistics are included even if AI didn't generate them
+    if (!generated.statistics || generated.statistics.length === 0) {
+      generated.statistics = statisticsToInclude;
+    }
+    
     console.log('✅ Content generated:', {
       headline: generated.headline?.substring(0, 50),
-      features: generated.features?.length
+      features: generated.features?.length,
+      statistics: generated.statistics?.length
     });
 
     return new Response(
@@ -337,7 +372,11 @@ CRITICAL:
 /**
  * Build user prompt from consultation data
  */
-function buildUserPrompt(consultationData: any): string {
+function buildUserPrompt(consultationData: any, intelligenceContext?: any, statisticsToInclude?: any[]): string {
+  const statsInstructions = statisticsToInclude && statisticsToInclude.length > 0
+    ? `\n7. Include these EXACT statistics in the statistics array:\n${statisticsToInclude.map(s => `   - Value: "${s.value}", Label: "${s.label}", Source: "${s.source}"`).join('\n')}`
+    : '';
+
   return `Generate landing page content for this consultation:
 
 CONSULTATION DATA:
@@ -354,25 +393,30 @@ INSTRUCTIONS:
 2. Use industry-appropriate language and tone
 3. Address the audience's pain points directly
 4. Include ONLY verifiable credentials from consultation (no fabrication)
-5. Generate exactly 5 relevant features
-6. Create a clear, benefit-driven CTA
+5. Generate exactly 5 relevant features with COMPLETE sentences (no truncation)
+6. Create a clear, benefit-driven CTA${statsInstructions}
 
 Return ONLY valid JSON in this exact format:
 {
   "headline": "Compelling headline addressing primary pain",
   "subheadline": "Supporting statement with emotional benefit",
   "features": [
-    {"title": "Feature 1", "description": "Benefit-focused description", "icon": "✓"},
-    {"title": "Feature 2", "description": "Benefit-focused description", "icon": "✓"},
-    {"title": "Feature 3", "description": "Benefit-focused description", "icon": "✓"},
-    {"title": "Feature 4", "description": "Benefit-focused description", "icon": "✓"},
-    {"title": "Feature 5", "description": "Benefit-focused description", "icon": "✓"}
+    {"title": "Feature 1", "description": "Complete benefit-focused description sentence.", "icon": "star"},
+    {"title": "Feature 2", "description": "Complete benefit-focused description sentence.", "icon": "shield"},
+    {"title": "Feature 3", "description": "Complete benefit-focused description sentence.", "icon": "check"},
+    {"title": "Feature 4", "description": "Complete benefit-focused description sentence.", "icon": "heart"},
+    {"title": "Feature 5", "description": "Complete benefit-focused description sentence.", "icon": "trophy"}
+  ],
+  "statistics": [
+    {"value": "21,714", "label": "Wedding businesses nationwide", "source": "Zippia"},
+    {"value": "85%", "label": "Couples who hire professional DJs", "source": "The Knot"},
+    {"value": "$1,200", "label": "Average DJ booking value", "source": "WeddingWire"}
   ],
   "problemStatement": "Problem as a question they ask themselves",
   "solutionStatement": "Solution with clear benefits",
   "socialProof": "Professional credential statement (only if provided)",
   "ctaText": "Action-oriented CTA",
-  "sections": ["hero", "features", "problem_solution", "final_cta"],
+  "sections": ["hero", "features", "problem_solution", "stats", "final_cta"],
   "images": {
     "hero": "Unsplash search query for hero image",
     "gallery": [],
