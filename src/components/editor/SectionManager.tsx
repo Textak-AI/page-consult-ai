@@ -3,6 +3,7 @@ import { Eye, EyeOff, Trash2, RefreshCw, Calculator, Loader2 } from "lucide-reac
 import { useState } from "react";
 import { useEditing } from "@/contexts/EditingContext";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 type Section = {
   type: string;
@@ -47,7 +48,19 @@ export function SectionManager({
   const handleRegenerate = async (sectionType: string) => {
     if (!onRegenerateSection || isRegenerating) return;
     setRegeneratingSection(sectionType);
-    await onRegenerateSection(sectionType);
+    try {
+      await onRegenerateSection(sectionType);
+      toast({
+        title: `${getSectionTitle(sectionType)} section regenerated`,
+        description: "Content has been updated with fresh copy.",
+      });
+    } catch (error) {
+      toast({
+        title: "Regeneration failed",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    }
     setRegeneratingSection(null);
   };
 
