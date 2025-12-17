@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 type Message = {
   role: "ai" | "user";
@@ -349,13 +350,15 @@ const AIDemo = () => {
 
               {/* Industry selection */}
               {step === "industry" && !isThinking && (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6 animate-fade-in">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
                   {industries.map((industry, index) => (
-                    <button
+                    <motion.button
                       key={industry.title}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05, duration: 0.3, ease: "easeOut" }}
                       onClick={(e) => handleIndustrySelect(e, industry.title)}
                       className="group relative cursor-pointer text-left"
-                      style={{ animationDelay: `${index * 50}ms` }}
                     >
                       {/* Hover glow */}
                       <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-xl opacity-0 group-hover:opacity-30 blur transition-all duration-300" />
@@ -375,7 +378,7 @@ const AIDemo = () => {
                         </h3>
                         <p className="text-white/40 text-xs">{industry.subtitle}</p>
                       </div>
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               )}
@@ -404,13 +407,15 @@ const AIDemo = () => {
 
               {/* Goal selection */}
               {step === "goal" && !isThinking && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6 animate-fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
                   {goals.map((goal, index) => (
-                    <button
+                    <motion.button
                       key={goal.title}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05, duration: 0.3, ease: "easeOut" }}
                       onClick={(e) => handleGoalSelect(e, goal.title)}
                       className="group relative cursor-pointer text-left"
-                      style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-xl opacity-0 group-hover:opacity-30 blur transition-all duration-300" />
                       
@@ -428,7 +433,7 @@ const AIDemo = () => {
                         </h3>
                         <p className="text-white/40 text-sm">{goal.subtitle}</p>
                       </div>
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               )}
