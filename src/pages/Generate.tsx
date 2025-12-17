@@ -542,8 +542,33 @@ function GenerateContent() {
         ctaText: content.ctaText,
         ctaLink: "#signup",
         backgroundImage: heroImageUrl,
+        trustBadges: ["100% Satisfaction Guarantee", "Same-Day Response", "Award-Winning Service"],
       },
     });
+
+    // Stats Bar (after hero) - extract statistics from intelligence data
+    const statisticsFromResearch = intelligence?.marketResearch?.claims
+      ?.filter(c => c.category === 'statistic')
+      ?.slice(0, 3)
+      ?.map(stat => {
+        // Parse the claim to extract value and label
+        const match = stat.claim.match(/^([\d,.$%KMB]+(?:\s*[-–]\s*[\d,.$%KMB]+)?)\s*(.*)$/i);
+        if (match) {
+          return { value: match[1], label: match[2], source: stat.source };
+        }
+        return { value: "", label: stat.claim, source: stat.source };
+      }) || [];
+    
+    if (statisticsFromResearch.length > 0) {
+      sections.push({
+        type: "stats-bar",
+        order: order++,
+        visible: true,
+        content: {
+          statistics: statisticsFromResearch,
+        },
+      });
+    }
 
     // Problem-Solution
     sections.push({
@@ -579,7 +604,7 @@ function GenerateContent() {
       });
     }
 
-    // Social Proof
+    // Social Proof with testimonial
     sections.push({
       type: "social-proof",
       order: order++,
@@ -587,6 +612,13 @@ function GenerateContent() {
       content: {
         stats: [{ label: content.socialProof, value: "" }],
         industry: consultationData.industry,
+        testimonial: {
+          quote: content.socialProof || `${consultationData.industry} professionals across the region trust us for their most important needs.`,
+          name: "Sarah M.",
+          title: "Satisfied Customer",
+          company: "",
+          rating: 5,
+        },
       },
     });
 

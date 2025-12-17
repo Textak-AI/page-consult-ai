@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
 import { useState } from "react";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, Shield, Clock, Award } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface CitedStat {
   statistic: string;
@@ -27,6 +28,7 @@ interface HeroSectionProps {
       urgency?: string;
     };
     citedStat?: CitedStat;
+    trustBadges?: string[];
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -55,18 +57,24 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
 
   const backgroundStyle = content.backgroundImage
     ? {
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url(${content.backgroundImage})`,
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url(${content.backgroundImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center 40%',
       }
     : {};
 
+  const defaultTrustBadges = content.trustBadges || [
+    "100% Satisfaction Guarantee",
+    "Same-Day Response",
+    "Award-Winning Service"
+  ];
+
   return (
     <section 
-      className={`py-20 px-4 ${
+      className={`min-h-[80vh] flex items-center py-24 px-4 ${
         content.backgroundImage 
           ? 'text-white' 
-          : 'bg-gradient-to-br from-primary/10 via-background to-secondary/10'
+          : 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
       } ${isEditing ? "relative" : ""}`}
       style={backgroundStyle}
     >
@@ -83,56 +91,77 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           </Button>
         </>
       )}
-      <div className="container mx-auto max-w-4xl text-center space-y-6">
+      <div className="container mx-auto max-w-5xl text-center space-y-8">
         {content.fomo?.badge && (
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/20 rounded-full text-sm animate-pulse">
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-sm text-cyan-300"
+          >
+            <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
             {content.fomo.badge}
-          </div>
+          </motion.div>
         )}
         
         {content.citedStat && (
-          <div className="inline-block bg-card/80 backdrop-blur-sm border border-border rounded-lg p-4 mb-4">
-            <div className="text-4xl font-bold text-primary mb-1">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="inline-block bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-5"
+          >
+            <div className="text-4xl font-bold text-cyan-400 mb-1">
               {content.citedStat.statistic}
             </div>
-            <div className="text-sm text-muted-foreground mb-2">
+            <div className="text-sm text-gray-300 mb-2">
               {content.citedStat.claim}
             </div>
-            <cite className="text-xs text-muted-foreground/70 not-italic">
+            <cite className="text-xs text-gray-400 not-italic">
               Source: {content.citedStat.fullCitation}
             </cite>
-          </div>
+          </motion.div>
         )}
         
-        <h1
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
           className={`text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-tight ${
             isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
           }`}
-          style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.8)' }}
           contentEditable={isEditing}
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("headline", e)}
         >
-          {content.headline}
-        </h1>
-        <p 
-          className={`text-lg md:text-xl lg:text-2xl leading-relaxed max-w-3xl mx-auto ${
-            content.backgroundImage ? 'text-white/95' : 'text-muted-foreground'
-          } ${
+          <span className="bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent drop-shadow-lg">
+            {content.headline}
+          </span>
+        </motion.h1>
+        
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className={`text-lg md:text-xl lg:text-2xl leading-relaxed max-w-3xl mx-auto text-gray-300 ${
             isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
           }`}
-          style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.8)' }}
           contentEditable={isEditing}
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("subheadline", e)}
         >
           {content.subheadline}
-        </p>
+        </motion.p>
         
-        <div className="pt-4 space-y-3">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="pt-4 space-y-6"
+        >
           <Button 
             size="lg" 
-            className={`text-lg px-8 ${
+            className={`text-lg px-10 py-6 h-auto bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all duration-300 hover:scale-105 ${
               isEditing ? "outline-dashed outline-2 outline-primary/30" : ""
             }`}
           >
@@ -146,20 +175,34 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           </Button>
           
           {content.fomo?.urgency && (
-            <p className="text-sm text-accent font-medium">
+            <p className="text-sm text-cyan-400 font-medium">
               ⚡ {content.fomo.urgency}
             </p>
           )}
-        </div>
+
+          {/* Trust Badges */}
+          <div className="flex flex-wrap justify-center gap-6 pt-4">
+            {defaultTrustBadges.map((badge, i) => {
+              const icons = [Shield, Clock, Award];
+              const Icon = icons[i % icons.length];
+              return (
+                <div key={i} className="flex items-center gap-2 text-sm text-gray-400">
+                  <Icon className="w-4 h-4 text-cyan-500" />
+                  <span>{badge}</span>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
 
         {content.imageAttribution && (
-          <p className="text-xs opacity-70 mt-8">
+          <p className="text-xs text-gray-500 mt-8">
             Photo by{' '}
             <a
               href={content.imageAttribution.photographerLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="underline"
+              className="underline hover:text-gray-400"
             >
               {content.imageAttribution.photographerName}
             </a>
