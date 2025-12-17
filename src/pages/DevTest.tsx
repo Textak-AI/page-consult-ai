@@ -119,10 +119,8 @@ export default function DevTest() {
     });
   };
 
-  // Only render in development
-  if (import.meta.env.PROD) {
-    return null;
-  }
+  // Note: In a real production deployment, you might want to hide this page
+  // For now, keeping it accessible for testing purposes
 
   return (
     <div className="min-h-screen bg-background p-8">

@@ -41,7 +41,7 @@ const App = () => (
             <Route path="/gallery-test" element={<GalleryTest />} />
             <Route path="/hero-showcase" element={<HeroShowcase />} />
             <Route path="/section-selector" element={<SectionSelectorDemo />} />
-            {!import.meta.env.PROD && <Route path="/dev-test" element={<DevTest />} />}
+            <Route path="/dev-test" element={<DevTest />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
