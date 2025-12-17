@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Eye, EyeOff, Trash2, GripVertical, RefreshCw } from "lucide-react";
+import { Eye, EyeOff, Trash2, RefreshCw, Calculator, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useEditing } from "@/contexts/EditingContext";
 import { cn } from "@/lib/utils";
@@ -28,12 +28,8 @@ export function SectionManager({
   onRegenerateSection,
   isRegenerating,
 }: SectionManagerProps) {
-  const [expandedSection, setExpandedSection] = useState<number | null>(null);
+  const [regeneratingSection, setRegeneratingSection] = useState<string | null>(null);
   const { setEditingSection } = useEditing();
-
-  const toggleSection = (index: number) => {
-    setExpandedSection(expandedSection === index ? null : index);
-  };
 
   const toggleVisibility = (index: number) => {
     const updated = [...sections];
@@ -48,120 +44,144 @@ export function SectionManager({
     onSave();
   };
 
+  const handleRegenerate = async (sectionType: string) => {
+    if (!onRegenerateSection || isRegenerating) return;
+    setRegeneratingSection(sectionType);
+    await onRegenerateSection(sectionType);
+    setRegeneratingSection(null);
+  };
+
   const getSectionTitle = (type: string) => {
     const titles: { [key: string]: string } = {
-      hero: "Hero Section",
-      "problem-solution": "Problem/Solution",
+      hero: "Hero",
+      "stats-bar": "Stats Bar",
+      "problem-solution": "Problem / Solution",
       calculator: "ROI Calculator",
-      features: "Features Grid",
+      features: "Features",
       "photo-gallery": "Photo Gallery",
-      "social-proof": "Social Proof",
+      "social-proof": "Testimonials",
       "final-cta": "Final CTA",
     };
-    return titles[type] || type.replace(/_/g, ' ').replace(/-/g, ' ').toUpperCase();
+    return titles[type] || type.replace(/_/g, ' ').replace(/-/g, ' ');
+  };
+
+  const getSectionIcon = (type: string) => {
+    const icons: { [key: string]: string } = {
+      hero: "🎯",
+      "stats-bar": "📊",
+      "problem-solution": "💡",
+      calculator: "🧮",
+      features: "✨",
+      "photo-gallery": "🖼️",
+      "social-proof": "⭐",
+      "final-cta": "🚀",
+    };
+    return icons[type] || "📄";
   };
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="p-4 border-b border-white/10">
-        <h2 className="font-semibold text-lg text-white">Sections</h2>
+    <div className="flex flex-col h-full">
+      {/* Section List Header */}
+      <div className="px-4 py-3 border-b border-white/10">
+        <h2 className="font-semibold text-sm text-white tracking-wide">PAGE SECTIONS</h2>
       </div>
 
-      <div className="p-4 space-y-2">
-        {sections.map((section, index) => (
-          <div
-            key={index}
-            className="group border border-white/10 rounded-lg overflow-hidden bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors"
-          >
-            <div className="flex items-center p-3 gap-2">
-              <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
-              <button
-                onClick={() => toggleSection(index)}
-                className="flex-1 flex items-center gap-2 text-left hover:text-cyan-400 transition-colors text-white"
-              >
-                <ChevronRight
-                  className={`w-4 h-4 transition-transform ${
-                    expandedSection === index ? "rotate-90" : ""
-                  }`}
-                />
-                <span className="font-medium">{getSectionTitle(section.type)}</span>
-              </button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRegenerateSection?.(section.type);
-                }}
-                disabled={isRegenerating}
-                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-cyan-500/20 hover:text-cyan-400"
-                title={`Regenerate ${section.type.replace(/-/g, ' ')}`}
-              >
-                <RefreshCw className={cn("h-3.5 w-3.5", isRegenerating && "animate-spin")} />
-              </Button>
-              <button
-                onClick={() => toggleVisibility(index)}
-                className="p-1 hover:bg-white/10 rounded transition-colors"
-              >
-                {section.visible ? (
-                  <Eye className="w-4 h-4 text-cyan-400" />
-                ) : (
-                  <EyeOff className="w-4 h-4 text-gray-500" />
-                )}
-              </button>
-              <button
-                onClick={() => deleteSection(index)}
-                className="p-1 hover:bg-red-500/20 hover:text-red-400 rounded transition-colors text-gray-400"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+      {/* Sections List */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+        {sections.map((section, index) => {
+          const isCurrentlyRegenerating = regeneratingSection === section.type;
+          return (
+            <div
+              key={index}
+              className={cn(
+                "group flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all cursor-pointer",
+                section.visible 
+                  ? "bg-white/5 hover:bg-white/10 border border-white/10" 
+                  : "bg-white/[0.02] opacity-50 border border-white/5"
+              )}
+              onClick={() => setEditingSection(index)}
+            >
+              {/* Icon */}
+              <span className="text-base flex-shrink-0">{getSectionIcon(section.type)}</span>
+              
+              {/* Title */}
+              <span className={cn(
+                "flex-1 text-sm font-medium truncate",
+                section.visible ? "text-white" : "text-gray-500"
+              )}>
+                {getSectionTitle(section.type)}
+              </span>
 
-            {expandedSection === index && (
-              <div className="p-3 border-t border-white/10 bg-white/5">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full justify-start text-white hover:bg-white/10 hover:text-cyan-400"
-                  onClick={() => setEditingSection(index)}
+              {/* Action Buttons */}
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Regenerate */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRegenerate(section.type);
+                  }}
+                  disabled={isRegenerating}
+                  className={cn(
+                    "p-1.5 rounded hover:bg-cyan-500/20 transition-colors",
+                    isCurrentlyRegenerating ? "text-cyan-400" : "text-gray-400 hover:text-cyan-400"
+                  )}
+                  title={`Regenerate ${getSectionTitle(section.type)}`}
                 >
-                  Edit content
-                </Button>
+                  {isCurrentlyRegenerating ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  )}
+                </button>
+                
+                {/* Visibility */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleVisibility(index);
+                  }}
+                  className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                  title={section.visible ? "Hide section" : "Show section"}
+                >
+                  {section.visible ? (
+                    <Eye className="w-3.5 h-3.5 text-cyan-400" />
+                  ) : (
+                    <EyeOff className="w-3.5 h-3.5 text-gray-500" />
+                  )}
+                </button>
+                
+                {/* Delete */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteSection(index);
+                  }}
+                  className="p-1.5 rounded hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors"
+                  title="Delete section"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
-            )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
 
-      <div className="p-4 border-t border-white/10 space-y-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full justify-start relative pl-6 bg-white/5 border-white/10 text-white hover:bg-white/10"
-          >
-            <span className="absolute left-0 top-0 w-1 h-full bg-blue-500 rounded-l"></span>
-            + Add Section
-          </Button>
-        {onAddCalculator && (
+      {/* Add Calculator Button */}
+      {onAddCalculator && (
+        <div className="p-3 border-t border-white/10">
           <Button 
             variant="outline"
             size="sm"
-            className="w-full justify-start relative pl-6 bg-white/5 border-white/10 text-white hover:bg-white/10"
+            className="w-full justify-start gap-2 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border-purple-500/30 text-white hover:bg-purple-500/20 hover:border-purple-500/50"
             onClick={onAddCalculator}
           >
-            <span className="absolute left-0 top-0 w-1 h-full bg-purple-500 rounded-l"></span>
-            + Calculator
+            <Calculator className="w-4 h-4 text-purple-400" />
+            <span>Add Calculator</span>
+            <span className="ml-auto text-xs text-purple-400/70">PRO</span>
           </Button>
-        )}
-        <Button 
-          variant="outline" 
-          size="sm"
-          className="w-full justify-start relative pl-6 bg-white/5 border-white/10 text-white hover:bg-white/10"
-        >
-          <span className="absolute left-0 top-0 w-1 h-full bg-orange-500 rounded-l"></span>
-          ⚡ AI Improve
-        </Button>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
