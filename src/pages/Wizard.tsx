@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,9 @@ import { MessageCircle, Loader2 } from "lucide-react";
 import { useSession } from "@/contexts/SessionContext";
 import { WelcomeBackModal } from "@/components/editor/WelcomeBackModal";
 import iconmark from "@/assets/iconmark-darkmode.svg";
+import { useIntelligence } from "@/hooks/useIntelligence";
+import IntelligenceGathering from "@/components/wizard/IntelligenceGathering";
+import type { PersonaIntelligence, GeneratedContent } from "@/services/intelligence/types";
 
 type Message = {
   role: "ai" | "user";
@@ -74,6 +77,10 @@ export default function Wizard() {
   const [challenge, setChallenge] = useState("");
   const [uniqueValue, setUniqueValue] = useState("");
   const [offer, setOffer] = useState("");
+  
+  // Intelligence state
+  const [intelligenceData, setIntelligenceData] = useState<PersonaIntelligence | null>(null);
+  const [generatedContentData, setGeneratedContentData] = useState<GeneratedContent | null>(null);
 
   // Helper functions to map demo values to wizard types
   function mapDemoIndustryToType(industry: string): IndustryType {
@@ -334,6 +341,59 @@ export default function Wizard() {
     setMessages(prev => [...prev, { role: "user", content }]);
   };
 
+  // Intelligence gathering hook
+  const handleIntelligenceComplete = useCallback((intelligence: PersonaIntelligence | null, content: GeneratedContent | null) => {
+    console.log('✅ Intelligence gathering complete', { hasIntelligence: !!intelligence, hasContent: !!content });
+    setIntelligenceData(intelligence);
+    setGeneratedContentData(content);
+    
+    // Auto-advance to next step (step 5: service type for professional, or challenge for others)
+    const isProfessional = selectedIndustry === "professional";
+    setStep(5);
+    
+    addAIMessage(
+      intelligence 
+        ? `I've researched your market and built a detailed customer persona.\n\n` +
+          (isProfessional 
+            ? `Now, what type of professional service do you provide?\n\n(Examples: driveway replacement, legal services, accounting, home improvement...)`
+            : `What's the biggest problem or challenge your audience faces that your solution solves?\n\n(This becomes your compelling headline)`)
+        : (isProfessional
+            ? `What type of professional service do you provide?\n\n(Examples: driveway replacement, legal services, accounting, home improvement...)`
+            : `What's the biggest challenge your audience faces that you solve?\n\n(This becomes your compelling headline)`)
+    );
+  }, [selectedIndustry]);
+  
+  const {
+    stage: intelligenceStage,
+    progress: intelligenceProgress,
+    error: intelligenceError,
+    gatherIntelligence,
+    isGathering,
+    isComplete: isIntelligenceComplete
+  } = useIntelligence({
+    consultationId,
+    userId,
+    onComplete: handleIntelligenceComplete
+  });
+  
+  // Trigger intelligence gathering when entering step 4
+  useEffect(() => {
+    if (step === 4 && intelligenceStage === 'idle' && targetAudience && !isGathering) {
+      const industryTitle = selectedIndustry === "other" 
+        ? customIndustry 
+        : industries.find(i => i.id === selectedIndustry)?.title || "";
+      const goalTitle = goals.find(g => g.id === selectedGoal)?.title || "";
+      
+      gatherIntelligence({
+        industry: industryTitle,
+        targetAudience: targetAudience,
+        serviceType: serviceType || undefined,
+        goal: goalTitle,
+        challenge: challenge || undefined
+      });
+    }
+  }, [step, intelligenceStage, targetAudience, selectedIndustry, customIndustry, selectedGoal, serviceType, challenge, gatherIntelligence, isGathering]);
+
   const saveProgress = async (updates: any) => {
     if (!consultationId) return;
     
@@ -420,27 +480,12 @@ export default function Wizard() {
     addUserMessage(targetAudience);
     await saveProgress({ target_audience: targetAudience });
     
-    // Note: Email capture not needed - users are already authenticated
-    
-    // Check if this is professional services - if so, ask for service type
-    if (selectedIndustry === "professional") {
-      setStep(4);
-      setServiceType(""); // Clear input for next question
-      addAIMessage(
-        `Thanks! ${targetAudience.split(" ")[0]}s are a clear target.\n\n` +
-        `Before we continue, what type of professional service do you provide?\n\n` +
-        `(Examples: driveway replacement, legal services, accounting, home improvement, consulting...)`
-      );
-    } else {
-      setStep(4);
-      setChallenge(""); // Clear input for next question
-      addAIMessage(
-        `Thanks! ${targetAudience.split(" ")[0]}s are worth understanding deeply.\n\n` +
-        `Now here's the key question:\n\n` +
-        `What's the biggest problem or challenge your audience faces that your solution solves?\n\n` +
-        `(This becomes your compelling headline)`
-      );
-    }
+    // Go to intelligence gathering step (step 4)
+    setStep(4);
+    addAIMessage(
+      `Perfect! ${targetAudience.split(" ")[0]}s are a valuable target.\n\n` +
+      `Let me research your market and build a detailed customer persona...`
+    );
   };
 
   const handleServiceTypeSubmit = async () => {
@@ -457,7 +502,7 @@ export default function Wizard() {
     addUserMessage(serviceType);
     await saveProgress({ service_type: serviceType });
     
-    setStep(5);
+    setStep(6); // Step 6: Challenge (for professional services)
     setChallenge(""); // Clear input for next question
     addAIMessage(
       `Perfect! ${serviceType} is a valuable service.\n\n` +
@@ -481,7 +526,7 @@ export default function Wizard() {
     addUserMessage(challenge);
     await saveProgress({ challenge });
     
-    setStep(selectedIndustry === "professional" ? 6 : 5);
+    setStep(selectedIndustry === "professional" ? 7 : 6); // UniqueValue step
     setUniqueValue(""); // Clear input for next question
     addAIMessage("That's a real pain point. Strong foundation for your headline.\n\nWhat makes your solution uniquely valuable?\n\nWhy should they choose you over alternatives?");
   };
@@ -500,7 +545,7 @@ export default function Wizard() {
     addUserMessage(uniqueValue);
     await saveProgress({ unique_value: uniqueValue });
     
-    setStep(selectedIndustry === "professional" ? 7 : 6);
+    setStep(selectedIndustry === "professional" ? 8 : 7); // Offer step
     setOffer(""); // Clear input for next question
     addAIMessage(`Almost there! What are you offering to capture ${selectedGoal === "leads" ? "leads" : selectedGoal === "sales" ? "sales" : selectedGoal === "signups" ? "signups" : "meetings"}?`);
   };
@@ -527,7 +572,7 @@ export default function Wizard() {
 
   const showSummary = async () => {
     await saveProgress({ status: "completed" });
-    const finalStep = selectedIndustry === "professional" ? 8 : 7;
+    const finalStep = selectedIndustry === "professional" ? 9 : 8; // Summary step
     setStep(finalStep);
     addAIMessage("Perfect! I have everything I need. Here's your custom landing page strategy:");
   };
@@ -580,7 +625,10 @@ export default function Wizard() {
           unique_value: uniqueValue,
           offer: offer,
           timestamp: new Date().toISOString()
-        }
+        },
+        // Pass intelligence data to the generate page
+        intelligence: intelligenceData,
+        generatedContent: generatedContentData
       }
     });
   };
@@ -623,7 +671,8 @@ export default function Wizard() {
     }, 500);
   };
 
-  const totalSteps = selectedIndustry === "professional" ? 7 : 6;
+  // New flow: 1-Industry, 2-Goal, 3-Audience, 4-Intelligence, 5-ServiceType(pro)/Challenge, 6-Challenge(pro)/UniqueValue, 7-UniqueValue(pro)/Offer, 8-Offer(pro)/Summary, 9-Summary(pro)
+  const totalSteps = selectedIndustry === "professional" ? 8 : 7;
   const currentStep = step > totalSteps ? totalSteps : step;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
@@ -817,8 +866,19 @@ export default function Wizard() {
                 </div>
               )}
 
-              {/* Step 4: Service Type (Professional Services Only) */}
-              {step === 4 && selectedIndustry === "professional" && (
+              {/* Step 4: Intelligence Gathering */}
+              {step === 4 && (
+                <div className="animate-fade-in">
+                  <IntelligenceGathering
+                    stage={intelligenceStage}
+                    progress={intelligenceProgress}
+                    error={intelligenceError || undefined}
+                  />
+                </div>
+              )}
+
+              {/* Step 5: Service Type (Professional Services Only) */}
+              {step === 5 && selectedIndustry === "professional" && (
                 <div className="space-y-4 animate-fade-in">
                   <Textarea
                     placeholder="e.g., driveway replacement and repair, legal services, accounting, home improvement, business consulting..."
@@ -842,8 +902,8 @@ export default function Wizard() {
                 </div>
               )}
 
-              {/* Step 4/5: Challenge */}
-              {((step === 4 && selectedIndustry !== "professional") || (step === 5 && selectedIndustry === "professional")) && (
+              {/* Step 5/6: Challenge */}
+              {((step === 5 && selectedIndustry !== "professional") || (step === 6 && selectedIndustry === "professional")) && (
                 <div className="space-y-4 animate-fade-in">
                   <Textarea
                     placeholder="e.g., Wasting 10 hours per week on manual tasks, Struggling to prove ROI to leadership..."
@@ -867,8 +927,8 @@ export default function Wizard() {
                 </div>
               )}
 
-              {/* Step 5/6: Unique Value */}
-              {((step === 5 && selectedIndustry !== "professional") || (step === 6 && selectedIndustry === "professional")) && (
+              {/* Step 6/7: Unique Value */}
+              {((step === 6 && selectedIndustry !== "professional") || (step === 7 && selectedIndustry === "professional")) && (
                 <div className="space-y-4 animate-fade-in">
                   <Textarea
                     placeholder="e.g., Automates workflows in 5 minutes vs 2 hours manually, Integrates with existing tools..."
@@ -892,8 +952,8 @@ export default function Wizard() {
                 </div>
               )}
 
-              {/* Step 6/7: Offer */}
-              {((step === 6 && selectedIndustry !== "professional") || (step === 7 && selectedIndustry === "professional")) && (
+              {/* Step 7/8: Offer */}
+              {((step === 7 && selectedIndustry !== "professional") || (step === 8 && selectedIndustry === "professional")) && (
                 <div className="space-y-4 animate-fade-in">
                   <Textarea
                     placeholder="e.g., Free 14-day trial, Free consultation (30 min), Limited-time discount..."
@@ -913,8 +973,8 @@ export default function Wizard() {
               )}
 
 
-              {/* Step 7/8: Summary */}
-              {(step === 7 || step === 8) && (
+              {/* Step 8/9: Summary */}
+              {(step === 8 || step === 9) && (
                 <div className="space-y-6 animate-fade-in">
                   <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
                     <h3 className="font-bold text-xl mb-6 flex items-center gap-2 text-white">
