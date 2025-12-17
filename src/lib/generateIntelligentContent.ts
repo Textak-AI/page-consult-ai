@@ -1,3 +1,19 @@
+/**
+ * @deprecated DEPRECATED - Use src/services/intelligence/contentGeneration.ts instead
+ * 
+ * This file is kept only for backwards compatibility fallback.
+ * All new features should use the intelligence-first pipeline:
+ * 
+ * import { generateIntelligentContent } from '@/services/intelligence/contentGeneration';
+ * import { runIntelligencePipeline } from '@/services/intelligence';
+ * 
+ * The new system provides:
+ * - Market research via Perplexity API
+ * - Persona synthesis via Claude
+ * - Intelligence-aware content generation
+ * - Traceability and confidence scoring
+ */
+
 import { supabase } from '@/integrations/supabase/client';
 import { getIndustryPattern } from '@/data/industry-patterns';
 
