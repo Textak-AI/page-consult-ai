@@ -4,7 +4,8 @@ import iconmark from "@/assets/iconmark.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check, Sparkles, Wand2, Palette, Undo2, Redo2, Brain, Target, User, AlertTriangle, Heart, ShieldAlert, MessageSquare, BarChart3, ChevronDown } from "lucide-react";
+import { Loader2, Check, Sparkles, Wand2, Palette, Undo2, Redo2, Brain } from "lucide-react";
+import { PersonaInsightsPanel } from "@/components/editor/PersonaInsightsPanel";
 import { SectionManager } from "@/components/editor/SectionManager";
 import { LivePreview } from "@/components/editor/LivePreview";
 import { PublishModal } from "@/components/editor/PublishModal";
@@ -14,7 +15,6 @@ import { StylePicker } from "@/components/editor/StylePicker";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
 import { generateIntelligentContent, runIntelligencePipeline } from "@/services/intelligence";
 import type { PersonaIntelligence, GeneratedContent } from "@/services/intelligence/types";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import logo from "/logo/whiteAsset_3combimark_darkmode.svg";
 
@@ -1315,117 +1315,7 @@ function EditorContent({
         <div className="w-72 border-r border-white/10 bg-white/5 backdrop-blur-md flex flex-col overflow-hidden">
           {/* Persona Insights Panel */}
           {intelligence?.synthesizedPersona && (
-            <Collapsible defaultOpen className="border-b border-white/10">
-              <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 hover:bg-white/5 transition-colors">
-                <div className="flex items-center gap-2 text-purple-300">
-                  <Brain className="w-4 h-4" />
-                  <span className="text-sm font-medium">Persona Insights</span>
-                </div>
-                <ChevronDown className="w-4 h-4 text-purple-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="px-4 pb-4 space-y-4">
-                {/* Persona Name */}
-                <div className="flex items-center gap-2 text-white">
-                  <User className="w-4 h-4 text-cyan-400" />
-                  <span className="text-sm font-semibold">{intelligence.synthesizedPersona.name || "Target Customer"}</span>
-                </div>
-                
-                {/* Primary Pain */}
-                {intelligence.synthesizedPersona.painPoints?.[0] && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-red-400">
-                      <AlertTriangle className="w-3 h-3" />
-                      <span className="text-xs font-medium">Primary Pain</span>
-                    </div>
-                    <p className="text-xs text-gray-300 pl-4">
-                      {intelligence.synthesizedPersona.painPoints[0].pain}
-                    </p>
-                  </div>
-                )}
-                
-                {/* Primary Desire */}
-                {intelligence.synthesizedPersona.desires?.[0] && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-green-400">
-                      <Heart className="w-3 h-3" />
-                      <span className="text-xs font-medium">Primary Desire</span>
-                    </div>
-                    <p className="text-xs text-gray-300 pl-4">
-                      {intelligence.synthesizedPersona.desires[0].desire}
-                    </p>
-                  </div>
-                )}
-                
-                {/* Key Objection */}
-                {intelligence.synthesizedPersona.objections?.[0] && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-yellow-400">
-                      <ShieldAlert className="w-3 h-3" />
-                      <span className="text-xs font-medium">Key Objection</span>
-                    </div>
-                    <p className="text-xs text-gray-300 pl-4">
-                      {intelligence.synthesizedPersona.objections[0].objection}
-                    </p>
-                    {intelligence.synthesizedPersona.objections[0].counterArgument && (
-                      <p className="text-xs text-cyan-300 pl-4">
-                        → {intelligence.synthesizedPersona.objections[0].counterArgument}
-                      </p>
-                    )}
-                  </div>
-                )}
-                
-                {/* Language Patterns */}
-                {intelligence.synthesizedPersona.languagePatterns?.length > 0 && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-purple-400">
-                      <MessageSquare className="w-3 h-3" />
-                      <span className="text-xs font-medium">They Say Things Like</span>
-                    </div>
-                    <div className="pl-4 space-y-1">
-                      {intelligence.synthesizedPersona.languagePatterns.slice(0, 4).map((phrase: string, i: number) => (
-                        <p key={i} className="text-xs text-gray-400 italic">
-                          "{phrase}"
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Market Stats */}
-                {intelligence.marketResearch?.claims?.length > 0 && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-cyan-400">
-                      <BarChart3 className="w-3 h-3" />
-                      <span className="text-xs font-medium">Market Intelligence</span>
-                    </div>
-                    <div className="pl-4 space-y-1">
-                      {intelligence.marketResearch.claims.slice(0, 2).map((claim: any, i: number) => (
-                        <p key={i} className="text-xs text-gray-300">
-                          • {claim.claim}
-                          {claim.source && (
-                            <span className="text-gray-500 ml-1">({claim.source})</span>
-                          )}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Confidence Score */}
-                {intelligence.confidenceScore > 0 && (
-                  <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                    <span className="text-xs text-gray-400">Research Confidence</span>
-                    <span className={cn(
-                      "text-xs font-medium",
-                      intelligence.confidenceScore >= 0.8 ? "text-green-400" :
-                      intelligence.confidenceScore >= 0.5 ? "text-yellow-400" : "text-red-400"
-                    )}>
-                      {Math.round(intelligence.confidenceScore * 100)}%
-                    </span>
-                  </div>
-                )}
-              </CollapsibleContent>
-            </Collapsible>
+            <PersonaInsightsPanel intelligence={intelligence} />
           )}
           
           {/* Section Manager */}
