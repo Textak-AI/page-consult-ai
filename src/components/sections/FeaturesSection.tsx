@@ -1,4 +1,5 @@
 import { Zap, Target, Shield, TrendingUp, Users, Award, Grid, List, Headset, DollarSign, Tag, Clock } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface FeaturesSectionProps {
   content: {
@@ -59,29 +60,43 @@ const getIconForFeature = (feature: { title: string; description: string; icon: 
 
 export function FeaturesSection({ content }: FeaturesSectionProps) {
   return (
-    <section className="py-20 px-4">
+    <section className="py-24 px-4 bg-slate-50 dark:bg-slate-900/50">
       <div className="container mx-auto max-w-6xl">
-        <div className="text-center mb-16 mx-auto max-w-3xl">
-          <h2 className="text-4xl font-bold mb-4">Key Features</h2>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16 mx-auto max-w-3xl"
+        >
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+            Why Choose Us
+          </h2>
           <p className="text-lg text-muted-foreground">
-            Everything you need to succeed
+            Everything you need to succeed, all in one place
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8">
           {content.features.map((feature, i) => {
             const Icon = getIconForFeature(feature);
             return (
-              <div
+              <motion.div
                 key={i}
-                className="p-8 rounded-lg border bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 flex flex-col"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                className="group p-8 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/10 transition-all duration-300 hover:-translate-y-2 flex flex-col"
               >
-                <Icon className="w-12 h-12 text-primary mb-6" />
-                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className="text-base text-muted-foreground leading-relaxed">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Icon className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">{feature.title}</h3>
+                <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
                   {feature.description}
                 </p>
-              </div>
+              </motion.div>
             );
           })}
         </div>

@@ -5,6 +5,7 @@ import { FeaturesSection } from "@/components/sections/FeaturesSection";
 import { SocialProofSection } from "@/components/sections/SocialProofSection";
 import { FinalCTASection } from "@/components/sections/FinalCTASection";
 import { PhotoGallerySection } from "@/components/sections/PhotoGallerySection";
+import { StatsBarSection } from "@/components/sections/StatsBarSection";
 import { useEditing } from "@/contexts/EditingContext";
 import { EditingToolbar } from "@/components/editor/EditingToolbar";
 import { styleVariants } from "@/lib/styleVariants";
@@ -50,6 +51,13 @@ export function LivePreview({ sections, onSectionsChange }: LivePreviewProps) {
             content={section.content}
             onUpdate={updateSection}
             isEditing={editingSection === index}
+          />
+        );
+      case "stats-bar":
+        return (
+          <StatsBarSection
+            key={index}
+            statistics={section.content.statistics || []}
           />
         );
       case "problem-solution":
