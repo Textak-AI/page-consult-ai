@@ -1039,6 +1039,7 @@ function GenerateContent() {
         preGeneratedContent={preGeneratedContent}
         isRegenerating={isRegenerating}
         handleRegenerate={handleRegenerate}
+        handleRegenerateSection={handleRegenerateSection}
       />
     </EditingProvider>
   );
@@ -1068,6 +1069,7 @@ function EditorContent({
   preGeneratedContent,
   isRegenerating,
   handleRegenerate,
+  handleRegenerateSection,
 }: any) {
   const { toast } = useToast();
   const { pageStyle, setPageStyle } = useEditing();
