@@ -58,7 +58,29 @@ const getIconForFeature = (feature: { title: string; description: string; icon: 
   return iconMap[feature.icon] || Zap;
 };
 
+// Default features to pad to 6 when less are provided
+const defaultFeatures = [
+  { title: "Expert Support", description: "Dedicated support team available to help you succeed at every step.", icon: "Headset" },
+  { title: "Proven Results", description: "Track record of delivering exceptional outcomes for our clients.", icon: "TrendingUp" },
+  { title: "Quality Guaranteed", description: "We stand behind our work with comprehensive quality assurance.", icon: "Shield" },
+];
+
 export function FeaturesSection({ content }: FeaturesSectionProps) {
+  // Ensure we always have exactly 6 features for balanced grid
+  let features = [...(content.features || [])];
+  
+  if (features.length < 6) {
+    const needed = 6 - features.length;
+    const existingTitles = features.map(f => f.title.toLowerCase());
+    const availableDefaults = defaultFeatures.filter(
+      d => !existingTitles.some(t => t.includes(d.title.toLowerCase().split(' ')[0]))
+    );
+    features = [...features, ...availableDefaults.slice(0, needed)];
+  }
+  
+  // Cap at 6 for clean grid
+  features = features.slice(0, 6);
+
   return (
     <section className="py-20 md:py-28 px-4 bg-slate-50 dark:bg-slate-900/50">
       <div className="container mx-auto max-w-6xl">
@@ -78,7 +100,7 @@ export function FeaturesSection({ content }: FeaturesSectionProps) {
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {content.features.map((feature, i) => {
+          {features.map((feature, i) => {
             const Icon = getIconForFeature(feature);
             return (
               <motion.div
