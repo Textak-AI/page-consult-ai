@@ -105,6 +105,7 @@ export default function DevTest() {
 
   const goToGeneratePage = () => {
     const consultationData = {
+      id: "dev-test-" + Date.now(),
       industry: formData.industry,
       specificService: formData.service,
       goal: formData.goal,
@@ -115,7 +116,10 @@ export default function DevTest() {
     };
     
     navigate('/generate', { 
-      state: { consultationData } 
+      state: { 
+        consultationData,
+        devMode: true // Bypass authentication
+      } 
     });
   };
 
