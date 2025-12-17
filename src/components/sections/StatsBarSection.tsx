@@ -16,7 +16,7 @@ function isCleanStat(stat: Statistic): boolean {
   
   // Value should be short (number-like): e.g., "85%", "$1,200", "21,714"
   const valueClean = stat.value.trim();
-  if (valueClean.length > 15) return false;
+  if (valueClean.length > 20) return false; // Allow slightly longer for ranges
   
   // Label should be under ~40 chars (5-6 words max)
   const labelClean = stat.label.trim();
@@ -28,6 +28,21 @@ function isCleanStat(stat: Statistic): boolean {
   }
   
   return true;
+}
+
+// Simplify long/complex values for cleaner display
+function simplifyValue(value: string): string {
+  const trimmed = value.trim();
+  
+  // Handle ranges like "$1,850-$2,100" -> "$2,100"
+  if (trimmed.includes('-') && trimmed.length > 10) {
+    const rangeMatch = trimmed.match(/\$?([\d,]+)\s*-\s*\$?([\d,]+)/);
+    if (rangeMatch) {
+      return `$${rangeMatch[2]}`;
+    }
+  }
+  
+  return trimmed;
 }
 
 // Extract a clean value from messy text (best effort)
@@ -112,8 +127,8 @@ export function StatsBarSection({ statistics }: StatsBarSectionProps) {
               transition={{ delay: i * 0.15, duration: 0.5 }}
               className="bg-white dark:bg-slate-800/60 rounded-2xl p-6 md:p-8 text-center shadow-lg shadow-slate-200/50 dark:shadow-slate-900/30 border border-slate-200/80 dark:border-slate-700/50 hover:shadow-xl hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-300"
             >
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-500 dark:from-cyan-400 dark:to-cyan-300 bg-clip-text text-transparent mb-3">
-                {stat.value}
+              <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-500 dark:from-cyan-400 dark:to-cyan-300 bg-clip-text text-transparent mb-3 whitespace-nowrap">
+                {simplifyValue(stat.value)}
               </div>
               <div className="text-slate-700 dark:text-slate-300 font-medium text-sm md:text-base mb-2 line-clamp-2">
                 {stat.label}

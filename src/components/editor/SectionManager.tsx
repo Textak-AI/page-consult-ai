@@ -78,19 +78,7 @@ export function SectionManager({
     return titles[type] || type.replace(/_/g, ' ').replace(/-/g, ' ');
   };
 
-  const getSectionIcon = (type: string) => {
-    const icons: { [key: string]: string } = {
-      hero: "🎯",
-      "stats-bar": "📊",
-      "problem-solution": "💡",
-      calculator: "🧮",
-      features: "✨",
-      "photo-gallery": "🖼️",
-      "social-proof": "⭐",
-      "final-cta": "🚀",
-    };
-    return icons[type] || "📄";
-  };
+  // Removed emoji icons - using action icons on hover instead
 
   return (
     <div className="flex flex-col h-full">
@@ -107,19 +95,16 @@ export function SectionManager({
             <div
               key={index}
               className={cn(
-                "group flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all cursor-pointer",
+                "group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all cursor-pointer",
                 section.visible 
                   ? "bg-white/5 hover:bg-white/10 border border-white/10" 
                   : "bg-white/[0.02] opacity-50 border border-white/5"
               )}
               onClick={() => setEditingSection(index)}
             >
-              {/* Icon */}
-              <span className="text-base flex-shrink-0">{getSectionIcon(section.type)}</span>
-              
-              {/* Title */}
+              {/* Title - no emoji, just text */}
               <span className={cn(
-                "flex-1 text-sm font-medium truncate",
+                "flex-1 text-sm font-medium",
                 section.visible ? "text-white" : "text-gray-500"
               )}>
                 {getSectionTitle(section.type)}
