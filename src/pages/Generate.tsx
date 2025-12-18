@@ -1345,9 +1345,15 @@ function EditorContent({
         currentStyle={pageStyle}
         onStyleSelect={(style) => {
           setPageStyle(style);
+          const styleNames: Record<string, string> = {
+            premium: 'Premium',
+            minimal: 'Minimal', 
+            bold: 'Bold',
+            elegant: 'Elegant'
+          };
           toast({
-            title: "Style updated",
-            description: `Applied ${style} style to all sections`,
+            title: `Style applied: ${styleNames[style] || style}`,
+            description: "Your page now uses the new design preset",
           });
         }}
       />
