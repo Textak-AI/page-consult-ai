@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Trash2, RefreshCw, Calculator, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Trash2, RefreshCw, Calculator, Loader2, Zap } from "lucide-react";
 import { useState } from "react";
 import { useEditing } from "@/contexts/EditingContext";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ interface SectionManagerProps {
   onAddCalculator?: () => void;
   onRegenerateSection?: (sectionType: string) => void;
   isRegenerating?: boolean;
+  actionCost?: number;
 }
 
 export function SectionManager({
@@ -28,6 +29,7 @@ export function SectionManager({
   onAddCalculator,
   onRegenerateSection,
   isRegenerating,
+  actionCost = 1,
 }: SectionManagerProps) {
   const [regeneratingSection, setRegeneratingSection] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);

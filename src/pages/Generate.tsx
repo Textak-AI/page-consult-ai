@@ -18,6 +18,7 @@ import type { PersonaIntelligence, GeneratedContent } from "@/services/intellige
 import { cn } from "@/lib/utils";
 import logo from "/logo/whiteAsset_3combimark_darkmode.svg";
 import { useAIActions, type AIActionType } from "@/hooks/useAIActions";
+import { useCredits } from "@/hooks/useCredits";
 import { StylePresetName } from "@/styles/presets";
 import {
   UsageIndicator,
@@ -26,6 +27,7 @@ import {
   LowBalanceAlert,
   UsageHistoryModal,
 } from "@/components/usage";
+import { CreditDisplay, UpgradeDrawer } from "@/components/credits";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -1145,9 +1147,11 @@ function EditorContent({
 
   // AI Actions usage tracking
   const aiActions = useAIActions(userId);
+  const { credits } = useCredits(userId);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [zeroBalanceModalOpen, setZeroBalanceModalOpen] = useState(false);
   const [usageHistoryOpen, setUsageHistoryOpen] = useState(false);
+  const [upgradeDrawerOpen, setUpgradeDrawerOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<{
     type: AIActionType;
     cost: number;
@@ -1419,8 +1423,22 @@ function EditorContent({
 
       {/* Editor layout */}
       <div className="flex-1 flex overflow-hidden relative z-10">
-        {/* Left sidebar with Persona Insights + Section Manager */}
+        {/* Left sidebar with Credits + Persona Insights + Section Manager */}
         <div className="w-72 border-r border-white/10 bg-white/5 backdrop-blur-md flex flex-col overflow-hidden">
+          {/* Credit Display */}
+          {userId && !aiActions.loading && (
+            <div className="p-3 border-b border-white/10">
+              <CreditDisplay
+                available={credits.available}
+                total={credits.total}
+                resetDate={credits.resetDate}
+                isUnlimited={credits.isUnlimited}
+                onUpgrade={() => setUpgradeDrawerOpen(true)}
+                onGetMoreActions={() => setUpgradeDrawerOpen(true)}
+              />
+            </div>
+          )}
+          
           {/* Persona Insights Panel */}
           {intelligence?.synthesizedPersona && (
             <PersonaInsightsPanel 
@@ -1436,8 +1454,9 @@ function EditorContent({
               onSectionsChange={setSections}
               onSave={handleSave}
               onAddCalculator={() => setCalculatorUpgradeOpen(true)}
-              onRegenerateSection={handleRegenerateSection}
+              onRegenerateSection={handleRegenerateSectionWithUsage}
               isRegenerating={isRegenerating}
+              actionCost={1}
             />
           </div>
         </div>
@@ -1525,9 +1544,33 @@ function EditorContent({
       {showLowBalanceAlert && aiActions.isLowBalance && !aiActions.isZeroBalance && (
         <LowBalanceAlert
           remaining={aiActions.available}
+          onUpgrade={() => setUpgradeDrawerOpen(true)}
           onDismiss={() => setShowLowBalanceAlert(false)}
         />
       )}
+
+      <UpgradeDrawer
+        open={upgradeDrawerOpen}
+        onOpenChange={setUpgradeDrawerOpen}
+        currentPlan={credits.plan}
+        currentUsage={{ used: credits.used, total: credits.total }}
+        onSelectPlan={(planId) => {
+          console.log('Selected plan:', planId);
+          // TODO: Connect to Stripe checkout
+          toast({
+            title: "Redirecting to checkout...",
+            description: `Upgrading to ${planId} plan`,
+          });
+        }}
+        onPurchaseActions={(amount) => {
+          console.log('Purchase actions:', amount);
+          // TODO: Connect to Stripe checkout
+          toast({
+            title: "Redirecting to checkout...",
+            description: `Purchasing ${amount} actions`,
+          });
+        }}
+      />
     </div>
   );
 }
