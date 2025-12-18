@@ -83,8 +83,20 @@ export function UpgradeDrawer({
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
   const handleCheckout = async (priceId: string, mode: 'subscription' | 'payment') => {
+    console.log('🛒 Starting checkout:', { priceId, mode });
     setIsLoading(priceId);
     try {
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔐 Auth session:', session ? 'Authenticated' : 'Not authenticated');
+      
+      if (!session) {
+        toast.error('Please sign in to upgrade your plan');
+        setIsLoading(null);
+        return;
+      }
+
+      console.log('📡 Calling stripe-checkout function...');
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
           priceId,
@@ -94,15 +106,22 @@ export function UpgradeDrawer({
         },
       });
 
-      if (error) throw error;
+      console.log('📥 Stripe checkout response:', { data, error });
+
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        throw error;
+      }
 
       if (data?.url) {
+        console.log('✅ Redirecting to Stripe:', data.url);
         window.location.href = data.url;
       } else {
+        console.error('❌ No checkout URL in response:', data);
         throw new Error('No checkout URL returned');
       }
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.error('❌ Checkout error:', error);
       toast.error('Failed to start checkout. Please try again.');
     } finally {
       setIsLoading(null);
@@ -110,8 +129,10 @@ export function UpgradeDrawer({
   };
 
   const handlePlanSelect = async (planId: string, priceId: string | null) => {
+    console.log('📋 Plan selected:', { planId, priceId });
     if (!priceId) {
       // Starter plan - no checkout needed
+      console.log('ℹ️ Starter plan - no checkout needed');
       onSelectPlan?.(planId);
       return;
     }
@@ -119,6 +140,7 @@ export function UpgradeDrawer({
   };
 
   const handleActionPackPurchase = async (pack: typeof actionPacks[0]) => {
+    console.log('💰 Action pack purchase:', pack);
     await handleCheckout(pack.priceId, 'payment');
     onPurchaseActions?.(pack.amount);
   };
