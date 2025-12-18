@@ -1,20 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Zap, Check, Star, ArrowRight, CreditCard, Sparkles } from 'lucide-react';
+import { X, Zap, Check, ArrowRight, CreditCard, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-
-interface Plan {
-  id: string;
-  name: string;
-  price: number;
-  priceLabel: string;
-  actions: number | 'unlimited';
-  actionsLabel: string;
-  features: string[];
-  recommended?: boolean;
-  current?: boolean;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { PLAN_DETAILS, ACTION_PACKS, STRIPE_PRICES } from '@/lib/stripe-config';
 
 interface UpgradeDrawerProps {
   open: boolean;
@@ -25,14 +16,15 @@ interface UpgradeDrawerProps {
   onPurchaseActions?: (amount: number) => void;
 }
 
-const plans: Plan[] = [
+const plans = [
   {
     id: 'starter',
-    name: 'Starter',
-    price: 0,
+    name: PLAN_DETAILS.starter.name,
+    price: PLAN_DETAILS.starter.price,
     priceLabel: 'Free',
-    actions: 30,
-    actionsLabel: '30 actions/mo',
+    actions: PLAN_DETAILS.starter.actions,
+    actionsLabel: `${PLAN_DETAILS.starter.actions} actions/mo`,
+    priceId: PLAN_DETAILS.starter.priceId,
     features: [
       '1 landing page',
       'Basic AI generation',
@@ -41,11 +33,12 @@ const plans: Plan[] = [
   },
   {
     id: 'pro',
-    name: 'Pro',
-    price: 29,
-    priceLabel: '$29/mo',
-    actions: 150,
-    actionsLabel: '150 actions/mo',
+    name: PLAN_DETAILS.pro.name,
+    price: PLAN_DETAILS.pro.price,
+    priceLabel: `$${PLAN_DETAILS.pro.price}/mo`,
+    actions: PLAN_DETAILS.pro.actions,
+    actionsLabel: `${PLAN_DETAILS.pro.actions} actions/mo`,
+    priceId: PLAN_DETAILS.pro.priceId,
     features: [
       'Unlimited pages',
       'Advanced AI features',
@@ -57,11 +50,12 @@ const plans: Plan[] = [
   },
   {
     id: 'agency',
-    name: 'Agency',
-    price: 99,
-    priceLabel: '$99/mo',
-    actions: 'unlimited',
+    name: PLAN_DETAILS.agency.name,
+    price: PLAN_DETAILS.agency.price,
+    priceLabel: `$${PLAN_DETAILS.agency.price}/mo`,
+    actions: PLAN_DETAILS.agency.actions,
     actionsLabel: 'Unlimited',
+    priceId: PLAN_DETAILS.agency.priceId,
     features: [
       'Everything in Pro',
       'Unlimited AI actions',
@@ -72,11 +66,10 @@ const plans: Plan[] = [
   },
 ];
 
-const actionPacks = [
-  { amount: 10, price: 5, savings: 0 },
-  { amount: 25, price: 10, savings: 17 },
-  { amount: 50, price: 18, savings: 28 },
-];
+const actionPacks = ACTION_PACKS.map(pack => ({
+  ...pack,
+  savings: pack.amount === 10 ? 0 : pack.amount === 25 ? 17 : 28,
+}));
 
 export function UpgradeDrawer({
   open,
@@ -87,6 +80,48 @@ export function UpgradeDrawer({
   onPurchaseActions,
 }: UpgradeDrawerProps) {
   const [selectedTab, setSelectedTab] = useState<'plans' | 'actions'>('plans');
+  const [isLoading, setIsLoading] = useState<string | null>(null);
+
+  const handleCheckout = async (priceId: string, mode: 'subscription' | 'payment') => {
+    setIsLoading(priceId);
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
+          priceId,
+          mode,
+          successUrl: `${window.location.origin}/generate?checkout=success`,
+          cancelUrl: `${window.location.origin}/generate?checkout=cancelled`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handlePlanSelect = async (planId: string, priceId: string | null) => {
+    if (!priceId) {
+      // Starter plan - no checkout needed
+      onSelectPlan?.(planId);
+      return;
+    }
+    await handleCheckout(priceId, 'subscription');
+  };
+
+  const handleActionPackPurchase = async (pack: typeof actionPacks[0]) => {
+    await handleCheckout(pack.priceId, 'payment');
+    onPurchaseActions?.(pack.amount);
+  };
 
   return (
     <AnimatePresence>
@@ -169,6 +204,7 @@ export function UpgradeDrawer({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {plans.map((plan) => {
                     const isCurrent = plan.id === currentPlan;
+                    const isLoadingThis = isLoading === plan.priceId;
                     return (
                       <div
                         key={plan.id}
@@ -216,10 +252,12 @@ export function UpgradeDrawer({
                               ? 'bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600'
                               : 'bg-white/10 hover:bg-white/20'
                           )}
-                          disabled={isCurrent}
-                          onClick={() => onSelectPlan?.(plan.id)}
+                          disabled={isCurrent || isLoading !== null}
+                          onClick={() => handlePlanSelect(plan.id, plan.priceId)}
                         >
-                          {isCurrent ? (
+                          {isLoadingThis ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : isCurrent ? (
                             'Current Plan'
                           ) : (
                             <>
@@ -239,39 +277,49 @@ export function UpgradeDrawer({
                   </p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {actionPacks.map((pack) => (
-                      <div
-                        key={pack.amount}
-                        className="p-5 rounded-xl border border-white/10 bg-white/5 hover:border-cyan-500/50 transition-all"
-                      >
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="p-2 rounded-lg bg-cyan-500/20">
-                            <Zap className="w-5 h-5 text-cyan-400" />
-                          </div>
-                          <div>
-                            <span className="text-2xl font-bold text-white">{pack.amount}</span>
-                            <span className="text-sm text-slate-400 ml-1">actions</span>
-                          </div>
-                        </div>
-                        
-                        <div className="mb-4">
-                          <span className="text-xl font-bold text-white">${pack.price}</span>
-                          {pack.savings > 0 && (
-                            <span className="ml-2 text-xs text-emerald-400 font-medium">
-                              Save {pack.savings}%
-                            </span>
-                          )}
-                        </div>
-                        
-                        <Button
-                          className="w-full bg-white/10 hover:bg-white/20"
-                          onClick={() => onPurchaseActions?.(pack.amount)}
+                    {actionPacks.map((pack) => {
+                      const isLoadingThis = isLoading === pack.priceId;
+                      return (
+                        <div
+                          key={pack.amount}
+                          className="p-5 rounded-xl border border-white/10 bg-white/5 hover:border-cyan-500/50 transition-all"
                         >
-                          <CreditCard className="w-4 h-4 mr-2" />
-                          Purchase
-                        </Button>
-                      </div>
-                    ))}
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="p-2 rounded-lg bg-cyan-500/20">
+                              <Zap className="w-5 h-5 text-cyan-400" />
+                            </div>
+                            <div>
+                              <span className="text-2xl font-bold text-white">{pack.amount}</span>
+                              <span className="text-sm text-slate-400 ml-1">actions</span>
+                            </div>
+                          </div>
+                          
+                          <div className="mb-4">
+                            <span className="text-xl font-bold text-white">${pack.price}</span>
+                            {pack.savings > 0 && (
+                              <span className="ml-2 text-xs text-emerald-400 font-medium">
+                                Save {pack.savings}%
+                              </span>
+                            )}
+                          </div>
+                          
+                          <Button
+                            className="w-full bg-white/10 hover:bg-white/20"
+                            disabled={isLoading !== null}
+                            onClick={() => handleActionPackPurchase(pack)}
+                          >
+                            {isLoadingThis ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <>
+                                <CreditCard className="w-4 h-4 mr-2" />
+                                Purchase
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      );
+                    })}
                   </div>
                   
                   <p className="text-xs text-slate-500 text-center mt-4">
