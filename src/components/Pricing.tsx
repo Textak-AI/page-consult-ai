@@ -141,36 +141,30 @@ const Pricing = () => {
           </p>
 
           {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4">
-            <span className={cn(
-              "text-sm font-medium transition-colors",
-              !isAnnual ? "text-white" : "text-gray-400"
-            )}>
-              Monthly
-            </span>
-            <button
-              onClick={() => setIsAnnual(!isAnnual)}
+          <div className="inline-flex bg-slate-800/80 rounded-full p-1 border border-slate-700">
+            <button 
               className={cn(
-                "relative w-14 h-7 rounded-full transition-colors",
-                isAnnual ? "bg-cyan-500" : "bg-slate-700"
+                "px-5 py-2 rounded-full text-sm font-medium transition-all duration-200",
+                !isAnnual 
+                  ? "bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg" 
+                  : "text-slate-400 hover:text-white"
               )}
+              onClick={() => setIsAnnual(false)}
             >
-              <div className={cn(
-                "absolute top-1 w-5 h-5 rounded-full bg-white transition-transform shadow-md",
-                isAnnual ? "translate-x-8" : "translate-x-1"
-              )} />
+              Monthly
             </button>
-            <span className={cn(
-              "text-sm font-medium transition-colors",
-              isAnnual ? "text-white" : "text-gray-400"
-            )}>
+            <button 
+              className={cn(
+                "px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center",
+                isAnnual 
+                  ? "bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg" 
+                  : "text-slate-400 hover:text-white"
+              )}
+              onClick={() => setIsAnnual(true)}
+            >
               Annual
-            </span>
-            {isAnnual && (
-              <span className="ml-2 px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-full">
-                Save up to 17%
-              </span>
-            )}
+              <span className="ml-2 text-xs text-cyan-300">Save 17%</span>
+            </button>
           </div>
         </div>
 
