@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Play, ArrowRight } from "lucide-react";
+import { Play, ArrowRight, TrendingUp, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import AbstractHeroTeaser from "@/components/AbstractHeroTeaser";
-import AnimatedStatsCard from "@/components/AnimatedStatsCard";
 
 const Hero = () => {
   return (
@@ -20,53 +19,14 @@ const Hero = () => {
           animationDuration: '5s'
         }} />
       </div>
-      
-      {/* Floating ambient cards - Decorative layer behind content */}
-      <div className="absolute -top-6 left-12 w-56 h-24 hidden lg:block z-0" style={{
-        animation: 'fade-in 800ms ease-out 1000ms forwards, float 4s ease-in-out infinite',
-        animationFillMode: 'forwards',
-        willChange: 'transform',
-        opacity: 0
-      }}>
-        <div className="bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-2xl">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-green-400/20 flex items-center justify-center">
-              <span className="text-green-400 text-sm" style={{
-                filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.3))'
-              }}>✓</span>
-            </div>
-            <span className="text-xs text-gray-400">Real-time strategy building</span>
-          </div>
-        </div>
-      </div>
-      
-      <div className="absolute bottom-24 right-12 w-48 h-20 hidden lg:block z-0" style={{
-        animation: 'fade-in 800ms ease-out 1000ms forwards, float 5s ease-in-out 1s infinite',
-        animationFillMode: 'forwards',
-        willChange: 'transform',
-        opacity: 0
-      }}>
-        <div className="bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl p-4 shadow-2xl">
-          <div className="flex items-center gap-3">
-            <span className="text-lg" style={{
-              filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.3))'
-            }}>✨</span>
-            <div>
-              <div className="text-sm font-medium text-cyan-400">10 min average</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Animated rotating stats card */}
-      <AnimatedStatsCard />
 
-      {/* Main content grid - 60/40 split */}
+      {/* Main content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
-        <div className="grid lg:grid-cols-[60%_40%] gap-12 lg:gap-16 items-center">
+        {/* Hero grid - balanced layout with larger gap */}
+        <div className="grid lg:grid-cols-[1fr_520px] gap-12 lg:gap-24 items-center">
           
-          {/* Left content - 60% */}
-          <div className="max-w-2xl" style={{
+          {/* Left content */}
+          <div style={{
             animation: 'slide-up 800ms ease-out 200ms forwards',
             animationFillMode: 'forwards',
             opacity: 0
@@ -89,7 +49,7 @@ const Hero = () => {
             </h1>
             
             {/* Subheadline */}
-            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed mb-12" style={{
+            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed mb-10" style={{
               textRendering: 'optimizeLegibility',
               animation: 'fade-in 800ms ease-out 400ms forwards',
               animationFillMode: 'forwards',
@@ -129,7 +89,7 @@ const Hero = () => {
             </p>
           </div>
 
-          {/* Right demo - 40% - Abstract teaser */}
+          {/* Right - Abstract teaser visualization */}
           <div className="relative flex items-center justify-center" style={{
             animation: 'scale-in 1000ms ease-out 800ms forwards',
             animationFillMode: 'forwards',
@@ -139,9 +99,41 @@ const Hero = () => {
           </div>
           
         </div>
+
+        {/* Stats row - full width, aligned with content edges */}
+        <div 
+          className="mt-16 lg:mt-20 flex flex-col sm:flex-row justify-between items-center gap-6 sm:gap-4"
+          style={{
+            animation: 'fade-in 800ms ease-out 1000ms forwards',
+            animationFillMode: 'forwards',
+            opacity: 0
+          }}
+        >
+          {/* Left stat - aligns with headline */}
+          <div className="flex items-center gap-3 bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl px-5 py-3">
+            <div className="w-10 h-10 rounded-xl bg-green-400/10 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-green-400" />
+            </div>
+            <div>
+              <div className="text-lg font-bold text-green-400">3.4x more conversions</div>
+              <div className="text-xs text-gray-400">with interactive tools</div>
+            </div>
+          </div>
+          
+          {/* Right stat - aligns with visualization */}
+          <div className="flex items-center gap-3 bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl px-5 py-3">
+            <div className="w-10 h-10 rounded-xl bg-cyan-400/10 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div>
+              <div className="text-lg font-bold text-cyan-400">10 min average</div>
+              <div className="text-xs text-gray-400">to build your page</div>
+            </div>
+          </div>
+        </div>
       </div>
       
-      {/* Scroll indicator - Above content */}
+      {/* Scroll indicator */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce-slow hidden md:flex transition-colors duration-300 group cursor-default z-30">
         <span className="text-gray-400 text-xs uppercase tracking-widest animate-pulse">Scroll to explore</span>
         <div className="w-6 h-10 border-2 border-gray-600 group-hover:border-gray-400 rounded-full relative flex justify-center transition-colors duration-300">

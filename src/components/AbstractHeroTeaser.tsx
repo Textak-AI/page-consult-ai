@@ -69,13 +69,13 @@ export default function AbstractHeroTeaser() {
   const overallReadiness = phase === 0 ? 0 : Math.min(phase * 18, 72);
 
   return (
-    <div className="relative max-w-lg w-full">
+    <div className="relative w-full max-w-[520px]">
       {/* Subtle glow behind */}
       <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 rounded-3xl blur-2xl opacity-60" />
       
       {/* Main container - glassmorphism */}
       <motion.div 
-        className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5 md:p-6 shadow-xl"
+        className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 shadow-xl"
         animate={{ 
           y: [0, -6, 0],
         }}
