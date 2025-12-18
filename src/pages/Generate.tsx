@@ -488,10 +488,31 @@ function GenerateContent() {
 
   const generateSections = async (consultationData: any): Promise<Section[]> => {
     // Content Generation Priority:
+    // 0. NEW: Generate with strategy brief from strategic consultation (best, most strategic)
     // 1. Pre-generated content from wizard (fastest, already done)
     // 2. Generate with intelligence context (best quality, uses market research + persona)
     // 3. Fallback to old generation without intelligence (backwards compatibility)
     try {
+      // PRIORITY 0: Use strategy brief from strategic consultation
+      if (fromStrategicConsultation && strategicData?.strategyBrief) {
+        console.log('📋 Generating with STRATEGY BRIEF from strategic consultation');
+        
+        const { data: result, error } = await supabase.functions.invoke('generate-page-content', {
+          body: {
+            strategyBrief: strategicData.strategyBrief,
+            strategicConsultation: strategicData.consultationData,
+            industry: consultationData.industry,
+          }
+        });
+        
+        if (error) {
+          console.warn('⚠️ Strategy brief generation failed:', error);
+        } else if (result?.success && result?.content) {
+          console.log('✅ Strategy brief generated content:', result.content);
+          return await mapStrategyBriefContentToSections(result.content, consultationData, strategicData.consultationData);
+        }
+      }
+
       // PRIORITY 1: Use pre-generated content from wizard if available
       if (preGeneratedContent) {
         console.log('✅ Using pre-generated content from wizard');
@@ -684,6 +705,174 @@ function GenerateContent() {
       content: {
         headline: "Ready to Get Started?",
         ctaText: content.ctaText,
+        ctaLink: "#signup",
+      },
+    });
+
+    return sections;
+  };
+
+  // Map strategy brief generated content to Section[]
+  const mapStrategyBriefContentToSections = async (
+    content: any,
+    consultationData: any,
+    strategicConsultation: any
+  ): Promise<Section[]> => {
+    // Fetch images
+    const heroImageUrl = await fetchHeroImage(
+      strategicConsultation?.businessName || consultationData.industry
+    );
+    const galleryImages = await fetchGalleryImages([]);
+
+    const sections: Section[] = [];
+    let order = 0;
+
+    // Build trust badges from social proof
+    const trustBadges: string[] = [];
+    if (content.socialProof?.yearsInBusiness) {
+      trustBadges.push(`${content.socialProof.yearsInBusiness} in Business`);
+    }
+    if (content.socialProof?.clientCount) {
+      trustBadges.push(`${content.socialProof.clientCount} Clients Served`);
+    }
+    if (content.socialProof?.achievements) {
+      trustBadges.push(content.socialProof.achievements);
+    }
+
+    // Hero
+    sections.push({
+      type: "hero",
+      order: order++,
+      visible: true,
+      content: {
+        headline: content.headline,
+        subheadline: content.subheadline,
+        ctaText: content.ctaText || strategicConsultation?.ctaText || "Get Started",
+        ctaLink: "#signup",
+        backgroundImage: heroImageUrl,
+        trustBadges: trustBadges.length > 0 ? trustBadges : undefined,
+      },
+    });
+
+    // Stats Bar (from social proof)
+    const statisticsToShow: Array<{ value: string; label: string }> = [];
+    if (content.socialProof?.clientCount) {
+      const countMatch = content.socialProof.clientCount.match(/(\d+[\d,+]*)/);
+      if (countMatch) {
+        statisticsToShow.push({
+          value: countMatch[1] + "+",
+          label: "Happy Clients",
+        });
+      }
+    }
+    if (content.socialProof?.yearsInBusiness) {
+      const yearsMatch = content.socialProof.yearsInBusiness.match(/(\d+)/);
+      if (yearsMatch) {
+        statisticsToShow.push({
+          value: yearsMatch[1] + "+",
+          label: "Years Experience",
+        });
+      }
+    }
+
+    if (statisticsToShow.length > 0) {
+      sections.push({
+        type: "stats-bar",
+        order: order++,
+        visible: true,
+        content: {
+          statistics: statisticsToShow,
+        },
+      });
+    }
+
+    // Problem-Solution
+    sections.push({
+      type: "problem-solution",
+      order: order++,
+      visible: true,
+      content: {
+        problem: content.problemStatement,
+        solution: content.solutionStatement,
+      },
+    });
+
+    // Features
+    if (content.features && content.features.length > 0) {
+      sections.push({
+        type: "features",
+        order: order++,
+        visible: true,
+        content: {
+          features: content.features.map((f: any) => ({
+            title: f.title,
+            description: f.description,
+            icon: f.icon || "CheckCircle",
+          })),
+        },
+      });
+    }
+
+    // Process Steps (if provided - from processDescription)
+    if (content.processSteps && content.processSteps.length > 0) {
+      sections.push({
+        type: "how-it-works",
+        order: order++,
+        visible: true,
+        content: {
+          steps: content.processSteps,
+        },
+      });
+    }
+
+    // Gallery (if we have images)
+    if (galleryImages.length > 0) {
+      sections.push({
+        type: "photo-gallery",
+        order: order++,
+        visible: true,
+        content: {
+          images: galleryImages,
+          title: `${strategicConsultation?.businessName || consultationData.industry} Gallery`,
+        },
+      });
+    }
+
+    // Social Proof with testimonials - use actual testimonials or placeholder format
+    const testimonials = content.testimonials || [];
+    const firstTestimonial = testimonials[0] || {
+      quote: "[Testimonial will be added - describe the transformation your client experienced]",
+      author: "[Client Name]",
+      title: "[Their Role/Company]",
+    };
+
+    sections.push({
+      type: "social-proof",
+      order: order++,
+      visible: true,
+      content: {
+        stats: [],
+        industry: strategicConsultation?.industry || consultationData.industry,
+        testimonial: {
+          quote: firstTestimonial.quote,
+          name: firstTestimonial.author,
+          title: firstTestimonial.title,
+          company: "",
+          rating: 5,
+        },
+        additionalTestimonials: testimonials.slice(1),
+      },
+    });
+
+    // Final CTA
+    sections.push({
+      type: "final-cta",
+      order: order++,
+      visible: true,
+      content: {
+        headline: "Ready to Get Started?",
+        subheadline: content.solutionStatement?.split(".")[0] || "Take the next step today.",
+        ctaText: content.ctaText || strategicConsultation?.ctaText || "Get Started",
         ctaLink: "#signup",
       },
     });

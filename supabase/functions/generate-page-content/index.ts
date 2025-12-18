@@ -2,150 +2,50 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
-// Validation schema
+// Validation schema - updated to support both old and new consultation flows
 const GenerateContentRequestSchema = z.object({
-  industry: z.string().trim().min(2).max(100),
+  // Legacy fields
+  industry: z.string().trim().min(2).max(100).optional(),
   specificService: z.string().trim().min(2).max(200).optional(),
   service_type: z.string().trim().min(2).max(200).optional(),
-  goal: z.string().trim().min(2).max(200),
-  targetAudience: z.string().trim().min(5).max(500),
+  goal: z.string().trim().min(2).max(200).optional(),
+  targetAudience: z.string().trim().min(5).max(500).optional(),
   target_audience: z.string().trim().min(5).max(500).optional(),
-  challenge: z.string().trim().min(10).max(1000),
-  uniqueValue: z.string().trim().min(10).max(1000),
+  challenge: z.string().trim().min(10).max(1000).optional(),
+  uniqueValue: z.string().trim().min(10).max(1000).optional(),
   unique_value: z.string().trim().min(10).max(1000).optional(),
   credentials: z.string().trim().max(500).optional(),
   insights: z.string().max(10000).optional(),
   marketInsights: z.any().optional(),
+  // NEW: Strategy brief from strategic consultation
+  strategyBrief: z.string().max(50000).optional(),
+  // NEW: Full consultation data from strategic consultation
+  strategicConsultation: z.object({
+    businessName: z.string().optional(),
+    industry: z.string().optional(),
+    industryOther: z.string().optional(),
+    yearsInBusiness: z.string().optional(),
+    uniqueStrength: z.string().optional(),
+    idealClient: z.string().optional(),
+    clientFrustration: z.string().optional(),
+    desiredOutcome: z.string().optional(),
+    clientCount: z.string().optional(),
+    achievements: z.string().optional(),
+    testimonialText: z.string().optional(),
+    mainOffer: z.string().optional(),
+    offerIncludes: z.string().optional(),
+    investmentRange: z.string().optional(),
+    processDescription: z.string().optional(),
+    primaryGoal: z.string().optional(),
+    ctaText: z.string().optional(),
+    objectionsToOvercome: z.string().optional(),
+  }).optional(),
 });
-
-// Industry patterns for intelligent content generation
-type IndustryPattern = {
-  name: string;
-  tone: string;
-  audienceType: string;
-  targetLanguage?: {
-    audience: string[];
-    avoid: string[];
-  };
-  features: string[];
-  headlineFormulas?: string[];
-  ctaPatterns?: string[];
-};
-
-const industryPatterns: Record<string, IndustryPattern> = {
-  wedding_dj: {
-    name: "Wedding DJ",
-    tone: "emotional, celebratory, romantic, warm",
-    audienceType: "b2c_emotional",
-    targetLanguage: {
-      audience: ["couples", "brides", "grooms", "wedding planners", "engaged couples"],
-      avoid: ["businesses", "companies", "clients", "ROI", "metrics"]
-    },
-    features: [
-      "Professional DJ equipment and sound systems",
-      "Extensive music library spanning all genres and decades",
-      "Master of Ceremonies (MC) services",
-      "Custom playlist creation and song requests",
-      "Wireless microphones for speeches and toasts",
-      "Mood lighting and dance floor effects",
-      "Backup equipment for guaranteed reliability",
-      "Reception timeline planning and coordination",
-      "Smooth transitions between key moments",
-      "Experience with venue acoustics"
-    ],
-    headlineFormulas: [
-      "Your Perfect Wedding DJ - {credential}",
-      "Make Your Reception Unforgettable",
-      "{years} Years Creating Magical Wedding Celebrations"
-    ],
-    ctaPatterns: [
-      "Check Availability for Your Date",
-      "Book Your DJ & Get {offer}",
-      "Schedule Your Free Consultation"
-    ]
-  },
-  b2b_saas: {
-    name: "B2B SaaS",
-    tone: "professional, confident, roi-focused, efficient",
-    audienceType: "b2b_rational",
-    features: [
-      "Seamless integrations with existing tools",
-      "Enterprise-grade security and compliance",
-      "Real-time analytics dashboard",
-      "Automated workflows",
-      "API access for custom integrations"
-    ]
-  },
-  legal_services: {
-    name: "Legal Services",
-    tone: "authoritative, trustworthy, professional",
-    audienceType: "b2c_trust",
-    features: [
-      "Free initial consultation",
-      "Licensed attorneys",
-      "Proven case outcomes",
-      "Clear communication throughout"
-    ]
-  },
-  home_services: {
-    name: "Home Services",
-    tone: "reliable, trustworthy, local",
-    audienceType: "b2c_practical",
-    features: [
-      "Licensed and insured",
-      "Upfront transparent pricing",
-      "Same-day service available",
-      "Satisfaction guarantee"
-    ]
-  },
-  healthcare: {
-    name: "Healthcare",
-    tone: "caring, professional, knowledgeable",
-    audienceType: "b2c_trust",
-    features: [
-      "Board-certified physicians",
-      "Accepting new patients",
-      "Most insurance accepted",
-      "Evening and weekend hours"
-    ]
-  }
-};
-
-function detectIndustry(consultationData: ConsultationData): string {
-  const industry = consultationData.industry?.toLowerCase() || '';
-  const service = consultationData.service_type?.toLowerCase() || '';
-  const combined = `${industry} ${service}`;
-  
-  if (combined.includes('wedding') || combined.includes('dj')) return 'wedding_dj';
-  if (combined.includes('saas') || combined.includes('software')) return 'b2b_saas';
-  if (combined.includes('legal') || combined.includes('law') || combined.includes('attorney')) return 'legal_services';
-  if (combined.includes('plumb') || combined.includes('hvac') || combined.includes('electric')) return 'home_services';
-  if (combined.includes('health') || combined.includes('medical') || combined.includes('doctor')) return 'healthcare';
-  
-  return 'b2b_saas'; // default
-}
-
-function extractCredentials(text: string) {
-  const years = text.match(/(\d+)\+?\s*years?/i)?.[1];
-  const rating = text.match(/(\d+(?:\.\d+)?)\s*[-\s]?star/i)?.[1];
-  const count = text.match(/(\d+)\+?\s*(customer|client|wedding|project)/i)?.[1];
-  return { years, rating, count };
-}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-interface ConsultationData {
-  industry?: string;
-  service_type?: string;
-  goal?: string;
-  target_audience?: string;
-  challenge?: string;
-  unique_value?: string;
-  offer?: string;
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -153,40 +53,22 @@ serve(async (req) => {
   }
 
   try {
-    // Parse request body - Supabase functions.invoke sends JSON stringified body
     const bodyText = await req.text();
-    console.log('Raw body received:', bodyText.substring(0, 200));
+    console.log('[generate-page-content] Raw body received:', bodyText.substring(0, 300));
     
-    let consultationData: ConsultationData;
+    let requestData: z.infer<typeof GenerateContentRequestSchema>;
     try {
-      consultationData = JSON.parse(bodyText);
-      console.log('✅ Successfully parsed consultation data:', {
-        industry: consultationData.industry,
-        service_type: consultationData.service_type,
-        goal: consultationData.goal
-      });
+      requestData = JSON.parse(bodyText);
+      console.log('[generate-page-content] Parsed request data');
     } catch (parseError) {
-      console.error('❌ JSON parse error:', parseError);
-      console.error('Body that failed to parse:', bodyText);
+      console.error('[generate-page-content] JSON parse error:', parseError);
       return new Response(
-        JSON.stringify({ error: 'Invalid JSON in request body', details: String(parseError) }), 
+        JSON.stringify({ error: 'Invalid JSON in request body' }), 
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    // Validate request body against schema
-    const validation = GenerateContentRequestSchema.safeParse(consultationData);
-    if (!validation.success) {
-      console.error('❌ Validation error:', validation.error);
-      return new Response(
-        JSON.stringify({ error: 'Invalid consultation data', details: 'Request validation failed' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    console.log('Consultation data:', JSON.stringify(consultationData, null, 2));
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-
     if (!lovableApiKey) {
       return new Response(
         JSON.stringify({ error: 'API key not configured' }), 
@@ -194,243 +76,198 @@ serve(async (req) => {
       );
     }
 
-    // Detect industry and load patterns
-    const industryKey = detectIndustry(consultationData);
-    const pattern = industryPatterns[industryKey];
-    const credentials = extractCredentials(consultationData.unique_value || '');
+    // Determine which generation mode to use
+    const hasStrategyBrief = !!requestData.strategyBrief && requestData.strategyBrief.length > 100;
+    const hasStrategicConsultation = !!requestData.strategicConsultation;
     
-    console.log(`Detected industry: ${industryKey}`, { pattern: pattern.name, credentials });
+    console.log('[generate-page-content] Mode:', hasStrategyBrief ? 'STRATEGY_BRIEF' : 'LEGACY');
 
-    // Build intelligent, pattern-based prompt
-    const systemPrompt = `You are an expert landing page copywriter specializing in ${pattern.name}.
+    let systemPrompt: string;
+    let userPrompt: string;
 
-═══════════════════════════════════════════════════════════
-INDUSTRY: ${pattern.name}
-TONE: ${pattern.tone}
-AUDIENCE TYPE: ${pattern.audienceType}
-═══════════════════════════════════════════════════════════
-
-CRITICAL TRANSFORMATION RULES:
-1. NEVER copy user's exact words verbatim - always transform professionally
-2. Use ONLY credentials the user actually provided
-3. Match tone to ${pattern.audienceType} audience
-4. Generate features from this industry-specific list:
-   ${pattern.features.slice(0, 6).map((f: string, i: number) => `   ${i + 1}. ${f}`).join('\n')}
-
-CREDENTIAL TRANSFORMATION:
-User provided: ${consultationData.unique_value || 'Not specified'}
-Extracted: ${credentials.years ? `${credentials.years} years` : ''} ${credentials.rating ? `${credentials.rating}-star rating` : ''} ${credentials.count ? `${credentials.count}+ projects` : ''}
-
-${pattern.headlineFormulas ? `HEADLINE FORMULAS (choose one):
-${pattern.headlineFormulas.map((f: string, i: number) => `${i + 1}. ${f}`).join('\n')}` : ''}
-
-${pattern.ctaPatterns ? `CTA PATTERNS (choose one):
-${pattern.ctaPatterns.map((c: string, i: number) => `${i + 1}. ${c}`).join('\n')}` : ''}
-
-AUDIENCE LANGUAGE:
-✓ Use: ${pattern.targetLanguage?.audience?.join(', ') || 'appropriate audience terms'}
-✗ AVOID: ${pattern.targetLanguage?.avoid?.join(', ') || 'inappropriate terms'}
+    if (hasStrategyBrief) {
+      // ═══════════════════════════════════════════════════════════════════════════
+      // STRATEGY BRIEF MODE - Uses AI-generated strategy brief as primary context
+      // ═══════════════════════════════════════════════════════════════════════════
+      
+      const sc = requestData.strategicConsultation || {};
+      
+      systemPrompt = `You are an expert landing page copywriter. You have been given a STRATEGY BRIEF that was created from a deep business consultation. Your job is to transform this brief into compelling landing page content.
 
 ═══════════════════════════════════════════════════════════
-MANDATORY OUTPUT RULES
-
-1. NEVER COPY RAW TEXT VERBATIM
-   ❌ INPUT: "I have 10 years experience as a wedding DJ"
-   ❌ BAD: "I have 10 years experience as a wedding DJ"
-   ✅ GOOD: "A Decade of Making Wedding Receptions Unforgettable"
-   
-   ❌ INPUT: "We help businesses track leads"
-   ❌ BAD: "We help businesses track leads"
-   ✅ GOOD: "Never Miss Another Sales Opportunity"
-
-3. EXTRACT & USE EXACT CREDENTIALS
-   Parse unique_value for:
-   - Years: "10 years" → Feature: "10 Years Experience"
-   - Rating: "5-star rating" → Feature: "5-Star Rated"
-   - Count: "200 weddings" → Feature: "200+ Weddings Performed"
-   - Certifications: "Licensed & insured" → Feature: "Licensed & Insured"
-   
-   ✅ USE EXACT NUMBERS from input
-   ❌ NEVER fabricate or round: Don't turn "10 years" into "12+ years"
-
-4. GENERATE INDUSTRY-SPECIFIC FEATURES
-   Wedding DJ → Professional Equipment, Music Library, MC Services, Backup Systems, Reception Timeline
-   B2B SaaS → Quick Setup, Real-Time Analytics, Automated Workflows, Security, Integrations
-   Legal → Free Consultation, Trial Experience, Case Results, Responsive Communication
-   Home Services → Licensed/Insured, Upfront Pricing, Local Expertise, Satisfaction Guarantee
-   
-   ❌ NEVER generic: "Quality Service", "Great Results", "Trusted Platform"
-   ✅ ALWAYS specific to their industry
-
-5. MATCH LANGUAGE TO AUDIENCE
-   B2B Audience: "Your team saves 10+ hours weekly with automated workflows"
-   B2C Audience: "You'll enjoy peace of mind with our satisfaction guarantee"
-   
-   Wedding/Emotional: "Make your reception unforgettable"
-   Professional/Formal: "Protecting your legal rights with aggressive representation"
-
-6. CTA = VISITOR ACTION (NOT USER'S GOAL)
-   ❌ User's goal: "Generate leads" → CTA: "Ready to generate leads?" (WRONG)
-   ✅ User's offer: "Free quote" → CTA: "Get Your Free Quote" (RIGHT)
-   ✅ User's offer: "Free trial" → CTA: "Start Free Trial" (RIGHT)
-
-7. PROBLEM/SOLUTION MUST BE PUNCHY
-   Problem: 1-2 sentences max, question format preferred
-   ✅ "Finding a reliable wedding DJ shouldn't be stressful or expensive."
-   ❌ "Many couples struggle to find wedding DJs who are affordable and professional and have the right equipment and music selection for their special day."
-   
-   Solution: 2-3 sentences, benefit-focused, uses their exact credentials
-   ✅ "With 10 years of experience and a 5-star Google rating, we specialize in unforgettable wedding receptions with professional sound, MC services, and you'll receive a free audio recording of your celebration."
-
-8. VALIDATE CONSISTENCY
-   Before finalizing, check:
-   - Does headline match the industry? (No "Platform" for service businesses)
-   - Do features match the industry? (Wedding DJ features ≠ SaaS features)
-   - Does language match audience? (B2B formal vs B2C friendly)
-   - Does CTA use offer, not goal?
-   - Are credentials from unique_value accurate?
-
-═══════════════════════════════════════════════════════════
-EXAMPLE TRANSFORMATIONS
+CRITICAL RULES - READ CAREFULLY
 ═══════════════════════════════════════════════════════════
 
-EXAMPLE 1: Wedding DJ
-INPUT:
-- Industry: Wedding DJ
-- Service: DJ services  
-- Target: Wedding planners and couples
-- Challenge: Finding reasonably-priced talented DJ
-- Unique Value: 10 years experience, 5-star Google rating, professional sound equipment
-- Offer: Free audio recording of reception
+1. THE STRATEGY BRIEF IS YOUR PRIMARY SOURCE
+   - Every piece of content you generate MUST be derived from the strategy brief
+   - Use the "Headline Recommendations" section for headline options
+   - Use "Key Messaging Pillars" for feature themes
+   - Use "Tone & Voice" to guide your writing style
+   - Use "Recommended Page Structure" for section ordering
+   - Use "Proof Points" for credibility elements
 
-CORRECT OUTPUT:
-{
-  "headline": "Your Perfect Wedding DJ – 10 Years of 5-Star Celebrations",
-  "subheadline": "From first dance to last call, we create the soundtrack to your perfect day with professional entertainment backed by hundreds of glowing reviews.",
-  "features": [
-    {
-      "title": "10 Years DJ Experience",
-      "description": "A decade of making wedding receptions unforgettable, from intimate gatherings to grand celebrations.",
-      "icon": "Award"
-    },
-    {
-      "title": "5-Star Google Rating",
-      "description": "Hundreds of happy couples trust us with their special day. Read our reviews and see why.",
-      "icon": "Users"
-    },
-    {
-      "title": "Professional Sound Equipment",
-      "description": "Crystal-clear audio, backup systems, and state-of-the-art lighting ensure flawless entertainment.",
-      "icon": "Zap"
-    },
-    {
-      "title": "All Music Genres",
-      "description": "From classic wedding songs to current hits, we have every genre and decade covered.",
-      "icon": "Target"
-    },
-    {
-      "title": "MC Services Included",
-      "description": "Smooth transitions, announcements, and keeping your celebration flowing perfectly all night.",
-      "icon": "TrendingUp"
-    },
-    {
-      "title": "Free Reception Audio Recording",
-      "description": "Download and relive your entire celebration with complimentary high-quality audio recording.",
-      "icon": "Shield"
-    }
-  ],
-  "ctaText": "Get Your Free Quote + Reception Audio",
-  "problemStatement": "Finding the perfect wedding DJ shouldn't be stressful or expensive.",
-  "solutionStatement": "With 10 years of experience and a 5-star Google rating, we specialize in creating unforgettable wedding receptions with professional sound, MC services, and you'll receive a free audio recording of your entire celebration as a keepsake."
-}
+2. NEVER USE GENERIC PLACEHOLDERS
+   ❌ FORBIDDEN: "Sarah M., Satisfied Customer"
+   ❌ FORBIDDEN: "John D., Happy Client"  
+   ❌ FORBIDDEN: "Lorem ipsum" or any filler text
+   ❌ FORBIDDEN: Generic testimonial quotes
+   
+   ✅ IF REAL TESTIMONIALS PROVIDED: Use the actual text and name from consultation
+   ✅ IF NO TESTIMONIALS: Use this exact format:
+      {
+        "quote": "[Testimonial will be added - describe the transformation your client experienced]",
+        "author": "[Client Name]",
+        "title": "[Their Role/Company]"
+      }
 
-EXAMPLE 2: B2B SaaS
-INPUT:
-- Industry: B2B SaaS
-- Service: Lead tracking software
-- Target: Sales teams at mid-market companies
-- Challenge: Teams waste time on manual lead tracking
-- Unique Value: Setup in under 5 minutes, integrates with all major CRMs, used by 500+ companies
-- Offer: 14-day free trial
+3. USE ACTUAL BUSINESS DATA
+   - Business name: ${sc.businessName || 'the business'}
+   - Years in business: ${sc.yearsInBusiness || 'Not specified'}
+   - Client count: ${sc.clientCount || 'Not specified'}
+   - Achievements: ${sc.achievements || 'Not specified'}
+   - CTA text from consultation: "${sc.ctaText || 'Get Started'}"
 
-CORRECT OUTPUT:
-{
-  "headline": "Finally, Lead Tracking That Actually Works for Sales Teams",
-  "subheadline": "Stop losing opportunities in spreadsheets. See every lead, every action, every conversion in one real-time dashboard. Trusted by 500+ growing companies.",
-  "features": [
-    {
-      "title": "Set Up in Under 5 Minutes",
-      "description": "Get started instantly with our intuitive platform. Your team can be tracking leads today, no technical knowledge required.",
-      "icon": "Zap"
-    },
-    {
-      "title": "500+ Companies Trust Us",
-      "description": "Mid-market sales teams rely on us daily to capture and convert opportunities. Join them.",
-      "icon": "Users"
-    },
-    {
-      "title": "Real-Time Lead Tracking",
-      "description": "See every visitor, every action, every opportunity as it happens. Never miss another sales opportunity.",
-      "icon": "Target"
-    },
-    {
-      "title": "Seamless CRM Integration",
-      "description": "Works with Salesforce, HubSpot, Pipedrive, and all major CRMs. Your data flows automatically.",
-      "icon": "TrendingUp"
-    },
-    {
-      "title": "Automated Workflows",
-      "description": "Save 10+ hours weekly with intelligent automation that handles repetitive tasks while you focus on closing.",
-      "icon": "Award"
-    },
-    {
-      "title": "Enterprise-Grade Security",
-      "description": "SOC 2 compliant with bank-level encryption. Your data is always safe and secure.",
-      "icon": "Shield"
-    }
-  ],
-  "ctaText": "Start Your 14-Day Free Trial",
-  "problemStatement": "Your sales team is wasting hours every week on manual lead tracking and missing opportunities.",
-  "solutionStatement": "Our lead tracking platform is used by 500+ companies because it sets up in under 5 minutes, integrates with all major CRMs, and gives your team real-time visibility into every opportunity. Start your 14-day free trial today."
-}
+4. TESTIMONIAL RULES
+   Real testimonial provided: "${sc.testimonialText || 'None'}"
+   
+   IF testimonialText contains actual quotes with names:
+   - Parse and use them exactly as provided
+   - Keep the real person's name and title
+   
+   IF testimonialText is empty or generic:
+   - Generate 2-3 testimonial placeholders using this format:
+     {
+       "quote": "[Testimonial will be added]",
+       "author": "[Client Name]",
+       "title": "[Their Industry/Role]"
+     }
+   - This signals to the user they need to add real content
 
+5. FEATURE GENERATION
+   - Extract features from the "Key Messaging Pillars" in the strategy brief
+   - Each feature should address a specific benefit mentioned in the brief
+   - Include any deliverables from: "${sc.offerIncludes || 'Not specified'}"
+   - Maximum 6 features
+
+6. PROBLEM/SOLUTION STATEMENTS
+   - Problem: Derive from client frustration: "${sc.clientFrustration || 'Not specified'}"
+   - Solution: Derive from unique strength: "${sc.uniqueStrength || 'Not specified'}"
+   - Desired outcome: "${sc.desiredOutcome || 'Not specified'}"
+
+7. CTA (CALL TO ACTION)
+   - Primary CTA text: "${sc.ctaText || 'Get Started'}"
+   - Primary goal: "${sc.primaryGoal || 'leads'}"
+
+═══════════════════════════════════════════════════════════
+OUTPUT FORMAT (STRICT JSON)
 ═══════════════════════════════════════════════════════════
 
 Return ONLY valid JSON with this exact structure:
 {
-  "headline": "string (industry-specific, uses credentials, NOT generic)",
-  "subheadline": "string (benefit-focused, matches audience tone, 1-2 sentences)", 
+  "headline": "string (derived from brief's Headline Recommendations)",
+  "subheadline": "string (derived from Core Value Proposition, 1-2 sentences)",
   "features": [
     {
-      "title": "string (from unique_value credentials OR industry-specific)",
-      "description": "string (benefit-focused, NOT feature list, 1 sentence)",
-      "icon": "Zap|Target|Shield|Award|TrendingUp|Users"
+      "title": "string (derived from Key Messaging Pillars)",
+      "description": "string (benefit-focused, 1 sentence)",
+      "icon": "Zap|Target|Shield|Award|TrendingUp|Users|CheckCircle|Clock|Heart|Star"
     }
   ],
-  "ctaText": "string (uses OFFER as visitor action, NOT user's goal)",
-  "problemStatement": "string (1-2 sentences max, question format preferred)",
-  "solutionStatement": "string (2-3 sentences, benefit-focused, uses exact credentials from unique_value)"
+  "ctaText": "string (use the CTA from consultation: ${sc.ctaText || 'Get Started'})",
+  "problemStatement": "string (1-2 sentences, derived from client frustration)",
+  "solutionStatement": "string (2-3 sentences, derived from unique strength and desired outcome)",
+  "testimonials": [
+    {
+      "quote": "string (real quote if provided, otherwise '[Testimonial will be added]')",
+      "author": "string (real name if provided, otherwise '[Client Name]')",
+      "title": "string (real title if provided, otherwise '[Their Role/Company]')"
+    }
+  ],
+  "socialProof": {
+    "clientCount": "string (if provided: '${sc.clientCount || ''}', otherwise null)",
+    "yearsInBusiness": "string (if provided: '${sc.yearsInBusiness || ''}', otherwise null)",
+    "achievements": "string (if provided, otherwise null)"
+  },
+  "processSteps": [
+    {
+      "step": 1,
+      "title": "string",
+      "description": "string"
+    }
+  ]
 }`;
 
-    const userPrompt = `Transform this consultation data into professional landing page content:
+      userPrompt = `Here is the STRATEGY BRIEF to use as your primary context for generating landing page content:
 
-Industry: ${consultationData.industry || 'Not specified'}
-Service Type: ${consultationData.service_type || 'Not specified'}
-Target Audience: ${consultationData.target_audience || 'Not specified'}
-Challenge/Problem: ${consultationData.challenge || 'Not specified'}
-Unique Value: ${consultationData.unique_value || 'Not specified'}
-Offer: ${consultationData.offer || 'Not specified'}
-Goal: ${consultationData.goal || 'Not specified'}
+═══════════════════════════════════════════════════════════
+STRATEGY BRIEF
+═══════════════════════════════════════════════════════════
 
-Generate compelling, industry-specific content that:
-1. Uses the actual service/credentials they mentioned
-2. Creates relevant features for their specific industry
-3. Transforms their unique value into professional copy
-4. Makes a problem statement that resonates with their audience
-5. Creates a solution statement that highlights their specific advantages
+${requestData.strategyBrief}
 
-Return valid JSON only.`;
+═══════════════════════════════════════════════════════════
+ADDITIONAL CONSULTATION DATA
+═══════════════════════════════════════════════════════════
 
+Business Name: ${sc.businessName || 'Not specified'}
+Industry: ${sc.industry || requestData.industry || 'Not specified'}
+Main Offer: ${sc.mainOffer || 'Not specified'}
+What's Included: ${sc.offerIncludes || 'Not specified'}
+Investment Range: ${sc.investmentRange || 'Not specified'}
+Process Description: ${sc.processDescription || 'Not specified'}
+Primary Goal: ${sc.primaryGoal || 'Generate leads'}
+CTA Text: ${sc.ctaText || 'Get Started'}
+Objections to Address: ${sc.objectionsToOvercome || 'Not specified'}
+
+Real Testimonials Provided:
+${sc.testimonialText || 'None - use placeholder format'}
+
+═══════════════════════════════════════════════════════════
+
+Generate landing page content following the strategy brief's recommendations. Return valid JSON only.`;
+
+    } else {
+      // ═══════════════════════════════════════════════════════════════════════════
+      // LEGACY MODE - Original quick consultation flow (backwards compatibility)
+      // ═══════════════════════════════════════════════════════════════════════════
+      
+      systemPrompt = `You are an expert landing page copywriter.
+
+CRITICAL RULES:
+1. NEVER copy user's exact words verbatim - always transform professionally
+2. Use ONLY credentials the user actually provided
+3. NEVER use generic placeholder names like "Sarah M." or "John D."
+4. If no testimonials provided, use format: "[Client Name], [Their Role]" with quote: "[Testimonial will be added]"
+
+Return ONLY valid JSON with this structure:
+{
+  "headline": "string",
+  "subheadline": "string", 
+  "features": [
+    { "title": "string", "description": "string", "icon": "Zap|Target|Shield|Award|TrendingUp|Users" }
+  ],
+  "ctaText": "string",
+  "problemStatement": "string",
+  "solutionStatement": "string",
+  "testimonials": [
+    { "quote": "string", "author": "string", "title": "string" }
+  ]
+}`;
+
+      userPrompt = `Transform this consultation data into professional landing page content:
+
+Industry: ${requestData.industry || 'Not specified'}
+Service Type: ${requestData.service_type || 'Not specified'}
+Target Audience: ${requestData.target_audience || 'Not specified'}
+Challenge/Problem: ${requestData.challenge || 'Not specified'}
+Unique Value: ${requestData.unique_value || 'Not specified'}
+Offer: ${requestData.goal || 'Not specified'}
+
+Generate compelling content. Return valid JSON only.`;
+    }
+
+    console.log('[generate-page-content] Calling AI Gateway...');
+    
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -449,18 +286,18 @@ Return valid JSON only.`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
+      console.error('[generate-page-content] AI Gateway error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: 'Rate limit exceeded. Using fallback content generation.' }), 
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again.' }), 
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: 'AI credits depleted. Using fallback content generation.' }), 
+          JSON.stringify({ error: 'AI credits depleted. Please add credits.' }), 
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -474,39 +311,62 @@ Return valid JSON only.`;
     const data = await response.json();
     const content = data.choices[0].message.content;
     
+    console.log('[generate-page-content] AI response received, parsing...');
+    
     // Parse the JSON response
     let parsedContent;
     try {
-      // Try to extract JSON from markdown code blocks if present
       const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/```\s*([\s\S]*?)\s*```/);
       const jsonString = jsonMatch ? jsonMatch[1] : content;
       parsedContent = JSON.parse(jsonString);
     } catch (e) {
-      console.error('Failed to parse AI response as JSON:', content);
+      console.error('[generate-page-content] Failed to parse AI response as JSON:', content);
       return new Response(
         JSON.stringify({ error: 'Invalid AI response format', rawContent: content }), 
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Validate the response has required fields
+    // Validate required fields
     if (!parsedContent.headline || !parsedContent.features || !Array.isArray(parsedContent.features)) {
-      console.error('AI response missing required fields:', parsedContent);
+      console.error('[generate-page-content] AI response missing required fields:', parsedContent);
       return new Response(
         JSON.stringify({ error: 'Incomplete AI response', rawContent: parsedContent }), 
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // Post-process to catch any remaining generic placeholders
+    if (parsedContent.testimonials && Array.isArray(parsedContent.testimonials)) {
+      parsedContent.testimonials = parsedContent.testimonials.map((t: any) => {
+        // Catch common generic names and replace with placeholder format
+        const genericNames = ['sarah', 'john', 'jane', 'mike', 'lisa', 'david', 'emily'];
+        const authorLower = (t.author || '').toLowerCase();
+        const isGeneric = genericNames.some(name => authorLower.includes(name));
+        
+        if (isGeneric || authorLower.includes('satisfied') || authorLower.includes('happy')) {
+          return {
+            quote: '[Testimonial will be added - describe the transformation your client experienced]',
+            author: '[Client Name]',
+            title: '[Their Role/Company]'
+          };
+        }
+        return t;
+      });
+    }
+
+    console.log('[generate-page-content] Successfully generated content');
+    
     return new Response(
-      JSON.stringify({ success: true, content: parsedContent }), 
+      JSON.stringify({ success: true, content: parsedContent, mode: hasStrategyBrief ? 'strategy_brief' : 'legacy' }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
-    console.error('Error in generate-page-content function:', error);
+  } catch (error: unknown) {
+    console.error('[generate-page-content] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), 
+      JSON.stringify({ error: errorMessage }), 
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
