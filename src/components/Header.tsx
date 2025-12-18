@@ -60,13 +60,13 @@ const Header = () => {
             >
               Login
             </Link>
-            <Link to="/signup">
+            <Link to="/new">
               <Button 
                 variant="default" 
                 size="default" 
                 className="bg-white text-slate-900 font-semibold px-6 py-2.5 rounded-xl shadow-xl shadow-white/20 hover:shadow-2xl hover:shadow-white/30 hover:scale-105 transition-all duration-300"
               >
-                Start Free
+                Get Started
               </Button>
             </Link>
           </div>

@@ -24,8 +24,8 @@ const FinalCTA = () => {
             size="lg"
             className="bg-white text-slate-900 hover:bg-gray-100 text-lg px-12 py-7 h-auto shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 font-semibold"
           >
-            <Link to="/wizard">
-              Start Free Trial
+            <Link to="/new">
+              Start Strategic Consultation
             </Link>
           </Button>
           

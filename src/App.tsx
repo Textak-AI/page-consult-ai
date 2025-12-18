@@ -10,6 +10,7 @@ import Wizard from "./pages/Wizard";
 import WizardReview from "./pages/WizardReview";
 import Signup from "./pages/Signup";
 import Generate from "./pages/Generate";
+import NewConsultation from "./pages/NewConsultation";
 import GalleryTest from "./pages/GalleryTest";
 import HeroShowcase from "./pages/HeroShowcase";
 import SectionSelectorDemo from "./pages/SectionSelectorDemo";
@@ -34,6 +35,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/new" element={<NewConsultation />} />
             <Route path="/wizard" element={<Wizard />} />
             <Route path="/wizard/review" element={<WizardReview />} />
             <Route path="/signup" element={<Signup />} />
