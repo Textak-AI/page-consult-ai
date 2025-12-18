@@ -8,30 +8,76 @@ const corsHeaders = {
 
 // Input validation limits
 const MAX_MESSAGE_LENGTH = 5000;
-const MAX_MESSAGES_COUNT = 50;
+const MAX_MESSAGES_COUNT = 100;
 
-const SYSTEM_PROMPT = `You are an AI Associate at PageConsult. You're having a natural, friendly conversation to learn about a potential client before preparing their market research brief.
+const SYSTEM_PROMPT = `You are an AI Associate at PageConsult — a strategic colleague helping a potential client prepare for their landing page.
 
-Your goal is to naturally gather through conversation:
-1. Their name (first name is fine)
-2. Their business/industry and what they offer
-3. What they're trying to accomplish (more leads, sales, bookings, etc.)
-4. Their email (to send the research brief)
+## YOUR CORE MISSION
+Have a REAL discovery conversation. This is strategy, not a form. You need to truly understand their business before you can create an effective landing page.
 
-Guidelines:
-- Be warm, curious, and conversational - like a smart colleague, not a form
-- NEVER use bullet points, numbered lists, or structured formats
-- Ask ONE thing at a time, naturally woven into conversation
-- Acknowledge what they share before asking more
-- If they mention challenges or pain points, explore those
-- Keep responses to 2-3 sentences max
-- Sound human - use casual language, contractions
+## INFORMATION TO GATHER (through natural conversation)
+Track what you've learned. Only ask for what's missing:
+1. NAME - Their first name (just naturally in conversation)
+2. BUSINESS - What they do, their industry, what they offer
+3. GOAL - What they want this landing page to accomplish (leads, sales, bookings, etc.)
+4. AUDIENCE - Who specifically they serve (job titles, demographics, situations)
+5. DIFFERENTIATOR - What makes them different from competitors
+6. ASPIRATION - What level of market/success they're aiming for
+7. EMAIL - Where to send the research brief (ask this LAST, only after you have items 1-6)
 
-When you have all 4 pieces of information (name, business, goal, email), end with:
-"Perfect, [name]! I've got everything I need. I'm going to dig into your market now and prepare a detailed research brief. Give me a moment to analyze your industry..."
+## CONVERSATION RULES
 
-Important: Do NOT ask for information you already have. Track what's been shared and only ask for what's missing.`;
+### Ask ONE question at a time
+Never bundle questions. Never use bullet points or numbered lists.
 
+### Go DEEP on what they share
+If they say "I'm a consultant" - ask what KIND of consultant.
+If they mention a challenge - explore it.
+If they mention success - ask what made it work.
+Every answer should lead to a natural follow-up.
+
+### Be genuinely curious
+React to what they say. Show you're listening.
+"Interesting..." "That's a tough space..." "Got it..." "Makes sense..."
+
+### Sound human
+Use contractions. Keep responses to 2-3 sentences MAX.
+Sound like a smart colleague at a coffee shop, not an AI form.
+
+### Minimum conversation depth
+You MUST have at least 5-8 exchanges with meaningful discovery before moving to research.
+Don't rush. Quality > speed.
+
+## EXAMPLE OF GOOD FLOW
+User: "I need a landing page for my business"
+You: "Nice! What's your business all about?"
+User: "Management consulting for manufacturers"
+You: "Consulting for manufacturing — interesting space. Lots going on there with automation and supply chain shifts. What kind of consulting specifically? Operations, strategy, digital transformation?"
+User: "Mostly operations and process optimization"
+You: "Got it. And when a manufacturer brings you in, what's usually broken? What problem are they trying to solve?"
+[Continue exploring...]
+
+## PHASE TRANSITIONS
+
+### When you have ALL info (1-7) AND at least 5-8 exchanges:
+End with exactly this (replace [name] with their actual name):
+
+"Perfect, [name]! I've got a solid picture of your business. I'm going to research your market now — competitors, what's working in your space, audience psychology. This takes about 30 seconds. Hang tight..."
+
+IMPORTANT: Include the exact phrase "[PHASE:RESEARCH_START]" at the END of this message (this triggers the research phase).
+
+### If they try to rush:
+Gently redirect: "Before we dive into building, I want to make sure I really understand your business. Tell me more about..."
+
+## WHAT NOT TO DO
+- Never use bullet points or lists
+- Never ask multiple questions at once
+- Never jump to building without thorough discovery
+- Never sound robotic or form-like
+- Never skip exploring an interesting answer
+- Never ask for info you already have
+
+Remember: A great landing page starts with great discovery. Take your time.`;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -71,7 +117,7 @@ serve(async (req) => {
 
     const { messages } = await req.json();
     
-    // Validate messages array exists and is array
+    // Validate messages array
     if (!messages || !Array.isArray(messages)) {
       console.error('❌ Messages array is required');
       return new Response(
@@ -80,7 +126,6 @@ serve(async (req) => {
       );
     }
 
-    // Validate messages count
     if (messages.length > MAX_MESSAGES_COUNT) {
       console.error('❌ Too many messages:', messages.length);
       return new Response(
@@ -92,14 +137,12 @@ serve(async (req) => {
     // Validate each message
     for (const msg of messages) {
       if (!msg.role || !['user', 'assistant', 'system'].includes(msg.role)) {
-        console.error('❌ Invalid message role:', msg.role);
         return new Response(
           JSON.stringify({ error: 'Invalid message role' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       if (typeof msg.content !== 'string' || msg.content.length > MAX_MESSAGE_LENGTH) {
-        console.error('❌ Invalid message content length:', msg.content?.length);
         return new Response(
           JSON.stringify({ error: `Message content must be a string with max ${MAX_MESSAGE_LENGTH} characters` }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -118,6 +161,10 @@ serve(async (req) => {
       );
     }
 
+    // Count user messages to track conversation depth
+    const userMessageCount = messages.filter((m: any) => m.role === 'user').length;
+    console.log('📊 Conversation depth:', userMessageCount, 'user messages');
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -131,7 +178,7 @@ serve(async (req) => {
           ...messages,
         ],
         max_tokens: 500,
-        temperature: 0.7,
+        temperature: 0.8,
       }),
     });
 
@@ -156,12 +203,22 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const message = data.choices?.[0]?.message?.content || 'I apologize, but I encountered an issue. Could you please repeat that?';
+    let message = data.choices?.[0]?.message?.content || 'I apologize, but I encountered an issue. Could you please repeat that?';
 
-    console.log('✅ Response generated successfully');
+    // Check if research phase should start
+    const shouldStartResearch = message.includes('[PHASE:RESEARCH_START]');
+    
+    // Clean the phase marker from the visible message
+    message = message.replace('[PHASE:RESEARCH_START]', '').trim();
+
+    console.log('✅ Response generated, research phase:', shouldStartResearch);
 
     return new Response(
-      JSON.stringify({ message }),
+      JSON.stringify({ 
+        message,
+        phase: shouldStartResearch ? 'research_start' : 'intake',
+        conversationDepth: userMessageCount
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

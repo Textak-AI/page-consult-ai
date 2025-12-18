@@ -1,17 +1,26 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { Send, Loader2, Bot, User } from "lucide-react";
+import { Send, Loader2, Bot, User, Search, CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
 import iconmark from "@/assets/iconmark-darkmode.svg";
 import { getAuthHeaders } from "@/lib/authHelpers";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Message = {
   id: string;
   role: "assistant" | "user";
   content: string;
+  type?: "research_finding" | "strategy";
+};
+
+type Phase = "intake" | "researching" | "presenting" | "strategy" | "building";
+
+type ResearchStep = {
+  label: string;
+  done: boolean;
 };
 
 const INITIAL_MESSAGE = "Hey — I'm your AI Associate at PageConsult. Before I dig into your market and prepare for our consultation, tell me a bit about what brings you here today.";
@@ -24,6 +33,16 @@ export default function Wizard() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [phase, setPhase] = useState<Phase>("intake");
+  const [collectedInfo, setCollectedInfo] = useState<Record<string, any>>({});
+  const [researchSteps, setResearchSteps] = useState<ResearchStep[]>([
+    { label: "Analyzing your industry landscape", done: false },
+    { label: "Researching competitor positioning", done: false },
+    { label: "Identifying audience pain points", done: false },
+    { label: "Finding market statistics", done: false },
+  ]);
+  const [researchData, setResearchData] = useState<any>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -32,10 +51,12 @@ export default function Wizard() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Focus input on mount
+  // Focus input on mount and phase changes
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (phase === "intake" || phase === "presenting") {
+      inputRef.current?.focus();
+    }
+  }, [phase]);
 
   // Check auth
   useEffect(() => {
@@ -49,6 +70,89 @@ export default function Wizard() {
     };
     checkAuth();
   }, [navigate]);
+
+  // Extract info from conversation for research
+  const extractInfoFromConversation = useCallback((msgs: Message[]): Record<string, any> => {
+    const userMessages = msgs.filter(m => m.role === "user").map(m => m.content);
+    const fullConversation = msgs.map(m => `${m.role}: ${m.content}`).join('\n');
+    
+    // Simple extraction - the AI has gathered this through conversation
+    return {
+      conversationHistory: fullConversation,
+      userInputs: userMessages,
+      messageCount: msgs.length
+    };
+  }, []);
+
+  // Run research phase
+  const runResearch = useCallback(async (info: Record<string, any>) => {
+    setPhase("researching");
+    
+    try {
+      const headers = await getAuthHeaders();
+      
+      // Simulate research steps with actual timing
+      for (let i = 0; i < researchSteps.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 2500 + Math.random() * 1500));
+        setResearchSteps(prev => prev.map((step, idx) => 
+          idx === i ? { ...step, done: true } : step
+        ));
+      }
+
+      // Call Perplexity research (if available) or use the AI to synthesize findings
+      // For now, we'll generate research insights using the AI
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/intake-chat`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            messages: [
+              { role: "user", content: `Based on our conversation, synthesize 3-4 key market insights for this business. Format as:
+              
+1. 📊 Market Insight: [specific finding about their industry]
+2. 🎯 Positioning Opportunity: [what angle they should take]
+3. 💡 Messaging Direction: [what to lead with]
+4. ⚡ Competitive Advantage: [how to stand out]
+
+Be specific and actionable, not generic. Reference things they told you.
+
+Here's our conversation:
+${info.conversationHistory}` }
+            ]
+          })
+        }
+      );
+
+      if (!response.ok) throw new Error("Research failed");
+      
+      const data = await response.json();
+      setResearchData(data);
+      
+      // Wait a moment then present findings
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setPhase("presenting");
+      
+      // Add research findings as a message
+      const researchMessage: Message = {
+        id: Date.now().toString(),
+        role: "assistant",
+        content: `I've done some research on your market. Here's what I found:\n\n${data.message}\n\nDoes this match what you're seeing? Anything I got wrong or missed?`,
+        type: "research_finding"
+      };
+      
+      setMessages(prev => [...prev, researchMessage]);
+      
+    } catch (error) {
+      console.error("Research error:", error);
+      toast({
+        title: "Research Error",
+        description: "Couldn't complete market research. Let's continue anyway.",
+        variant: "destructive"
+      });
+      setPhase("strategy");
+    }
+  }, [researchSteps]);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -96,21 +200,15 @@ export default function Wizard() {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Check if AI indicates research phase is starting
-      if (data.message.toLowerCase().includes("dig into your market") || 
-          data.message.toLowerCase().includes("analyze your industry") ||
-          data.message.toLowerCase().includes("research brief")) {
-        // Give user a moment to read, then navigate to generation
+      // Check if we should move to research phase
+      if (data.phase === 'research_start') {
+        const info = extractInfoFromConversation([...messages, userMessage, assistantMessage]);
+        setCollectedInfo(info);
+        
+        // Give user a moment to read, then start research
         setTimeout(() => {
-          // Extract collected info from conversation for the generate page
-          const collectedInfo = extractInfoFromConversation([...messages, userMessage, assistantMessage]);
-          navigate("/generate", { 
-            state: { 
-              consultationData: collectedInfo,
-              fromWizard: true 
-            } 
-          });
-        }, 3000);
+          runResearch(info);
+        }, 2000);
       }
 
     } catch (error) {
@@ -125,20 +223,72 @@ export default function Wizard() {
     }
   };
 
-  // Extract structured info from conversation
-  const extractInfoFromConversation = (msgs: Message[]): Record<string, string> => {
-    // This will be enhanced - for now pass the full conversation
-    const userMessages = msgs.filter(m => m.role === "user").map(m => m.content);
-    return {
-      conversationHistory: JSON.stringify(msgs),
-      rawUserInput: userMessages.join(" | ")
+  // Handle presenting phase responses
+  const handlePresentingResponse = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input.trim()
     };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      // After user responds to research, move to strategy phase
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const strategyMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: `Thanks for that context! Based on our conversation and research, here's what I recommend for your page:
+
+**Hero:** Lead with your strongest differentiator and a specific result
+**Structure:** Problem → Solution → Proof → Process → CTA
+**Tone:** Confident but approachable (you're an expert, not corporate)
+**CTA:** Clear action that feels low-risk
+
+Ready to build this? Or want to adjust the approach first?`,
+        type: "strategy"
+      };
+
+      setMessages(prev => [...prev, strategyMessage]);
+      setPhase("strategy");
+
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle build button
+  const handleBuild = () => {
+    setPhase("building");
+    
+    // Navigate to generate page with all collected info
+    setTimeout(() => {
+      navigate("/generate", {
+        state: {
+          consultationData: collectedInfo,
+          researchData: researchData,
+          fromWizard: true
+        }
+      });
+    }, 500);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      if (phase === "presenting") {
+        handlePresentingResponse();
+      } else if (phase === "intake") {
+        sendMessage();
+      }
     }
   };
 
@@ -149,15 +299,85 @@ export default function Wizard() {
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3">
           <img src={iconmark} alt="PageConsult" className="h-8 w-8" />
           <span className="text-lg font-semibold text-white">PageConsult AI</span>
+          
+          {/* Phase indicator */}
+          <div className="ml-auto flex items-center gap-2 text-sm">
+            <span className={`px-3 py-1 rounded-full ${
+              phase === "intake" ? "bg-cyan-500/20 text-cyan-400" :
+              phase === "researching" ? "bg-yellow-500/20 text-yellow-400" :
+              phase === "presenting" ? "bg-purple-500/20 text-purple-400" :
+              phase === "strategy" ? "bg-green-500/20 text-green-400" :
+              "bg-cyan-500/20 text-cyan-400"
+            }`}>
+              {phase === "intake" && "Discovery"}
+              {phase === "researching" && "Researching..."}
+              {phase === "presenting" && "Review Insights"}
+              {phase === "strategy" && "Strategy"}
+              {phase === "building" && "Building..."}
+            </span>
+          </div>
         </div>
       </header>
+
+      {/* Research Progress Overlay */}
+      <AnimatePresence>
+        {phase === "researching" && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-[#0f0a1f]/95 backdrop-blur-xl flex items-center justify-center"
+          >
+            <div className="max-w-md w-full mx-4">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
+                  <Search className="w-8 h-8 text-white animate-pulse" />
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">Researching Your Market</h2>
+                <p className="text-white/60">This takes about 15-30 seconds...</p>
+              </div>
+              
+              <div className="space-y-4">
+                {researchSteps.map((step, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.2 }}
+                    className="flex items-center gap-3"
+                  >
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                      step.done 
+                        ? "bg-green-500" 
+                        : researchSteps.findIndex(s => !s.done) === idx 
+                          ? "bg-cyan-500 animate-pulse" 
+                          : "bg-white/20"
+                    }`}>
+                      {step.done ? (
+                        <CheckCircle2 className="w-4 h-4 text-white" />
+                      ) : researchSteps.findIndex(s => !s.done) === idx ? (
+                        <Loader2 className="w-4 h-4 text-white animate-spin" />
+                      ) : null}
+                    </div>
+                    <span className={`text-sm ${step.done ? "text-white" : "text-white/50"}`}>
+                      {step.label}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
           {messages.map((message) => (
-            <div
+            <motion.div
               key={message.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               className={`flex gap-4 ${message.role === "user" ? "flex-row-reverse" : ""}`}
             >
               {/* Avatar */}
@@ -177,7 +397,11 @@ export default function Wizard() {
               <div className={`max-w-[75%] ${message.role === "user" ? "text-right" : ""}`}>
                 <div className={`inline-block rounded-2xl px-5 py-3 ${
                   message.role === "assistant"
-                    ? "bg-white/10 backdrop-blur-sm text-white/90 rounded-tl-sm"
+                    ? message.type === "research_finding" 
+                      ? "bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-white/90 rounded-tl-sm"
+                      : message.type === "strategy"
+                        ? "bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 text-white/90 rounded-tl-sm"
+                        : "bg-white/10 backdrop-blur-sm text-white/90 rounded-tl-sm"
                     : "bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-tr-sm"
                 }`}>
                   <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
@@ -185,7 +409,7 @@ export default function Wizard() {
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
 
           {/* Typing Indicator */}
@@ -208,34 +432,59 @@ export default function Wizard() {
         </div>
       </div>
 
-      {/* Input Area */}
+      {/* Input Area / Action Buttons */}
       <div className="border-t border-white/10 bg-black/30 backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-4 py-4">
-          <div className="flex gap-3 items-center">
-            <Input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message..."
-              disabled={isLoading}
-              className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl py-6 px-4 text-[15px] focus-visible:ring-cyan-500/50"
-            />
-            <Button
-              onClick={sendMessage}
-              disabled={!input.trim() || isLoading}
-              className="h-12 w-12 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 disabled:opacity-50"
-            >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-            </Button>
-          </div>
-          <p className="text-center text-white/40 text-xs mt-3">
-            Press Enter to send
-          </p>
+          {phase === "strategy" ? (
+            <div className="flex gap-3 justify-center">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setPhase("presenting");
+                  inputRef.current?.focus();
+                }}
+                className="px-6 py-6 border-white/20 text-white hover:bg-white/10"
+              >
+                Let's Adjust
+              </Button>
+              <Button
+                onClick={handleBuild}
+                className="px-8 py-6 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-semibold gap-2"
+              >
+                <Sparkles className="w-5 h-5" />
+                Build My Page
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+            </div>
+          ) : (phase === "intake" || phase === "presenting") && (
+            <>
+              <div className="flex gap-3 items-center">
+                <Input
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={phase === "presenting" ? "Any corrections or additional context..." : "Type your message..."}
+                  disabled={isLoading}
+                  className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl py-6 px-4 text-[15px] focus-visible:ring-cyan-500/50"
+                />
+                <Button
+                  onClick={phase === "presenting" ? handlePresentingResponse : sendMessage}
+                  disabled={!input.trim() || isLoading}
+                  className="h-12 w-12 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-center text-white/40 text-xs mt-3">
+                Press Enter to send
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
