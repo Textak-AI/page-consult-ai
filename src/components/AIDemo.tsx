@@ -492,7 +492,7 @@ export default function AIDemo() {
               <Button 
                 variant="outline" 
                 size="lg"
-                className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:border-white/40 px-8 py-6 text-base font-semibold"
+                className="border-slate-600 bg-transparent text-white hover:bg-slate-800 hover:border-slate-500 px-8 py-6 text-base font-semibold"
               >
                 See Pricing
               </Button>
