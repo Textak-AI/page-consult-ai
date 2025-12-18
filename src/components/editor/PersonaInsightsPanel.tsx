@@ -20,6 +20,10 @@ interface PersonaInsightsPanelProps {
 // Helper function to strip citations like [1], [2], etc. and markdown
 function cleanText(text: string): string {
   if (!text) return '';
+  // Handle JSON objects that were stringified
+  if (typeof text === 'object') {
+    return '';
+  }
   return text
     .replace(/\[\d+\]/g, '') // Remove [1], [2], etc.
     .replace(/\*\*/g, '') // Remove markdown bold
@@ -28,13 +32,92 @@ function cleanText(text: string): string {
     .trim();
 }
 
+// Parse pain point which might be a JSON object or string
+function parsePainPoint(pain: any): { main: string; tip?: string } | null {
+  if (!pain) return null;
+  
+  // If it's a string that looks like JSON, try to parse it
+  if (typeof pain === 'string') {
+    try {
+      const parsed = JSON.parse(pain);
+      if (parsed.Pain_1 || parsed.pain) {
+        return {
+          main: cleanText(parsed.Pain_1 || parsed.pain || ''),
+          tip: parsed.actionable ? cleanText(parsed.actionable) : undefined,
+        };
+      }
+    } catch {
+      // Not JSON, use as-is
+      return { main: cleanText(pain) };
+    }
+    return { main: cleanText(pain) };
+  }
+  
+  // If it's an object with Pain_1, actionable fields
+  if (typeof pain === 'object') {
+    if (pain.Pain_1 || pain.pain) {
+      return {
+        main: cleanText(pain.Pain_1 || pain.pain || ''),
+        tip: pain.actionable ? cleanText(pain.actionable) : undefined,
+      };
+    }
+    // Standard format with .pain property
+    if (pain.pain) {
+      return { main: cleanText(pain.pain) };
+    }
+  }
+  
+  return null;
+}
+
+// Parse market stats from various possible formats
+function parseMarketStats(marketResearch: any): Array<{ value: string; label: string }> {
+  const stats: Array<{ value: string; label: string }> = [];
+  
+  if (!marketResearch) return stats;
+  
+  // Check for _DEMOGRAPHICS format
+  const demographics = marketResearch._DEMOGRAPHICS || marketResearch.demographics || marketResearch.DEMOGRAPHICS;
+  if (Array.isArray(demographics)) {
+    demographics.forEach((d: any) => {
+      if (d.Age_range || d.age_range) stats.push({ value: d.Age_range || d.age_range, label: 'Age range' });
+      if (d.Average_budget || d.budget) stats.push({ value: d.Average_budget || d.budget, label: 'Avg budget' });
+      if (d.Market_size || d.market_size) stats.push({ value: d.Market_size || d.market_size, label: 'Market size' });
+    });
+  }
+  
+  // Check for claims with statistics
+  if (marketResearch.claims) {
+    marketResearch.claims
+      .filter((c: any) => c.category === 'statistic' || c.claim?.match(/\d/))
+      .slice(0, 6)
+      .forEach((claim: any) => {
+        const extracted = extractStatValue(typeof claim === 'string' ? claim : claim.claim);
+        if (extracted) stats.push(extracted);
+      });
+  }
+  
+  // Check for raw statistics object
+  if (marketResearch.statistics && typeof marketResearch.statistics === 'object') {
+    Object.entries(marketResearch.statistics).forEach(([key, val]: [string, any]) => {
+      if (val && typeof val === 'string' || typeof val === 'number') {
+        stats.push({ value: String(val), label: key.replace(/_/g, ' ') });
+      }
+    });
+  }
+  
+  return stats.slice(0, 4);
+}
+
 // Extract numeric value from a stat claim
 function extractStatValue(claim: string): { value: string; label: string } | null {
-  // Match patterns like "$22,500", "36", "21,714", "85%", etc.
+  if (!claim || typeof claim !== 'string') return null;
+  
+  // Match patterns like "$22,500", "36", "21,714", "85%", "$1,850-$2,100", etc.
   const patterns = [
-    /(\$[\d,]+(?:\.\d+)?)/,  // Dollar amounts
-    /([\d,]+(?:\.\d+)?%)/,   // Percentages
-    /([\d,]+(?:\.\d+)?)/,    // Plain numbers
+    /(\$[\d,]+(?:-\$[\d,]+)?)/,  // Dollar amounts (including ranges)
+    /([\d,]+(?:\.\d+)?%)/,       // Percentages
+    /([\d,]+(?:-[\d,]+)?)/,      // Plain numbers (including ranges)
   ];
   
   for (const pattern of patterns) {
@@ -56,14 +139,29 @@ function extractStatValue(claim: string): { value: string; label: string } | nul
   return null;
 }
 
-// Parse CTA examples - filter out citation-only entries
-function parseCtaExamples(examples: string[]): string[] {
-  return examples
-    .map(cta => cleanText(cta))
+// Parse CTA examples - filter out citation-only entries and generate defaults if needed
+function parseCtaExamples(examples: string[] | undefined, industry?: string): string[] {
+  const defaults = [
+    'Get Started',
+    'Book a Consultation',
+    'Get Free Quote',
+    'Learn More',
+  ];
+  
+  if (!examples || examples.length === 0) return defaults;
+  
+  const parsed = examples
+    .map(cta => cleanText(typeof cta === 'string' ? cta : ''))
     .filter(cta => {
-      // Filter out empty strings, citations-only, or too short
-      return cta.length > 3 && !/^\[\d+\]$/.test(cta) && !/^\d+$/.test(cta);
+      // Filter out empty strings, citations-only, too short, or numeric fragments
+      return cta.length > 3 && 
+             !/^\[\d+\]$/.test(cta) && 
+             !/^\d+/.test(cta) &&
+             !cta.includes('%') &&
+             cta.split(' ').length <= 6;
     });
+  
+  return parsed.length > 0 ? parsed : defaults;
 }
 
 // Parse headline formulas
@@ -100,16 +198,10 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
   if (!persona) return null;
 
   // Extract market statistics and parse them into clean stat cards
-  const rawStatistics = marketResearch?.claims
-    ?.filter((c: any) => c.category === 'statistic' || c.claim?.match(/\d/))
-    ?.slice(0, 6) || [];
-  
-  const parsedStats = rawStatistics
-    .map((s: any) => extractStatValue(s.claim))
-    .filter(Boolean)
-    .slice(0, 4);
+  const parsedStats = parseMarketStats(marketResearch);
   
   // Get unique sources for collapsed sources section
+  const rawStatistics = marketResearch?.claims?.filter((c: any) => c.category === 'statistic') || [];
   const allSources = [...new Set([
     ...rawStatistics.map((s: any) => s.source).filter(Boolean),
     ...(marketResearch?.sources || []),
@@ -123,15 +215,16 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
     landingPageBestPractices.commonMistakes?.length
   );
 
-  // Parse CTA examples
-  const cleanCtaExamples = landingPageBestPractices?.ctaExamples 
-    ? parseCtaExamples(landingPageBestPractices.ctaExamples) 
-    : [];
+  // Parse CTA examples with fallback defaults
+  const cleanCtaExamples = parseCtaExamples(landingPageBestPractices?.ctaExamples, intelligence.industry);
 
   // Parse headline formulas
   const cleanHeadlines = landingPageBestPractices?.headlineFormulas
     ?.map(parseHeadlineFormula)
     .filter(h => h.formula.length > 5) || [];
+  
+  // Parse pain points properly
+  const primaryPainParsed = persona.painPoints?.[0] ? parsePainPoint(persona.painPoints[0]) : null;
 
   // Parse conversion tips
   const cleanTips = landingPageBestPractices?.conversionTips
@@ -290,7 +383,7 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
       </div>
 
       {/* Primary Pain */}
-      {persona.painPoints?.[0] && (
+      {primaryPainParsed && (
         <CompactInsightSection
           icon={AlertTriangle}
           iconColor="text-red-400"
@@ -300,8 +393,13 @@ export function PersonaInsightsPanel({ intelligence, landingPageBestPractices }:
           onToggle={() => toggleSection('pain')}
         >
           <p className="text-xs text-gray-300 leading-relaxed">
-            {cleanText(persona.painPoints[0].pain)}
+            {primaryPainParsed.main}
           </p>
+          {primaryPainParsed.tip && (
+            <p className="mt-1.5 text-[10px] text-gray-500 italic">
+              Tip: {primaryPainParsed.tip}
+            </p>
+          )}
         </CompactInsightSection>
       )}
 
