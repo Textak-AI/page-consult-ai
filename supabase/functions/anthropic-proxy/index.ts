@@ -1,10 +1,15 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Anthropic from 'npm:@anthropic-ai/sdk';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation limits
+const MAX_SYSTEM_PROMPT_LENGTH = 50000;
+const MAX_USER_PROMPT_LENGTH = 50000;
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -15,6 +20,34 @@ serve(async (req) => {
   console.log('🚀 anthropic-proxy function called');
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('❌ Missing authorization header');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized - missing authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Create Supabase client and verify user
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      console.error('❌ Authentication failed:', authError?.message || 'No user found');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized - invalid token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('✅ User authenticated:', user.id);
+
     // Get API key from Supabase secret
     const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
     console.log('🔑 ANTHROPIC_API_KEY status:', apiKey ? 'FOUND' : 'MISSING');
@@ -30,7 +63,7 @@ serve(async (req) => {
       );
     }
 
-    // Parse request
+    // Parse and validate request
     const body = await req.json();
     const { systemPrompt, userPrompt } = body;
     
@@ -41,12 +74,36 @@ serve(async (req) => {
       userPromptLength: userPrompt?.length || 0,
     });
 
+    // Validate required fields
     if (!systemPrompt || !userPrompt) {
       console.error('❌ Missing prompts:', { systemPrompt: !!systemPrompt, userPrompt: !!userPrompt });
       return new Response(
         JSON.stringify({ 
           success: false,
           error: 'Missing systemPrompt or userPrompt in request body' 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate input lengths
+    if (typeof systemPrompt !== 'string' || systemPrompt.length > MAX_SYSTEM_PROMPT_LENGTH) {
+      console.error('❌ Invalid systemPrompt length:', systemPrompt?.length);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: `systemPrompt must be a string with max ${MAX_SYSTEM_PROMPT_LENGTH} characters` 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (typeof userPrompt !== 'string' || userPrompt.length > MAX_USER_PROMPT_LENGTH) {
+      console.error('❌ Invalid userPrompt length:', userPrompt?.length);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: `userPrompt must be a string with max ${MAX_USER_PROMPT_LENGTH} characters` 
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
