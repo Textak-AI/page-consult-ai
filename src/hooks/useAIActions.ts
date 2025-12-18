@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { isDevMode, DEV_MODE_CREDITS } from '@/config/devMode';
 
 export type AIActionType = 
   | 'page_generation' 
@@ -47,29 +48,35 @@ const ACTION_COSTS: Record<AIActionType, number> = {
   style_change: 1,
 };
 
-export function useAIActions(userId: string | null) {
+export function useAIActions(userId: string | null, userEmail?: string | null) {
   const [usage, setUsage] = useState<UserUsage | null>(null);
   const [usageLog, setUsageLog] = useState<UsageLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [dontShowConfirm, setDontShowConfirm] = useState(false);
 
-  // Calculate derived values
-  const available = usage 
-    ? (usage.ai_actions_limit ?? 30) - usage.ai_actions_used + usage.ai_actions_rollover 
-    : 0;
+  // Check if dev mode is active
+  const devMode = isDevMode(userEmail);
+
+  // Calculate derived values (use dev credits if in dev mode)
+  const available = devMode 
+    ? DEV_MODE_CREDITS 
+    : (usage 
+        ? (usage.ai_actions_limit ?? 30) - usage.ai_actions_used + usage.ai_actions_rollover 
+        : 0);
   
-  const limit = usage?.ai_actions_limit ?? 30;
+  const limit = devMode ? DEV_MODE_CREDITS : (usage?.ai_actions_limit ?? 30);
   const percentUsed = limit ? ((limit - available + (usage?.ai_actions_rollover ?? 0)) / limit) * 100 : 0;
-  const percentRemaining = 100 - percentUsed;
+  const percentRemaining = devMode ? 100 : (100 - percentUsed);
   
   const daysUntilReset = usage?.billing_period_start
     ? Math.max(0, 30 - Math.floor((Date.now() - new Date(usage.billing_period_start).getTime()) / (1000 * 60 * 60 * 24)))
     : 30;
 
-  const isUnlimited = usage?.plan_tier === 'agency';
-  const isPro = usage?.plan_tier === 'pro';
-  const isLowBalance = available <= 5 && !isUnlimited;
-  const isZeroBalance = available <= 0 && !isUnlimited;
+  // Dev mode users are always treated as unlimited
+  const isUnlimited = devMode || usage?.plan_tier === 'agency';
+  const isPro = devMode || usage?.plan_tier === 'pro';
+  const isLowBalance = !devMode && available <= 5 && !isUnlimited;
+  const isZeroBalance = !devMode && available <= 0 && !isUnlimited;
 
   // Fetch user usage data
   const fetchUsage = useCallback(async () => {
@@ -134,8 +141,10 @@ export function useAIActions(userId: string | null) {
 
   // Check if action is allowed (without tracking)
   const checkAction = useCallback((actionType: AIActionType, isFirstPageGeneration = false): { allowed: boolean; cost: number; remaining: number } => {
-    if (isUnlimited) {
-      return { allowed: true, cost: 0, remaining: -1 };
+    // DEV MODE: Always allow actions
+    if (devMode || isUnlimited) {
+      console.log('[DEV MODE] Bypassing credit check for action:', actionType);
+      return { allowed: true, cost: 0, remaining: DEV_MODE_CREDITS };
     }
 
     let cost = ACTION_COSTS[actionType];
@@ -150,7 +159,7 @@ export function useAIActions(userId: string | null) {
       cost,
       remaining: available,
     };
-  }, [available, isUnlimited]);
+  }, [available, isUnlimited, devMode]);
 
   // Track an AI action
   const trackAction = useCallback(async (
@@ -159,6 +168,12 @@ export function useAIActions(userId: string | null) {
     sectionType?: string,
     isFirstPageGeneration = false
   ): Promise<ActionResult> => {
+    // DEV MODE: Skip actual tracking, just allow
+    if (devMode) {
+      console.log(`[DEV MODE] Bypassing credit deduction for action: ${actionType} (would cost ${ACTION_COSTS[actionType]})`);
+      return { allowed: true, remaining: DEV_MODE_CREDITS, unlimited: true };
+    }
+
     if (!userId) {
       return { allowed: false, remaining: 0, unlimited: false };
     }
@@ -200,7 +215,7 @@ export function useAIActions(userId: string | null) {
       console.error('Error tracking action:', err);
       return { allowed: false, remaining: available, unlimited: false };
     }
-  }, [userId, isUnlimited, available, fetchUsage, fetchUsageLog]);
+  }, [userId, isUnlimited, available, fetchUsage, fetchUsageLog, devMode]);
 
   // Request grace actions
   const requestGraceActions = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
@@ -259,6 +274,7 @@ export function useAIActions(userId: string | null) {
     requestGraceActions,
     getActionCost,
     refreshUsage: fetchUsage,
+    devMode, // Expose dev mode status
   };
 }
 

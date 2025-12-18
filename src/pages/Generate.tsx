@@ -1139,14 +1139,16 @@ function EditorContent({
   
   // Get current user
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUserId(user?.id || null);
+      setUserEmail(user?.email || null);
     });
   }, []);
 
-  // AI Actions usage tracking
-  const aiActions = useAIActions(userId);
+  // AI Actions usage tracking (pass email for dev mode detection)
+  const aiActions = useAIActions(userId, userEmail);
   const { credits } = useCredits(userId);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [zeroBalanceModalOpen, setZeroBalanceModalOpen] = useState(false);
@@ -1173,8 +1175,11 @@ function EditorContent({
     callback: () => void,
     sectionType?: string
   ) => {
-    // Agency tier always allowed
-    if (aiActions.isUnlimited) {
+    // DEV MODE or Agency tier: Always allow, skip confirmation
+    if (aiActions.devMode || aiActions.isUnlimited) {
+      if (aiActions.devMode) {
+        console.log(`[DEV MODE] Executing ${actionType} without credit check`);
+      }
       callback();
       return;
     }
@@ -1312,8 +1317,15 @@ function EditorContent({
             <img src={logo} alt="PageConsult AI" className="h-8 w-auto" />
           </a>
           
+          {/* Dev Mode Indicator */}
+          {aiActions.devMode && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-yellow-500/20 border border-yellow-500/40">
+              <span className="text-xs font-medium text-yellow-400">🛠️ DEV MODE</span>
+            </div>
+          )}
+          
           {/* Usage Indicator */}
-          {userId && !aiActions.loading && (
+          {userId && !aiActions.loading && !aiActions.devMode && (
             <UsageIndicator
               available={aiActions.available}
               limit={aiActions.limit}
