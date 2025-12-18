@@ -167,6 +167,7 @@ export type Database = {
       landing_pages: {
         Row: {
           analytics_enabled: boolean | null
+          consultation_data: Json | null
           consultation_id: string | null
           created_at: string
           id: string
@@ -178,13 +179,16 @@ export type Database = {
           sections: Json
           slug: string
           status: string
+          strategy_brief: string | null
           styles: Json | null
           title: string
           updated_at: string
           user_id: string
+          website_intelligence: Json | null
         }
         Insert: {
           analytics_enabled?: boolean | null
+          consultation_data?: Json | null
           consultation_id?: string | null
           created_at?: string
           id?: string
@@ -196,13 +200,16 @@ export type Database = {
           sections?: Json
           slug: string
           status?: string
+          strategy_brief?: string | null
           styles?: Json | null
           title: string
           updated_at?: string
           user_id: string
+          website_intelligence?: Json | null
         }
         Update: {
           analytics_enabled?: boolean | null
+          consultation_data?: Json | null
           consultation_id?: string | null
           created_at?: string
           id?: string
@@ -214,10 +221,12 @@ export type Database = {
           sections?: Json
           slug?: string
           status?: string
+          strategy_brief?: string | null
           styles?: Json | null
           title?: string
           updated_at?: string
           user_id?: string
+          website_intelligence?: Json | null
         }
         Relationships: [
           {
