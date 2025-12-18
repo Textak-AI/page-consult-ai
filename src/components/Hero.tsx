@@ -66,8 +66,8 @@ const Hero = () => {
               opacity: 0
             }}>
               <Button asChild size="lg" className="group/btn text-lg px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white border-0 animate-pulse-glow hover:scale-105 rounded-xl font-semibold transition-all duration-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900" aria-label="Start free AI consultation demo">
-                <Link to="/wizard" className="flex items-center">
-                  <span className="relative z-10">Try AI Consultant - Free Demo</span>
+                <Link to="/new" className="flex items-center">
+                  <span className="relative z-10">Start Strategic Consultation</span>
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover/btn:translate-x-1" />
                 </Link>
               </Button>

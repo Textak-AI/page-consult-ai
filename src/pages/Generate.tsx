@@ -105,16 +105,25 @@ function GenerateContent() {
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Intelligence data from wizard
+  // Intelligence data from wizard or strategic consultation
   const navigationState = location.state as {
     consultationData?: any;
     intelligenceData?: PersonaIntelligence;
     generatedContentData?: GeneratedContent;
     landingPageBestPractices?: any;
     devMode?: boolean; // Bypass auth for testing
+    // New strategic consultation data
+    strategicData?: {
+      consultationData?: any;
+      websiteIntelligence?: any;
+      strategyBrief?: string;
+    };
+    fromStrategicConsultation?: boolean;
   } | null;
   
   const isDevMode = navigationState?.devMode === true;
+  const fromStrategicConsultation = navigationState?.fromStrategicConsultation === true;
+  const strategicData = navigationState?.strategicData || null;
   
   const [intelligence, setIntelligence] = useState<PersonaIntelligence | null>(
     navigationState?.intelligenceData || null
@@ -420,17 +429,30 @@ function GenerateContent() {
       const slug = `${consultationData.industry?.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
       console.log("💾 Creating new page in database with slug:", slug);
       
+      // Prepare insert data with optional strategic fields
+      const insertData: any = {
+        user_id: userId,
+        consultation_id: consultationData.id,
+        title: strategicData?.consultationData?.businessName 
+          ? `${strategicData.consultationData.businessName} Landing Page`
+          : `${consultationData.industry} Landing Page`,
+        slug,
+        sections: generatedSections,
+        meta_title: `${consultationData.offer} - ${consultationData.industry}`,
+        meta_description: consultationData.unique_value,
+      };
+      
+      // Add strategic data if from new consultation flow
+      if (fromStrategicConsultation && strategicData) {
+        insertData.consultation_data = strategicData.consultationData || {};
+        insertData.website_intelligence = strategicData.websiteIntelligence || null;
+        insertData.strategy_brief = strategicData.strategyBrief || null;
+        console.log("📋 Including strategic consultation data in page record");
+      }
+      
       const { data: pageData, error } = await supabase
         .from("landing_pages")
-        .insert({
-          user_id: userId,
-          consultation_id: consultationData.id,
-          title: `${consultationData.industry} Landing Page`,
-          slug,
-          sections: generatedSections,
-          meta_title: `${consultationData.offer} - ${consultationData.industry}`,
-          meta_description: consultationData.unique_value,
-        })
+        .insert(insertData)
         .select()
         .single();
 
