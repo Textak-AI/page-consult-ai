@@ -291,6 +291,36 @@ export type Database = {
           },
         ]
       }
+      usage_log: {
+        Row: {
+          action_cost: number
+          action_type: Database["public"]["Enums"]["ai_action_type"]
+          created_at: string
+          id: string
+          page_id: string | null
+          section_type: string | null
+          user_id: string
+        }
+        Insert: {
+          action_cost: number
+          action_type: Database["public"]["Enums"]["ai_action_type"]
+          created_at?: string
+          id?: string
+          page_id?: string | null
+          section_type?: string | null
+          user_id: string
+        }
+        Update: {
+          action_cost?: number
+          action_type?: Database["public"]["Enums"]["ai_action_type"]
+          created_at?: string
+          id?: string
+          page_id?: string | null
+          section_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_plans: {
         Row: {
           api_calls_limit: number
@@ -324,15 +354,78 @@ export type Database = {
         }
         Relationships: []
       }
+      user_usage: {
+        Row: {
+          ai_actions_limit: number | null
+          ai_actions_rollover: number
+          ai_actions_used: number
+          billing_period_start: string
+          created_at: string
+          grace_actions_given: boolean
+          id: string
+          plan_tier: Database["public"]["Enums"]["plan_tier"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_actions_limit?: number | null
+          ai_actions_rollover?: number
+          ai_actions_used?: number
+          billing_period_start?: string
+          created_at?: string
+          grace_actions_given?: boolean
+          id?: string
+          plan_tier?: Database["public"]["Enums"]["plan_tier"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_actions_limit?: number | null
+          ai_actions_rollover?: number
+          ai_actions_used?: number
+          billing_period_start?: string
+          created_at?: string
+          grace_actions_given?: boolean
+          id?: string
+          plan_tier?: Database["public"]["Enums"]["plan_tier"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      grant_grace_actions: { Args: { p_user_id: string }; Returns: Json }
       reset_api_calls: { Args: never; Returns: undefined }
+      reset_monthly_usage: { Args: never; Returns: undefined }
+      track_ai_action: {
+        Args: {
+          p_action_cost: number
+          p_action_type: Database["public"]["Enums"]["ai_action_type"]
+          p_page_id?: string
+          p_section_type?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
-      [_ in never]: never
+      ai_action_type:
+        | "page_generation"
+        | "section_regeneration"
+        | "ai_improvement"
+        | "intelligence_refresh"
+        | "style_change"
+      plan_tier: "starter" | "pro" | "agency"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -459,6 +552,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      ai_action_type: [
+        "page_generation",
+        "section_regeneration",
+        "ai_improvement",
+        "intelligence_refresh",
+        "style_change",
+      ],
+      plan_tier: ["starter", "pro", "agency"],
+    },
   },
 } as const
