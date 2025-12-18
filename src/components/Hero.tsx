@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Play, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { AnimatedChatPreview } from "@/components/AnimatedChatPreview";
+import AbstractHeroTeaser from "@/components/AbstractHeroTeaser";
 import AnimatedStatsCard from "@/components/AnimatedStatsCard";
 
 const Hero = () => {
@@ -129,13 +129,13 @@ const Hero = () => {
             </p>
           </div>
 
-          {/* Right demo - 40% */}
-          <div className="relative" style={{
+          {/* Right demo - 40% - Abstract teaser */}
+          <div className="relative flex items-center justify-center" style={{
             animation: 'scale-in 1000ms ease-out 800ms forwards',
             animationFillMode: 'forwards',
             opacity: 0
           }}>
-            <AnimatedChatPreview />
+            <AbstractHeroTeaser />
           </div>
           
         </div>
