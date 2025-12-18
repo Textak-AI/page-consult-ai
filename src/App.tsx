@@ -13,6 +13,7 @@ import Generate from "./pages/Generate";
 import GalleryTest from "./pages/GalleryTest";
 import HeroShowcase from "./pages/HeroShowcase";
 import SectionSelectorDemo from "./pages/SectionSelectorDemo";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 import DevTest from "./pages/DevTest";
 
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/gallery-test" element={<GalleryTest />} />
             <Route path="/hero-showcase" element={<HeroShowcase />} />
             <Route path="/section-selector" element={<SectionSelectorDemo />} />
+            <Route path="/chat" element={<Chat />} />
             <Route path="/dev-test" element={<DevTest />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
