@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import { Send, Loader2, Bot, User, Search, CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
+import { Send, Loader2, Bot, User, Search, CheckCircle2, ArrowRight, Sparkles, PanelRightClose, PanelRight } from "lucide-react";
 import iconmark from "@/assets/iconmark-darkmode.svg";
 import { getAuthHeaders } from "@/lib/authHelpers";
 import { motion, AnimatePresence } from "framer-motion";
+import { IntelligencePanel, IntelligenceTile, getDefaultTiles } from "@/components/wizard/IntelligencePanel";
+import { cn } from "@/lib/utils";
 
 type Message = {
   id: string;
@@ -23,6 +25,24 @@ type ResearchStep = {
   done: boolean;
 };
 
+const iconMapForTiles: Record<string, IntelligenceTile["icon"]> = {
+  industry: "Building2",
+  audience: "Target",
+  value: "Gem",
+  competitive: "Shield",
+  goals: "Rocket",
+  swagger: "Gauge",
+};
+
+const categoryNames: Record<string, string> = {
+  industry: "Industry & Market",
+  audience: "Target Audience",
+  value: "Value Proposition",
+  competitive: "Competitive Position",
+  goals: "Goals & Objectives",
+  swagger: "Swagger Level",
+};
+
 const INITIAL_MESSAGE = "Hey — I'm your AI Associate at PageConsult. Before I dig into your market and prepare for our consultation, tell me a bit about what brings you here today.";
 
 export default function Wizard() {
@@ -35,6 +55,9 @@ export default function Wizard() {
   const [userId, setUserId] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("intake");
   const [collectedInfo, setCollectedInfo] = useState<Record<string, any>>({});
+  const [tiles, setTiles] = useState<IntelligenceTile[]>(getDefaultTiles());
+  const [overallReadiness, setOverallReadiness] = useState(0);
+  const [showPanel, setShowPanel] = useState(true);
   const [researchSteps, setResearchSteps] = useState<ResearchStep[]>([
     { label: "Analyzing your industry landscape", done: false },
     { label: "Researching competitor positioning", done: false },
@@ -51,10 +74,10 @@ export default function Wizard() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Focus input on mount and phase changes
+  // Focus input on mount
   useEffect(() => {
     if (phase === "intake" || phase === "presenting") {
-      inputRef.current?.focus();
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [phase]);
 
@@ -71,27 +94,35 @@ export default function Wizard() {
     checkAuth();
   }, [navigate]);
 
-  // Extract info from conversation for research
-  const extractInfoFromConversation = useCallback((msgs: Message[]): Record<string, any> => {
-    const userMessages = msgs.filter(m => m.role === "user").map(m => m.content);
-    const fullConversation = msgs.map(m => `${m.role}: ${m.content}`).join('\n');
+  // Update tiles from intelligence data
+  const updateTilesFromIntelligence = useCallback((intelligence: any) => {
+    if (!intelligence?.tiles) return;
     
-    // Simple extraction - the AI has gathered this through conversation
-    return {
-      conversationHistory: fullConversation,
-      userInputs: userMessages,
-      messageCount: msgs.length
-    };
+    setTiles(prev => {
+      return prev.map(tile => {
+        const newData = intelligence.tiles[tile.id];
+        if (!newData) return tile;
+        
+        return {
+          ...tile,
+          fill: newData.fill || 0,
+          insight: newData.insight || "Not yet known",
+          state: newData.state || "empty"
+        };
+      });
+    });
+    
+    setOverallReadiness(intelligence.overallReadiness || 0);
   }, []);
 
   // Run research phase
-  const runResearch = useCallback(async (info: Record<string, any>) => {
+  const runResearch = useCallback(async () => {
     setPhase("researching");
     
     try {
       const headers = await getAuthHeaders();
       
-      // Simulate research steps with actual timing
+      // Simulate research steps
       for (let i = 0; i < researchSteps.length; i++) {
         await new Promise(resolve => setTimeout(resolve, 2500 + Math.random() * 1500));
         setResearchSteps(prev => prev.map((step, idx) => 
@@ -99,8 +130,9 @@ export default function Wizard() {
         ));
       }
 
-      // Call Perplexity research (if available) or use the AI to synthesize findings
-      // For now, we'll generate research insights using the AI
+      // Generate research insights using the conversation
+      const conversationText = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+      
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/intake-chat`,
         {
@@ -108,18 +140,17 @@ export default function Wizard() {
           headers,
           body: JSON.stringify({
             messages: [
-              { role: "user", content: `Based on our conversation, synthesize 3-4 key market insights for this business. Format as:
-              
-1. 📊 Market Insight: [specific finding about their industry]
-2. 🎯 Positioning Opportunity: [what angle they should take]
-3. 💡 Messaging Direction: [what to lead with]
-4. ⚡ Competitive Advantage: [how to stand out]
+              { role: "user", content: `Based on our conversation, synthesize 3-4 key market insights. Format naturally as paragraphs, not bullet points:
 
-Be specific and actionable, not generic. Reference things they told you.
+1. A market insight about their industry
+2. A positioning opportunity they should leverage  
+3. A messaging direction recommendation
+4. What competitive angle to lead with
 
-Here's our conversation:
-${info.conversationHistory}` }
-            ]
+Be specific based on what they shared. Here's our conversation:
+${conversationText}` }
+            ],
+            extractOnly: false
           })
         }
       );
@@ -127,17 +158,15 @@ ${info.conversationHistory}` }
       if (!response.ok) throw new Error("Research failed");
       
       const data = await response.json();
-      setResearchData(data);
+      setResearchData({ ...data, tiles, overallReadiness });
       
-      // Wait a moment then present findings
       await new Promise(resolve => setTimeout(resolve, 1000));
       setPhase("presenting");
       
-      // Add research findings as a message
       const researchMessage: Message = {
         id: Date.now().toString(),
         role: "assistant",
-        content: `I've done some research on your market. Here's what I found:\n\n${data.message}\n\nDoes this match what you're seeing? Anything I got wrong or missed?`,
+        content: `I've done some research on your market. Here's what I found:\n\n${data.message}\n\nDoes this match what you're seeing? Anything I got wrong or want to add?`,
         type: "research_finding"
       };
       
@@ -152,7 +181,7 @@ ${info.conversationHistory}` }
       });
       setPhase("strategy");
     }
-  }, [researchSteps]);
+  }, [messages, tiles, overallReadiness, researchSteps]);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -170,7 +199,6 @@ ${info.conversationHistory}` }
     try {
       const headers = await getAuthHeaders();
       
-      // Build conversation history for the AI
       const conversationHistory = [...messages, userMessage].map(msg => ({
         role: msg.role,
         content: msg.content
@@ -192,6 +220,11 @@ ${info.conversationHistory}` }
 
       const data = await response.json();
       
+      // Update intelligence tiles
+      if (data.intelligence) {
+        updateTilesFromIntelligence(data.intelligence);
+      }
+      
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
@@ -199,23 +232,13 @@ ${info.conversationHistory}` }
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-
-      // Check if we should move to research phase
-      if (data.phase === 'research_start') {
-        const info = extractInfoFromConversation([...messages, userMessage, assistantMessage]);
-        setCollectedInfo(info);
-        
-        // Give user a moment to read, then start research
-        setTimeout(() => {
-          runResearch(info);
-        }, 2000);
-      }
+      setCollectedInfo({ conversationHistory: [...messages, userMessage, assistantMessage], tiles, intelligence: data.intelligence });
 
     } catch (error) {
       console.error("Error sending message:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send message. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to send message.",
         variant: "destructive"
       });
     } finally {
@@ -223,7 +246,6 @@ ${info.conversationHistory}` }
     }
   };
 
-  // Handle presenting phase responses
   const handlePresentingResponse = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -238,7 +260,6 @@ ${info.conversationHistory}` }
     setIsLoading(true);
 
     try {
-      // After user responds to research, move to strategy phase
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const strategyMessage: Message = {
@@ -246,10 +267,10 @@ ${info.conversationHistory}` }
         role: "assistant",
         content: `Thanks for that context! Based on our conversation and research, here's what I recommend for your page:
 
-**Hero:** Lead with your strongest differentiator and a specific result
-**Structure:** Problem → Solution → Proof → Process → CTA
-**Tone:** Confident but approachable (you're an expert, not corporate)
-**CTA:** Clear action that feels low-risk
+Hero: Lead with your strongest differentiator and a specific result you deliver
+Structure: Problem → Solution → Proof → Process → CTA
+Tone: Confident but approachable — expert without being corporate
+CTA: Clear action that feels low-risk to take
 
 Ready to build this? Or want to adjust the approach first?`,
         type: "strategy"
@@ -265,16 +286,15 @@ Ready to build this? Or want to adjust the approach first?`,
     }
   };
 
-  // Handle build button
   const handleBuild = () => {
     setPhase("building");
     
-    // Navigate to generate page with all collected info
     setTimeout(() => {
       navigate("/generate", {
         state: {
           consultationData: collectedInfo,
           researchData: researchData,
+          tiles: tiles,
           fromWizard: true
         }
       });
@@ -292,23 +312,26 @@ Ready to build this? Or want to adjust the approach first?`,
     }
   };
 
+  const isResearchReady = overallReadiness >= 80;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0a1f] via-[#1a1332] to-[#0f0a1f] flex flex-col">
       {/* Header */}
-      <header className="border-b border-white/10 bg-black/20 backdrop-blur-xl">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3">
+      <header className="border-b border-white/10 bg-black/20 backdrop-blur-xl z-10">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-3">
           <img src={iconmark} alt="PageConsult" className="h-8 w-8" />
           <span className="text-lg font-semibold text-white">PageConsult AI</span>
           
           {/* Phase indicator */}
-          <div className="ml-auto flex items-center gap-2 text-sm">
-            <span className={`px-3 py-1 rounded-full ${
+          <div className="ml-4 flex items-center gap-2 text-sm">
+            <span className={cn(
+              "px-3 py-1 rounded-full",
               phase === "intake" ? "bg-cyan-500/20 text-cyan-400" :
               phase === "researching" ? "bg-yellow-500/20 text-yellow-400" :
               phase === "presenting" ? "bg-purple-500/20 text-purple-400" :
               phase === "strategy" ? "bg-green-500/20 text-green-400" :
               "bg-cyan-500/20 text-cyan-400"
-            }`}>
+            )}>
               {phase === "intake" && "Discovery"}
               {phase === "researching" && "Researching..."}
               {phase === "presenting" && "Review Insights"}
@@ -316,6 +339,16 @@ Ready to build this? Or want to adjust the approach first?`,
               {phase === "building" && "Building..."}
             </span>
           </div>
+          
+          {/* Panel toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowPanel(!showPanel)}
+            className="ml-auto text-white/60 hover:text-white hover:bg-white/10"
+          >
+            {showPanel ? <PanelRightClose className="w-5 h-5" /> : <PanelRight className="w-5 h-5" />}
+          </Button>
         </div>
       </header>
 
@@ -346,20 +379,21 @@ Ready to build this? Or want to adjust the approach first?`,
                     transition={{ delay: idx * 0.2 }}
                     className="flex items-center gap-3"
                   >
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                    <div className={cn(
+                      "w-6 h-6 rounded-full flex items-center justify-center",
                       step.done 
                         ? "bg-green-500" 
                         : researchSteps.findIndex(s => !s.done) === idx 
                           ? "bg-cyan-500 animate-pulse" 
                           : "bg-white/20"
-                    }`}>
+                    )}>
                       {step.done ? (
                         <CheckCircle2 className="w-4 h-4 text-white" />
                       ) : researchSteps.findIndex(s => !s.done) === idx ? (
                         <Loader2 className="w-4 h-4 text-white animate-spin" />
                       ) : null}
                     </div>
-                    <span className={`text-sm ${step.done ? "text-white" : "text-white/50"}`}>
+                    <span className={cn("text-sm", step.done ? "text-white" : "text-white/50")}>
                       {step.label}
                     </span>
                   </motion.div>
@@ -370,122 +404,150 @@ Ready to build this? Or want to adjust the approach first?`,
         )}
       </AnimatePresence>
 
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-          {messages.map((message) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex gap-4 ${message.role === "user" ? "flex-row-reverse" : ""}`}
-            >
-              {/* Avatar */}
-              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                message.role === "assistant" 
-                  ? "bg-gradient-to-br from-cyan-500 to-purple-600" 
-                  : "bg-gradient-to-br from-purple-500 to-pink-600"
-              }`}>
-                {message.role === "assistant" ? (
-                  <Bot className="w-5 h-5 text-white" />
-                ) : (
-                  <User className="w-5 h-5 text-white" />
-                )}
-              </div>
-
-              {/* Message Bubble */}
-              <div className={`max-w-[75%] ${message.role === "user" ? "text-right" : ""}`}>
-                <div className={`inline-block rounded-2xl px-5 py-3 ${
-                  message.role === "assistant"
-                    ? message.type === "research_finding" 
-                      ? "bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-white/90 rounded-tl-sm"
-                      : message.type === "strategy"
-                        ? "bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 text-white/90 rounded-tl-sm"
-                        : "bg-white/10 backdrop-blur-sm text-white/90 rounded-tl-sm"
-                    : "bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-tr-sm"
-                }`}>
-                  <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
-                    {message.content}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-
-          {/* Typing Indicator */}
-          {isLoading && (
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl rounded-tl-sm px-5 py-3">
-                <div className="flex gap-1.5">
-                  <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      {/* Input Area / Action Buttons */}
-      <div className="border-t border-white/10 bg-black/30 backdrop-blur-xl">
-        <div className="max-w-3xl mx-auto px-4 py-4">
-          {phase === "strategy" ? (
-            <div className="flex gap-3 justify-center">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setPhase("presenting");
-                  inputRef.current?.focus();
-                }}
-                className="px-6 py-6 border-white/20 text-white hover:bg-white/10"
-              >
-                Let's Adjust
-              </Button>
-              <Button
-                onClick={handleBuild}
-                className="px-8 py-6 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-semibold gap-2"
-              >
-                <Sparkles className="w-5 h-5" />
-                Build My Page
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            </div>
-          ) : (phase === "intake" || phase === "presenting") && (
-            <>
-              <div className="flex gap-3 items-center">
-                <Input
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={phase === "presenting" ? "Any corrections or additional context..." : "Type your message..."}
-                  disabled={isLoading}
-                  className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl py-6 px-4 text-[15px] focus-visible:ring-cyan-500/50"
-                />
-                <Button
-                  onClick={phase === "presenting" ? handlePresentingResponse : sendMessage}
-                  disabled={!input.trim() || isLoading}
-                  className="h-12 w-12 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 disabled:opacity-50"
+      {/* Main Content - Split Screen */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Chat Area */}
+        <div className={cn(
+          "flex-1 flex flex-col transition-all duration-300",
+          showPanel ? "w-[60%]" : "w-full"
+        )}>
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={cn("flex gap-4", message.role === "user" ? "flex-row-reverse" : "")}
                 >
-                  {isLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Send className="w-5 h-5" />
-                  )}
-                </Button>
-              </div>
-              <p className="text-center text-white/40 text-xs mt-3">
-                Press Enter to send
-              </p>
-            </>
-          )}
+                  <div className={cn(
+                    "flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center",
+                    message.role === "assistant" 
+                      ? "bg-gradient-to-br from-cyan-500 to-purple-600" 
+                      : "bg-gradient-to-br from-purple-500 to-pink-600"
+                  )}>
+                    {message.role === "assistant" ? (
+                      <Bot className="w-5 h-5 text-white" />
+                    ) : (
+                      <User className="w-5 h-5 text-white" />
+                    )}
+                  </div>
+
+                  <div className={cn("max-w-[80%]", message.role === "user" ? "text-right" : "")}>
+                    <div className={cn(
+                      "inline-block rounded-2xl px-5 py-3",
+                      message.role === "assistant"
+                        ? message.type === "research_finding" 
+                          ? "bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-purple-500/30 text-white/90 rounded-tl-sm"
+                          : message.type === "strategy"
+                            ? "bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 text-white/90 rounded-tl-sm"
+                            : "bg-white/10 backdrop-blur-sm text-white/90 rounded-tl-sm"
+                        : "bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-tr-sm"
+                    )}>
+                      <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
+                        {message.content}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+
+              {isLoading && (
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
+                    <Bot className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl rounded-tl-sm px-5 py-3">
+                    <div className="flex gap-1.5">
+                      <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+
+          {/* Input Area */}
+          <div className="border-t border-white/10 bg-black/30 backdrop-blur-xl">
+            <div className="max-w-2xl mx-auto px-4 py-4">
+              {phase === "strategy" ? (
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setPhase("presenting");
+                      inputRef.current?.focus();
+                    }}
+                    className="px-6 py-6 border-white/20 text-white hover:bg-white/10"
+                  >
+                    Let's Adjust
+                  </Button>
+                  <Button
+                    onClick={handleBuild}
+                    className="px-8 py-6 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-semibold gap-2"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    Build My Page
+                    <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </div>
+              ) : (phase === "intake" || phase === "presenting") && (
+                <>
+                  <div className="flex gap-3 items-center">
+                    <Input
+                      ref={inputRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder={phase === "presenting" ? "Any corrections or additional context..." : "Type your message..."}
+                      disabled={isLoading}
+                      className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40 rounded-xl py-6 px-4 text-[15px] focus-visible:ring-cyan-500/50"
+                    />
+                    <Button
+                      onClick={phase === "presenting" ? handlePresentingResponse : sendMessage}
+                      disabled={!input.trim() || isLoading}
+                      className="h-12 w-12 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 disabled:opacity-50"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Send className="w-5 h-5" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-center text-white/40 text-xs mt-3">
+                    Press Enter to send
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Intelligence Panel */}
+        <AnimatePresence>
+          {showPanel && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: "40%", opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex-shrink-0 overflow-hidden"
+            >
+              <IntelligencePanel
+                tiles={tiles}
+                overallReadiness={overallReadiness}
+                onBeginResearch={runResearch}
+                isResearchReady={isResearchReady}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
