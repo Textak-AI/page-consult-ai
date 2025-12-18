@@ -17,6 +17,15 @@ import { generateIntelligentContent, runIntelligencePipeline } from "@/services/
 import type { PersonaIntelligence, GeneratedContent } from "@/services/intelligence/types";
 import { cn } from "@/lib/utils";
 import logo from "/logo/whiteAsset_3combimark_darkmode.svg";
+import { useAIActions, type AIActionType } from "@/hooks/useAIActions";
+import { StylePresetName } from "@/styles/presets";
+import {
+  UsageIndicator,
+  ActionConfirmModal,
+  ZeroBalanceModal,
+  LowBalanceAlert,
+  UsageHistoryModal,
+} from "@/components/usage";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -1125,6 +1134,119 @@ function EditorContent({
 }: any) {
   const { toast } = useToast();
   const { pageStyle, setPageStyle } = useEditing();
+  
+  // Get current user
+  const [userId, setUserId] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUserId(user?.id || null);
+    });
+  }, []);
+
+  // AI Actions usage tracking
+  const aiActions = useAIActions(userId);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [zeroBalanceModalOpen, setZeroBalanceModalOpen] = useState(false);
+  const [usageHistoryOpen, setUsageHistoryOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    type: AIActionType;
+    cost: number;
+    callback: () => void;
+    sectionType?: string;
+  } | null>(null);
+  const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
+
+  // Show low balance alert when needed
+  useEffect(() => {
+    if (aiActions.isLowBalance && !aiActions.isZeroBalance) {
+      setShowLowBalanceAlert(true);
+    }
+  }, [aiActions.isLowBalance, aiActions.isZeroBalance]);
+
+  // Wrapper function to check and track AI actions
+  const executeWithUsageCheck = async (
+    actionType: AIActionType,
+    callback: () => void,
+    sectionType?: string
+  ) => {
+    // Agency tier always allowed
+    if (aiActions.isUnlimited) {
+      callback();
+      return;
+    }
+
+    const check = aiActions.checkAction(actionType);
+    
+    if (!check.allowed) {
+      setZeroBalanceModalOpen(true);
+      return;
+    }
+
+    // Skip confirmation if user opted out
+    if (aiActions.dontShowConfirm) {
+      const result = await aiActions.trackAction(actionType, pageData?.id, sectionType);
+      if (result.allowed) {
+        callback();
+      } else {
+        setZeroBalanceModalOpen(true);
+      }
+      return;
+    }
+
+    // Show confirmation modal
+    setPendingAction({
+      type: actionType,
+      cost: check.cost,
+      callback,
+      sectionType,
+    });
+    setConfirmModalOpen(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (!pendingAction) return;
+    
+    setConfirmModalOpen(false);
+    
+    const result = await aiActions.trackAction(
+      pendingAction.type,
+      pageData?.id,
+      pendingAction.sectionType
+    );
+    
+    if (result.allowed) {
+      pendingAction.callback();
+    } else {
+      setZeroBalanceModalOpen(true);
+    }
+    
+    setPendingAction(null);
+  };
+
+  // Wrapped handlers with usage tracking
+  const handleRegenerateWithUsage = () => {
+    executeWithUsageCheck('page_generation', handleRegenerate);
+  };
+
+  const handleRegenerateSectionWithUsage = (sectionType: string) => {
+    executeWithUsageCheck('section_regeneration', () => handleRegenerateSection(sectionType), sectionType);
+  };
+
+  const handleStyleChangeWithUsage = (style: StylePresetName) => {
+    executeWithUsageCheck('style_change', () => {
+      setPageStyle(style);
+      const styleNames: Record<StylePresetName, string> = {
+        premium: 'Premium',
+        minimal: 'Minimal', 
+        bold: 'Bold',
+        elegant: 'Elegant'
+      };
+      toast({
+        title: `Style applied: ${styleNames[style] || style}`,
+        description: "Your page now uses the new design preset",
+      });
+    });
+  };
 
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
@@ -1186,6 +1308,20 @@ function EditorContent({
             <img src={logo} alt="PageConsult AI" className="h-8 w-auto" />
           </a>
           
+          {/* Usage Indicator */}
+          {userId && !aiActions.loading && (
+            <UsageIndicator
+              available={aiActions.available}
+              limit={aiActions.limit}
+              percentRemaining={aiActions.percentRemaining}
+              daysUntilReset={aiActions.daysUntilReset}
+              isUnlimited={aiActions.isUnlimited}
+              isPro={aiActions.isPro}
+              rollover={aiActions.usage?.ai_actions_rollover}
+              onClick={() => setUsageHistoryOpen(true)}
+            />
+          )}
+          
           {/* Intelligence badge */}
           {intelligence && (
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-500/20 border border-purple-500/30">
@@ -1208,7 +1344,7 @@ function EditorContent({
             <Button
               variant="outline"
               size="sm"
-              onClick={handleRegenerate}
+              onClick={handleRegenerateWithUsage}
               disabled={isRegenerating}
               className="gap-2 bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20"
             >
@@ -1343,19 +1479,7 @@ function EditorContent({
         open={stylePickerOpen}
         onOpenChange={setStylePickerOpen}
         currentStyle={pageStyle}
-        onStyleSelect={(style) => {
-          setPageStyle(style);
-          const styleNames: Record<string, string> = {
-            premium: 'Premium',
-            minimal: 'Minimal', 
-            bold: 'Bold',
-            elegant: 'Elegant'
-          };
-          toast({
-            title: `Style applied: ${styleNames[style] || style}`,
-            description: "Your page now uses the new design preset",
-          });
-        }}
+        onStyleSelect={handleStyleChangeWithUsage}
       />
 
       <CalculatorUpgradeModal
@@ -1364,6 +1488,46 @@ function EditorContent({
         onAddCalculator={handleAddCalculator}
         industry={consultation?.industry}
       />
+
+      {/* Usage Tracking Modals */}
+      <ActionConfirmModal
+        isOpen={confirmModalOpen}
+        onClose={() => {
+          setConfirmModalOpen(false);
+          setPendingAction(null);
+        }}
+        onConfirm={handleConfirmAction}
+        actionType={pendingAction?.type || 'section_regeneration'}
+        actionCost={pendingAction?.cost || 1}
+        remaining={aiActions.available}
+        dontShowAgain={aiActions.dontShowConfirm}
+        onDontShowAgainChange={aiActions.setDontShowConfirm}
+      />
+
+      <ZeroBalanceModal
+        isOpen={zeroBalanceModalOpen}
+        onClose={() => setZeroBalanceModalOpen(false)}
+        onRequestGrace={aiActions.requestGraceActions}
+        graceAlreadyUsed={aiActions.usage?.grace_actions_given || false}
+      />
+
+      <UsageHistoryModal
+        isOpen={usageHistoryOpen}
+        onClose={() => setUsageHistoryOpen(false)}
+        usageLog={aiActions.usageLog}
+        available={aiActions.available}
+        limit={aiActions.limit}
+        rollover={aiActions.usage?.ai_actions_rollover || 0}
+        isPro={aiActions.isPro}
+        daysUntilReset={aiActions.daysUntilReset}
+      />
+
+      {showLowBalanceAlert && aiActions.isLowBalance && !aiActions.isZeroBalance && (
+        <LowBalanceAlert
+          remaining={aiActions.available}
+          onDismiss={() => setShowLowBalanceAlert(false)}
+        />
+      )}
     </div>
   );
 }
