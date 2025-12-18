@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Zap, Check, ArrowRight, CreditCard, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -82,6 +82,28 @@ export function UpgradeDrawer({
   const [selectedTab, setSelectedTab] = useState<'plans' | 'actions'>('plans');
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
+  // Handle escape key to close
+  const handleEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' && open) {
+      onOpenChange(false);
+    }
+  }, [open, onOpenChange]);
+
+  // Lock body scroll and add escape listener when open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+      document.addEventListener('keydown', handleEscape);
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [open, handleEscape]);
+
   const handleCheckout = async (priceId: string, mode: 'subscription' | 'payment') => {
     console.log('🛒 Starting checkout:', { priceId, mode });
     setIsLoading(priceId);
@@ -146,25 +168,32 @@ export function UpgradeDrawer({
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {open && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop - z-40 */}
           <motion.div
+            key="upgrade-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
             onClick={() => onOpenChange(false)}
+            aria-hidden="true"
           />
           
-          {/* Drawer */}
+          {/* Drawer - z-50 */}
           <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            key="upgrade-drawer"
+            initial={{ y: '100%', opacity: 0.5 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 350 }}
             className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] overflow-hidden rounded-t-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 border-t border-white/10 shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="upgrade-drawer-title"
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-2">
@@ -174,8 +203,8 @@ export function UpgradeDrawer({
             {/* Header */}
             <div className="px-6 pb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-cyan-400" />
+              <h2 id="upgrade-drawer-title" className="text-xl font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-cyan-400" />
                   Get More AI Actions
                 </h2>
                 {currentUsage && (

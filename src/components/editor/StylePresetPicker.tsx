@@ -43,7 +43,7 @@ export function StylePresetPicker({ currentStyle, onStyleChange }: StylePresetPi
           <span className="font-medium">{stylePresetInfo[currentStyle].name}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72 bg-slate-900 border-slate-700 p-2">
+      <DropdownMenuContent align="end" className="w-72 bg-slate-900 border-slate-700 p-2 z-50">
         {(Object.keys(stylePresetInfo) as StylePresetName[]).map((style) => {
           const Icon = styleIcons[style];
           const isSelected = style === currentStyle;
