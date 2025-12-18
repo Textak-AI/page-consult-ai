@@ -296,6 +296,7 @@ export type Database = {
           action_cost: number
           action_type: Database["public"]["Enums"]["ai_action_type"]
           created_at: string
+          description: string | null
           id: string
           page_id: string | null
           section_type: string | null
@@ -305,6 +306,7 @@ export type Database = {
           action_cost: number
           action_type: Database["public"]["Enums"]["ai_action_type"]
           created_at?: string
+          description?: string | null
           id?: string
           page_id?: string | null
           section_type?: string | null
@@ -314,6 +316,7 @@ export type Database = {
           action_cost?: number
           action_type?: Database["public"]["Enums"]["ai_action_type"]
           created_at?: string
+          description?: string | null
           id?: string
           page_id?: string | null
           section_type?: string | null
@@ -356,9 +359,11 @@ export type Database = {
       }
       user_usage: {
         Row: {
+          actions_purchased: number
           ai_actions_limit: number | null
           ai_actions_rollover: number
           ai_actions_used: number
+          billing_period_end: string | null
           billing_period_start: string
           created_at: string
           grace_actions_given: boolean
@@ -370,9 +375,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          actions_purchased?: number
           ai_actions_limit?: number | null
           ai_actions_rollover?: number
           ai_actions_used?: number
+          billing_period_end?: string | null
           billing_period_start?: string
           created_at?: string
           grace_actions_given?: boolean
@@ -384,9 +391,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          actions_purchased?: number
           ai_actions_limit?: number | null
           ai_actions_rollover?: number
           ai_actions_used?: number
+          billing_period_end?: string | null
           billing_period_start?: string
           created_at?: string
           grace_actions_given?: boolean
@@ -407,16 +416,28 @@ export type Database = {
       grant_grace_actions: { Args: { p_user_id: string }; Returns: Json }
       reset_api_calls: { Args: never; Returns: undefined }
       reset_monthly_usage: { Args: never; Returns: undefined }
-      track_ai_action: {
-        Args: {
-          p_action_cost: number
-          p_action_type: Database["public"]["Enums"]["ai_action_type"]
-          p_page_id?: string
-          p_section_type?: string
-          p_user_id: string
-        }
-        Returns: Json
-      }
+      track_ai_action:
+        | {
+            Args: {
+              p_action_cost: number
+              p_action_type: Database["public"]["Enums"]["ai_action_type"]
+              p_page_id?: string
+              p_section_type?: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_action_cost: number
+              p_action_type: Database["public"]["Enums"]["ai_action_type"]
+              p_description?: string
+              p_page_id?: string
+              p_section_type?: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
     }
     Enums: {
       ai_action_type:
@@ -425,6 +446,12 @@ export type Database = {
         | "ai_improvement"
         | "intelligence_refresh"
         | "style_change"
+        | "research"
+        | "consultation"
+        | "generation"
+        | "revision"
+        | "calculator"
+        | "copy_improve"
       plan_tier: "starter" | "pro" | "agency"
     }
     CompositeTypes: {
@@ -559,6 +586,12 @@ export const Constants = {
         "ai_improvement",
         "intelligence_refresh",
         "style_change",
+        "research",
+        "consultation",
+        "generation",
+        "revision",
+        "calculator",
+        "copy_improve",
       ],
       plan_tier: ["starter", "pro", "agency"],
     },
