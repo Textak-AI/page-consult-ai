@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import DevTest from "./pages/DevTest";
 import AILoaderPreview from "./pages/AILoaderPreview";
 import IntroPreview from "./pages/IntroPreview";
+import DesignSystemTest from "./pages/DesignSystemTest";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/dev-test" element={<DevTest />} />
             <Route path="/ai-loader-preview" element={<AILoaderPreview />} />
             <Route path="/intro-preview" element={<IntroPreview />} />
+            <Route path="/design-system-test" element={<DesignSystemTest />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
