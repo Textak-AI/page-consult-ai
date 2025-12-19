@@ -20,6 +20,8 @@ const GenerateContentRequestSchema = z.object({
   marketInsights: z.any().optional(),
   // NEW: Strategy brief from strategic consultation
   strategyBrief: z.string().max(50000).optional(),
+  // NEW: Structured brief JSON from strategy generation
+  structuredBrief: z.any().optional(),
   // NEW: Full consultation data from strategic consultation
   strategicConsultation: z.object({
     businessName: z.string().optional(),
@@ -77,85 +79,78 @@ serve(async (req) => {
 
     // Determine which generation mode to use
     const hasStrategyBrief = !!requestData.strategyBrief && requestData.strategyBrief.length > 100;
+    const hasStructuredBrief = !!requestData.structuredBrief;
     const hasStrategicConsultation = !!requestData.strategicConsultation;
     
-    console.log('[generate-page-content] Mode:', hasStrategyBrief ? 'STRATEGY_BRIEF' : 'LEGACY');
+    console.log('[generate-page-content] Mode:', hasStructuredBrief ? 'STRUCTURED_BRIEF' : hasStrategyBrief ? 'STRATEGY_BRIEF' : 'LEGACY');
 
     let systemPrompt: string;
     let userPrompt: string;
 
-    if (hasStrategyBrief) {
+    if (hasStructuredBrief || hasStrategyBrief) {
       // ═══════════════════════════════════════════════════════════════════════════
-      // STRATEGY BRIEF MODE - Uses AI-generated strategy brief as primary context
+      // STRATEGY BRIEF MODE - Uses strategy brief as the LITERAL BLUEPRINT
       // ═══════════════════════════════════════════════════════════════════════════
       
       const sc = requestData.strategicConsultation || {};
+      const sb = requestData.structuredBrief || {};
       
-      systemPrompt = `You are an expert landing page copywriter. You have been given a STRATEGY BRIEF that was created from a deep business consultation. Your job is to transform this brief into compelling landing page content.
+      systemPrompt = `You are a landing page generator that transforms strategy briefs into page content. The strategy brief is your LITERAL BLUEPRINT - every element must be traceable back to it.
 
 ═══════════════════════════════════════════════════════════
-CRITICAL RULES - READ CAREFULLY
+CRITICAL: THE BRIEF IS YOUR BLUEPRINT
 ═══════════════════════════════════════════════════════════
 
-1. THE STRATEGY BRIEF IS YOUR PRIMARY SOURCE
-   - Every piece of content you generate MUST be derived from the strategy brief
-   - Use the "Headline Recommendations" section for headline options
-   - Use "Key Messaging Pillars" for feature themes
-   - Use "Tone & Voice" to guide your writing style
-   - Use "Recommended Page Structure" for section ordering
-   - Use "Proof Points" for credibility elements
+1. PAGE STRUCTURE - Follow Section 9 EXACTLY
+   - Use the "pageStructure" array to determine which sections to include
+   - Do NOT add sections not in the pageStructure
+   - Do NOT remove sections that ARE in the pageStructure
+   - Order sections exactly as specified
 
-2. NEVER USE GENERIC PLACEHOLDERS
-   ❌ FORBIDDEN: "Sarah M., Satisfied Customer"
-   ❌ FORBIDDEN: "John D., Happy Client"  
-   ❌ FORBIDDEN: "Lorem ipsum" or any filler text
-   ❌ FORBIDDEN: Generic testimonial quotes
-   
-   ✅ IF REAL TESTIMONIALS PROVIDED: Use the actual text and name from consultation
-   ✅ IF NO TESTIMONIALS: Use this exact format:
-      {
-        "quote": "[Testimonial will be added - describe the transformation your client experienced]",
-        "author": "[Client Name]",
-        "title": "[Their Role/Company]"
-      }
+2. HEADLINES - Use Section 10
+   - Choose the BEST headline from the "headlines" options (optionA, optionB, or optionC)
+   - Use "subheadline" directly as the hero subheadline
 
-3. USE ACTUAL BUSINESS DATA
-   - Business name: ${sc.businessName || 'the business'}
-   - Years in business: ${sc.yearsInBusiness || 'Not specified'}
-   - Client count: ${sc.clientCount || 'Not specified'}
-   - Achievements: ${sc.achievements || 'Not specified'}
-   - CTA text from consultation: "${sc.ctaText || 'Get Started'}"
+3. FEATURES - Build from Section 4 (Messaging Pillars)
+   - Each messagingPillar becomes a feature card
+   - Use the exact title, description, and icon from the pillar
+   - Maximum 6 features (4 is ideal for visual balance)
 
-4. TESTIMONIAL RULES
-   Real testimonial provided: "${sc.testimonialText || 'None'}"
-   
-   IF testimonialText contains actual quotes with names:
-   - Parse and use them exactly as provided
-   - Keep the real person's name and title
-   
-   IF testimonialText is empty or generic:
-   - Generate 2-3 testimonial placeholders using this format:
-     {
-       "quote": "[Testimonial will be added]",
-       "author": "[Client Name]",
-       "title": "[Their Industry/Role]"
-     }
-   - This signals to the user they need to add real content
+4. PROOF POINTS - Use Section 6
+   - Extract stats from "proofPoints" for the stats-bar
+   - Only include stats that have real values (not null)
 
-5. FEATURE GENERATION
-   - Extract features from the "Key Messaging Pillars" in the strategy brief
-   - Each feature should address a specific benefit mentioned in the brief
-   - Include any deliverables from: "${sc.offerIncludes || 'Not specified'}"
-   - Maximum 6 features
+5. PROBLEM/SOLUTION - Use Section 5 (Competitive Differentiation)
+   - Use "problemStatement" and "solutionStatement" directly
 
-6. PROBLEM/SOLUTION STATEMENTS
-   - Problem: Derive from client frustration: "${sc.clientFrustration || 'Not specified'}"
-   - Solution: Derive from unique strength: "${sc.uniqueStrength || 'Not specified'}"
-   - Desired outcome: "${sc.desiredOutcome || 'Not specified'}"
+6. FAQ - Use Section 8 (Objection Handling)
+   - Each objection becomes a FAQ item
+   - Use question as the FAQ question, answer as the FAQ answer
 
-7. CTA (CALL TO ACTION)
-   - Primary CTA text: "${sc.ctaText || 'Get Started'}"
-   - Primary goal: "${sc.primaryGoal || 'leads'}"
+7. TONE - Apply Section 7 Throughout
+   - Match the specified tone in all copy
+   - Professional = formal, credibility-focused
+   - Friendly = conversational, approachable
+   - Authoritative = expert, confident
+   - Warm = empathetic, caring
+
+8. TESTIMONIALS - Never Fabricate
+   ✅ IF real testimonials in brief: Use exactly as provided
+   ❌ IF no testimonials: Use placeholder format:
+      { "quote": "[Testimonial will be added]", "author": "[Client Name]", "title": "[Role]" }
+
+9. CTA - Use from Brief
+   - Use "ctaText" from the brief/consultation
+
+═══════════════════════════════════════════════════════════
+DESIGN BEST PRACTICES (Apply to content structure)
+═══════════════════════════════════════════════════════════
+
+- One focal point per section (don't overcrowd)
+- High-contrast CTAs (make them stand out)
+- Body text optimized for readability
+- Alternating section emphasis for visual rhythm
+- Mobile-first content structure
 
 ═══════════════════════════════════════════════════════════
 OUTPUT FORMAT (STRICT JSON)
@@ -163,49 +158,69 @@ OUTPUT FORMAT (STRICT JSON)
 
 Return ONLY valid JSON with this exact structure:
 {
-  "headline": "string (derived from brief's Headline Recommendations)",
-  "subheadline": "string (derived from Core Value Proposition, 1-2 sentences)",
+  "headline": "string (from headlines.optionA/B/C - pick the best)",
+  "subheadline": "string (from subheadline field directly)",
   "features": [
     {
-      "title": "string (derived from Key Messaging Pillars)",
-      "description": "string (benefit-focused, 1 sentence)",
-      "icon": "Zap|Target|Shield|Award|TrendingUp|Users|CheckCircle|Clock|Heart|Star"
+      "title": "string (from messagingPillars)",
+      "description": "string (from messagingPillars)", 
+      "icon": "string (from messagingPillars: Zap|Target|Shield|Award|TrendingUp|Users|CheckCircle|Clock|Heart|Star)"
     }
   ],
-  "ctaText": "string (use the CTA from consultation: ${sc.ctaText || 'Get Started'})",
-  "problemStatement": "string (1-2 sentences, derived from client frustration)",
-  "solutionStatement": "string (2-3 sentences, derived from unique strength and desired outcome)",
+  "ctaText": "string (from ctaText)",
+  "problemStatement": "string (from problemStatement)",
+  "solutionStatement": "string (from solutionStatement)",
   "testimonials": [
     {
-      "quote": "string (real quote if provided, otherwise '[Testimonial will be added]')",
-      "author": "string (real name if provided, otherwise '[Client Name]')",
-      "title": "string (real title if provided, otherwise '[Their Role/Company]')"
+      "quote": "string",
+      "author": "string",
+      "title": "string"
     }
   ],
-  "socialProof": {
-    "clientCount": "string (if provided: '${sc.clientCount || ''}', otherwise null)",
-    "yearsInBusiness": "string (if provided: '${sc.yearsInBusiness || ''}', otherwise null)",
-    "achievements": "string (if provided, otherwise null)"
+  "proofPoints": {
+    "clientCount": "string or null",
+    "yearsInBusiness": "string or null",
+    "achievements": "string or null",
+    "otherStats": ["string"] or []
   },
+  "faqItems": [
+    {
+      "question": "string (from objections)",
+      "answer": "string (from objections)"
+    }
+  ],
   "processSteps": [
     {
       "step": 1,
       "title": "string",
       "description": "string"
     }
-  ]
+  ] or null,
+  "pageStructure": ["hero", "stats-bar", ...] (from pageStructure),
+  "tone": "string (from tone)"
 }`;
 
-      userPrompt = `Here is the STRATEGY BRIEF to use as your primary context for generating landing page content:
+      // Build user prompt with structured data
+      const structuredData = hasStructuredBrief ? JSON.stringify(sb, null, 2) : '';
+      
+      userPrompt = `Generate landing page content using this STRATEGY BRIEF as your LITERAL BLUEPRINT.
 
 ═══════════════════════════════════════════════════════════
-STRATEGY BRIEF
+STRATEGY BRIEF (Full Document)
 ═══════════════════════════════════════════════════════════
 
 ${requestData.strategyBrief}
 
+${hasStructuredBrief ? `
 ═══════════════════════════════════════════════════════════
-ADDITIONAL CONSULTATION DATA
+STRUCTURED BRIEF DATA (Parse This)
+═══════════════════════════════════════════════════════════
+
+${structuredData}
+` : ''}
+
+═══════════════════════════════════════════════════════════
+CONSULTATION DATA (Additional Context)
 ═══════════════════════════════════════════════════════════
 
 Business Name: ${sc.businessName || 'Not specified'}
@@ -222,8 +237,18 @@ Real Testimonials Provided:
 ${sc.testimonialText || 'None - use placeholder format'}
 
 ═══════════════════════════════════════════════════════════
+INSTRUCTIONS
+═══════════════════════════════════════════════════════════
 
-Generate landing page content following the strategy brief's recommendations. Return valid JSON only.`;
+1. Use the pageStructure array to determine section order
+2. Pull headlines from the headlines object (pick the best option)
+3. Build features from messagingPillars
+4. Create FAQ from objections
+5. Apply the specified tone throughout
+
+A user should be able to trace EVERY section of the generated page back to the strategy brief.
+
+Return valid JSON only.`;
 
     } else {
       // ═══════════════════════════════════════════════════════════════════════════
@@ -279,7 +304,6 @@ Generate compelling content. Return valid JSON only.`;
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
       }),
     });
 
@@ -354,10 +378,14 @@ Generate compelling content. Return valid JSON only.`;
       });
     }
 
-    console.log('[generate-page-content] Successfully generated content');
+    console.log('[generate-page-content] Successfully generated content with mode:', hasStructuredBrief ? 'structured_brief' : hasStrategyBrief ? 'strategy_brief' : 'legacy');
     
     return new Response(
-      JSON.stringify({ success: true, content: parsedContent, mode: hasStrategyBrief ? 'strategy_brief' : 'legacy' }), 
+      JSON.stringify({ 
+        success: true, 
+        content: parsedContent, 
+        mode: hasStructuredBrief ? 'structured_brief' : hasStrategyBrief ? 'strategy_brief' : 'legacy' 
+      }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
