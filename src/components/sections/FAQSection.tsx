@@ -39,26 +39,49 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
 
   return (
     <section 
-      className={`py-16 md:py-24 px-4 bg-slate-900/50 relative ${isEditing ? 'relative' : ''}`}
+      className={`py-16 md:py-24 px-4 relative ${isEditing ? 'relative' : ''}`}
+      style={{ backgroundColor: 'var(--color-background, #0f172a)' }}
       itemScope
       itemType="https://schema.org/FAQPage"
     >
       {isEditing && (
-        <div className="absolute inset-0 border-2 border-secondary/80 rounded-lg pointer-events-none z-10" />
+        <div 
+          className="absolute inset-0 border-2 rounded-lg pointer-events-none z-10"
+          style={{ borderColor: 'var(--color-secondary, rgba(168, 85, 247, 0.8))' }}
+        />
       )}
 
       <div className="container mx-auto max-w-3xl relative z-0">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-cyan-500/10 rounded-full border border-cyan-500/20 mb-4">
-            <MessageSquare className="w-4 h-4 text-cyan-400" />
-            <span className="text-sm text-cyan-400 font-medium">Common Questions</span>
+          <div 
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4"
+            style={{
+              backgroundColor: 'var(--color-primary-muted, rgba(6, 182, 212, 0.1))',
+              borderColor: 'var(--color-primary, rgba(6, 182, 212, 0.2))',
+              borderWidth: '1px',
+            }}
+          >
+            <MessageSquare 
+              className="w-4 h-4"
+              style={{ color: 'var(--color-primary, #22d3ee)' }}
+            />
+            <span 
+              className="text-sm font-medium"
+              style={{ color: 'var(--color-primary, #22d3ee)' }}
+            >
+              Common Questions
+            </span>
           </div>
           
           <h2 
-            className={`text-3xl md:text-4xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent ${
-              isEditing ? 'outline-dashed outline-2 outline-secondary/50 rounded px-2' : ''
+            className={`text-3xl md:text-4xl font-bold ${
+              isEditing ? 'outline-dashed outline-2 rounded px-2' : ''
             }`}
+            style={{ 
+              color: 'var(--color-text-primary, white)',
+              outlineColor: isEditing ? 'var(--color-secondary, rgba(168, 85, 247, 0.5))' : undefined,
+            }}
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={handleHeadlineUpdate}
@@ -68,11 +91,19 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
         </div>
 
         {/* FAQ Items */}
-        <div className="space-y-0 bg-slate-800/30 rounded-2xl border border-slate-700/50 px-6 overflow-hidden">
+        <div 
+          className="space-y-0 rounded-2xl px-6 overflow-hidden"
+          style={{
+            backgroundColor: 'var(--color-surface, rgba(30, 41, 59, 0.3))',
+            borderColor: 'var(--color-border, rgba(71, 85, 105, 0.5))',
+            borderWidth: '1px',
+          }}
+        >
           {items.map((item, index) => (
             <motion.div
               key={index}
-              className="border-b border-slate-700/50 last:border-b-0"
+              className="last:border-b-0"
+              style={{ borderBottomColor: 'var(--color-border, rgba(71, 85, 105, 0.5))', borderBottomWidth: '1px' }}
               itemScope
               itemProp="mainEntity"
               itemType="https://schema.org/Question"
@@ -92,13 +123,18 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
                     value={item.question}
                     onChange={(e) => handleItemUpdate(index, 'question', e.target.value)}
                     onBlur={() => setEditingItem(null)}
-                    className="flex-1 mr-4 bg-slate-800 border-cyan-500/50"
+                    className="flex-1 mr-4"
+                    style={{
+                      backgroundColor: 'var(--color-surface, #1e293b)',
+                      borderColor: 'var(--color-primary, rgba(6, 182, 212, 0.5))',
+                    }}
                     autoFocus
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
                   <h3 
-                    className="text-lg font-medium text-foreground group-hover:text-cyan-400 transition-colors pr-4 flex-1"
+                    className="text-lg font-medium pr-4 flex-1 transition-colors"
+                    style={{ color: 'var(--color-text-primary, white)' }}
                     itemProp="name"
                   >
                     {item.question}
@@ -113,7 +149,8 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
                         setEditingItem(index);
                         setExpandedIndex(index);
                       }}
-                      className="p-1 text-muted-foreground hover:text-cyan-400 transition-colors"
+                      className="p-1 transition-colors"
+                      style={{ color: 'var(--color-text-muted, #94a3b8)' }}
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
@@ -122,7 +159,10 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
                     animate={{ rotate: expandedIndex === index ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                    <ChevronDown 
+                      className="w-5 h-5"
+                      style={{ color: 'var(--color-text-muted, #94a3b8)' }}
+                    />
                   </motion.div>
                 </div>
               </button>
@@ -145,12 +185,17 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
                         <Textarea
                           value={item.answer}
                           onChange={(e) => handleItemUpdate(index, 'answer', e.target.value)}
-                          className="w-full bg-slate-800 border-cyan-500/50 min-h-[100px]"
+                          className="w-full min-h-[100px]"
+                          style={{
+                            backgroundColor: 'var(--color-surface, #1e293b)',
+                            borderColor: 'var(--color-primary, rgba(6, 182, 212, 0.5))',
+                          }}
                           onClick={(e) => e.stopPropagation()}
                         />
                       ) : (
                         <p 
-                          className="text-muted-foreground leading-relaxed"
+                          className="leading-relaxed"
+                          style={{ color: 'var(--color-text-secondary, #94a3b8)' }}
                           itemProp="text"
                         >
                           {item.answer}
@@ -166,7 +211,10 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
 
         {/* Empty state */}
         {items.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
+          <div 
+            className="text-center py-12"
+            style={{ color: 'var(--color-text-muted, #64748b)' }}
+          >
             <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No FAQ items available</p>
           </div>
