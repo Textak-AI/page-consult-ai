@@ -4,6 +4,14 @@ import { useState } from "react";
 import { ImagePlus, Shield, Clock, Award, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
+const getButtonTextColor = (primaryColor: string): string => {
+  const hex = primaryColor.replace('#', '');
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5 ? '#1E293B' : '#FFFFFF';
+};
 interface CitedStat {
   statistic: string;
   claim: string;
@@ -33,6 +41,7 @@ interface HeroSectionProps {
       icon?: string;
       text: string;
     }>;
+    primaryColor?: string;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -224,7 +233,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             }`}
             style={{
               background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))`,
-              color: 'var(--color-text-inverse)',
+              color: content.primaryColor ? getButtonTextColor(content.primaryColor) : 'var(--color-text-inverse)',
               boxShadow: 'var(--shadow-large)',
               borderRadius: 'var(--radius-small)',
               fontFamily: 'var(--font-body)',
