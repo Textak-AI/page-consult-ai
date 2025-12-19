@@ -182,7 +182,7 @@ const professionalServices: DesignSystem = {
     style: "abstract",
     overlayOpacity: 0.5,
     overlayColor: "#FFFFFF",
-    treatment: "clean",
+    treatment: "professional",
   },
 };
 
@@ -359,7 +359,7 @@ const healthcareMedical: DesignSystem = {
     style: "photography",
     overlayOpacity: 0.3,
     overlayColor: "#FFFFFF",
-    treatment: "clean",
+    treatment: "professional",
   },
 };
 
