@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { X, Sparkles, Send, RotateCcw } from "lucide-react";
+import { Sparkles, Send, RotateCcw, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SectionAIChatProps {
   isOpen: boolean;
@@ -21,12 +23,12 @@ interface SectionAIChatProps {
 }
 
 const QUICK_ACTIONS = [
-  { label: "Make shorter", prompt: "Make this content more concise and punchy" },
-  { label: "Make punchier", prompt: "Make this copy more compelling and action-oriented" },
-  { label: "Add detail", prompt: "Expand on this content with more specific details" },
-  { label: "Change tone", prompt: "Make the tone more professional and authoritative" },
-  { label: "Add urgency", prompt: "Add more urgency and a stronger call to action" },
-  { label: "Simplify", prompt: "Simplify the language for a broader audience" },
+  { label: "Make shorter", prompt: "Make this more concise while keeping the key message." },
+  { label: "Make punchier", prompt: "Make this more energetic with stronger verbs and action-oriented language." },
+  { label: "Add detail", prompt: "Add more specific details and examples to make this more compelling." },
+  { label: "More professional", prompt: "Adjust the tone to be more formal and professional." },
+  { label: "Focus on benefits", prompt: "Focus more on customer benefits and outcomes rather than features." },
+  { label: "Add urgency", prompt: "Add more urgency and a stronger call to action." },
 ];
 
 interface Message {
@@ -45,7 +47,8 @@ export function SectionAIChat({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [proposedChanges, setProposedChanges] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [previewContent, setPreviewContent] = useState<any>(null);
 
   const sectionLabel = sectionType
     .split("-")
@@ -53,29 +56,51 @@ export function SectionAIChat({
     .join(" ");
 
   const handleSendMessage = async (message: string) => {
-    if (!message.trim()) return;
+    if (!message.trim() || isLoading) return;
 
     const userMessage: Message = { role: "user", content: message };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+    setError(null);
 
-    // TODO: Wire up actual AI in Phase 2
-    // For now, simulate a response
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        role: "assistant",
-        content: `I'll help you "${message.toLowerCase()}" for the ${sectionLabel} section. This is a placeholder response - AI integration coming in Phase 2.`,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setIsLoading(false);
-      
-      // Simulate proposed changes
-      setProposedChanges({
-        ...sectionContent,
-        _preview: true,
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('modify-section', {
+        body: {
+          sectionType,
+          sectionContent,
+          userRequest: message,
+          strategyBrief,
+          brandVoice: strategyBrief?.tone || strategyBrief?.brandVoice || 'professional'
+        }
       });
-    }, 1000);
+
+      if (fnError) {
+        throw new Error(fnError.message || 'Failed to call AI service');
+      }
+
+      if (data?.success && data?.modifiedContent) {
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: `I've updated the ${sectionLabel} section based on your request. Review the changes below and click "Apply Changes" when ready.`,
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+        setPreviewContent(data.modifiedContent);
+      } else {
+        throw new Error(data?.error || 'Failed to modify section');
+      }
+    } catch (err) {
+      console.error('Error modifying section:', err);
+      setError(err instanceof Error ? err.message : 'Network error. Please try again.');
+      
+      const errorMessage: Message = {
+        role: "assistant",
+        content: "Sorry, I encountered an error processing your request. Please try again.",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleQuickAction = (action: typeof QUICK_ACTIONS[0]) => {
@@ -83,32 +108,72 @@ export function SectionAIChat({
   };
 
   const handleApply = () => {
-    if (proposedChanges) {
-      const { _preview, ...changes } = proposedChanges;
-      onApplyChanges(changes);
+    if (previewContent) {
+      onApplyChanges(previewContent);
       onClose();
+      // Reset state for next use
+      setMessages([]);
+      setPreviewContent(null);
+      setError(null);
     }
   };
 
   const handleReset = () => {
     setMessages([]);
-    setProposedChanges(null);
+    setPreviewContent(null);
+    setError(null);
   };
 
-  const getCurrentContentSummary = () => {
-    if (!sectionContent) return "No content available";
-    
-    const summary: string[] = [];
-    if (sectionContent.headline) summary.push(`Headline: "${sectionContent.headline}"`);
-    if (sectionContent.subheadline) summary.push(`Subheadline: "${sectionContent.subheadline}"`);
-    if (sectionContent.ctaText) summary.push(`CTA: "${sectionContent.ctaText}"`);
-    if (sectionContent.description) summary.push(`Description: "${sectionContent.description.substring(0, 100)}..."`);
-    
-    return summary.length > 0 ? summary.join("\n") : "Complex content structure";
+  const handleClose = () => {
+    onClose();
+    // Reset state when closing
+    setMessages([]);
+    setPreviewContent(null);
+    setError(null);
+    setInput("");
+  };
+
+  const renderContentPreview = (content: any, label: string, variant: 'original' | 'modified') => {
+    const bgClass = variant === 'original' 
+      ? 'bg-muted/50' 
+      : 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800';
+    const labelClass = variant === 'original'
+      ? 'text-muted-foreground'
+      : 'text-green-700 dark:text-green-400';
+
+    const getDisplayContent = (c: any): string[] => {
+      const lines: string[] = [];
+      if (c?.headline) lines.push(`Headline: "${c.headline}"`);
+      if (c?.subheadline) lines.push(`Subheadline: "${c.subheadline}"`);
+      if (c?.ctaText) lines.push(`CTA: "${c.ctaText}"`);
+      if (c?.description) {
+        const desc = c.description.length > 120 ? c.description.substring(0, 120) + '...' : c.description;
+        lines.push(`Description: "${desc}"`);
+      }
+      if (c?.items && Array.isArray(c.items)) {
+        lines.push(`Items: ${c.items.length} items`);
+      }
+      if (c?.features && Array.isArray(c.features)) {
+        lines.push(`Features: ${c.features.length} features`);
+      }
+      if (c?.questions && Array.isArray(c.questions)) {
+        lines.push(`FAQs: ${c.questions.length} questions`);
+      }
+      return lines.length > 0 ? lines : ['Complex content structure'];
+    };
+
+    return (
+      <div className={`rounded-md p-3 border ${bgClass}`}>
+        <p className={`text-xs font-medium mb-2 ${labelClass}`}>{label}</p>
+        <pre className="text-xs whitespace-pre-wrap overflow-auto max-h-32">
+          {getDisplayContent(content).join('\n')}
+        </pre>
+      </div>
+    );
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Sheet open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col p-0">
         <SheetHeader className="px-6 py-4 border-b">
           <div className="flex items-center justify-between">
@@ -116,19 +181,38 @@ export function SectionAIChat({
               <Sparkles className="h-5 w-5 text-primary" />
               AI Edit: {sectionLabel}
             </SheetTitle>
-            <Button variant="ghost" size="icon" onClick={handleReset}>
+            <Button variant="ghost" size="icon" onClick={handleReset} title="Reset conversation">
               <RotateCcw className="h-4 w-4" />
             </Button>
           </div>
         </SheetHeader>
 
-        {/* Current Content Summary */}
-        <div className="px-6 py-3 border-b bg-muted/30">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Current Content</p>
-          <pre className="text-xs bg-background rounded-md p-3 overflow-auto max-h-24 whitespace-pre-wrap">
-            {getCurrentContentSummary()}
-          </pre>
-        </div>
+        {/* Error Alert */}
+        {error && (
+          <div className="px-6 py-3">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </div>
+        )}
+
+        {/* Before/After Preview */}
+        {previewContent ? (
+          <div className="px-6 py-4 border-b space-y-3">
+            <p className="text-xs font-medium text-muted-foreground">Compare Changes</p>
+            <div className="grid grid-cols-2 gap-3">
+              {renderContentPreview(sectionContent, 'Original', 'original')}
+              {renderContentPreview(previewContent, 'Modified ✓', 'modified')}
+            </div>
+          </div>
+        ) : (
+          /* Current Content Summary - only show when no preview */
+          <div className="px-6 py-3 border-b bg-muted/30">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Current Content</p>
+            {renderContentPreview(sectionContent, '', 'original')}
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="px-6 py-3 border-b">
@@ -138,7 +222,9 @@ export function SectionAIChat({
               <Badge
                 key={action.label}
                 variant="outline"
-                className="cursor-pointer hover:bg-primary/10 hover:border-primary transition-colors"
+                className={`cursor-pointer hover:bg-primary/10 hover:border-primary transition-colors ${
+                  isLoading ? 'opacity-50 pointer-events-none' : ''
+                }`}
                 onClick={() => handleQuickAction(action)}
               >
                 {action.label}
@@ -176,30 +262,15 @@ export function SectionAIChat({
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-muted rounded-lg px-4 py-2">
-                    <div className="flex gap-1">
-                      <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                    </div>
+                  <div className="bg-muted rounded-lg px-4 py-3 flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">AI is working...</span>
                   </div>
                 </div>
               )}
             </div>
           )}
         </ScrollArea>
-
-        {/* Proposed Changes Preview */}
-        {proposedChanges && (
-          <div className="px-6 py-3 border-t bg-green-50 dark:bg-green-950/20">
-            <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-2">
-              ✓ Changes Ready to Apply
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Preview the changes in the editor before applying
-            </p>
-          </div>
-        )}
 
         {/* Input Area */}
         <div className="px-6 py-4 border-t bg-background">
@@ -209,6 +280,7 @@ export function SectionAIChat({
               onChange={(e) => setInput(e.target.value)}
               placeholder="Describe what changes you want..."
               className="min-h-[44px] max-h-32 resize-none"
+              disabled={isLoading}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -222,22 +294,26 @@ export function SectionAIChat({
               onClick={() => handleSendMessage(input)}
               disabled={!input.trim() || isLoading}
             >
-              <Send className="h-4 w-4" />
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="px-6 py-4 border-t flex gap-3">
-          <Button variant="outline" className="flex-1" onClick={onClose}>
+          <Button variant="outline" className="flex-1" onClick={handleClose}>
             Cancel
           </Button>
           <Button
             className="flex-1"
             onClick={handleApply}
-            disabled={!proposedChanges}
+            disabled={!previewContent || isLoading}
           >
-            Apply Changes
+            {previewContent ? 'Apply Changes' : 'Waiting for changes...'}
           </Button>
         </div>
       </SheetContent>
