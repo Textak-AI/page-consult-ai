@@ -18,6 +18,7 @@ import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 import DevTest from "./pages/DevTest";
 import AILoaderPreview from "./pages/AILoaderPreview";
+import IntroPreview from "./pages/IntroPreview";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/chat" element={<Chat />} />
             <Route path="/dev-test" element={<DevTest />} />
             <Route path="/ai-loader-preview" element={<AILoaderPreview />} />
+            <Route path="/intro-preview" element={<IntroPreview />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
