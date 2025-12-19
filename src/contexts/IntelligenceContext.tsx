@@ -308,15 +308,10 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       }
 
       // Step 3: Check if we should show email gate
-      // Show gate after message 1 if we have industry detected (AI is smart enough to extract from single message)
-      const shouldShowGate = newMessageCount >= 1 && 
+      // Show gate after message 2 if we have industry detected
+      const shouldShowGate = newMessageCount >= 2 && 
                              newExtracted.industry && 
                              !state.emailCaptured;
-
-      // If showing gate, append a teaser to the AI response
-      if (shouldShowGate) {
-        aiResponseContent += "\n\nI've researched your market and found some specific insights about your buyers. Want to see what I found?";
-      }
 
       const aiMessage: ConversationMessage = {
         role: 'assistant',
