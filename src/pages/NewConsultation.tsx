@@ -7,8 +7,11 @@ import { StrategicConsultation, StrategyBriefReview, ConsultationIntro, shouldSh
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import iconmark from "@/assets/iconmark-darkmode.svg";
+import { DevToolbar, useDevMode } from "@/components/dev/DevToolbar";
+import { mockConsultation, mockStrategyBrief } from "@/lib/mockDevData";
+import { AIWorkingLoader } from "@/components/editor/AIWorkingLoader";
 
-type Stage = 'loading' | 'intro' | 'consultation' | 'brief-review' | 'generating';
+type Stage = 'loading' | 'intro' | 'consultation' | 'brief-review' | 'generating' | 'dev-loading';
 
 export default function NewConsultation() {
   const navigate = useNavigate();
@@ -17,7 +20,8 @@ export default function NewConsultation() {
   const [userId, setUserId] = useState<string | null>(null);
   const [consultationData, setConsultationData] = useState<ConsultationData | null>(null);
   const [strategyBrief, setStrategyBrief] = useState<string>('');
-
+  const [consultationStep, setConsultationStep] = useState(1);
+  const isDevMode = useDevMode();
   // Check auth on mount
   useEffect(() => {
     const checkAuth = async () => {
@@ -142,6 +146,52 @@ export default function NewConsultation() {
     navigate("/");
   };
 
+  // Dev mode handlers
+  const handleDevJumpToLoading = () => {
+    setStage('dev-loading');
+    // Auto-complete after 10 seconds
+    setTimeout(() => {
+      setConsultationData(mockConsultation as unknown as ConsultationData);
+      setStrategyBrief(mockStrategyBrief);
+      setStage('brief-review');
+    }, 10000);
+  };
+
+  const handleDevJumpToBriefReview = () => {
+    setConsultationData(mockConsultation as unknown as ConsultationData);
+    setStrategyBrief(mockStrategyBrief);
+    setStage('brief-review');
+  };
+
+  const handleDevJumpToPageBuilder = () => {
+    navigate("/generate", {
+      state: {
+        consultationData: {
+          id: 'dev-test-id',
+          industry: mockConsultation.industry,
+          service_type: mockConsultation.mainOffer,
+          goal: mockConsultation.primaryGoal,
+          target_audience: mockConsultation.idealClient,
+          challenge: mockConsultation.clientFrustration,
+          unique_value: mockConsultation.uniqueStrength,
+          offer: mockConsultation.mainOffer,
+          businessName: mockConsultation.businessName,
+        },
+        strategicData: {
+          consultationData: mockConsultation,
+          websiteIntelligence: mockConsultation.websiteIntelligence,
+          strategyBrief: mockStrategyBrief,
+        },
+        fromStrategicConsultation: true,
+      },
+    });
+  };
+
+  const handleDevJumpToStep = (step: number) => {
+    setConsultationStep(step);
+    setStage('consultation');
+  };
+
   // Loading state
   if (stage === 'loading') {
     return (
@@ -163,6 +213,11 @@ export default function NewConsultation() {
     return (
       <ConsultationIntro onComplete={() => setStage('consultation')} />
     );
+  }
+
+  // Dev loading state (shows AI working loader for 10 seconds)
+  if (stage === 'dev-loading') {
+    return <AIWorkingLoader />;
   }
 
   // Generating state
@@ -247,6 +302,18 @@ export default function NewConsultation() {
           </motion.div>
         )}
       </main>
+
+      {/* Dev Toolbar */}
+      {isDevMode && (
+        <DevToolbar
+          onJumpToLoading={handleDevJumpToLoading}
+          onJumpToBriefReview={handleDevJumpToBriefReview}
+          onJumpToPageBuilder={handleDevJumpToPageBuilder}
+          onJumpToStep={handleDevJumpToStep}
+          currentStep={consultationStep}
+          totalSteps={6}
+        />
+      )}
     </div>
   );
 }
