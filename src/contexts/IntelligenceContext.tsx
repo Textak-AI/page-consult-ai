@@ -414,7 +414,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
 }
 
 // ============================================
-// HOOK
+// HOOK - Provides access to intelligence context
 // ============================================
 
 export function useIntelligence() {
