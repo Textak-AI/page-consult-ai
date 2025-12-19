@@ -60,3 +60,57 @@ const cssVariables = designSystemToCSSVariables(designSystem);
 // border-radius: var(--radius-medium);
 
 */
+
+// Add to src/config/designSystem/index.ts
+
+export {
+  allFonts,
+  sansSerifFonts,
+  serifFonts,
+  displayFonts,
+  getRecommendedFonts,
+  getDefaultFontPairing,
+  getGoogleFontsUrl,
+  industryFontPairings,
+  type FontOption,
+} from './fontOptions';
+
+export {
+  isValidHex,
+  normalizeHex,
+  hexToRgb,
+  rgbToHex,
+  getContrastRatio,
+  meetsContrastStandard,
+  getContrastRating,
+  lightenColor,
+  darkenColor,
+  getHoverColor,
+  isLightColor,
+  getTextColorForBackground,
+  areColorsTooSimilar,
+  validatePalette,
+} from './colorUtils';
+```
+
+---
+
+## Then: Wire It Into the Flow
+
+Once the files are pasted, send this to Lovable:
+```
+Integrate BrandCustomization into the consultation flow:
+
+1. In the consultation wizard (or demo flow), add BrandCustomization as a step AFTER website intelligence extraction and BEFORE the main consultation questions.
+
+2. Store the brandSettings output in consultation context/state:
+   - Pass brandSettings to generateDesignSystem() as brandOverrides
+   - Include in the data sent to generate-strategy-brief
+
+3. The flow should be:
+   - User enters URL → Extract intelligence
+   - Show BrandCustomization screen with extracted colors
+   - User approves/modifies → Continue to consultation
+   - Brand settings carry through to page generation
+
+4. If user clicks "Use Industry Defaults Instead", skip customization and use the industry baseline colors.
