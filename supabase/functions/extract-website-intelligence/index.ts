@@ -1,15 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
 serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  // Handle CORS preflight requests
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   try {
     const { url } = await req.json();
@@ -167,12 +165,13 @@ serve(async (req) => {
   } catch (error: unknown) {
     console.error('[extract-website-intelligence] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to analyze website';
+    const origin = req.headers.get('Origin');
     return new Response(JSON.stringify({
       success: false,
       error: errorMessage
     }), {
       status: 200, // Return 200 so frontend can handle gracefully
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' }
     });
   }
 });

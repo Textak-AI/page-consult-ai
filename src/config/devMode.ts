@@ -11,25 +11,23 @@ const DEV_EMAILS = [
 /**
  * Check if the app is running in development mode
  * Dev mode bypasses credit/subscription checks
+ * 
+ * SECURITY: Only uses build-time DEV flag and validated email allowlist.
+ * URL parameters and localStorage are NOT checked as they can be manipulated.
  */
 export const isDevMode = (userEmail?: string | null): boolean => {
-  // Option 1: Vite development environment
+  // Option 1: Vite development environment (build-time constant, cannot be manipulated)
   if (import.meta.env.DEV) {
     return true;
   }
   
-  // Option 2: Check for dev URL parameter (?dev=true)
-  if (typeof window !== 'undefined') {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('dev') === 'true') {
-      return true;
-    }
-  }
-  
-  // Option 3: Check if user email is in dev list
+  // Option 2: Check if user email is in dev list (server-validated via auth)
   if (userEmail && DEV_EMAILS.includes(userEmail.toLowerCase())) {
     return true;
   }
+  
+  // REMOVED: URL parameter check (?dev=true) - exploitable in production
+  // REMOVED: localStorage check - can be manipulated by users
   
   return false;
 };

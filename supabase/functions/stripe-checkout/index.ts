@@ -1,11 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
 const STRIPE_PRICES = {
   pro_monthly: 'price_1SfXwOFqTTK3LcBFMXRpEVcS',
@@ -18,9 +14,12 @@ const STRIPE_PRICES = {
 serve(async (req) => {
   console.log('🛒 Stripe checkout request received');
   
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  // Handle CORS preflight requests
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   try {
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
@@ -132,9 +131,10 @@ serve(async (req) => {
   } catch (error: unknown) {
     console.error('Checkout error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
+    const origin = req.headers.get('Origin');
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' },
     });
   }
 });

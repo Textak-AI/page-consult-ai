@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
 // Validation schema - updated to support both old and new consultation flows
 const GenerateContentRequestSchema = z.object({
@@ -42,15 +43,13 @@ const GenerateContentRequestSchema = z.object({
   }).optional(),
 });
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  // Handle CORS preflight requests
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   try {
     const bodyText = await req.text();
@@ -365,9 +364,10 @@ Generate compelling content. Return valid JSON only.`;
   } catch (error: unknown) {
     console.error('[generate-page-content] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const origin = req.headers.get('Origin');
     return new Response(
       JSON.stringify({ error: errorMessage }), 
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } }
     );
   }
 });
