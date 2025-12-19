@@ -60,6 +60,8 @@ export interface Section {
 export interface MapBriefOptions {
   heroImageUrl?: string;
   businessName: string;
+  logoUrl?: string | null;
+  primaryColor?: string;
 }
 
 /**
@@ -69,7 +71,10 @@ export interface MapBriefOptions {
 function extractNumericValue(text: string | null): string | null {
   if (!text) return null;
   const match = text.match(/(\d+[\d,]*[+KMB]?)/i);
-  return match ? match[1] : null;
+  if (!match) return null;
+  // Avoid double plus: only add + if not already present
+  const value = match[1];
+  return value;
 }
 
 /**
@@ -100,7 +105,7 @@ export function mapBriefToSections(
   brief: StructuredBrief,
   options: MapBriefOptions
 ): Section[] {
-  const { businessName, heroImageUrl } = options;
+  const { businessName, heroImageUrl, logoUrl, primaryColor } = options;
   const sections: Section[] = [];
   const pageStructure = brief.pageStructure || [];
 
@@ -130,6 +135,8 @@ export function mapBriefToSections(
             ctaLink: '#contact',
             backgroundImage: heroImageUrl || null,
             trustBadges: trustBadges.length > 0 ? trustBadges : undefined,
+            logoUrl: logoUrl || null,
+            primaryColor: primaryColor || null,
           },
         });
         break;
@@ -308,6 +315,7 @@ export function mapBriefToSections(
             ctaText: brief.ctaText,
             ctaLink: '#contact',
             trustIndicators: trustIndicators.length > 0 ? trustIndicators : undefined,
+            primaryColor: primaryColor || null,
           },
         });
         break;

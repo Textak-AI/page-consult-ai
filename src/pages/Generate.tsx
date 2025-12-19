@@ -817,6 +817,14 @@ function GenerateContent() {
     // Fetch hero image
     const heroImageUrl = await fetchHeroImage(businessName);
 
+    // Get brand settings for passing to sections
+    const brandSettings = strategicConsultation?.brandSettings || navigationState?.strategicData?.brandSettings;
+    const logoUrl = brandSettings?.logoUrl || strategicConsultation?.websiteIntelligence?.logoUrl || null;
+    const primaryColor = brandSettings?.primaryColor || designSystem?.colors?.primary || null;
+    
+    console.log('🖼️ Logo URL for sections:', logoUrl);
+    console.log('🎨 Primary color for sections:', primaryColor);
+
     // Check if content is a valid structured brief
     if (isStructuredBriefContent(content)) {
       console.log('📋 Using BRIEF-FIRST mapper with structuredBrief');
@@ -828,6 +836,8 @@ function GenerateContent() {
       const sections = mapBriefToSections(content, {
         businessName,
         heroImageUrl,
+        logoUrl,
+        primaryColor,
       });
       
       console.log(`✅ Brief-first mapper built ${sections.length} sections`);
@@ -849,6 +859,11 @@ function GenerateContent() {
     const sections: Section[] = [];
     let order = 0;
     const businessName = strategicConsultation?.businessName || consultationData.industry;
+    
+    // Get brand settings for passing to sections
+    const brandSettings = strategicConsultation?.brandSettings || navigationState?.strategicData?.brandSettings;
+    const logoUrl = brandSettings?.logoUrl || strategicConsultation?.websiteIntelligence?.logoUrl || null;
+    const primaryColor = brandSettings?.primaryColor || designSystem?.colors?.primary || null;
 
     // Get page structure from brief - this is our blueprint
     const pageStructure: string[] = content.pageStructure || [
@@ -899,6 +914,8 @@ function GenerateContent() {
               ctaText: content.ctaText || "Get Started",
               ctaLink: "#contact",
               backgroundImage: heroImageUrl,
+              logoUrl,
+              primaryColor,
             },
           });
           break;
@@ -1018,6 +1035,7 @@ function GenerateContent() {
               subheadline: content.solutionStatement?.split(".")[0] || "",
               ctaText: content.ctaText || "Get Started",
               ctaLink: "#contact",
+              primaryColor,
             },
           });
           break;

@@ -42,6 +42,7 @@ interface HeroSectionProps {
       text: string;
     }>;
     primaryColor?: string;
+    logoUrl?: string | null;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -106,6 +107,24 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         </>
       )}
       <div className="container mx-auto max-w-6xl text-center" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-stack-gap)' }}>
+        {/* Logo - only render if exists */}
+        {content.logoUrl && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="flex justify-center mb-4"
+          >
+            <img 
+              src={content.logoUrl} 
+              alt="Company logo" 
+              className="h-12 md:h-16 object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </motion.div>
+        )}
         {content.fomo?.badge && (
           <motion.div 
             initial={{ opacity: 0, y: -10 }}

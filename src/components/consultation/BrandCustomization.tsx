@@ -115,32 +115,45 @@ export function BrandCustomization({
   onUseDefaults 
 }: Props) {
   // Helper to find first "colorful" color (not near-white or near-black)
-  const findColorfulColor = (colors: string[], fallback: string): string => {
-    for (const color of colors) {
+  const getFirstColorfulColor = (colors: string[]): string => {
+    const validColors = colors.filter(c => c && c.length > 0);
+    
+    for (const color of validColors) {
+      const hex = color.replace('#', '').toUpperCase();
+      
+      // Skip pure white and black
+      if (['FFF', 'FFFFFF', '000', '000000'].includes(hex)) continue;
+      
+      // Skip very light or very dark colors
       try {
-        const hex = color.replace('#', '');
-        if (hex.length !== 6) continue;
-        const r = parseInt(hex.substr(0, 2), 16);
-        const g = parseInt(hex.substr(2, 2), 16);
-        const b = parseInt(hex.substr(4, 2), 16);
+        const fullHex = hex.length === 3 
+          ? hex.split('').map(c => c + c).join('') 
+          : hex;
+        if (fullHex.length !== 6) continue;
+        
+        const r = parseInt(fullHex.substr(0, 2), 16);
+        const g = parseInt(fullHex.substr(2, 2), 16);  
+        const b = parseInt(fullHex.substr(4, 2), 16);
         const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        // Skip colors that are too light (>0.9) or too dark (<0.1)
-        if (luminance > 0.1 && luminance < 0.9) {
-          return color;
-        }
-      } catch (e) {
+        
+        // Skip colors with luminance > 0.85 (near-white) or < 0.15 (near-black)
+        if (luminance > 0.85 || luminance < 0.15) continue;
+        
+        return color;
+      } catch {
         continue;
       }
     }
-    return fallback;
+    
+    return '#3B82F6'; // Fallback to visible blue
   };
   
-  // Initialize with first "colorful" extracted color or industry default
-  const [primaryColor, setPrimaryColor] = useState(
-    findColorfulColor(
-      [websiteIntelligence.primaryColor || '', ...websiteIntelligence.colors],
-      '#1E3A5F' // Industry default
-    )
+  // Initialize with first "colorful" extracted color or fallback
+  const [primaryColor, setPrimaryColor] = useState(() => 
+    getFirstColorfulColor([
+      websiteIntelligence.primaryColor || '',
+      ...websiteIntelligence.colors
+    ])
   );
   const [secondaryColor, setSecondaryColor] = useState(
     websiteIntelligence.secondaryColor || 
