@@ -1,28 +1,31 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import AIDemo from "@/components/AIDemo";
+import LiveDemoSection from "@/components/landing/LiveDemoSection";
 import HowItWorks from "@/components/HowItWorks";
 import Features from "@/components/Features";
 import SocialProof from "@/components/SocialProof";
 import Pricing from "@/components/Pricing";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
+import { IntelligenceProvider } from "@/contexts/IntelligenceContext";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
-      <Header />
-      <main>
-        <Hero />
-        <AIDemo />
-        <HowItWorks />
-        <Features />
-        <SocialProof />
-        <Pricing />
-        <FinalCTA />
-      </main>
-      <Footer />
-    </div>
+    <IntelligenceProvider>
+      <div className="min-h-screen">
+        <Header />
+        <main>
+          <Hero />
+          <LiveDemoSection />
+          <HowItWorks />
+          <Features />
+          <SocialProof />
+          <Pricing />
+          <FinalCTA />
+        </main>
+        <Footer />
+      </div>
+    </IntelligenceProvider>
   );
 };
 
