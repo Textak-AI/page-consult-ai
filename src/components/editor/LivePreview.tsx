@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { ProblemSolutionSection } from "@/components/sections/ProblemSolutionSection";
 import { CalculatorSection } from "@/components/sections/CalculatorSection";
@@ -10,6 +11,8 @@ import { FAQSection } from "@/components/sections/FAQSection";
 import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
 import { useEditing } from "@/contexts/EditingContext";
 import { EditingToolbar } from "@/components/editor/EditingToolbar";
+import { SectionToolbar } from "@/components/editor/SectionToolbar";
+import { SectionAIChat } from "@/components/editor/SectionAIChat";
 import { styleVariants } from "@/lib/styleVariants";
 
 type Section = {
@@ -24,11 +27,15 @@ interface LivePreviewProps {
   onSectionsChange: (sections: Section[]) => void;
   cssVariables?: string;
   iconStyle?: "outline" | "solid" | "duotone";
+  strategyBrief?: any;
 }
 
-export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyle = "outline" }: LivePreviewProps) {
+export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief }: LivePreviewProps) {
   const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();
   const currentStyle = styleVariants[pageStyle];
+  
+  const [aiChatOpen, setAiChatOpen] = useState(false);
+  const [aiChatSection, setAiChatSection] = useState<{ index: number; type: string; content: any } | null>(null);
 
   const handleSaveEdit = () => {
     setEditingSection(null);
@@ -42,6 +49,50 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     return `section-${type}`;
   };
 
+  const handleEditSection = (index: number) => {
+    if (editingSection === index) {
+      setEditingSection(null);
+    } else {
+      setEditingSection(index);
+    }
+  };
+
+  const handleAIAssist = (index: number, type: string, content: any) => {
+    setAiChatSection({ index, type, content });
+    setAiChatOpen(true);
+  };
+
+  const handleApplyAIChanges = (newContent: any) => {
+    if (aiChatSection) {
+      const updated = [...sections];
+      updated[aiChatSection.index].content = newContent;
+      onSectionsChange(updated);
+    }
+    setAiChatOpen(false);
+    setAiChatSection(null);
+  };
+
+  const renderSectionWithToolbar = (section: Section, index: number, sectionElement: React.ReactNode) => {
+    const sectionId = getSectionId(section.type);
+    
+    return (
+      <div 
+        key={index} 
+        id={sectionId} 
+        className="relative group transition-all duration-300"
+      >
+        <SectionToolbar
+          sectionType={section.type}
+          sectionContent={section.content}
+          onEdit={() => handleEditSection(index)}
+          onAIAssist={() => handleAIAssist(index, section.type, section.content)}
+          isEditing={editingSection === index}
+        />
+        {sectionElement}
+      </div>
+    );
+  };
+
   const renderSection = (section: Section, index: number) => {
     if (!section.visible) return null;
 
@@ -51,103 +102,90 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
       onSectionsChange(updated);
     };
 
-    const sectionId = getSectionId(section.type);
-
     switch (section.type) {
       case "hero":
-        return (
-          <div key={index} id={sectionId} className="transition-all duration-300">
-            <HeroSection
-              content={section.content}
-              onUpdate={updateSection}
-              isEditing={editingSection === index}
-            />
-          </div>
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <HeroSection
+            content={section.content}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
+          />
         );
       case "stats-bar":
-        return (
-          <div key={index} id={sectionId} className="transition-all duration-300">
-            <StatsBarSection
-              statistics={section.content.statistics || []}
-            />
-          </div>
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <StatsBarSection statistics={section.content.statistics || []} />
         );
       case "problem-solution":
-        return (
-          <div key={index} id={sectionId} className="transition-all duration-300">
-            <ProblemSolutionSection
-              content={section.content}
-              onUpdate={updateSection}
-              isEditing={editingSection === index}
-            />
-          </div>
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <ProblemSolutionSection
+            content={section.content}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
+          />
         );
       case "calculator":
-        return (
-          <div key={index} id={sectionId} className="transition-all duration-300">
-            <CalculatorSection
-              content={section.content}
-              onUpdate={updateSection}
-            />
-          </div>
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <CalculatorSection content={section.content} onUpdate={updateSection} />
         );
       case "features":
-        return (
-          <div key={index} id={sectionId} className="transition-all duration-300">
-            <FeaturesSection
-              content={section.content}
-              onUpdate={updateSection}
-              iconStyle={iconStyle}
-            />
-          </div>
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <FeaturesSection
+            content={section.content}
+            onUpdate={updateSection}
+            iconStyle={iconStyle}
+          />
         );
       case "photo-gallery":
-        return (
-          <div key={index} id={sectionId} className="transition-all duration-300">
-            <PhotoGallerySection
-              content={section.content}
-              onUpdate={updateSection}
-              isEditing={editingSection === index}
-            />
-          </div>
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <PhotoGallerySection
+            content={section.content}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
+          />
         );
       case "social-proof":
-        return (
-          <div key={index} id={sectionId} className="transition-all duration-300">
-            <SocialProofSection
-              content={section.content}
-              onUpdate={updateSection}
-            />
-          </div>
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <SocialProofSection content={section.content} onUpdate={updateSection} />
         );
       case "final-cta":
-        return (
-          <div key={index} id={sectionId} className="transition-all duration-300">
-            <FinalCTASection
-              content={section.content}
-              onUpdate={updateSection}
-              isEditing={editingSection === index}
-            />
-          </div>
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <FinalCTASection
+            content={section.content}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
+          />
         );
       case "faq":
-        return (
-          <div key={index} id={sectionId} className="transition-all duration-300">
-            <FAQSection
-              content={section.content}
-              onUpdate={updateSection}
-              isEditing={editingSection === index}
-            />
-          </div>
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <FAQSection
+            content={section.content}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
+          />
         );
       case "how-it-works":
-        return (
-          <div key={index} id={sectionId} className="transition-all duration-300">
-            <HowItWorksSection
-              content={section.content}
-              onUpdate={updateSection}
-            />
-          </div>
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <HowItWorksSection content={section.content} onUpdate={updateSection} />
         );
       default:
         return null;
@@ -219,6 +257,19 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           .sort((a, b) => a.order - b.order)
           .map((section, index) => renderSection(section, index))}
       </div>
+      
+      {/* AI Chat Drawer */}
+      <SectionAIChat
+        isOpen={aiChatOpen}
+        onClose={() => {
+          setAiChatOpen(false);
+          setAiChatSection(null);
+        }}
+        sectionType={aiChatSection?.type || ""}
+        sectionContent={aiChatSection?.content || {}}
+        strategyBrief={strategyBrief}
+        onApplyChanges={handleApplyAIChanges}
+      />
     </div>
   );
 }
