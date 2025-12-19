@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 
 // Hardcoded test data for Acceler8ors
 const TEST_BRAND_SETTINGS = {
-  logoUrl: 'https://acceler8ors.com/wp-content/uploads/2023/08/cropped-a8-logo-icon.png',
+  logoUrl: 'https://acceler8ors.com/wp-content/uploads/2024/08/A8NLogo.webp',
   primaryColor: '#CD86D4', // Pink/purple
   secondaryColor: '#1E3A5F',
   headingFont: 'Inter',
