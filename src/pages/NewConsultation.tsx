@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -14,8 +14,28 @@ import type { AISeoData } from "@/services/intelligence/types";
 
 type Stage = 'loading' | 'intro' | 'consultation' | 'brief-review' | 'generating' | 'dev-loading';
 
+// Type for prefill data from landing demo
+interface PrefillData {
+  extracted?: {
+    industry?: string | null;
+    audience?: string | null;
+    valueProp?: string | null;
+    businessType?: 'B2B' | 'B2C' | 'Both' | null;
+  };
+  market?: {
+    marketSize?: string | null;
+    buyerPersona?: string | null;
+    commonObjections?: string[];
+    industryInsights?: string[];
+  };
+  email?: string | null;
+  source?: string;
+  sessionId?: string;
+}
+
 export default function NewConsultation() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [stage, setStage] = useState<Stage>('loading');
   const [userId, setUserId] = useState<string | null>(null);
@@ -23,25 +43,54 @@ export default function NewConsultation() {
   const [strategyBrief, setStrategyBrief] = useState<string>('');
   const [aiSeoData, setAiSeoData] = useState<AISeoData | null>(null);
   const [consultationStep, setConsultationStep] = useState(1);
+  const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
   const isDevMode = useDevMode();
+
+  // Parse prefill data from query params
+  useEffect(() => {
+    const prefillParam = searchParams.get('prefill');
+    if (prefillParam) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(prefillParam));
+        setPrefillData(parsed);
+        console.log('📥 Prefill data loaded from demo:', parsed);
+        
+        // Show toast to acknowledge the prefill
+        if (parsed.extracted?.industry) {
+          toast({
+            title: "Welcome back!",
+            description: `Continuing your ${parsed.extracted.industry} strategy session.`,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to parse prefill data:', err);
+      }
+    }
+  }, [searchParams, toast]);
+
   // Check auth on mount
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate("/signup");
+        // Preserve prefill data in redirect
+        const prefillParam = searchParams.get('prefill');
+        const redirectUrl = prefillParam 
+          ? `/new?prefill=${encodeURIComponent(prefillParam)}`
+          : '/new';
+        navigate(`/signup?redirect=${encodeURIComponent(redirectUrl)}`);
         return;
       }
       setUserId(user.id);
-      // Check if we should show intro
-      if (shouldShowIntro()) {
-        setStage('intro');
-      } else {
+      // Skip intro if coming from demo with prefill data
+      if (prefillData?.source === 'landing_demo' || !shouldShowIntro()) {
         setStage('consultation');
+      } else {
+        setStage('intro');
       }
     };
     checkAuth();
-  }, [navigate]);
+  }, [navigate, searchParams, prefillData]);
 
   // Handle consultation completion
   const handleConsultationComplete = (data: ConsultationData, brief: string, seoData?: AISeoData | null) => {
@@ -287,6 +336,7 @@ export default function NewConsultation() {
             <StrategicConsultation
               onComplete={handleConsultationComplete}
               onBack={handleBackFromConsultation}
+              prefillData={prefillData}
             />
           </motion.div>
         )}
