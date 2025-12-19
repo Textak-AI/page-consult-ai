@@ -149,9 +149,13 @@ export default function LiveDemoSection() {
     }
   }, [state.conversation.length]);
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom on new messages - only within chat container
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current && chatContainerRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }, [state.conversation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -238,7 +242,7 @@ export default function LiveDemoSection() {
             </div>
 
             {/* Messages area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
               <AnimatePresence mode="popLayout">
                 {displayConversation.map((message, index) => (
                   <motion.div
@@ -390,10 +394,11 @@ export default function LiveDemoSection() {
               <h4 className="text-sm font-medium text-slate-300 mb-4 text-center">Strategy Readiness</h4>
               <ReadinessRing percentage={state.readiness} />
               
-              {/* Continue button */}
-              <AnimatePresence>
-                {state.readiness >= 60 && (
+              {/* Continue button - only show when email captured AND readiness >= 60 */}
+              <AnimatePresence mode="wait">
+                {state.readiness >= 60 && state.emailCaptured ? (
                   <motion.div
+                    key="continue-button"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
@@ -407,7 +412,17 @@ export default function LiveDemoSection() {
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </motion.div>
-                )}
+                ) : state.readiness >= 50 && !state.emailCaptured ? (
+                  <motion.p
+                    key="email-prompt"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="mt-4 text-center text-sm text-slate-400"
+                  >
+                    Enter your email above to continue...
+                  </motion.p>
+                ) : null}
               </AnimatePresence>
             </div>
           </motion.div>

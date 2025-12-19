@@ -308,8 +308,8 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       }
 
       // Step 3: Check if we should show email gate
-      // Show gate after message 2 if we have industry detected
-      const shouldShowGate = newMessageCount >= 2 && 
+      // Show gate after message 1 if we have industry detected (AI is smart enough to extract from single message)
+      const shouldShowGate = newMessageCount >= 1 && 
                              newExtracted.industry && 
                              !state.emailCaptured;
 
