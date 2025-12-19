@@ -15,7 +15,7 @@ import { PageGenerationLoader } from "@/components/editor/PageGenerationLoader";
 import { StrategyBriefPanel } from "@/components/builder/StrategyBriefPanel";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
 import { generateIntelligentContent, runIntelligencePipeline } from "@/services/intelligence";
-import type { PersonaIntelligence, GeneratedContent } from "@/services/intelligence/types";
+import type { PersonaIntelligence, GeneratedContent, AISeoData } from "@/services/intelligence/types";
 import { cn } from "@/lib/utils";
 import logo from "/logo/whiteAsset_3combimark_darkmode.svg";
 import { useAIActions, type AIActionType } from "@/hooks/useAIActions";
@@ -29,6 +29,7 @@ import {
   UsageHistoryModal,
 } from "@/components/usage";
 import { CreditDisplay, UpgradeDrawer } from "@/components/credits";
+import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid } from "@/lib/aiSeoIntegration";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -430,6 +431,30 @@ function GenerateContent() {
       const slug = `${consultationData.industry?.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
       console.log("💾 Creating new page in database with slug:", slug);
       
+      // Get aiSeoData for meta tags optimization
+      const aiSeoData = consultationData.aiSeoData || consultationData.ai_seo_data;
+      let optimizedMeta = {
+        title: `${consultationData.offer} - ${consultationData.industry}`,
+        description: consultationData.unique_value || '',
+      };
+      
+      // Use AI SEO optimized meta tags if available
+      if (isAISeoDataValid(aiSeoData)) {
+        const seoAssets = generateSEOAssets(
+          {
+            industry: consultationData.industry,
+            offer: consultationData.offer,
+            uniqueValue: consultationData.unique_value,
+          },
+          aiSeoData
+        );
+        optimizedMeta = {
+          title: seoAssets.metaTags.title,
+          description: seoAssets.metaTags.description,
+        };
+        console.log('✅ Using AI SEO optimized meta tags:', optimizedMeta);
+      }
+      
       // Prepare insert data with optional strategic fields
       const insertData: any = {
         user_id: userId,
@@ -439,8 +464,8 @@ function GenerateContent() {
           : `${consultationData.industry} Landing Page`,
         slug,
         sections: generatedSections,
-        meta_title: `${consultationData.offer} - ${consultationData.industry}`,
-        meta_description: consultationData.unique_value,
+        meta_title: optimizedMeta.title,
+        meta_description: optimizedMeta.description,
       };
       
       // Add strategic data if from new consultation flow
@@ -698,6 +723,17 @@ function GenerateContent() {
       },
     });
 
+    // FAQ Section (from aiSeoData if available)
+    const aiSeoData = consultationData.aiSeoData || consultationData.ai_seo_data;
+    if (isAISeoDataValid(aiSeoData) && aiSeoData.faqItems?.length > 0) {
+      const faqConfig = createFAQSectionConfig(aiSeoData.faqItems);
+      sections.push({
+        ...faqConfig,
+        order: order++,
+      });
+      console.log('✅ Added FAQ section with', aiSeoData.faqItems.length, 'items');
+    }
+
     // Final CTA
     sections.push({
       type: "final-cta",
@@ -864,6 +900,17 @@ function GenerateContent() {
         additionalTestimonials: testimonials.slice(1),
       },
     });
+
+    // FAQ Section (from aiSeoData if available)
+    const aiSeoData = consultationData.aiSeoData || consultationData.ai_seo_data;
+    if (isAISeoDataValid(aiSeoData) && aiSeoData.faqItems?.length > 0) {
+      const faqConfig = createFAQSectionConfig(aiSeoData.faqItems);
+      sections.push({
+        ...faqConfig,
+        order: order++,
+      });
+      console.log('✅ Strategy brief: Added FAQ section with', aiSeoData.faqItems.length, 'items');
+    }
 
     // Final CTA
     sections.push({

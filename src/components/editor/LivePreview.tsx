@@ -6,6 +6,7 @@ import { SocialProofSection } from "@/components/sections/SocialProofSection";
 import { FinalCTASection } from "@/components/sections/FinalCTASection";
 import { PhotoGallerySection } from "@/components/sections/PhotoGallerySection";
 import { StatsBarSection } from "@/components/sections/StatsBarSection";
+import { FAQSection } from "@/components/sections/FAQSection";
 import { useEditing } from "@/contexts/EditingContext";
 import { EditingToolbar } from "@/components/editor/EditingToolbar";
 import { styleVariants } from "@/lib/styleVariants";
@@ -119,6 +120,16 @@ export function LivePreview({ sections, onSectionsChange }: LivePreviewProps) {
         return (
           <div key={index} id={sectionId} className="transition-all duration-300">
             <FinalCTASection
+              content={section.content}
+              onUpdate={updateSection}
+              isEditing={editingSection === index}
+            />
+          </div>
+        );
+      case "faq":
+        return (
+          <div key={index} id={sectionId} className="transition-all duration-300">
+            <FAQSection
               content={section.content}
               onUpdate={updateSection}
               isEditing={editingSection === index}
