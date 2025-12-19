@@ -174,3 +174,130 @@ export const mockGeneratedSections = [
     },
   },
 ];
+
+export const mockAiSeoData = {
+  entity: {
+    type: "ProfessionalService",
+    name: "Acceler8ors",
+    description: "B2B creative agency helping tech startups build brands in 6 weeks. Team from Google, Spotify, Pentagram delivering strategy-first branding.",
+    industry: "Marketing & Advertising",
+    areaServed: "United States"
+  },
+  authoritySignals: [
+    {
+      type: "statistic" as const,
+      raw: "75+ B2B tech companies",
+      optimized: "Trusted by 75+ B2B tech companies including Series A-C startups",
+      numbers: ["75+"]
+    },
+    {
+      type: "achievement" as const,
+      raw: "Featured in Communication Arts",
+      optimized: "Work featured in Communication Arts, the leading creative industry publication",
+      numbers: []
+    },
+    {
+      type: "credential" as const,
+      raw: "Team from Google, Spotify, Pentagram",
+      optimized: "Team includes alumni from Google, Spotify, and Pentagram design studios",
+      numbers: []
+    },
+    {
+      type: "statistic" as const,
+      raw: "Average client NPS of 72",
+      optimized: "Client satisfaction NPS score of 72 (industry average: 30-40)",
+      numbers: ["72"]
+    },
+    {
+      type: "comparison" as const,
+      raw: "6 weeks vs 6 months",
+      optimized: "Delivers in 6 weeks what traditional agencies take 6 months to complete",
+      numbers: ["6", "6"]
+    },
+    {
+      type: "testimonial" as const,
+      raw: "Delivered in 6 weeks what 3 agencies couldn't in 18 months",
+      optimized: "\"Delivered in 6 weeks what 3 previous agencies couldn't in 18 months\" — Marcus Chen, CEO DataStack",
+      numbers: ["6", "3", "18"]
+    }
+  ],
+  faqItems: [
+    {
+      question: "Why does Acceler8ors cost $25-50K for branding?",
+      answer: "Our Brand Acceleration Sprint includes complete brand identity, website design, pitch deck, and 90-day marketing roadmap. The investment pays for itself when you consider that our clients avoid the typical 18-month agency cycle.",
+      source: "objection" as const
+    },
+    {
+      question: "How can you deliver a complete brand in 6 weeks?",
+      answer: "We use a sprint methodology with weekly creative reviews. Our strategy-first approach means we start building immediately after our 2-hour strategy session, with no wasted cycles.",
+      source: "objection" as const
+    },
+    {
+      question: "What's included in the Brand Acceleration Sprint?",
+      answer: "Brand strategy document, logo and visual identity system, 10-15 page website design, investor pitch deck, brand guidelines, and a 90-day marketing roadmap.",
+      source: "offer" as const
+    },
+    {
+      question: "How does your process work?",
+      answer: "15-minute discovery call, custom proposal within 48 hours, 2-hour strategy session, 6 weekly creative reviews, then final delivery and handoff.",
+      source: "process" as const
+    },
+    {
+      question: "Do you work with early-stage startups?",
+      answer: "We specialize in Series A-C B2B tech startups with $2M-$50M revenue. Earlier-stage companies may benefit from our lighter-weight packages.",
+      source: "industry_common" as const
+    },
+    {
+      question: "What makes you different from other branding agencies?",
+      answer: "Our team comes from Google, Spotify, and Pentagram — we understand both tech and brand building. We're fast because we're focused, not because we cut corners.",
+      source: "objection" as const
+    }
+  ],
+  queryTargets: [
+    {
+      query: "best branding agency for B2B SaaS startups",
+      intent: "transactional" as const,
+      priority: "high" as const
+    },
+    {
+      query: "how much does startup branding cost",
+      intent: "informational" as const,
+      priority: "high" as const
+    },
+    {
+      query: "fast branding agency for tech companies",
+      intent: "transactional" as const,
+      priority: "high" as const
+    },
+    {
+      query: "brand identity for Series A startup",
+      intent: "transactional" as const,
+      priority: "high" as const
+    },
+    {
+      query: "how long does rebranding take",
+      intent: "informational" as const,
+      priority: "medium" as const
+    },
+    {
+      query: "branding agency that understands tech",
+      intent: "transactional" as const,
+      priority: "medium" as const
+    },
+    {
+      query: "what should a startup branding package include",
+      intent: "informational" as const,
+      priority: "medium" as const
+    },
+    {
+      query: "agency alternatives for startup branding",
+      intent: "informational" as const,
+      priority: "low" as const
+    }
+  ],
+  schemaReadiness: {
+    score: 82,
+    missing: ["priceRange", "openingHours", "logo", "aggregateRating"],
+    complete: ["name", "description", "industry", "areaServed", "founder", "employee", "hasOfferCatalog"]
+  }
+};

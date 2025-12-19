@@ -8,8 +8,9 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import iconmark from "@/assets/iconmark-darkmode.svg";
 import { DevToolbar, useDevMode } from "@/components/dev/DevToolbar";
-import { mockConsultation, mockStrategyBrief } from "@/lib/mockDevData";
+import { mockConsultation, mockStrategyBrief, mockAiSeoData } from "@/lib/mockDevData";
 import { AIWorkingLoader } from "@/components/editor/AIWorkingLoader";
+import type { AISeoData } from "@/services/intelligence/types";
 
 type Stage = 'loading' | 'intro' | 'consultation' | 'brief-review' | 'generating' | 'dev-loading';
 
@@ -20,6 +21,7 @@ export default function NewConsultation() {
   const [userId, setUserId] = useState<string | null>(null);
   const [consultationData, setConsultationData] = useState<ConsultationData | null>(null);
   const [strategyBrief, setStrategyBrief] = useState<string>('');
+  const [aiSeoData, setAiSeoData] = useState<AISeoData | null>(null);
   const [consultationStep, setConsultationStep] = useState(1);
   const isDevMode = useDevMode();
   // Check auth on mount
@@ -42,11 +44,13 @@ export default function NewConsultation() {
   }, [navigate]);
 
   // Handle consultation completion
-  const handleConsultationComplete = (data: ConsultationData, brief: string) => {
+  const handleConsultationComplete = (data: ConsultationData, brief: string, seoData?: AISeoData | null) => {
     console.log('📋 Consultation complete:', data);
     console.log('📝 Strategy brief generated');
+    if (seoData) console.log('🔍 AI SEO data available:', seoData.entity?.type);
     setConsultationData(data);
     setStrategyBrief(brief);
+    setAiSeoData(seoData || null);
     setStage('brief-review');
   };
 
@@ -160,6 +164,7 @@ export default function NewConsultation() {
   const handleDevJumpToBriefReview = () => {
     setConsultationData(mockConsultation as unknown as ConsultationData);
     setStrategyBrief(mockStrategyBrief);
+    setAiSeoData(mockAiSeoData);
     setStage('brief-review');
   };
 
@@ -295,6 +300,7 @@ export default function NewConsultation() {
             <StrategyBriefReview
               brief={strategyBrief}
               consultationData={consultationData}
+              aiSeoData={aiSeoData}
               onApprove={handleBriefApproved}
               onEdit={handleBriefEdit}
               onRestart={handleRestart}

@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { AIWorkingLoader } from '@/components/editor/AIWorkingLoader';
+import type { AISeoData } from '@/services/intelligence/types';
 
 export interface ConsultationData {
   // Website Intelligence
@@ -95,7 +96,7 @@ const PRIMARY_GOALS = [
 ];
 
 interface Props {
-  onComplete: (data: ConsultationData, strategyBrief: string) => void;
+  onComplete: (data: ConsultationData, strategyBrief: string, aiSeoData?: AISeoData | null) => void;
   onBack?: () => void;
 }
 
@@ -221,17 +222,32 @@ export function StrategicConsultation({ onComplete, onBack }: Props) {
     setIsGeneratingBrief(true);
     
     try {
-      const { data: briefResult, error } = await supabase.functions.invoke('generate-strategy-brief', {
-        body: { consultationData: data }
-      });
+      // Generate strategy brief and extract AI SEO data in parallel
+      const [briefResult, seoResult] = await Promise.all([
+        supabase.functions.invoke('generate-strategy-brief', {
+          body: { consultationData: data }
+        }),
+        supabase.functions.invoke('extract-ai-seo-data', {
+          body: { consultationId: 'temp-' + Date.now(), consultationData: data }
+        })
+      ]);
       
-      if (error) throw error;
+      if (briefResult.error) throw briefResult.error;
+      
+      // Extract AI SEO data (non-blocking if it fails)
+      let aiSeoData: AISeoData | null = null;
+      if (seoResult.data?.success && seoResult.data?.aiSeoData) {
+        aiSeoData = seoResult.data.aiSeoData;
+        console.log('🔍 AI SEO data extracted:', aiSeoData.entity?.type);
+      } else if (seoResult.error) {
+        console.warn('⚠️ AI SEO extraction failed:', seoResult.error);
+      }
       
       // Clear the draft since consultation is complete
       localStorage.removeItem('pageconsult_consultation_draft');
       console.log('🗑️ Cleared consultation draft');
       
-      onComplete(data as ConsultationData, briefResult.strategyBrief);
+      onComplete(data as ConsultationData, briefResult.data.strategyBrief, aiSeoData);
     } catch (err) {
       console.error('Strategy brief generation error:', err);
       // Fallback: proceed with basic brief
@@ -241,7 +257,7 @@ export function StrategicConsultation({ onComplete, onBack }: Props) {
       localStorage.removeItem('pageconsult_consultation_draft');
       console.log('🗑️ Cleared consultation draft');
       
-      onComplete(data as ConsultationData, fallbackBrief);
+      onComplete(data as ConsultationData, fallbackBrief, null);
     } finally {
       setIsGeneratingBrief(false);
     }
