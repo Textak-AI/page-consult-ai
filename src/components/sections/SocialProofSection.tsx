@@ -108,8 +108,10 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
   
   return (
     <section 
-      className="py-20 md:py-28 px-4"
-      style={{ backgroundColor: 'var(--color-surface, white)' }}
+      style={{ 
+        backgroundColor: 'var(--color-surface)',
+        padding: 'var(--spacing-section-y) var(--spacing-section-x)',
+      }}
     >
       <div className="container mx-auto max-w-6xl">
         <motion.div 
@@ -120,14 +122,24 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
           className="text-center mb-16 md:mb-20 mx-auto max-w-3xl"
         >
           <h2 
-            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-5"
-            style={{ color: 'var(--color-text-primary, #0f172a)' }}
+            className="text-3xl sm:text-4xl md:text-5xl mb-5"
+            style={{ 
+              color: 'var(--color-text-primary)',
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 'var(--font-weight-heading)',
+              lineHeight: 'var(--line-height-heading)',
+              letterSpacing: 'var(--letter-spacing-heading)',
+            }}
           >
             {header.title}
           </h2>
           <p 
             className="text-lg md:text-xl"
-            style={{ color: 'var(--color-text-secondary, #475569)' }}
+            style={{ 
+              color: 'var(--color-text-secondary)',
+              fontFamily: 'var(--font-body)',
+              lineHeight: 'var(--line-height-body)',
+            }}
           >
             {header.subtitle}
           </p>
@@ -142,16 +154,21 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
           className="max-w-4xl mx-auto mb-16"
         >
           <div 
-            className="relative p-8 md:p-12 lg:p-16 rounded-3xl shadow-xl"
+            className="relative"
             style={{
-              backgroundColor: 'var(--color-background-alt, #f8fafc)',
-              borderColor: 'var(--color-border, #e2e8f0)',
-              borderWidth: '1px',
+              backgroundColor: 'var(--color-background-alt)',
+              borderColor: 'var(--color-border)',
+              borderWidth: 'var(--border-width)',
+              borderStyle: 'solid',
+              borderRadius: 'var(--radius-large)',
+              padding: 'var(--spacing-card-padding)',
+              boxShadow: 'var(--shadow-large)',
             }}
           >
             <Quote 
               className="absolute top-6 left-6 md:top-8 md:left-8 w-12 h-12 md:w-16 md:h-16"
-              style={{ color: 'var(--color-primary, rgba(6, 182, 212, 0.15))' }}
+              style={{ color: 'var(--color-primary)', opacity: 0.15 }}
+              strokeWidth={1.5}
             />
             
             {/* Star Rating */}
@@ -160,40 +177,54 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
                 <Star 
                   key={i} 
                   className="w-6 h-6 md:w-7 md:h-7 fill-current"
-                  style={{ color: 'var(--color-warning, #facc15)' }}
+                  style={{ color: 'var(--color-warning)' }}
                 />
               ))}
             </div>
             
             <blockquote 
-              className="text-xl md:text-2xl lg:text-3xl leading-relaxed mb-10 relative z-10 font-medium italic"
-              style={{ color: 'var(--color-text-primary, #0f172a)' }}
+              className="text-xl md:text-2xl lg:text-3xl mb-10 relative z-10 italic"
+              style={{ 
+                color: 'var(--color-text-primary)',
+                fontFamily: 'var(--font-body)',
+                lineHeight: 'var(--line-height-body)',
+                fontWeight: 500,
+              }}
             >
               "{testimonial.quote}"
             </blockquote>
             
             <div className="flex items-center gap-5">
               <div 
-                className="w-16 h-16 md:w-18 md:h-18 rounded-full flex items-center justify-center shadow-lg"
+                className="w-16 h-16 md:w-18 md:h-18 rounded-full flex items-center justify-center"
                 style={{
-                  background: `linear-gradient(135deg, var(--color-primary, #06b6d4), var(--color-secondary, #a855f7))`,
+                  background: `linear-gradient(135deg, var(--color-primary), var(--color-secondary))`,
+                  boxShadow: 'var(--shadow-medium)',
                 }}
               >
                 <User 
                   className="w-8 h-8 md:w-9 md:h-9"
-                  style={{ color: 'var(--color-text-inverse, white)' }}
+                  style={{ color: 'var(--color-text-inverse)' }}
+                  strokeWidth={1.5}
                 />
               </div>
               <div>
                 <div 
-                  className="font-bold text-lg md:text-xl"
-                  style={{ color: 'var(--color-text-primary, #0f172a)' }}
+                  className="text-lg md:text-xl"
+                  style={{ 
+                    color: 'var(--color-text-primary)',
+                    fontFamily: 'var(--font-heading)',
+                    fontWeight: 'var(--font-weight-heading)',
+                  }}
                 >
                   {testimonial.name}
                 </div>
                 <div 
                   className="text-sm md:text-base"
-                  style={{ color: 'var(--color-text-secondary, #64748b)' }}
+                  style={{ 
+                    color: 'var(--color-text-secondary)',
+                    fontFamily: 'var(--font-body)',
+                  }}
                 >
                   {testimonial.title}{testimonial.company && `, ${testimonial.company}`}
                 </div>
@@ -204,7 +235,7 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
 
         {/* Stats Grid */}
         {content.stats && content.stats.length > 0 && content.stats.some(s => s.value) && (
-          <div className="grid md:grid-cols-3 gap-6 md:gap-8 mb-16 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 mb-16 max-w-4xl mx-auto" style={{ gap: 'var(--spacing-card-gap)' }}>
             {content.stats.filter(s => s.value).map((stat, i) => (
               <motion.div 
                 key={i} 
@@ -212,22 +243,33 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="text-center p-8 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300"
+                className="text-center hover:scale-[1.02] transition-all duration-300"
                 style={{
-                  backgroundColor: 'var(--color-background-alt, #f8fafc)',
-                  borderColor: 'var(--color-border, #e2e8f0)',
-                  borderWidth: '1px',
+                  backgroundColor: 'var(--color-background-alt)',
+                  borderColor: 'var(--color-border)',
+                  borderWidth: 'var(--border-width)',
+                  borderStyle: 'solid',
+                  borderRadius: 'var(--radius-medium)',
+                  padding: 'var(--spacing-card-padding)',
+                  boxShadow: 'var(--shadow-small)',
                 }}
               >
                 <div 
-                  className="text-4xl md:text-5xl font-bold mb-3"
-                  style={{ color: 'var(--color-primary, #06b6d4)' }}
+                  className="text-4xl md:text-5xl mb-3"
+                  style={{ 
+                    color: 'var(--color-primary)',
+                    fontFamily: 'var(--font-heading)',
+                    fontWeight: 'var(--font-weight-heading)',
+                  }}
                 >
                   {stat.value}
                 </div>
                 <div 
-                  className="font-medium"
-                  style={{ color: 'var(--color-text-secondary, #64748b)' }}
+                  style={{ 
+                    color: 'var(--color-text-secondary)',
+                    fontFamily: 'var(--font-body)',
+                    fontWeight: 'var(--font-weight-body)',
+                  }}
                 >
                   {stat.label}
                 </div>
@@ -242,24 +284,31 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="p-6 md:p-8 rounded-2xl max-w-2xl mx-auto"
+            className="max-w-2xl mx-auto"
             style={{
-              backgroundColor: 'var(--color-background-alt, #f8fafc)',
-              borderColor: 'var(--color-border, #e2e8f0)',
-              borderWidth: '1px',
+              backgroundColor: 'var(--color-background-alt)',
+              borderColor: 'var(--color-border)',
+              borderWidth: 'var(--border-width)',
+              borderStyle: 'solid',
+              borderRadius: 'var(--radius-medium)',
+              padding: 'var(--spacing-card-padding)',
             }}
           >
             <div 
               className="flex items-center gap-2 mb-5 text-sm font-semibold"
-              style={{ color: 'var(--color-text-primary, #0f172a)' }}
+              style={{ 
+                color: 'var(--color-text-primary)',
+                fontFamily: 'var(--font-heading)',
+              }}
             >
               <Clock 
                 className="w-5 h-5"
-                style={{ color: 'var(--color-primary, #06b6d4)' }}
+                style={{ color: 'var(--color-primary)' }}
+                strokeWidth={1.5}
               />
               <span>Recent Activity</span>
             </div>
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-element-gap)' }}>
               {content.recentActivity.map((activity, i) => (
                 <div
                   key={i}
@@ -268,19 +317,19 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
                   <div>
                     <span 
                       className="font-semibold"
-                      style={{ color: 'var(--color-text-primary, #0f172a)' }}
+                      style={{ color: 'var(--color-text-primary)' }}
                     >
                       {activity.name}
                     </span>
                     <span 
-                      style={{ color: 'var(--color-text-secondary, #64748b)' }}
+                      style={{ color: 'var(--color-text-secondary)' }}
                     >
                       {' '}{activity.action} from {activity.location}
                     </span>
                   </div>
                   <span 
                     className="text-xs"
-                    style={{ color: 'var(--color-text-muted, #94a3b8)' }}
+                    style={{ color: 'var(--color-text-muted)' }}
                   >
                     {activity.time}
                   </span>

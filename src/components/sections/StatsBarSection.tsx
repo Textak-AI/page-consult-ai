@@ -47,14 +47,17 @@ export function StatsBarSection({ statistics }: StatsBarSectionProps) {
 
   return (
     <section 
-      className="py-12 md:py-16 border-y"
       style={{
-        background: 'linear-gradient(to right, var(--color-background-alt, #f1f5f9), var(--color-surface, #f8fafc), var(--color-background-alt, #f1f5f9))',
-        borderColor: 'var(--color-border, #e2e8f0)',
+        backgroundColor: 'var(--color-background-alt)',
+        borderTopWidth: 'var(--border-width)',
+        borderBottomWidth: 'var(--border-width)',
+        borderColor: 'var(--color-border)',
+        borderStyle: 'solid',
+        padding: 'var(--spacing-section-y) var(--spacing-section-x)',
       }}
     >
-      <div className="container mx-auto max-w-6xl px-4">
-        <div className={`grid ${getGridClass()} gap-6 md:gap-8`}>
+      <div className="container mx-auto max-w-6xl">
+        <div className={`grid ${getGridClass()}`} style={{ gap: 'var(--spacing-card-gap)' }}>
           {cleanStats.map((stat, i) => (
             <motion.div
               key={i}
@@ -62,29 +65,41 @@ export function StatsBarSection({ statistics }: StatsBarSectionProps) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.15, duration: 0.5 }}
-              className="rounded-2xl p-6 md:p-8 text-center shadow-lg hover:shadow-xl transition-all duration-300"
+              className="text-center hover:scale-[1.02] transition-all duration-300"
               style={{
-                backgroundColor: 'var(--color-surface, white)',
-                borderColor: 'var(--color-border, #e2e8f0)',
-                borderWidth: '1px',
+                backgroundColor: 'var(--color-surface)',
+                borderColor: 'var(--color-border)',
+                borderWidth: 'var(--border-width)',
+                borderStyle: 'solid',
+                borderRadius: 'var(--radius-medium)',
+                padding: 'var(--spacing-card-padding)',
+                boxShadow: 'var(--shadow-medium)',
               }}
             >
               <div 
-                className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3"
-                style={{ color: 'var(--color-primary, #0891b2)' }}
+                className="text-3xl sm:text-4xl md:text-5xl mb-3"
+                style={{ 
+                  color: 'var(--color-primary)',
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: 'var(--font-weight-heading)',
+                }}
               >
                 {stat.value}
               </div>
               <div 
-                className="font-medium text-sm md:text-base mb-2"
-                style={{ color: 'var(--color-text-primary, #334155)' }}
+                className="text-sm md:text-base mb-2"
+                style={{ 
+                  color: 'var(--color-text-primary)',
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: 'var(--font-weight-body)',
+                }}
               >
                 {stat.label}
               </div>
               {stat.source && (
                 <div 
                   className="text-xs"
-                  style={{ color: 'var(--color-text-muted, #64748b)' }}
+                  style={{ color: 'var(--color-text-muted)' }}
                 >
                   Source: {stat.source}
                 </div>

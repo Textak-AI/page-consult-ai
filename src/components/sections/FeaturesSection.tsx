@@ -92,8 +92,10 @@ export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSect
 
   return (
     <section 
-      className="py-20 md:py-28 px-4"
-      style={{ backgroundColor: 'var(--color-background-alt, #f8fafc)' }}
+      style={{ 
+        backgroundColor: 'var(--color-background-alt)',
+        padding: 'var(--spacing-section-y) var(--spacing-section-x)',
+      }}
     >
       <div className="container mx-auto max-w-6xl">
         <motion.div 
@@ -104,20 +106,30 @@ export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSect
           className="text-center mb-16 md:mb-20 mx-auto max-w-3xl"
         >
           <h2 
-            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-5"
-            style={{ color: 'var(--color-text-primary, #0f172a)' }}
+            className="text-3xl sm:text-4xl md:text-5xl mb-5"
+            style={{ 
+              color: 'var(--color-text-primary)',
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 'var(--font-weight-heading)',
+              lineHeight: 'var(--line-height-heading)',
+              letterSpacing: 'var(--letter-spacing-heading)',
+            }}
           >
             {title}
           </h2>
           <p 
             className="text-lg md:text-xl"
-            style={{ color: 'var(--color-text-secondary, #475569)' }}
+            style={{ 
+              color: 'var(--color-text-secondary)',
+              fontFamily: 'var(--font-body)',
+              lineHeight: 'var(--line-height-body)',
+            }}
           >
             {subtitle}
           </p>
         </motion.div>
 
-        <div className={`grid gap-6 md:gap-8 ${getGridClass()}`}>
+        <div className={`grid ${getGridClass()}`} style={{ gap: 'var(--spacing-card-gap)' }}>
           {features.map((feature, i) => {
             const Icon = getIconComponent(feature.icon);
             return (
@@ -127,36 +139,48 @@ export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSect
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="group p-8 md:p-10 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col"
+                className="group flex flex-col hover:-translate-y-1 transition-all duration-300"
                 style={{
-                  backgroundColor: 'var(--color-surface, white)',
-                  borderColor: 'var(--color-border, #e2e8f0)',
-                  borderWidth: '1px',
+                  backgroundColor: 'var(--color-surface)',
+                  borderColor: 'var(--color-border)',
+                  borderWidth: 'var(--border-width)',
+                  borderStyle: 'solid',
+                  borderRadius: 'var(--radius-medium)',
+                  padding: 'var(--spacing-card-padding)',
+                  boxShadow: 'var(--shadow-small)',
                 }}
               >
                 {/* Icon with style from design system */}
                 <div 
-                  className="w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
+                  className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
                   style={{ 
-                    backgroundColor: 'var(--color-primary-muted, rgba(6, 182, 212, 0.1))',
-                    borderRadius: 'var(--radius-medium, 0.75rem)',
+                    backgroundColor: 'var(--color-primary-muted)',
+                    borderRadius: 'var(--radius-medium)',
                   }}
                 >
                   <Icon 
                     className="w-7 h-7 md:w-8 md:h-8" 
-                    style={{ color: 'var(--color-primary, #0891b2)' }}
+                    style={{ color: 'var(--color-primary)' }}
                     strokeWidth={getStrokeWidth()} 
                   />
                 </div>
                 <h3 
-                  className="text-xl md:text-2xl font-bold mb-4"
-                  style={{ color: 'var(--color-text-primary, #0f172a)' }}
+                  className="text-xl md:text-2xl mb-4"
+                  style={{ 
+                    color: 'var(--color-text-primary)',
+                    fontFamily: 'var(--font-heading)',
+                    fontWeight: 'var(--font-weight-heading)',
+                  }}
                 >
                   {feature.title}
                 </h3>
                 <p 
-                  className="text-base md:text-lg leading-relaxed"
-                  style={{ color: 'var(--color-text-secondary, #475569)' }}
+                  className="text-base md:text-lg"
+                  style={{ 
+                    color: 'var(--color-text-secondary)',
+                    fontFamily: 'var(--font-body)',
+                    lineHeight: 'var(--line-height-body)',
+                  }}
                 >
                   {feature.description}
                 </p>
