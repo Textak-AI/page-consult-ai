@@ -123,6 +123,14 @@ function GenerateContent() {
       websiteIntelligence?: any;
       strategyBrief?: string;
       structuredBrief?: any;
+      brandSettings?: {
+        logoUrl: string | null;
+        primaryColor: string;
+        secondaryColor: string;
+        headingFont: string;
+        bodyFont: string;
+        modified: boolean;
+      };
     };
     fromStrategicConsultation?: boolean;
   } | null;
@@ -533,17 +541,23 @@ function GenerateContent() {
         
         // Generate design system from industry + tone + brand colors
         const structuredBrief = strategicData.structuredBrief;
+        const brandSettings = strategicData.brandSettings || strategicData.consultationData?.brandSettings;
+        
         const ds = generateDesignSystem({
           industry: consultationData.industry || 'default',
           tone: structuredBrief?.tone || 'professional',
-          brandOverrides: strategicData.consultationData?.websiteIntelligence ? {
+          brandOverrides: brandSettings ? {
+            primaryColor: brandSettings.primaryColor,
+            secondaryColor: brandSettings.secondaryColor,
+            extractedColors: strategicData.consultationData?.websiteIntelligence?.brandColors,
+          } : strategicData.consultationData?.websiteIntelligence ? {
             primaryColor: strategicData.consultationData.websiteIntelligence.primaryColor,
             extractedColors: strategicData.consultationData.websiteIntelligence.colors,
           } : undefined,
         });
         setDesignSystem(ds);
         setCssVariables(designSystemToCSSVariables(ds));
-        console.log('🎨 Generated design system:', ds.id, 'with tone:', structuredBrief?.tone);
+        console.log('🎨 Generated design system:', ds.id, 'with tone:', structuredBrief?.tone, 'brand:', brandSettings?.modified ? 'customized' : 'default');
         
         const { data: result, error } = await supabase.functions.invoke('generate-page-content', {
           body: {
