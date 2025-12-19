@@ -2,6 +2,15 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowRight, Clock, Shield, Zap, CheckCircle } from "lucide-react";
 
+const getButtonTextColor = (primaryColor: string): string => {
+  const hex = primaryColor.replace('#', '');
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5 ? '#1E293B' : '#FFFFFF';
+};
+
 interface FinalCTASectionProps {
   content: {
     headline: string;
@@ -9,6 +18,7 @@ interface FinalCTASectionProps {
     ctaLink: string;
     subtext?: string;
     trustIndicators?: Array<{ text: string }>;
+    primaryColor?: string;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -106,7 +116,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             }`}
             style={{
               background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))`,
-              color: 'var(--color-text-inverse)',
+              color: content.primaryColor ? getButtonTextColor(content.primaryColor) : 'var(--color-text-inverse)',
               boxShadow: 'var(--shadow-large)',
               borderRadius: 'var(--radius-small)',
               fontFamily: 'var(--font-body)',
