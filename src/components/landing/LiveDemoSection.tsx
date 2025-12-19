@@ -182,11 +182,11 @@ export default function LiveDemoSection() {
     ? [{ role: 'assistant' as const, content: "Tell me about your business — who do you help and what do you do for them?", timestamp: new Date() }]
     : state.conversation;
 
-  // Get market insights to display
+  // Get market insights to display (limit to 2 for layout balance)
   const marketInsights = [
     ...(state.market.industryInsights || []),
     ...(state.market.commonObjections?.slice(0, 1) || []),
-  ].slice(0, 3);
+  ].slice(0, 2);
 
   return (
     <section id="demo" className="py-20 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800">
@@ -326,7 +326,7 @@ export default function LiveDemoSection() {
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="space-y-6"
+            className="space-y-6 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent"
           >
             {/* Intelligence Profile Card */}
             <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">

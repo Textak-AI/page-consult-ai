@@ -100,12 +100,21 @@ Be specific and concise. Return factual information.`;
     const perplexityData = await perplexityResponse.json();
     const researchContent = perplexityData.choices?.[0]?.message?.content || '';
 
+    // Helper to strip citation brackets like [1], [1][3], [1,2], etc.
+    const stripCitations = (text: string): string => {
+      return text
+        .replace(/\[\d+(?:,\s*\d+)*\]/g, '') // [1], [1,2], [1, 2, 3]
+        .replace(/\[\d+\]\[\d+\]/g, '')       // [1][3]
+        .replace(/\s+/g, ' ')                 // collapse multiple spaces
+        .trim();
+    };
+
     // Parse the research into structured format
     const result = {
-      marketSize: extractSection(researchContent, 'market size') || `The ${industry} market continues to grow`,
-      buyerPersona: extractSection(researchContent, 'buyer persona') || `Decision-makers in ${audience || 'the target market'}`,
-      commonObjections: extractList(researchContent, 'objections'),
-      industryInsights: extractList(researchContent, 'insights'),
+      marketSize: stripCitations(extractSection(researchContent, 'market size') || `The ${industry} market continues to grow`),
+      buyerPersona: stripCitations(extractSection(researchContent, 'buyer persona') || `Decision-makers in ${audience || 'the target market'}`),
+      commonObjections: extractList(researchContent, 'objections').map(stripCitations),
+      industryInsights: extractList(researchContent, 'insights').map(stripCitations),
     };
 
     // Ensure we have at least some objections and insights
