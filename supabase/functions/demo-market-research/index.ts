@@ -10,25 +10,81 @@ const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+// Input validation constants
+const MAX_INPUT_LENGTH = 200;
+const RATE_LIMIT_PER_HOUR = 20;
+
+// Sanitize input
+function sanitizeInput(input: string): string {
+  if (typeof input !== 'string') return '';
+  return input
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+    .replace(/[<>\"'&]/g, '')
+    .slice(0, MAX_INPUT_LENGTH)
+    .trim();
+}
+
+// Hash IP for rate limiting
+async function hashIP(ip: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(ip + 'demo-market-salt');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { industry, audience } = await req.json();
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    
+    // Rate limiting by IP
+    const forwarded = req.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+    const ipHash = await hashIP(ip);
 
-    if (!industry) {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count } = await supabase
+      .from('demo_sessions')
+      .select('*', { count: 'exact', head: true })
+      .eq('ip_hash', ipHash)
+      .gte('created_at', oneHourAgo);
+
+    if (count && count >= RATE_LIMIT_PER_HOUR) {
+      console.warn('Rate limit exceeded for IP hash:', ipHash);
       return new Response(
-        JSON.stringify({ error: 'Industry is required' }),
+        JSON.stringify({ error: 'Rate limit exceeded', rateLimited: true }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const body = await req.json();
+    const { industry, audience } = body;
+
+    // Input validation
+    if (!industry || typeof industry !== 'string') {
+      return new Response(
+        JSON.stringify({ error: 'Industry is required and must be a string' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    // Sanitize inputs
+    const sanitizedIndustry = sanitizeInput(industry);
+    const sanitizedAudience = audience ? sanitizeInput(audience) : 'general';
 
-    // Check cache first
-    const cacheKey = `${industry.toLowerCase()}_${(audience || 'general').toLowerCase()}`.replace(/\s+/g, '_').slice(0, 100);
+    if (sanitizedIndustry.length < 2) {
+      return new Response(
+        JSON.stringify({ error: 'Industry must be at least 2 characters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check cache first (internal access only - not exposed via RLS)
+    const cacheKey = `${sanitizedIndustry.toLowerCase()}_${sanitizedAudience.toLowerCase()}`.replace(/\s+/g, '_').slice(0, 100);
     
     const { data: cached } = await supabase
       .from('demo_market_cache')
@@ -38,7 +94,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (cached?.data) {
-      console.log('Cache hit for:', cacheKey);
+      console.log('Cache hit for:', cacheKey, 'IP hash:', ipHash);
       return new Response(
         JSON.stringify(cached.data),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -51,15 +107,15 @@ serve(async (req) => {
       console.warn('PERPLEXITY_API_KEY not configured, returning mock data');
       return new Response(
         JSON.stringify({
-          marketSize: `The ${industry} market is substantial and growing`,
-          buyerPersona: `Typical buyers are decision-makers in ${audience || 'target organizations'}`,
+          marketSize: `The ${sanitizedIndustry} market is substantial and growing`,
+          buyerPersona: `Typical buyers are decision-makers in ${sanitizedAudience}`,
           commonObjections: [
             'Concerns about implementation time and complexity',
             'Questions about ROI and measurable outcomes',
             'Need for proof from similar businesses',
           ],
           industryInsights: [
-            `${industry} businesses are increasingly looking for differentiation`,
+            `${sanitizedIndustry} businesses are increasingly looking for differentiation`,
             'Digital presence is becoming critical for competitive advantage',
           ],
         }),
@@ -67,8 +123,8 @@ serve(async (req) => {
       );
     }
 
-    // Call Perplexity API
-    const query = `For ${industry} businesses targeting ${audience || 'general audience'}:
+    // Call Perplexity API with sanitized inputs
+    const query = `For ${sanitizedIndustry} businesses targeting ${sanitizedAudience}:
 1. Approximate market size
 2. Typical buyer persona (age, role, priorities, decision factors)
 3. Top 3 objections/concerns prospects have
@@ -100,19 +156,19 @@ Be specific and concise. Return factual information.`;
     const perplexityData = await perplexityResponse.json();
     const researchContent = perplexityData.choices?.[0]?.message?.content || '';
 
-    // Helper to strip citation brackets like [1], [1][3], [1,2], etc.
+    // Helper to strip citation brackets
     const stripCitations = (text: string): string => {
       return text
-        .replace(/\[\d+(?:,\s*\d+)*\]/g, '') // [1], [1,2], [1, 2, 3]
-        .replace(/\[\d+\]\[\d+\]/g, '')       // [1][3]
-        .replace(/\s+/g, ' ')                 // collapse multiple spaces
+        .replace(/\[\d+(?:,\s*\d+)*\]/g, '')
+        .replace(/\[\d+\]\[\d+\]/g, '')
+        .replace(/\s+/g, ' ')
         .trim();
     };
 
     // Parse the research into structured format
     const result = {
-      marketSize: stripCitations(extractSection(researchContent, 'market size') || `The ${industry} market continues to grow`),
-      buyerPersona: stripCitations(extractSection(researchContent, 'buyer persona') || `Decision-makers in ${audience || 'the target market'}`),
+      marketSize: stripCitations(extractSection(researchContent, 'market size') || `The ${sanitizedIndustry} market continues to grow`),
+      buyerPersona: stripCitations(extractSection(researchContent, 'buyer persona') || `Decision-makers in ${sanitizedAudience}`),
       commonObjections: extractList(researchContent, 'objections').map(stripCitations),
       industryInsights: extractList(researchContent, 'insights').map(stripCitations),
     };
@@ -127,19 +183,19 @@ Be specific and concise. Return factual information.`;
     }
     if (result.industryInsights.length === 0) {
       result.industryInsights = [
-        `${industry} is seeing increased digital transformation`,
+        `${sanitizedIndustry} is seeing increased digital transformation`,
         'Buyers are looking for differentiated solutions',
       ];
     }
 
-    // Cache the result
+    // Cache the result (only accessible via this function, not publicly)
     await supabase.from('demo_market_cache').upsert({
       cache_key: cacheKey,
       data: result,
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     }, { onConflict: 'cache_key' });
 
-    console.log('Research completed and cached for:', cacheKey);
+    console.log('Research completed and cached for:', cacheKey, 'IP hash:', ipHash);
 
     return new Response(
       JSON.stringify(result),
@@ -149,7 +205,7 @@ Be specific and concise. Return factual information.`;
     console.error('Error in demo-market-research:', error);
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Processing error',
         marketSize: null,
         buyerPersona: null,
         commonObjections: [],
@@ -164,7 +220,6 @@ function extractSection(text: string, keyword: string): string | null {
   const lines = text.split('\n');
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].toLowerCase().includes(keyword)) {
-      // Return this line and potentially the next if it's a continuation
       let result = lines[i].replace(/^\d+\.\s*/, '').replace(/\*\*/g, '').trim();
       if (lines[i + 1] && !lines[i + 1].match(/^\d+\./)) {
         result += ' ' + lines[i + 1].replace(/\*\*/g, '').trim();
