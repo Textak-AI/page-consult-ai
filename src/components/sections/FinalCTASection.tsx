@@ -8,6 +8,7 @@ interface FinalCTASectionProps {
     ctaText: string;
     ctaLink: string;
     subtext?: string;
+    trustIndicators?: Array<{ text: string }>;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -21,11 +22,8 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
     });
   };
 
-  const trustIndicators = [
-    { icon: Shield, text: "No commitment required" },
-    { icon: Zap, text: "Free quote in 24 hours" },
-    { icon: Clock, text: "Same-day response" },
-  ];
+  // Only use trust indicators if explicitly provided - NO FABRICATION
+  const trustIndicators = content.trustIndicators || [];
 
   return (
     <section 
@@ -124,30 +122,36 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             <ArrowRight className="ml-3 w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-1 transition-transform" strokeWidth={1.5} />
           </Button>
           
-          {/* Trust Indicators */}
-          <div className="flex flex-wrap justify-center pt-4" style={{ gap: 'var(--spacing-element-gap)' }}>
-            {trustIndicators.map((item, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
-                className="flex items-center gap-2 text-sm md:text-base"
-                style={{ 
-                  color: 'var(--color-text-secondary)',
-                  fontFamily: 'var(--font-body)',
-                }}
-              >
-                <CheckCircle 
-                  className="w-5 h-5" 
-                  style={{ color: 'var(--color-primary)' }}
-                  strokeWidth={1.5}
-                />
-                <span>{item.text}</span>
-              </motion.div>
-            ))}
-          </div>
+          {/* Trust Indicators - only shown if data exists, NO FABRICATION */}
+          {trustIndicators.length > 0 && (
+            <div className="flex flex-wrap justify-center pt-4" style={{ gap: 'var(--spacing-element-gap)' }}>
+              {trustIndicators.map((item, i) => {
+                const icons = [Shield, Zap, Clock];
+                const Icon = icons[i % icons.length];
+                return (
+                  <motion.div 
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
+                    className="flex items-center gap-2 text-sm md:text-base"
+                    style={{ 
+                      color: 'var(--color-text-secondary)',
+                      fontFamily: 'var(--font-body)',
+                    }}
+                  >
+                    <CheckCircle 
+                      className="w-5 h-5" 
+                      style={{ color: 'var(--color-primary)' }}
+                      strokeWidth={1.5}
+                    />
+                    <span>{item.text}</span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
       </div>
     </section>

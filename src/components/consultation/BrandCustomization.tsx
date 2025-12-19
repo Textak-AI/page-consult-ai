@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Palette, Check, Upload, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -114,11 +114,33 @@ export function BrandCustomization({
   onBack,
   onUseDefaults 
 }: Props) {
-  // Initialize with extracted colors or defaults
+  // Helper to find first "colorful" color (not near-white or near-black)
+  const findColorfulColor = (colors: string[], fallback: string): string => {
+    for (const color of colors) {
+      try {
+        const hex = color.replace('#', '');
+        if (hex.length !== 6) continue;
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        // Skip colors that are too light (>0.9) or too dark (<0.1)
+        if (luminance > 0.1 && luminance < 0.9) {
+          return color;
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+    return fallback;
+  };
+  
+  // Initialize with first "colorful" extracted color or industry default
   const [primaryColor, setPrimaryColor] = useState(
-    websiteIntelligence.primaryColor || 
-    websiteIntelligence.colors[0] || 
-    '#1E3A5F'
+    findColorfulColor(
+      [websiteIntelligence.primaryColor || '', ...websiteIntelligence.colors],
+      '#1E3A5F' // Industry default
+    )
   );
   const [secondaryColor, setSecondaryColor] = useState(
     websiteIntelligence.secondaryColor || 
@@ -130,6 +152,7 @@ export function BrandCustomization({
   const [logoUrl, setLogoUrl] = useState<string | null>(websiteIntelligence.logoUrl || null);
   const [logoOption, setLogoOption] = useState<'extracted' | 'upload'>('extracted');
   const [hasModified, setHasModified] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   // Load Google Fonts dynamically
   useEffect(() => {
@@ -169,6 +192,21 @@ export function BrandCustomization({
       setPrimaryColor(color);
     } else {
       setSecondaryColor(color);
+    }
+  };
+
+  // Handle logo file upload
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setLogoUrl(result);
+        setLogoOption('upload');
+        setHasModified(true);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -257,7 +295,10 @@ export function BrandCustomization({
                         Looks good
                       </span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label 
+                      className="flex items-center gap-2 cursor-pointer"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
                       <input
                         type="radio"
                         name="logo"
@@ -265,11 +306,19 @@ export function BrandCustomization({
                         onChange={() => setLogoOption('upload')}
                         className="w-4 h-4 text-cyan-500"
                       />
-                      <span className="text-slate-400 flex items-center gap-1">
+                      <span className="text-slate-400 flex items-center gap-1 hover:text-white transition-colors">
                         <Upload className="w-4 h-4" />
                         Upload different
                       </span>
                     </label>
+                    {/* Hidden file input for logo upload */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                    />
                   </div>
                 </div>
               </motion.div>
@@ -462,12 +511,12 @@ export function BrandCustomization({
             </motion.div>
           </div>
 
-          {/* Right Column - Live Preview */}
+          {/* Right Column - Live Preview - sticky on desktop */}
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="lg:sticky lg:top-8"
+            className="lg:sticky lg:top-24 lg:self-start"
           >
             <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700">
               <Label className="text-slate-400 text-sm uppercase tracking-wider mb-4 block">

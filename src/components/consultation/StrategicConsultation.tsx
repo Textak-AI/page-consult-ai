@@ -107,6 +107,79 @@ const PRIMARY_GOALS = [
   { value: 'sales', label: 'Direct Sales', desc: 'Sell product/service directly' },
 ];
 
+// Industry-specific placeholder examples for better UX
+const INDUSTRY_PLACEHOLDERS: Record<string, {
+  idealClient: string;
+  clientFrustration: string;
+  desiredOutcome: string;
+  uniqueStrength: string;
+  mainOffer: string;
+  offerIncludes: string;
+}> = {
+  'B2B SaaS / Software': {
+    idealClient: 'e.g., Mid-market SaaS companies with 50-200 employees looking to scale their sales operations...',
+    clientFrustration: 'e.g., They struggle with fragmented tools, manual processes, and inconsistent data across departments...',
+    desiredOutcome: 'e.g., Streamlined operations that save 10+ hours per week and provide clear visibility into their pipeline...',
+    uniqueStrength: 'e.g., We integrate with 50+ tools out of the box and customers see ROI within the first 30 days...',
+    mainOffer: 'e.g., Enterprise Platform Integration, Custom API Development',
+    offerIncludes: 'e.g., Full implementation, 3 custom integrations, dedicated success manager, 24/7 support...',
+  },
+  'Professional Services': {
+    idealClient: 'e.g., Growing businesses with 10-50 employees needing strategic consulting but lacking in-house expertise...',
+    clientFrustration: 'e.g., They hire consultants who give generic advice without understanding their specific industry challenges...',
+    desiredOutcome: 'e.g., A clear strategic roadmap they can implement immediately with measurable quarterly milestones...',
+    uniqueStrength: 'e.g., We only work with 5 clients at a time, guaranteeing hands-on attention from senior partners...',
+    mainOffer: 'e.g., Strategic Growth Consulting, Business Transformation Services',
+    offerIncludes: 'e.g., Monthly strategy sessions, implementation support, quarterly business reviews...',
+  },
+  'Healthcare / Medical': {
+    idealClient: 'e.g., Medical practices with 3-10 providers looking to improve patient experience and operational efficiency...',
+    clientFrustration: 'e.g., They deal with outdated systems, long wait times, and frustrated staff juggling manual paperwork...',
+    desiredOutcome: 'e.g., A smoothly running practice where staff focus on patient care, not administrative burden...',
+    uniqueStrength: 'e.g., We specialize exclusively in healthcare IT with HIPAA-compliant solutions and 24/7 support...',
+    mainOffer: 'e.g., Practice Management Solutions, EHR Implementation',
+    offerIncludes: 'e.g., Full system setup, staff training, data migration, ongoing technical support...',
+  },
+  'Real Estate': {
+    idealClient: 'e.g., First-time homebuyers or families relocating who need guidance through the entire buying process...',
+    clientFrustration: 'e.g., They feel overwhelmed by the process, fear making a costly mistake, and get generic MLS listings...',
+    desiredOutcome: 'e.g., Finding their perfect home without stress, getting the best deal, and closing on time...',
+    uniqueStrength: 'e.g., We negotiate an average of $15K below asking price and have a 100% closing rate...',
+    mainOffer: 'e.g., Full-Service Home Buying, Luxury Property Sales',
+    offerIncludes: 'e.g., Market analysis, property tours, negotiation, closing coordination, post-sale support...',
+  },
+  'Agency / Creative': {
+    idealClient: 'e.g., Funded startups and established brands looking to differentiate through exceptional design and strategy...',
+    clientFrustration: 'e.g., They work with agencies that miss deadlines, don\'t understand their vision, or produce mediocre work...',
+    desiredOutcome: 'e.g., A brand that stands out, resonates with their audience, and drives measurable business results...',
+    uniqueStrength: 'e.g., We\'ve won 15+ design awards and our average client sees 3x improvement in conversion rates...',
+    mainOffer: 'e.g., Brand Strategy & Design, Digital Experience Design',
+    offerIncludes: 'e.g., Discovery workshop, brand strategy, visual identity, website design, brand guidelines...',
+  },
+  'Manufacturing / Industrial': {
+    idealClient: 'e.g., Aerospace and defense contractors requiring precision machined components with tight tolerances...',
+    clientFrustration: 'e.g., They deal with quality inconsistencies, late deliveries, and suppliers who can\'t scale with demand...',
+    desiredOutcome: 'e.g., A reliable supply chain partner that delivers quality parts on time, every time...',
+    uniqueStrength: 'e.g., AS9100D certified with 99.7% on-time delivery and zero defects on mission-critical parts...',
+    mainOffer: 'e.g., Precision CNC Machining, Custom Fabrication Services',
+    offerIncludes: 'e.g., Design consultation, prototyping, production runs, quality documentation, logistics...',
+  },
+  'default': {
+    idealClient: 'e.g., Describe your ideal customer in detail - their role, company size, specific needs...',
+    clientFrustration: 'e.g., What problems do they face? What keeps them up at night when hiring in your space?',
+    desiredOutcome: 'e.g., What transformation or result are they really paying for?',
+    uniqueStrength: 'e.g., What makes you different from competitors? What do you guarantee or promise?',
+    mainOffer: 'e.g., Your main product or service name',
+    offerIncludes: 'e.g., List what\'s included in your core offering...',
+  },
+};
+
+// Helper to get placeholders based on selected industry
+const getPlaceholders = (industry?: string) => {
+  if (!industry) return INDUSTRY_PLACEHOLDERS['default'];
+  return INDUSTRY_PLACEHOLDERS[industry] || INDUSTRY_PLACEHOLDERS['default'];
+};
+
 // Prefill data from landing demo
 interface PrefillData {
   extracted?: {
@@ -570,6 +643,7 @@ ${d.ctaText}
         );
 
       case 'audience':
+        const placeholders = getPlaceholders(data.industry);
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
@@ -584,7 +658,7 @@ ${d.ctaText}
                 </Label>
                 <Textarea
                   id="idealClient"
-                  placeholder="e.g., Wedding planners at mid-to-high-end venues who manage 20+ events per year and value reliability over price..."
+                  placeholder={placeholders.idealClient}
                   value={data.idealClient || ''}
                   onChange={(e) => updateData({ idealClient: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
@@ -597,7 +671,7 @@ ${d.ctaText}
                 </Label>
                 <Textarea
                   id="clientFrustration"
-                  placeholder="e.g., They're tired of vendors who don't show up on time, don't communicate well, and make them look bad to their clients..."
+                  placeholder={placeholders.clientFrustration}
                   value={data.clientFrustration || ''}
                   onChange={(e) => updateData({ clientFrustration: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
@@ -610,7 +684,7 @@ ${d.ctaText}
                 </Label>
                 <Textarea
                   id="desiredOutcome"
-                  placeholder="e.g., They're buying peace of mind — knowing the entertainment is handled so they can focus on everything else..."
+                  placeholder={placeholders.desiredOutcome}
                   value={data.desiredOutcome || ''}
                   onChange={(e) => updateData({ desiredOutcome: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
