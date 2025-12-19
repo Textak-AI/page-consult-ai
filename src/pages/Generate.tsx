@@ -1314,6 +1314,7 @@ function GenerateContent() {
         handleRegenerate={handleRegenerate}
         handleRegenerateSection={handleRegenerateSection}
         landingPageBestPractices={landingPageBestPractices}
+        strategicData={strategicData}
       />
     </EditingProvider>
   );
@@ -1345,6 +1346,7 @@ function EditorContent({
   handleRegenerate,
   handleRegenerateSection,
   landingPageBestPractices,
+  strategicData,
 }: any) {
   const { toast } = useToast();
   const { pageStyle, setPageStyle } = useEditing();
