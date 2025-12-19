@@ -148,6 +148,46 @@ export interface ConsultationData {
   challenge?: string;
   uniqueValue?: string;
   offer?: string;
+  aiSeoData?: AISeoData;
+}
+
+// ============ AI SEO Data ============
+
+export interface AISeoData {
+  entity: {
+    type: string;
+    name: string;
+    description: string;
+    industry: string;
+    areaServed: string;
+  };
+  authoritySignals: AuthoritySignal[];
+  faqItems: FAQItem[];
+  queryTargets: QueryTarget[];
+  schemaReadiness: {
+    score: number;
+    missing: string[];
+    complete: string[];
+  };
+}
+
+export interface AuthoritySignal {
+  type: 'statistic' | 'credential' | 'testimonial' | 'achievement' | 'comparison';
+  raw: string;
+  optimized: string;
+  numbers: string[];
+}
+
+export interface FAQItem {
+  question: string;
+  answer: string;
+  source: 'objection' | 'offer' | 'process' | 'industry_common';
+}
+
+export interface QueryTarget {
+  query: string;
+  intent: 'informational' | 'transactional';
+  priority: 'high' | 'medium' | 'low';
 }
 
 export interface GeneratedContent {

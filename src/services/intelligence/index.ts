@@ -31,14 +31,49 @@ import type {
   ConsultationData, 
   PersonaIntelligence,
   GeneratedContent,
-  ResearchInputs 
+  ResearchInputs,
+  AISeoData
 } from './types';
+import { supabase } from '@/integrations/supabase/client';
 import { fetchMarketResearch, storeMarketResearch, getExistingResearch } from './marketResearch';
 import { synthesizePersona } from './personaSynthesis';
 import { generateIntelligentContent, logGeneration } from './contentGeneration';
 
 /**
+ * Extract AI SEO data from consultation data
+ * Call this after consultation is complete, before strategy brief generation
+ */
+export async function extractAISeoData(
+  consultationId: string,
+  consultationData: ConsultationData
+): Promise<{ success: boolean; aiSeoData?: AISeoData; error?: string }> {
+  console.log('🔍 Extracting AI SEO data...');
+  
+  try {
+    const { data, error } = await supabase.functions.invoke('extract-ai-seo-data', {
+      body: { consultationId, consultationData }
+    });
+
+    if (error) {
+      console.error('AI SEO extraction error:', error);
+      return { success: false, error: error.message };
+    }
+
+    if (!data?.success) {
+      return { success: false, error: data?.error || 'Extraction failed' };
+    }
+
+    console.log('✅ AI SEO data extracted:', data.aiSeoData?.entity?.type);
+    return { success: true, aiSeoData: data.aiSeoData };
+  } catch (err) {
+    console.error('AI SEO extraction error:', err);
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
+  }
+}
+
+/**
  * Full intelligence pipeline:
+ * 0. Extract AI SEO data (NEW - before everything else)
  * 1. Fetch market research (Perplexity)
  * 2. Synthesize persona (Claude)
  * 3. Generate content (Claude with persona context)
@@ -51,9 +86,23 @@ export async function runIntelligencePipeline(
   success: boolean;
   intelligence?: PersonaIntelligence;
   content?: GeneratedContent;
+  aiSeoData?: AISeoData;
   error?: string;
 }> {
   console.log('🚀 Starting full intelligence pipeline');
+  
+  // Step 0: Extract AI SEO Data (runs first, before strategy brief)
+  console.log('🔍 Step 0: AI SEO Data Extraction');
+  let aiSeoData: AISeoData | undefined;
+  
+  const seoResult = await extractAISeoData(consultationId, consultationData);
+  if (seoResult.success && seoResult.aiSeoData) {
+    aiSeoData = seoResult.aiSeoData;
+    // Add to consultation data for downstream use
+    consultationData.aiSeoData = aiSeoData;
+  } else {
+    console.warn('⚠️ AI SEO extraction failed, proceeding without it:', seoResult.error);
+  }
   
   // Check for existing research
   const existing = await getExistingResearch(consultationId);
@@ -83,7 +132,8 @@ export async function runIntelligencePipeline(
     
     return {
       success: true,
-      content: contentResult.content
+      content: contentResult.content,
+      aiSeoData
     };
   }
 
@@ -181,6 +231,7 @@ export async function runIntelligencePipeline(
   return {
     success: true,
     intelligence: intelligence || undefined,
-    content: contentResult.content
+    content: contentResult.content,
+    aiSeoData
   };
 }
