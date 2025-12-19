@@ -74,7 +74,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("headline", e)}
           style={{ 
-            color: 'var(--color-text-inverse)',
+            color: '#FFFFFF',
             fontFamily: 'var(--font-heading)',
             fontWeight: 'var(--font-weight-heading)',
             lineHeight: 'var(--line-height-heading)',

@@ -42,10 +42,10 @@ const TEST_STRUCTURED_BRIEF: StructuredBrief = {
     },
   ],
   proofPoints: {
-    clientCount: "50+ businesses transformed",
-    yearsInBusiness: "15 years of consulting excellence",
-    achievements: "Award-winning methodology",
-    otherStats: ["$100M+ revenue generated for clients", "95% client satisfaction rate"],
+    clientCount: "50+ startups accelerated",
+    yearsInBusiness: "4 years empowering founders",
+    achievements: null, // Only include if verified
+    otherStats: ["$2M+ in funding secured for clients"],
   },
   problemStatement: "Many businesses hit a growth ceiling – stuck between startup scrappiness and enterprise scale, unable to break through despite working harder than ever.",
   solutionStatement: "Acceler8ors provides the strategic roadmap and hands-on support you need to break through barriers and achieve sustainable, profitable growth.",
