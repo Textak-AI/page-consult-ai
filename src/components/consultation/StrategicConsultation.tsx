@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -104,6 +104,48 @@ export function StrategicConsultation({ onComplete, onBack }: Props) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [isGeneratingBrief, setIsGeneratingBrief] = useState(false);
+  const [showRestorePrompt, setShowRestorePrompt] = useState(false);
+  const [pendingRestore, setPendingRestore] = useState<{
+    savedStep: number;
+    savedData: Partial<ConsultationData>;
+  } | null>(null);
+
+  // Restore progress on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('pageconsult_consultation_draft');
+    if (saved) {
+      try {
+        const { currentStep: savedStep, data: savedData, timestamp } = JSON.parse(saved);
+        
+        // Only restore if less than 24 hours old and has meaningful data
+        const isRecent = Date.now() - timestamp < 24 * 60 * 60 * 1000;
+        const hasMeaningfulData = savedData.businessName || savedData.industry || savedData.idealClient;
+        
+        if (isRecent && hasMeaningfulData) {
+          setShowRestorePrompt(true);
+          setPendingRestore({ savedStep, savedData });
+        } else {
+          // Clear stale data
+          localStorage.removeItem('pageconsult_consultation_draft');
+        }
+      } catch (e) {
+        console.warn('Failed to parse saved consultation:', e);
+        localStorage.removeItem('pageconsult_consultation_draft');
+      }
+    }
+  }, []);
+
+  // Save progress whenever data or step changes
+  useEffect(() => {
+    if (Object.keys(data).length > 0) {
+      localStorage.setItem('pageconsult_consultation_draft', JSON.stringify({
+        currentStep,
+        data,
+        timestamp: Date.now()
+      }));
+      console.log('💾 Consultation progress saved');
+    }
+  }, [currentStep, data]);
 
   const updateData = (updates: Partial<ConsultationData>) => {
     setData(prev => ({ ...prev, ...updates }));
@@ -184,11 +226,20 @@ export function StrategicConsultation({ onComplete, onBack }: Props) {
       
       if (error) throw error;
       
+      // Clear the draft since consultation is complete
+      localStorage.removeItem('pageconsult_consultation_draft');
+      console.log('🗑️ Cleared consultation draft');
+      
       onComplete(data as ConsultationData, briefResult.strategyBrief);
     } catch (err) {
       console.error('Strategy brief generation error:', err);
       // Fallback: proceed with basic brief
       const fallbackBrief = generateFallbackBrief(data as ConsultationData);
+      
+      // Clear the draft since consultation is complete
+      localStorage.removeItem('pageconsult_consultation_draft');
+      console.log('🗑️ Cleared consultation draft');
+      
       onComplete(data as ConsultationData, fallbackBrief);
     } finally {
       setIsGeneratingBrief(false);
@@ -645,6 +696,54 @@ ${d.ctaText}
 
   return (
     <div className="max-w-2xl mx-auto">
+      {/* Restore Prompt */}
+      {showRestorePrompt && pendingRestore && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-muted/80 border border-primary/30 rounded-xl p-4 mb-6"
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+              <RotateCcw className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-foreground font-medium mb-1">Continue where you left off?</h3>
+              <p className="text-muted-foreground text-sm mb-3">
+                You have an unfinished consultation
+                {pendingRestore.savedData.businessName && ` for "${pendingRestore.savedData.businessName}"`}.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setCurrentStep(pendingRestore.savedStep);
+                    setData(pendingRestore.savedData);
+                    setShowRestorePrompt(false);
+                    setPendingRestore(null);
+                  }}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Continue
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    localStorage.removeItem('pageconsult_consultation_draft');
+                    setShowRestorePrompt(false);
+                    setPendingRestore(null);
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Start Fresh
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-3">
