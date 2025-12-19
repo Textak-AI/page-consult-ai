@@ -249,14 +249,14 @@ export default function NewConsultation() {
   // Loading state
   if (stage === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center"
         >
-          <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
+          <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mx-auto mb-4" />
+          <p className="text-slate-400">Loading...</p>
         </motion.div>
       </div>
     );
@@ -277,30 +277,30 @@ export default function NewConsultation() {
   // Generating state
   if (stage === 'generating') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center"
         >
-          <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-foreground mb-2">Preparing Your Page...</h2>
-          <p className="text-muted-foreground">Setting up generation with your strategy brief</p>
+          <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-2">Preparing Your Page...</h2>
+          <p className="text-slate-400">Setting up generation with your strategy brief</p>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+    <div className="min-h-screen bg-slate-950">
       {/* Header */}
-      <header className="border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-10">
+      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-xl sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={stage === 'consultation' ? handleBackFromConsultation : handleRestart}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-slate-400 hover:text-white hover:bg-slate-800"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             {stage === 'consultation' ? 'Home' : 'Back'}
@@ -308,15 +308,15 @@ export default function NewConsultation() {
           
           <div className="flex items-center gap-3 ml-4">
             <img src={iconmark} alt="PageConsult" className="h-8 w-8" />
-            <span className="text-lg font-semibold text-foreground">PageConsult AI</span>
+            <span className="text-lg font-semibold text-white">PageConsult AI</span>
           </div>
           
           {/* Stage indicator */}
           <div className="ml-auto flex items-center gap-2 text-sm">
             <span className={`px-3 py-1 rounded-full ${
               stage === 'consultation' 
-                ? 'bg-primary/20 text-primary' 
-                : 'bg-accent/20 text-accent'
+                ? 'bg-cyan-500/20 text-cyan-400' 
+                : 'bg-purple-500/20 text-purple-400'
             }`}>
               {stage === 'consultation' && 'Discovery'}
               {stage === 'brief-review' && 'Strategy Review'}

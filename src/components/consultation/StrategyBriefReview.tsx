@@ -32,11 +32,11 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, onAppr
         animate={{ opacity: 1, y: 0 }}
         className="text-center"
       >
-        <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-          <FileText className="w-8 h-8 text-primary" />
+        <div className="w-16 h-16 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <FileText className="w-8 h-8 text-cyan-400" />
         </div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Your Strategy Brief</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl font-bold text-white mb-2">Your Strategy Brief</h1>
+        <p className="text-slate-400">
           Review the strategic foundation for your landing page. Edit anything that doesn't feel right.
         </p>
       </motion.div>
@@ -45,20 +45,20 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, onAppr
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-card border border-border rounded-2xl p-6 md:p-8"
+        className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 md:p-8"
       >
         {isEditing ? (
           <div className="space-y-4">
             <textarea
               value={editedBrief}
               onChange={(e) => setEditedBrief(e.target.value)}
-              className="w-full h-[500px] bg-background border border-border rounded-xl p-4 text-foreground font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full h-[500px] bg-slate-900 border border-slate-600 rounded-xl p-4 text-white font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
             <div className="flex gap-3 justify-end">
-              <Button variant="ghost" onClick={() => setIsEditing(false)}>
+              <Button variant="ghost" onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-white hover:bg-slate-700">
                 Cancel
               </Button>
-              <Button onClick={handleSaveEdit} className="bg-primary hover:bg-primary/90">
+              <Button onClick={handleSaveEdit} className="bg-cyan-500 hover:bg-cyan-600 text-white">
                 Save Changes
               </Button>
             </div>
@@ -67,15 +67,15 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, onAppr
           <div className="prose prose-invert prose-slate max-w-none">
             <ReactMarkdown
               components={{
-                h1: ({ children }) => <h1 className="text-2xl font-bold text-primary mb-4">{children}</h1>,
-                h2: ({ children }) => <h2 className="text-xl font-semibold text-foreground mt-6 mb-3">{children}</h2>,
-                h3: ({ children }) => <h3 className="text-lg font-medium text-foreground/90 mt-4 mb-2">{children}</h3>,
-                p: ({ children }) => <p className="text-muted-foreground mb-3 leading-relaxed">{children}</p>,
-                ul: ({ children }) => <ul className="list-disc list-inside text-muted-foreground space-y-1 mb-4">{children}</ul>,
-                ol: ({ children }) => <ol className="list-decimal list-inside text-muted-foreground space-y-1 mb-4">{children}</ol>,
-                li: ({ children }) => <li className="text-muted-foreground">{children}</li>,
-                strong: ({ children }) => <strong className="text-foreground font-semibold">{children}</strong>,
-                blockquote: ({ children }) => <blockquote className="border-l-4 border-primary pl-4 italic text-muted-foreground">{children}</blockquote>,
+                h1: ({ children }) => <h1 className="text-2xl font-bold text-cyan-400 mb-4">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-xl font-semibold text-white mt-6 mb-3">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-lg font-medium text-slate-200 mt-4 mb-2">{children}</h3>,
+                p: ({ children }) => <p className="text-slate-400 mb-3 leading-relaxed">{children}</p>,
+                ul: ({ children }) => <ul className="list-disc list-inside text-slate-400 space-y-1 mb-4">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal list-inside text-slate-400 space-y-1 mb-4">{children}</ol>,
+                li: ({ children }) => <li className="text-slate-400">{children}</li>,
+                strong: ({ children }) => <strong className="text-white font-semibold">{children}</strong>,
+                blockquote: ({ children }) => <blockquote className="border-l-4 border-cyan-500 pl-4 italic text-slate-400">{children}</blockquote>,
               }}
             >
               {brief}
@@ -96,7 +96,7 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, onAppr
         <Button
           variant="ghost"
           onClick={onRestart}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-slate-400 hover:text-white hover:bg-slate-800"
         >
           <RotateCcw className="w-4 h-4 mr-2" />
           Start Over
@@ -105,7 +105,7 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, onAppr
         <Button
           variant="outline"
           onClick={() => setIsEditing(true)}
-          className="border-border text-foreground hover:bg-muted"
+          className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white"
         >
           <Edit3 className="w-4 h-4 mr-2" />
           Edit Brief
@@ -113,7 +113,7 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, onAppr
         
         <Button
           onClick={onApprove}
-          className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground px-8"
+          className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white px-8"
         >
           <CheckCircle2 className="w-4 h-4 mr-2" />
           Approve & Generate Page

@@ -357,25 +357,25 @@ ${d.ctaText}
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">Let's Start With Your Brand</h2>
-              <p className="text-muted-foreground">Have a website? I'll pull your branding automatically.</p>
+              <h2 className="text-2xl font-bold text-white mb-2">Let's Start With Your Brand</h2>
+              <p className="text-slate-400">Have a website? I'll pull your branding automatically.</p>
             </div>
             
             <div className="space-y-5">
-              <Label htmlFor="websiteUrl" className="text-muted-foreground">Website URL (optional)</Label>
+              <Label htmlFor="websiteUrl" className="text-slate-400">Website URL (optional)</Label>
               <div className="flex gap-3">
                 <Input
                   id="websiteUrl"
                   placeholder="yourwebsite.com"
                   value={data.websiteUrl || ''}
                   onChange={(e) => updateData({ websiteUrl: e.target.value })}
-                  className="flex-1 bg-background/50 border-border text-foreground"
+                  className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                 />
                 <Button
                   onClick={handleWebsiteAnalysis}
                   disabled={!data.websiteUrl || isAnalyzing}
                   variant="outline"
-                  className="border-border"
+                  className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white"
                 >
                   {isAnalyzing ? (
                     <>
@@ -396,15 +396,15 @@ ${d.ctaText}
               )}
               
               {data.websiteIntelligence && (
-                <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center gap-2 text-primary">
+                <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-cyan-400">
                     <CheckCircle2 className="w-5 h-5" />
                     <span className="font-medium">Here's what I found:</span>
                   </div>
                   
                   {data.websiteIntelligence.logoUrl && (
                     <div className="flex items-center gap-3">
-                      <span className="text-muted-foreground text-sm">Logo:</span>
+                      <span className="text-slate-400 text-sm">Logo:</span>
                       <img 
                         src={data.websiteIntelligence.logoUrl} 
                         alt="Logo" 
@@ -418,12 +418,12 @@ ${d.ctaText}
                   
                   {data.websiteIntelligence.brandColors.length > 0 && (
                     <div className="flex items-center gap-3">
-                      <span className="text-muted-foreground text-sm">Colors:</span>
+                      <span className="text-slate-400 text-sm">Colors:</span>
                       <div className="flex gap-1">
                         {data.websiteIntelligence.brandColors.slice(0, 4).map((color, i) => (
                           <div
                             key={i}
-                            className="w-6 h-6 rounded border border-border"
+                            className="w-6 h-6 rounded border border-slate-600"
                             style={{ backgroundColor: color }}
                           />
                         ))}
@@ -433,21 +433,21 @@ ${d.ctaText}
                   
                   {data.websiteIntelligence.tagline && (
                     <div>
-                      <span className="text-muted-foreground text-sm">Tagline:</span>
-                      <p className="text-foreground mt-1">"{data.websiteIntelligence.tagline}"</p>
+                      <span className="text-slate-400 text-sm">Tagline:</span>
+                      <p className="text-white mt-1">"{data.websiteIntelligence.tagline}"</p>
                     </div>
                   )}
                   
                   {data.websiteIntelligence.description && (
                     <div>
-                      <span className="text-muted-foreground text-sm">About:</span>
-                      <p className="text-muted-foreground text-sm mt-1">{data.websiteIntelligence.description}</p>
+                      <span className="text-slate-400 text-sm">About:</span>
+                      <p className="text-slate-400 text-sm mt-1">{data.websiteIntelligence.description}</p>
                     </div>
                   )}
                 </div>
               )}
               
-              <p className="text-sm text-muted-foreground/70">
+              <p className="text-sm text-slate-500">
                 No website yet? No problem — skip this step and we'll build everything fresh.
               </p>
             </div>
@@ -458,29 +458,29 @@ ${d.ctaText}
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">Tell Me About Your Business</h2>
-              <p className="text-muted-foreground">The foundation for your landing page strategy.</p>
+              <h2 className="text-2xl font-bold text-white mb-2">Tell Me About Your Business</h2>
+              <p className="text-slate-400">The foundation for your landing page strategy.</p>
             </div>
             
             <div className="space-y-5">
               <div>
-                <Label htmlFor="businessName" className="text-muted-foreground">Business Name *</Label>
+                <Label htmlFor="businessName" className="text-slate-400">Business Name *</Label>
                 <Input
                   id="businessName"
                   placeholder="e.g., Acme Solutions"
                   value={data.businessName || ''}
                   onChange={(e) => updateData({ businessName: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                 />
               </div>
               
               <div>
-                <Label htmlFor="industry" className="text-muted-foreground">Industry *</Label>
+                <Label htmlFor="industry" className="text-slate-400">Industry *</Label>
                 <select
                   id="industry"
                   value={data.industry || ''}
                   onChange={(e) => updateData({ industry: e.target.value })}
-                  className="mt-2 w-full bg-background/50 border border-border text-foreground rounded-lg px-4 py-3"
+                  className="mt-2 w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-3"
                 >
                   <option value="">Select your industry...</option>
                   {INDUSTRIES.map(ind => (
@@ -492,24 +492,24 @@ ${d.ctaText}
                     placeholder="Specify your industry"
                     value={data.industryOther || ''}
                     onChange={(e) => updateData({ industryOther: e.target.value })}
-                    className="mt-2 bg-background/50 border-border text-foreground"
+                    className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                   />
                 )}
               </div>
               
               <div>
-                <Label htmlFor="yearsInBusiness" className="text-muted-foreground">Years in Business</Label>
+                <Label htmlFor="yearsInBusiness" className="text-slate-400">Years in Business</Label>
                 <Input
                   id="yearsInBusiness"
                   placeholder="e.g., 5 years, Since 2015, Just started"
                   value={data.yearsInBusiness || ''}
                   onChange={(e) => updateData({ yearsInBusiness: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                 />
               </div>
               
               <div>
-                <Label htmlFor="uniqueStrength" className="text-muted-foreground">
+                <Label htmlFor="uniqueStrength" className="text-slate-400">
                   What's the ONE thing you do better than anyone else? *
                 </Label>
                 <Textarea
@@ -517,7 +517,7 @@ ${d.ctaText}
                   placeholder="e.g., We're the only agency that guarantees 10x ROI on ad spend within 90 days or your money back..."
                   value={data.uniqueStrength || ''}
                   onChange={(e) => updateData({ uniqueStrength: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground min-h-[100px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
               </div>
             </div>
@@ -528,13 +528,13 @@ ${d.ctaText}
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">Who Are You Trying to Reach?</h2>
-              <p className="text-muted-foreground">Understanding your audience shapes everything.</p>
+              <h2 className="text-2xl font-bold text-white mb-2">Who Are You Trying to Reach?</h2>
+              <p className="text-slate-400">Understanding your audience shapes everything.</p>
             </div>
             
             <div className="space-y-5">
               <div>
-                <Label htmlFor="idealClient" className="text-muted-foreground">
+                <Label htmlFor="idealClient" className="text-slate-400">
                   Describe your ideal client in detail *
                 </Label>
                 <Textarea
@@ -542,12 +542,12 @@ ${d.ctaText}
                   placeholder="e.g., Wedding planners at mid-to-high-end venues who manage 20+ events per year and value reliability over price..."
                   value={data.idealClient || ''}
                   onChange={(e) => updateData({ idealClient: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground min-h-[100px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
               </div>
               
               <div>
-                <Label htmlFor="clientFrustration" className="text-muted-foreground">
+                <Label htmlFor="clientFrustration" className="text-slate-400">
                   What's their biggest frustration when hiring in your space? *
                 </Label>
                 <Textarea
@@ -555,12 +555,12 @@ ${d.ctaText}
                   placeholder="e.g., They're tired of vendors who don't show up on time, don't communicate well, and make them look bad to their clients..."
                   value={data.clientFrustration || ''}
                   onChange={(e) => updateData({ clientFrustration: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground min-h-[100px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
               </div>
               
               <div>
-                <Label htmlFor="desiredOutcome" className="text-muted-foreground">
+                <Label htmlFor="desiredOutcome" className="text-slate-400">
                   What outcome are they really buying? (Not your service, the result) *
                 </Label>
                 <Textarea
@@ -568,7 +568,7 @@ ${d.ctaText}
                   placeholder="e.g., They're buying peace of mind — knowing the entertainment is handled so they can focus on everything else..."
                   value={data.desiredOutcome || ''}
                   onChange={(e) => updateData({ desiredOutcome: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground min-h-[100px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
               </div>
             </div>
@@ -579,13 +579,13 @@ ${d.ctaText}
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">Your Track Record</h2>
-              <p className="text-muted-foreground">Social proof that builds trust. Share what you can.</p>
+              <h2 className="text-2xl font-bold text-white mb-2">Your Track Record</h2>
+              <p className="text-slate-400">Social proof that builds trust. Share what you can.</p>
             </div>
             
             <div className="space-y-5">
               <div>
-                <Label htmlFor="clientCount" className="text-muted-foreground">
+                <Label htmlFor="clientCount" className="text-slate-400">
                   Approximately how many clients/projects have you completed?
                 </Label>
                 <Input
@@ -593,12 +593,12 @@ ${d.ctaText}
                   placeholder="e.g., 400+ weddings, 50 clients, 1000 projects"
                   value={data.clientCount || ''}
                   onChange={(e) => updateData({ clientCount: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                 />
               </div>
               
               <div>
-                <Label htmlFor="achievements" className="text-muted-foreground">
+                <Label htmlFor="achievements" className="text-slate-400">
                   Any notable achievements? (Awards, certifications, press, notable clients)
                 </Label>
                 <Textarea
@@ -606,12 +606,12 @@ ${d.ctaText}
                   placeholder="e.g., 'Best of Weddings' award 3 years running, certified by XYZ, featured in ABC magazine..."
                   value={data.achievements || ''}
                   onChange={(e) => updateData({ achievements: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground min-h-[80px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
                 />
               </div>
               
               <div>
-                <Label htmlFor="testimonialText" className="text-muted-foreground">
+                <Label htmlFor="testimonialText" className="text-slate-400">
                   Paste 1-2 real testimonials, or describe what clients typically say about you
                 </Label>
                 <Textarea
@@ -619,7 +619,7 @@ ${d.ctaText}
                   placeholder={'e.g., "Working with [you] was the best decision we made. They handled everything professionally and our clients loved them." - Sarah M., Event Planner'}
                   value={data.testimonialText || ''}
                   onChange={(e) => updateData({ testimonialText: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground min-h-[120px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[120px]"
                 />
               </div>
             </div>
@@ -630,13 +630,13 @@ ${d.ctaText}
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">What Are You Offering?</h2>
-              <p className="text-muted-foreground">The specifics of what visitors will get.</p>
+              <h2 className="text-2xl font-bold text-white mb-2">What Are You Offering?</h2>
+              <p className="text-slate-400">The specifics of what visitors will get.</p>
             </div>
             
             <div className="space-y-5">
               <div>
-                <Label htmlFor="mainOffer" className="text-muted-foreground">
+                <Label htmlFor="mainOffer" className="text-slate-400">
                   Main service or product name *
                 </Label>
                 <Input
@@ -644,12 +644,12 @@ ${d.ctaText}
                   placeholder="e.g., Wedding DJ Partnership Package, Growth Marketing Audit, Custom Software Development"
                   value={data.mainOffer || ''}
                   onChange={(e) => updateData({ mainOffer: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                 />
               </div>
               
               <div>
-                <Label htmlFor="offerIncludes" className="text-muted-foreground">
+                <Label htmlFor="offerIncludes" className="text-slate-400">
                   What's included? Key deliverables? *
                 </Label>
                 <Textarea
@@ -657,19 +657,19 @@ ${d.ctaText}
                   placeholder="e.g., 6 hours of coverage, backup equipment, planning consultation, custom playlist creation, MC services..."
                   value={data.offerIncludes || ''}
                   onChange={(e) => updateData({ offerIncludes: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground min-h-[100px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
               </div>
               
               <div>
-                <Label htmlFor="investmentRange" className="text-muted-foreground">
+                <Label htmlFor="investmentRange" className="text-slate-400">
                   Investment range
                 </Label>
                 <select
                   id="investmentRange"
                   value={data.investmentRange || ''}
                   onChange={(e) => updateData({ investmentRange: e.target.value })}
-                  className="mt-2 w-full bg-background/50 border border-border text-foreground rounded-lg px-4 py-3"
+                  className="mt-2 w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-3"
                 >
                   <option value="">Select range...</option>
                   {INVESTMENT_RANGES.map(range => (
@@ -679,7 +679,7 @@ ${d.ctaText}
               </div>
               
               <div>
-                <Label htmlFor="processDescription" className="text-muted-foreground">
+                <Label htmlFor="processDescription" className="text-slate-400">
                   What happens after they contact you? Describe your process.
                 </Label>
                 <Textarea
@@ -687,7 +687,7 @@ ${d.ctaText}
                   placeholder="e.g., 1) Free 15-min call to discuss needs, 2) Custom proposal within 48 hours, 3) Planning session if booked, 4) Delivery/event day"
                   value={data.processDescription || ''}
                   onChange={(e) => updateData({ processDescription: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground min-h-[100px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
               </div>
             </div>
@@ -698,13 +698,13 @@ ${d.ctaText}
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">What Should This Page Achieve?</h2>
-              <p className="text-muted-foreground">Final details to optimize your conversion strategy.</p>
+              <h2 className="text-2xl font-bold text-white mb-2">What Should This Page Achieve?</h2>
+              <p className="text-slate-400">Final details to optimize your conversion strategy.</p>
             </div>
             
             <div className="space-y-5">
               <div>
-                <Label className="text-muted-foreground">Primary goal *</Label>
+                <Label className="text-slate-400">Primary goal *</Label>
                 <div className="grid grid-cols-2 gap-3 mt-2">
                   {PRIMARY_GOALS.map(goal => (
                     <button
@@ -712,19 +712,19 @@ ${d.ctaText}
                       onClick={() => updateData({ primaryGoal: goal.value })}
                       className={`p-4 rounded-xl border-2 text-left transition-all ${
                         data.primaryGoal === goal.value
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border bg-background/50 hover:border-muted-foreground/50'
+                          ? 'border-cyan-500 bg-cyan-500/10'
+                          : 'border-slate-700 bg-slate-800/50 hover:border-slate-500'
                       }`}
                     >
-                      <div className="font-medium text-foreground">{goal.label}</div>
-                      <div className="text-sm text-muted-foreground">{goal.desc}</div>
+                      <div className="font-medium text-white">{goal.label}</div>
+                      <div className="text-sm text-slate-400">{goal.desc}</div>
                     </button>
                   ))}
                 </div>
               </div>
               
               <div>
-                <Label htmlFor="ctaText" className="text-muted-foreground">
+                <Label htmlFor="ctaText" className="text-slate-400">
                   What should the main button say? *
                 </Label>
                 <Input
@@ -732,12 +732,12 @@ ${d.ctaText}
                   placeholder="e.g., Schedule a Consultation, Get Your Free Quote, Book a Demo"
                   value={data.ctaText || ''}
                   onChange={(e) => updateData({ ctaText: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                 />
               </div>
               
               <div>
-                <Label htmlFor="objectionsToOvercome" className="text-muted-foreground">
+                <Label htmlFor="objectionsToOvercome" className="text-slate-400">
                   Any specific objections or concerns you need to address on this page?
                 </Label>
                 <Textarea
@@ -745,7 +745,7 @@ ${d.ctaText}
                   placeholder="e.g., Price concerns, trust issues with new vendors, comparison to DIY options, timing/availability concerns..."
                   value={data.objectionsToOvercome || ''}
                   onChange={(e) => updateData({ objectionsToOvercome: e.target.value })}
-                  className="mt-2 bg-background/50 border-border text-foreground min-h-[80px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
                 />
               </div>
             </div>
@@ -768,15 +768,15 @@ ${d.ctaText}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-muted/80 border border-primary/30 rounded-xl p-4 mb-6"
+          className="bg-slate-800/80 border border-cyan-500/30 rounded-xl p-4 mb-6"
         >
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-              <RotateCcw className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
+              <RotateCcw className="w-5 h-5 text-cyan-400" />
             </div>
             <div className="flex-1">
-              <h3 className="text-foreground font-medium mb-1">Continue where you left off?</h3>
-              <p className="text-muted-foreground text-sm mb-3">
+              <h3 className="text-white font-medium mb-1">Continue where you left off?</h3>
+              <p className="text-slate-400 text-sm mb-3">
                 You have an unfinished consultation
                 {pendingRestore.savedData.businessName && ` for "${pendingRestore.savedData.businessName}"`}.
               </p>
@@ -789,7 +789,7 @@ ${d.ctaText}
                     setShowRestorePrompt(false);
                     setPendingRestore(null);
                   }}
-                  className="bg-primary hover:bg-primary/90"
+                  className="bg-cyan-500 hover:bg-cyan-600 text-white"
                 >
                   Continue
                 </Button>
@@ -801,7 +801,7 @@ ${d.ctaText}
                     setShowRestorePrompt(false);
                     setPendingRestore(null);
                   }}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-slate-400 hover:text-white hover:bg-slate-700"
                 >
                   Start Fresh
                 </Button>
@@ -820,16 +820,16 @@ ${d.ctaText}
               <div
                 key={step.id}
                 className={`flex items-center gap-2 ${
-                  index <= currentStep ? 'text-primary' : 'text-muted-foreground/30'
+                  index <= currentStep ? 'text-cyan-400' : 'text-slate-600'
                 }`}
               >
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
                     index < currentStep
-                      ? 'bg-primary border-primary text-primary-foreground'
+                      ? 'bg-cyan-500 border-cyan-500 text-white'
                       : index === currentStep
-                      ? 'border-primary text-primary'
-                      : 'border-border text-muted-foreground/30'
+                      ? 'border-cyan-500 text-cyan-400'
+                      : 'border-slate-700 text-slate-600'
                   }`}
                 >
                   {index < currentStep ? (
@@ -842,15 +842,15 @@ ${d.ctaText}
             );
           })}
         </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-primary to-accent"
+            className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
             initial={{ width: 0 }}
             animate={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
             transition={{ duration: 0.3 }}
           />
         </div>
-        <div className="text-center text-sm text-muted-foreground mt-2">
+        <div className="text-center text-sm text-slate-400 mt-2">
           Step {currentStep + 1} of {STEPS.length}: {STEPS[currentStep].title}
         </div>
       </div>
@@ -863,7 +863,7 @@ ${d.ctaText}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
-          className="bg-card/50 border border-border rounded-2xl p-8"
+          className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8"
         >
           {renderStepContent()}
         </motion.div>
@@ -874,7 +874,7 @@ ${d.ctaText}
         <Button
           variant="ghost"
           onClick={handleBack}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-slate-400 hover:text-white hover:bg-slate-800"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
@@ -883,7 +883,7 @@ ${d.ctaText}
         <Button
           onClick={handleNext}
           disabled={!canProceed()}
-          className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground"
+          className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
         >
           {currentStep === STEPS.length - 1 ? (
             <>
