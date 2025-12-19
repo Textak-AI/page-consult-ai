@@ -25,8 +25,10 @@ export function HowItWorksSection({ content }: HowItWorksSectionProps) {
 
   return (
     <section 
-      className="py-20 md:py-28 px-4"
-      style={{ backgroundColor: 'var(--color-surface, white)' }}
+      style={{ 
+        backgroundColor: 'var(--color-surface)',
+        padding: 'var(--spacing-section-y) var(--spacing-section-x)',
+      }}
     >
       <div className="container mx-auto max-w-6xl">
         <motion.div
@@ -37,14 +39,24 @@ export function HowItWorksSection({ content }: HowItWorksSectionProps) {
           className="text-center mb-16 md:mb-20 mx-auto max-w-3xl"
         >
           <h2 
-            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-5"
-            style={{ color: 'var(--color-text-primary, #0f172a)' }}
+            className="text-3xl sm:text-4xl md:text-5xl mb-5"
+            style={{ 
+              color: 'var(--color-text-primary)',
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 'var(--font-weight-heading)',
+              lineHeight: 'var(--line-height-heading)',
+              letterSpacing: 'var(--letter-spacing-heading)',
+            }}
           >
             {title}
           </h2>
           <p 
             className="text-lg md:text-xl"
-            style={{ color: 'var(--color-text-secondary, #475569)' }}
+            style={{ 
+              color: 'var(--color-text-secondary)',
+              fontFamily: 'var(--font-body)',
+              lineHeight: 'var(--line-height-body)',
+            }}
           >
             {subtitle}
           </p>
@@ -55,17 +67,17 @@ export function HowItWorksSection({ content }: HowItWorksSectionProps) {
           <div 
             className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 transform -translate-y-1/2 z-0"
             style={{
-              background: 'linear-gradient(to right, transparent, var(--color-primary, #06b6d4), transparent)',
+              background: 'linear-gradient(to right, transparent, var(--color-primary), transparent)',
               opacity: 0.3,
             }}
           />
 
-          <div className={`grid gap-8 md:gap-6 relative z-10 ${
+          <div className={`grid relative z-10 ${
             steps.length === 3 ? 'md:grid-cols-3' : 
             steps.length === 4 ? 'md:grid-cols-4' : 
             steps.length === 2 ? 'md:grid-cols-2' : 
             'md:grid-cols-3'
-          }`}>
+          }`} style={{ gap: 'var(--spacing-card-gap)' }}>
             {steps.map((step, index) => (
               <motion.div
                 key={index}
@@ -76,39 +88,55 @@ export function HowItWorksSection({ content }: HowItWorksSectionProps) {
                 className="relative"
               >
                 <div 
-                  className="rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col"
+                  className="h-full flex flex-col"
                   style={{
-                    backgroundColor: 'var(--color-surface, white)',
-                    borderColor: 'var(--color-border, #e2e8f0)',
-                    borderWidth: '1px',
+                    backgroundColor: 'var(--color-surface)',
+                    borderColor: 'var(--color-border)',
+                    borderWidth: 'var(--border-width)',
+                    borderStyle: 'solid',
+                    borderRadius: 'var(--radius-medium)',
+                    padding: 'var(--spacing-card-padding)',
+                    boxShadow: 'var(--shadow-small)',
                   }}
                 >
                   {/* Step number badge */}
                   <div 
-                    className="w-14 h-14 rounded-full flex items-center justify-center mb-6 shadow-lg mx-auto md:mx-0"
+                    className="w-14 h-14 rounded-full flex items-center justify-center mb-6 mx-auto md:mx-0"
                     style={{
-                      background: `linear-gradient(135deg, var(--color-primary, #06b6d4), var(--color-primary-hover, #0891b2))`,
-                      boxShadow: '0 8px 20px -8px var(--color-primary, rgba(6, 182, 212, 0.4))',
+                      background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))`,
+                      boxShadow: 'var(--shadow-medium)',
                     }}
                   >
                     <span 
-                      className="text-xl font-bold"
-                      style={{ color: 'var(--color-text-inverse, white)' }}
+                      className="text-xl"
+                      style={{ 
+                        color: 'var(--color-text-inverse)',
+                        fontFamily: 'var(--font-heading)',
+                        fontWeight: 'var(--font-weight-heading)',
+                      }}
                     >
                       {step.number}
                     </span>
                   </div>
 
                   <h3 
-                    className="text-xl font-bold mb-3 text-center md:text-left"
-                    style={{ color: 'var(--color-text-primary, #0f172a)' }}
+                    className="text-xl mb-3 text-center md:text-left"
+                    style={{ 
+                      color: 'var(--color-text-primary)',
+                      fontFamily: 'var(--font-heading)',
+                      fontWeight: 'var(--font-weight-heading)',
+                    }}
                   >
                     {step.title}
                   </h3>
 
                   <p 
-                    className="leading-relaxed text-center md:text-left flex-grow"
-                    style={{ color: 'var(--color-text-secondary, #475569)' }}
+                    className="text-center md:text-left flex-grow"
+                    style={{ 
+                      color: 'var(--color-text-secondary)',
+                      fontFamily: 'var(--font-body)',
+                      lineHeight: 'var(--line-height-body)',
+                    }}
                   >
                     {step.description}
                   </p>
@@ -120,7 +148,8 @@ export function HowItWorksSection({ content }: HowItWorksSectionProps) {
                     <div 
                       className="w-0.5 h-8"
                       style={{
-                        background: 'linear-gradient(to bottom, var(--color-primary, rgba(6, 182, 212, 0.4)), transparent)',
+                        background: 'linear-gradient(to bottom, var(--color-primary), transparent)',
+                        opacity: 0.4,
                       }}
                     />
                   </div>

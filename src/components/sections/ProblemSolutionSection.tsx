@@ -30,9 +30,10 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
 
   return (
     <section 
-      className={`py-20 md:py-28 px-4 ${isEditing ? "relative" : ""}`}
+      className={`${isEditing ? "relative" : ""}`}
       style={{
-        background: 'linear-gradient(to bottom, var(--color-background-alt, #f8fafc), var(--color-surface, white), var(--color-background-alt, #f8fafc))',
+        background: 'linear-gradient(to bottom, var(--color-background-alt), var(--color-surface), var(--color-background-alt))',
+        padding: 'var(--spacing-section-y) var(--spacing-section-x)',
       }}
     >
       {isEditing && (
@@ -47,80 +48,111 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
           className="text-center mb-16"
         >
           <h2 
-            className="text-3xl sm:text-4xl md:text-5xl font-bold"
-            style={{ color: 'var(--color-text-primary, #0f172a)' }}
+            className="text-3xl sm:text-4xl md:text-5xl"
+            style={{ 
+              color: 'var(--color-text-primary)',
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 'var(--font-weight-heading)',
+              lineHeight: 'var(--line-height-heading)',
+              letterSpacing: 'var(--letter-spacing-heading)',
+            }}
           >
             Why This Matters
           </h2>
         </motion.div>
         
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-stretch">
+        <div className="grid md:grid-cols-2 items-stretch" style={{ gap: 'var(--spacing-card-gap)' }}>
           {/* Problem Card */}
           <motion.div 
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="space-y-5 p-8 md:p-10 rounded-2xl border-2 shadow-lg"
             style={{
-              backgroundColor: 'var(--color-surface, white)',
-              borderColor: 'var(--color-error, #ef4444)',
+              backgroundColor: 'var(--color-surface)',
+              borderColor: 'var(--color-error)',
               borderWidth: '2px',
-              borderRadius: 'var(--radius-large, 1rem)',
+              borderStyle: 'solid',
+              borderRadius: 'var(--radius-large)',
+              padding: 'var(--spacing-card-padding)',
+              boxShadow: 'var(--shadow-medium)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--spacing-element-gap)',
             }}
           >
             <div className="flex items-center gap-4">
               <div 
-                className="w-14 h-14 rounded-xl flex items-center justify-center shadow-lg"
+                className="w-14 h-14 flex items-center justify-center"
                 style={{ 
-                  background: 'linear-gradient(135deg, var(--color-error, #ef4444), #f97316)',
+                  background: 'linear-gradient(135deg, var(--color-error), #f97316)',
+                  borderRadius: 'var(--radius-medium)',
+                  boxShadow: 'var(--shadow-medium)',
                 }}
               >
-                <AlertCircle className="w-7 h-7 text-white" />
+                <AlertCircle className="w-7 h-7 text-white" strokeWidth={1.5} />
               </div>
               <h3 
-                className="text-2xl md:text-3xl font-bold"
-                style={{ color: 'var(--color-error, #dc2626)' }}
+                className="text-2xl md:text-3xl"
+                style={{ 
+                  color: 'var(--color-error)',
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: 'var(--font-weight-heading)',
+                }}
               >
                 The Challenge
               </h3>
             </div>
             <p 
-              className={`text-lg md:text-xl leading-relaxed ${
+              className={`text-lg md:text-xl ${
                 isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
               }`}
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("problem", e)}
-              style={{ color: 'var(--color-text-secondary, #475569)' }}
+              style={{ 
+                color: 'var(--color-text-secondary)',
+                fontFamily: 'var(--font-body)',
+                lineHeight: 'var(--line-height-body)',
+              }}
             >
               {content.problem}
             </p>
             
             {content.problemStat && (
               <div 
-                className="mt-6 p-5 rounded-xl"
+                className="mt-2"
                 style={{
-                  backgroundColor: 'var(--color-background-alt, #fef2f2)',
-                  borderColor: 'var(--color-error, #fecaca)',
-                  borderWidth: '1px',
+                  backgroundColor: 'var(--color-background-alt)',
+                  borderColor: 'var(--color-error)',
+                  borderWidth: 'var(--border-width)',
+                  borderStyle: 'solid',
+                  borderRadius: 'var(--radius-medium)',
+                  padding: 'var(--spacing-card-padding)',
                 }}
               >
                 <div 
-                  className="text-3xl md:text-4xl font-bold mb-2"
-                  style={{ color: 'var(--color-error, #dc2626)' }}
+                  className="text-3xl md:text-4xl mb-2"
+                  style={{ 
+                    color: 'var(--color-error)',
+                    fontFamily: 'var(--font-heading)',
+                    fontWeight: 'var(--font-weight-heading)',
+                  }}
                 >
                   {content.problemStat.statistic}
                 </div>
                 <p 
                   className="text-sm md:text-base mb-3"
-                  style={{ color: 'var(--color-text-secondary, #64748b)' }}
+                  style={{ 
+                    color: 'var(--color-text-secondary)',
+                    fontFamily: 'var(--font-body)',
+                  }}
                 >
                   {content.problemStat.claim}
                 </p>
                 <cite 
                   className="text-xs not-italic block"
-                  style={{ color: 'var(--color-text-muted, #94a3b8)' }}
+                  style={{ color: 'var(--color-text-muted)' }}
                 >
                   Source: {content.problemStat.fullCitation}
                 </cite>
@@ -134,66 +166,91 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="space-y-5 p-8 md:p-10 rounded-2xl border-2 shadow-lg"
             style={{
-              backgroundColor: 'var(--color-surface, white)',
-              borderColor: 'var(--color-success, #22c55e)',
+              backgroundColor: 'var(--color-surface)',
+              borderColor: 'var(--color-success)',
               borderWidth: '2px',
-              borderRadius: 'var(--radius-large, 1rem)',
+              borderStyle: 'solid',
+              borderRadius: 'var(--radius-large)',
+              padding: 'var(--spacing-card-padding)',
+              boxShadow: 'var(--shadow-medium)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--spacing-element-gap)',
             }}
           >
             <div className="flex items-center gap-4">
               <div 
-                className="w-14 h-14 rounded-xl flex items-center justify-center shadow-lg"
+                className="w-14 h-14 flex items-center justify-center"
                 style={{ 
-                  background: 'linear-gradient(135deg, var(--color-success, #22c55e), var(--color-primary, #14b8a6))',
+                  background: 'linear-gradient(135deg, var(--color-success), var(--color-primary))',
+                  borderRadius: 'var(--radius-medium)',
+                  boxShadow: 'var(--shadow-medium)',
                 }}
               >
-                <CheckCircle className="w-7 h-7 text-white" />
+                <CheckCircle className="w-7 h-7 text-white" strokeWidth={1.5} />
               </div>
               <h3 
-                className="text-2xl md:text-3xl font-bold"
-                style={{ color: 'var(--color-success, #16a34a)' }}
+                className="text-2xl md:text-3xl"
+                style={{ 
+                  color: 'var(--color-success)',
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: 'var(--font-weight-heading)',
+                }}
               >
                 Our Solution
               </h3>
             </div>
             <p 
-              className={`text-lg md:text-xl leading-relaxed ${
+              className={`text-lg md:text-xl ${
                 isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
               }`}
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("solution", e)}
-              style={{ color: 'var(--color-text-secondary, #475569)' }}
+              style={{ 
+                color: 'var(--color-text-secondary)',
+                fontFamily: 'var(--font-body)',
+                lineHeight: 'var(--line-height-body)',
+              }}
             >
               {content.solution}
             </p>
             
             {content.solutionStat && (
               <div 
-                className="mt-6 p-5 rounded-xl"
+                className="mt-2"
                 style={{
-                  backgroundColor: 'var(--color-primary-muted, #f0fdfa)',
-                  borderColor: 'var(--color-success, #bbf7d0)',
-                  borderWidth: '1px',
+                  backgroundColor: 'var(--color-primary-muted)',
+                  borderColor: 'var(--color-success)',
+                  borderWidth: 'var(--border-width)',
+                  borderStyle: 'solid',
+                  borderRadius: 'var(--radius-medium)',
+                  padding: 'var(--spacing-card-padding)',
                 }}
               >
                 <div 
-                  className="text-3xl md:text-4xl font-bold mb-2"
-                  style={{ color: 'var(--color-success, #16a34a)' }}
+                  className="text-3xl md:text-4xl mb-2"
+                  style={{ 
+                    color: 'var(--color-success)',
+                    fontFamily: 'var(--font-heading)',
+                    fontWeight: 'var(--font-weight-heading)',
+                  }}
                 >
                   {content.solutionStat.statistic}
                 </div>
                 <p 
                   className="text-sm md:text-base mb-3"
-                  style={{ color: 'var(--color-text-secondary, #64748b)' }}
+                  style={{ 
+                    color: 'var(--color-text-secondary)',
+                    fontFamily: 'var(--font-body)',
+                  }}
                 >
                   {content.solutionStat.claim}
                 </p>
                 <cite 
                   className="text-xs not-italic block"
-                  style={{ color: 'var(--color-text-muted, #94a3b8)' }}
+                  style={{ color: 'var(--color-text-muted)' }}
                 >
                   Source: {content.solutionStat.fullCitation}
                 </cite>
@@ -211,14 +268,16 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
           className="hidden md:flex justify-center mt-12"
         >
           <div 
-            className="flex items-center gap-3 px-6 py-3 rounded-full"
+            className="flex items-center gap-3 px-6 py-3"
             style={{
-              backgroundColor: 'var(--color-surface, #f1f5f9)',
-              color: 'var(--color-text-muted, #64748b)',
+              backgroundColor: 'var(--color-surface)',
+              color: 'var(--color-text-muted)',
+              borderRadius: 'var(--radius-large)',
+              fontFamily: 'var(--font-body)',
             }}
           >
             <span className="text-sm font-semibold">From Problem</span>
-            <ArrowRight className="w-5 h-5" />
+            <ArrowRight className="w-5 h-5" strokeWidth={1.5} />
             <span className="text-sm font-semibold">To Solution</span>
           </div>
         </motion.div>
