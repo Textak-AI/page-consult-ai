@@ -7,6 +7,7 @@ import { FinalCTASection } from "@/components/sections/FinalCTASection";
 import { PhotoGallerySection } from "@/components/sections/PhotoGallerySection";
 import { StatsBarSection } from "@/components/sections/StatsBarSection";
 import { FAQSection } from "@/components/sections/FAQSection";
+import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
 import { useEditing } from "@/contexts/EditingContext";
 import { EditingToolbar } from "@/components/editor/EditingToolbar";
 import { styleVariants } from "@/lib/styleVariants";
@@ -133,6 +134,15 @@ export function LivePreview({ sections, onSectionsChange }: LivePreviewProps) {
               content={section.content}
               onUpdate={updateSection}
               isEditing={editingSection === index}
+            />
+          </div>
+        );
+      case "how-it-works":
+        return (
+          <div key={index} id={sectionId} className="transition-all duration-300">
+            <HowItWorksSection
+              content={section.content}
+              onUpdate={updateSection}
             />
           </div>
         );

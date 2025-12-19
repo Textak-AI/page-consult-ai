@@ -30,6 +30,7 @@ import {
 } from "@/components/usage";
 import { CreditDisplay, UpgradeDrawer } from "@/components/credits";
 import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid } from "@/lib/aiSeoIntegration";
+import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief } from "@/utils/sectionMapper";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -753,48 +754,65 @@ function GenerateContent() {
   };
 
   // Map strategy brief generated content to Section[]
-  // This follows the pageStructure from Section 9 of the brief EXACTLY
+  // BRIEF-FIRST: Uses the new strict mapper that treats structuredBrief as single source of truth
   const mapStrategyBriefContentToSections = async (
     content: any,
     consultationData: any,
     strategicConsultation: any
   ): Promise<Section[]> => {
-    // Fetch images
-    const heroImageUrl = await fetchHeroImage(
-      strategicConsultation?.businessName || consultationData.industry
-    );
-    const galleryImages = await fetchGalleryImages([]);
+    const businessName = strategicConsultation?.businessName || consultationData.industry || 'Our Company';
+    
+    // Fetch hero image
+    const heroImageUrl = await fetchHeroImage(businessName);
 
+    // Check if content is a valid structured brief
+    if (isStructuredBriefContent(content)) {
+      console.log('📋 Using BRIEF-FIRST mapper with structuredBrief');
+      console.log('📐 Page structure:', content.pageStructure);
+      console.log('📊 Proof points:', content.proofPoints);
+      console.log('🎯 Messaging pillars:', content.messagingPillars?.length);
+      
+      // Use the strict brief-first mapper - NO FABRICATION
+      const sections = mapBriefToSections(content, {
+        businessName,
+        heroImageUrl,
+      });
+      
+      console.log(`✅ Brief-first mapper built ${sections.length} sections`);
+      return sections;
+    }
+    
+    // Fallback for legacy content format that doesn't match StructuredBrief
+    console.log('⚠️ Content is not a valid StructuredBrief, using legacy mapping');
+    return mapLegacyStrategyContent(content, consultationData, strategicConsultation, heroImageUrl);
+  };
+  
+  // Legacy mapping for non-structured brief content
+  const mapLegacyStrategyContent = async (
+    content: any,
+    consultationData: any,
+    strategicConsultation: any,
+    heroImageUrl: string
+  ): Promise<Section[]> => {
     const sections: Section[] = [];
     let order = 0;
+    const businessName = strategicConsultation?.businessName || consultationData.industry;
 
     // Get page structure from brief - this is our blueprint
     const pageStructure: string[] = content.pageStructure || [
       'hero', 'stats-bar', 'problem-solution', 'features', 'faq', 'final-cta'
     ];
     
-    console.log('🏗️ Building page with structure:', pageStructure);
+    console.log('🏗️ Legacy mapping with structure:', pageStructure);
 
-    // Build trust badges from proof points
-    const trustBadges: string[] = [];
-    if (content.proofPoints?.yearsInBusiness) {
-      trustBadges.push(`${content.proofPoints.yearsInBusiness} in Business`);
-    }
-    if (content.proofPoints?.clientCount) {
-      trustBadges.push(`${content.proofPoints.clientCount} Served`);
-    }
-    if (content.proofPoints?.achievements) {
-      trustBadges.push(content.proofPoints.achievements);
-    }
-
-    // Build statistics array from proof points
+    // Build statistics from proof points (NO fabrication)
     const buildStatistics = () => {
       const stats: Array<{ value: string; label: string }> = [];
       
       if (content.proofPoints?.clientCount) {
         const countMatch = content.proofPoints.clientCount.match(/(\d+[\d,+]*)/);
         if (countMatch) {
-          stats.push({ value: countMatch[1] + "+", label: "Happy Clients" });
+          stats.push({ value: countMatch[1] + "+", label: "Clients Served" });
         }
       }
       if (content.proofPoints?.yearsInBusiness) {
@@ -812,7 +830,7 @@ function GenerateContent() {
         });
       }
       
-      return stats.slice(0, 3); // Max 3 stats
+      return stats.slice(0, 4);
     };
 
     // Iterate through pageStructure and build sections in order
@@ -826,73 +844,55 @@ function GenerateContent() {
             content: {
               headline: content.headline,
               subheadline: content.subheadline,
-              ctaText: content.ctaText || strategicConsultation?.ctaText || "Get Started",
-              ctaLink: "#signup",
+              ctaText: content.ctaText || "Get Started",
+              ctaLink: "#contact",
               backgroundImage: heroImageUrl,
-              trustBadges: trustBadges.length > 0 ? trustBadges : undefined,
-              // Design specs: generous padding, clear focal point
-              designSpecs: {
-                sectionPadding: "96px", // 80-120px range
-                heroVariant: "centered", // Single focal point
-              }
             },
           });
           break;
 
         case 'stats-bar':
           const statistics = buildStatistics();
-          if (statistics.length > 0) {
+          // Only render if we have at least 2 real stats
+          if (statistics.length >= 2) {
             sections.push({
               type: "stats-bar",
               order: order++,
               visible: true,
-              content: {
-                statistics,
-                // Design specs
-                designSpecs: {
-                  sectionPadding: "48px",
-                  backgroundColor: "alternate", // Visual rhythm
-                }
-              },
+              content: { statistics },
             });
           }
           break;
 
         case 'problem-solution':
-          sections.push({
-            type: "problem-solution",
-            order: order++,
-            visible: true,
-            content: {
-              problem: content.problemStatement,
-              solution: content.solutionStatement,
-              // Design specs
-              designSpecs: {
-                sectionPadding: "96px",
-                layout: "two-column", // Clear separation
-              }
-            },
-          });
+          if (content.problemStatement && content.solutionStatement) {
+            sections.push({
+              type: "problem-solution",
+              order: order++,
+              visible: true,
+              content: {
+                problem: content.problemStatement,
+                solution: content.solutionStatement,
+              },
+            });
+          }
           break;
 
         case 'features':
+          // Only use features from content, no defaults
           if (content.features && content.features.length > 0) {
             sections.push({
               type: "features",
               order: order++,
               visible: true,
               content: {
-                features: content.features.slice(0, 6).map((f: any) => ({
+                title: 'Why Choose Us',
+                subtitle: `What sets ${businessName} apart`,
+                features: content.features.map((f: any) => ({
                   title: f.title,
                   description: f.description,
                   icon: f.icon || "CheckCircle",
                 })),
-                // Design specs
-                designSpecs: {
-                  sectionPadding: "96px",
-                  gridColumns: content.features.length <= 3 ? 3 : content.features.length <= 4 ? 2 : 3,
-                  backgroundColor: "alternate",
-                }
               },
             });
           }
@@ -905,25 +905,9 @@ function GenerateContent() {
               order: order++,
               visible: true,
               content: {
+                title: 'How It Works',
+                subtitle: 'Your path to results',
                 steps: content.processSteps,
-                // Design specs
-                designSpecs: {
-                  sectionPadding: "96px",
-                }
-              },
-            });
-          }
-          break;
-
-        case 'photo-gallery':
-          if (galleryImages.length > 0) {
-            sections.push({
-              type: "photo-gallery",
-              order: order++,
-              visible: true,
-              content: {
-                images: galleryImages,
-                title: `${strategicConsultation?.businessName || consultationData.industry} Gallery`,
               },
             });
           }
@@ -931,11 +915,10 @@ function GenerateContent() {
 
         case 'social-proof':
           const testimonials = content.testimonials || [];
-          const firstTestimonial = testimonials[0] || {
-            quote: "[Testimonial will be added - describe the transformation your client experienced]",
-            author: "[Client Name]",
-            title: "[Their Role/Company]",
-          };
+          const firstTestimonial = testimonials[0];
+          const hasRealTestimonial = firstTestimonial && 
+            !firstTestimonial.author?.includes('[') &&
+            !firstTestimonial.quote?.includes('[');
 
           sections.push({
             type: "social-proof",
@@ -943,26 +926,20 @@ function GenerateContent() {
             visible: true,
             content: {
               stats: [],
-              industry: strategicConsultation?.industry || consultationData.industry,
-              testimonial: {
+              industry: businessName,
+              testimonial: hasRealTestimonial ? {
                 quote: firstTestimonial.quote,
                 name: firstTestimonial.author,
                 title: firstTestimonial.title,
                 company: "",
                 rating: 5,
-              },
-              additionalTestimonials: testimonials.slice(1),
-              // Design specs
-              designSpecs: {
-                sectionPadding: "96px",
-                backgroundColor: "alternate",
-              }
+              } : undefined,
             },
           });
           break;
 
         case 'faq':
-          // Use FAQ items from the generated content (from objections)
+          // Use objections as FAQ if available
           if (content.faqItems && content.faqItems.length > 0) {
             sections.push({
               type: "faq",
@@ -974,22 +951,8 @@ function GenerateContent() {
                   question: faq.question,
                   answer: faq.answer,
                 })),
-                // Design specs
-                designSpecs: {
-                  sectionPadding: "96px",
-                }
               },
             });
-          } else {
-            // Fallback to aiSeoData FAQ if available
-            const aiSeoData = consultationData.aiSeoData || consultationData.ai_seo_data;
-            if (isAISeoDataValid(aiSeoData) && aiSeoData.faqItems?.length > 0) {
-              const faqConfig = createFAQSectionConfig(aiSeoData.faqItems);
-              sections.push({
-                ...faqConfig,
-                order: order++,
-              });
-            }
           }
           break;
 
@@ -1000,15 +963,9 @@ function GenerateContent() {
             visible: true,
             content: {
               headline: "Ready to Get Started?",
-              subheadline: content.solutionStatement?.split(".")[0] || "Take the next step today.",
-              ctaText: content.ctaText || strategicConsultation?.ctaText || "Get Started",
-              ctaLink: "#signup",
-              // Design specs: high contrast CTA
-              designSpecs: {
-                sectionPadding: "120px", // Generous for final CTA
-                ctaStyle: "high-contrast",
-                backgroundColor: "primary",
-              }
+              subheadline: content.solutionStatement?.split(".")[0] || "",
+              ctaText: content.ctaText || "Get Started",
+              ctaLink: "#contact",
             },
           });
           break;
@@ -1018,7 +975,7 @@ function GenerateContent() {
       }
     }
 
-    console.log(`✅ Built ${sections.length} sections from pageStructure`);
+    console.log(`✅ Legacy mapper built ${sections.length} sections from pageStructure`);
     return sections;
   };
 

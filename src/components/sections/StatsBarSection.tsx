@@ -10,114 +10,45 @@ interface StatsBarSectionProps {
   statistics: Statistic[];
 }
 
-// Validate and clean a statistic entry
-function isCleanStat(stat: Statistic): boolean {
-  if (!stat.value || !stat.label) return false;
-  
-  // Value should be short (number-like): e.g., "85%", "$1,200", "21,714"
-  const valueClean = stat.value.trim();
-  if (valueClean.length > 20) return false; // Allow slightly longer for ranges
-  
-  // Label should be under ~40 chars (5-6 words max)
-  const labelClean = stat.label.trim();
-  if (labelClean.length > 50) return false;
-  
-  // Reject if value contains sentence-like content
-  if (valueClean.includes('(') || valueClean.includes('with') || valueClean.includes('aged')) {
-    return false;
-  }
-  
-  return true;
-}
-
-// Simplify long/complex values for cleaner display
-function simplifyValue(value: string): string {
-  const trimmed = value.trim();
-  
-  // Handle ranges like "$1,850-$2,100" -> "$2,100"
-  if (trimmed.includes('-') && trimmed.length > 10) {
-    const rangeMatch = trimmed.match(/\$?([\d,]+)\s*-\s*\$?([\d,]+)/);
-    if (rangeMatch) {
-      return `$${rangeMatch[2]}`;
-    }
-  }
-  
-  return trimmed;
-}
-
-// Extract a clean value from messy text (best effort)
-function extractCleanValue(text: string): string | null {
-  if (!text) return null;
-  
-  // Try to find percentage
-  const percentMatch = text.match(/(\d+(?:\.\d+)?%)/);
-  if (percentMatch) return percentMatch[1];
-  
-  // Try to find dollar amount
-  const dollarMatch = text.match(/(\$[\d,]+(?:\.\d{2})?)/);
-  if (dollarMatch) return dollarMatch[1];
-  
-  // Try to find plain number with commas
-  const numberMatch = text.match(/^([\d,]+)/);
-  if (numberMatch && numberMatch[1].length <= 10) return numberMatch[1];
-  
-  return null;
-}
-
-// Fallback statistics when we don't have enough clean ones
-const fallbackStats: Statistic[] = [
-  { value: "98%", label: "Client satisfaction rate", source: "Industry Average" },
-  { value: "500+", label: "Events completed", source: "Company Data" },
-  { value: "10+", label: "Years of experience", source: "Company Data" },
-];
-
-// Clean up a statistic entry
-function cleanStat(stat: Statistic): Statistic | null {
-  if (isCleanStat(stat)) {
-    return {
-      value: stat.value.trim(),
-      label: stat.label.trim(),
-      source: stat.source?.trim()
-    };
-  }
-  
-  // Try to salvage by extracting clean value
-  const cleanValue = extractCleanValue(stat.value);
-  if (cleanValue && stat.label && stat.label.length < 50) {
-    return {
-      value: cleanValue,
-      label: stat.label.trim().slice(0, 40),
-      source: stat.source?.trim()
-    };
-  }
-  
-  return null;
-}
-
+/**
+ * Stats Bar Section - BRIEF-FIRST APPROACH
+ * 
+ * CRITICAL: Only shows statistics passed from the brief.
+ * NO fallback stats, NO fabrication, NO template defaults.
+ */
 export function StatsBarSection({ statistics }: StatsBarSectionProps) {
-  // Clean and filter statistics
-  let cleanStats = (statistics || [])
-    .map(cleanStat)
-    .filter((s): s is Statistic => s !== null)
-    .slice(0, 3);
-  
-  // Add fallback stats if we have less than 3
-  if (cleanStats.length < 3) {
-    const needed = 3 - cleanStats.length;
-    const existingLabels = cleanStats.map(s => s.label.toLowerCase());
-    const availableFallbacks = fallbackStats.filter(
-      f => !existingLabels.some(l => l.includes(f.label.toLowerCase().split(' ')[0]))
-    );
-    cleanStats = [...cleanStats, ...availableFallbacks.slice(0, needed)];
+  // NO FABRICATION: Only render stats that actually exist
+  // Don't pad with defaults, return null if no real stats
+  if (!statistics || statistics.length === 0) {
+    return null;
   }
-  
-  // Don't render if still no stats
-  if (cleanStats.length === 0) return null;
+
+  // Clean the stats (remove any that are clearly malformed)
+  const cleanStats = statistics.filter(stat => {
+    if (!stat.value || !stat.label) return false;
+    // Value should be reasonably short (number-like)
+    if (stat.value.length > 15) return false;
+    // Label should be under ~50 chars
+    if (stat.label.length > 50) return false;
+    return true;
+  });
+
+  // Don't render if no clean stats
+  if (cleanStats.length === 0) {
+    return null;
+  }
+
+  // Dynamic grid based on stat count
+  const getGridClass = () => {
+    if (cleanStats.length === 2) return "grid-cols-2";
+    if (cleanStats.length === 3) return "grid-cols-1 md:grid-cols-3";
+    return "grid-cols-2 md:grid-cols-4";
+  };
 
   return (
     <section className="py-12 md:py-16 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-800/80 dark:via-slate-900 dark:to-slate-800/80 border-y border-slate-200 dark:border-slate-700/50">
       <div className="container mx-auto max-w-6xl px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+        <div className={`grid ${getGridClass()} gap-6 md:gap-8`}>
           {cleanStats.map((stat, i) => (
             <motion.div
               key={i}
@@ -127,10 +58,10 @@ export function StatsBarSection({ statistics }: StatsBarSectionProps) {
               transition={{ delay: i * 0.15, duration: 0.5 }}
               className="bg-white dark:bg-slate-800/60 rounded-2xl p-6 md:p-8 text-center shadow-lg shadow-slate-200/50 dark:shadow-slate-900/30 border border-slate-200/80 dark:border-slate-700/50 hover:shadow-xl hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-300"
             >
-              <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-500 dark:from-cyan-400 dark:to-cyan-300 bg-clip-text text-transparent mb-3 whitespace-nowrap">
-                {simplifyValue(stat.value)}
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-500 dark:from-cyan-400 dark:to-cyan-300 bg-clip-text text-transparent mb-3">
+                {stat.value}
               </div>
-              <div className="text-slate-700 dark:text-slate-300 font-medium text-sm md:text-base mb-2 line-clamp-2">
+              <div className="text-slate-700 dark:text-slate-300 font-medium text-sm md:text-base mb-2">
                 {stat.label}
               </div>
               {stat.source && (
