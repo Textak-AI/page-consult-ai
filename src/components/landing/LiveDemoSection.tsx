@@ -133,6 +133,7 @@ export default function LiveDemoSection() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasInitialized = useRef(false);
+  const continueRef = useRef<HTMLDivElement>(null);
 
   // Send initial AI message on mount
   useEffect(() => {
@@ -159,6 +160,25 @@ export default function LiveDemoSection() {
     }
   }, [state.conversation]);
 
+  // Get market insights to display (limit to 2 for layout balance)
+  const marketInsights = [
+    ...(state.market.industryInsights || []),
+    ...(state.market.commonObjections?.slice(0, 1) || []),
+  ].slice(0, 2);
+
+  // Auto-scroll to Continue button after market insights load
+  useEffect(() => {
+    if (marketInsights.length > 0 && !state.market.isLoading) {
+      const timer = setTimeout(() => {
+        continueRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest' 
+        });
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [marketInsights.length, state.market.isLoading]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || state.isProcessing || state.rateLimited) return;
@@ -182,11 +202,6 @@ export default function LiveDemoSection() {
     ? [{ role: 'assistant' as const, content: "Tell me about your business — who do you help and what do you do for them?", timestamp: new Date() }]
     : state.conversation;
 
-  // Get market insights to display (limit to 2 for layout balance)
-  const marketInsights = [
-    ...(state.market.industryInsights || []),
-    ...(state.market.commonObjections?.slice(0, 1) || []),
-  ].slice(0, 2);
 
   return (
     <section id="demo" className="py-20 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800">
@@ -391,7 +406,7 @@ export default function LiveDemoSection() {
             )}
 
             {/* Readiness Ring */}
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
+            <div ref={continueRef} className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
               <h4 className="text-sm font-medium text-slate-300 mb-4 text-center">Strategy Readiness</h4>
               <ReadinessRing percentage={state.readiness} />
               
