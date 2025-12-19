@@ -543,6 +543,11 @@ function GenerateContent() {
         const structuredBrief = strategicData.structuredBrief;
         const brandSettings = strategicData.brandSettings || strategicData.consultationData?.brandSettings;
         
+        // DEBUG: Log brand settings flow
+        console.log('🎨 Brand settings from consultationData:', strategicData.consultationData?.brandSettings);
+        console.log('🎨 Brand settings from strategicData:', strategicData.brandSettings);
+        console.log('🎨 Final brandSettings:', brandSettings);
+        
         const ds = generateDesignSystem({
           industry: consultationData.industry || 'default',
           tone: structuredBrief?.tone || 'professional',
@@ -557,7 +562,9 @@ function GenerateContent() {
         });
         setDesignSystem(ds);
         setCssVariables(designSystemToCSSVariables(ds));
-        console.log('🎨 Generated design system:', ds.id, 'with tone:', structuredBrief?.tone, 'brand:', brandSettings?.modified ? 'customized' : 'default');
+        console.log('🎨 Generated design system:', ds);
+        console.log('🎨 Design system primary color:', ds.colors.primary);
+        console.log('🎨 Brand override applied:', brandSettings?.modified ? 'customized' : 'default');
         
         const { data: result, error } = await supabase.functions.invoke('generate-page-content', {
           body: {
@@ -665,7 +672,7 @@ function GenerateContent() {
     const sections: Section[] = [];
     let order = 0;
 
-    // Hero
+    // Hero - NO hardcoded trust badges
     sections.push({
       type: "hero",
       order: order++,
@@ -676,7 +683,7 @@ function GenerateContent() {
         ctaText: content.ctaText,
         ctaLink: "#signup",
         backgroundImage: heroImageUrl,
-        trustBadges: ["100% Satisfaction Guarantee", "Same-Day Response", "Award-Winning Service"],
+        // trustBadges deliberately omitted - no fabrication
       },
     });
 

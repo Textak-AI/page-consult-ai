@@ -67,18 +67,11 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
       }
     : {};
 
-  // Default credibility items
-  const credibilityItems = content.credibilityBar || [
-    { icon: "check", text: "25+ Years Excellence" },
-    { icon: "check", text: "5-Star Rated Service" },
-    { icon: "check", text: "Locally Owned & Operated" }
-  ];
-
-  const defaultTrustBadges = content.trustBadges || [
-    "100% Satisfaction Guarantee",
-    "Same-Day Response",
-    "Award-Winning Service"
-  ];
+  // Only show credibility items if explicitly provided - NO FABRICATION
+  const credibilityItems = content.credibilityBar || [];
+  
+  // Only show trust badges if explicitly provided in brief - NO FABRICATION
+  const trustBadges = content.trustBadges || [];
 
   return (
     <section 
@@ -255,51 +248,55 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             </p>
           )}
 
-          {/* Credibility Bar */}
-          <div className="flex flex-wrap justify-center pt-4" style={{ gap: 'var(--spacing-element-gap)' }}>
-            {credibilityItems.map((item, i) => (
-              <motion.div 
-                key={i} 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.5 + i * 0.1 }}
-                className="flex items-center gap-2 text-sm md:text-base"
-                style={{ 
-                  color: 'var(--color-text-secondary)',
-                  fontFamily: 'var(--font-body)',
-                }}
-              >
-                <CheckCircle 
-                  className="w-5 h-5 flex-shrink-0" 
-                  style={{ color: 'var(--color-primary)' }}
-                  strokeWidth={1.5}
-                />
-                <span className="font-medium">{item.text}</span>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Trust Badges - smaller, below credibility */}
-          <div className="flex flex-wrap justify-center gap-6 pt-2">
-            {defaultTrustBadges.map((badge, i) => {
-              const icons = [Shield, Clock, Award];
-              const Icon = icons[i % icons.length];
-              return (
-                <div 
+          {/* Credibility Bar - only shown if data exists */}
+          {credibilityItems.length > 0 && (
+            <div className="flex flex-wrap justify-center pt-4" style={{ gap: 'var(--spacing-element-gap)' }}>
+              {credibilityItems.map((item, i) => (
+                <motion.div 
                   key={i} 
-                  className="flex items-center gap-2 text-xs"
-                  style={{ color: 'var(--color-text-muted)' }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.5 + i * 0.1 }}
+                  className="flex items-center gap-2 text-sm md:text-base"
+                  style={{ 
+                    color: 'var(--color-text-secondary)',
+                    fontFamily: 'var(--font-body)',
+                  }}
                 >
-                  <Icon 
-                    className="w-3.5 h-3.5" 
+                  <CheckCircle 
+                    className="w-5 h-5 flex-shrink-0" 
                     style={{ color: 'var(--color-primary)' }}
                     strokeWidth={1.5}
                   />
-                  <span>{badge}</span>
-                </div>
-              );
-            })}
-          </div>
+                  <span className="font-medium">{item.text}</span>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {/* Trust Badges - only shown if data exists, NO FABRICATION */}
+          {trustBadges.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-6 pt-2">
+              {trustBadges.map((badge, i) => {
+                const icons = [Shield, Clock, Award];
+                const Icon = icons[i % icons.length];
+                return (
+                  <div 
+                    key={i} 
+                    className="flex items-center gap-2 text-xs"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    <Icon 
+                      className="w-3.5 h-3.5" 
+                      style={{ color: 'var(--color-primary)' }}
+                      strokeWidth={1.5}
+                    />
+                    <span>{badge}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
 
         {content.imageAttribution && (

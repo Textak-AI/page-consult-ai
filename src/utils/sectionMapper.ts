@@ -285,12 +285,18 @@ export function mapBriefToSections(
       }
 
       case 'final-cta': {
-        // Build trust signals from proof points
-        const trustSignals: string[] = ['No commitment required'];
+        // STRICT: Only include trust indicators from proofPoints, NO FABRICATION
+        const trustIndicators: Array<{ text: string }> = [];
+        
         if (brief.proofPoints?.yearsInBusiness) {
-          trustSignals.push(`${brief.proofPoints.yearsInBusiness} of expertise`);
+          trustIndicators.push({ text: brief.proofPoints.yearsInBusiness });
         }
-        trustSignals.push('Results-driven approach');
+        if (brief.proofPoints?.clientCount) {
+          trustIndicators.push({ text: brief.proofPoints.clientCount });
+        }
+        if (brief.proofPoints?.achievements) {
+          trustIndicators.push({ text: brief.proofPoints.achievements });
+        }
 
         sections.push({
           type: 'final-cta',
@@ -298,10 +304,10 @@ export function mapBriefToSections(
           visible: true,
           content: {
             headline: 'Ready to Get Started?',
-            subheadline: brief.solutionStatement?.split('.')[0] + '.' || '',
+            subtext: brief.solutionStatement?.split('.')[0] + '.' || '',
             ctaText: brief.ctaText,
             ctaLink: '#contact',
-            trustSignals: trustSignals.filter(Boolean),
+            trustIndicators: trustIndicators.length > 0 ? trustIndicators : undefined,
           },
         });
         break;
