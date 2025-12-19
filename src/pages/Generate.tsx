@@ -31,7 +31,8 @@ import {
 import { CreditDisplay, UpgradeDrawer } from "@/components/credits";
 import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid } from "@/lib/aiSeoIntegration";
 import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief } from "@/utils/sectionMapper";
-import { generateDesignSystem, designSystemToCSSVariables, type DesignSystem } from "@/config/designSystem";
+import { generateDesignSystem, designSystemToCSSVariables } from "@/config/designSystem";
+import type { DesignSystem } from "@/config/designSystem";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -144,7 +145,7 @@ function GenerateContent() {
   
   // Design system for dynamic theming
   const [designSystem, setDesignSystem] = useState<DesignSystem | null>(null);
-  const [cssVariables, setCssVariables] = useState<string>("");
+  const [cssVariables, setCssVariables] = useState<string>('');
 
   const loadingMessages = [
     { icon: Check, text: "Analyzing your strategy" },
@@ -1443,6 +1444,8 @@ function GenerateContent() {
         handleRegenerateSection={handleRegenerateSection}
         landingPageBestPractices={landingPageBestPractices}
         strategicData={strategicData}
+        cssVariables={cssVariables}
+        designSystem={designSystem}
       />
     </EditingProvider>
   );
@@ -1475,6 +1478,8 @@ function EditorContent({
   handleRegenerateSection,
   landingPageBestPractices,
   strategicData,
+  cssVariables,
+  designSystem,
 }: any) {
   const { toast } = useToast();
   const { pageStyle, setPageStyle } = useEditing();
