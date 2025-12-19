@@ -3,7 +3,7 @@
  * Three-layer structure: scrolling code, frosted glass, loading UI
  */
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -11,11 +11,13 @@ const codeLines = [
   "analyzing target audience psychographics...",
   "extracting competitive differentiation...",
   "mapping objection handling framework...",
+  "cross-referencing market data...",
   "generating headline variations...",
   "synthesizing proof points...",
-  "building page structure...",
   "calibrating tone guidelines...",
-  "finalizing brief...",
+  "building page structure...",
+  "evaluating positioning strategy...",
+  "finalizing strategic brief...",
 ];
 
 const statusMessages = [
@@ -26,13 +28,13 @@ const statusMessages = [
   "Finalizing your brief...",
 ];
 
-const xPositions = ['10%', '25%', '40%', '60%', '75%'];
+const xPositions = ['5%', '20%', '45%', '70%', '15%', '55%', '35%', '80%'];
 
-interface CodeLine {
+interface CodeLineData {
   id: number;
   text: string;
   x: string;
-  startTime: number;
+  delay: number;
 }
 
 interface AIWorkingLoaderProps {
@@ -40,44 +42,22 @@ interface AIWorkingLoaderProps {
 }
 
 export function AIWorkingLoader({ onComplete }: AIWorkingLoaderProps) {
-  const [codeLinesList, setCodeLinesList] = useState<CodeLine[]>([]);
+  const [lines, setLines] = useState<CodeLineData[]>([]);
   const [statusIndex, setStatusIndex] = useState(0);
   const [statusVisible, setStatusVisible] = useState(true);
-  const nextIdRef = useRef(0);
-  const lineIndexRef = useRef(0);
 
-  // Add new code lines periodically
+  // Initialize lines with staggered delays
   useEffect(() => {
-    const addLine = () => {
-      const newLine: CodeLine = {
-        id: nextIdRef.current++,
-        text: codeLines[lineIndexRef.current % codeLines.length],
-        x: xPositions[Math.floor(Math.random() * xPositions.length)],
-        startTime: Date.now(),
-      };
-      lineIndexRef.current++;
-      setCodeLinesList(prev => [...prev, newLine]);
-    };
-
-    // Add initial lines
-    for (let i = 0; i < 5; i++) {
-      setTimeout(() => addLine(), i * 200);
+    const initialLines: CodeLineData[] = [];
+    for (let i = 0; i < 20; i++) {
+      initialLines.push({
+        id: i,
+        text: codeLines[i % codeLines.length],
+        x: xPositions[i % xPositions.length],
+        delay: i * 0.5, // Stagger by 0.5s each
+      });
     }
-
-    // Add new line every 600ms
-    const interval = setInterval(addLine, 600);
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  // Clean up old lines
-  useEffect(() => {
-    const cleanup = setInterval(() => {
-      const now = Date.now();
-      setCodeLinesList(prev => prev.filter(line => now - line.startTime < 8000));
-    }, 1000);
-
-    return () => clearInterval(cleanup);
+    setLines(initialLines);
   }, []);
 
   // Rotate status messages
@@ -96,18 +76,16 @@ export function AIWorkingLoader({ onComplete }: AIWorkingLoaderProps) {
 
   return (
     <div className="fixed inset-0 overflow-hidden">
-      {/* LAYER 1: CODE BACKGROUND */}
-      <div className="absolute inset-0 bg-slate-950 z-0">
-        {codeLinesList.map((line) => (
+      {/* LAYER 1: CODE BACKGROUND (z-0) */}
+      <div className="fixed inset-0 bg-slate-950 z-0 overflow-hidden">
+        {lines.map((line) => (
           <div
             key={line.id}
-            className="absolute font-mono text-sm text-cyan-400 whitespace-nowrap animate-scroll-up"
+            className="absolute font-mono text-sm text-cyan-400 opacity-70 whitespace-nowrap"
             style={{
               left: line.x,
-              bottom: '-20px',
-              animationDuration: '8s',
-              animationTimingFunction: 'linear',
-              animationFillMode: 'forwards',
+              animation: `float-up 10s linear infinite`,
+              animationDelay: `${line.delay}s`,
             }}
           >
             {line.text}
@@ -115,16 +93,12 @@ export function AIWorkingLoader({ onComplete }: AIWorkingLoaderProps) {
         ))}
       </div>
 
-      {/* LAYER 2: FROSTED GLASS OVERLAY */}
+      {/* LAYER 2: FROSTED GLASS OVERLAY (z-10) */}
       <div 
-        className="fixed inset-0 z-10 bg-slate-900/40"
-        style={{
-          backdropFilter: 'blur(64px)',
-          WebkitBackdropFilter: 'blur(64px)',
-        }}
+        className="fixed inset-0 z-10 bg-slate-900/30 backdrop-blur-xl"
       />
 
-      {/* LAYER 3: LOADING UI */}
+      {/* LAYER 3: LOADING UI (z-20) */}
       <div className="fixed inset-0 z-20 flex flex-col items-center justify-center">
         {/* Spinner */}
         <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
@@ -145,26 +119,23 @@ export function AIWorkingLoader({ onComplete }: AIWorkingLoaderProps) {
         </p>
       </div>
 
-      {/* CSS for scroll animation */}
+      {/* CSS for float-up animation */}
       <style>{`
-        @keyframes scroll-up {
+        @keyframes float-up {
           0% {
-            transform: translateY(0);
+            transform: translateY(100vh);
             opacity: 0;
           }
-          5% {
+          10% {
             opacity: 0.7;
           }
           90% {
             opacity: 0.7;
           }
           100% {
-            transform: translateY(-100vh);
+            transform: translateY(-100px);
             opacity: 0;
           }
-        }
-        .animate-scroll-up {
-          animation: scroll-up 8s linear forwards;
         }
       `}</style>
     </div>
