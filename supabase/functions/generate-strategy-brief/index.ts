@@ -15,16 +15,18 @@ serve(async (req) => {
     
     console.log('[generate-strategy-brief] Generating brief for:', consultationData.businessName);
 
-    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!anthropicApiKey) {
-      throw new Error('ANTHROPIC_API_KEY is not configured');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
     const systemPrompt = `You are a strategic landing page consultant. Based on consultation data, you create focused strategy briefs that will guide landing page content generation.
 
 Your brief must be actionable, specific, and derived directly from the client's inputs. Never use generic placeholder text. If information is missing, acknowledge it and make strategic recommendations.
 
-Output the brief in clean markdown format.`;
+CRITICAL: Your output will be used as the LITERAL BLUEPRINT for page generation. Every section you recommend will be built exactly as specified.
+
+Output the brief in clean markdown format with a STRUCTURED JSON block at the end for the page generator to parse.`;
 
     const userPrompt = `Create a strategy brief for this landing page project:
 
@@ -68,57 +70,143 @@ Generate a STRATEGY BRIEF with these sections:
 
 1. **Executive Summary** (2-3 sentences on the strategic approach)
 
-2. **Target Audience Profile** (Synthesize who we're speaking to)
+2. **Target Audience Profile** (Synthesize who we're speaking to - their role, frustrations, desires)
 
-3. **Core Value Proposition** (One powerful statement that captures the unique value)
+3. **Core Value Proposition** (One powerful statement that captures the unique value - this becomes the hero subheadline)
 
-4. **Key Messaging Pillars** (3 main themes/messages to emphasize throughout)
+4. **Key Messaging Pillars** (3-4 main themes to emphasize - these become FEATURE CARDS)
+   - For each pillar: Title, Benefit Description, Icon suggestion (Zap, Target, Shield, Award, TrendingUp, Users, CheckCircle, Clock, Heart, Star)
 
-5. **Competitive Differentiation** (What sets this apart)
+5. **Competitive Differentiation** (What sets this apart - use for problem/solution section)
 
-6. **Proof Points** (Specific credibility elements to feature)
+6. **Proof Points** (Specific credibility elements to feature - numbers, years, achievements)
+   - Extract specific numbers: "X+ clients", "Y years experience", etc.
 
-7. **Tone & Voice** (How the copy should sound)
+7. **Tone & Voice** (How the copy should sound - professional, friendly, authoritative, etc.)
 
-8. **Objection Handling** (How to address concerns)
+8. **Objection Handling** (3-5 common objections with rebuttals - these become FAQ items)
 
-9. **Recommended Page Structure** (Specific sections in order with purpose of each)
+9. **Recommended Page Structure** (EXACT sections in order with purpose)
+   List ONLY sections that make sense for this business. Choose from:
+   - hero: Opening with headline, subheadline, CTA
+   - stats-bar: Key numbers/proof points (only if we have real stats)
+   - problem-solution: Pain point → Our solution
+   - features: Service/benefit cards from messaging pillars
+   - how-it-works: Step-by-step process (only if process is defined)
+   - social-proof: Testimonial + trust signals (only if we have real testimonials)
+   - faq: Address objections
+   - final-cta: Closing call to action
 
 10. **Headline Recommendations** (3 options for the main headline, derived from the value prop)
+    - Option A (Direct benefit)
+    - Option B (Problem-focused)
+    - Option C (Outcome-focused)
+
+---
+
+After the markdown brief, include a JSON block that the page generator will parse directly:
+
+\`\`\`json
+{
+  "headlines": {
+    "optionA": "Direct benefit headline",
+    "optionB": "Problem-focused headline", 
+    "optionC": "Outcome-focused headline"
+  },
+  "subheadline": "Core value proposition as 1-2 sentence subheadline",
+  "messagingPillars": [
+    {
+      "title": "Pillar title",
+      "description": "Benefit-focused description (1 sentence)",
+      "icon": "IconName"
+    }
+  ],
+  "proofPoints": {
+    "clientCount": "X+ clients" or null,
+    "yearsInBusiness": "Y years" or null,
+    "achievements": "Achievement text" or null,
+    "otherStats": ["Additional stat 1", "Additional stat 2"]
+  },
+  "problemStatement": "2 sentences describing the pain/frustration",
+  "solutionStatement": "2-3 sentences describing how we solve it",
+  "tone": "One word: professional | friendly | authoritative | warm | confident",
+  "objections": [
+    {
+      "question": "Common objection as question",
+      "answer": "Rebuttal/answer"
+    }
+  ],
+  "pageStructure": ["hero", "stats-bar", "problem-solution", "features", "faq", "final-cta"],
+  "processSteps": [
+    {
+      "step": 1,
+      "title": "Step title",
+      "description": "What happens in this step"
+    }
+  ] or null,
+  "testimonials": [
+    {
+      "quote": "Actual testimonial text or [Testimonial will be added]",
+      "author": "Real name or [Client Name]",
+      "title": "Role/Company or [Their Role]"
+    }
+  ],
+  "ctaText": "CTA button text"
+}
+\`\`\`
 
 Be specific. No generic advice. Everything should tie back to the actual consultation data provided.`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
-        'x-api-key': anthropicApiKey,
-        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2500,
-        system: systemPrompt,
+        model: 'google/gemini-2.5-flash',
         messages: [
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
-        ]
+        ],
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[generate-strategy-brief] Anthropic API error:', errorText);
-      throw new Error(`Anthropic API error: ${response.status}`);
+      console.error('[generate-strategy-brief] AI Gateway error:', errorText);
+      
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again.');
+      }
+      if (response.status === 402) {
+        throw new Error('AI credits depleted. Please add credits.');
+      }
+      
+      throw new Error(`AI Gateway error: ${response.status}`);
     }
 
     const result = await response.json();
-    const strategyBrief = result.content[0]?.text || '';
+    const strategyBrief = result.choices?.[0]?.message?.content || '';
 
     console.log('[generate-strategy-brief] Brief generated successfully');
 
+    // Extract the structured JSON from the brief
+    let structuredBrief = null;
+    const jsonMatch = strategyBrief.match(/```json\s*([\s\S]*?)\s*```/);
+    if (jsonMatch) {
+      try {
+        structuredBrief = JSON.parse(jsonMatch[1]);
+        console.log('[generate-strategy-brief] Extracted structured brief');
+      } catch (e) {
+        console.warn('[generate-strategy-brief] Could not parse structured JSON from brief');
+      }
+    }
+
     return new Response(JSON.stringify({
       success: true,
-      strategyBrief
+      strategyBrief,
+      structuredBrief
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

@@ -119,6 +119,7 @@ function GenerateContent() {
       consultationData?: any;
       websiteIntelligence?: any;
       strategyBrief?: string;
+      structuredBrief?: any;
     };
     fromStrategicConsultation?: boolean;
   } | null;
@@ -526,6 +527,7 @@ function GenerateContent() {
         const { data: result, error } = await supabase.functions.invoke('generate-page-content', {
           body: {
             strategyBrief: strategicData.strategyBrief,
+            structuredBrief: strategicData.structuredBrief || null,
             strategicConsultation: strategicData.consultationData,
             industry: consultationData.industry,
           }
@@ -535,6 +537,7 @@ function GenerateContent() {
           console.warn('⚠️ Strategy brief generation failed:', error);
         } else if (result?.success && result?.content) {
           console.log('✅ Strategy brief generated content:', result.content);
+          console.log('📐 Page structure from brief:', result.content.pageStructure);
           return await mapStrategyBriefContentToSections(result.content, consultationData, strategicData.consultationData);
         }
       }
@@ -750,6 +753,7 @@ function GenerateContent() {
   };
 
   // Map strategy brief generated content to Section[]
+  // This follows the pageStructure from Section 9 of the brief EXACTLY
   const mapStrategyBriefContentToSections = async (
     content: any,
     consultationData: any,
@@ -764,167 +768,257 @@ function GenerateContent() {
     const sections: Section[] = [];
     let order = 0;
 
-    // Build trust badges from social proof
+    // Get page structure from brief - this is our blueprint
+    const pageStructure: string[] = content.pageStructure || [
+      'hero', 'stats-bar', 'problem-solution', 'features', 'faq', 'final-cta'
+    ];
+    
+    console.log('🏗️ Building page with structure:', pageStructure);
+
+    // Build trust badges from proof points
     const trustBadges: string[] = [];
-    if (content.socialProof?.yearsInBusiness) {
-      trustBadges.push(`${content.socialProof.yearsInBusiness} in Business`);
+    if (content.proofPoints?.yearsInBusiness) {
+      trustBadges.push(`${content.proofPoints.yearsInBusiness} in Business`);
     }
-    if (content.socialProof?.clientCount) {
-      trustBadges.push(`${content.socialProof.clientCount} Clients Served`);
+    if (content.proofPoints?.clientCount) {
+      trustBadges.push(`${content.proofPoints.clientCount} Served`);
     }
-    if (content.socialProof?.achievements) {
-      trustBadges.push(content.socialProof.achievements);
+    if (content.proofPoints?.achievements) {
+      trustBadges.push(content.proofPoints.achievements);
     }
 
-    // Hero
-    sections.push({
-      type: "hero",
-      order: order++,
-      visible: true,
-      content: {
-        headline: content.headline,
-        subheadline: content.subheadline,
-        ctaText: content.ctaText || strategicConsultation?.ctaText || "Get Started",
-        ctaLink: "#signup",
-        backgroundImage: heroImageUrl,
-        trustBadges: trustBadges.length > 0 ? trustBadges : undefined,
-      },
-    });
-
-    // Stats Bar (from social proof)
-    const statisticsToShow: Array<{ value: string; label: string }> = [];
-    if (content.socialProof?.clientCount) {
-      const countMatch = content.socialProof.clientCount.match(/(\d+[\d,+]*)/);
-      if (countMatch) {
-        statisticsToShow.push({
-          value: countMatch[1] + "+",
-          label: "Happy Clients",
+    // Build statistics array from proof points
+    const buildStatistics = () => {
+      const stats: Array<{ value: string; label: string }> = [];
+      
+      if (content.proofPoints?.clientCount) {
+        const countMatch = content.proofPoints.clientCount.match(/(\d+[\d,+]*)/);
+        if (countMatch) {
+          stats.push({ value: countMatch[1] + "+", label: "Happy Clients" });
+        }
+      }
+      if (content.proofPoints?.yearsInBusiness) {
+        const yearsMatch = content.proofPoints.yearsInBusiness.match(/(\d+)/);
+        if (yearsMatch) {
+          stats.push({ value: yearsMatch[1] + "+", label: "Years Experience" });
+        }
+      }
+      if (content.proofPoints?.otherStats && Array.isArray(content.proofPoints.otherStats)) {
+        content.proofPoints.otherStats.forEach((stat: string) => {
+          const match = stat.match(/^([\d,.$%]+(?:[KMB+])?)\s+(.*)$/i);
+          if (match) {
+            stats.push({ value: match[1], label: match[2] });
+          }
         });
       }
-    }
-    if (content.socialProof?.yearsInBusiness) {
-      const yearsMatch = content.socialProof.yearsInBusiness.match(/(\d+)/);
-      if (yearsMatch) {
-        statisticsToShow.push({
-          value: yearsMatch[1] + "+",
-          label: "Years Experience",
-        });
-      }
-    }
-
-    if (statisticsToShow.length > 0) {
-      sections.push({
-        type: "stats-bar",
-        order: order++,
-        visible: true,
-        content: {
-          statistics: statisticsToShow,
-        },
-      });
-    }
-
-    // Problem-Solution
-    sections.push({
-      type: "problem-solution",
-      order: order++,
-      visible: true,
-      content: {
-        problem: content.problemStatement,
-        solution: content.solutionStatement,
-      },
-    });
-
-    // Features
-    if (content.features && content.features.length > 0) {
-      sections.push({
-        type: "features",
-        order: order++,
-        visible: true,
-        content: {
-          features: content.features.map((f: any) => ({
-            title: f.title,
-            description: f.description,
-            icon: f.icon || "CheckCircle",
-          })),
-        },
-      });
-    }
-
-    // Process Steps (if provided - from processDescription)
-    if (content.processSteps && content.processSteps.length > 0) {
-      sections.push({
-        type: "how-it-works",
-        order: order++,
-        visible: true,
-        content: {
-          steps: content.processSteps,
-        },
-      });
-    }
-
-    // Gallery (if we have images)
-    if (galleryImages.length > 0) {
-      sections.push({
-        type: "photo-gallery",
-        order: order++,
-        visible: true,
-        content: {
-          images: galleryImages,
-          title: `${strategicConsultation?.businessName || consultationData.industry} Gallery`,
-        },
-      });
-    }
-
-    // Social Proof with testimonials - use actual testimonials or placeholder format
-    const testimonials = content.testimonials || [];
-    const firstTestimonial = testimonials[0] || {
-      quote: "[Testimonial will be added - describe the transformation your client experienced]",
-      author: "[Client Name]",
-      title: "[Their Role/Company]",
+      
+      return stats.slice(0, 3); // Max 3 stats
     };
 
-    sections.push({
-      type: "social-proof",
-      order: order++,
-      visible: true,
-      content: {
-        stats: [],
-        industry: strategicConsultation?.industry || consultationData.industry,
-        testimonial: {
-          quote: firstTestimonial.quote,
-          name: firstTestimonial.author,
-          title: firstTestimonial.title,
-          company: "",
-          rating: 5,
-        },
-        additionalTestimonials: testimonials.slice(1),
-      },
-    });
+    // Iterate through pageStructure and build sections in order
+    for (const sectionType of pageStructure) {
+      switch (sectionType) {
+        case 'hero':
+          sections.push({
+            type: "hero",
+            order: order++,
+            visible: true,
+            content: {
+              headline: content.headline,
+              subheadline: content.subheadline,
+              ctaText: content.ctaText || strategicConsultation?.ctaText || "Get Started",
+              ctaLink: "#signup",
+              backgroundImage: heroImageUrl,
+              trustBadges: trustBadges.length > 0 ? trustBadges : undefined,
+              // Design specs: generous padding, clear focal point
+              designSpecs: {
+                sectionPadding: "96px", // 80-120px range
+                heroVariant: "centered", // Single focal point
+              }
+            },
+          });
+          break;
 
-    // FAQ Section (from aiSeoData if available)
-    const aiSeoData = consultationData.aiSeoData || consultationData.ai_seo_data;
-    if (isAISeoDataValid(aiSeoData) && aiSeoData.faqItems?.length > 0) {
-      const faqConfig = createFAQSectionConfig(aiSeoData.faqItems);
-      sections.push({
-        ...faqConfig,
-        order: order++,
-      });
-      console.log('✅ Strategy brief: Added FAQ section with', aiSeoData.faqItems.length, 'items');
+        case 'stats-bar':
+          const statistics = buildStatistics();
+          if (statistics.length > 0) {
+            sections.push({
+              type: "stats-bar",
+              order: order++,
+              visible: true,
+              content: {
+                statistics,
+                // Design specs
+                designSpecs: {
+                  sectionPadding: "48px",
+                  backgroundColor: "alternate", // Visual rhythm
+                }
+              },
+            });
+          }
+          break;
+
+        case 'problem-solution':
+          sections.push({
+            type: "problem-solution",
+            order: order++,
+            visible: true,
+            content: {
+              problem: content.problemStatement,
+              solution: content.solutionStatement,
+              // Design specs
+              designSpecs: {
+                sectionPadding: "96px",
+                layout: "two-column", // Clear separation
+              }
+            },
+          });
+          break;
+
+        case 'features':
+          if (content.features && content.features.length > 0) {
+            sections.push({
+              type: "features",
+              order: order++,
+              visible: true,
+              content: {
+                features: content.features.slice(0, 6).map((f: any) => ({
+                  title: f.title,
+                  description: f.description,
+                  icon: f.icon || "CheckCircle",
+                })),
+                // Design specs
+                designSpecs: {
+                  sectionPadding: "96px",
+                  gridColumns: content.features.length <= 3 ? 3 : content.features.length <= 4 ? 2 : 3,
+                  backgroundColor: "alternate",
+                }
+              },
+            });
+          }
+          break;
+
+        case 'how-it-works':
+          if (content.processSteps && content.processSteps.length > 0) {
+            sections.push({
+              type: "how-it-works",
+              order: order++,
+              visible: true,
+              content: {
+                steps: content.processSteps,
+                // Design specs
+                designSpecs: {
+                  sectionPadding: "96px",
+                }
+              },
+            });
+          }
+          break;
+
+        case 'photo-gallery':
+          if (galleryImages.length > 0) {
+            sections.push({
+              type: "photo-gallery",
+              order: order++,
+              visible: true,
+              content: {
+                images: galleryImages,
+                title: `${strategicConsultation?.businessName || consultationData.industry} Gallery`,
+              },
+            });
+          }
+          break;
+
+        case 'social-proof':
+          const testimonials = content.testimonials || [];
+          const firstTestimonial = testimonials[0] || {
+            quote: "[Testimonial will be added - describe the transformation your client experienced]",
+            author: "[Client Name]",
+            title: "[Their Role/Company]",
+          };
+
+          sections.push({
+            type: "social-proof",
+            order: order++,
+            visible: true,
+            content: {
+              stats: [],
+              industry: strategicConsultation?.industry || consultationData.industry,
+              testimonial: {
+                quote: firstTestimonial.quote,
+                name: firstTestimonial.author,
+                title: firstTestimonial.title,
+                company: "",
+                rating: 5,
+              },
+              additionalTestimonials: testimonials.slice(1),
+              // Design specs
+              designSpecs: {
+                sectionPadding: "96px",
+                backgroundColor: "alternate",
+              }
+            },
+          });
+          break;
+
+        case 'faq':
+          // Use FAQ items from the generated content (from objections)
+          if (content.faqItems && content.faqItems.length > 0) {
+            sections.push({
+              type: "faq",
+              order: order++,
+              visible: true,
+              content: {
+                title: "Frequently Asked Questions",
+                items: content.faqItems.map((faq: any) => ({
+                  question: faq.question,
+                  answer: faq.answer,
+                })),
+                // Design specs
+                designSpecs: {
+                  sectionPadding: "96px",
+                }
+              },
+            });
+          } else {
+            // Fallback to aiSeoData FAQ if available
+            const aiSeoData = consultationData.aiSeoData || consultationData.ai_seo_data;
+            if (isAISeoDataValid(aiSeoData) && aiSeoData.faqItems?.length > 0) {
+              const faqConfig = createFAQSectionConfig(aiSeoData.faqItems);
+              sections.push({
+                ...faqConfig,
+                order: order++,
+              });
+            }
+          }
+          break;
+
+        case 'final-cta':
+          sections.push({
+            type: "final-cta",
+            order: order++,
+            visible: true,
+            content: {
+              headline: "Ready to Get Started?",
+              subheadline: content.solutionStatement?.split(".")[0] || "Take the next step today.",
+              ctaText: content.ctaText || strategicConsultation?.ctaText || "Get Started",
+              ctaLink: "#signup",
+              // Design specs: high contrast CTA
+              designSpecs: {
+                sectionPadding: "120px", // Generous for final CTA
+                ctaStyle: "high-contrast",
+                backgroundColor: "primary",
+              }
+            },
+          });
+          break;
+
+        default:
+          console.warn(`⚠️ Unknown section type in pageStructure: ${sectionType}`);
+      }
     }
 
-    // Final CTA
-    sections.push({
-      type: "final-cta",
-      order: order++,
-      visible: true,
-      content: {
-        headline: "Ready to Get Started?",
-        subheadline: content.solutionStatement?.split(".")[0] || "Take the next step today.",
-        ctaText: content.ctaText || strategicConsultation?.ctaText || "Get Started",
-        ctaLink: "#signup",
-      },
-    });
-
+    console.log(`✅ Built ${sections.length} sections from pageStructure`);
     return sections;
   };
 
