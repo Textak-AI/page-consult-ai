@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, User, Sparkles, ArrowRight, Send, TrendingUp, Users, Target, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import EmailGateModal from './EmailGateModal';
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -127,7 +128,7 @@ const InsightTile = ({ insight, delay }: { insight: string; delay: number }) => 
 
 export default function LiveDemoSection() {
   const navigate = useNavigate();
-  const { state, processUserMessage, resetIntelligence } = useIntelligence();
+  const { state, processUserMessage, resetIntelligence, submitEmail, dismissEmailGate } = useIntelligence();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -428,6 +429,15 @@ export default function LiveDemoSection() {
           </motion.div>
         </div>
       </div>
+
+      {/* Email Gate Modal */}
+      <EmailGateModal
+        isOpen={state.showEmailGate}
+        onSubmit={submitEmail}
+        onDismiss={dismissEmailGate}
+        industry={state.extracted.industry}
+        audience={state.extracted.audience}
+      />
     </section>
   );
 }
