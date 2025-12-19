@@ -162,11 +162,14 @@ export default function NewConsultation() {
             processDescription: consultationData.processDescription,
             ctaText: consultationData.ctaText,
             objectionsToOvercome: consultationData.objectionsToOvercome,
+            // Brand settings from customization
+            brandSettings: consultationData.brandSettings,
           },
           strategicData: {
             consultationData,
             websiteIntelligence: consultationData.websiteIntelligence,
             strategyBrief,
+            brandSettings: consultationData.brandSettings,
           },
           fromStrategicConsultation: true,
         },

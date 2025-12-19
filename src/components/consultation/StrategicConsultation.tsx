@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { AIWorkingLoader } from '@/components/editor/AIWorkingLoader';
 import type { AISeoData } from '@/services/intelligence/types';
+import { BrandCustomization, type BrandSettings, type WebsiteIntelligence } from './BrandCustomization';
 
 export interface ConsultationData {
   // Website Intelligence
@@ -21,6 +22,16 @@ export interface ConsultationData {
     heroText: string | null;
     testimonials: string[];
     companyName: string | null;
+  };
+  
+  // Brand Settings (from BrandCustomization step)
+  brandSettings?: {
+    logoUrl: string | null;
+    primaryColor: string;
+    secondaryColor: string;
+    headingFont: string;
+    bodyFont: string;
+    modified: boolean;
   };
   
   // Business Identity
@@ -54,6 +65,7 @@ export interface ConsultationData {
 
 const STEPS = [
   { id: 'website', title: 'Your Website', icon: Globe },
+  { id: 'branding', title: 'Brand Customization', icon: Palette },
   { id: 'identity', title: 'Business Identity', icon: Building2 },
   { id: 'audience', title: 'Target Audience', icon: Users },
   { id: 'credibility', title: 'Credibility', icon: Trophy },
@@ -248,6 +260,8 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
     switch (STEPS[currentStep].id) {
       case 'website':
         return true; // Optional step
+      case 'branding':
+        return true; // Can always proceed (defaults available)
       case 'identity':
         return data.businessName && data.industry && data.uniqueStrength;
       case 'audience':
@@ -263,7 +277,27 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
     }
   };
 
+  // Handle brand customization completion
+  const handleBrandComplete = (brandSettings: BrandSettings) => {
+    updateData({ brandSettings });
+    setCurrentStep(currentStep + 1);
+  };
+
+  // Handle using industry defaults (skip brand customization)
+  const handleUseDefaults = () => {
+    // Clear brand settings to use industry baseline
+    updateData({ brandSettings: undefined });
+    setCurrentStep(currentStep + 1);
+  };
+
   const handleNext = async () => {
+    // If moving from website step and no website intelligence, skip branding step
+    if (STEPS[currentStep].id === 'website' && !data.websiteIntelligence) {
+      // Skip branding step (index 1) and go directly to identity (index 2)
+      setCurrentStep(currentStep + 2);
+      return;
+    }
+    
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -273,6 +307,13 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
   };
 
   const handleBack = () => {
+    // If going back to branding step but no website intelligence, skip to website step
+    if (STEPS[currentStep].id === 'identity' && !data.websiteIntelligence) {
+      // Skip branding step and go back to website (index 0)
+      setCurrentStep(0);
+      return;
+    }
+    
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     } else if (onBack) {
@@ -453,6 +494,10 @@ ${d.ctaText}
             </div>
           </div>
         );
+
+      case 'branding':
+        // Handled by early return before main render - should not reach here
+        return null;
 
       case 'identity':
         return (
@@ -759,6 +804,29 @@ ${d.ctaText}
 
   if (isGeneratingBrief) {
     return <AIWorkingLoader />;
+  }
+
+  // Brand customization step renders as full-page component
+  if (STEPS[currentStep].id === 'branding') {
+    const brandingIntelligence: WebsiteIntelligence = {
+      url: data.websiteUrl || '',
+      logoUrl: data.websiteIntelligence?.logoUrl,
+      colors: data.websiteIntelligence?.brandColors || [],
+      primaryColor: data.websiteIntelligence?.brandColors?.[0],
+      secondaryColor: data.websiteIntelligence?.brandColors?.[1],
+      companyName: data.websiteIntelligence?.companyName,
+      tagline: data.websiteIntelligence?.tagline,
+    };
+    
+    return (
+      <BrandCustomization
+        websiteIntelligence={brandingIntelligence}
+        industry={data.industry}
+        onComplete={handleBrandComplete}
+        onBack={handleBack}
+        onUseDefaults={handleUseDefaults}
+      />
+    );
   }
 
   return (
