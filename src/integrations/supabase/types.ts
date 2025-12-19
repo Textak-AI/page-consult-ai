@@ -110,6 +110,39 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_leads: {
+        Row: {
+          converted_to_user: boolean | null
+          created_at: string | null
+          email: string
+          engagement_score: number | null
+          extracted_intelligence: Json | null
+          id: string
+          session_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          converted_to_user?: boolean | null
+          created_at?: string | null
+          email: string
+          engagement_score?: number | null
+          extracted_intelligence?: Json | null
+          id?: string
+          session_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          converted_to_user?: boolean | null
+          created_at?: string | null
+          email?: string
+          engagement_score?: number | null
+          extracted_intelligence?: Json | null
+          id?: string
+          session_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       demo_market_cache: {
         Row: {
           cache_key: string
