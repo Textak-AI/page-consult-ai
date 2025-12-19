@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { StrategicConsultation, StrategyBriefReview, type ConsultationData } from "@/components/consultation";
+import { StrategicConsultation, StrategyBriefReview, ConsultationIntro, shouldShowIntro, type ConsultationData } from "@/components/consultation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import iconmark from "@/assets/iconmark-darkmode.svg";
 
-type Stage = 'loading' | 'consultation' | 'brief-review' | 'generating';
+type Stage = 'loading' | 'intro' | 'consultation' | 'brief-review' | 'generating';
 
 export default function NewConsultation() {
   const navigate = useNavigate();
@@ -27,7 +27,12 @@ export default function NewConsultation() {
         return;
       }
       setUserId(user.id);
-      setStage('consultation');
+      // Check if we should show intro
+      if (shouldShowIntro()) {
+        setStage('intro');
+      } else {
+        setStage('consultation');
+      }
     };
     checkAuth();
   }, [navigate]);
@@ -150,6 +155,13 @@ export default function NewConsultation() {
           <p className="text-muted-foreground">Loading...</p>
         </motion.div>
       </div>
+    );
+  }
+
+  // Intro state
+  if (stage === 'intro') {
+    return (
+      <ConsultationIntro onComplete={() => setStage('consultation')} />
     );
   }
 
