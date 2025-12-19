@@ -169,6 +169,9 @@ export type Database = {
       }
       landing_pages: {
         Row: {
+          ai_seo_breakdown: Json | null
+          ai_seo_last_calculated: string | null
+          ai_seo_score: number | null
           analytics_enabled: boolean | null
           consultation_data: Json | null
           consultation_id: string | null
@@ -190,6 +193,9 @@ export type Database = {
           website_intelligence: Json | null
         }
         Insert: {
+          ai_seo_breakdown?: Json | null
+          ai_seo_last_calculated?: string | null
+          ai_seo_score?: number | null
           analytics_enabled?: boolean | null
           consultation_data?: Json | null
           consultation_id?: string | null
@@ -211,6 +217,9 @@ export type Database = {
           website_intelligence?: Json | null
         }
         Update: {
+          ai_seo_breakdown?: Json | null
+          ai_seo_last_calculated?: string | null
+          ai_seo_score?: number | null
           analytics_enabled?: boolean | null
           consultation_data?: Json | null
           consultation_id?: string | null
