@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
+import { AIWorkingLoader } from '@/components/editor/AIWorkingLoader';
 
 export interface ConsultationData {
   // Website Intelligence
@@ -679,19 +680,7 @@ ${d.ctaText}
   };
 
   if (isGeneratingBrief) {
-    return (
-      <div className="min-h-[500px] flex flex-col items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-foreground mb-2">Building Your Strategy Brief...</h2>
-          <p className="text-muted-foreground">Analyzing your inputs and crafting a strategic foundation.</p>
-        </motion.div>
-      </div>
-    );
+    return <AIWorkingLoader />;
   }
 
   return (
