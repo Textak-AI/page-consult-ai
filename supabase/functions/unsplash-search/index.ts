@@ -2,11 +2,26 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-};
+// CORS with origin whitelist for security
+const allowedOrigins = [
+  'https://page-consult-ai.lovable.app',
+  'https://preview--page-consult-ai.lovable.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:8080',
+];
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const allowedOrigin = origin && allowedOrigins.some(o => origin.startsWith(o.replace(/\/$/, '')))
+    ? origin 
+    : allowedOrigins[0];
+  
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  };
+}
 
 // Validation schema
 const UnsplashSearchSchema = z.object({
@@ -16,6 +31,9 @@ const UnsplashSearchSchema = z.object({
 });
 
 serve(async (req) => {
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -23,7 +41,7 @@ serve(async (req) => {
   try {
     console.log('Unsplash search request received');
     
-    // Get user from JWT (already verified by Supabase since verify_jwt = true)
+    // Get authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       console.error('No authorization header');
@@ -33,22 +51,26 @@ serve(async (req) => {
       );
     }
     
-    const token = authHeader.replace('Bearer ', '');
-    const [, payload] = token.split('.');
-    const decodedPayload = JSON.parse(atob(payload));
-    const userId = decodedPayload.sub;
-
-    if (!userId) {
-      console.error('No user ID in token');
+    // SECURITY FIX: Use proper Supabase auth verification instead of manual JWT decode
+    const verifyClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    
+    const { data: { user }, error: authError } = await verifyClient.auth.getUser();
+    if (authError || !user) {
+      console.error('Auth verification failed:', authError);
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
+    
+    const userId = user.id;
     console.log('User authenticated:', userId);
 
-    // Use service role key for database operations
+    // Use service role key for database operations (quota checking)
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -178,9 +200,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Unsplash search error:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    const origin = req.headers.get('Origin');
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } }
     );
   }
 });
