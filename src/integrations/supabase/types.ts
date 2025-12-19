@@ -58,6 +58,7 @@ export type Database = {
       }
       consultations: {
         Row: {
+          ai_seo_data: Json | null
           calculator_config: Json | null
           challenge: string | null
           created_at: string
@@ -74,6 +75,7 @@ export type Database = {
           wants_calculator: boolean | null
         }
         Insert: {
+          ai_seo_data?: Json | null
           calculator_config?: Json | null
           challenge?: string | null
           created_at?: string
@@ -90,6 +92,7 @@ export type Database = {
           wants_calculator?: boolean | null
         }
         Update: {
+          ai_seo_data?: Json | null
           calculator_config?: Json | null
           challenge?: string | null
           created_at?: string

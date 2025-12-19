@@ -8,7 +8,8 @@ import {
   getExistingResearch,
   type PersonaIntelligence,
   type GeneratedContent,
-  type ConsultationData
+  type ConsultationData,
+  type AISeoData
 } from '@/services/intelligence';
 
 type IntelligenceStage = 'idle' | 'researching' | 'synthesizing' | 'complete' | 'error';
@@ -16,7 +17,7 @@ type IntelligenceStage = 'idle' | 'researching' | 'synthesizing' | 'complete' | 
 interface UseIntelligenceOptions {
   consultationId: string | null;
   userId: string | null;
-  onComplete?: (intelligence: PersonaIntelligence | null, content: GeneratedContent | null) => void;
+  onComplete?: (intelligence: PersonaIntelligence | null, content: GeneratedContent | null, aiSeoData: AISeoData | null) => void;
 }
 
 export function useIntelligence({ consultationId, userId, onComplete }: UseIntelligenceOptions) {
@@ -25,6 +26,7 @@ export function useIntelligence({ consultationId, userId, onComplete }: UseIntel
   const [error, setError] = useState<string | null>(null);
   const [intelligence, setIntelligence] = useState<PersonaIntelligence | null>(null);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
+  const [aiSeoData, setAiSeoData] = useState<AISeoData | null>(null);
 
   /**
    * Start the intelligence gathering process
@@ -68,7 +70,8 @@ export function useIntelligence({ consultationId, userId, onComplete }: UseIntel
         if (result.success && result.content) {
           setGeneratedContent(result.content);
           if (result.intelligence) setIntelligence(result.intelligence);
-          onComplete?.(result.intelligence || null, result.content);
+          if (result.aiSeoData) setAiSeoData(result.aiSeoData);
+          onComplete?.(result.intelligence || null, result.content, result.aiSeoData || null);
         }
         return;
       }
@@ -91,13 +94,14 @@ export function useIntelligence({ consultationId, userId, onComplete }: UseIntel
         setStage('complete');
         if (result.intelligence) setIntelligence(result.intelligence);
         if (result.content) setGeneratedContent(result.content);
-        onComplete?.(result.intelligence || null, result.content || null);
+        if (result.aiSeoData) setAiSeoData(result.aiSeoData);
+        onComplete?.(result.intelligence || null, result.content || null, result.aiSeoData || null);
       } else {
         console.warn('Intelligence pipeline failed:', result.error);
         setStage('error');
         setError(result.error || 'Intelligence gathering failed');
         // Still call onComplete to proceed without intelligence
-        onComplete?.(null, null);
+        onComplete?.(null, null, null);
       }
 
     } catch (err) {
@@ -105,7 +109,7 @@ export function useIntelligence({ consultationId, userId, onComplete }: UseIntel
       clearInterval(progressInterval);
       setStage('error');
       setError(err instanceof Error ? err.message : 'Unknown error');
-      onComplete?.(null, null);
+      onComplete?.(null, null, null);
     }
   }, [consultationId, userId, onComplete]);
 
@@ -118,6 +122,7 @@ export function useIntelligence({ consultationId, userId, onComplete }: UseIntel
     setError(null);
     setIntelligence(null);
     setGeneratedContent(null);
+    setAiSeoData(null);
   }, []);
 
   return {
@@ -126,6 +131,7 @@ export function useIntelligence({ consultationId, userId, onComplete }: UseIntel
     error,
     intelligence,
     generatedContent,
+    aiSeoData,
     gatherIntelligence,
     reset,
     isGathering: stage === 'researching' || stage === 'synthesizing',
