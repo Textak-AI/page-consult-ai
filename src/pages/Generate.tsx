@@ -12,6 +12,7 @@ import { AIConsultantSidebar } from "@/components/editor/AIConsultantSidebar";
 import { CalculatorUpgradeModal } from "@/components/editor/CalculatorUpgradeModal";
 import { StylePicker } from "@/components/editor/StylePicker";
 import { PageGenerationLoader } from "@/components/editor/PageGenerationLoader";
+import { StrategyBriefPanel } from "@/components/builder/StrategyBriefPanel";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
 import { generateIntelligentContent, runIntelligencePipeline } from "@/services/intelligence";
 import type { PersonaIntelligence, GeneratedContent } from "@/services/intelligence/types";
@@ -1686,6 +1687,12 @@ function EditorContent({
         
         <LivePreview sections={sections} onSectionsChange={setSections} />
       </div>
+
+      {/* Strategy Brief Panel - Fixed to right edge */}
+      <StrategyBriefPanel
+        brief={strategicData?.strategyBrief || (pageData?.strategy_brief as string | null) || null}
+        businessName={strategicData?.consultationData?.businessName || (pageData?.consultation_data as any)?.businessName}
+      />
 
       <PublishModal
         open={publishModalOpen}
