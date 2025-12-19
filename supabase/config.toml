@@ -1,5 +1,8 @@
 project_id = "wopnfuzevpldhkshkmrk"
 
+[functions.modify-section]
+verify_jwt = true
+
 [functions.anthropic-proxy]
 verify_jwt = true
 
