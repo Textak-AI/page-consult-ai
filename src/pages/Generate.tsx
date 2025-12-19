@@ -31,6 +31,7 @@ import {
 import { CreditDisplay, UpgradeDrawer } from "@/components/credits";
 import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid } from "@/lib/aiSeoIntegration";
 import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief } from "@/utils/sectionMapper";
+import { generateDesignSystem, designSystemToCSSVariables, type DesignSystem } from "@/config/designSystem";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -140,6 +141,10 @@ function GenerateContent() {
     navigationState?.landingPageBestPractices || null
   );
   const [isRegenerating, setIsRegenerating] = useState(false);
+  
+  // Design system for dynamic theming
+  const [designSystem, setDesignSystem] = useState<DesignSystem | null>(null);
+  const [cssVariables, setCssVariables] = useState<string>("");
 
   const loadingMessages = [
     { icon: Check, text: "Analyzing your strategy" },
@@ -525,6 +530,20 @@ function GenerateContent() {
       if (fromStrategicConsultation && strategicData?.strategyBrief) {
         console.log('📋 Generating with STRATEGY BRIEF from strategic consultation');
         
+        // Generate design system from industry + tone + brand colors
+        const structuredBrief = strategicData.structuredBrief;
+        const ds = generateDesignSystem({
+          industry: consultationData.industry || 'default',
+          tone: structuredBrief?.tone || 'professional',
+          brandOverrides: strategicData.consultationData?.websiteIntelligence ? {
+            primaryColor: strategicData.consultationData.websiteIntelligence.primaryColor,
+            extractedColors: strategicData.consultationData.websiteIntelligence.colors,
+          } : undefined,
+        });
+        setDesignSystem(ds);
+        setCssVariables(designSystemToCSSVariables(ds));
+        console.log('🎨 Generated design system:', ds.id, 'with tone:', structuredBrief?.tone);
+        
         const { data: result, error } = await supabase.functions.invoke('generate-page-content', {
           body: {
             strategyBrief: strategicData.strategyBrief,
@@ -541,6 +560,17 @@ function GenerateContent() {
           console.log('📐 Page structure from brief:', result.content.pageStructure);
           return await mapStrategyBriefContentToSections(result.content, consultationData, strategicData.consultationData);
         }
+      }
+      
+      // Generate fallback design system for non-strategic flows
+      if (!designSystem) {
+        const ds = generateDesignSystem({
+          industry: consultationData.industry || 'default',
+          tone: 'professional',
+        });
+        setDesignSystem(ds);
+        setCssVariables(designSystemToCSSVariables(ds));
+        console.log('🎨 Generated fallback design system:', ds.id);
       }
 
       // PRIORITY 1: Use pre-generated content from wizard if available
@@ -1785,7 +1815,12 @@ function EditorContent({
           </div>
         </div>
         
-        <LivePreview sections={sections} onSectionsChange={setSections} />
+        <LivePreview 
+          sections={sections} 
+          onSectionsChange={setSections} 
+          cssVariables={cssVariables}
+          iconStyle={designSystem?.components?.iconStyle}
+        />
       </div>
 
       {/* Strategy Brief Panel - Fixed to right edge */}

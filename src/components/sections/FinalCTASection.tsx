@@ -28,13 +28,24 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   ];
 
   return (
-    <section className={`py-20 md:py-28 lg:py-32 px-4 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-900 relative overflow-hidden ${
-      isEditing ? "relative" : ""
-    }`}>
+    <section 
+      className={`py-20 md:py-28 lg:py-32 px-4 relative overflow-hidden ${
+        isEditing ? "relative" : ""
+      }`}
+      style={{
+        background: 'linear-gradient(135deg, var(--color-background, #1e293b), var(--color-background-alt, #0f172a))',
+      }}
+    >
       {/* Background decorations */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjAzIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-60"></div>
-      <div className="absolute top-1/2 left-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[100px] -translate-y-1/2"></div>
-      <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px] -translate-y-1/2"></div>
+      <div 
+        className="absolute top-1/2 left-1/4 w-[500px] h-[500px] rounded-full blur-[100px] -translate-y-1/2"
+        style={{ backgroundColor: 'var(--color-primary, rgba(6, 182, 212, 0.1))' }}
+      ></div>
+      <div 
+        className="absolute top-1/2 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] -translate-y-1/2"
+        style={{ backgroundColor: 'var(--color-secondary, rgba(168, 85, 247, 0.1))' }}
+      ></div>
       
       {isEditing && (
         <div className="absolute inset-0 border-2 border-secondary/80 rounded-lg pointer-events-none z-10" />
@@ -52,10 +63,9 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
           contentEditable={isEditing}
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("headline", e)}
+          style={{ color: 'var(--color-text-inverse, white)' }}
         >
-          <span className="bg-gradient-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent">
-            {content.headline}
-          </span>
+          {content.headline}
         </motion.h2>
         
         {content.subtext && (
@@ -64,7 +74,8 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.05 }}
-            className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto"
+            className="text-lg md:text-xl max-w-2xl mx-auto"
+            style={{ color: 'var(--color-text-secondary, #94a3b8)' }}
           >
             {content.subtext}
           </motion.p>
@@ -79,9 +90,15 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
         >
           <Button 
             size="lg" 
-            className={`text-lg md:text-xl px-12 md:px-16 py-7 md:py-8 h-auto font-semibold bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 shadow-2xl shadow-cyan-500/40 hover:shadow-cyan-500/60 transition-all duration-300 hover:scale-105 group ${
+            className={`text-lg md:text-xl px-12 md:px-16 py-7 md:py-8 h-auto font-semibold shadow-2xl transition-all duration-300 hover:scale-105 group ${
               isEditing ? "outline-dashed outline-2 outline-secondary/50" : ""
             }`}
+            style={{
+              background: `linear-gradient(135deg, var(--color-primary, #06b6d4), var(--color-primary-hover, #0891b2))`,
+              color: 'var(--color-text-inverse, white)',
+              boxShadow: '0 20px 40px -15px var(--color-primary, rgba(6, 182, 212, 0.4))',
+              borderRadius: 'var(--radius-medium, 0.75rem)',
+            }}
           >
             <span
               contentEditable={isEditing}
@@ -102,9 +119,13 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
-                className="flex items-center gap-2 text-sm md:text-base text-slate-400"
+                className="flex items-center gap-2 text-sm md:text-base"
+                style={{ color: 'var(--color-text-secondary, #94a3b8)' }}
               >
-                <CheckCircle className="w-5 h-5 text-cyan-500" />
+                <CheckCircle 
+                  className="w-5 h-5" 
+                  style={{ color: 'var(--color-primary, #22d3ee)' }}
+                />
                 <span>{item.text}</span>
               </motion.div>
             ))}

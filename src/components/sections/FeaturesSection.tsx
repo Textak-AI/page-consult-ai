@@ -18,6 +18,7 @@ interface FeaturesSectionProps {
     }>;
   };
   onUpdate?: (content: any) => void;
+  iconStyle?: "outline" | "solid" | "duotone";
 }
 
 // Comprehensive icon map - maps string names to Lucide components
@@ -58,7 +59,7 @@ const getIconComponent = (iconName: string): LucideIcon => {
   return CheckCircle;
 };
 
-export function FeaturesSection({ content }: FeaturesSectionProps) {
+export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSectionProps) {
   const { 
     title = "Why Choose Us", 
     subtitle = "Everything you need to succeed",
@@ -80,8 +81,20 @@ export function FeaturesSection({ content }: FeaturesSectionProps) {
     return "md:grid-cols-2 lg:grid-cols-3"; // 6+
   };
 
+  // Get stroke width based on icon style
+  const getStrokeWidth = () => {
+    switch (iconStyle) {
+      case "solid": return 2.5;
+      case "duotone": return 1.5;
+      default: return 1.5; // outline
+    }
+  };
+
   return (
-    <section className="py-20 md:py-28 px-4 bg-slate-50 dark:bg-slate-900/50">
+    <section 
+      className="py-20 md:py-28 px-4"
+      style={{ backgroundColor: 'var(--color-background-alt, #f8fafc)' }}
+    >
       <div className="container mx-auto max-w-6xl">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -90,10 +103,16 @@ export function FeaturesSection({ content }: FeaturesSectionProps) {
           transition={{ duration: 0.5 }}
           className="text-center mb-16 md:mb-20 mx-auto max-w-3xl"
         >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-5 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+          <h2 
+            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-5"
+            style={{ color: 'var(--color-text-primary, #0f172a)' }}
+          >
             {title}
           </h2>
-          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400">
+          <p 
+            className="text-lg md:text-xl"
+            style={{ color: 'var(--color-text-secondary, #475569)' }}
+          >
             {subtitle}
           </p>
         </motion.div>
@@ -108,16 +127,37 @@ export function FeaturesSection({ content }: FeaturesSectionProps) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="group p-8 md:p-10 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-slate-900/30 hover:border-cyan-500/30 dark:hover:border-cyan-500/30 transition-all duration-300 hover:-translate-y-1 flex flex-col"
+                className="group p-8 md:p-10 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col"
+                style={{
+                  backgroundColor: 'var(--color-surface, white)',
+                  borderColor: 'var(--color-border, #e2e8f0)',
+                  borderWidth: '1px',
+                }}
               >
-                {/* Icon with outline style (not filled squares) */}
-                <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <Icon className="w-7 h-7 md:w-8 md:h-8 text-cyan-500 dark:text-cyan-400" strokeWidth={1.5} />
+                {/* Icon with style from design system */}
+                <div 
+                  className="w-14 h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
+                  style={{ 
+                    backgroundColor: 'var(--color-primary-muted, rgba(6, 182, 212, 0.1))',
+                    borderRadius: 'var(--radius-medium, 0.75rem)',
+                  }}
+                >
+                  <Icon 
+                    className="w-7 h-7 md:w-8 md:h-8" 
+                    style={{ color: 'var(--color-primary, #0891b2)' }}
+                    strokeWidth={getStrokeWidth()} 
+                  />
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold mb-4 text-slate-900 dark:text-white">
+                <h3 
+                  className="text-xl md:text-2xl font-bold mb-4"
+                  style={{ color: 'var(--color-text-primary, #0f172a)' }}
+                >
                   {feature.title}
                 </h3>
-                <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
+                <p 
+                  className="text-base md:text-lg leading-relaxed"
+                  style={{ color: 'var(--color-text-secondary, #475569)' }}
+                >
                   {feature.description}
                 </p>
               </motion.div>
