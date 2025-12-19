@@ -49,12 +49,12 @@ export default function EmailGateModal({
   // Generate personalized teaser based on extracted intelligence
   const getTeaser = () => {
     if (industry && audience) {
-      return `We've analyzed the ${industry} market and found key insights about reaching ${audience}.`;
+      return `Enter your email to get detailed insights on the ${industry} market and ${audience} buyer patterns.`;
     }
     if (industry) {
-      return `We've researched the ${industry} market and found buyer patterns you should know.`;
+      return `Enter your email to get detailed insights on the ${industry} market and buyer patterns.`;
     }
-    return "We've researched your market and found insights about your ideal buyers.";
+    return "Enter your email to unlock detailed insights on your market and ideal buyers.";
   };
 
   return (
@@ -93,7 +93,7 @@ export default function EmailGateModal({
                   )}
                 </div>
                 <h2 className="text-xl font-bold text-white mb-2">
-                  Your Market Research is Ready
+                  Unlock Your Market Research
                 </h2>
                 <p className="text-slate-300 text-sm leading-relaxed">
                   {getTeaser()}
