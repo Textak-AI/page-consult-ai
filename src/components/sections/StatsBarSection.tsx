@@ -46,7 +46,13 @@ export function StatsBarSection({ statistics }: StatsBarSectionProps) {
   };
 
   return (
-    <section className="py-12 md:py-16 bg-gradient-to-r from-slate-100 via-slate-50 to-slate-100 dark:from-slate-800/80 dark:via-slate-900 dark:to-slate-800/80 border-y border-slate-200 dark:border-slate-700/50">
+    <section 
+      className="py-12 md:py-16 border-y"
+      style={{
+        background: 'linear-gradient(to right, var(--color-background-alt, #f1f5f9), var(--color-surface, #f8fafc), var(--color-background-alt, #f1f5f9))',
+        borderColor: 'var(--color-border, #e2e8f0)',
+      }}
+    >
       <div className="container mx-auto max-w-6xl px-4">
         <div className={`grid ${getGridClass()} gap-6 md:gap-8`}>
           {cleanStats.map((stat, i) => (
@@ -56,16 +62,30 @@ export function StatsBarSection({ statistics }: StatsBarSectionProps) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.15, duration: 0.5 }}
-              className="bg-white dark:bg-slate-800/60 rounded-2xl p-6 md:p-8 text-center shadow-lg shadow-slate-200/50 dark:shadow-slate-900/30 border border-slate-200/80 dark:border-slate-700/50 hover:shadow-xl hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-300"
+              className="rounded-2xl p-6 md:p-8 text-center shadow-lg hover:shadow-xl transition-all duration-300"
+              style={{
+                backgroundColor: 'var(--color-surface, white)',
+                borderColor: 'var(--color-border, #e2e8f0)',
+                borderWidth: '1px',
+              }}
             >
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-500 dark:from-cyan-400 dark:to-cyan-300 bg-clip-text text-transparent mb-3">
+              <div 
+                className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3"
+                style={{ color: 'var(--color-primary, #0891b2)' }}
+              >
                 {stat.value}
               </div>
-              <div className="text-slate-700 dark:text-slate-300 font-medium text-sm md:text-base mb-2">
+              <div 
+                className="font-medium text-sm md:text-base mb-2"
+                style={{ color: 'var(--color-text-primary, #334155)' }}
+              >
                 {stat.label}
               </div>
               {stat.source && (
-                <div className="text-xs text-slate-500 dark:text-slate-500">
+                <div 
+                  className="text-xs"
+                  style={{ color: 'var(--color-text-muted, #64748b)' }}
+                >
                   Source: {stat.source}
                 </div>
               )}
