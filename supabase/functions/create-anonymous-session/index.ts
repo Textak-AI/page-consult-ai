@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 // Validation schema
-const SetSessionSchema = z.object({
+const CreateSessionSchema = z.object({
   session_token: z.string().uuid('Invalid session token format'),
 });
 
@@ -21,11 +21,6 @@ const corsHeaders = (origin: string | null) => ({
   'Access-Control-Allow-Credentials': 'true',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS'
 });
-
-interface SetSessionRequest {
-  session_token: string;
-  user_id?: string;
-}
 
 serve(async (req) => {
   const origin = req.headers.get('origin');
@@ -49,7 +44,7 @@ serve(async (req) => {
     }
 
     // Validate request body against schema
-    const validation = SetSessionSchema.safeParse(requestBody);
+    const validation = CreateSessionSchema.safeParse(requestBody);
     if (!validation.success) {
       console.error('Validation error:', validation.error);
       return new Response(
@@ -61,33 +56,33 @@ serve(async (req) => {
     const { session_token } = validation.data;
 
     // Initialize Supabase client with SERVICE_ROLE_KEY to bypass RLS
-    // This is secure because we're validating a session_token from the request body
+    // This is secure because this endpoint only creates anonymous sessions
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify session exists in database
+    // Create anonymous session
     const { data: session, error } = await supabaseClient
       .from('consultation_sessions')
-      .select('id, session_token')
-      .eq('session_token', session_token)
-      .maybeSingle();
+      .insert({
+        session_token,
+        current_step: 'consultation',
+        status: 'in_progress',
+        user_id: null // Anonymous session
+      })
+      .select('id')
+      .single();
 
     if (error) {
       console.error('Database error:', error);
       return new Response(
-        JSON.stringify({ error: 'Failed to validate session' }),
+        JSON.stringify({ error: 'Failed to create session' }),
         { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (!session) {
-      return new Response(
-        JSON.stringify({ error: 'Session not found' }),
-        { status: 404, headers: { ...headers, 'Content-Type': 'application/json' } }
-      );
-    }
+    console.log('Created anonymous session:', session.id);
 
     // Set httpOnly cookie
     const cookieOptions = [
@@ -96,7 +91,7 @@ serve(async (req) => {
       'Secure',
       'SameSite=Lax',
       'Path=/',
-      `Max-Age=${24 * 60 * 60}`, // 24 hours
+      `Max-Age=${7 * 24 * 60 * 60}`, // 7 days
     ].join('; ');
 
     return new Response(
@@ -111,7 +106,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in set-session-cookie:', error);
+    console.error('Error in create-anonymous-session:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }

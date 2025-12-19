@@ -70,74 +70,103 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     // Get current user if authenticated
     const { data: { session: authSession } } = await supabase.auth.getSession();
 
-    // Create new session in database
-    const { data, error } = await supabase
-      .from('consultation_sessions')
-      .insert({
-        session_token: token,
-        current_step: 'consultation',
-        status: 'in_progress',
-        user_id: authSession?.user?.id || null
-      })
-      .select()
-      .single();
+    // For authenticated users, create session via direct insert (RLS allows this)
+    if (authSession?.user?.id) {
+      const { data, error } = await supabase
+        .from('consultation_sessions')
+        .insert({
+          session_token: token,
+          current_step: 'consultation',
+          status: 'in_progress',
+          user_id: authSession.user.id
+        })
+        .select()
+        .single();
 
-    if (error) {
-      if (import.meta.env.DEV) {
-        console.error('Error creating session:', error);
-      }
-      toast({
-        title: "⚠️ Session error",
-        description: "Could not create session. Please refresh the page.",
-        variant: "destructive",
-        duration: 5000
-      });
-      return;
-    }
-
-    // Set session token and ID immediately (works without cookie)
-    setSessionToken(token);
-    setSessionId(data.id);
-
-    // Try to set the session cookie via edge function (optional enhancement)
-    try {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/set-session-cookie`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ session_token: token }),
-      });
-
-      if (!response.ok) {
-        // Log but don't fail - session works without cookie
+      if (error) {
         if (import.meta.env.DEV) {
-          console.warn('Cookie setting failed, but session created successfully');
+          console.error('Error creating session:', error);
         }
+        toast({
+          title: "⚠️ Session error",
+          description: "Could not create session. Please refresh the page.",
+          variant: "destructive",
+          duration: 5000
+        });
+        return;
       }
-    } catch (error) {
-      // Cookie is optional - session already works via state
-      if (import.meta.env.DEV) {
-        console.warn('Could not set session cookie (non-critical):', error);
+
+      setSessionToken(token);
+      setSessionId(data.id);
+    } else {
+      // For anonymous users, create session via edge function (bypasses RLS securely)
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/create-anonymous-session`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ session_token: token }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          if (import.meta.env.DEV) {
+            console.error('Error creating anonymous session:', errorData);
+          }
+          toast({
+            title: "⚠️ Session error",
+            description: "Could not create session. Please refresh the page.",
+            variant: "destructive",
+            duration: 5000
+          });
+          return;
+        }
+
+        const data = await response.json();
+        setSessionToken(token);
+        setSessionId(data.session_id);
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error('Error creating anonymous session:', error);
+        }
+        toast({
+          title: "⚠️ Session error",
+          description: "Could not create session. Please refresh the page.",
+          variant: "destructive",
+          duration: 5000
+        });
+        return;
       }
     }
   };
 
   const loadSessionFromDb = async (token: string) => {
-    const { data, error } = await supabase
-      .from('consultation_sessions')
-      .select('*')
-      .eq('session_token', token)
-      .eq('status', 'in_progress')
-      .maybeSingle();
+    // Check if user is authenticated
+    const { data: { session: authSession } } = await supabase.auth.getSession();
     
-    if (error) {
-      console.error('Error loading session:', error);
-      return null;
+    if (authSession?.user?.id) {
+      // Authenticated users can query directly (RLS allows this)
+      const { data, error } = await supabase
+        .from('consultation_sessions')
+        .select('*')
+        .eq('session_token', token)
+        .eq('user_id', authSession.user.id)
+        .eq('status', 'in_progress')
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error loading session:', error);
+        return null;
+      }
+      
+      return data;
     }
     
-    return data;
+    // For anonymous users, the session data was already loaded via get-session edge function
+    // during initializeSession. Return null here to avoid direct DB queries.
+    return null;
   };
 
   const saveSession = async (updates: Partial<SessionData>) => {
@@ -161,31 +190,83 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     
     setIsSaving(true);
     
-    const { error } = await supabase
-      .from('consultation_sessions')
-      .update({
-        ...updates,
-        last_active: new Date().toISOString()
-      })
-      .eq('session_token', sessionToken);
+    // Check if user is authenticated
+    const { data: { session: authSession } } = await supabase.auth.getSession();
     
-    if (error) {
-      if (import.meta.env.DEV) {
-        console.error('Error saving session:', error);
+    if (authSession?.user?.id) {
+      // Authenticated users can update via direct query (RLS allows this)
+      const { error } = await supabase
+        .from('consultation_sessions')
+        .update({
+          ...updates,
+          last_active: new Date().toISOString()
+        })
+        .eq('session_token', sessionToken)
+        .eq('user_id', authSession.user.id);
+      
+      if (error) {
+        if (import.meta.env.DEV) {
+          console.error('Error saving session:', error);
+        }
+        toast({
+          title: "⚠️ Connection issue",
+          description: "Changes not saved. Please check your connection.",
+          variant: "destructive",
+          duration: 3000
+        });
+      } else {
+        toast({
+          title: "✓ Saved",
+          duration: 2000,
+          className: "bg-green-50 border-green-200 text-green-900"
+        });
       }
-      toast({
-        title: "⚠️ Connection issue",
-        description: "Changes not saved. Please check your connection.",
-        variant: "destructive",
-        duration: 3000
-      });
     } else {
-      // Show subtle success toast
-      toast({
-        title: "✓ Saved",
-        duration: 2000,
-        className: "bg-green-50 border-green-200 text-green-900"
-      });
+      // Anonymous users save via edge function (bypasses RLS securely)
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/update-anonymous-session`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            session_token: sessionToken,
+            updates: {
+              ...updates,
+              last_active: new Date().toISOString()
+            }
+          }),
+        });
+
+        if (!response.ok) {
+          if (import.meta.env.DEV) {
+            console.error('Error saving anonymous session');
+          }
+          toast({
+            title: "⚠️ Connection issue",
+            description: "Changes not saved. Please check your connection.",
+            variant: "destructive",
+            duration: 3000
+          });
+        } else {
+          toast({
+            title: "✓ Saved",
+            duration: 2000,
+            className: "bg-green-50 border-green-200 text-green-900"
+          });
+        }
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error('Error saving anonymous session:', error);
+        }
+        toast({
+          title: "⚠️ Connection issue",
+          description: "Changes not saved. Please check your connection.",
+          variant: "destructive",
+          duration: 3000
+        });
+      }
     }
     
     setIsSaving(false);
@@ -209,13 +290,43 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       return;
     }
     
-    const { error } = await supabase
-      .from('consultation_sessions')
-      .update({ user_email: email })
-      .eq('session_token', sessionToken);
+    // Check if user is authenticated
+    const { data: { session: authSession } } = await supabase.auth.getSession();
     
-    if (!error) {
-      setUserEmailState(email);
+    if (authSession?.user?.id) {
+      // Authenticated users can update via direct query
+      const { error } = await supabase
+        .from('consultation_sessions')
+        .update({ user_email: email })
+        .eq('session_token', sessionToken)
+        .eq('user_id', authSession.user.id);
+      
+      if (!error) {
+        setUserEmailState(email);
+      }
+    } else {
+      // Anonymous users update via edge function
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/update-anonymous-session`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            session_token: sessionToken,
+            updates: { user_email: email }
+          }),
+        });
+
+        if (response.ok) {
+          setUserEmailState(email);
+        }
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error('Error setting email:', error);
+        }
+      }
     }
   };
 

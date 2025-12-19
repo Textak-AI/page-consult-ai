@@ -65,3 +65,9 @@ verify_jwt = false
 
 [functions.demo-update-session]
 verify_jwt = false
+
+[functions.create-anonymous-session]
+verify_jwt = false
+
+[functions.update-anonymous-session]
+verify_jwt = false
