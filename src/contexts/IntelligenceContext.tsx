@@ -328,8 +328,14 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         ...prev,
         conversation: [...prev.conversation, aiMessage],
         isProcessing: false,
-        showEmailGate: shouldShowGate,
       }));
+
+      // Show email gate with 2-second delay so user can read the response first
+      if (shouldShowGate) {
+        setTimeout(() => {
+          setState(prev => ({ ...prev, showEmailGate: true }));
+        }, 2000);
+      }
 
       // Update session in database (fire and forget)
       supabase.functions.invoke('demo-update-session', {
