@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import LiveDemoSection from "@/components/landing/LiveDemoSection";
@@ -10,6 +11,11 @@ import Footer from "@/components/Footer";
 import { IntelligenceProvider } from "@/contexts/IntelligenceContext";
 
 const Index = () => {
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <IntelligenceProvider>
       <div className="min-h-screen">
