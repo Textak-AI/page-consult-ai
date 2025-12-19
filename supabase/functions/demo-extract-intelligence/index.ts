@@ -42,18 +42,25 @@ async function hashIP(ip: string): Promise<string> {
 
 const systemPrompt = `You extract business intelligence from prospect messages.
 
+CRITICAL DISTINCTION:
+- "I'm a manufacturer" → industry: Manufacturing
+- "I help manufacturers" or "we work with manufacturers" → industry: Consulting/Services, audience: Manufacturers
+- "I sell to restaurants" → audience: Restaurants (NOT industry: Food & Beverage)
+
+The INDUSTRY is what the business IS (their category).
+The AUDIENCE is who they SERVE (their customers/clients).
+
+When someone says "we help X" or "we work with X" or "our clients are X":
+- X is the AUDIENCE, not the industry
+- The industry is likely Consulting, Agency, Services, or Software
+
 Return ONLY valid JSON:
 {
-  "industry": "Specific industry category or null",
-  "audience": "Who they serve/sell to or null", 
-  "valueProp": "What value/outcome they provide or null",
+  "industry": "What type of business they ARE",
+  "audience": "Who they SELL TO or HELP",
+  "valueProp": "What value/outcome they provide",
   "businessType": "B2B or B2C or Both or null"
 }
-
-Be specific:
-- "Manufacturing" not "Business"
-- "VP Operations at aerospace companies" not "business owners"
-- "Supply chain waste reduction" not "consulting"
 
 If something is unclear from this message, return null for that field.
 Do not include any text outside the JSON object.
