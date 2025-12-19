@@ -1,5 +1,5 @@
 // PageConsult AI Design System
-// Main export file
+// Main export file for design tokens and generators
 
 // Types
 export type {
