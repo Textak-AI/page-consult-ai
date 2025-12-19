@@ -2,8 +2,20 @@ import { Button } from "@/components/ui/button";
 import { Play, ArrowRight, TrendingUp, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import AbstractHeroTeaser from "@/components/AbstractHeroTeaser";
+import { useContext } from "react";
+import IntelligenceContext from "@/contexts/IntelligenceContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Hero = () => {
+  // Try to get intelligence context (may be null if not in provider)
+  const intelligenceContext = useContext(IntelligenceContext);
+  const extractedIndustry = intelligenceContext?.state?.extracted?.industry;
+
+  // Dynamic headline based on detected industry
+  const headline = extractedIndustry
+    ? `Landing Pages for ${extractedIndustry}`
+    : "Landing Pages That Start With Strategy";
+
   return (
     <section className="relative pt-32 pb-20 min-h-screen overflow-x-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]">
       {/* Background layer - BEHIND everything */}
@@ -31,22 +43,48 @@ const Hero = () => {
             animationFillMode: 'forwards',
             opacity: 0
           }}>
-            {/* Headline */}
-            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white tracking-tight antialiased mb-6" style={{
-              lineHeight: '1.2',
-              textRendering: 'optimizeLegibility'
-            }}>
-              <span className="block">Landing Pages</span>
-              <span className="block mt-2">
-                That Start With{' '}
-                <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient-x" style={{
-                  backgroundSize: '200% auto',
-                  textShadow: '0 0 40px rgba(6, 182, 212, 0.3)'
-                }}>
-                  Strategy
-                </span>
-              </span>
-            </h1>
+            {/* Headline with animation on change */}
+            <AnimatePresence mode="wait">
+              <motion.h1 
+                key={headline}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white tracking-tight antialiased mb-6" 
+                style={{
+                  lineHeight: '1.2',
+                  textRendering: 'optimizeLegibility'
+                }}
+              >
+                {extractedIndustry ? (
+                  <>
+                    <span className="block">Landing Pages for</span>
+                    <span className="block mt-2">
+                      <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient-x" style={{
+                        backgroundSize: '200% auto',
+                        textShadow: '0 0 40px rgba(6, 182, 212, 0.3)'
+                      }}>
+                        {extractedIndustry}
+                      </span>
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="block">Landing Pages</span>
+                    <span className="block mt-2">
+                      That Start With{' '}
+                      <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient-x" style={{
+                        backgroundSize: '200% auto',
+                        textShadow: '0 0 40px rgba(6, 182, 212, 0.3)'
+                      }}>
+                        Strategy
+                      </span>
+                    </span>
+                  </>
+                )}
+              </motion.h1>
+            </AnimatePresence>
             
             {/* Subheadline */}
             <p className="text-xl md:text-2xl text-gray-300 leading-relaxed mb-10" style={{

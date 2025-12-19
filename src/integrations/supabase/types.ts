@@ -110,6 +110,69 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_market_cache: {
+        Row: {
+          cache_key: string
+          created_at: string | null
+          data: Json
+          expires_at: string | null
+          id: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string | null
+          data: Json
+          expires_at?: string | null
+          id?: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string | null
+          data?: Json
+          expires_at?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      demo_sessions: {
+        Row: {
+          completed: boolean | null
+          continued_to_consultation: boolean | null
+          created_at: string | null
+          extracted_intelligence: Json | null
+          id: string
+          ip_hash: string | null
+          market_research: Json | null
+          message_count: number | null
+          messages: Json | null
+          session_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          continued_to_consultation?: boolean | null
+          created_at?: string | null
+          extracted_intelligence?: Json | null
+          id?: string
+          ip_hash?: string | null
+          market_research?: Json | null
+          message_count?: number | null
+          messages?: Json | null
+          session_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          continued_to_consultation?: boolean | null
+          created_at?: string | null
+          extracted_intelligence?: Json | null
+          id?: string
+          ip_hash?: string | null
+          market_research?: Json | null
+          message_count?: number | null
+          messages?: Json | null
+          session_id?: string
+        }
+        Relationships: []
+      }
       generation_logs: {
         Row: {
           confidence_score: number | null
