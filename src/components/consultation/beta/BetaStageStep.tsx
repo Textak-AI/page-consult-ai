@@ -6,7 +6,6 @@ import {
   Users, 
   Globe, 
   Rocket,
-  Check,
   ArrowRight,
   ArrowLeft
 } from 'lucide-react';
@@ -53,12 +52,12 @@ export function BetaStageStep({ value, onChange, onContinue, onBack }: Props) {
           What stage is your product?
         </h2>
         <p className="text-slate-400">
-          This helps us tailor your messaging and call-to-action
+          This helps us craft the right messaging
         </p>
       </div>
 
-      {/* Stage Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Stage Grid - 2x3 */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {LAUNCH_STAGES.map((stage) => {
           const Icon = stage.icon;
           const isSelected = value === stage.id;
@@ -68,7 +67,7 @@ export function BetaStageStep({ value, onChange, onContinue, onBack }: Props) {
               key={stage.id}
               onClick={() => onChange(stage.id)}
               className={cn(
-                "relative p-5 rounded-xl border-2 text-left transition-all",
+                "relative p-5 rounded-xl border-2 text-center transition-all flex flex-col items-center",
                 isSelected
                   ? "border-cyan-500 bg-cyan-500/10"
                   : "border-slate-700 hover:border-slate-500 bg-slate-800/50"
@@ -76,19 +75,22 @@ export function BetaStageStep({ value, onChange, onContinue, onBack }: Props) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="flex items-start gap-3">
-                <div className={cn(
-                  "p-2.5 rounded-lg",
-                  isSelected ? "bg-cyan-500/20 text-cyan-400" : "bg-slate-700 text-slate-400"
-                )}>
-                  <Icon className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-white text-sm">{stage.title}</h3>
-                  <p className="text-xs text-slate-400 mt-1">{stage.description}</p>
-                </div>
-                {isSelected && <Check className="w-4 h-4 text-cyan-400 shrink-0" />}
+              {/* Circular icon container */}
+              <div className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center mb-3",
+                isSelected ? "bg-cyan-500/20" : "bg-slate-700"
+              )}>
+                <Icon className={cn(
+                  "w-6 h-6",
+                  isSelected ? "text-cyan-400" : "text-slate-400"
+                )} />
               </div>
+              
+              {/* Title centered below icon */}
+              <h3 className="font-semibold text-white text-sm mb-1">{stage.title}</h3>
+              
+              {/* Description in smaller text */}
+              <p className="text-xs text-slate-400 leading-tight">{stage.description}</p>
             </motion.button>
           );
         })}
@@ -96,10 +98,18 @@ export function BetaStageStep({ value, onChange, onContinue, onBack }: Props) {
 
       {/* Navigation */}
       <div className="flex justify-between pt-4">
-        <Button variant="ghost" onClick={onBack} className="text-slate-400">
+        <Button 
+          variant="ghost" 
+          onClick={onBack} 
+          className="text-slate-300 hover:text-white hover:bg-slate-700"
+        >
           <ArrowLeft className="w-4 h-4 mr-2" /> Back
         </Button>
-        <Button onClick={onContinue} disabled={!value} className="bg-cyan-500 hover:bg-cyan-600">
+        <Button 
+          onClick={onContinue} 
+          disabled={!value} 
+          className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white hover:from-cyan-600 hover:to-purple-600"
+        >
           Continue <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>

@@ -75,10 +75,10 @@ export function BetaViralStep({
       {/* Header */}
       <div className="text-center">
         <h2 className="text-2xl font-bold text-white mb-2">
-          Add a viral referral system?
+          Enable Viral Referral System?
         </h2>
         <p className="text-slate-400">
-          Reward early adopters for spreading the word
+          Let signups share a unique link to move up and unlock perks
         </p>
       </div>
 
@@ -87,10 +87,10 @@ export function BetaViralStep({
         <Share2 className="w-6 h-6 text-slate-400" />
         <div className="flex-1">
           <Label htmlFor="viral-toggle" className="text-white font-medium">
-            Enable Referral Rewards
+            Enable Viral Waitlist
           </Label>
           <p className="text-sm text-slate-400">
-            Users can share a unique link to unlock rewards
+            Let signups share a unique link to earn rewards and move up the waitlist
           </p>
         </div>
         <Switch
@@ -131,8 +131,9 @@ export function BetaViralStep({
                   exit={{ opacity: 0, x: 20 }}
                   className="flex items-center gap-3 p-4 rounded-xl border border-slate-700 bg-slate-800/30"
                 >
-                  <div className="p-2 rounded-lg bg-cyan-500/20">
-                    <Gift className="w-4 h-4 text-cyan-400" />
+                  {/* Circular number badge with gradient */}
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center shrink-0">
+                    <span className="text-white font-bold text-sm">{index + 1}</span>
                   </div>
                   
                   <div className="flex items-center gap-2">
@@ -186,10 +187,17 @@ export function BetaViralStep({
 
       {/* Navigation */}
       <div className="flex justify-between pt-4">
-        <Button variant="ghost" onClick={onBack} className="text-slate-400">
+        <Button 
+          variant="ghost" 
+          onClick={onBack} 
+          className="text-slate-300 hover:text-white hover:bg-slate-700"
+        >
           <ArrowLeft className="w-4 h-4 mr-2" /> Back
         </Button>
-        <Button onClick={onContinue} className="bg-cyan-500 hover:bg-cyan-600">
+        <Button 
+          onClick={onContinue} 
+          className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white hover:from-cyan-600 hover:to-purple-600"
+        >
           Continue <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
