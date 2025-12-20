@@ -242,8 +242,16 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
         setTestData(parsed);
         setJsonText(JSON.stringify(parsed, null, 2));
       } catch (e) {
-        // Ignore parse errors
+        // Fall back to default preset on parse error
+        const defaultPreset = PRESETS['hypeflow-beta'];
+        setTestData(defaultPreset);
+        setJsonText(JSON.stringify(defaultPreset, null, 2));
       }
+    } else {
+      // No saved data, ensure default is loaded with proper JSON text
+      const defaultPreset = PRESETS['hypeflow-beta'];
+      setTestData(defaultPreset);
+      setJsonText(JSON.stringify(defaultPreset, null, 2));
     }
   }, []);
 
