@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette, FileText, TrendingUp, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,8 +9,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { AIWorkingLoader } from '@/components/editor/AIWorkingLoader';
 import type { AISeoData } from '@/services/intelligence/types';
 import { BrandCustomization, type BrandSettings, type WebsiteIntelligence } from './BrandCustomization';
+import { 
+  PageTypeStep, 
+  PAGE_TYPES, 
+  type PageType,
+  InvestorProfileStep,
+  type InvestorProfileData,
+  TractionMilestonesStep,
+  type TractionMilestonesData,
+  InvestmentOpportunityStep,
+  type InvestmentOpportunityData,
+  TeamAdvisorsStep,
+  type TeamAdvisorsData
+} from './steps';
 
 export interface ConsultationData {
+  // Page Type
+  pageType?: PageType;
+  
   // Website Intelligence
   websiteUrl?: string;
   websiteIntelligence?: {
@@ -41,17 +57,17 @@ export interface ConsultationData {
   yearsInBusiness: string;
   uniqueStrength: string;
   
-  // Target Audience
+  // Target Audience (Customer Acquisition flow)
   idealClient: string;
   clientFrustration: string;
   desiredOutcome: string;
   
-  // Credibility
+  // Credibility (Customer Acquisition flow)
   clientCount: string;
   achievements: string;
   testimonialText: string;
   
-  // Offer Details
+  // Offer Details (Customer Acquisition flow)
   mainOffer: string;
   offerIncludes: string;
   investmentRange: string;
@@ -61,17 +77,47 @@ export interface ConsultationData {
   primaryGoal: string;
   ctaText: string;
   objectionsToOvercome: string;
+  
+  // IR-specific fields
+  investorProfile?: InvestorProfileData;
+  tractionMilestones?: TractionMilestonesData;
+  investmentOpportunity?: InvestmentOpportunityData;
+  teamAdvisors?: TeamAdvisorsData;
 }
 
-const STEPS = [
+// Base steps that apply to all page types
+const BASE_STEPS = [
   { id: 'website', title: 'Your Website', icon: Globe },
   { id: 'branding', title: 'Brand Customization', icon: Palette },
+  { id: 'page-type', title: 'Page Purpose', icon: FileText },
   { id: 'identity', title: 'Business Identity', icon: Building2 },
+];
+
+// Customer Acquisition specific steps
+const CUSTOMER_ACQUISITION_STEPS = [
   { id: 'audience', title: 'Target Audience', icon: Users },
   { id: 'credibility', title: 'Credibility', icon: Trophy },
   { id: 'offer', title: 'Your Offer', icon: Target },
   { id: 'goals', title: 'Page Goals', icon: CheckCircle2 },
 ];
+
+// Investor Relations specific steps
+const IR_STEPS = [
+  { id: 'investor-profile', title: 'Investor Profile', icon: TrendingUp },
+  { id: 'traction', title: 'Traction & Milestones', icon: Trophy },
+  { id: 'team', title: 'Team & Advisors', icon: UserCheck },
+  { id: 'ir-opportunity', title: 'Investment Opportunity', icon: Target },
+  { id: 'goals', title: 'Page Goals', icon: CheckCircle2 },
+];
+
+// Helper to get steps based on page type
+const getStepsForPageType = (pageType?: PageType) => {
+  if (pageType === 'investor-relations') {
+    return [...BASE_STEPS, ...IR_STEPS];
+  }
+  // Default to customer acquisition flow for all other types
+  return [...BASE_STEPS, ...CUSTOMER_ACQUISITION_STEPS];
+};
 
 const INDUSTRIES = [
   'B2B SaaS / Software',
@@ -259,6 +305,9 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
     savedData: Partial<ConsultationData>;
   } | null>(null);
 
+  // Compute STEPS dynamically based on selected page type
+  const STEPS = useMemo(() => getStepsForPageType(data.pageType), [data.pageType]);
+
   // Restore progress on mount
   useEffect(() => {
     const saved = localStorage.getItem('pageconsult_consultation_draft');
@@ -335,6 +384,8 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
         return true; // Optional step
       case 'branding':
         return true; // Can always proceed (defaults available)
+      case 'page-type':
+        return !!data.pageType; // Must select a page type
       case 'identity':
         return data.businessName && data.industry && data.uniqueStrength;
       case 'audience':
@@ -345,6 +396,18 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
         return data.mainOffer && data.offerIncludes;
       case 'goals':
         return data.primaryGoal && data.ctaText;
+      // IR-specific steps
+      case 'investor-profile':
+        return data.investorProfile?.investorTypes?.length && 
+               data.investorProfile?.companyStage && 
+               data.investorProfile?.investmentAsk &&
+               data.investorProfile?.investmentThesis;
+      case 'traction':
+        return true; // Optional
+      case 'team':
+        return true; // Optional
+      case 'ir-opportunity':
+        return !!data.investmentOpportunity?.irEmail;
       default:
         return true;
     }
@@ -366,10 +429,13 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
   const handleNext = async () => {
     // If moving from website step and no website intelligence, skip branding step
     if (STEPS[currentStep].id === 'website' && !data.websiteIntelligence) {
-      // Skip branding step (index 1) and go directly to identity (index 2)
+      // Skip branding step (index 1) and go directly to page-type (index 2)
       setCurrentStep(currentStep + 2);
       return;
     }
+    
+    // If page type changes, we might need to reset step index due to different step arrays
+    // The useMemo for STEPS handles this automatically
     
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -381,7 +447,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
 
   const handleBack = () => {
     // If going back to branding step but no website intelligence, skip to website step
-    if (STEPS[currentStep].id === 'identity' && !data.websiteIntelligence) {
+    if (STEPS[currentStep].id === 'page-type' && !data.websiteIntelligence) {
       // Skip branding step and go back to website (index 0)
       setCurrentStep(0);
       return;
@@ -570,6 +636,54 @@ ${d.ctaText}
       case 'branding':
         // Handled by early return before main render - should not reach here
         return null;
+
+      case 'page-type':
+        return (
+          <PageTypeStep
+            selectedType={data.pageType}
+            onSelect={(pageType) => updateData({ pageType })}
+          />
+        );
+
+      case 'investor-profile':
+        return (
+          <InvestorProfileStep
+            data={data.investorProfile || {}}
+            onChange={(updates) => updateData({ 
+              investorProfile: { ...data.investorProfile, ...updates } as InvestorProfileData 
+            })}
+          />
+        );
+
+      case 'traction':
+        return (
+          <TractionMilestonesStep
+            data={data.tractionMilestones || {}}
+            onChange={(updates) => updateData({ 
+              tractionMilestones: { ...data.tractionMilestones, ...updates } as TractionMilestonesData 
+            })}
+          />
+        );
+
+      case 'team':
+        return (
+          <TeamAdvisorsStep
+            data={data.teamAdvisors || {}}
+            onChange={(updates) => updateData({ 
+              teamAdvisors: { ...data.teamAdvisors, ...updates } as TeamAdvisorsData 
+            })}
+          />
+        );
+
+      case 'ir-opportunity':
+        return (
+          <InvestmentOpportunityStep
+            data={data.investmentOpportunity || {}}
+            onChange={(updates) => updateData({ 
+              investmentOpportunity: { ...data.investmentOpportunity, ...updates } as InvestmentOpportunityData 
+            })}
+          />
+        );
 
       case 'identity':
         return (
