@@ -37,9 +37,32 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  // Mark document as hydrated to show content
+  // Handle hydration and scroll restoration
   useEffect(() => {
+    // Get saved scroll position
+    const savedPosition = sessionStorage.getItem('scrollPosition');
+    
+    // Mark as hydrated
     document.documentElement.classList.add('hydrated');
+    
+    // Restore scroll position after a brief delay (let content render)
+    if (savedPosition) {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, parseInt(savedPosition, 10));
+        sessionStorage.removeItem('scrollPosition');
+      });
+    }
+    
+    // Save scroll position before unload
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem('scrollPosition', window.scrollY.toString());
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, []);
 
   return (
