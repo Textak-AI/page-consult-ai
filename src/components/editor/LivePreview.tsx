@@ -13,6 +13,7 @@ import { useEditing } from "@/contexts/EditingContext";
 import { EditingToolbar } from "@/components/editor/EditingToolbar";
 import { SectionToolbar } from "@/components/editor/SectionToolbar";
 import { SectionAIChat } from "@/components/editor/SectionAIChat";
+import { SectionImageGenerator } from "@/components/editor/SectionImageGenerator";
 import { styleVariants } from "@/lib/styleVariants";
 
 type Section = {
@@ -36,6 +37,9 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
   
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [aiChatSection, setAiChatSection] = useState<{ index: number; type: string; content: any } | null>(null);
+  
+  const [imageGenOpen, setImageGenOpen] = useState(false);
+  const [imageGenSection, setImageGenSection] = useState<{ index: number; type: string; content: any } | null>(null);
 
   const handleSaveEdit = () => {
     setEditingSection(null);
@@ -62,6 +66,11 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     setAiChatOpen(true);
   };
 
+  const handleImageGenerate = (index: number, type: string, content: any) => {
+    setImageGenSection({ index, type, content });
+    setImageGenOpen(true);
+  };
+
   const handleApplyAIChanges = (newContent: any) => {
     if (aiChatSection) {
       const updated = [...sections];
@@ -70,6 +79,29 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     }
     setAiChatOpen(false);
     setAiChatSection(null);
+  };
+
+  const handleApplyImage = (imageUrl: string) => {
+    if (imageGenSection) {
+      const updated = [...sections];
+      const content = updated[imageGenSection.index].content;
+      
+      // Apply image based on section type
+      if (imageGenSection.type === 'hero') {
+        content.backgroundImage = imageUrl;
+      } else if (imageGenSection.type === 'photo-gallery') {
+        // Add to gallery images
+        content.images = [...(content.images || []), { url: imageUrl, alt: 'AI Generated' }];
+      } else {
+        // For features, problem-solution, etc - set as main image
+        content.image = imageUrl;
+      }
+      
+      updated[imageGenSection.index].content = content;
+      onSectionsChange(updated);
+    }
+    setImageGenOpen(false);
+    setImageGenSection(null);
   };
 
   const renderSectionWithToolbar = (section: Section, index: number, sectionElement: React.ReactNode) => {
@@ -86,6 +118,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           sectionContent={section.content}
           onEdit={() => handleEditSection(index)}
           onAIAssist={() => handleAIAssist(index, section.type, section.content)}
+          onImageGenerate={() => handleImageGenerate(index, section.type, section.content)}
           isEditing={editingSection === index}
         />
         {sectionElement}
@@ -269,6 +302,20 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         sectionContent={aiChatSection?.content || {}}
         strategyBrief={strategyBrief}
         onApplyChanges={handleApplyAIChanges}
+      />
+      
+      {/* Image Generator Drawer */}
+      <SectionImageGenerator
+        isOpen={imageGenOpen}
+        onClose={() => {
+          setImageGenOpen(false);
+          setImageGenSection(null);
+        }}
+        sectionType={imageGenSection?.type || ""}
+        sectionContent={imageGenSection?.content || {}}
+        strategyBrief={strategyBrief}
+        industryContext={strategyBrief?.industry}
+        onApplyImage={handleApplyImage}
       />
     </div>
   );

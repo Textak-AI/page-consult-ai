@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Pencil, Sparkles } from "lucide-react";
+import { Pencil, Sparkles, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -8,20 +7,26 @@ interface SectionToolbarProps {
   sectionContent: any;
   onEdit: () => void;
   onAIAssist: () => void;
+  onImageGenerate?: () => void;
   isEditing: boolean;
 }
+
+const IMAGE_CAPABLE_SECTIONS = ['hero', 'features', 'problem-solution', 'photo-gallery'];
 
 export function SectionToolbar({
   sectionType,
   sectionContent,
   onEdit,
   onAIAssist,
+  onImageGenerate,
   isEditing,
 }: SectionToolbarProps) {
   const sectionLabel = sectionType
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+
+  const showImageButton = IMAGE_CAPABLE_SECTIONS.includes(sectionType);
 
   return (
     <div
@@ -53,6 +58,18 @@ export function SectionToolbar({
         <Sparkles className="h-3.5 w-3.5" />
         <span className="text-xs">AI</span>
       </Button>
+      {showImageButton && onImageGenerate && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 gap-1.5"
+          onClick={onImageGenerate}
+          title="Generate AI Image"
+        >
+          <ImageIcon className="h-3.5 w-3.5" />
+          <span className="text-xs">Image</span>
+        </Button>
+      )}
     </div>
   );
 }
