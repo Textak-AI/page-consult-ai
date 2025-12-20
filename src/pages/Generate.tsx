@@ -29,10 +29,11 @@ import {
   UsageHistoryModal,
 } from "@/components/usage";
 import { CreditDisplay, UpgradeDrawer } from "@/components/credits";
-import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid } from "@/lib/aiSeoIntegration";
+import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid, generateSEOHeadData, type SEOHeadData } from "@/lib/aiSeoIntegration";
 import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief } from "@/utils/sectionMapper";
 import { generateDesignSystem, designSystemToCSSVariables } from "@/config/designSystem";
 import type { DesignSystem } from "@/config/designSystem";
+import { SEOHead } from "@/components/seo/SEOHead";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -154,6 +155,9 @@ function GenerateContent() {
   // Design system for dynamic theming
   const [designSystem, setDesignSystem] = useState<DesignSystem | null>(null);
   const [cssVariables, setCssVariables] = useState<string>('');
+  
+  // SEO data for SEOHead component
+  const [seoData, setSeoData] = useState<SEOHeadData | null>(null);
 
   const loadingMessages = [
     { icon: Check, text: "Analyzing your strategy" },
@@ -193,6 +197,48 @@ function GenerateContent() {
       pushHistory(sections);
     }
   }, [phase]);
+
+  // Generate SEO data when consultation and AI SEO data are available
+  useEffect(() => {
+    if (!consultation) return;
+    
+    const aiSeoData = consultation.aiSeoData || consultation.ai_seo_data;
+    if (!isAISeoDataValid(aiSeoData)) return;
+    
+    // Build strategy brief data from available sources
+    const briefData = strategicData?.structuredBrief || {};
+    const strategyBriefForSEO = {
+      businessName: strategicData?.consultationData?.businessName || consultation.industry,
+      processOverview: briefData.problemStatement,
+      howItWorks: briefData.processSteps ? {
+        steps: briefData.processSteps.map((step: any) => ({
+          title: step.title,
+          description: step.description,
+        })),
+      } : undefined,
+      offerType: 'service' as const,
+      offerName: consultation.offer || briefData.mainOffer,
+      valueProposition: consultation.unique_value || briefData.subheadline,
+      serviceArea: aiSeoData.entity?.areaServed,
+    };
+    
+    // Generate SEO head data
+    const generatedSeoData = generateSEOHeadData(
+      {
+        industry: consultation.industry,
+        offer: consultation.offer,
+        uniqueValue: consultation.unique_value,
+      },
+      aiSeoData,
+      undefined, // testimonials
+      strategyBriefForSEO,
+      pageData?.published_url || undefined,
+      undefined // ogImage
+    );
+    
+    setSeoData(generatedSeoData);
+    console.log('✅ SEO data generated:', generatedSeoData);
+  }, [consultation, strategicData, pageData]);
 
   const loadConsultation = async () => {
     try {
@@ -1485,6 +1531,7 @@ function GenerateContent() {
         strategicData={strategicData}
         cssVariables={cssVariables}
         designSystem={designSystem}
+        seoData={seoData}
       />
     </EditingProvider>
   );
@@ -1519,6 +1566,7 @@ function EditorContent({
   strategicData,
   cssVariables,
   designSystem,
+  seoData,
 }: any) {
   const { toast } = useToast();
   const { pageStyle, setPageStyle } = useEditing();
@@ -1692,6 +1740,9 @@ function EditorContent({
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-[#0f0a1f] via-[#1a1332] to-[#0f0a1f] relative overflow-hidden">
+      {/* SEO Head - inject meta tags and schema markup */}
+      {seoData && <SEOHead seo={seoData} />}
+      
       {/* Ambient orbs */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse-slow" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
