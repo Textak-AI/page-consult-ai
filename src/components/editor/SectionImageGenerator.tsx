@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Sparkles, Zap, Loader2, RefreshCw, Check, X } from "lucide-react";
+import { useState, useRef } from "react";
+import { Sparkles, Zap, Loader2, RefreshCw, Check, X, Upload, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 interface SectionImageGeneratorProps {
   isOpen: boolean;
@@ -93,9 +95,13 @@ export function SectionImageGenerator({
   const [prompt, setPrompt] = useState("");
   const [quality, setQuality] = useState<'quick' | 'standard'>('quick');
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("generate");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const industry = industryContext || strategyBrief?.industry || 'default';
   const suggestions = getImageSuggestions(sectionType, industry);
@@ -158,8 +164,109 @@ export function SectionImageGenerator({
   const handleReset = () => {
     setPrompt("");
     setGeneratedImages([]);
+    setUploadedImages([]);
     setSelectedImage(null);
     setError(null);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Please sign in to upload images");
+      }
+
+      const newUploadedImages: string[] = [];
+
+      for (const file of Array.from(files)) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          toast({
+            title: "Invalid file type",
+            description: `${file.name} is not an image file`,
+            variant: "destructive",
+          });
+          continue;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast({
+            title: "File too large",
+            description: `${file.name} exceeds 5MB limit`,
+            variant: "destructive",
+          });
+          continue;
+        }
+
+        // Generate unique filename
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        // Upload to Supabase Storage
+        const { data, error: uploadError } = await supabase.storage
+          .from('section-images')
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw uploadError;
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('section-images')
+          .getPublicUrl(data.path);
+
+        newUploadedImages.push(publicUrl);
+      }
+
+      if (newUploadedImages.length > 0) {
+        setUploadedImages(prev => [...prev, ...newUploadedImages]);
+        setSelectedImage(newUploadedImages[0]);
+        toast({
+          title: "Upload successful",
+          description: `${newUploadedImages.length} image(s) uploaded`,
+        });
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to upload image');
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      // Create a fake event to reuse handleFileSelect logic
+      const fakeEvent = {
+        target: { files }
+      } as React.ChangeEvent<HTMLInputElement>;
+      await handleFileSelect(fakeEvent);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const handleClose = () => {
@@ -168,98 +275,207 @@ export function SectionImageGenerator({
     onClose();
   };
 
+  // Combine all images for display
+  const allImages = [...generatedImages, ...uploadedImages];
+
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            Generate Image for {sectionLabel}
+            <ImageIcon className="h-5 w-5 text-primary" />
+            Add Image to {sectionLabel}
           </SheetTitle>
           <SheetDescription>
-            Describe the image you want or choose a suggestion below.
+            Generate an AI image or upload your own.
           </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
-          {/* Prompt Input */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Describe your image</label>
-            <Textarea
-              placeholder="e.g., Professional team meeting in a modern office with natural light..."
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="min-h-[100px] resize-none"
-            />
-          </div>
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+          />
 
-          {/* Suggestions */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">
-              Suggestions for {industry}
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {suggestions.map((suggestion, i) => (
-                <Button
-                  key={i}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs h-auto py-1.5 px-2 whitespace-normal text-left"
-                  onClick={() => {
-                    setPrompt(suggestion);
-                    handleGenerate(suggestion);
-                  }}
-                  disabled={isLoading}
-                >
-                  {suggestion.length > 50 ? suggestion.slice(0, 50) + '...' : suggestion}
-                </Button>
-              ))}
-            </div>
-          </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="generate" className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                Generate
+              </TabsTrigger>
+              <TabsTrigger value="upload" className="flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Upload
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Quality Selector */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Quality</label>
-            <div className="flex gap-2">
+            <TabsContent value="generate" className="space-y-4 mt-4">
+              {/* Prompt Input */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Describe your image</label>
+                <Textarea
+                  placeholder="e.g., Professional team meeting in a modern office with natural light..."
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  className="min-h-[100px] resize-none"
+                />
+              </div>
+
+              {/* Suggestions */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Suggestions for {industry}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {suggestions.map((suggestion, i) => (
+                    <Button
+                      key={i}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs h-auto py-1.5 px-2 whitespace-normal text-left"
+                      onClick={() => {
+                        setPrompt(suggestion);
+                        handleGenerate(suggestion);
+                      }}
+                      disabled={isLoading}
+                    >
+                      {suggestion.length > 50 ? suggestion.slice(0, 50) + '...' : suggestion}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quality Selector */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Quality</label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={quality === 'quick' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setQuality('quick')}
+                    className="flex-1"
+                  >
+                    <Zap className="h-4 w-4 mr-1.5" />
+                    Quick (~10s)
+                  </Button>
+                  <Button
+                    variant={quality === 'standard' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setQuality('standard')}
+                    className="flex-1"
+                  >
+                    <Sparkles className="h-4 w-4 mr-1.5" />
+                    Standard (~20s)
+                  </Button>
+                </div>
+              </div>
+
+              {/* Generate Button */}
               <Button
-                variant={quality === 'quick' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setQuality('quick')}
-                className="flex-1"
+                onClick={() => handleGenerate()}
+                disabled={isLoading || !prompt.trim()}
+                className="w-full"
               >
-                <Zap className="h-4 w-4 mr-1.5" />
-                Quick (~10s)
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Creating your images...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Generate Images
+                  </>
+                )}
               </Button>
-              <Button
-                variant={quality === 'standard' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setQuality('standard')}
-                className="flex-1"
-              >
-                <Sparkles className="h-4 w-4 mr-1.5" />
-                Standard (~20s)
-              </Button>
-            </div>
-          </div>
 
-          {/* Generate Button */}
-          <Button
-            onClick={() => handleGenerate()}
-            disabled={isLoading || !prompt.trim()}
-            className="w-full"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Creating your images...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Generate Images
-              </>
-            )}
-          </Button>
+              {/* Loading Skeletons */}
+              {isLoading && (
+                <div className="grid grid-cols-2 gap-3">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="aspect-video rounded-lg bg-muted animate-pulse flex items-center justify-center"
+                    >
+                      <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="upload" className="space-y-4 mt-4">
+              {/* Drop Zone */}
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onClick={() => fileInputRef.current?.click()}
+                className={cn(
+                  "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors",
+                  "hover:border-primary/50 hover:bg-muted/50",
+                  isUploading && "opacity-50 pointer-events-none"
+                )}
+              >
+                {isUploading ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="h-10 w-10 text-muted-foreground animate-spin" />
+                    <p className="text-sm text-muted-foreground">Uploading...</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <Upload className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-sm font-medium">Drop images here or click to browse</p>
+                    <p className="text-xs text-muted-foreground">
+                      Supports JPG, PNG, WebP up to 5MB
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Uploaded Images Preview */}
+              {uploadedImages.length > 0 && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Uploaded images</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {uploadedImages.map((img, i) => (
+                      <div key={i} className="group relative">
+                        <button
+                          onClick={() => setSelectedImage(img)}
+                          className={cn(
+                            "relative aspect-video rounded-lg overflow-hidden border-2 transition-all w-full",
+                            selectedImage === img
+                              ? "border-primary ring-2 ring-primary/20"
+                              : "border-transparent hover:border-muted-foreground/30"
+                          )}
+                        >
+                          <img
+                            src={img}
+                            alt={`Uploaded ${i + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          {selectedImage === img && (
+                            <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                              <Check className="h-3 w-3" />
+                            </div>
+                          )}
+                        </button>
+                        
+                        {/* Hover preview */}
+                        <div className="hidden group-hover:block absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 rounded-lg overflow-hidden shadow-2xl border bg-background pointer-events-none">
+                          <img src={img} alt="Preview" className="w-full h-auto" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
 
           {/* Error */}
           {error && (
@@ -268,22 +484,8 @@ export function SectionImageGenerator({
             </div>
           )}
 
-          {/* Loading Skeletons */}
-          {isLoading && (
-            <div className="grid grid-cols-2 gap-3">
-              {[0, 1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="aspect-video rounded-lg bg-muted animate-pulse flex items-center justify-center"
-                >
-                  <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Generated Images Grid */}
-          {!isLoading && generatedImages.length > 0 && (
+          {/* Generated Images Grid (shown in Generate tab) */}
+          {activeTab === "generate" && !isLoading && generatedImages.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Select an image</label>
