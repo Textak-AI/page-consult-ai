@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { SessionProvider } from "@/contexts/SessionContext";
 import Index from "./pages/Index";
 import Wizard from "./pages/Wizard";
@@ -31,36 +32,38 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <SessionProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/new" element={<NewConsultation />} />
-            <Route path="/wizard" element={<Wizard />} />
-            <Route path="/wizard/review" element={<WizardReview />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/generate" element={<Generate />} />
-            <Route path="/generate/:pageId" element={<Generate />} />
-            <Route path="/gallery-test" element={<GalleryTest />} />
-            <Route path="/hero-showcase" element={<HeroShowcase />} />
-            <Route path="/section-selector" element={<SectionSelectorDemo />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/dev-test" element={<DevTest />} />
-            <Route path="/ai-loader-preview" element={<AILoaderPreview />} />
-            <Route path="/intro-preview" element={<IntroPreview />} />
-            <Route path="/design-system-test" element={<DesignSystemTest />} />
-            <Route path="/test-page" element={<TestPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </SessionProvider>
-  </QueryClientProvider>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <SessionProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/new" element={<NewConsultation />} />
+              <Route path="/wizard" element={<Wizard />} />
+              <Route path="/wizard/review" element={<WizardReview />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/generate" element={<Generate />} />
+              <Route path="/generate/:pageId" element={<Generate />} />
+              <Route path="/gallery-test" element={<GalleryTest />} />
+              <Route path="/hero-showcase" element={<HeroShowcase />} />
+              <Route path="/section-selector" element={<SectionSelectorDemo />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/dev-test" element={<DevTest />} />
+              <Route path="/ai-loader-preview" element={<AILoaderPreview />} />
+              <Route path="/intro-preview" element={<IntroPreview />} />
+              <Route path="/design-system-test" element={<DesignSystemTest />} />
+              <Route path="/test-page" element={<TestPage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </SessionProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;
