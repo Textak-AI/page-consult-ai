@@ -144,17 +144,27 @@ export function SectionImageGenerator({
   };
 
   const handleApply = () => {
+    console.log('handleApply called');
+    console.log('selectedImage:', selectedImage);
     if (selectedImage) {
+      console.log('Calling onApplyImage with:', selectedImage);
       onApplyImage(selectedImage);
-      handleClose();
+      // Reset state after successful apply
+      handleReset();
+      onClose();
     }
   };
 
-  const handleClose = () => {
+  const handleReset = () => {
     setPrompt("");
     setGeneratedImages([]);
     setSelectedImage(null);
     setError(null);
+  };
+
+  const handleClose = () => {
+    // Don't clear generated images - user might want to come back
+    // Only clear on successful apply or explicit reset
     onClose();
   };
 
@@ -277,15 +287,26 @@ export function SectionImageGenerator({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Select an image</label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleGenerate()}
-                  className="h-8"
-                >
-                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                  Regenerate
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleReset}
+                    className="h-8"
+                  >
+                    <X className="h-3.5 w-3.5 mr-1.5" />
+                    Start Over
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleGenerate()}
+                    className="h-8"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                    Regenerate
+                  </Button>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {generatedImages.map((img, i) => (

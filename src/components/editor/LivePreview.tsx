@@ -82,22 +82,29 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
   };
 
   const handleApplyImage = (imageUrl: string) => {
+    console.log('handleApplyImage called with:', imageUrl);
+    console.log('imageGenSection:', imageGenSection);
+    
     if (imageGenSection) {
       const updated = [...sections];
-      const content = updated[imageGenSection.index].content;
+      const content = { ...updated[imageGenSection.index].content };
       
       // Apply image based on section type
       if (imageGenSection.type === 'hero') {
         content.backgroundImage = imageUrl;
+        console.log('Setting hero backgroundImage to:', imageUrl);
       } else if (imageGenSection.type === 'photo-gallery') {
         // Add to gallery images
         content.images = [...(content.images || []), { url: imageUrl, alt: 'AI Generated' }];
+        console.log('Added image to photo-gallery');
       } else {
         // For features, problem-solution, etc - set as main image
         content.image = imageUrl;
+        console.log('Setting section image to:', imageUrl);
       }
       
       updated[imageGenSection.index].content = content;
+      console.log('Calling onSectionsChange with updated sections');
       onSectionsChange(updated);
     }
     setImageGenOpen(false);
