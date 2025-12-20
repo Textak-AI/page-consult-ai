@@ -12,7 +12,7 @@ import { BrandCustomization, type BrandSettings, type WebsiteIntelligence } from
 import { 
   PageTypeStep, 
   PAGE_TYPES, 
-  type PageType,
+  type PageTypeId,
   InvestorProfileStep,
   type InvestorProfileData,
   TractionMilestonesStep,
@@ -25,7 +25,7 @@ import {
 
 export interface ConsultationData {
   // Page Type
-  pageType?: PageType;
+  pageType?: PageTypeId;
   
   // Website Intelligence
   websiteUrl?: string;
@@ -111,7 +111,7 @@ const IR_STEPS = [
 ];
 
 // Helper to get steps based on page type
-const getStepsForPageType = (pageType?: PageType) => {
+const getStepsForPageType = (pageType?: PageTypeId) => {
   if (pageType === 'investor-relations') {
     return [...BASE_STEPS, ...IR_STEPS];
   }
@@ -640,8 +640,10 @@ ${d.ctaText}
       case 'page-type':
         return (
           <PageTypeStep
-            selectedType={data.pageType}
-            onSelect={(pageType) => updateData({ pageType })}
+            value={data.pageType || null}
+            onChange={(pageType) => updateData({ pageType: pageType as PageTypeId })}
+            onContinue={handleNext}
+            onBack={handleBack}
           />
         );
 
