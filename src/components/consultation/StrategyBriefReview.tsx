@@ -55,10 +55,10 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, onAppr
               className="w-full h-[500px] bg-slate-900 border border-slate-600 rounded-xl p-4 text-white font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
             <div className="flex gap-3 justify-end">
-              <Button variant="ghost" onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-white hover:bg-slate-700">
+              <Button variant="outline" onClick={() => setIsEditing(false)} className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700">
                 Cancel
               </Button>
-              <Button onClick={handleSaveEdit} className="bg-cyan-500 hover:bg-cyan-600 text-white">
+              <Button onClick={handleSaveEdit} className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white">
                 Save Changes
               </Button>
             </div>
@@ -94,9 +94,9 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, onAppr
         className="flex flex-col sm:flex-row gap-4 justify-center"
       >
         <Button
-          variant="ghost"
+          variant="outline"
           onClick={onRestart}
-          className="text-slate-400 hover:text-white hover:bg-slate-800"
+          className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
         >
           <RotateCcw className="w-4 h-4 mr-2" />
           Start Over
@@ -105,7 +105,7 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, onAppr
         <Button
           variant="outline"
           onClick={() => setIsEditing(true)}
-          className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white"
+          className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
         >
           <Edit3 className="w-4 h-4 mr-2" />
           Edit Brief

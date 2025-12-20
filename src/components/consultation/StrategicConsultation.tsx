@@ -488,8 +488,7 @@ ${d.ctaText}
                 <Button
                   onClick={handleWebsiteAnalysis}
                   disabled={!data.websiteUrl || isAnalyzing}
-                  variant="outline"
-                  className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white"
+                  className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white disabled:opacity-50"
                 >
                   {isAnalyzing ? (
                     <>
@@ -937,13 +936,13 @@ ${d.ctaText}
                 </Button>
                 <Button
                   size="sm"
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => {
                     localStorage.removeItem('pageconsult_consultation_draft');
                     setShowRestorePrompt(false);
                     setPendingRestore(null);
                   }}
-                  className="text-slate-400 hover:text-white hover:bg-slate-700"
+                  className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
                 >
                   Start Fresh
                 </Button>
@@ -1014,9 +1013,9 @@ ${d.ctaText}
       {/* Navigation */}
       <div className="flex justify-between mt-6">
         <Button
-          variant="ghost"
+          variant="outline"
           onClick={handleBack}
-          className="text-slate-400 hover:text-white hover:bg-slate-800"
+          className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
