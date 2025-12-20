@@ -69,13 +69,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
     });
   };
 
-  const backgroundStyle = content.backgroundImage
-    ? {
-        backgroundImage: `linear-gradient(135deg, var(--image-overlay-color, rgba(15, 23, 42, 0.85)), var(--image-overlay-color, rgba(15, 23, 42, 0.75))), url(${content.backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center 40%',
-      }
-    : {};
+  // No longer using inline backgroundStyle - we render background as a separate div for better control
 
   // Only show credibility items if explicitly provided - NO FABRICATION
   const credibilityItems = content.credibilityBar || [];
@@ -85,14 +79,28 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
 
   return (
     <section 
-      className={`min-h-[85vh] flex items-center ${isEditing ? "relative" : ""}`}
+      className={`min-h-[85vh] flex items-center relative ${isEditing ? "" : ""}`}
       style={{
-        ...backgroundStyle,
-        backgroundColor: content.backgroundImage ? undefined : 'var(--color-background)',
+        backgroundColor: 'var(--color-background)',
         color: 'var(--color-text-primary)',
         padding: 'var(--spacing-section-y) var(--spacing-section-x)',
       }}
     >
+      {/* Background Image Layer */}
+      {content.backgroundImage && (
+        <div 
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: `url(${content.backgroundImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          {/* Overlay for text readability */}
+          <div className="absolute inset-0 bg-black/50" />
+        </div>
+      )}
+      
       {isEditing && (
         <>
           <div className="absolute inset-0 border-2 border-primary/50 rounded-lg pointer-events-none" />
@@ -106,7 +114,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           </Button>
         </>
       )}
-      <div className="container mx-auto max-w-6xl text-center" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-stack-gap)' }}>
+      <div className="container mx-auto max-w-6xl text-center relative z-10" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-stack-gap)' }}>
         {/* Logo - only render if exists */}
         {content.logoUrl && (
           <motion.div
