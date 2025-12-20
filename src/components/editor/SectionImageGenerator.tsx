@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Sparkles, Zap, Loader2, RefreshCw, Check, X, Upload, ImageIcon } from "lucide-react";
+import { Sparkles, Zap, Loader2, RefreshCw, Check, X, Upload, ImageIcon, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -269,6 +269,48 @@ export function SectionImageGenerator({
     e.stopPropagation();
   };
 
+  const handleDeleteImage = async (imageUrl: string) => {
+    try {
+      // Extract the file path from the public URL
+      // URL format: https://<project>.supabase.co/storage/v1/object/public/section-images/<user-id>/<filename>
+      const urlParts = imageUrl.split('/section-images/');
+      if (urlParts.length !== 2) {
+        throw new Error('Invalid image URL format');
+      }
+      const filePath = urlParts[1];
+
+      // Delete from Supabase Storage
+      const { error: deleteError } = await supabase.storage
+        .from('section-images')
+        .remove([filePath]);
+
+      if (deleteError) {
+        console.error('Delete error:', deleteError);
+        throw deleteError;
+      }
+
+      // Remove from local state
+      setUploadedImages(prev => prev.filter(img => img !== imageUrl));
+      
+      // Clear selection if this image was selected
+      if (selectedImage === imageUrl) {
+        setSelectedImage(null);
+      }
+
+      toast({
+        title: "Image deleted",
+        description: "The image has been removed",
+      });
+    } catch (err) {
+      console.error('Delete error:', err);
+      toast({
+        title: "Delete failed",
+        description: err instanceof Error ? err.message : 'Failed to delete image',
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleClose = () => {
     // Don't clear generated images - user might want to come back
     // Only clear on successful apply or explicit reset
@@ -463,6 +505,18 @@ export function SectionImageGenerator({
                               <Check className="h-3 w-3" />
                             </div>
                           )}
+                        </button>
+                        
+                        {/* Delete button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteImage(img);
+                          }}
+                          className="absolute top-2 left-2 bg-destructive text-destructive-foreground rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/90 z-10"
+                          title="Delete image"
+                        >
+                          <Trash2 className="h-3 w-3" />
                         </button>
                         
                         {/* Hover preview */}
