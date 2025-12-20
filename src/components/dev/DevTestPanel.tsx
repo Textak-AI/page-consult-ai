@@ -628,7 +628,7 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
                   <Textarea
                     value={jsonText}
                     onChange={(e) => handleJsonChange(e.target.value)}
-                    className={`font-mono text-sm h-80 bg-slate-800 border-slate-600 ${
+                    className={`font-mono text-sm h-80 bg-slate-800 border-slate-600 text-slate-100 placeholder:text-slate-500 ${
                       jsonError ? 'border-red-500/50' : ''
                     }`}
                     placeholder="Paste consultation JSON here..."
