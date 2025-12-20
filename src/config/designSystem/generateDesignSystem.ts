@@ -107,85 +107,184 @@ function darkenColor(hex: string, percent: number): string {
 }
 
 /**
+ * Sanitize a CSS value to prevent CSS injection attacks.
+ * Only allows valid color formats (hex, rgb, rgba, hsl, hsla, named colors),
+ * numeric values with units, and safe string values.
+ */
+function sanitizeCSSValue(value: string | number, type: 'color' | 'size' | 'font' | 'number' | 'shadow' | 'gradient'): string {
+  // Convert numbers to strings
+  const strValue = typeof value === 'number' ? String(value) : value;
+  
+  if (typeof strValue !== 'string') {
+    console.warn('[DesignSystem] Invalid CSS value type:', typeof strValue);
+    return type === 'color' ? '#000000' : '0';
+  }
+
+  const trimmed = strValue.trim();
+
+  // Check for dangerous patterns that could break out of CSS context
+  const dangerousPatterns = [
+    /[{}]/,           // CSS block delimiters
+    /;.*:/,           // Multiple property injection
+    /url\s*\(/i,      // URL function (can exfiltrate data)
+    /expression\s*\(/i, // IE expression
+    /javascript:/i,   // JavaScript protocol
+    /@import/i,       // CSS import
+    /behavior\s*:/i,  // IE behavior
+    /-moz-binding/i,  // Firefox XBL
+  ];
+
+  for (const pattern of dangerousPatterns) {
+    if (pattern.test(trimmed)) {
+      console.warn('[DesignSystem] Potentially dangerous CSS value blocked:', trimmed);
+      return type === 'color' ? '#000000' : '0';
+    }
+  }
+
+  switch (type) {
+    case 'color': {
+      // Valid color formats: hex, rgb, rgba, hsl, hsla, named colors
+      const validColorRegex = /^(#[0-9a-fA-F]{3,8}|rgb\([^)]+\)|rgba\([^)]+\)|hsl\([^)]+\)|hsla\([^)]+\)|[a-zA-Z]+)$/;
+      if (!validColorRegex.test(trimmed)) {
+        console.warn('[DesignSystem] Invalid color value:', trimmed);
+        return '#000000';
+      }
+      return trimmed;
+    }
+    case 'size': {
+      // Valid size formats: numbers with units (px, rem, em, %, vh, vw, etc.)
+      const validSizeRegex = /^-?[\d.]+\s*(px|rem|em|%|vh|vw|vmin|vmax|ch|ex)?$/;
+      if (!validSizeRegex.test(trimmed)) {
+        console.warn('[DesignSystem] Invalid size value:', trimmed);
+        return '0';
+      }
+      return trimmed;
+    }
+    case 'font': {
+      // Font names: alphanumeric, spaces, quotes, hyphens, commas
+      const validFontRegex = /^[\w\s"',-]+$/;
+      if (!validFontRegex.test(trimmed)) {
+        console.warn('[DesignSystem] Invalid font value:', trimmed);
+        return 'sans-serif';
+      }
+      return trimmed;
+    }
+    case 'number': {
+      // Pure numbers or numbers with simple units
+      const validNumberRegex = /^-?[\d.]+\s*(px|rem|em|%|s|ms)?$/;
+      if (!validNumberRegex.test(trimmed)) {
+        console.warn('[DesignSystem] Invalid number value:', trimmed);
+        return '0';
+      }
+      return trimmed;
+    }
+    case 'shadow': {
+      // Box shadow: numbers, colors, and shadow keywords
+      const validShadowRegex = /^(none|[\d.]+\s*(px|rem|em)?\s*)+\s*(#[0-9a-fA-F]{3,8}|rgb[a]?\([^)]+\)|hsl[a]?\([^)]+\)|[a-zA-Z]+)?(\s*(inset))?$/i;
+      // For complex shadows, just check for dangerous patterns (already done above)
+      return trimmed;
+    }
+    case 'gradient': {
+      // Gradients: linear-gradient, radial-gradient with safe color stops
+      const validGradientRegex = /^(linear|radial|conic)-gradient\([^)]+\)$/i;
+      if (!validGradientRegex.test(trimmed)) {
+        console.warn('[DesignSystem] Invalid gradient value:', trimmed);
+        return 'none';
+      }
+      return trimmed;
+    }
+    default:
+      return trimmed;
+  }
+}
+
+/**
  * Convert design system to CSS custom properties (variables)
  * These can be injected into a style tag or used with Tailwind
  */
 export function designSystemToCSSVariables(system: DesignSystem): string {
+  // Sanitize all values before interpolation
+  const c = system.colors;
+  const t = system.typography;
+  const s = system.spacing;
+  const comp = system.components;
+  const img = system.imagery;
+
   return `
 :root {
   /* Colors - Primary */
-  --color-primary: ${system.colors.primary};
-  --color-primary-hover: ${system.colors.primaryHover};
-  --color-primary-muted: ${system.colors.primaryMuted};
+  --color-primary: ${sanitizeCSSValue(c.primary, 'color')};
+  --color-primary-hover: ${sanitizeCSSValue(c.primaryHover, 'color')};
+  --color-primary-muted: ${sanitizeCSSValue(c.primaryMuted, 'color')};
   
   /* Colors - Secondary */
-  --color-secondary: ${system.colors.secondary};
-  --color-secondary-hover: ${system.colors.secondaryHover};
-  --color-secondary-muted: ${system.colors.secondaryMuted};
+  --color-secondary: ${sanitizeCSSValue(c.secondary, 'color')};
+  --color-secondary-hover: ${sanitizeCSSValue(c.secondaryHover, 'color')};
+  --color-secondary-muted: ${sanitizeCSSValue(c.secondaryMuted, 'color')};
   
   /* Colors - Background */
-  --color-background: ${system.colors.background};
-  --color-background-alt: ${system.colors.backgroundAlt};
-  --color-surface: ${system.colors.surface};
-  --color-surface-hover: ${system.colors.surfaceHover};
+  --color-background: ${sanitizeCSSValue(c.background, 'color')};
+  --color-background-alt: ${sanitizeCSSValue(c.backgroundAlt, 'color')};
+  --color-surface: ${sanitizeCSSValue(c.surface, 'color')};
+  --color-surface-hover: ${sanitizeCSSValue(c.surfaceHover, 'color')};
   
   /* Colors - Text */
-  --color-text-primary: ${system.colors.textPrimary};
-  --color-text-secondary: ${system.colors.textSecondary};
-  --color-text-muted: ${system.colors.textMuted};
-  --color-text-inverse: ${system.colors.textInverse};
+  --color-text-primary: ${sanitizeCSSValue(c.textPrimary, 'color')};
+  --color-text-secondary: ${sanitizeCSSValue(c.textSecondary, 'color')};
+  --color-text-muted: ${sanitizeCSSValue(c.textMuted, 'color')};
+  --color-text-inverse: ${sanitizeCSSValue(c.textInverse, 'color')};
   
   /* Colors - Semantic */
-  --color-success: ${system.colors.success};
-  --color-warning: ${system.colors.warning};
-  --color-error: ${system.colors.error};
-  --color-info: ${system.colors.info};
+  --color-success: ${sanitizeCSSValue(c.success, 'color')};
+  --color-warning: ${sanitizeCSSValue(c.warning, 'color')};
+  --color-error: ${sanitizeCSSValue(c.error, 'color')};
+  --color-info: ${sanitizeCSSValue(c.info, 'color')};
   
   /* Colors - Border */
-  --color-border: ${system.colors.border};
-  --color-border-strong: ${system.colors.borderStrong};
+  --color-border: ${sanitizeCSSValue(c.border, 'color')};
+  --color-border-strong: ${sanitizeCSSValue(c.borderStrong, 'color')};
   
   /* Typography */
-  --font-heading: ${system.typography.headingFont};
-  --font-body: ${system.typography.bodyFont};
-  --font-weight-heading: ${system.typography.headingWeight};
-  --font-weight-body: ${system.typography.bodyWeight};
-  --font-size-base: ${system.typography.baseSize};
-  --line-height-heading: ${system.typography.headingLineHeight};
-  --line-height-body: ${system.typography.bodyLineHeight};
-  --letter-spacing-heading: ${system.typography.headingLetterSpacing};
-  --letter-spacing-body: ${system.typography.bodyLetterSpacing};
+  --font-heading: ${sanitizeCSSValue(t.headingFont, 'font')};
+  --font-body: ${sanitizeCSSValue(t.bodyFont, 'font')};
+  --font-weight-heading: ${sanitizeCSSValue(t.headingWeight, 'number')};
+  --font-weight-body: ${sanitizeCSSValue(t.bodyWeight, 'number')};
+  --font-size-base: ${sanitizeCSSValue(t.baseSize, 'size')};
+  --line-height-heading: ${sanitizeCSSValue(t.headingLineHeight, 'number')};
+  --line-height-body: ${sanitizeCSSValue(t.bodyLineHeight, 'number')};
+  --letter-spacing-heading: ${sanitizeCSSValue(t.headingLetterSpacing, 'size')};
+  --letter-spacing-body: ${sanitizeCSSValue(t.bodyLetterSpacing, 'size')};
   
   /* Spacing */
-  --spacing-section-y: ${system.spacing.sectionPaddingY};
-  --spacing-section-x: ${system.spacing.sectionPaddingX};
-  --spacing-container-max: ${system.spacing.containerMaxWidth};
-  --spacing-card-padding: ${system.spacing.cardPadding};
-  --spacing-card-gap: ${system.spacing.cardGap};
-  --spacing-element-gap: ${system.spacing.elementGap};
-  --spacing-stack-gap: ${system.spacing.stackGap};
+  --spacing-section-y: ${sanitizeCSSValue(s.sectionPaddingY, 'size')};
+  --spacing-section-x: ${sanitizeCSSValue(s.sectionPaddingX, 'size')};
+  --spacing-container-max: ${sanitizeCSSValue(s.containerMaxWidth, 'size')};
+  --spacing-card-padding: ${sanitizeCSSValue(s.cardPadding, 'size')};
+  --spacing-card-gap: ${sanitizeCSSValue(s.cardGap, 'size')};
+  --spacing-element-gap: ${sanitizeCSSValue(s.elementGap, 'size')};
+  --spacing-stack-gap: ${sanitizeCSSValue(s.stackGap, 'size')};
   
   /* Components - Radius */
-  --radius-small: ${system.components.radiusSmall};
-  --radius-medium: ${system.components.radiusMedium};
-  --radius-large: ${system.components.radiusLarge};
-  --radius-full: ${system.components.radiusFull};
+  --radius-small: ${sanitizeCSSValue(comp.radiusSmall, 'size')};
+  --radius-medium: ${sanitizeCSSValue(comp.radiusMedium, 'size')};
+  --radius-large: ${sanitizeCSSValue(comp.radiusLarge, 'size')};
+  --radius-full: ${sanitizeCSSValue(comp.radiusFull, 'size')};
   
   /* Components - Shadow */
-  --shadow-small: ${system.components.shadowSmall};
-  --shadow-medium: ${system.components.shadowMedium};
-  --shadow-large: ${system.components.shadowLarge};
+  --shadow-small: ${sanitizeCSSValue(comp.shadowSmall, 'shadow')};
+  --shadow-medium: ${sanitizeCSSValue(comp.shadowMedium, 'shadow')};
+  --shadow-large: ${sanitizeCSSValue(comp.shadowLarge, 'shadow')};
   
   /* Components - Border */
-  --border-width: ${system.components.borderWidth};
+  --border-width: ${sanitizeCSSValue(comp.borderWidth, 'size')};
   
   /* Components - Icons */
-  --icon-stroke-width: ${system.components.iconStrokeWidth};
+  --icon-stroke-width: ${sanitizeCSSValue(comp.iconStrokeWidth, 'number')};
   
   /* Imagery */
-  --image-overlay-opacity: ${system.imagery.overlayOpacity};
-  --image-overlay-color: ${system.imagery.overlayColor};
-  ${system.imagery.overlayGradient ? `--image-overlay-gradient: ${system.imagery.overlayGradient};` : ""}
+  --image-overlay-opacity: ${sanitizeCSSValue(img.overlayOpacity, 'number')};
+  --image-overlay-color: ${sanitizeCSSValue(img.overlayColor, 'color')};
+  ${img.overlayGradient ? `--image-overlay-gradient: ${sanitizeCSSValue(img.overlayGradient, 'gradient')};` : ""}
 }
 `.trim();
 }
