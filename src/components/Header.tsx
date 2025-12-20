@@ -30,19 +30,15 @@ const Header = () => {
           {/* Logo - fixed width container to prevent shift */}
           <div className="flex items-center justify-start">
             <a href="/" className="flex items-center py-2 hover:opacity-80 transition-opacity">
-              <div className="h-8 w-32 flex items-center relative">
-                {!logoLoaded && (
-                  <div className="h-8 w-32 bg-slate-700/50 animate-pulse rounded absolute inset-0" />
-                )}
+              <div className="h-8 w-32 flex items-center flex-shrink-0">
                 <img 
                   src="/logo/whiteAsset_3combimark_darkmode.svg" 
                   alt="PageConsult AI" 
+                  onLoad={() => setLogoLoaded(true)}
                   className={cn(
                     "h-8 w-auto transition-opacity duration-200",
                     logoLoaded ? "opacity-100" : "opacity-0"
                   )}
-                  loading="eager"
-                  onLoad={() => setLogoLoaded(true)}
                 />
               </div>
             </a>
