@@ -14,6 +14,133 @@ export type Database = {
   }
   public: {
     Tables: {
+      beta_pages: {
+        Row: {
+          consultation_id: string | null
+          created_at: string | null
+          id: string
+          launch_channels: string[] | null
+          launch_date: string | null
+          launch_stage: string | null
+          max_signups: number | null
+          page_type: string | null
+          perks: string[] | null
+          published_url: string | null
+          referral_enabled: boolean | null
+          reward_tiers: Json | null
+          scarcity_type: string | null
+          scarcity_value: number | null
+          signup_goal: number | null
+          status: string | null
+          total_signups: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          consultation_id?: string | null
+          created_at?: string | null
+          id?: string
+          launch_channels?: string[] | null
+          launch_date?: string | null
+          launch_stage?: string | null
+          max_signups?: number | null
+          page_type?: string | null
+          perks?: string[] | null
+          published_url?: string | null
+          referral_enabled?: boolean | null
+          reward_tiers?: Json | null
+          scarcity_type?: string | null
+          scarcity_value?: number | null
+          signup_goal?: number | null
+          status?: string | null
+          total_signups?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          consultation_id?: string | null
+          created_at?: string | null
+          id?: string
+          launch_channels?: string[] | null
+          launch_date?: string | null
+          launch_stage?: string | null
+          max_signups?: number | null
+          page_type?: string | null
+          perks?: string[] | null
+          published_url?: string | null
+          referral_enabled?: boolean | null
+          reward_tiers?: Json | null
+          scarcity_type?: string | null
+          scarcity_value?: number | null
+          signup_goal?: number | null
+          status?: string | null
+          total_signups?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beta_pages_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      beta_signups: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          name: string | null
+          page_id: string
+          position: number | null
+          referral_code: string
+          referral_count: number | null
+          referred_by: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          name?: string | null
+          page_id: string
+          position?: number | null
+          referral_code: string
+          referral_count?: number | null
+          referred_by?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string | null
+          page_id?: string
+          position?: number | null
+          referral_code?: string
+          referral_count?: number | null
+          referred_by?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beta_signups_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "beta_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultation_sessions: {
         Row: {
           approved_sections: Json | null
