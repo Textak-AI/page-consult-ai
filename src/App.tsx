@@ -73,8 +73,8 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <DevFloatingButton />
           <BrowserRouter>
+            <DevFloatingButton />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/new" element={<NewConsultation />} />
