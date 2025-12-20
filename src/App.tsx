@@ -1,7 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+
+// Disable automatic scroll restoration to prevent flash on refresh
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -31,7 +36,13 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
+const App = () => {
+  // Mark document as hydrated to show content
+  useEffect(() => {
+    document.documentElement.classList.add('hydrated');
+  }, []);
+
+  return (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
@@ -64,6 +75,7 @@ const App = () => (
       </SessionProvider>
     </QueryClientProvider>
   </HelmetProvider>
-);
+  );
+};
 
 export default App;
