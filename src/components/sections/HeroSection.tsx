@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
 import { useState } from "react";
-import { ImagePlus, Shield, Clock, Award, CheckCircle } from "lucide-react";
+import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 const getButtonTextColor = (primaryColor: string): string => {
@@ -12,6 +12,7 @@ const getButtonTextColor = (primaryColor: string): string => {
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.5 ? '#1E293B' : '#FFFFFF';
 };
+
 interface CitedStat {
   statistic: string;
   claim: string;
@@ -69,24 +70,46 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
     });
   };
 
-  // No longer using inline backgroundStyle - we render background as a separate div for better control
-
-  // Only show credibility items if explicitly provided - NO FABRICATION
   const credibilityItems = content.credibilityBar || [];
-  
-  // Only show trust badges if explicitly provided in brief - NO FABRICATION
   const trustBadges = content.trustBadges || [];
 
   return (
     <section 
-      className={`min-h-[85vh] flex items-center relative ${isEditing ? "" : ""}`}
+      className={`min-h-screen flex items-center relative overflow-hidden ${isEditing ? "" : ""}`}
       style={{
-        backgroundColor: 'var(--color-background)',
-        color: 'var(--color-text-primary)',
-        padding: 'var(--spacing-section-y) var(--spacing-section-x)',
+        backgroundColor: 'hsl(217, 33%, 6%)',
       }}
     >
-      {/* Background Image Layer */}
+      {/* Premium Background Layer */}
+      <div className="absolute inset-0 z-0">
+        {/* Gradient Mesh Background */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: `
+              radial-gradient(at 40% 20%, hsla(189, 95%, 43%, 0.15) 0px, transparent 50%),
+              radial-gradient(at 80% 0%, hsla(270, 95%, 60%, 0.12) 0px, transparent 50%),
+              radial-gradient(at 0% 50%, hsla(189, 95%, 43%, 0.08) 0px, transparent 50%),
+              radial-gradient(at 100% 100%, hsla(270, 95%, 60%, 0.08) 0px, transparent 50%)
+            `,
+          }}
+        />
+        
+        {/* Subtle Grid Pattern */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-40" />
+        
+        {/* Floating Orbs */}
+        <div 
+          className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px] animate-float-slow"
+          style={{ backgroundColor: 'hsla(189, 95%, 43%, 0.08)' }}
+        />
+        <div 
+          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] animate-float-delayed"
+          style={{ backgroundColor: 'hsla(270, 95%, 60%, 0.06)' }}
+        />
+      </div>
+
+      {/* Background Image Layer (if provided) */}
       {content.backgroundImage && (
         <div 
           className="absolute inset-0 z-0"
@@ -96,11 +119,10 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             backgroundPosition: 'center',
           }}
         >
-          {/* Overlay for text readability - uses design system variables with lighter default for images */}
           <div 
             className="absolute inset-0" 
             style={{
-              background: `linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.4))`,
+              background: `linear-gradient(135deg, hsla(217, 33%, 6%, 0.85), hsla(217, 33%, 6%, 0.75))`,
             }}
           />
         </div>
@@ -108,259 +130,28 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
       
       {isEditing && (
         <>
-          <div className="absolute inset-0 border-2 border-primary/50 rounded-lg pointer-events-none" />
+          <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-20" />
           <Button
-            className="absolute top-4 right-4 z-10"
+            className="absolute top-4 right-4 z-20"
             size="sm"
             onClick={() => setImagePickerOpen(true)}
           >
             <ImagePlus className="h-4 w-4 mr-2" />
-            {content.backgroundImage ? 'Change' : 'Add'} Background Image
+            {content.backgroundImage ? 'Change' : 'Add'} Background
           </Button>
         </>
       )}
-      {/* Glass container when background image exists */}
-      {content.backgroundImage ? (
-        <div className="container mx-auto max-w-6xl relative z-10 flex items-center justify-center px-4">
-          <div 
-            className="backdrop-blur-md bg-black/30 rounded-2xl p-8 md:p-12 max-w-4xl w-full border border-white/10 text-center"
-            style={{
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-              display: 'flex', 
-              flexDirection: 'column', 
-              gap: 'var(--spacing-stack-gap)'
-            }}
-          >
-            {/* Logo - only render if exists */}
-            {content.logoUrl && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="flex justify-center mb-4"
-              >
-                <img 
-                  src={content.logoUrl} 
-                  alt="Company logo" 
-                  className="h-12 md:h-16 object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              </motion.div>
-            )}
-            {content.fomo?.badge && (
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm backdrop-blur-sm mx-auto"
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  borderColor: 'var(--color-primary)',
-                  borderWidth: 'var(--border-width)',
-                  borderStyle: 'solid',
-                  color: 'var(--color-primary)',
-                  borderRadius: 'var(--radius-large)',
-                  fontFamily: 'var(--font-body)',
-                  fontWeight: 'var(--font-weight-body)',
-                }}
-              >
-                <span 
-                  className="w-2 h-2 rounded-full animate-pulse"
-                  style={{ backgroundColor: 'var(--color-primary)' }}
-                />
-                {content.fomo.badge}
-              </motion.div>
-            )}
-            
-            {content.citedStat && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="inline-block backdrop-blur-sm mx-auto"
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  borderColor: 'var(--color-border)',
-                  borderWidth: 'var(--border-width)',
-                  borderStyle: 'solid',
-                  borderRadius: 'var(--radius-large)',
-                  padding: 'var(--spacing-card-padding)',
-                  boxShadow: 'var(--shadow-large)',
-                }}
-              >
-                <div 
-                  className="text-4xl md:text-5xl mb-2"
-                  style={{ 
-                    color: 'var(--color-primary)',
-                    fontFamily: 'var(--font-heading)',
-                    fontWeight: 'var(--font-weight-heading)',
-                  }}
-                >
-                  {content.citedStat.statistic}
-                </div>
-                <div 
-                  className="text-base mb-3"
-                  style={{ 
-                    color: 'var(--color-text-secondary)',
-                    fontFamily: 'var(--font-body)',
-                    lineHeight: 'var(--line-height-body)',
-                  }}
-                >
-                  {content.citedStat.claim}
-                </div>
-                <cite 
-                  className="text-xs not-italic"
-                  style={{ color: 'var(--color-text-muted)' }}
-                >
-                  Source: {content.citedStat.fullCitation}
-                </cite>
-              </motion.div>
-            )}
-            
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl ${
-                isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
-              }`}
-              contentEditable={isEditing}
-              suppressContentEditableWarning
-              onBlur={(e) => handleBlur("headline", e)}
-              style={{ 
-                textShadow: '0 4px 30px rgba(0,0,0,0.5), 0 2px 10px rgba(0,0,0,0.3)',
-                color: 'var(--color-text-primary)',
-                fontFamily: 'var(--font-heading)',
-                fontWeight: 'var(--font-weight-heading)',
-                lineHeight: 'var(--line-height-heading)',
-                letterSpacing: 'var(--letter-spacing-heading)',
-              }}
-            >
-              {content.headline}
-            </motion.h1>
-            
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className={`text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto ${
-                isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
-              }`}
-              contentEditable={isEditing}
-              suppressContentEditableWarning
-              onBlur={(e) => handleBlur("subheadline", e)}
-              style={{ 
-                textShadow: '0 2px 10px rgba(0,0,0,0.4)',
-                color: 'var(--color-text-secondary)',
-                fontFamily: 'var(--font-body)',
-                fontWeight: 'var(--font-weight-body)',
-                lineHeight: 'var(--line-height-body)',
-              }}
-            >
-              {content.subheadline}
-            </motion.p>
-            
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="pt-6"
-              style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-stack-gap)', alignItems: 'center' }}
-            >
-              <Button 
-                size="lg" 
-                className={`text-lg px-12 py-7 h-auto font-semibold transition-all duration-300 hover:scale-105 ${
-                  isEditing ? "outline-dashed outline-2 outline-primary/30" : ""
-                }`}
-                style={{
-                  background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))`,
-                  color: content.primaryColor ? getButtonTextColor(content.primaryColor) : 'var(--color-text-inverse)',
-                  boxShadow: 'var(--shadow-large)',
-                  borderRadius: 'var(--radius-small)',
-                  fontFamily: 'var(--font-body)',
-                }}
-              >
-                <span
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning
-                  onBlur={(e) => handleBlur("ctaText", e)}
-                >
-                  {content.ctaText}
-                </span>
-              </Button>
-              
-              {content.fomo?.urgency && (
-                <p 
-                  className="text-sm font-medium"
-                  style={{ color: 'var(--color-primary)' }}
-                >
-                  ⚡ {content.fomo.urgency}
-                </p>
-              )}
 
-              {/* Credibility Bar - only shown if data exists */}
-              {credibilityItems.length > 0 && (
-                <div className="flex flex-wrap justify-center pt-4" style={{ gap: 'var(--spacing-element-gap)' }}>
-                  {credibilityItems.map((item, i) => (
-                    <motion.div 
-                      key={i} 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.5 + i * 0.1 }}
-                      className="flex items-center gap-2 text-sm md:text-base"
-                      style={{ 
-                        color: 'var(--color-text-secondary)',
-                        fontFamily: 'var(--font-body)',
-                      }}
-                    >
-                      <CheckCircle 
-                        className="w-5 h-5 flex-shrink-0" 
-                        style={{ color: 'var(--color-primary)' }}
-                        strokeWidth={1.5}
-                      />
-                      <span className="font-medium">{item.text}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-
-              {/* Trust Badges - only shown if data exists, NO FABRICATION */}
-              {trustBadges.length > 0 && (
-                <div className="flex flex-wrap justify-center gap-6 pt-2">
-                  {trustBadges.map((badge, i) => {
-                    const icons = [Shield, Clock, Award];
-                    const Icon = icons[i % icons.length];
-                    return (
-                      <div 
-                        key={i} 
-                        className="flex items-center gap-2 text-xs"
-                        style={{ color: 'var(--color-text-muted)' }}
-                      >
-                        <Icon 
-                          className="w-3.5 h-3.5" 
-                          style={{ color: 'var(--color-primary)' }}
-                          strokeWidth={1.5}
-                        />
-                        <span>{badge}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </motion.div>
-          </div>
-        </div>
-      ) : (
-        <div className="container mx-auto max-w-6xl text-center relative z-10" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-stack-gap)' }}>
-          {/* Logo - only render if exists */}
+      {/* Content Layer */}
+      <div className="container mx-auto max-w-5xl text-center relative z-10 px-6 py-32">
+        <div className="flex flex-col items-center gap-8">
+          
+          {/* Logo */}
           {content.logoUrl && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="flex justify-center mb-4"
+              transition={{ duration: 0.5 }}
             >
               <img 
                 src={content.logoUrl} 
@@ -372,219 +163,162 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               />
             </motion.div>
           )}
+
+          {/* Eyebrow Badge */}
           {content.fomo?.badge && (
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm backdrop-blur-sm mx-auto"
-              style={{
-                backgroundColor: 'var(--color-primary-muted)',
-                borderColor: 'var(--color-primary)',
-                borderWidth: 'var(--border-width)',
-                borderStyle: 'solid',
-                color: 'var(--color-primary)',
-                borderRadius: 'var(--radius-large)',
-                fontFamily: 'var(--font-body)',
-                fontWeight: 'var(--font-weight-body)',
-              }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 backdrop-blur-sm"
             >
-              <span 
-                className="w-2 h-2 rounded-full animate-pulse"
-                style={{ backgroundColor: 'var(--color-primary)' }}
-              />
-              {content.fomo.badge}
+              <Sparkles className="w-4 h-4 text-cyan-400" strokeWidth={1.5} />
+              <span className="text-sm font-medium text-cyan-400 tracking-wide">
+                {content.fomo.badge}
+              </span>
             </motion.div>
           )}
-          
+
+          {/* Cited Stat */}
           {content.citedStat && (
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="inline-block backdrop-blur-sm mx-auto"
-              style={{
-                backgroundColor: 'var(--color-surface)',
-                borderColor: 'var(--color-border)',
-                borderWidth: 'var(--border-width)',
-                borderStyle: 'solid',
-                borderRadius: 'var(--radius-large)',
-                padding: 'var(--spacing-card-padding)',
-                boxShadow: 'var(--shadow-large)',
-              }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className="inline-block bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
             >
-              <div 
-                className="text-4xl md:text-5xl mb-2"
-                style={{ 
-                  color: 'var(--color-primary)',
-                  fontFamily: 'var(--font-heading)',
-                  fontWeight: 'var(--font-weight-heading)',
-                }}
-              >
+              <div className="text-4xl md:text-5xl font-bold mb-2 text-gradient-premium">
                 {content.citedStat.statistic}
               </div>
-              <div 
-                className="text-base mb-3"
-                style={{ 
-                  color: 'var(--color-text-secondary)',
-                  fontFamily: 'var(--font-body)',
-                  lineHeight: 'var(--line-height-body)',
-                }}
-              >
+              <div className="text-base text-slate-300 mb-3">
                 {content.citedStat.claim}
               </div>
-              <cite 
-                className="text-xs not-italic"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
+              <cite className="text-xs text-slate-500 not-italic">
                 Source: {content.citedStat.fullCitation}
               </cite>
             </motion.div>
           )}
           
+          {/* Headline — THE STATEMENT */}
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl ${
-              isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] font-bold tracking-tight leading-[1.1] max-w-4xl ${
+              isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
             }`}
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("headline", e)}
             style={{ 
-              color: 'var(--color-text-primary)',
-              fontFamily: 'var(--font-heading)',
-              fontWeight: 'var(--font-weight-heading)',
-              lineHeight: 'var(--line-height-heading)',
-              letterSpacing: 'var(--letter-spacing-heading)',
+              color: 'white',
+              textShadow: '0 4px 40px hsla(0, 0%, 0%, 0.5)',
             }}
           >
             {content.headline}
           </motion.h1>
           
+          {/* Subheadline */}
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className={`text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto ${
-              isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
+            transition={{ duration: 0.6, delay: 0.35 }}
+            className={`text-lg md:text-xl lg:text-2xl max-w-2xl leading-relaxed ${
+              isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
             }`}
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("subheadline", e)}
-            style={{ 
-              color: 'var(--color-text-secondary)',
-              fontFamily: 'var(--font-body)',
-              fontWeight: 'var(--font-weight-body)',
-              lineHeight: 'var(--line-height-body)',
-            }}
+            style={{ color: 'hsl(215, 20%, 65%)' }}
           >
             {content.subheadline}
           </motion.p>
           
+          {/* CTA Group */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="pt-6"
-            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-stack-gap)', alignItems: 'center' }}
+            transition={{ duration: 0.6, delay: 0.45 }}
+            className="flex flex-col sm:flex-row items-center gap-4 pt-4"
           >
-            <Button 
-              size="lg" 
-              className={`text-lg px-12 py-7 h-auto font-semibold transition-all duration-300 hover:scale-105 ${
-                isEditing ? "outline-dashed outline-2 outline-primary/30" : ""
-              }`}
-              style={{
-                background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))`,
-                color: content.primaryColor ? getButtonTextColor(content.primaryColor) : 'var(--color-text-inverse)',
-                boxShadow: 'var(--shadow-large)',
-                borderRadius: 'var(--radius-small)',
-                fontFamily: 'var(--font-body)',
-              }}
-            >
-              <span
-                contentEditable={isEditing}
-                suppressContentEditableWarning
-                onBlur={(e) => handleBlur("ctaText", e)}
+            {/* Primary CTA */}
+            <div className="relative group">
+              <Button 
+                size="lg" 
+                className={`relative overflow-hidden text-lg px-10 py-7 h-auto font-semibold transition-all duration-300 hover:scale-[1.02] ${
+                  isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""
+                }`}
+                style={{
+                  background: `linear-gradient(135deg, hsl(189, 95%, 43%), hsl(200, 95%, 50%))`,
+                  color: 'white',
+                  boxShadow: '0 0 30px hsla(189, 95%, 43%, 0.3), 0 10px 40px -10px hsla(189, 95%, 43%, 0.5)',
+                  borderRadius: '12px',
+                }}
               >
-                {content.ctaText}
-              </span>
-            </Button>
+                <span
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleBlur("ctaText", e)}
+                  className="relative z-10"
+                >
+                  {content.ctaText}
+                </span>
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" strokeWidth={2} />
+                
+                {/* Shimmer Effect */}
+                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
+              </Button>
+            </div>
             
+            {/* Secondary CTA (Urgency) */}
             {content.fomo?.urgency && (
-              <p 
-                className="text-sm font-medium"
-                style={{ color: 'var(--color-primary)' }}
-              >
+              <p className="text-sm font-medium text-cyan-400">
                 ⚡ {content.fomo.urgency}
               </p>
             )}
-
-            {/* Credibility Bar - only shown if data exists */}
-            {credibilityItems.length > 0 && (
-              <div className="flex flex-wrap justify-center pt-4" style={{ gap: 'var(--spacing-element-gap)' }}>
-                {credibilityItems.map((item, i) => (
-                  <motion.div 
-                    key={i} 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.5 + i * 0.1 }}
-                    className="flex items-center gap-2 text-sm md:text-base"
-                    style={{ 
-                      color: 'var(--color-text-secondary)',
-                      fontFamily: 'var(--font-body)',
-                    }}
-                  >
-                    <CheckCircle 
-                      className="w-5 h-5 flex-shrink-0" 
-                      style={{ color: 'var(--color-primary)' }}
-                      strokeWidth={1.5}
-                    />
-                    <span className="font-medium">{item.text}</span>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-
-            {/* Trust Badges - only shown if data exists, NO FABRICATION */}
-            {trustBadges.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-6 pt-2">
-                {trustBadges.map((badge, i) => {
-                  const icons = [Shield, Clock, Award];
-                  const Icon = icons[i % icons.length];
-                  return (
-                    <div 
-                      key={i} 
-                      className="flex items-center gap-2 text-xs"
-                      style={{ color: 'var(--color-text-muted)' }}
-                    >
-                      <Icon 
-                        className="w-3.5 h-3.5" 
-                        style={{ color: 'var(--color-primary)' }}
-                        strokeWidth={1.5}
-                      />
-                      <span>{badge}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </motion.div>
-        </div>
-      )}
 
+          {/* Trust Indicators */}
+          {(credibilityItems.length > 0 || trustBadges.length > 0) && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+              className="flex flex-wrap justify-center gap-6 pt-6"
+            >
+              {credibilityItems.map((item, i) => (
+                <div 
+                  key={i} 
+                  className="flex items-center gap-2 text-sm text-slate-400"
+                >
+                  <CheckCircle className="w-4 h-4 text-cyan-400" strokeWidth={1.5} />
+                  <span>{item.text}</span>
+                </div>
+              ))}
+              {trustBadges.map((badge, i) => {
+                const icons = [Shield, Clock, Award];
+                const Icon = icons[i % icons.length];
+                return (
+                  <div key={i} className="flex items-center gap-2 text-sm text-slate-400">
+                    <Icon className="w-4 h-4 text-cyan-400" strokeWidth={1.5} />
+                    <span>{badge}</span>
+                  </div>
+                );
+              })}
+            </motion.div>
+          )}
+        </div>
+      </div>
+
+      {/* Image Attribution */}
       {content.imageAttribution && (
-        <p 
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs z-10"
-          style={{ color: 'var(--color-text-muted)' }}
-        >
+        <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs z-10 text-slate-500">
           Photo by{' '}
           <a
             href={content.imageAttribution.photographerLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:opacity-80"
+            className="underline hover:text-slate-400 transition-colors"
           >
             {content.imageAttribution.photographerName}
           </a>

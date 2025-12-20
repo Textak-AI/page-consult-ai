@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, MessageSquare, Edit3 } from 'lucide-react';
+import { ChevronDown, MessageSquare, Edit3, Sparkles } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { EyebrowBadge } from '@/components/ui/PremiumCard';
 import type { FAQItem } from '@/services/intelligence/types';
 
 interface FAQSectionProps {
@@ -39,63 +40,30 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
 
   return (
     <section 
-      className={`relative ${isEditing ? 'relative' : ''}`}
-      style={{ 
-        backgroundColor: 'var(--color-background)',
-        padding: 'var(--spacing-section-y) var(--spacing-section-x)',
-      }}
+      className="relative overflow-hidden"
+      style={{ backgroundColor: 'hsl(217, 33%, 6%)', padding: '120px 24px' }}
       itemScope
       itemType="https://schema.org/FAQPage"
     >
+      <div className="absolute inset-0 bg-grid-pattern opacity-30" />
+      
       {isEditing && (
-        <div 
-          className="absolute inset-0 border-2 rounded-lg pointer-events-none z-10"
-          style={{ borderColor: 'var(--color-secondary)' }}
-        />
+        <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
       )}
 
-      <div className="container mx-auto max-w-3xl relative z-0">
+      <div className="container mx-auto max-w-3xl relative z-10">
         {/* Header */}
         <div className="text-center mb-12">
-          <div 
-            className="inline-flex items-center gap-2 px-4 py-1.5 mb-4"
-            style={{
-              backgroundColor: 'var(--color-primary-muted)',
-              borderColor: 'var(--color-primary)',
-              borderWidth: 'var(--border-width)',
-              borderStyle: 'solid',
-              borderRadius: 'var(--radius-large)',
-            }}
-          >
-            <MessageSquare 
-              className="w-4 h-4"
-              style={{ color: 'var(--color-primary)' }}
-              strokeWidth={1.5}
-            />
-            <span 
-              className="text-sm"
-              style={{ 
-                color: 'var(--color-primary)',
-                fontFamily: 'var(--font-body)',
-                fontWeight: 'var(--font-weight-body)',
-              }}
-            >
-              Common Questions
-            </span>
-          </div>
+          <EyebrowBadge 
+            icon={<MessageSquare className="w-4 h-4" strokeWidth={1.5} />} 
+            text="Common Questions" 
+            className="mb-6"
+          />
           
           <h2 
-            className={`text-3xl md:text-4xl ${
-              isEditing ? 'outline-dashed outline-2 rounded px-2' : ''
+            className={`text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight ${
+              isEditing ? 'outline-dashed outline-2 outline-cyan-500/30 rounded px-2' : ''
             }`}
-            style={{ 
-              color: 'var(--color-text-primary)',
-              fontFamily: 'var(--font-heading)',
-              fontWeight: 'var(--font-weight-heading)',
-              lineHeight: 'var(--line-height-heading)',
-              letterSpacing: 'var(--letter-spacing-heading)',
-              outlineColor: isEditing ? 'var(--color-secondary)' : undefined,
-            }}
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={handleHeadlineUpdate}
@@ -105,26 +73,11 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
         </div>
 
         {/* FAQ Items */}
-        <div 
-          className="overflow-hidden"
-          style={{
-            backgroundColor: 'var(--color-surface)',
-            borderColor: 'var(--color-border)',
-            borderWidth: 'var(--border-width)',
-            borderStyle: 'solid',
-            borderRadius: 'var(--radius-large)',
-            padding: '0 var(--spacing-card-padding)',
-          }}
-        >
+        <div className="rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] overflow-hidden">
           {items.map((item, index) => (
             <motion.div
               key={index}
-              className="last:border-b-0"
-              style={{ 
-                borderBottomColor: 'var(--color-border)', 
-                borderBottomWidth: 'var(--border-width)',
-                borderBottomStyle: 'solid',
-              }}
+              className={index !== items.length - 1 ? "border-b border-white/[0.05]" : ""}
               itemScope
               itemProp="mainEntity"
               itemType="https://schema.org/Question"
@@ -133,67 +86,40 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
               viewport={{ once: true }}
               transition={{ delay: index * 0.05 }}
             >
-              {/* Question */}
               <button
-                className="w-full py-5 px-1 flex items-center justify-between text-left group"
+                className="w-full py-6 px-6 flex items-center justify-between text-left group hover:bg-white/[0.02] transition-colors"
                 onClick={() => handleToggle(index)}
-                aria-expanded={expandedIndex === index}
               >
                 {isEditing && editingItem === index ? (
                   <Input
                     value={item.question}
                     onChange={(e) => handleItemUpdate(index, 'question', e.target.value)}
                     onBlur={() => setEditingItem(null)}
-                    className="flex-1 mr-4"
-                    style={{
-                      backgroundColor: 'var(--color-surface)',
-                      borderColor: 'var(--color-primary)',
-                    }}
+                    className="flex-1 mr-4 bg-slate-800 border-cyan-500"
                     autoFocus
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
-                  <h3 
-                    className="text-lg pr-4 flex-1 transition-colors"
-                    style={{ 
-                      color: 'var(--color-text-primary)',
-                      fontFamily: 'var(--font-heading)',
-                      fontWeight: 'var(--font-weight-body)',
-                    }}
-                    itemProp="name"
-                  >
+                  <h3 className="text-lg font-medium text-white pr-4 flex-1 group-hover:text-cyan-400 transition-colors" itemProp="name">
                     {item.question}
                   </h3>
                 )}
                 
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2">
                   {isEditing && editingItem !== index && (
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingItem(index);
-                        setExpandedIndex(index);
-                      }}
-                      className="p-1 transition-colors"
-                      style={{ color: 'var(--color-text-muted)' }}
+                      onClick={(e) => { e.stopPropagation(); setEditingItem(index); setExpandedIndex(index); }}
+                      className="p-1 text-slate-500 hover:text-cyan-400 transition-colors"
                     >
                       <Edit3 className="w-4 h-4" strokeWidth={1.5} />
                     </button>
                   )}
-                  <motion.div
-                    animate={{ rotate: expandedIndex === index ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <ChevronDown 
-                      className="w-5 h-5"
-                      style={{ color: 'var(--color-text-muted)' }}
-                      strokeWidth={1.5}
-                    />
+                  <motion.div animate={{ rotate: expandedIndex === index ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                    <ChevronDown className="w-5 h-5 text-slate-500" strokeWidth={1.5} />
                   </motion.div>
                 </div>
               </button>
 
-              {/* Answer */}
               <AnimatePresence>
                 {expandedIndex === index && (
                   <motion.div
@@ -206,29 +132,16 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
                     itemProp="acceptedAnswer"
                     itemType="https://schema.org/Answer"
                   >
-                    <div className="pb-5 px-1">
+                    <div className="pb-6 px-6">
                       {isEditing && editingItem === index ? (
                         <Textarea
                           value={item.answer}
                           onChange={(e) => handleItemUpdate(index, 'answer', e.target.value)}
-                          className="w-full min-h-[100px]"
-                          style={{
-                            backgroundColor: 'var(--color-surface)',
-                            borderColor: 'var(--color-primary)',
-                          }}
+                          className="w-full min-h-[100px] bg-slate-800 border-cyan-500"
                           onClick={(e) => e.stopPropagation()}
                         />
                       ) : (
-                        <p 
-                          style={{ 
-                            color: 'var(--color-text-secondary)',
-                            fontFamily: 'var(--font-body)',
-                            lineHeight: 'var(--line-height-body)',
-                          }}
-                          itemProp="text"
-                        >
-                          {item.answer}
-                        </p>
+                        <p className="text-slate-400 leading-relaxed" itemProp="text">{item.answer}</p>
                       )}
                     </div>
                   </motion.div>
@@ -238,14 +151,10 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
           ))}
         </div>
 
-        {/* Empty state */}
         {items.length === 0 && (
-          <div 
-            className="text-center py-12"
-            style={{ color: 'var(--color-text-muted)' }}
-          >
+          <div className="text-center py-12 text-slate-500">
             <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" strokeWidth={1.5} />
-            <p style={{ fontFamily: 'var(--font-body)' }}>No FAQ items available</p>
+            <p>No FAQ items available</p>
           </div>
         )}
       </div>

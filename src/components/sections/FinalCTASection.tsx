@@ -1,15 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowRight, Clock, Shield, Zap, CheckCircle } from "lucide-react";
-
-const getButtonTextColor = (primaryColor: string): string => {
-  const hex = primaryColor.replace('#', '');
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.5 ? '#1E293B' : '#FFFFFF';
-};
+import { ArrowRight, CheckCircle, Sparkles } from "lucide-react";
 
 interface FinalCTASectionProps {
   content: {
@@ -32,54 +23,42 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
     });
   };
 
-  // Only use trust indicators if explicitly provided - NO FABRICATION
   const trustIndicators = content.trustIndicators || [];
 
   return (
     <section 
-      className={`relative overflow-hidden ${isEditing ? "relative" : ""}`}
-      style={{
-        background: 'linear-gradient(135deg, var(--color-background), var(--color-background-alt))',
-        padding: 'var(--spacing-section-y) var(--spacing-section-x)',
-      }}
+      className="relative overflow-hidden"
+      style={{ backgroundColor: 'hsl(217, 33%, 6%)', padding: '120px 24px' }}
     >
-      {/* Background decorations */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjAzIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-60"></div>
-      <div 
-        className="absolute top-1/2 left-1/4 w-[500px] h-[500px] rounded-full blur-[100px] -translate-y-1/2"
-        style={{ backgroundColor: 'var(--color-primary)', opacity: 0.1 }}
-      ></div>
-      <div 
-        className="absolute top-1/2 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] -translate-y-1/2"
-        style={{ backgroundColor: 'var(--color-secondary)', opacity: 0.1 }}
-      ></div>
+      {/* Dramatic Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-grid-pattern opacity-30" />
+        <div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[150px]"
+          style={{ background: 'radial-gradient(circle, hsla(189, 95%, 43%, 0.15) 0%, transparent 70%)' }}
+        />
+        <div 
+          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px]"
+          style={{ backgroundColor: 'hsla(270, 95%, 60%, 0.08)' }}
+        />
+      </div>
       
       {isEditing && (
-        <div 
-          className="absolute inset-0 border-2 rounded-lg pointer-events-none z-10"
-          style={{ borderColor: 'var(--color-secondary)' }}
-        />
+        <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
       )}
       
-      <div className="container mx-auto max-w-4xl text-center relative z-10" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-stack-gap)', alignItems: 'center' }}>
+      <div className="container mx-auto max-w-4xl text-center relative z-10 flex flex-col items-center gap-8">
         <motion.h2 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl ${
-            isEditing ? "outline-dashed outline-2 outline-secondary/50 rounded px-2" : ""
+          className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight max-w-3xl ${
+            isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
           }`}
           contentEditable={isEditing}
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("headline", e)}
-          style={{ 
-            color: 'var(--color-text-primary)',
-            fontFamily: 'var(--font-heading)',
-            fontWeight: 'var(--font-weight-heading)',
-            lineHeight: 'var(--line-height-heading)',
-            letterSpacing: 'var(--letter-spacing-heading)',
-          }}
         >
           {content.headline}
         </motion.h2>
@@ -89,80 +68,82 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.05 }}
-            className="text-lg md:text-xl max-w-2xl"
-            style={{ 
-              color: 'var(--color-text-secondary)',
-              fontFamily: 'var(--font-body)',
-              lineHeight: 'var(--line-height-body)',
-            }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-lg md:text-xl text-slate-400 max-w-2xl leading-relaxed"
           >
             {content.subtext}
           </motion.p>
         )}
         
+        {/* CTA Button — Maximum Impact */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
           className="pt-4"
-          style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-stack-gap)', alignItems: 'center' }}
         >
-          <Button 
-            size="lg" 
-            className={`text-lg md:text-xl px-12 md:px-16 py-7 md:py-8 h-auto font-semibold transition-all duration-300 hover:scale-105 group ${
-              isEditing ? "outline-dashed outline-2 outline-secondary/50" : ""
-            }`}
-            style={{
-              background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))`,
-              color: content.primaryColor ? getButtonTextColor(content.primaryColor) : 'var(--color-text-inverse)',
-              boxShadow: 'var(--shadow-large)',
-              borderRadius: 'var(--radius-small)',
-              fontFamily: 'var(--font-body)',
-            }}
-          >
-            <span
-              contentEditable={isEditing}
-              suppressContentEditableWarning
-              onBlur={(e) => handleBlur("ctaText", e)}
+          <div className="relative group">
+            <Button 
+              size="lg" 
+              className={`relative overflow-hidden text-lg md:text-xl px-12 md:px-16 py-7 md:py-8 h-auto font-semibold transition-all duration-300 hover:scale-[1.02] animate-pulse-glow ${
+                isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""
+              }`}
+              style={{
+                background: 'linear-gradient(135deg, hsl(189, 95%, 43%), hsl(200, 95%, 50%))',
+                color: 'white',
+                borderRadius: '16px',
+              }}
             >
-              {content.ctaText}
-            </span>
-            <ArrowRight className="ml-3 w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-1 transition-transform" strokeWidth={1.5} />
-          </Button>
-          
-          {/* Trust Indicators - only shown if data exists, NO FABRICATION */}
-          {trustIndicators.length > 0 && (
-            <div className="flex flex-wrap justify-center pt-4" style={{ gap: 'var(--spacing-element-gap)' }}>
-              {trustIndicators.map((item, i) => {
-                const icons = [Shield, Zap, Clock];
-                const Icon = icons[i % icons.length];
-                return (
-                  <motion.div 
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
-                    className="flex items-center gap-2 text-sm md:text-base"
-                    style={{ 
-                      color: 'var(--color-text-secondary)',
-                      fontFamily: 'var(--font-body)',
-                    }}
-                  >
-                    <CheckCircle 
-                      className="w-5 h-5" 
-                      style={{ color: 'var(--color-primary)' }}
-                      strokeWidth={1.5}
-                    />
-                    <span>{item.text}</span>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
+              <span
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("ctaText", e)}
+                className="relative z-10"
+              >
+                {content.ctaText}
+              </span>
+              <ArrowRight className="ml-3 w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-1 transition-transform relative z-10" strokeWidth={2} />
+              
+              {/* Animated Gradient */}
+              <div 
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style={{ background: 'linear-gradient(135deg, hsl(200, 95%, 50%), hsl(270, 95%, 60%))' }}
+              />
+              
+              {/* Shimmer */}
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
+            </Button>
+          </div>
         </motion.div>
+
+        {/* Micro-trust below CTA */}
+        {trustIndicators.length > 0 ? (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex flex-wrap justify-center gap-6 pt-4"
+          >
+            {trustIndicators.map((item, i) => (
+              <div key={i} className="flex items-center gap-2 text-sm text-slate-400">
+                <CheckCircle className="w-4 h-4 text-cyan-400" strokeWidth={1.5} />
+                <span>{item.text}</span>
+              </div>
+            ))}
+          </motion.div>
+        ) : (
+          <motion.p 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="text-sm text-slate-500"
+          >
+            No credit card required · Free to start
+          </motion.p>
+        )}
       </div>
     </section>
   );
