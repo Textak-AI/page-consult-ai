@@ -27,8 +27,17 @@ serve(async (req) => {
 
     const REPLICATE_API_TOKEN = Deno.env.get('REPLICATE_API_TOKEN')
     if (!REPLICATE_API_TOKEN) {
-      throw new Error('REPLICATE_API_TOKEN is not configured')
+      console.error('REPLICATE_API_TOKEN is not set in secrets')
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'REPLICATE_API_TOKEN is not configured. Please add your Replicate API token to secrets.' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
     }
+
+    console.log('Replicate token found, initializing client...')
 
     const replicate = new Replicate({
       auth: REPLICATE_API_TOKEN
@@ -48,6 +57,7 @@ Mood: Confident, trustworthy, innovative.`
       : 'black-forest-labs/flux-dev'
 
     console.log('Using model:', model)
+    console.log('Enhanced prompt:', enhancedPrompt.substring(0, 100) + '...')
 
     const output = await replicate.run(model, {
       input: {
@@ -68,11 +78,28 @@ Mood: Confident, trustworthy, innovative.`
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
-  } catch (error) {
-    console.error('Error generating image:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
+    
+    console.error('Error generating image:', errorMessage)
+    console.error('Error stack:', errorStack)
+    console.error('Full error object:', JSON.stringify(error, null, 2))
+    
+    // Check for specific Replicate errors
+    let userMessage = errorMessage
+    if (errorMessage.includes('Invalid token')) {
+      userMessage = 'Invalid Replicate API token. Please check your REPLICATE_API_TOKEN secret.'
+    } else if (errorMessage.includes('rate limit')) {
+      userMessage = 'Replicate rate limit exceeded. Please try again in a few minutes.'
+    } else if (errorMessage.includes('payment')) {
+      userMessage = 'Replicate account requires payment. Please check your Replicate billing.'
+    }
+    
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+      error: userMessage,
+      details: errorMessage
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
