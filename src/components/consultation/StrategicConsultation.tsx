@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette, FileText, TrendingUp, UserCheck, Rocket, Calendar, Gift, Share2 } from 'lucide-react';
+import { IndustrySelector } from './IndustrySelector';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -61,6 +62,8 @@ export interface ConsultationData {
   businessName: string;
   productName?: string;
   industry: string;
+  industryCategory?: string;
+  industrySubcategory?: string;
   industryOther?: string;
   yearsInBusiness: string;
   uniqueStrength: string;
@@ -819,25 +822,21 @@ ${d.ctaText}
               
               <div>
                 <Label htmlFor="industry" className="text-slate-400">Industry *</Label>
-                <select
-                  id="industry"
-                  value={data.industry || ''}
-                  onChange={(e) => updateData({ industry: e.target.value })}
-                  className="mt-2 w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-3"
-                >
-                  <option value="">Select your industry...</option>
-                  {INDUSTRIES.map(ind => (
-                    <option key={ind} value={ind}>{ind}</option>
-                  ))}
-                </select>
-                {data.industry === 'Other' && (
-                  <Input
-                    placeholder="Specify your industry"
-                    value={data.industryOther || ''}
-                    onChange={(e) => updateData({ industryOther: e.target.value })}
-                    className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                <div className="mt-2">
+                  <IndustrySelector
+                    value={{
+                      category: data.industryCategory || '',
+                      subcategory: data.industrySubcategory || '',
+                    }}
+                    onChange={({ category, subcategory }) => {
+                      updateData({ 
+                        industryCategory: category,
+                        industrySubcategory: subcategory,
+                        industry: `${category} → ${subcategory}`,
+                      });
+                    }}
                   />
-                )}
+                </div>
               </div>
               
               <div>
