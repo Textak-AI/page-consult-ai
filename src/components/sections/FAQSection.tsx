@@ -22,6 +22,11 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
   const headline = content.headline || 'Frequently Asked Questions';
   const items = content.items || [];
 
+  // Don't render section at all if no FAQ items (unless editing)
+  if (items.length === 0 && !isEditing) {
+    return null;
+  }
+
   const handleToggle = (index: number) => {
     if (!isEditing || editingItem === null) {
       setExpandedIndex(expandedIndex === index ? null : index);
@@ -151,10 +156,10 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
           ))}
         </div>
 
-        {items.length === 0 && (
+        {items.length === 0 && isEditing && (
           <div className="text-center py-12 text-slate-500">
             <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" strokeWidth={1.5} />
-            <p>No FAQ items available</p>
+            <p>No FAQ items - add questions in edit mode</p>
           </div>
         )}
       </div>
