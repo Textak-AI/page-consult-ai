@@ -404,6 +404,7 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
               ...consultationData,
               businessName: testData.businessName,
               productName: testData.productName,
+              pageType: testData.pageType, // CRITICAL: Explicitly pass pageType for beta sections
             },
             brandSettings: {
               primaryColor: testData.brandSettings?.primaryColor || '#06B6D4',
