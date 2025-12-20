@@ -853,11 +853,21 @@ ${d.ctaText}
               
               <div>
                 <Label htmlFor="uniqueStrength" className="text-slate-400">
-                  What's the ONE thing you do better than anyone else? *
+                  {data.pageType === 'beta-prelaunch'
+                    ? `What will make ${data.productName || data.businessName || 'your product'} worth the wait? *`
+                    : data.productName
+                    ? `What's the ONE thing ${data.productName} does better than anything else? *`
+                    : "What's the ONE thing you do better than anyone else? *"}
                 </Label>
                 <Textarea
                   id="uniqueStrength"
-                  placeholder="e.g., We're the only agency that guarantees 10x ROI on ad spend within 90 days or your money back..."
+                  placeholder={
+                    data.pageType === 'beta-prelaunch'
+                      ? "e.g., AI that actually learns YOUR focus patterns, not generic productivity tips..."
+                      : data.productName
+                      ? `e.g., ${data.productName} is the only tool that...`
+                      : "e.g., We're the only agency that guarantees 10x ROI on ad spend within 90 days or your money back..."
+                  }
                   value={data.uniqueStrength || ''}
                   onChange={(e) => updateData({ uniqueStrength: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
