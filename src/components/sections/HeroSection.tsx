@@ -119,245 +119,478 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           </Button>
         </>
       )}
-      <div className="container mx-auto max-w-6xl text-center relative z-10" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-stack-gap)' }}>
-        {/* Logo - only render if exists */}
-        {content.logoUrl && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="flex justify-center mb-4"
-          >
-            <img 
-              src={content.logoUrl} 
-              alt="Company logo" 
-              className="h-12 md:h-16 object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          </motion.div>
-        )}
-        {content.fomo?.badge && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm backdrop-blur-sm mx-auto"
+      {/* Glass container when background image exists */}
+      {content.backgroundImage ? (
+        <div className="container mx-auto max-w-6xl relative z-10 flex items-center justify-center px-4">
+          <div 
+            className="backdrop-blur-md bg-black/30 rounded-2xl p-8 md:p-12 max-w-4xl w-full border border-white/10 text-center"
             style={{
-              backgroundColor: 'var(--color-primary-muted)',
-              borderColor: 'var(--color-primary)',
-              borderWidth: 'var(--border-width)',
-              borderStyle: 'solid',
-              color: 'var(--color-primary)',
-              borderRadius: 'var(--radius-large)',
-              fontFamily: 'var(--font-body)',
-              fontWeight: 'var(--font-weight-body)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: 'var(--spacing-stack-gap)'
             }}
           >
-            <span 
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: 'var(--color-primary)' }}
-            />
-            {content.fomo.badge}
-          </motion.div>
-        )}
-        
-        {content.citedStat && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="inline-block backdrop-blur-sm mx-auto"
-            style={{
-              backgroundColor: 'var(--color-surface)',
-              borderColor: 'var(--color-border)',
-              borderWidth: 'var(--border-width)',
-              borderStyle: 'solid',
-              borderRadius: 'var(--radius-large)',
-              padding: 'var(--spacing-card-padding)',
-              boxShadow: 'var(--shadow-large)',
-            }}
-          >
-            <div 
-              className="text-4xl md:text-5xl mb-2"
-              style={{ 
-                color: 'var(--color-primary)',
-                fontFamily: 'var(--font-heading)',
-                fontWeight: 'var(--font-weight-heading)',
-              }}
-            >
-              {content.citedStat.statistic}
-            </div>
-            <div 
-              className="text-base mb-3"
-              style={{ 
-                color: 'var(--color-text-secondary)',
-                fontFamily: 'var(--font-body)',
-                lineHeight: 'var(--line-height-body)',
-              }}
-            >
-              {content.citedStat.claim}
-            </div>
-            <cite 
-              className="text-xs not-italic"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
-              Source: {content.citedStat.fullCitation}
-            </cite>
-          </motion.div>
-        )}
-        
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl ${
-            isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
-          }`}
-          contentEditable={isEditing}
-          suppressContentEditableWarning
-          onBlur={(e) => handleBlur("headline", e)}
-          style={{ 
-            textShadow: content.backgroundImage ? '0 4px 30px rgba(0,0,0,0.5), 0 2px 10px rgba(0,0,0,0.3)' : 'none',
-            color: 'var(--color-text-primary)',
-            fontFamily: 'var(--font-heading)',
-            fontWeight: 'var(--font-weight-heading)',
-            lineHeight: 'var(--line-height-heading)',
-            letterSpacing: 'var(--letter-spacing-heading)',
-          }}
-        >
-          {content.headline}
-        </motion.h1>
-        
-        <motion.p 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className={`text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto ${
-            isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
-          }`}
-          contentEditable={isEditing}
-          suppressContentEditableWarning
-          onBlur={(e) => handleBlur("subheadline", e)}
-          style={{ 
-            textShadow: content.backgroundImage ? '0 2px 10px rgba(0,0,0,0.4)' : 'none',
-            color: 'var(--color-text-secondary)',
-            fontFamily: 'var(--font-body)',
-            fontWeight: 'var(--font-weight-body)',
-            lineHeight: 'var(--line-height-body)',
-          }}
-        >
-          {content.subheadline}
-        </motion.p>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="pt-6"
-          style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-stack-gap)', alignItems: 'center' }}
-        >
-          <Button 
-            size="lg" 
-            className={`text-lg px-12 py-7 h-auto font-semibold transition-all duration-300 hover:scale-105 ${
-              isEditing ? "outline-dashed outline-2 outline-primary/30" : ""
-            }`}
-            style={{
-              background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))`,
-              color: content.primaryColor ? getButtonTextColor(content.primaryColor) : 'var(--color-text-inverse)',
-              boxShadow: 'var(--shadow-large)',
-              borderRadius: 'var(--radius-small)',
-              fontFamily: 'var(--font-body)',
-            }}
-          >
-            <span
-              contentEditable={isEditing}
-              suppressContentEditableWarning
-              onBlur={(e) => handleBlur("ctaText", e)}
-            >
-              {content.ctaText}
-            </span>
-          </Button>
-          
-          {content.fomo?.urgency && (
-            <p 
-              className="text-sm font-medium"
-              style={{ color: 'var(--color-primary)' }}
-            >
-              ⚡ {content.fomo.urgency}
-            </p>
-          )}
-
-          {/* Credibility Bar - only shown if data exists */}
-          {credibilityItems.length > 0 && (
-            <div className="flex flex-wrap justify-center pt-4" style={{ gap: 'var(--spacing-element-gap)' }}>
-              {credibilityItems.map((item, i) => (
-                <motion.div 
-                  key={i} 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.5 + i * 0.1 }}
-                  className="flex items-center gap-2 text-sm md:text-base"
+            {/* Logo - only render if exists */}
+            {content.logoUrl && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="flex justify-center mb-4"
+              >
+                <img 
+                  src={content.logoUrl} 
+                  alt="Company logo" 
+                  className="h-12 md:h-16 object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </motion.div>
+            )}
+            {content.fomo?.badge && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-sm backdrop-blur-sm mx-auto"
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderColor: 'var(--color-primary)',
+                  borderWidth: 'var(--border-width)',
+                  borderStyle: 'solid',
+                  color: 'var(--color-primary)',
+                  borderRadius: 'var(--radius-large)',
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: 'var(--font-weight-body)',
+                }}
+              >
+                <span 
+                  className="w-2 h-2 rounded-full animate-pulse"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                />
+                {content.fomo.badge}
+              </motion.div>
+            )}
+            
+            {content.citedStat && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="inline-block backdrop-blur-sm mx-auto"
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderColor: 'var(--color-border)',
+                  borderWidth: 'var(--border-width)',
+                  borderStyle: 'solid',
+                  borderRadius: 'var(--radius-large)',
+                  padding: 'var(--spacing-card-padding)',
+                  boxShadow: 'var(--shadow-large)',
+                }}
+              >
+                <div 
+                  className="text-4xl md:text-5xl mb-2"
+                  style={{ 
+                    color: 'var(--color-primary)',
+                    fontFamily: 'var(--font-heading)',
+                    fontWeight: 'var(--font-weight-heading)',
+                  }}
+                >
+                  {content.citedStat.statistic}
+                </div>
+                <div 
+                  className="text-base mb-3"
                   style={{ 
                     color: 'var(--color-text-secondary)',
                     fontFamily: 'var(--font-body)',
+                    lineHeight: 'var(--line-height-body)',
                   }}
                 >
-                  <CheckCircle 
-                    className="w-5 h-5 flex-shrink-0" 
-                    style={{ color: 'var(--color-primary)' }}
-                    strokeWidth={1.5}
-                  />
-                  <span className="font-medium">{item.text}</span>
-                </motion.div>
-              ))}
-            </div>
-          )}
+                  {content.citedStat.claim}
+                </div>
+                <cite 
+                  className="text-xs not-italic"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  Source: {content.citedStat.fullCitation}
+                </cite>
+              </motion.div>
+            )}
+            
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl ${
+                isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
+              }`}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("headline", e)}
+              style={{ 
+                textShadow: '0 4px 30px rgba(0,0,0,0.5), 0 2px 10px rgba(0,0,0,0.3)',
+                color: 'var(--color-text-primary)',
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 'var(--font-weight-heading)',
+                lineHeight: 'var(--line-height-heading)',
+                letterSpacing: 'var(--letter-spacing-heading)',
+              }}
+            >
+              {content.headline}
+            </motion.h1>
+            
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className={`text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto ${
+                isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
+              }`}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("subheadline", e)}
+              style={{ 
+                textShadow: '0 2px 10px rgba(0,0,0,0.4)',
+                color: 'var(--color-text-secondary)',
+                fontFamily: 'var(--font-body)',
+                fontWeight: 'var(--font-weight-body)',
+                lineHeight: 'var(--line-height-body)',
+              }}
+            >
+              {content.subheadline}
+            </motion.p>
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="pt-6"
+              style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-stack-gap)', alignItems: 'center' }}
+            >
+              <Button 
+                size="lg" 
+                className={`text-lg px-12 py-7 h-auto font-semibold transition-all duration-300 hover:scale-105 ${
+                  isEditing ? "outline-dashed outline-2 outline-primary/30" : ""
+                }`}
+                style={{
+                  background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))`,
+                  color: content.primaryColor ? getButtonTextColor(content.primaryColor) : 'var(--color-text-inverse)',
+                  boxShadow: 'var(--shadow-large)',
+                  borderRadius: 'var(--radius-small)',
+                  fontFamily: 'var(--font-body)',
+                }}
+              >
+                <span
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleBlur("ctaText", e)}
+                >
+                  {content.ctaText}
+                </span>
+              </Button>
+              
+              {content.fomo?.urgency && (
+                <p 
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--color-primary)' }}
+                >
+                  ⚡ {content.fomo.urgency}
+                </p>
+              )}
 
-          {/* Trust Badges - only shown if data exists, NO FABRICATION */}
-          {trustBadges.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-6 pt-2">
-              {trustBadges.map((badge, i) => {
-                const icons = [Shield, Clock, Award];
-                const Icon = icons[i % icons.length];
-                return (
-                  <div 
+              {/* Credibility Bar - only shown if data exists */}
+              {credibilityItems.length > 0 && (
+                <div className="flex flex-wrap justify-center pt-4" style={{ gap: 'var(--spacing-element-gap)' }}>
+                  {credibilityItems.map((item, i) => (
+                    <motion.div 
+                      key={i} 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.5 + i * 0.1 }}
+                      className="flex items-center gap-2 text-sm md:text-base"
+                      style={{ 
+                        color: 'var(--color-text-secondary)',
+                        fontFamily: 'var(--font-body)',
+                      }}
+                    >
+                      <CheckCircle 
+                        className="w-5 h-5 flex-shrink-0" 
+                        style={{ color: 'var(--color-primary)' }}
+                        strokeWidth={1.5}
+                      />
+                      <span className="font-medium">{item.text}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
+              {/* Trust Badges - only shown if data exists, NO FABRICATION */}
+              {trustBadges.length > 0 && (
+                <div className="flex flex-wrap justify-center gap-6 pt-2">
+                  {trustBadges.map((badge, i) => {
+                    const icons = [Shield, Clock, Award];
+                    const Icon = icons[i % icons.length];
+                    return (
+                      <div 
+                        key={i} 
+                        className="flex items-center gap-2 text-xs"
+                        style={{ color: 'var(--color-text-muted)' }}
+                      >
+                        <Icon 
+                          className="w-3.5 h-3.5" 
+                          style={{ color: 'var(--color-primary)' }}
+                          strokeWidth={1.5}
+                        />
+                        <span>{badge}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          </div>
+        </div>
+      ) : (
+        <div className="container mx-auto max-w-6xl text-center relative z-10" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-stack-gap)' }}>
+          {/* Logo - only render if exists */}
+          {content.logoUrl && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="flex justify-center mb-4"
+            >
+              <img 
+                src={content.logoUrl} 
+                alt="Company logo" 
+                className="h-12 md:h-16 object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </motion.div>
+          )}
+          {content.fomo?.badge && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm backdrop-blur-sm mx-auto"
+              style={{
+                backgroundColor: 'var(--color-primary-muted)',
+                borderColor: 'var(--color-primary)',
+                borderWidth: 'var(--border-width)',
+                borderStyle: 'solid',
+                color: 'var(--color-primary)',
+                borderRadius: 'var(--radius-large)',
+                fontFamily: 'var(--font-body)',
+                fontWeight: 'var(--font-weight-body)',
+              }}
+            >
+              <span 
+                className="w-2 h-2 rounded-full animate-pulse"
+                style={{ backgroundColor: 'var(--color-primary)' }}
+              />
+              {content.fomo.badge}
+            </motion.div>
+          )}
+          
+          {content.citedStat && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="inline-block backdrop-blur-sm mx-auto"
+              style={{
+                backgroundColor: 'var(--color-surface)',
+                borderColor: 'var(--color-border)',
+                borderWidth: 'var(--border-width)',
+                borderStyle: 'solid',
+                borderRadius: 'var(--radius-large)',
+                padding: 'var(--spacing-card-padding)',
+                boxShadow: 'var(--shadow-large)',
+              }}
+            >
+              <div 
+                className="text-4xl md:text-5xl mb-2"
+                style={{ 
+                  color: 'var(--color-primary)',
+                  fontFamily: 'var(--font-heading)',
+                  fontWeight: 'var(--font-weight-heading)',
+                }}
+              >
+                {content.citedStat.statistic}
+              </div>
+              <div 
+                className="text-base mb-3"
+                style={{ 
+                  color: 'var(--color-text-secondary)',
+                  fontFamily: 'var(--font-body)',
+                  lineHeight: 'var(--line-height-body)',
+                }}
+              >
+                {content.citedStat.claim}
+              </div>
+              <cite 
+                className="text-xs not-italic"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                Source: {content.citedStat.fullCitation}
+              </cite>
+            </motion.div>
+          )}
+          
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl ${
+              isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
+            }`}
+            contentEditable={isEditing}
+            suppressContentEditableWarning
+            onBlur={(e) => handleBlur("headline", e)}
+            style={{ 
+              color: 'var(--color-text-primary)',
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 'var(--font-weight-heading)',
+              lineHeight: 'var(--line-height-heading)',
+              letterSpacing: 'var(--letter-spacing-heading)',
+            }}
+          >
+            {content.headline}
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className={`text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto ${
+              isEditing ? "outline-dashed outline-2 outline-primary/30 rounded px-2" : ""
+            }`}
+            contentEditable={isEditing}
+            suppressContentEditableWarning
+            onBlur={(e) => handleBlur("subheadline", e)}
+            style={{ 
+              color: 'var(--color-text-secondary)',
+              fontFamily: 'var(--font-body)',
+              fontWeight: 'var(--font-weight-body)',
+              lineHeight: 'var(--line-height-body)',
+            }}
+          >
+            {content.subheadline}
+          </motion.p>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="pt-6"
+            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-stack-gap)', alignItems: 'center' }}
+          >
+            <Button 
+              size="lg" 
+              className={`text-lg px-12 py-7 h-auto font-semibold transition-all duration-300 hover:scale-105 ${
+                isEditing ? "outline-dashed outline-2 outline-primary/30" : ""
+              }`}
+              style={{
+                background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))`,
+                color: content.primaryColor ? getButtonTextColor(content.primaryColor) : 'var(--color-text-inverse)',
+                boxShadow: 'var(--shadow-large)',
+                borderRadius: 'var(--radius-small)',
+                fontFamily: 'var(--font-body)',
+              }}
+            >
+              <span
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("ctaText", e)}
+              >
+                {content.ctaText}
+              </span>
+            </Button>
+            
+            {content.fomo?.urgency && (
+              <p 
+                className="text-sm font-medium"
+                style={{ color: 'var(--color-primary)' }}
+              >
+                ⚡ {content.fomo.urgency}
+              </p>
+            )}
+
+            {/* Credibility Bar - only shown if data exists */}
+            {credibilityItems.length > 0 && (
+              <div className="flex flex-wrap justify-center pt-4" style={{ gap: 'var(--spacing-element-gap)' }}>
+                {credibilityItems.map((item, i) => (
+                  <motion.div 
                     key={i} 
-                    className="flex items-center gap-2 text-xs"
-                    style={{ color: 'var(--color-text-muted)' }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.5 + i * 0.1 }}
+                    className="flex items-center gap-2 text-sm md:text-base"
+                    style={{ 
+                      color: 'var(--color-text-secondary)',
+                      fontFamily: 'var(--font-body)',
+                    }}
                   >
-                    <Icon 
-                      className="w-3.5 h-3.5" 
+                    <CheckCircle 
+                      className="w-5 h-5 flex-shrink-0" 
                       style={{ color: 'var(--color-primary)' }}
                       strokeWidth={1.5}
                     />
-                    <span>{badge}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </motion.div>
+                    <span className="font-medium">{item.text}</span>
+                  </motion.div>
+                ))}
+              </div>
+            )}
 
-        {content.imageAttribution && (
-          <p 
-            className="text-xs mt-8"
-            style={{ color: 'var(--color-text-muted)' }}
+            {/* Trust Badges - only shown if data exists, NO FABRICATION */}
+            {trustBadges.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-6 pt-2">
+                {trustBadges.map((badge, i) => {
+                  const icons = [Shield, Clock, Award];
+                  const Icon = icons[i % icons.length];
+                  return (
+                    <div 
+                      key={i} 
+                      className="flex items-center gap-2 text-xs"
+                      style={{ color: 'var(--color-text-muted)' }}
+                    >
+                      <Icon 
+                        className="w-3.5 h-3.5" 
+                        style={{ color: 'var(--color-primary)' }}
+                        strokeWidth={1.5}
+                      />
+                      <span>{badge}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
+
+      {content.imageAttribution && (
+        <p 
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs z-10"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          Photo by{' '}
+          <a
+            href={content.imageAttribution.photographerLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:opacity-80"
           >
-            Photo by{' '}
-            <a
-              href={content.imageAttribution.photographerLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:opacity-80"
-            >
-              {content.imageAttribution.photographerName}
-            </a>
-            {' '}on Unsplash
-          </p>
-        )}
-      </div>
+            {content.imageAttribution.photographerName}
+          </a>
+          {' '}on Unsplash
+        </p>
+      )}
 
       <ImagePicker
         open={imagePickerOpen}

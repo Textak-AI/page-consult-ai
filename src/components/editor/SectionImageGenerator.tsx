@@ -101,6 +101,7 @@ export function SectionImageGenerator({
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("generate");
+  const [hoveredImage, setHoveredImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const industry = industryContext || strategyBrief?.industry || 'default';
@@ -321,8 +322,29 @@ export function SectionImageGenerator({
   const allImages = [...generatedImages, ...uploadedImages];
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+    <>
+      {/* Large hover preview - fixed position outside drawer */}
+      {hoveredImage && (
+        <div 
+          className="fixed z-[200] pointer-events-none hidden lg:block"
+          style={{
+            right: 'calc(36rem + 24px)', // Drawer width (~xl) + gap
+            top: '50%',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          <div className="rounded-xl overflow-hidden shadow-2xl border-2 border-white/20 bg-black">
+            <img 
+              src={hoveredImage} 
+              alt="Preview" 
+              className="w-[500px] h-auto max-h-[70vh] object-contain"
+            />
+          </div>
+        </div>
+      )}
+      
+      <Sheet open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <ImageIcon className="h-5 w-5 text-primary" />
@@ -485,7 +507,12 @@ export function SectionImageGenerator({
                   <label className="text-sm font-medium">Uploaded images</label>
                   <div className="grid grid-cols-2 gap-3">
                     {uploadedImages.map((img, i) => (
-                      <div key={i} className="group relative">
+                      <div 
+                        key={i} 
+                        className="group relative"
+                        onMouseEnter={() => setHoveredImage(img)}
+                        onMouseLeave={() => setHoveredImage(null)}
+                      >
                         <button
                           onClick={() => setSelectedImage(img)}
                           className={cn(
@@ -518,11 +545,6 @@ export function SectionImageGenerator({
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>
-                        
-                        {/* Hover preview */}
-                        <div className="hidden group-hover:block absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 rounded-lg overflow-hidden shadow-2xl border bg-background pointer-events-none">
-                          <img src={img} alt="Preview" className="w-full h-auto" />
-                        </div>
                       </div>
                     ))}
                   </div>
@@ -566,7 +588,12 @@ export function SectionImageGenerator({
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {generatedImages.map((img, i) => (
-                  <div key={i} className="group relative">
+                  <div 
+                    key={i} 
+                    className="group relative"
+                    onMouseEnter={() => setHoveredImage(img)}
+                    onMouseLeave={() => setHoveredImage(null)}
+                  >
                     <button
                       onClick={() => setSelectedImage(img)}
                       className={cn(
@@ -587,11 +614,6 @@ export function SectionImageGenerator({
                         </div>
                       )}
                     </button>
-                    
-                    {/* Hover preview - larger image */}
-                    <div className="hidden group-hover:block absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 rounded-lg overflow-hidden shadow-2xl border bg-background pointer-events-none">
-                      <img src={img} alt="Preview" className="w-full h-auto" />
-                    </div>
                   </div>
                 ))}
               </div>
@@ -621,5 +643,6 @@ export function SectionImageGenerator({
         </div>
       </SheetContent>
     </Sheet>
+    </>
   );
 }
