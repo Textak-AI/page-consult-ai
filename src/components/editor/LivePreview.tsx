@@ -15,6 +15,8 @@ import { SectionToolbar } from "@/components/editor/SectionToolbar";
 import { SectionAIChat } from "@/components/editor/SectionAIChat";
 import { SectionImageGenerator } from "@/components/editor/SectionImageGenerator";
 import { styleVariants } from "@/lib/styleVariants";
+import { SEOHead } from "@/components/seo/SEOHead";
+import type { SEOHeadData } from "@/lib/aiSeoIntegration";
 
 type Section = {
   type: string;
@@ -29,9 +31,10 @@ interface LivePreviewProps {
   cssVariables?: string;
   iconStyle?: "outline" | "solid" | "duotone";
   strategyBrief?: any;
+  seoData?: SEOHeadData;
 }
 
-export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief }: LivePreviewProps) {
+export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData }: LivePreviewProps) {
   const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();
   const currentStyle = styleVariants[pageStyle];
   
@@ -292,6 +295,9 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
       {isEditing && (
         <EditingToolbar onSave={handleSaveEdit} onCancel={handleCancelEdit} />
       )}
+      
+      {/* SEO Head - injects meta tags and schema markup */}
+      {seoData && <SEOHead seo={seoData} />}
       <div className="min-h-full bg-background live-preview-container">
         {sections
           .sort((a, b) => a.order - b.order)

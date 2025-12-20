@@ -4,15 +4,42 @@
  */
 
 import type { AISeoData, ConsultationData, FAQItem } from '@/services/intelligence/types';
-import { generateSchemaMarkup, type SchemaMarkupResult } from './generateSchemaMarkup';
+import { generateSchemaMarkup, getSchemaObjects, type SchemaMarkupResult } from './generateSchemaMarkup';
 import { generateFAQSection, type FAQSectionResult } from './generateFAQSection';
 import { generateMetaTags, type MetaTags } from './generateMetaTags';
+
+interface StrategyBrief {
+  businessName?: string;
+  processOverview?: string;
+  howItWorks?: {
+    steps?: { title: string; description: string }[];
+  };
+  offerType?: 'product' | 'service';
+  offerName?: string;
+  valueProposition?: string;
+  serviceArea?: string;
+}
 
 export interface SEOEnhancedPage {
   schemaMarkup: SchemaMarkupResult;
   faqSection: FAQSectionResult | null;
   metaTags: MetaTags;
   authoritySignalsForContent: string[];
+}
+
+export interface SEOHeadData {
+  metaTitle: string;
+  metaDescription: string;
+  keywords?: string;
+  canonical?: string;
+  openGraph: {
+    type?: string;
+    title?: string;
+    description?: string;
+    image?: string;
+    url?: string;
+  };
+  schemaMarkup: object[];
 }
 
 export interface Testimonial {
@@ -22,16 +49,47 @@ export interface Testimonial {
 }
 
 /**
+ * Generates SEO data formatted for SEOHead component
+ */
+export function generateSEOHeadData(
+  consultation: ConsultationData,
+  aiSeoData: AISeoData,
+  testimonials?: Testimonial[],
+  strategyBrief?: StrategyBrief,
+  canonicalUrl?: string,
+  ogImage?: string
+): SEOHeadData {
+  const metaTags = generateMetaTags(aiSeoData, consultation, canonicalUrl);
+  const schemaObjects = getSchemaObjects(consultation, aiSeoData, testimonials, strategyBrief);
+
+  return {
+    metaTitle: metaTags.title,
+    metaDescription: metaTags.description,
+    keywords: metaTags.keywords,
+    canonical: canonicalUrl,
+    openGraph: {
+      type: metaTags.ogType,
+      title: metaTags.ogTitle,
+      description: metaTags.ogDescription,
+      image: ogImage,
+      url: canonicalUrl,
+    },
+    schemaMarkup: schemaObjects.all,
+  };
+}
+
+/**
  * Generates all SEO assets from aiSeoData
  */
 export function generateSEOAssets(
   consultation: ConsultationData,
   aiSeoData: AISeoData,
   testimonials?: Testimonial[],
-  canonicalUrl?: string
+  canonicalUrl?: string,
+  strategyBrief?: StrategyBrief
 ): SEOEnhancedPage {
-  // Generate schema markup
-  const schemaMarkup = generateSchemaMarkup(consultation, aiSeoData, testimonials);
+  // Generate schema markup (now with HowTo and Service schemas)
+  const schemaMarkup = generateSchemaMarkup(consultation, aiSeoData, testimonials, strategyBrief);
   
   // Generate FAQ section (if we have FAQ items)
   const faqSection = aiSeoData.faqItems && aiSeoData.faqItems.length > 0

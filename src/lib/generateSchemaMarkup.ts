@@ -29,10 +29,30 @@ interface Testimonial {
   quote: string;
 }
 
+interface HowToStep {
+  title: string;
+  description: string;
+}
+
+interface StrategyBrief {
+  businessName?: string;
+  processOverview?: string;
+  howItWorks?: {
+    steps?: HowToStep[];
+  };
+  offerType?: 'product' | 'service';
+  offerName?: string;
+  valueProposition?: string;
+  serviceArea?: string;
+}
+
 export interface SchemaMarkupResult {
   entitySchema: string;
   faqSchema?: string;
+  howToSchema?: string;
+  serviceSchema?: string;
   combined: string;
+  schemas: object[];
 }
 
 /**
@@ -153,31 +173,96 @@ export function generateFAQSchema(faqItems: AISeoData['faqItems']): object {
 }
 
 /**
+ * Generates HowTo schema from process steps
+ */
+export function generateHowToSchema(brief: StrategyBrief): object | null {
+  if (!brief.howItWorks?.steps?.length) return null;
+  
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: `How ${brief.businessName || 'Our Service'} Works`,
+    description: brief.processOverview || `Learn how ${brief.businessName || 'we'} help you achieve results.`,
+    step: brief.howItWorks.steps.map((step, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: step.title,
+      text: step.description,
+    })),
+  };
+}
+
+/**
+ * Generates Service or Product schema from offer details
+ */
+export function generateServiceSchema(brief: StrategyBrief): object {
+  return {
+    '@context': 'https://schema.org',
+    '@type': brief.offerType === 'product' ? 'Product' : 'Service',
+    name: brief.offerName || brief.businessName || 'Our Service',
+    description: brief.valueProposition || '',
+    provider: {
+      '@type': 'Organization',
+      name: brief.businessName || 'Our Company',
+    },
+    areaServed: brief.serviceArea || 'Worldwide',
+  };
+}
+
+/**
  * Main function to generate all schema markup
  */
 export function generateSchemaMarkup(
   consultation: ConsultationData,
   aiSeoData: AISeoData,
-  testimonials?: Testimonial[]
+  testimonials?: Testimonial[],
+  strategyBrief?: StrategyBrief
 ): SchemaMarkupResult {
+  const schemas: object[] = [];
+  
   // Generate entity schema
   const entitySchemaObj = generateEntitySchema(aiSeoData, consultation, testimonials);
+  schemas.push(entitySchemaObj);
   const entitySchema = `<script type="application/ld+json">${JSON.stringify(entitySchemaObj, null, 2)}</script>`;
 
   // Generate FAQ schema if we have FAQ items
   let faqSchema: string | undefined;
   if (aiSeoData.faqItems && aiSeoData.faqItems.length > 0) {
     const faqSchemaObj = generateFAQSchema(aiSeoData.faqItems);
+    schemas.push(faqSchemaObj);
     faqSchema = `<script type="application/ld+json">${JSON.stringify(faqSchemaObj, null, 2)}</script>`;
   }
 
+  // Generate HowTo schema if we have strategy brief with steps
+  let howToSchema: string | undefined;
+  if (strategyBrief) {
+    const howToSchemaObj = generateHowToSchema(strategyBrief);
+    if (howToSchemaObj) {
+      schemas.push(howToSchemaObj);
+      howToSchema = `<script type="application/ld+json">${JSON.stringify(howToSchemaObj, null, 2)}</script>`;
+    }
+  }
+
+  // Generate Service schema if we have strategy brief
+  let serviceSchema: string | undefined;
+  if (strategyBrief && (strategyBrief.offerName || strategyBrief.valueProposition)) {
+    const serviceSchemaObj = generateServiceSchema(strategyBrief);
+    schemas.push(serviceSchemaObj);
+    serviceSchema = `<script type="application/ld+json">${JSON.stringify(serviceSchemaObj, null, 2)}</script>`;
+  }
+
   // Combined for easy insertion
-  const combined = faqSchema ? `${entitySchema}\n${faqSchema}` : entitySchema;
+  const combined = [entitySchema, faqSchema, howToSchema, serviceSchema]
+    .filter(Boolean)
+    .join('\n');
 
   return {
     entitySchema,
     faqSchema,
+    howToSchema,
+    serviceSchema,
     combined,
+    schemas,
   };
 }
 
@@ -187,12 +272,24 @@ export function generateSchemaMarkup(
 export function getSchemaObjects(
   consultation: ConsultationData,
   aiSeoData: AISeoData,
-  testimonials?: Testimonial[]
-): { entity: object; faq?: object } {
+  testimonials?: Testimonial[],
+  strategyBrief?: StrategyBrief
+): { entity: object; faq?: object; howTo?: object; service?: object; all: object[] } {
   const entity = generateEntitySchema(aiSeoData, consultation, testimonials);
+  const all: object[] = [entity];
+  
   const faq = aiSeoData.faqItems?.length > 0 
     ? generateFAQSchema(aiSeoData.faqItems) 
     : undefined;
+  if (faq) all.push(faq);
+
+  const howTo = strategyBrief ? generateHowToSchema(strategyBrief) : undefined;
+  if (howTo) all.push(howTo);
+
+  const service = strategyBrief && (strategyBrief.offerName || strategyBrief.valueProposition)
+    ? generateServiceSchema(strategyBrief)
+    : undefined;
+  if (service) all.push(service);
   
-  return { entity, faq };
+  return { entity, faq, howTo, service, all };
 }
