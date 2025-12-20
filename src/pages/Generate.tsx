@@ -914,15 +914,22 @@ function GenerateContent() {
     let order = 0;
     const businessName = strategicConsultation?.businessName || consultationData.industry;
     
+    // CRITICAL: Get pageType for beta section mapping
+    const pageType = strategicConsultation?.pageType || consultationData.pageType || null;
+    const isBetaPage = pageType === 'beta-prelaunch';
+    console.log('🏗️ [mapLegacyStrategyContent] pageType:', pageType, '| isBetaPage:', isBetaPage);
+    
     // Get brand settings for passing to sections
     const brandSettings = strategicConsultation?.brandSettings || navigationState?.strategicData?.brandSettings;
     const logoUrl = brandSettings?.logoUrl || strategicConsultation?.websiteIntelligence?.logoUrl || null;
     const primaryColor = brandSettings?.primaryColor || designSystem?.colors?.primary || null;
 
     // Get page structure from brief - this is our blueprint
-    const pageStructure: string[] = content.pageStructure || [
-      'hero', 'stats-bar', 'problem-solution', 'features', 'faq', 'final-cta'
-    ];
+    // For beta pages, use beta-specific structure if not provided
+    const defaultStructure = isBetaPage 
+      ? ['hero', 'features', 'founder', 'waitlist-proof', 'final-cta']
+      : ['hero', 'stats-bar', 'problem-solution', 'features', 'faq', 'final-cta'];
+    const pageStructure: string[] = content.pageStructure || defaultStructure;
     
     console.log('🏗️ Legacy mapping with structure:', pageStructure);
 
@@ -959,10 +966,20 @@ function GenerateContent() {
       switch (sectionType) {
         case 'hero':
           sections.push({
-            type: "hero",
+            type: isBetaPage ? "beta-hero-teaser" : "hero",
             order: order++,
             visible: true,
-            content: {
+            content: isBetaPage ? {
+              headline: content.headline,
+              subheadline: content.subheadline,
+              ctaText: content.ctaText || "Get Early Access",
+              ctaLink: "#signup",
+              backgroundImage: heroImageUrl,
+              productName: strategicConsultation?.productName || businessName,
+              launchDate: strategicConsultation?.launchDate || null,
+              logoUrl,
+              primaryColor,
+            } : {
               headline: content.headline,
               subheadline: content.subheadline,
               ctaText: content.ctaText || "Get Started",
@@ -1002,8 +1019,20 @@ function GenerateContent() {
           break;
 
         case 'features':
-          // Only use features from content, no defaults
-          if (content.features && content.features.length > 0) {
+          if (isBetaPage) {
+            // Beta pages use beta-perks instead of features
+            sections.push({
+              type: "beta-perks",
+              order: order++,
+              visible: true,
+              content: {
+                headline: "Early Adopter Perks",
+                subheadline: "Exclusive benefits for founding members",
+                perks: strategicConsultation?.betaPerks || consultationData.betaPerks || ['lifetime-discount', 'founding-member', 'priority-support'],
+                scarcityMessage: `Only ${strategicConsultation?.maxSignups || consultationData.maxSignups || 100} spots available`,
+              },
+            });
+          } else if (content.features && content.features.length > 0) {
             sections.push({
               type: "features",
               order: order++,
@@ -1060,6 +1089,37 @@ function GenerateContent() {
             },
           });
           break;
+          
+        case 'founder':
+          // Add founder section for beta pages
+          const founder = strategicConsultation?.founder || consultationData.founder;
+          sections.push({
+            type: "founder",
+            order: order++,
+            visible: true,
+            content: {
+              name: strategicConsultation?.founderName || founder?.name || 'Founder',
+              title: strategicConsultation?.founderTitle || founder?.title || 'Founder & CEO',
+              story: strategicConsultation?.founderStory || founder?.story || '',
+              credentials: strategicConsultation?.founderCredentials || founder?.credentials || [],
+              photo: strategicConsultation?.founderPhoto || founder?.photo || null,
+            },
+          });
+          break;
+          
+        case 'waitlist-proof':
+          // Add waitlist proof section for beta pages
+          sections.push({
+            type: "waitlist-proof",
+            order: order++,
+            visible: true,
+            content: {
+              totalSignups: 0,
+              todaySignups: 0,
+              spotsRemaining: strategicConsultation?.maxSignups || consultationData.maxSignups || 100,
+            },
+          });
+          break;
 
         case 'faq':
           // Use objections as FAQ if available
@@ -1081,10 +1141,17 @@ function GenerateContent() {
 
         case 'final-cta':
           sections.push({
-            type: "final-cta",
+            type: isBetaPage ? "beta-final-cta" : "final-cta",
             order: order++,
             visible: true,
-            content: {
+            content: isBetaPage ? {
+              headline: "Join the Waitlist",
+              subheadline: "Be first to experience the future",
+              ctaText: content.ctaText || "Get Early Access",
+              ctaLink: "#signup",
+              spotsRemaining: strategicConsultation?.maxSignups || consultationData.maxSignups || 100,
+              primaryColor,
+            } : {
               headline: "Ready to Get Started?",
               subheadline: content.solutionStatement?.split(".")[0] || "",
               ctaText: content.ctaText || "Get Started",
@@ -1099,7 +1166,7 @@ function GenerateContent() {
       }
     }
 
-    console.log(`✅ Legacy mapper built ${sections.length} sections from pageStructure`);
+    console.log(`✅ Legacy mapper built ${sections.length} sections from pageStructure (isBeta: ${isBetaPage})`);
     return sections;
   };
 
@@ -1107,12 +1174,19 @@ function GenerateContent() {
   const mapOldGeneratedContent = async (generated: any, consultationData: any): Promise<Section[]> => {
     const heroImageUrl = await fetchHeroImage(generated.images?.hero || consultationData.industry);
     const galleryImages = await fetchGalleryImages(generated.images?.gallery || []);
+    
+    // CRITICAL: Get pageType for beta section mapping
+    const pageType = consultationData.pageType || 
+                     navigationState?.strategicData?.consultationData?.pageType ||
+                     null;
+    const isBetaPage = pageType === 'beta-prelaunch';
+    console.log('🔧 [mapOldGeneratedContent] pageType:', pageType, '| isBetaPage:', isBetaPage);
 
     const mappedSections: Section[] = generated.sections.map((sectionType: string, index: number) => {
       switch (sectionType) {
         case "hero":
           return {
-            type: "hero",
+            type: isBetaPage ? "beta-hero-teaser" : "hero",
             order: index,
             visible: true,
             content: {
@@ -1121,14 +1195,21 @@ function GenerateContent() {
               ctaText: generated.ctaText,
               ctaLink: "#signup",
               backgroundImage: heroImageUrl,
+              productName: consultationData.productName || consultationData.industry,
+              launchDate: consultationData.launchDate || null,
             },
           };
         case "features":
           return {
-            type: "features",
+            type: isBetaPage ? "beta-perks" : "features",
             order: index,
             visible: true,
-            content: { features: generated.features },
+            content: isBetaPage ? {
+              headline: "Early Adopter Perks",
+              subheadline: "Exclusive benefits for founding members",
+              perks: consultationData.betaPerks || ['lifetime-discount', 'founding-member', 'priority-support'],
+              scarcityMessage: `Only ${consultationData.maxSignups || 100} spots available`,
+            } : { features: generated.features },
           };
         case "problem-solution":
           return {
@@ -1162,10 +1243,16 @@ function GenerateContent() {
           };
         case "final_cta":
           return {
-            type: "final-cta",
+            type: isBetaPage ? "beta-final-cta" : "final-cta",
             order: index,
             visible: true,
-            content: {
+            content: isBetaPage ? {
+              headline: "Join the Waitlist",
+              subheadline: "Be first to experience the future",
+              ctaText: generated.ctaText || "Get Early Access",
+              ctaLink: "#signup",
+              spotsRemaining: consultationData.maxSignups || 100,
+            } : {
               headline: "Ready to Get Started?",
               ctaText: generated.ctaText,
               ctaLink: "#signup",
@@ -1217,6 +1304,13 @@ function GenerateContent() {
 
   // Fallback template generation
   const generateFallbackSections = async (consultationData: any): Promise<Section[]> => {
+    // CRITICAL: Get pageType for beta section mapping
+    const pageType = consultationData.pageType || 
+                     navigationState?.strategicData?.consultationData?.pageType ||
+                     null;
+    const isBetaPage = pageType === 'beta-prelaunch';
+    console.log('🚀 [generateFallbackSections] pageType:', pageType, '| isBetaPage:', isBetaPage);
+    
     const {
       generateHeadline: genHeadline,
       generateSubheadline,
@@ -1233,6 +1327,85 @@ function GenerateContent() {
     const problemStatement = transformProblemStatement(consultationData.challenge);
     const solutionStatement = transformSolutionStatement(consultationData.unique_value, consultationData.industry);
 
+    // BETA PAGE: Use beta-specific section types
+    if (isBetaPage) {
+      console.log('🚀 [generateFallbackSections] Building BETA sections');
+      const sections: Section[] = [
+        {
+          type: "beta-hero-teaser",
+          order: 0,
+          visible: true,
+          content: { 
+            headline, 
+            subheadline, 
+            ctaText: cta.text || "Get Early Access", 
+            ctaLink: "#signup",
+            productName: consultationData.productName || consultationData.businessName || consultationData.industry,
+            launchDate: consultationData.launchDate || null,
+          },
+        },
+        {
+          type: "beta-perks",
+          order: 1,
+          visible: true,
+          content: {
+            headline: "Early Adopter Perks",
+            subheadline: "Exclusive benefits for founding members",
+            perks: consultationData.betaPerks || ['lifetime-discount', 'founding-member', 'priority-support'],
+            scarcityMessage: `Only ${consultationData.maxSignups || 100} spots available`,
+          },
+        },
+      ];
+      
+      // Add founder section if founder data exists
+      if (consultationData.founderName || consultationData.founder) {
+        console.log('🚀 [generateFallbackSections] Adding founder section');
+        sections.push({
+          type: "founder",
+          order: sections.length,
+          visible: true,
+          content: {
+            name: consultationData.founderName || consultationData.founder?.name || 'Founder',
+            title: consultationData.founderTitle || consultationData.founder?.title || 'Founder & CEO',
+            story: consultationData.founderStory || consultationData.founder?.story || '',
+            credentials: consultationData.founderCredentials || consultationData.founder?.credentials || [],
+            photo: consultationData.founderPhoto || consultationData.founder?.photo || null,
+          },
+        });
+      }
+      
+      // Add waitlist proof section
+      sections.push({
+        type: "waitlist-proof",
+        order: sections.length,
+        visible: true,
+        content: {
+          totalSignups: 0,
+          todaySignups: 0,
+          spotsRemaining: consultationData.maxSignups || 100,
+        },
+      });
+      
+      // Add beta final CTA
+      sections.push({
+        type: "beta-final-cta",
+        order: sections.length,
+        visible: true,
+        content: { 
+          headline: "Join the Waitlist", 
+          subheadline: "Be first to experience the future",
+          ctaText: cta.text || "Get Early Access", 
+          ctaLink: "#signup",
+          spotsRemaining: consultationData.maxSignups || 100,
+        },
+      });
+      
+      console.log('🚀 [generateFallbackSections] Built', sections.length, 'beta sections:', sections.map(s => s.type));
+      return sections;
+    }
+
+    // STANDARD PAGE: Use standard section types
+    console.log('🚀 [generateFallbackSections] Building STANDARD sections');
     return [
       {
         type: "hero",
