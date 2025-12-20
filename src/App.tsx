@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { SessionProvider } from "@/contexts/SessionContext";
+import { DevFloatingButton } from "@/components/dev";
 import Index from "./pages/Index";
 import Wizard from "./pages/Wizard";
 import WizardReview from "./pages/WizardReview";
@@ -72,6 +73,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <DevFloatingButton />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
