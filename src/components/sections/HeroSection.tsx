@@ -96,8 +96,13 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             backgroundPosition: 'center',
           }}
         >
-          {/* Overlay for text readability */}
-          <div className="absolute inset-0 bg-black/50" />
+          {/* Overlay for text readability - uses design system variables with lighter default for images */}
+          <div 
+            className="absolute inset-0" 
+            style={{
+              background: `linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.4))`,
+            }}
+          />
         </div>
       )}
       
