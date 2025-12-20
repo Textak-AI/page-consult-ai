@@ -157,7 +157,15 @@ export function LogoEditor({ imageUrl, open, onClose, onSave }: LogoEditorProps)
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden bg-slate-900 border-slate-700">
+      <DialogContent 
+        className="max-w-4xl max-h-[90vh] overflow-hidden bg-slate-900 border-slate-700 text-white"
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-white">
             Edit Logo - Remove Background
@@ -214,7 +222,7 @@ export function LogoEditor({ imageUrl, open, onClose, onSave }: LogoEditorProps)
             <Button
               variant={isPicking ? "default" : "outline"}
               onClick={() => setIsPicking(!isPicking)}
-              className="gap-2"
+              className={isPicking ? "gap-2" : "gap-2 border-slate-600 bg-slate-800 text-white hover:bg-slate-700"}
             >
               <Pipette className="w-4 h-4" />
               {isPicking ? 'Click image to pick color' : 'Pick Different Color'}
@@ -246,6 +254,7 @@ export function LogoEditor({ imageUrl, open, onClose, onSave }: LogoEditorProps)
                   variant="outline"
                   size="sm"
                   onClick={() => setZoom(z => Math.max(0.25, z - 0.25))}
+                  className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
                 >
                   <ZoomOut className="w-4 h-4" />
                 </Button>
@@ -253,6 +262,7 @@ export function LogoEditor({ imageUrl, open, onClose, onSave }: LogoEditorProps)
                   variant="outline"
                   size="sm"
                   onClick={() => setZoom(1)}
+                  className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
                 >
                   100%
                 </Button>
@@ -260,6 +270,7 @@ export function LogoEditor({ imageUrl, open, onClose, onSave }: LogoEditorProps)
                   variant="outline"
                   size="sm"
                   onClick={() => setZoom(z => Math.min(4, z + 0.25))}
+                  className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
                 >
                   <ZoomIn className="w-4 h-4" />
                 </Button>
@@ -271,7 +282,7 @@ export function LogoEditor({ imageUrl, open, onClose, onSave }: LogoEditorProps)
               variant="outline"
               onClick={handleUndo}
               disabled={historyIndex <= 0}
-              className="gap-2"
+              className="gap-2 border-slate-600 bg-slate-800 text-white hover:bg-slate-700 disabled:text-slate-500"
             >
               <Undo className="w-4 h-4" />
               Undo
@@ -279,11 +290,18 @@ export function LogoEditor({ imageUrl, open, onClose, onSave }: LogoEditorProps)
 
             {/* Action buttons */}
             <div className="flex gap-2 mt-auto pt-4">
-              <Button variant="ghost" onClick={onClose} className="flex-1 gap-2">
+              <Button 
+                variant="ghost" 
+                onClick={onClose} 
+                className="flex-1 gap-2 text-slate-300 hover:text-white hover:bg-slate-700"
+              >
                 <X className="w-4 h-4" />
                 Cancel
               </Button>
-              <Button onClick={handleSave} className="flex-1 gap-2">
+              <Button 
+                onClick={handleSave} 
+                className="flex-1 gap-2 bg-cyan-600 text-white hover:bg-cyan-500"
+              >
                 <Check className="w-4 h-4" />
                 Save
               </Button>
