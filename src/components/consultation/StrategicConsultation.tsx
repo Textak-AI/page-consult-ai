@@ -59,6 +59,7 @@ export interface ConsultationData {
   
   // Business Identity
   businessName: string;
+  productName?: string;
   industry: string;
   industryOther?: string;
   yearsInBusiness: string;
@@ -802,6 +803,18 @@ ${d.ctaText}
                   onChange={(e) => updateData({ businessName: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                 />
+              </div>
+              
+              <div>
+                <Label htmlFor="productName" className="text-slate-400">Product Name</Label>
+                <Input
+                  id="productName"
+                  placeholder="e.g., Claude, Notion, Figma (leave blank if same as business)"
+                  value={data.productName || ''}
+                  onChange={(e) => updateData({ productName: e.target.value })}
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                />
+                <p className="text-xs text-slate-500 mt-1.5">The name users will see on your landing page. Leave blank to use your business name.</p>
               </div>
               
               <div>
