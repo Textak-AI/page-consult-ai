@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Palette, Check, Upload, AlertCircle } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Palette, Check, Upload, AlertCircle, Pipette, Eraser, Sparkles, ZoomIn, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { HexColorPicker } from 'react-colorful';
 import {
   Popover,
@@ -16,6 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface WebsiteIntelligence {
   url: string;
@@ -163,9 +166,16 @@ export function BrandCustomization({
   const [headingFont, setHeadingFont] = useState('Inter');
   const [bodyFont, setBodyFont] = useState('Inter');
   const [logoUrl, setLogoUrl] = useState<string | null>(websiteIntelligence.logoUrl || null);
-  const [logoOption, setLogoOption] = useState<'extracted' | 'upload'>('extracted');
+  const [logoOption, setLogoOption] = useState<'extracted' | 'upload' | 'url'>('extracted');
+  const [logoUrlInput, setLogoUrlInput] = useState('');
   const [hasModified, setHasModified] = useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Logo enhancement states
+  const [logoSize, setLogoSize] = useState({ width: 0, height: 0 });
+  const [logoHasTransparency, setLogoHasTransparency] = useState(false);
+  const [isRemovingBg, setIsRemovingBg] = useState(false);
+  const [isUpscaling, setIsUpscaling] = useState(false);
   
   // Load Google Fonts dynamically
   useEffect(() => {
@@ -218,8 +228,107 @@ export function BrandCustomization({
         setLogoUrl(result);
         setLogoOption('upload');
         setHasModified(true);
+        // Reset logo states
+        setLogoSize({ width: 0, height: 0 });
+        setLogoHasTransparency(false);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle logo URL input
+  const handleLogoUrlSubmit = () => {
+    if (logoUrlInput.trim()) {
+      setLogoUrl(logoUrlInput.trim());
+      setLogoOption('url');
+      setHasModified(true);
+      // Reset logo states
+      setLogoSize({ width: 0, height: 0 });
+      setLogoHasTransparency(false);
+    }
+  };
+
+  // Check logo size and transparency when loaded
+  const handleLogoLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    setLogoSize({ width: img.naturalWidth, height: img.naturalHeight });
+    
+    // Check if PNG (likely has transparency)
+    const isPng = logoUrl?.toLowerCase().includes('.png') || logoUrl?.startsWith('data:image/png');
+    setLogoHasTransparency(!!isPng);
+  };
+
+  // EyeDropper API for picking colors
+  const handleEyedropper = async (colorType: 'primary' | 'secondary') => {
+    if ('EyeDropper' in window) {
+      try {
+        // @ts-ignore - EyeDropper is not in TypeScript types yet
+        const eyeDropper = new window.EyeDropper();
+        const result = await eyeDropper.open();
+        setHasModified(true);
+        if (colorType === 'primary') {
+          setPrimaryColor(result.sRGBHex);
+        } else {
+          setSecondaryColor(result.sRGBHex);
+        }
+      } catch (e) {
+        // User cancelled
+        console.log('EyeDropper cancelled');
+      }
+    } else {
+      toast.error('Eyedropper not supported in this browser. Use the color picker instead.');
+    }
+  };
+
+  // Remove background from logo
+  const handleRemoveBackground = async () => {
+    if (!logoUrl) return;
+    
+    setIsRemovingBg(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('remove-logo-background', {
+        body: { imageBase64: logoUrl }
+      });
+
+      if (error) throw error;
+      
+      if (data?.imageUrl) {
+        setLogoUrl(data.imageUrl);
+        setLogoHasTransparency(true);
+        setHasModified(true);
+        toast.success('Background removed successfully!');
+      }
+    } catch (error) {
+      console.error('Background removal error:', error);
+      toast.error('Failed to remove background. Please try again.');
+    } finally {
+      setIsRemovingBg(false);
+    }
+  };
+
+  // Upscale logo
+  const handleUpscaleLogo = async () => {
+    if (!logoUrl) return;
+    
+    setIsUpscaling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('upscale-logo', {
+        body: { imageBase64: logoUrl }
+      });
+
+      if (error) throw error;
+      
+      if (data?.imageUrl) {
+        setLogoUrl(data.imageUrl);
+        setLogoSize({ width: logoSize.width * 4, height: logoSize.height * 4 });
+        setHasModified(true);
+        toast.success('Logo upscaled to 4x resolution!');
+      }
+    } catch (error) {
+      console.error('Upscale error:', error);
+      toast.error('Failed to upscale logo. Please try again.');
+    } finally {
+      setIsUpscaling(false);
     }
   };
 
@@ -269,73 +378,208 @@ export function BrandCustomization({
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Left Column - Settings */}
           <div className="space-y-8">
-            {/* Logo Section */}
-            {websiteIntelligence.logoUrl && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700"
-              >
-                <Label className="text-slate-400 text-sm uppercase tracking-wider mb-4 block">
-                  Your Logo
-                </Label>
-                <div className="flex items-center gap-6">
-                  <div className="w-24 h-16 bg-slate-700/50 rounded-lg flex items-center justify-center p-2">
+            {/* Logo Section - Always show (with upload fallback if no extracted logo) */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700"
+            >
+              <Label className="text-slate-400 text-sm uppercase tracking-wider mb-4 block">
+                Company Logo
+              </Label>
+              
+              {/* Extracted logo preview if available */}
+              {websiteIntelligence.logoUrl && (
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-24 h-16 bg-slate-700/50 rounded-lg flex items-center justify-center p-2 relative overflow-hidden">
+                    {/* Checkerboard background for transparency preview */}
+                    <div className="absolute inset-0 bg-checkerboard opacity-30" />
                     <img 
                       src={websiteIntelligence.logoUrl} 
                       alt="Extracted logo"
-                      className="max-w-full max-h-full object-contain"
+                      className="max-w-full max-h-full object-contain relative z-10"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                       }}
                     />
                   </div>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="logo"
-                        checked={logoOption === 'extracted'}
-                        onChange={() => {
-                          setLogoOption('extracted');
-                          setLogoUrl(websiteIntelligence.logoUrl || null);
-                        }}
-                        className="w-4 h-4 text-cyan-500"
-                      />
-                      <span className="text-white flex items-center gap-1">
-                        <Check className="w-4 h-4 text-green-400" />
-                        Looks good
-                      </span>
-                    </label>
-                    <label 
-                      className="flex items-center gap-2 cursor-pointer"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <input
-                        type="radio"
-                        name="logo"
-                        checked={logoOption === 'upload'}
-                        onChange={() => setLogoOption('upload')}
-                        className="w-4 h-4 text-cyan-500"
-                      />
-                      <span className="text-slate-400 flex items-center gap-1 hover:text-white transition-colors">
-                        <Upload className="w-4 h-4" />
-                        Upload different
-                      </span>
-                    </label>
-                    {/* Hidden file input for logo upload */}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoUpload}
-                      className="hidden"
-                    />
+                  <div className="flex items-center gap-2 text-sm text-green-400">
+                    <Check className="w-4 h-4" />
+                    Extracted from website
                   </div>
                 </div>
-              </motion.div>
-            )}
+              )}
+
+              {/* Current logo preview (if different from extracted) */}
+              {logoUrl && logoUrl !== websiteIntelligence.logoUrl && (
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-24 h-16 bg-slate-700/50 rounded-lg flex items-center justify-center p-2 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-checkerboard opacity-30" />
+                    <img 
+                      src={logoUrl} 
+                      alt="Current logo"
+                      className="max-w-full max-h-full object-contain relative z-10"
+                      onLoad={handleLogoLoad}
+                    />
+                  </div>
+                  <span className="text-sm text-cyan-400">Current logo</span>
+                </div>
+              )}
+
+              {/* Logo options */}
+              <div className="space-y-4">
+                {/* Use extracted logo option */}
+                {websiteIntelligence.logoUrl && (
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="logoSource"
+                      checked={logoOption === 'extracted'}
+                      onChange={() => {
+                        setLogoOption('extracted');
+                        setLogoUrl(websiteIntelligence.logoUrl || null);
+                      }}
+                      className="w-4 h-4 text-cyan-500"
+                    />
+                    <span className="text-white">Use extracted logo</span>
+                  </label>
+                )}
+
+                {/* Upload option */}
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="logoSource"
+                      checked={logoOption === 'upload'}
+                      onChange={() => setLogoOption('upload')}
+                      className="w-4 h-4 text-cyan-500"
+                    />
+                    <span className="text-white">Upload logo</span>
+                  </label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose file
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* URL input option */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="logoSource"
+                      checked={logoOption === 'url'}
+                      onChange={() => setLogoOption('url')}
+                      className="w-4 h-4 text-cyan-500"
+                    />
+                    <span className="text-white">Enter logo URL</span>
+                  </label>
+                  {logoOption === 'url' && (
+                    <div className="flex gap-2 ml-6">
+                      <Input
+                        placeholder="https://example.com/logo.png"
+                        value={logoUrlInput}
+                        onChange={(e) => setLogoUrlInput(e.target.value)}
+                        className="flex-1 bg-slate-700/50 border-slate-600 text-white"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleLogoUrlSubmit}
+                        className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                      >
+                        <LinkIcon className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Logo enhancement options */}
+              {logoUrl && (
+                <div className="mt-6 space-y-3">
+                  {/* Background removal tip & button */}
+                  {!logoHasTransparency && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <Sparkles className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-amber-400 text-sm mb-2">
+                            Tip: Remove the background so your logo looks great on any hero image
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleRemoveBackground}
+                            disabled={isRemovingBg}
+                            className="border-amber-500/50 text-amber-400 hover:bg-amber-500/20"
+                          >
+                            {isRemovingBg ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Removing background...
+                              </>
+                            ) : (
+                              <>
+                                <Eraser className="w-4 h-4 mr-2" />
+                                Remove Background
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Upscale option for small logos */}
+                  {logoSize.width > 0 && logoSize.width < 200 && (
+                    <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <ZoomIn className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-cyan-400 text-sm mb-2">
+                            Your logo is small ({logoSize.width}×{logoSize.height}px). Upscale for better quality?
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleUpscaleLogo}
+                            disabled={isUpscaling}
+                            className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/20"
+                          >
+                            {isUpscaling ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Upscaling...
+                              </>
+                            ) : (
+                              <>
+                                <ZoomIn className="w-4 h-4 mr-2" />
+                                Upscale to 4× ({logoSize.width * 4}×{logoSize.height * 4}px)
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </motion.div>
 
             {/* Colors Section */}
             <motion.div 
@@ -352,7 +596,7 @@ export function BrandCustomization({
                 {/* Primary Color */}
                 <div>
                   <p className="text-white text-sm mb-2">Primary Color <span className="text-slate-500">(buttons, CTAs, key accents)</span></p>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
                     <Popover>
                       <PopoverTrigger asChild>
                         <button className="flex items-center gap-3 bg-slate-700/50 rounded-lg px-4 py-3 hover:bg-slate-700 transition-colors">
@@ -370,13 +614,33 @@ export function BrandCustomization({
                         />
                       </PopoverContent>
                     </Popover>
+                    
+                    {/* Eyedropper button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEyedropper('primary')}
+                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                      title="Pick color from screen"
+                    >
+                      <Pipette className="w-4 h-4" />
+                    </Button>
+                    
+                    {/* Fallback color input */}
+                    <input
+                      type="color"
+                      value={primaryColor}
+                      onChange={(e) => handleColorChange(e.target.value, 'primary')}
+                      className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent"
+                      title="Choose custom color"
+                    />
                   </div>
                 </div>
 
                 {/* Secondary Color */}
                 <div>
                   <p className="text-white text-sm mb-2">Secondary Color <span className="text-slate-500">(highlights, secondary actions)</span></p>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
                     <Popover>
                       <PopoverTrigger asChild>
                         <button className="flex items-center gap-3 bg-slate-700/50 rounded-lg px-4 py-3 hover:bg-slate-700 transition-colors">
@@ -394,6 +658,26 @@ export function BrandCustomization({
                         />
                       </PopoverContent>
                     </Popover>
+                    
+                    {/* Eyedropper button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEyedropper('secondary')}
+                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                      title="Pick color from screen"
+                    >
+                      <Pipette className="w-4 h-4" />
+                    </Button>
+                    
+                    {/* Fallback color input */}
+                    <input
+                      type="color"
+                      value={secondaryColor}
+                      onChange={(e) => handleColorChange(e.target.value, 'secondary')}
+                      className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent"
+                      title="Choose custom color"
+                    />
                   </div>
                 </div>
 
@@ -413,13 +697,17 @@ export function BrandCustomization({
                       {websiteIntelligence.colors.map((color, i) => (
                         <div key={i} className="relative group">
                           <button
+                            type="button"
                             onClick={() => handleExtractedColorClick(color, 'primary')}
                             onContextMenu={(e) => {
                               e.preventDefault();
                               handleExtractedColorClick(color, 'secondary');
                             }}
-                            className="w-10 h-10 rounded-lg border-2 border-slate-600 hover:border-cyan-400 transition-colors cursor-pointer"
-                            style={{ backgroundColor: color }}
+                            className="w-10 h-10 rounded-full border-2 transition-all cursor-pointer hover:scale-110 hover:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                            style={{ 
+                              backgroundColor: color,
+                              borderColor: primaryColor === color || secondaryColor === color ? '#22d3ee' : '#475569'
+                            }}
                             title={`Left-click: Primary, Right-click: Secondary\n${color}`}
                           />
                           <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
@@ -550,6 +838,7 @@ export function BrandCustomization({
                       src={logoUrl}
                       alt="Logo"
                       className="h-8 object-contain"
+                      onLoad={handleLogoLoad}
                     />
                   )}
                   
