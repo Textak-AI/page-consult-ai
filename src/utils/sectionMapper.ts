@@ -106,13 +106,19 @@ export function mapBriefToSections(
   brief: StructuredBrief,
   options: MapBriefOptions
 ): Section[] {
+  console.log('🔧 [mapBriefToSections] ENTERED');
+  console.log('🔧 [mapBriefToSections] options:', JSON.stringify(options, null, 2));
+  console.log('🔧 [mapBriefToSections] options.pageType:', options.pageType);
+  console.log('🔧 [mapBriefToSections] typeof options.pageType:', typeof options.pageType);
+  
   const { businessName, heroImageUrl, logoUrl, primaryColor, pageType } = options;
   const sections: Section[] = [];
   const pageStructure = brief.pageStructure || [];
   
   const isBetaPage = pageType === 'beta-prelaunch';
   
-  console.log('[sectionMapper] pageType:', pageType, '| isBetaPage:', isBetaPage);
+  console.log('🔧 [mapBriefToSections] isBetaPage:', isBetaPage);
+  console.log('🔧 [mapBriefToSections] pageStructure:', pageStructure);
 
   // Iterate through pageStructure and build sections in EXACT order
   for (const sectionType of pageStructure) {
