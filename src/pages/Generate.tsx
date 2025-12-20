@@ -1273,7 +1273,7 @@ function GenerateContent() {
       console.log('🔧 [mapOldGeneratedContent] Filtering for beta page');
       
       // 1. REMOVE sections that don't belong on beta pages
-      const betaExcludedTypes = ['video_hero', 'video-hero', 'process_timeline', 'process-timeline', 'stats_bar', 'stats-bar', 'social-proof', 'testimonials', 'problem-solution', 'photo-gallery', 'photo_gallery'];
+      const betaExcludedTypes = ['video_hero', 'video-hero', 'process_timeline', 'process-timeline', 'stats_bar', 'stats-bar', 'social-proof', 'testimonials', 'problem-solution', 'photo-gallery', 'photo_gallery', 'faq'];
       mappedSections = mappedSections.filter(section => {
         const excluded = betaExcludedTypes.includes(section.type);
         if (excluded) {
@@ -1282,16 +1282,17 @@ function GenerateContent() {
         return !excluded;
       });
 
-      // 2. ADD founder section if data exists
-      const founderData = consultationData.founder || {
-        name: consultationData.founderName,
-        title: consultationData.founderTitle,
-        story: consultationData.founderStory,
-        credentials: consultationData.founderCredentials,
-        photo: consultationData.founderPhoto,
-      };
+      // 2. ADD founder section if data exists - check multiple possible locations
+      const founderObj = consultationData.founder || {};
+      const founderName = founderObj.name || consultationData.founderName || null;
+      const founderTitle = founderObj.title || consultationData.founderTitle || null;
+      const founderStory = founderObj.story || consultationData.founderStory || null;
+      const founderCredentials = founderObj.credentials || consultationData.founderCredentials || [];
+      const founderPhoto = founderObj.photo || consultationData.founderPhoto || null;
       
-      if (founderData.name || founderData.story) {
+      console.log('🔧 [mapOldGeneratedContent] Founder check - name:', founderName, '| story:', !!founderStory);
+      
+      if (founderName || founderStory) {
         console.log('🔧 [mapOldGeneratedContent] Adding founder section');
         // Insert before final CTA
         const ctaIndex = mappedSections.findIndex(s => s.type === 'beta-final-cta');
@@ -1300,11 +1301,11 @@ function GenerateContent() {
           order: ctaIndex >= 0 ? ctaIndex : mappedSections.length,
           visible: true,
           content: {
-            name: founderData.name || 'Founder',
-            title: founderData.title || 'Founder & CEO',
-            story: founderData.story || '',
-            credentials: founderData.credentials || [],
-            photo: founderData.photo || null,
+            name: founderName || 'Founder',
+            title: founderTitle || 'Founder & CEO',
+            story: founderStory || '',
+            credentials: founderCredentials,
+            photo: founderPhoto,
           },
         };
         if (ctaIndex >= 0) {

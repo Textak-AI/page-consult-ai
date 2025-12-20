@@ -365,12 +365,14 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
           viralEnabled: testData.betaConfig.viralEnabled,
           rewardTiers: testData.betaConfig.rewardTiers,
         }),
-        // Founder fields
+        // Founder fields - pass both nested object and flat fields
         ...(testData.founder && includeFounder && {
+          founder: testData.founder,
           founderName: testData.founder.name,
           founderTitle: testData.founder.title,
           founderStory: testData.founder.story,
           founderCredentials: testData.founder.credentials,
+          founderPhoto: testData.founder.photo,
         }),
         // Brand settings
         ...(testData.brandSettings && {
