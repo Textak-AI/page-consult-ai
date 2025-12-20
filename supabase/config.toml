@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.update-anonymous-session]
 verify_jwt = false
+
+[functions.generate-section-image]
+verify_jwt = true
