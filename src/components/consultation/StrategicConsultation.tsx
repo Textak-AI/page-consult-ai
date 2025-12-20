@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette, FileText, TrendingUp, UserCheck } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette, FileText, TrendingUp, UserCheck, Rocket, Calendar, Gift, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,6 +22,13 @@ import {
   TeamAdvisorsStep,
   type TeamAdvisorsData
 } from './steps';
+import {
+  BetaStageStep,
+  BetaTimelineStep,
+  BetaPerksStep,
+  BetaViralStep,
+  type RewardTier
+} from './beta';
 
 export interface ConsultationData {
   // Page Type
@@ -83,6 +90,17 @@ export interface ConsultationData {
   tractionMilestones?: TractionMilestonesData;
   investmentOpportunity?: InvestmentOpportunityData;
   teamAdvisors?: TeamAdvisorsData;
+  
+  // Beta/Pre-launch specific fields
+  betaConfig?: {
+    stage: string | null;
+    timeline: string | null;
+    specificDate: Date | null;
+    perks: string[];
+    viralEnabled: boolean;
+    rewardTiers: RewardTier[];
+    founderStory?: string;
+  };
 }
 
 // Base steps that apply to all page types
@@ -110,10 +128,22 @@ const IR_STEPS = [
   { id: 'goals', title: 'Page Goals', icon: CheckCircle2 },
 ];
 
+// Beta/Pre-launch specific steps
+const BETA_STEPS = [
+  { id: 'beta-stage', title: 'Launch Stage', icon: Rocket },
+  { id: 'beta-timeline', title: 'Timeline', icon: Calendar },
+  { id: 'beta-perks', title: 'Early Adopter Perks', icon: Gift },
+  { id: 'beta-viral', title: 'Viral Referrals', icon: Share2 },
+  { id: 'goals', title: 'Page Goals', icon: CheckCircle2 },
+];
+
 // Helper to get steps based on page type
 const getStepsForPageType = (pageType?: PageTypeId) => {
   if (pageType === 'investor-relations') {
     return [...BASE_STEPS, ...IR_STEPS];
+  }
+  if (pageType === 'beta-prelaunch') {
+    return [...BASE_STEPS, ...BETA_STEPS];
   }
   // Default to customer acquisition flow for all other types
   return [...BASE_STEPS, ...CUSTOMER_ACQUISITION_STEPS];
@@ -408,6 +438,16 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
         return true; // Optional
       case 'ir-opportunity':
         return !!data.investmentOpportunity?.irEmail;
+      // Beta-specific steps
+      case 'beta-stage':
+        return !!data.betaConfig?.stage;
+      case 'beta-timeline':
+        return !!data.betaConfig?.timeline && 
+               (data.betaConfig.timeline !== 'specific' || !!data.betaConfig.specificDate);
+      case 'beta-perks':
+        return (data.betaConfig?.perks?.length || 0) > 0;
+      case 'beta-viral':
+        return true; // Optional - can proceed without enabling viral
       default:
         return true;
     }
@@ -684,6 +724,63 @@ ${d.ctaText}
             onChange={(updates) => updateData({ 
               investmentOpportunity: { ...data.investmentOpportunity, ...updates } as InvestmentOpportunityData 
             })}
+          />
+        );
+
+      // Beta/Pre-launch steps
+      case 'beta-stage':
+        return (
+          <BetaStageStep
+            value={data.betaConfig?.stage || null}
+            onChange={(stage) => updateData({ 
+              betaConfig: { ...data.betaConfig, stage, timeline: data.betaConfig?.timeline || null, specificDate: data.betaConfig?.specificDate || null, perks: data.betaConfig?.perks || [], viralEnabled: data.betaConfig?.viralEnabled || false, rewardTiers: data.betaConfig?.rewardTiers || [] }
+            })}
+            onContinue={handleNext}
+            onBack={handleBack}
+          />
+        );
+
+      case 'beta-timeline':
+        return (
+          <BetaTimelineStep
+            value={data.betaConfig?.timeline || null}
+            specificDate={data.betaConfig?.specificDate || null}
+            onChange={(timeline) => updateData({ 
+              betaConfig: { ...data.betaConfig, stage: data.betaConfig?.stage || null, timeline, specificDate: data.betaConfig?.specificDate || null, perks: data.betaConfig?.perks || [], viralEnabled: data.betaConfig?.viralEnabled || false, rewardTiers: data.betaConfig?.rewardTiers || [] }
+            })}
+            onDateChange={(specificDate) => updateData({ 
+              betaConfig: { ...data.betaConfig, stage: data.betaConfig?.stage || null, timeline: data.betaConfig?.timeline || null, specificDate, perks: data.betaConfig?.perks || [], viralEnabled: data.betaConfig?.viralEnabled || false, rewardTiers: data.betaConfig?.rewardTiers || [] }
+            })}
+            onContinue={handleNext}
+            onBack={handleBack}
+          />
+        );
+
+      case 'beta-perks':
+        return (
+          <BetaPerksStep
+            value={data.betaConfig?.perks || []}
+            onChange={(perks) => updateData({ 
+              betaConfig: { ...data.betaConfig, stage: data.betaConfig?.stage || null, timeline: data.betaConfig?.timeline || null, specificDate: data.betaConfig?.specificDate || null, perks, viralEnabled: data.betaConfig?.viralEnabled || false, rewardTiers: data.betaConfig?.rewardTiers || [] }
+            })}
+            onContinue={handleNext}
+            onBack={handleBack}
+          />
+        );
+
+      case 'beta-viral':
+        return (
+          <BetaViralStep
+            enabled={data.betaConfig?.viralEnabled || false}
+            tiers={data.betaConfig?.rewardTiers || []}
+            onEnabledChange={(viralEnabled) => updateData({ 
+              betaConfig: { ...data.betaConfig, stage: data.betaConfig?.stage || null, timeline: data.betaConfig?.timeline || null, specificDate: data.betaConfig?.specificDate || null, perks: data.betaConfig?.perks || [], viralEnabled, rewardTiers: data.betaConfig?.rewardTiers || [] }
+            })}
+            onTiersChange={(rewardTiers) => updateData({ 
+              betaConfig: { ...data.betaConfig, stage: data.betaConfig?.stage || null, timeline: data.betaConfig?.timeline || null, specificDate: data.betaConfig?.specificDate || null, perks: data.betaConfig?.perks || [], viralEnabled: data.betaConfig?.viralEnabled || false, rewardTiers }
+            })}
+            onContinue={handleNext}
+            onBack={handleBack}
           />
         );
 

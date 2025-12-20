@@ -5,3 +5,6 @@ export { AISeoPanel } from './AISeoPanel';
 export { BrandCustomization } from './BrandCustomization';
 export type { ConsultationData } from './StrategicConsultation';
 export type { BrandSettings, WebsiteIntelligence } from './BrandCustomization';
+
+// Beta components
+export * from './beta';
