@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Palette, Check, Upload, AlertCircle, Pipette, Eraser, Sparkles, ZoomIn, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Palette, Check, Upload, AlertCircle, Pipette, Edit, Sparkles, ZoomIn, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { LogoEditor } from './LogoEditor';
 
 export interface WebsiteIntelligence {
   url: string;
@@ -174,7 +175,7 @@ export function BrandCustomization({
   // Logo enhancement states
   const [logoSize, setLogoSize] = useState({ width: 0, height: 0 });
   const [logoHasTransparency, setLogoHasTransparency] = useState(false);
-  const [isRemovingBg, setIsRemovingBg] = useState(false);
+  const [showLogoEditor, setShowLogoEditor] = useState(false);
   const [isUpscaling, setIsUpscaling] = useState(false);
   
   // Load Google Fonts dynamically
@@ -280,30 +281,12 @@ export function BrandCustomization({
     }
   };
 
-  // Remove background from logo
-  const handleRemoveBackground = async () => {
-    if (!logoUrl) return;
-    
-    setIsRemovingBg(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('remove-logo-background', {
-        body: { imageBase64: logoUrl }
-      });
-
-      if (error) throw error;
-      
-      if (data?.imageUrl) {
-        setLogoUrl(data.imageUrl);
-        setLogoHasTransparency(true);
-        setHasModified(true);
-        toast.success('Background removed successfully!');
-      }
-    } catch (error) {
-      console.error('Background removal error:', error);
-      toast.error('Failed to remove background. Please try again.');
-    } finally {
-      setIsRemovingBg(false);
-    }
+  // Handle logo editor save
+  const handleLogoEditorSave = (editedUrl: string) => {
+    setLogoUrl(editedUrl);
+    setLogoHasTransparency(true);
+    setHasModified(true);
+    toast.success('Logo updated!');
   };
 
   // Upscale logo
@@ -512,36 +495,21 @@ export function BrandCustomization({
               {/* Logo enhancement options */}
               {logoUrl && (
                 <div className="mt-6 space-y-3">
-                  {/* Background removal tip & button */}
+                  {/* Edit Logo button */}
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowLogoEditor(true)}
+                    className="gap-2 border-slate-600 text-slate-300 hover:bg-slate-700"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Edit Logo (Remove Background)
+                  </Button>
+                  
+                  {/* Tip for non-transparent logos */}
                   {!logoHasTransparency && (
-                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
-                      <div className="flex items-start gap-3">
-                        <Sparkles className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                        <div className="flex-1">
-                          <p className="text-amber-400 text-sm mb-2">
-                            Tip: Remove the background so your logo looks great on any hero image
-                          </p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleRemoveBackground}
-                            disabled={isRemovingBg}
-                            className="border-amber-500/50 text-amber-400 hover:bg-amber-500/20"
-                          >
-                            {isRemovingBg ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Removing background...
-                              </>
-                            ) : (
-                              <>
-                                <Eraser className="w-4 h-4 mr-2" />
-                                Remove Background
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
+                    <div className="flex items-start gap-2 text-amber-400 text-sm">
+                      <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <span>Tip: Remove the background so your logo looks great on any hero image</span>
                     </div>
                   )}
 
@@ -579,6 +547,14 @@ export function BrandCustomization({
                   )}
                 </div>
               )}
+
+              {/* Logo Editor Modal */}
+              <LogoEditor
+                imageUrl={logoUrl || ''}
+                open={showLogoEditor}
+                onClose={() => setShowLogoEditor(false)}
+                onSave={handleLogoEditorSave}
+              />
             </motion.div>
 
             {/* Colors Section */}
