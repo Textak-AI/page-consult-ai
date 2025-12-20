@@ -1,5 +1,4 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 import { 
   DollarSign, 
   Zap, 
@@ -9,8 +8,11 @@ import {
   Users, 
   Shirt, 
   Star,
-  LucideIcon
-} from 'lucide-react';
+  CheckCircle,
+  Sparkles,
+  type LucideIcon
+} from "lucide-react";
+import { PremiumCard, EyebrowBadge, GradientIcon } from "@/components/ui/PremiumCard";
 
 interface PerkDisplay {
   icon: LucideIcon;
@@ -61,85 +63,129 @@ const PERK_DISPLAY: Record<string, PerkDisplay> = {
   },
 };
 
-interface Props {
+interface BetaPerksSectionProps {
   content: {
-    headline: string;
-    subheadline: string;
-    perks: string[];
+    headline?: string;
+    subheadline?: string;
+    perks?: string[] | Array<{ title: string; description: string; icon?: string }>;
     scarcityMessage?: string;
   };
+  onUpdate?: (content: any) => void;
 }
 
-export const BetaPerksSection: React.FC<Props> = ({ content }) => {
-  const validPerks = content.perks
-    .filter((perkId) => PERK_DISPLAY[perkId])
-    .map((perkId) => ({ id: perkId, ...PERK_DISPLAY[perkId] }));
+export function BetaPerksSection({ content }: BetaPerksSectionProps) {
+  const { 
+    headline = "Early Adopter Perks",
+    subheadline = "Exclusive benefits for joining early",
+    perks = [],
+    scarcityMessage 
+  } = content;
 
-  if (validPerks.length === 0) return null;
+  // Handle both string[] and object[] formats
+  const normalizedPerks = perks.map((perk) => {
+    if (typeof perk === 'string') {
+      return PERK_DISPLAY[perk] || { icon: CheckCircle, title: perk, description: '' };
+    }
+    return {
+      icon: CheckCircle,
+      title: perk.title,
+      description: perk.description,
+    };
+  }).filter(p => p.title);
 
-  // Determine grid columns based on perk count
-  const gridCols = validPerks.length <= 3 
-    ? 'md:grid-cols-3' 
-    : validPerks.length <= 4 
-      ? 'md:grid-cols-2 lg:grid-cols-4' 
-      : 'md:grid-cols-2 lg:grid-cols-4';
+  if (normalizedPerks.length === 0) return null;
+
+  const getGridClass = () => {
+    if (normalizedPerks.length <= 2) return "md:grid-cols-2";
+    if (normalizedPerks.length === 3) return "md:grid-cols-3";
+    if (normalizedPerks.length === 4) return "md:grid-cols-2 lg:grid-cols-4";
+    return "md:grid-cols-2 lg:grid-cols-4";
+  };
 
   return (
-    <section className="py-20 bg-slate-900">
-      <div className="container mx-auto px-4">
-        {/* Header */}
-        <motion.div
+    <section 
+      className="relative overflow-hidden"
+      style={{ 
+        backgroundColor: 'hsl(217, 33%, 6%)',
+        padding: '120px 24px',
+      }}
+    >
+      {/* Background */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-30" />
+      <div 
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full blur-[150px]"
+        style={{ backgroundColor: 'hsla(270, 95%, 60%, 0.05)' }}
+      />
+
+      <div className="container mx-auto max-w-6xl relative z-10">
+        {/* Section Header */}
+        <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          transition={{ duration: 0.5 }}
+          className="text-center mb-16 mx-auto max-w-3xl"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            {content.headline}
+          <EyebrowBadge 
+            icon={<Gift className="w-4 h-4" strokeWidth={1.5} />} 
+            text="Early Adopter Exclusive" 
+            className="mb-6"
+          />
+          
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-white tracking-tight">
+            {headline}
           </h2>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-            {content.subheadline}
+          <p className="text-lg md:text-xl text-slate-400 leading-relaxed">
+            {subheadline}
           </p>
         </motion.div>
 
-        {/* Perks grid */}
-        <div className={`grid grid-cols-1 ${gridCols} gap-6 max-w-5xl mx-auto`}>
-          {validPerks.map((perk, index) => (
-            <motion.div
-              key={perk.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.02 }}
-              className="relative overflow-hidden rounded-2xl bg-slate-800/50 border border-slate-700 p-6 text-center hover:border-cyan-500/50 transition-colors"
-            >
-              {/* Icon container */}
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 mb-4">
-                <perk.icon className="w-7 h-7 text-cyan-400" />
-              </div>
-
-              {/* Title */}
-              <h3 className="text-lg font-semibold text-white mb-2">
-                {perk.title}
-              </h3>
-
-              {/* Description */}
-              <p className="text-sm text-slate-400">
-                {perk.description}
-              </p>
-            </motion.div>
-          ))}
+        {/* Perks Grid */}
+        <div className={`grid gap-6 ${getGridClass()}`}>
+          {normalizedPerks.map((perk, i) => {
+            const Icon = perk.icon;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+              >
+                <PremiumCard 
+                  variant="glass" 
+                  glow 
+                  glowColor="purple"
+                  className="h-full group text-center"
+                >
+                  {/* Icon */}
+                  <GradientIcon colorFrom="hsl(270, 95%, 60%)" colorTo="hsl(189, 95%, 43%)" className="mb-6 mx-auto">
+                    <Icon className="w-7 h-7 text-white" strokeWidth={1.5} />
+                  </GradientIcon>
+                  
+                  {/* Title */}
+                  <h3 className="text-xl md:text-2xl font-semibold mb-3 text-white group-hover:text-purple-400 transition-colors">
+                    {perk.title}
+                  </h3>
+                  
+                  {/* Description */}
+                  <p className="text-base text-slate-400 leading-relaxed">
+                    {perk.description}
+                  </p>
+                </PremiumCard>
+              </motion.div>
+            );
+          })}
         </div>
 
-        {/* Scarcity message */}
-        {content.scarcityMessage && (
+        {/* Scarcity Message */}
+        {scarcityMessage && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.4 }}
-            className="mt-10 flex justify-center"
+            className="mt-12 flex justify-center"
           >
             <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-amber-500/10 border border-amber-500/30">
               <span className="relative flex h-2 w-2">
@@ -147,7 +193,7 @@ export const BetaPerksSection: React.FC<Props> = ({ content }) => {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
               </span>
               <span className="text-amber-400 font-medium">
-                {content.scarcityMessage}
+                {scarcityMessage}
               </span>
             </div>
           </motion.div>
@@ -155,4 +201,4 @@ export const BetaPerksSection: React.FC<Props> = ({ content }) => {
       </div>
     </section>
   );
-};
+}
