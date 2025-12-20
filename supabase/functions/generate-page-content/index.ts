@@ -22,6 +22,8 @@ const GenerateContentRequestSchema = z.object({
   strategyBrief: z.string().max(50000).optional(),
   // NEW: Structured brief JSON from strategy generation
   structuredBrief: z.any().optional(),
+  // NEW: Page type for beta/IR sections
+  pageType: z.string().optional(),
   // NEW: Full consultation data from strategic consultation
   strategicConsultation: z.object({
     businessName: z.string().optional(),
@@ -42,6 +44,7 @@ const GenerateContentRequestSchema = z.object({
     primaryGoal: z.string().optional(),
     ctaText: z.string().optional(),
     objectionsToOvercome: z.string().optional(),
+    pageType: z.string().optional(),
   }).optional(),
 });
 
@@ -81,8 +84,10 @@ serve(async (req) => {
     const hasStrategyBrief = !!requestData.strategyBrief && requestData.strategyBrief.length > 100;
     const hasStructuredBrief = !!requestData.structuredBrief;
     const hasStrategicConsultation = !!requestData.strategicConsultation;
+    const pageType = requestData.pageType || requestData.strategicConsultation?.pageType || null;
     
     console.log('[generate-page-content] Mode:', hasStructuredBrief ? 'STRUCTURED_BRIEF' : hasStrategyBrief ? 'STRATEGY_BRIEF' : 'LEGACY');
+    console.log('[generate-page-content] pageType:', pageType);
 
     let systemPrompt: string;
     let userPrompt: string;

@@ -62,6 +62,7 @@ export interface MapBriefOptions {
   businessName: string;
   logoUrl?: string | null;
   primaryColor?: string;
+  pageType?: string | null; // 'beta-prelaunch' | 'customer-acquisition' | etc.
 }
 
 /**
@@ -105,9 +106,13 @@ export function mapBriefToSections(
   brief: StructuredBrief,
   options: MapBriefOptions
 ): Section[] {
-  const { businessName, heroImageUrl, logoUrl, primaryColor } = options;
+  const { businessName, heroImageUrl, logoUrl, primaryColor, pageType } = options;
   const sections: Section[] = [];
   const pageStructure = brief.pageStructure || [];
+  
+  const isBetaPage = pageType === 'beta-prelaunch';
+  
+  console.log('[sectionMapper] pageType:', pageType, '| isBetaPage:', isBetaPage);
 
   // Iterate through pageStructure and build sections in EXACT order
   for (const sectionType of pageStructure) {
@@ -124,8 +129,12 @@ export function mapBriefToSections(
           trustBadges.push(brief.proofPoints.clientCount);
         }
 
+        // Use beta-hero-teaser for beta pages, standard hero otherwise
+        const heroType = isBetaPage ? 'beta-hero-teaser' : 'hero';
+        console.log('[sectionMapper] Hero type:', heroType);
+
         sections.push({
-          type: 'hero',
+          type: heroType,
           order,
           visible: true,
           content: {
@@ -207,14 +216,18 @@ export function mapBriefToSections(
 
       case 'features': {
         // CRITICAL: Use ONLY messagingPillars from brief, nothing else
+        // For beta pages, use beta-perks section
         if (brief.messagingPillars && brief.messagingPillars.length > 0) {
+          const featuresType = isBetaPage ? 'beta-perks' : 'features';
+          console.log('[sectionMapper] Features type:', featuresType);
+          
           sections.push({
-            type: 'features',
+            type: featuresType,
             order,
             visible: true,
             content: {
-              title: 'Why Choose Us',
-              subtitle: `What sets ${businessName} apart`,
+              title: isBetaPage ? 'Early Adopter Perks' : 'Why Choose Us',
+              subtitle: isBetaPage ? `What you get by joining early` : `What sets ${businessName} apart`,
               features: brief.messagingPillars.map(pillar => ({
                 title: pillar.title,
                 description: pillar.description,
@@ -248,16 +261,19 @@ export function mapBriefToSections(
       }
 
       case 'social-proof': {
-        // CRITICAL: Only use testimonials from brief, never fabricate
+        // For beta pages, use waitlist-proof section
         const hasRealTestimonials = brief.testimonials?.length > 0 &&
           !isPlaceholderTestimonial(brief.testimonials[0]);
+        
+        const socialProofType = isBetaPage ? 'waitlist-proof' : 'social-proof';
+        console.log('[sectionMapper] Social proof type:', socialProofType);
 
         sections.push({
-          type: 'social-proof',
+          type: socialProofType,
           order,
           visible: true,
           content: {
-            title: 'What Our Clients Say',
+            title: isBetaPage ? 'Join the Waitlist' : 'What Our Clients Say',
             testimonials: hasRealTestimonials
               ? brief.testimonials.map(t => ({
                   quote: t.quote,
@@ -305,12 +321,16 @@ export function mapBriefToSections(
           trustIndicators.push({ text: brief.proofPoints.achievements });
         }
 
+        // For beta pages, use a different CTA style
+        const ctaType = isBetaPage ? 'beta-final-cta' : 'final-cta';
+        console.log('[sectionMapper] CTA type:', ctaType);
+
         sections.push({
-          type: 'final-cta',
+          type: ctaType,
           order,
           visible: true,
           content: {
-            headline: 'Ready to Get Started?',
+            headline: isBetaPage ? 'Be the First to Know' : 'Ready to Get Started?',
             subtext: brief.solutionStatement?.split('.')[0] + '.' || '',
             ctaText: brief.ctaText,
             ctaLink: '#contact',

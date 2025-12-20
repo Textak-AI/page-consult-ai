@@ -618,8 +618,11 @@ function GenerateContent() {
             structuredBrief: strategicData.structuredBrief || null,
             strategicConsultation: strategicData.consultationData,
             industry: consultationData.industry,
+            pageType: strategicData.consultationData?.pageType || null, // CRITICAL: Pass pageType for beta sections
           }
         });
+        
+        console.log('[Generate] Passed pageType to generator:', strategicData.consultationData?.pageType);
         
         if (error) {
           console.warn('⚠️ Strategy brief generation failed:', error);
@@ -859,6 +862,9 @@ function GenerateContent() {
     strategicConsultation: any
   ): Promise<Section[]> => {
     const businessName = strategicConsultation?.businessName || consultationData.industry || 'Our Company';
+    const pageType = strategicConsultation?.pageType || null;
+    
+    console.log('[mapStrategyBriefContentToSections] pageType:', pageType);
     
     // Fetch hero image
     const heroImageUrl = await fetchHeroImage(businessName);
@@ -877,6 +883,7 @@ function GenerateContent() {
       console.log('📐 Page structure:', content.pageStructure);
       console.log('📊 Proof points:', content.proofPoints);
       console.log('🎯 Messaging pillars:', content.messagingPillars?.length);
+      console.log('📄 Page type:', pageType);
       
       // Use the strict brief-first mapper - NO FABRICATION
       const sections = mapBriefToSections(content, {
@@ -884,6 +891,7 @@ function GenerateContent() {
         heroImageUrl,
         logoUrl,
         primaryColor,
+        pageType, // CRITICAL: Pass pageType for beta sections
       });
       
       console.log(`✅ Brief-first mapper built ${sections.length} sections`);
