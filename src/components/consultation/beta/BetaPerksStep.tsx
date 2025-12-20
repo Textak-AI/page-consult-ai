@@ -64,15 +64,15 @@ export function BetaPerksStep({ value, onChange, onContinue, onBack }: Props) {
       {/* Header */}
       <div className="text-center">
         <h2 className="text-2xl font-bold text-white mb-2">
-          What perks will early adopters get?
+          What do early adopters get?
         </h2>
         <p className="text-slate-400">
-          Select all that apply to make your offer irresistible
+          Select all the perks you'll offer
         </p>
       </div>
 
-      {/* Perks Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* Perks Grid - 2x4 */}
+      <div className="grid grid-cols-2 gap-3">
         {PERK_OPTIONS.map((perk) => {
           const Icon = perk.icon;
           const isSelected = value.includes(perk.id);
@@ -87,9 +87,16 @@ export function BetaPerksStep({ value, onChange, onContinue, onBack }: Props) {
                   ? "border-cyan-500 bg-cyan-500/10"
                   : "border-slate-700 hover:border-slate-500 bg-slate-800/50"
               )}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
+              {/* Checkmark in top-right when selected */}
+              {isSelected && (
+                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-cyan-500 flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              )}
+              
               <div className="flex items-center gap-3">
                 <div className={cn(
                   "p-2 rounded-lg shrink-0",
@@ -100,14 +107,6 @@ export function BetaPerksStep({ value, onChange, onContinue, onBack }: Props) {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-white text-sm">{perk.title}</h3>
                   <p className="text-xs text-slate-400">{perk.description}</p>
-                </div>
-                <div className={cn(
-                  "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0",
-                  isSelected 
-                    ? "border-cyan-500 bg-cyan-500" 
-                    : "border-slate-600"
-                )}>
-                  {isSelected && <Check className="w-3 h-3 text-white" />}
                 </div>
               </div>
             </motion.button>
@@ -124,13 +123,17 @@ export function BetaPerksStep({ value, onChange, onContinue, onBack }: Props) {
 
       {/* Navigation */}
       <div className="flex justify-between pt-4">
-        <Button variant="ghost" onClick={onBack} className="text-slate-400">
+        <Button 
+          variant="ghost" 
+          onClick={onBack} 
+          className="text-slate-300 hover:text-white hover:bg-slate-700"
+        >
           <ArrowLeft className="w-4 h-4 mr-2" /> Back
         </Button>
         <Button 
           onClick={onContinue} 
           disabled={value.length === 0} 
-          className="bg-cyan-500 hover:bg-cyan-600"
+          className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white hover:from-cyan-600 hover:to-purple-600"
         >
           Continue <ArrowRight className="w-4 h-4 ml-2" />
         </Button>

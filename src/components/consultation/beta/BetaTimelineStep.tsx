@@ -1,14 +1,14 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { 
-  CalendarIcon,
-  Check,
+  Calendar,
+  Clock,
+  HelpCircle,
   ArrowRight,
   ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
@@ -19,24 +19,25 @@ import { cn } from '@/lib/utils';
 interface TimelineOption {
   id: string;
   label: string;
+  icon: React.ComponentType<{ className?: string }>;
   showDatePicker?: boolean;
 }
 
 export type TimelineId = 
   | 'specific' 
-  | 'q1-2025' 
-  | 'q2-2025' 
-  | 'q3-2025' 
-  | 'q4-2025' 
+  | 'q1-2026' 
+  | 'q2-2026' 
+  | 'q3-2026' 
+  | 'q4-2026' 
   | 'tbd';
 
 const TIMELINE_OPTIONS: TimelineOption[] = [
-  { id: 'specific', label: 'Specific date', showDatePicker: true },
-  { id: 'q1-2025', label: 'Q1 2025' },
-  { id: 'q2-2025', label: 'Q2 2025' },
-  { id: 'q3-2025', label: 'Q3 2025' },
-  { id: 'q4-2025', label: 'Q4 2025' },
-  { id: 'tbd', label: "When it's ready" },
+  { id: 'specific', label: 'Specific date', icon: Calendar, showDatePicker: true },
+  { id: 'q1-2026', label: 'Q1 2026', icon: Clock },
+  { id: 'q2-2026', label: 'Q2 2026', icon: Clock },
+  { id: 'q3-2026', label: 'Q3 2026', icon: Clock },
+  { id: 'q4-2026', label: 'Q4 2026', icon: Clock },
+  { id: 'tbd', label: "When it's ready", icon: HelpCircle },
 ];
 
 interface Props {
@@ -66,16 +67,17 @@ export function BetaTimelineStep({
       {/* Header */}
       <div className="text-center">
         <h2 className="text-2xl font-bold text-white mb-2">
-          When are you planning to launch?
+          When do you plan to launch?
         </h2>
         <p className="text-slate-400">
-          This helps set expectations and create urgency
+          We'll create countdown urgency based on your timeline
         </p>
       </div>
 
-      {/* Timeline Grid */}
+      {/* Timeline Grid - 2x3 */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {TIMELINE_OPTIONS.map((option) => {
+          const Icon = option.icon;
           const isSelected = value === option.id;
 
           return (
@@ -92,13 +94,16 @@ export function BetaTimelineStep({
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-center justify-center gap-2">
+                <Icon className={cn(
+                  "w-4 h-4",
+                  isSelected ? "text-cyan-400" : "text-slate-400"
+                )} />
                 <span className={cn(
                   "font-medium",
                   isSelected ? "text-cyan-400" : "text-white"
                 )}>
                   {option.label}
                 </span>
-                {isSelected && <Check className="w-4 h-4 text-cyan-400" />}
               </div>
             </motion.button>
           );
@@ -121,12 +126,12 @@ export function BetaTimelineStep({
                   !specificDate && "text-slate-400"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <Calendar className="mr-2 h-4 w-4" />
                 {specificDate ? format(specificDate, "PPP") : "Pick your launch date"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 bg-slate-800 border-slate-700" align="center">
-              <Calendar
+              <CalendarComponent
                 mode="single"
                 selected={specificDate || undefined}
                 onSelect={(date) => onDateChange(date || null)}
@@ -141,13 +146,17 @@ export function BetaTimelineStep({
 
       {/* Navigation */}
       <div className="flex justify-between pt-4">
-        <Button variant="ghost" onClick={onBack} className="text-slate-400">
+        <Button 
+          variant="ghost" 
+          onClick={onBack} 
+          className="text-slate-300 hover:text-white hover:bg-slate-700"
+        >
           <ArrowLeft className="w-4 h-4 mr-2" /> Back
         </Button>
         <Button 
           onClick={onContinue} 
           disabled={!canProceed} 
-          className="bg-cyan-500 hover:bg-cyan-600"
+          className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white hover:from-cyan-600 hover:to-purple-600"
         >
           Continue <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
