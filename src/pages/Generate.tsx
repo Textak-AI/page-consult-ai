@@ -1182,7 +1182,7 @@ function GenerateContent() {
     const isBetaPage = pageType === 'beta-prelaunch';
     console.log('🔧 [mapOldGeneratedContent] pageType:', pageType, '| isBetaPage:', isBetaPage);
 
-    const mappedSections: Section[] = generated.sections.map((sectionType: string, index: number) => {
+    let mappedSections: Section[] = generated.sections.map((sectionType: string, index: number) => {
       switch (sectionType) {
         case "hero":
           return {
@@ -1192,10 +1192,10 @@ function GenerateContent() {
             content: {
               headline: generated.headline,
               subheadline: generated.subheadline,
-              ctaText: generated.ctaText,
+              ctaText: isBetaPage ? "Get Early Access" : generated.ctaText,
               ctaLink: "#signup",
               backgroundImage: heroImageUrl,
-              productName: consultationData.productName || consultationData.industry,
+              productName: consultationData.productName || consultationData.businessName || consultationData.industry,
               launchDate: consultationData.launchDate || null,
             },
           };
@@ -1267,6 +1267,88 @@ function GenerateContent() {
           };
       }
     });
+
+    // FOR BETA PAGES: Filter and enhance
+    if (isBetaPage) {
+      console.log('🔧 [mapOldGeneratedContent] Filtering for beta page');
+      
+      // 1. REMOVE sections that don't belong on beta pages
+      const betaExcludedTypes = ['video_hero', 'video-hero', 'process_timeline', 'process-timeline', 'stats_bar', 'stats-bar', 'social-proof', 'testimonials', 'problem-solution', 'photo-gallery', 'photo_gallery'];
+      mappedSections = mappedSections.filter(section => {
+        const excluded = betaExcludedTypes.includes(section.type);
+        if (excluded) {
+          console.log('🔧 [mapOldGeneratedContent] Removing excluded section:', section.type);
+        }
+        return !excluded;
+      });
+
+      // 2. ADD founder section if data exists
+      const founderData = consultationData.founder || {
+        name: consultationData.founderName,
+        title: consultationData.founderTitle,
+        story: consultationData.founderStory,
+        credentials: consultationData.founderCredentials,
+        photo: consultationData.founderPhoto,
+      };
+      
+      if (founderData.name || founderData.story) {
+        console.log('🔧 [mapOldGeneratedContent] Adding founder section');
+        // Insert before final CTA
+        const ctaIndex = mappedSections.findIndex(s => s.type === 'beta-final-cta');
+        const founderSection: Section = {
+          type: 'founder',
+          order: ctaIndex >= 0 ? ctaIndex : mappedSections.length,
+          visible: true,
+          content: {
+            name: founderData.name || 'Founder',
+            title: founderData.title || 'Founder & CEO',
+            story: founderData.story || '',
+            credentials: founderData.credentials || [],
+            photo: founderData.photo || null,
+          },
+        };
+        if (ctaIndex >= 0) {
+          mappedSections.splice(ctaIndex, 0, founderSection);
+        } else {
+          mappedSections.push(founderSection);
+        }
+      }
+
+      // 3. ADD waitlist-proof section
+      console.log('🔧 [mapOldGeneratedContent] Adding waitlist-proof section');
+      const ctaIndex = mappedSections.findIndex(s => s.type === 'beta-final-cta');
+      const waitlistSection: Section = {
+        type: 'waitlist-proof',
+        order: ctaIndex >= 0 ? ctaIndex : mappedSections.length,
+        visible: true,
+        content: {
+          totalSignups: 0,
+          todaySignups: 0,
+          spotsRemaining: consultationData.maxSignups || 100,
+        },
+      };
+      if (ctaIndex >= 0) {
+        mappedSections.splice(ctaIndex, 0, waitlistSection);
+      } else {
+        mappedSections.push(waitlistSection);
+      }
+
+      // 4. UPDATE beta-perks to use consultation data perks
+      const perksSection = mappedSections.find(s => s.type === 'beta-perks');
+      if (perksSection && consultationData.betaPerks && consultationData.betaPerks.length > 0) {
+        console.log('🔧 [mapOldGeneratedContent] Using consultation perks:', consultationData.betaPerks);
+        perksSection.content.perks = consultationData.betaPerks;
+      }
+
+      // 5. REORDER sections
+      mappedSections = mappedSections.map((section, index) => ({
+        ...section,
+        order: index,
+      }));
+
+      console.log('🔧 [mapOldGeneratedContent] Final beta sections:', mappedSections.map(s => s.type));
+    }
+
     return mappedSections;
   };
 
