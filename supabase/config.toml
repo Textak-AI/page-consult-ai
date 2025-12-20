@@ -77,3 +77,9 @@ verify_jwt = false
 
 [functions.generate-section-image]
 verify_jwt = false
+
+[functions.remove-logo-background]
+verify_jwt = false
+
+[functions.upscale-logo]
+verify_jwt = false
