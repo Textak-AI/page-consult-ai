@@ -445,7 +445,7 @@ export function BrandCustomization({
                     variant="outline"
                     size="sm"
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                    className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Choose file
@@ -483,7 +483,7 @@ export function BrandCustomization({
                         variant="outline"
                         size="sm"
                         onClick={handleLogoUrlSubmit}
-                        className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                        className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
                       >
                         <LinkIcon className="w-4 h-4" />
                       </Button>
@@ -499,7 +499,7 @@ export function BrandCustomization({
                   <Button
                     variant="outline"
                     onClick={() => setShowLogoEditor(true)}
-                    className="gap-2 border-slate-600 text-slate-300 hover:bg-slate-700"
+                    className="gap-2 border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
                   >
                     <Edit className="w-4 h-4" />
                     Edit Logo (Remove Background)
@@ -596,7 +596,7 @@ export function BrandCustomization({
                       variant="outline"
                       size="sm"
                       onClick={() => handleEyedropper('primary')}
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                      className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
                       title="Pick color from screen"
                     >
                       <Pipette className="w-4 h-4" />
@@ -640,7 +640,7 @@ export function BrandCustomization({
                       variant="outline"
                       size="sm"
                       onClick={() => handleEyedropper('secondary')}
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                      className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
                       title="Pick color from screen"
                     >
                       <Pipette className="w-4 h-4" />
@@ -910,13 +910,13 @@ export function BrandCustomization({
           <Button
             variant="ghost"
             onClick={onUseDefaults}
-            className="text-slate-500 hover:text-slate-300 hover:bg-slate-800"
+            className="text-slate-300 hover:text-white hover:bg-slate-700"
           >
             Use Industry Defaults Instead
           </Button>
           <Button
             onClick={handleContinue}
-            className="bg-cyan-500 hover:bg-cyan-600 text-white px-8"
+            className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white px-8"
           >
             Continue
             <ArrowRight className="w-4 h-4 ml-2" />

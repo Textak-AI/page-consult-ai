@@ -120,13 +120,13 @@ export function ConsultationIntro({ onComplete }: ConsultationIntroProps) {
         <div className="flex flex-col items-center gap-3 mt-6">
           <Button
             onClick={handleComplete}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-white"
+            className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white"
           >
             Start Strategy Session →
           </Button>
           <button
             onClick={handleComplete}
-            className="text-slate-500 text-sm underline hover:text-slate-400 transition-colors"
+            className="text-slate-300 text-sm underline hover:text-white transition-colors"
           >
             Skip intro
           </button>
