@@ -9,6 +9,14 @@ import { PhotoGallerySection } from "@/components/sections/PhotoGallerySection";
 import { StatsBarSection } from "@/components/sections/StatsBarSection";
 import { FAQSection } from "@/components/sections/FAQSection";
 import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
+// Beta sections
+import { 
+  BetaHeroTeaserSection, 
+  BetaPerksSection, 
+  WaitlistProofSection, 
+  BetaFinalCTASection,
+  FounderCredibilitySection 
+} from "@/components/sections/beta";
 import { useEditing } from "@/contexts/EditingContext";
 import { EditingToolbar } from "@/components/editor/EditingToolbar";
 import { SectionToolbar } from "@/components/editor/SectionToolbar";
@@ -229,6 +237,49 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <HowItWorksSection content={section.content} onUpdate={updateSection} />
+        );
+      // Beta section types
+      case "beta-hero-teaser":
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <BetaHeroTeaserSection
+            content={section.content}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
+          />
+        );
+      case "beta-perks":
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <BetaPerksSection content={section.content} onUpdate={updateSection} />
+        );
+      case "waitlist-proof":
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <WaitlistProofSection content={section.content} />
+        );
+      case "beta-final-cta":
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <BetaFinalCTASection
+            content={section.content}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
+          />
+        );
+      case "founder":
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <FounderCredibilitySection
+            content={section.content}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
+          />
         );
       default:
         return null;
