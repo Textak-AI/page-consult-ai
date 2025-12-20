@@ -310,27 +310,33 @@ export function SectionImageGenerator({
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {generatedImages.map((img, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedImage(img)}
-                    className={cn(
-                      "relative aspect-video rounded-lg overflow-hidden border-2 transition-all",
-                      selectedImage === img
-                        ? "border-primary ring-2 ring-primary/20"
-                        : "border-transparent hover:border-muted-foreground/30"
-                    )}
-                  >
-                    <img
-                      src={img}
-                      alt={`Generated option ${i + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    {selectedImage === img && (
-                      <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
-                        <Check className="h-3 w-3" />
-                      </div>
-                    )}
-                  </button>
+                  <div key={i} className="group relative">
+                    <button
+                      onClick={() => setSelectedImage(img)}
+                      className={cn(
+                        "relative aspect-video rounded-lg overflow-hidden border-2 transition-all w-full",
+                        selectedImage === img
+                          ? "border-primary ring-2 ring-primary/20"
+                          : "border-transparent hover:border-muted-foreground/30"
+                      )}
+                    >
+                      <img
+                        src={img}
+                        alt={`Generated option ${i + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {selectedImage === img && (
+                        <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                          <Check className="h-3 w-3" />
+                        </div>
+                      )}
+                    </button>
+                    
+                    {/* Hover preview - larger image */}
+                    <div className="hidden group-hover:block absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 rounded-lg overflow-hidden shadow-2xl border bg-background pointer-events-none">
+                      <img src={img} alt="Preview" className="w-full h-auto" />
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
