@@ -359,15 +359,15 @@ export const BrandSettings: React.FC = () => {
                   <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
                   <p className="font-medium text-foreground">Upload Logo</p>
                   <p className="text-sm text-muted-foreground">PNG, SVG, JPG or WebP (max 2MB)</p>
+                  <input 
+                    ref={logoInputRef}
+                    type="file" 
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                  />
                 </label>
               )}
-              <input 
-                ref={logoInputRef}
-                type="file" 
-                accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                onChange={handleLogoUpload}
-                className="hidden"
-              />
             </div>
           </div>
 
