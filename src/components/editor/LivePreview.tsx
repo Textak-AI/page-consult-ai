@@ -11,6 +11,7 @@ import { FAQSection } from "@/components/sections/FAQSection";
 import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
 import { DifferentiatorCalloutSection } from "@/components/sections/DifferentiatorCalloutSection";
 import { AudienceFitSection } from "@/components/sections/AudienceFitSection";
+import { CredibilityStripSection } from "@/components/sections/CredibilityStripSection";
 // Beta sections
 import { 
   BetaHeroTeaserSection, 
@@ -288,6 +289,12 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
+        );
+      case "credibility-strip":
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <CredibilityStripSection content={section.content} />
         );
       case "founder":
         return renderSectionWithToolbar(
