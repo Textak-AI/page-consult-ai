@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, Check, Loader2, Palette, Type, MessageSquare, FileText } from 'lucide-react';
+import { Upload, Check, Loader2, Palette, Type, MessageSquare, FileText, ImageIcon, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { BrandBrief } from '@/hooks/useBrandBrief';
 
@@ -11,6 +11,8 @@ export const BrandSettings: React.FC = () => {
   const [brandBrief, setBrandBrief] = useState<BrandBrief | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -117,6 +119,119 @@ export const BrandSettings: React.FC = () => {
     }
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast({ 
+        title: 'Invalid file type', 
+        description: 'Please upload a PNG, JPG, SVG, or WebP file', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    // Validate file size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ 
+        title: 'File too large', 
+        description: 'Logo must be under 2MB', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    setIsUploadingLogo(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Delete old logo if exists
+      if (brandBrief?.logo_storage_path) {
+        await supabase.storage.from('brand-assets').remove([brandBrief.logo_storage_path]);
+      }
+
+      // Upload new logo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/logo-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('brand-assets')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('brand-assets')
+        .getPublicUrl(fileName);
+
+      // Update brand_briefs table
+      const { error: updateError } = await supabase
+        .from('brand_briefs')
+        .update({ 
+          logo_url: publicUrl,
+          logo_storage_path: fileName,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', brandBrief?.id);
+
+      if (updateError) throw updateError;
+
+      setBrandBrief(prev => prev ? { ...prev, logo_url: publicUrl, logo_storage_path: fileName } : null);
+      toast({ title: 'Logo uploaded successfully' });
+
+    } catch (error: any) {
+      console.error('[BrandSettings] Logo upload error:', error);
+      toast({ 
+        title: 'Upload failed', 
+        description: error.message || 'Please try again', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setIsUploadingLogo(false);
+      // Reset input
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
+
+  const handleLogoRemove = async () => {
+    if (!brandBrief) return;
+
+    try {
+      // Delete from storage if path exists
+      if (brandBrief.logo_storage_path) {
+        await supabase.storage.from('brand-assets').remove([brandBrief.logo_storage_path]);
+      }
+
+      // Update database
+      const { error } = await supabase
+        .from('brand_briefs')
+        .update({ 
+          logo_url: null,
+          logo_storage_path: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', brandBrief.id);
+
+      if (error) throw error;
+
+      setBrandBrief(prev => prev ? { ...prev, logo_url: null, logo_storage_path: null } : null);
+      toast({ title: 'Logo removed' });
+
+    } catch (error: any) {
+      console.error('[BrandSettings] Logo remove error:', error);
+      toast({ 
+        title: 'Failed to remove logo', 
+        variant: 'destructive' 
+      });
+    }
+  };
+
   const updateBrandBrief = async (updates: Partial<BrandBrief>) => {
     if (!brandBrief) return;
 
@@ -191,6 +306,70 @@ export const BrandSettings: React.FC = () => {
               <Check className="w-4 h-4 text-emerald-500 ml-auto" />
             </div>
           )}
+
+          {/* Logo Upload */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="w-4 h-4 text-brand" />
+              <h4 className="font-medium text-foreground">Company Logo</h4>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Upload your logo to display on generated pages
+            </p>
+            
+            <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-brand/50 transition-colors">
+              {isUploadingLogo ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="w-8 h-8 animate-spin text-brand" />
+                  <p className="text-sm font-medium text-foreground">Uploading logo...</p>
+                </div>
+              ) : brandBrief.logo_url ? (
+                <div className="space-y-3">
+                  <div className="bg-[repeating-conic-gradient(#e5e5e5_0_90deg,#fff_90deg_180deg)_0_0/16px_16px] rounded-lg p-4 inline-block">
+                    <img 
+                      src={brandBrief.logo_url} 
+                      alt="Company logo" 
+                      className="max-h-16 max-w-[200px] object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => logoInputRef.current?.click()}
+                    >
+                      Change Logo
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleLogoRemove}
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <label className="cursor-pointer block">
+                  <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="font-medium text-foreground">Upload Logo</p>
+                  <p className="text-sm text-muted-foreground">PNG, SVG, JPG or WebP (max 2MB)</p>
+                </label>
+              )}
+              <input 
+                ref={logoInputRef}
+                type="file" 
+                accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                onChange={handleLogoUpload}
+                className="hidden"
+              />
+            </div>
+          </div>
 
           {/* Colors */}
           <div className="space-y-3">
