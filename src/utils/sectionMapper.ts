@@ -1,5 +1,5 @@
 /**
- * Brief-First Section Mapper
+ * Brief-First Section Mapper with Intelligent Extraction
  * 
  * CRITICAL RULES:
  * - NO FABRICATION: Never generate content not in the structuredBrief
@@ -7,15 +7,25 @@
  * - STRICT STRUCTURE: Only render sections listed in pageStructure array, in exact order
  * - PROOF POINTS ONLY: Stats bar shows only values from proofPoints
  * - INDUSTRY-AWARE: Apply industry-specific headers and styling
+ * - INTELLIGENT EXTRACTION: Use briefExtractor for optimized content selection
  */
 
-import type { LucideIcon } from 'lucide-react';
 import { 
   detectIndustryVariant, 
   getIndustryTokens, 
   type IndustryVariant,
   type IndustryDesignTokens 
 } from '@/config/designSystem/industryVariants';
+import {
+  selectBestHeadline,
+  extractAuthoritySignals,
+  getOptimalStatsBar,
+  rankTestimonials,
+  optimizeFAQs,
+  enhanceMessagingPillars,
+  getIntelligentSectionHeaders,
+  type AuthoritySignal,
+} from '@/lib/briefExtractor';
 
 // Type definitions
 export interface StructuredBrief {
@@ -69,32 +79,13 @@ export interface MapBriefOptions {
   businessName: string;
   logoUrl?: string | null;
   primaryColor?: string;
-  pageType?: string | null; // 'beta-prelaunch' | 'customer-acquisition' | etc.
-  industry?: string;        // For industry variant detection
-  serviceType?: string;     // For industry variant detection
-}
-
-/**
- * Extract a numeric value from a string like "47+ aerospace manufacturers"
- * Returns the number/value part only
- */
-function extractNumericValue(text: string | null): string | null {
-  if (!text) return null;
-  const match = text.match(/(\d+[\d,]*[+KMB]?)/i);
-  if (!match) return null;
-  // Avoid double plus: only add + if not already present
-  const value = match[1];
-  return value;
-}
-
-/**
- * Extract label from a proof point (remove the numeric part)
- */
-function extractLabel(text: string): string {
-  // Remove the numeric part and clean up
-  const cleaned = text.replace(/^\d+[\d,]*[+KMB]?\s*/i, '').trim();
-  // Capitalize first letter
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  pageType?: string | null;
+  pageGoal?: string;
+  industry?: string;
+  serviceType?: string;
+  aiSearchOptimization?: {
+    authoritySignals?: string[];
+  };
 }
 
 /**
@@ -108,7 +99,7 @@ function isPlaceholderTestimonial(testimonial: { author: string; quote: string }
 }
 
 /**
- * Maps a structuredBrief to Section[] array.
+ * Maps a structuredBrief to Section[] array using intelligent extraction.
  * SINGLE SOURCE OF TRUTH: Only data from the brief is rendered.
  * INDUSTRY-AWARE: Applies industry-specific headers and styling.
  */
@@ -116,12 +107,10 @@ export function mapBriefToSections(
   brief: StructuredBrief,
   options: MapBriefOptions
 ): Section[] {
-  console.log('🔧 [mapBriefToSections] ENTERED');
-  console.log('🔧 [mapBriefToSections] options:', JSON.stringify(options, null, 2));
-  console.log('🔧 [mapBriefToSections] options.pageType:', options.pageType);
-  console.log('🔧 [mapBriefToSections] typeof options.pageType:', typeof options.pageType);
+  console.log('🧠 [sectionMapper] Starting intelligent extraction');
+  console.log('🧠 [sectionMapper] options:', JSON.stringify(options, null, 2));
   
-  const { businessName, heroImageUrl, logoUrl, primaryColor, pageType, industry, serviceType } = options;
+  const { businessName, heroImageUrl, logoUrl, primaryColor, pageType, pageGoal, industry, serviceType, aiSearchOptimization } = options;
   const sections: Section[] = [];
   const pageStructure = brief.pageStructure || [];
   
@@ -132,15 +121,23 @@ export function mapBriefToSections(
   const industryTokens = getIndustryTokens(industryVariant);
   const isConsulting = industryVariant === 'consulting';
   
-  console.log('🎨 [sectionMapper] industry input:', industry);
-  console.log('🎨 [sectionMapper] serviceType input:', serviceType);
-  console.log('🎨 [sectionMapper] pageType input:', pageType);
-  console.log('🎨 [sectionMapper] industryVariant:', industryVariant);
-  console.log('🎨 [sectionMapper] isConsulting:', isConsulting);
-  console.log('🔧 [mapBriefToSections] isBetaPage:', isBetaPage);
-  console.log('🔧 [mapBriefToSections] pageStructure:', pageStructure);
-
-  console.log('🎯 [sectionMapper] Starting section build with industryVariant:', industryVariant);
+  // Extract authority signals once (used by multiple sections)
+  const authoritySignals = extractAuthoritySignals(
+    brief.proofPoints || {},
+    aiSearchOptimization
+  );
+  
+  // Get intelligent section headers based on industry
+  const intelligentHeaders = getIntelligentSectionHeaders(
+    industryVariant,
+    brief.tone,
+    businessName
+  );
+  
+  console.log('🧠 [sectionMapper] Industry variant:', industryVariant);
+  console.log('🧠 [sectionMapper] Authority signals:', authoritySignals.length);
+  console.log('🧠 [sectionMapper] Page structure:', pageStructure);
+  console.log('🧠 [sectionMapper] isBetaPage:', isBetaPage);
 
   // Iterate through pageStructure and build sections in EXACT order
   for (const sectionType of pageStructure) {
@@ -149,14 +146,14 @@ export function mapBriefToSections(
 
     switch (sectionType) {
       case 'hero': {
-        // Build trust badges from proof points (only if they exist)
-        const trustBadges: string[] = [];
-        if (brief.proofPoints?.yearsInBusiness) {
-          trustBadges.push(brief.proofPoints.yearsInBusiness);
-        }
-        if (brief.proofPoints?.clientCount) {
-          trustBadges.push(brief.proofPoints.clientCount);
-        }
+        // Use intelligent headline selection based on page goal
+        const headlineSelection = selectBestHeadline(
+          brief.headlines || { optionA: '', optionB: '', optionC: '' },
+          pageGoal || 'generate-leads'
+        );
+        
+        // Build trust badges from top authority signals
+        const trustBadges = authoritySignals.slice(0, 2).map(s => `${s.value} ${s.label}`);
 
         // Use beta-hero-teaser for beta pages, standard hero otherwise
         const heroType = isBetaPage ? 'beta-hero-teaser' : 'hero';
@@ -167,16 +164,14 @@ export function mapBriefToSections(
           order,
           visible: true,
           content: {
-            headline: brief.headlines.optionA,
+            headline: headlineSelection.primary,
             subheadline: brief.subheadline,
-            // Use industry-specific CTA text
             ctaText: isConsulting ? industryTokens.sectionHeaders.cta.ctaText : brief.ctaText,
             ctaLink: '#contact',
             backgroundImage: heroImageUrl || null,
             trustBadges: trustBadges.length > 0 ? trustBadges : undefined,
             logoUrl: logoUrl || null,
             primaryColor: primaryColor || null,
-            // Pass industry variant for styling
             industryVariant: industryVariant,
           },
         });
@@ -184,38 +179,8 @@ export function mapBriefToSections(
       }
 
       case 'stats-bar': {
-        // CRITICAL: Only use stats that actually exist in proofPoints
-        const stats: Array<{ value: string; label: string }> = [];
-
-        if (brief.proofPoints?.clientCount) {
-          const value = extractNumericValue(brief.proofPoints.clientCount);
-          if (value) {
-            stats.push({ 
-              value, 
-              label: extractLabel(brief.proofPoints.clientCount) || 'Clients Served' 
-            });
-          }
-        }
-
-        if (brief.proofPoints?.yearsInBusiness) {
-          const value = extractNumericValue(brief.proofPoints.yearsInBusiness);
-          if (value) {
-            stats.push({ 
-              value, 
-              label: extractLabel(brief.proofPoints.yearsInBusiness) || 'Years Experience' 
-            });
-          }
-        }
-
-        // Only add otherStats if they follow "number + label" pattern
-        if (brief.proofPoints?.otherStats && Array.isArray(brief.proofPoints.otherStats)) {
-          brief.proofPoints.otherStats.forEach(stat => {
-            const match = stat.match(/^([\d,.$%]+[KMB+]?)\s+(.+)$/i);
-            if (match) {
-              stats.push({ value: match[1], label: match[2] });
-            }
-          });
-        }
+        // Use optimized stats bar extraction
+        const stats = getOptimalStatsBar(authoritySignals, 4);
 
         // Only render if we have at least 2 real stats
         if (stats.length >= 2) {
@@ -224,8 +189,8 @@ export function mapBriefToSections(
             order,
             visible: true,
             content: {
-              statistics: stats.slice(0, 4), // Max 4 stats
-              industryVariant: industryVariant, // ADD THIS - was missing!
+              statistics: stats,
+              industryVariant: industryVariant,
             },
           });
         }
@@ -239,9 +204,11 @@ export function mapBriefToSections(
             order,
             visible: true,
             content: {
+              problemTitle: 'The Challenge',
               problem: brief.problemStatement,
+              solutionTitle: 'Our Solution',
               solution: brief.solutionStatement,
-              industryVariant: industryVariant, // ADD THIS - was missing!
+              industryVariant: industryVariant,
             },
           });
         }
@@ -249,9 +216,13 @@ export function mapBriefToSections(
       }
 
       case 'features': {
-        // CRITICAL: Use ONLY messagingPillars from brief, nothing else
-        // For beta pages, use beta-perks section
-        if (brief.messagingPillars && brief.messagingPillars.length > 0) {
+        // Use enhanced messaging pillars with hooks and proof points
+        const enhancedPillars = enhanceMessagingPillars(
+          brief.messagingPillars || [],
+          authoritySignals
+        );
+
+        if (enhancedPillars.length > 0) {
           const featuresType = isBetaPage ? 'beta-perks' : 'features';
           console.log('[sectionMapper] Features type:', featuresType);
           
@@ -260,18 +231,19 @@ export function mapBriefToSections(
             order,
             visible: true,
             content: {
-              // Use industry-specific headers
               title: isBetaPage 
                 ? 'Early Adopter Perks' 
-                : industryTokens.sectionHeaders.features.title,
+                : (intelligentHeaders.features?.title || industryTokens.sectionHeaders.features.title),
               subtitle: isBetaPage 
-                ? `What you get by joining early` 
-                : industryTokens.sectionHeaders.features.subtitle,
+                ? 'What you get by joining early' 
+                : (intelligentHeaders.features?.subtitle || industryTokens.sectionHeaders.features.subtitle),
               eyebrow: industryTokens.sectionHeaders.features.eyebrow,
-              features: brief.messagingPillars.map(pillar => ({
+              features: enhancedPillars.map(pillar => ({
                 title: pillar.title,
                 description: pillar.description,
                 icon: pillar.icon,
+                hook: pillar.hook,
+                proofPoint: pillar.proofPoint,
               })),
               industryVariant: industryVariant,
             },
@@ -288,9 +260,8 @@ export function mapBriefToSections(
             order,
             visible: true,
             content: {
-              // Use industry-specific headers
-              title: industryTokens.sectionHeaders.process.title,
-              subtitle: industryTokens.sectionHeaders.process.subtitle,
+              title: intelligentHeaders.process?.title || industryTokens.sectionHeaders.process.title,
+              subtitle: intelligentHeaders.process?.subtitle || industryTokens.sectionHeaders.process.subtitle,
               steps: brief.processSteps.map(step => ({
                 number: step.step,
                 title: step.title,
@@ -304,9 +275,10 @@ export function mapBriefToSections(
       }
 
       case 'social-proof': {
-        // For beta pages, use waitlist-proof section
-        const hasRealTestimonials = brief.testimonials?.length > 0 &&
-          !isPlaceholderTestimonial(brief.testimonials[0]);
+        // Use ranked testimonials for better ordering
+        const rankedTestimonials = rankTestimonials(brief.testimonials || []);
+        const hasRealTestimonials = rankedTestimonials.length > 0 &&
+          !isPlaceholderTestimonial(rankedTestimonials[0]);
         
         const socialProofType = isBetaPage ? 'waitlist-proof' : 'social-proof';
         console.log('[sectionMapper] Social proof type:', socialProofType);
@@ -316,19 +288,19 @@ export function mapBriefToSections(
           order,
           visible: true,
           content: {
-            // Use industry-specific headers
             title: isBetaPage 
               ? 'Join the Waitlist' 
-              : industryTokens.sectionHeaders.testimonials.title,
-            subtitle: industryTokens.sectionHeaders.testimonials.subtitle,
+              : (intelligentHeaders.proof?.title || industryTokens.sectionHeaders.testimonials.title),
+            subtitle: intelligentHeaders.proof?.subtitle || industryTokens.sectionHeaders.testimonials.subtitle,
             testimonials: hasRealTestimonials
-              ? brief.testimonials.map(t => ({
+              ? rankedTestimonials.slice(0, 3).map(t => ({
                   quote: t.quote,
                   author: t.author,
                   title: t.title,
                   rating: 5,
+                  score: t.score,
                 }))
-              : [], // Empty array if no real testimonials
+              : [],
             achievements: brief.proofPoints?.achievements || null,
             industryVariant: industryVariant,
           },
@@ -337,19 +309,21 @@ export function mapBriefToSections(
       }
 
       case 'faq': {
-        // Only render if we have objections
-        if (brief.objections && brief.objections.length > 0) {
+        // Use optimized FAQs with categorization and prioritization
+        const optimizedFAQs = optimizeFAQs(brief.objections || [], 6);
+
+        if (optimizedFAQs.length > 0) {
           sections.push({
             type: 'faq',
             order,
             visible: true,
             content: {
-              // Use industry-specific headers
-              headline: industryTokens.sectionHeaders.faq.title,
+              headline: intelligentHeaders.faq?.title || industryTokens.sectionHeaders.faq.title,
               eyebrow: industryTokens.sectionHeaders.faq.eyebrow,
-              items: brief.objections.map(obj => ({
-                question: obj.question,
-                answer: obj.answer,
+              items: optimizedFAQs.map(faq => ({
+                question: faq.question,
+                answer: faq.answer,
+                category: faq.category,
               })),
               industryVariant: industryVariant,
             },
@@ -359,18 +333,10 @@ export function mapBriefToSections(
       }
 
       case 'final-cta': {
-        // STRICT: Only include trust indicators from proofPoints, NO FABRICATION
-        const trustIndicators: Array<{ text: string }> = [];
-        
-        if (brief.proofPoints?.yearsInBusiness) {
-          trustIndicators.push({ text: brief.proofPoints.yearsInBusiness });
-        }
-        if (brief.proofPoints?.clientCount) {
-          trustIndicators.push({ text: brief.proofPoints.clientCount });
-        }
-        if (brief.proofPoints?.achievements) {
-          trustIndicators.push({ text: brief.proofPoints.achievements });
-        }
+        // Build trust signal from top authority signal
+        const trustSignal = authoritySignals[0]
+          ? `${authoritySignals[0].value} ${authoritySignals[0].label}`
+          : undefined;
 
         // For beta pages, use a different CTA style
         const ctaType = isBetaPage ? 'beta-final-cta' : 'final-cta';
@@ -381,18 +347,18 @@ export function mapBriefToSections(
           order,
           visible: true,
           content: {
-            // Use industry-specific headers and CTA text
             headline: isBetaPage 
               ? 'Be the First to Know' 
-              : industryTokens.sectionHeaders.cta.title,
+              : (intelligentHeaders.cta?.title || industryTokens.sectionHeaders.cta.title),
             subtext: isBetaPage 
               ? '' 
-              : industryTokens.sectionHeaders.cta.subtext,
+              : (intelligentHeaders.cta?.subtitle || industryTokens.sectionHeaders.cta.subtext),
             ctaText: isConsulting 
               ? industryTokens.sectionHeaders.cta.ctaText 
               : brief.ctaText,
             ctaLink: '#contact',
-            trustIndicators: trustIndicators.length > 0 ? trustIndicators : undefined,
+            trustSignal,
+            trustIndicators: authoritySignals.slice(0, 3).map(s => ({ text: `${s.value} ${s.label}` })),
             primaryColor: primaryColor || null,
             industryVariant: industryVariant,
           },
@@ -401,11 +367,11 @@ export function mapBriefToSections(
       }
 
       default:
-        console.warn(`[sectionMapper] Unknown section type: ${sectionType}`);
+        console.warn(`🧠 [sectionMapper] Unknown section type: ${sectionType}`);
     }
   }
 
-  console.log(`[sectionMapper] Built ${sections.length} sections from pageStructure:`, pageStructure);
+  console.log(`🧠 [sectionMapper] Generated ${sections.length} sections from pageStructure:`, pageStructure);
   return sections;
 }
 
