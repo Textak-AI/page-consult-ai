@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { formatStatValue, getTypography } from "@/lib/typographyScale";
 
 interface Statistic {
   value: string;
@@ -8,6 +9,7 @@ interface Statistic {
 
 interface StatsBarSectionProps {
   statistics: Statistic[];
+  industryVariant?: string;
 }
 
 /**
@@ -16,7 +18,12 @@ interface StatsBarSectionProps {
  * CRITICAL: Only shows statistics passed from the brief.
  * NO fallback stats, NO fabrication, NO template defaults.
  */
-export function StatsBarSection({ statistics }: StatsBarSectionProps) {
+export function StatsBarSection({ statistics, industryVariant }: StatsBarSectionProps) {
+  const typography = getTypography(industryVariant);
+  const isConsulting = industryVariant === 'consulting';
+  
+  console.log('🎨 [StatsBarSection] industryVariant:', industryVariant, 'isConsulting:', isConsulting);
+  
   // NO FABRICATION: Only render stats that actually exist
   // Don't pad with defaults, return null if no real stats
   if (!statistics || statistics.length === 0) {
@@ -77,17 +84,17 @@ export function StatsBarSection({ statistics }: StatsBarSectionProps) {
               }}
             >
               <div 
-                className="text-3xl sm:text-4xl md:text-5xl mb-3"
+                className={typography.statValue}
                 style={{ 
                   color: 'var(--color-primary)',
                   fontFamily: 'var(--font-heading)',
                   fontWeight: 'var(--font-weight-heading)',
                 }}
               >
-                {stat.value}
+                {formatStatValue(stat.value)}
               </div>
               <div 
-                className="text-sm md:text-base mb-2"
+                className={typography.statLabel}
                 style={{ 
                   color: 'var(--color-text-primary)',
                   fontFamily: 'var(--font-body)',
