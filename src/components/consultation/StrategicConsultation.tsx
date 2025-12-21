@@ -396,18 +396,6 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
   // Compute STEPS dynamically based on selected page type and brand status
   // Skip branding step if brand colors are already configured
   const STEPS = useMemo(() => getStepsForPageType(data.pageType, hasBrandColors), [data.pageType, hasBrandColors]);
-  
-  // Show loading until we know the brand status
-  if (!isBrandCheckComplete) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
-          <p className="text-slate-400">Loading your brand...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Load draft from database on mount
   useEffect(() => {
@@ -469,6 +457,18 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
       console.log('💾 Consultation progress saved');
     }
   }, [currentStep, data]);
+
+  // Show loading until we know the brand status (AFTER all hooks)
+  if (!isBrandCheckComplete) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+          <p className="text-slate-400">Loading your brand...</p>
+        </div>
+      </div>
+    );
+  }
 
   const updateData = (updates: Partial<ConsultationData>) => {
     setData(prev => ({ ...prev, ...updates }));
