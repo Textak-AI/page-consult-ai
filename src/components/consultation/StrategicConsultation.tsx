@@ -126,8 +126,14 @@ export interface ConsultationData {
 }
 
 // Base steps that apply to all page types (website step moved to BrandSetup)
-const BASE_STEPS = [
+// Note: 'branding' step is conditionally included based on whether brand colors already exist
+const BASE_STEPS_WITH_BRANDING = [
   { id: 'branding', title: 'Brand Customization', icon: Palette },
+  { id: 'page-type', title: 'Page Purpose', icon: FileText },
+  { id: 'identity', title: 'Business Identity', icon: Building2 },
+];
+
+const BASE_STEPS_WITHOUT_BRANDING = [
   { id: 'page-type', title: 'Page Purpose', icon: FileText },
   { id: 'identity', title: 'Business Identity', icon: Building2 },
 ];
@@ -158,16 +164,19 @@ const BETA_STEPS = [
   { id: 'goals', title: 'Page Goals', icon: CheckCircle2 },
 ];
 
-// Helper to get steps based on page type
-const getStepsForPageType = (pageType?: PageTypeId) => {
+// Helper to get steps based on page type and whether brand is already configured
+const getStepsForPageType = (pageType?: PageTypeId, hasBrandColors?: boolean) => {
+  // If brand colors already exist (from Brand Setup or PDF extraction), skip the branding step
+  const baseSteps = hasBrandColors ? BASE_STEPS_WITHOUT_BRANDING : BASE_STEPS_WITH_BRANDING;
+  
   if (pageType === 'investor-relations') {
-    return [...BASE_STEPS, ...IR_STEPS];
+    return [...baseSteps, ...IR_STEPS];
   }
   if (pageType === 'beta-prelaunch') {
-    return [...BASE_STEPS, ...BETA_STEPS];
+    return [...baseSteps, ...BETA_STEPS];
   }
   // Default to customer acquisition flow for all other types
-  return [...BASE_STEPS, ...CUSTOMER_ACQUISITION_STEPS];
+  return [...baseSteps, ...CUSTOMER_ACQUISITION_STEPS];
 };
 
 const INDUSTRIES = [
@@ -371,8 +380,12 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
     getUser();
   }, []);
 
-  // Compute STEPS dynamically based on selected page type
-  const STEPS = useMemo(() => getStepsForPageType(data.pageType), [data.pageType]);
+  // Check if brand colors already exist from Brand Setup (PDF extraction or website analysis)
+  const hasBrandColors = Boolean(brandBrief?.colors?.primary?.hex);
+  
+  // Compute STEPS dynamically based on selected page type and brand status
+  // Skip branding step if brand colors are already configured
+  const STEPS = useMemo(() => getStepsForPageType(data.pageType, hasBrandColors), [data.pageType, hasBrandColors]);
 
   // Load draft from database on mount
   useEffect(() => {
