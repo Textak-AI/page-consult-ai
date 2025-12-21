@@ -29,6 +29,7 @@ import IntroPreview from "./pages/IntroPreview";
 import DesignSystemTest from "./pages/DesignSystemTest";
 import TestPage from "./pages/TestPage";
 import Settings from "./pages/Settings";
+import BrandSetup from "./pages/BrandSetup";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,6 +96,7 @@ const App = () => {
               <Route path="/test-page" element={<TestPage />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/brand" element={<Settings />} />
+              <Route path="/brand-setup" element={<BrandSetup />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
