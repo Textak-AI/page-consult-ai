@@ -148,6 +148,9 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
   };
 
   const renderSection = (section: Section, index: number) => {
+    // Debug logging
+    console.log('🎨 [LivePreview] Rendering section:', section.type, 'industryVariant:', section.content?.industryVariant);
+    
     if (!section.visible) return null;
 
     const updateSection = (content: any) => {

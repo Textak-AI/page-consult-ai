@@ -132,7 +132,11 @@ export function mapBriefToSections(
   const industryTokens = getIndustryTokens(industryVariant);
   const isConsulting = industryVariant === 'consulting';
   
-  console.log('🏭 [mapBriefToSections] Industry variant:', industryVariant);
+  console.log('🎨 [sectionMapper] industry input:', industry);
+  console.log('🎨 [sectionMapper] serviceType input:', serviceType);
+  console.log('🎨 [sectionMapper] pageType input:', pageType);
+  console.log('🎨 [sectionMapper] industryVariant:', industryVariant);
+  console.log('🎨 [sectionMapper] isConsulting:', isConsulting);
   console.log('🔧 [mapBriefToSections] isBetaPage:', isBetaPage);
   console.log('🔧 [mapBriefToSections] pageStructure:', pageStructure);
 
