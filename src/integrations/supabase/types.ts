@@ -155,6 +155,7 @@ export type Database = {
           updated_at: string | null
           user_id: string
           voice_tone: Json | null
+          website_url: string | null
         }
         Insert: {
           colors?: Json | null
@@ -169,6 +170,7 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           voice_tone?: Json | null
+          website_url?: string | null
         }
         Update: {
           colors?: Json | null
@@ -183,6 +185,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           voice_tone?: Json | null
+          website_url?: string | null
         }
         Relationships: []
       }
