@@ -31,17 +31,17 @@ export function AudienceFitSection({ content, onUpdate, isEditing }: AudienceFit
           </h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* This IS For */}
+        <div className={`grid gap-8 ${content.forWho && content.notForWho ? 'md:grid-cols-2' : 'max-w-xl mx-auto'}`}>
+          {/* This IS For - dark theme with green accent */}
           {content.forWho && (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="relative p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20"
+              className="relative p-6 rounded-2xl bg-background/50 border border-emerald-500/30 backdrop-blur-sm"
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
                   <Check className="w-5 h-5 text-emerald-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground">This Is For You If...</h3>
@@ -52,16 +52,16 @@ export function AudienceFitSection({ content, onUpdate, isEditing }: AudienceFit
             </motion.div>
           )}
 
-          {/* This is NOT For */}
+          {/* This is NOT For - dark theme with red accent */}
           {content.notForWho && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="relative p-6 rounded-2xl bg-rose-500/5 border border-rose-500/20"
+              className="relative p-6 rounded-2xl bg-background/50 border border-rose-500/30 backdrop-blur-sm"
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-rose-500/20 border border-rose-500/30 flex items-center justify-center">
                   <X className="w-5 h-5 text-rose-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground">This Isn't For You If...</h3>

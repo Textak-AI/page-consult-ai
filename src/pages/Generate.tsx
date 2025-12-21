@@ -201,13 +201,19 @@ function GenerateContent() {
 
   // Apply brand colors when nav state is available
   useEffect(() => {
-    const primaryColor = effectiveNavState?.strategicData?.brandSettings?.primaryColor ||
-                         effectiveNavState?.consultationData?.primaryColor ||
-                         null;
+    console.log('🎨 Brand color effect running');
     
-    console.log('🎨 Brand color check:', {
-      fromStrategicData: effectiveNavState?.strategicData?.brandSettings?.primaryColor,
-      fromConsultationData: effectiveNavState?.consultationData?.primaryColor,
+    // Check multiple possible paths for primaryColor
+    const primaryColor = 
+      effectiveNavState?.strategicData?.brandSettings?.primaryColor ||
+      effectiveNavState?.consultationData?.primaryColor ||
+      effectiveNavState?.consultationData?.brandSettings?.primaryColor ||
+      null;
+    
+    console.log('🎨 Brand color paths:', {
+      path1: effectiveNavState?.strategicData?.brandSettings?.primaryColor,
+      path2: effectiveNavState?.consultationData?.primaryColor,
+      path3: effectiveNavState?.consultationData?.brandSettings?.primaryColor,
       resolved: primaryColor,
     });
     
@@ -215,6 +221,8 @@ function GenerateContent() {
       console.log('🎨 Applying brand color:', primaryColor);
       const cleanup = applyBrandColors(primaryColor);
       return cleanup;
+    } else {
+      console.log('🎨 No brand color found, using default');
     }
   }, [effectiveNavState]);
 
@@ -1371,6 +1379,14 @@ function GenerateContent() {
             },
           };
         case "final_cta":
+          // Determine appropriate trust text based on industry/page type
+          const isSaaSOrProduct = ['SaaS', 'Technology', 'Software', 'B2B SaaS', 'Tech'].some(
+            term => consultationData.industry?.toLowerCase().includes(term.toLowerCase())
+          );
+          const trustText = isSaaSOrProduct 
+            ? 'No credit card required · Free to start'
+            : 'Free consultation · No obligation';
+            
           return {
             type: isBetaPage ? "beta-final-cta" : "final-cta",
             order: index,
@@ -1385,6 +1401,7 @@ function GenerateContent() {
               headline: "Ready to Get Started?",
               ctaText: generated.ctaText,
               ctaLink: "#signup",
+              trustText: trustText,
             },
           };
         default:
