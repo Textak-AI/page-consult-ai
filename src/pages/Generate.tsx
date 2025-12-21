@@ -1034,18 +1034,34 @@ function GenerateContent() {
       console.log('🎯 Messaging pillars:', content.messagingPillars?.length);
       console.log('📄 Page type:', pageType);
       
-      // Use the strict brief-first mapper - NO FABRICATION
+      // Extract page goal from consultation data
+      const pageGoal = strategicConsultation?.primaryGoal || 
+                       strategicConsultation?.goal || 
+                       consultationData.goal || 
+                       'generate-leads';
+      
+      // Get AI search optimization data if available (from consultation, not brief)
+      const aiSearchOptimization = strategicConsultation?.aiSearchOptimization || 
+                                   consultationData?.ai_seo_data || 
+                                   null;
+      
+      console.log('🎯 Page goal for headline selection:', pageGoal);
+      console.log('📈 AI Search Optimization data:', !!aiSearchOptimization);
+      
+      // Use the strict brief-first mapper with INTELLIGENT EXTRACTION
       const sections = mapBriefToSections(content, {
         businessName,
         heroImageUrl,
         logoUrl,
         primaryColor,
-        pageType, // CRITICAL: Pass pageType for beta sections
+        pageType,
+        pageGoal,                                   // For intelligent headline selection
         industry: consultationData.industry,       // For industry variant detection
         serviceType: consultationData.service_type, // For industry variant detection
+        aiSearchOptimization,                       // For authority signal extraction
       });
       
-      console.log(`✅ Brief-first mapper built ${sections.length} sections`);
+      console.log(`✅ Brief-first mapper built ${sections.length} sections with intelligent extraction`);
       return sections;
     }
     
