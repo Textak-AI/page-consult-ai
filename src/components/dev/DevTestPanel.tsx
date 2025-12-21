@@ -413,9 +413,12 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
 
       toast({
         title: 'Brand reset',
-        description: 'Refresh to test setup flow',
+        description: 'Navigating to fresh brand setup...',
       });
-      addLog('success', 'Brand brief deleted — refresh to test setup flow');
+      addLog('success', 'Brand brief deleted — navigating to fresh setup');
+      
+      // Navigate to brand-setup with fresh=true to avoid loading stale data
+      window.location.href = '/brand-setup?fresh=true';
     } catch (err) {
       toast({
         title: 'Error',

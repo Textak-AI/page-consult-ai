@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,8 @@ import {
   Type,
   MessageSquare,
   Pencil,
-  Globe
+  Globe,
+  ArrowLeft
 } from 'lucide-react';
 import { LogoEditor } from '@/components/consultation/LogoEditor';
 import logo from '/logo/whiteAsset_3combimark_darkmode.svg';
@@ -46,7 +47,11 @@ interface BrandBrief {
 
 export default function BrandSetup() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  
+  // Check if this is a fresh start (e.g., from Reset Brand or new user)
+  const isFreshStart = searchParams.get('fresh') === 'true';
   
   // State
   const [isLoading, setIsLoading] = useState(true);
@@ -56,7 +61,7 @@ export default function BrandSetup() {
   const [brandGuideUploaded, setBrandGuideUploaded] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [noBrandGuide, setNoBrandGuide] = useState(false);
-  const [manualColor, setManualColor] = useState('#0ea5e9');
+  const [manualColor, setManualColor] = useState('#0ea5e9'); // Default cyan, not stale data
   const [brandBrief, setBrandBrief] = useState<BrandBrief | null>(null);
   const [showReview, setShowReview] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -73,7 +78,7 @@ export default function BrandSetup() {
   // Check if user already has brand setup
   useEffect(() => {
     checkExistingBrand();
-  }, []);
+  }, [isFreshStart]);
 
   const checkExistingBrand = async () => {
     try {
@@ -84,6 +89,12 @@ export default function BrandSetup() {
       }
       
       setUserId(user.id);
+
+      // If fresh start, don't load existing data and don't redirect
+      if (isFreshStart) {
+        setIsLoading(false);
+        return;
+      }
 
       const { data: existingBrief } = await supabase
         .from('brand_briefs')
@@ -98,11 +109,13 @@ export default function BrandSetup() {
         return;
       }
 
+      // Don't pre-populate colors from incomplete brand briefs
+      // Only load logo if it exists
       if (existingBrief) {
-        setBrandBrief(existingBrief as unknown as BrandBrief);
         if (existingBrief.logo_url) {
           setLogoPreview(existingBrief.logo_url);
         }
+        // Don't set manualColor from stale data - keep default
       }
       
       setIsLoading(false);
@@ -366,10 +379,14 @@ export default function BrandSetup() {
         normalizedUrl = 'https://' + normalizedUrl;
       }
       
+      console.log('[BrandSetup] Analyzing website:', normalizedUrl);
+      
       // Call the website intelligence edge function
       const { data: result, error } = await supabase.functions.invoke('extract-website-intelligence', {
         body: { url: normalizedUrl }
       });
+      
+      console.log('[BrandSetup] Website analysis result:', result);
       
       if (error) throw error;
       
@@ -468,7 +485,18 @@ export default function BrandSetup() {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b border-border px-6 py-4">
-          <img src={logo} alt="PageConsult" className="h-8" />
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowReview(false)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <img src={logo} alt="PageConsult" className="h-8" />
+          </div>
         </header>
         
         <div className="max-w-2xl mx-auto py-12 px-4">
@@ -587,9 +615,20 @@ export default function BrandSetup() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      {/* Header with Back Button */}
       <header className="border-b border-border px-6 py-4">
-        <img src={logo} alt="PageConsult" className="h-8" />
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <img src={logo} alt="PageConsult" className="h-8" />
+        </div>
       </header>
 
       <div className="max-w-2xl mx-auto py-12 px-4">
