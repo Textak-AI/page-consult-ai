@@ -201,19 +201,21 @@ function GenerateContent() {
 
   // Apply brand colors when nav state is available
   useEffect(() => {
-    console.log('🎨 Brand color effect running');
+    console.log('🎨 Brand color effect running, effectiveNavState:', !!effectiveNavState);
     
     // Check multiple possible paths for primaryColor
     const primaryColor = 
       effectiveNavState?.strategicData?.brandSettings?.primaryColor ||
       effectiveNavState?.consultationData?.primaryColor ||
       effectiveNavState?.consultationData?.brandSettings?.primaryColor ||
+      effectiveNavState?.consultationData?.brandColor ||
       null;
     
     console.log('🎨 Brand color paths:', {
-      path1: effectiveNavState?.strategicData?.brandSettings?.primaryColor,
-      path2: effectiveNavState?.consultationData?.primaryColor,
-      path3: effectiveNavState?.consultationData?.brandSettings?.primaryColor,
+      strategicBrandSettings: effectiveNavState?.strategicData?.brandSettings?.primaryColor,
+      consultationPrimaryColor: effectiveNavState?.consultationData?.primaryColor,
+      consultationBrandSettings: effectiveNavState?.consultationData?.brandSettings?.primaryColor,
+      consultationBrandColor: effectiveNavState?.consultationData?.brandColor,
       resolved: primaryColor,
     });
     
@@ -1380,12 +1382,22 @@ function GenerateContent() {
           };
         case "final_cta":
           // Determine appropriate trust text based on industry/page type
-          const isSaaSOrProduct = ['SaaS', 'Technology', 'Software', 'B2B SaaS', 'Tech'].some(
-            term => consultationData.industry?.toLowerCase().includes(term.toLowerCase())
-          );
-          const trustText = isSaaSOrProduct 
-            ? 'No credit card required · Free to start'
-            : 'Free consultation · No obligation';
+          const industry = consultationData.industry?.toLowerCase() || '';
+          const pageTypeForTrust = consultationData.pageType || '';
+          
+          let trustText = 'No credit card required · Free to start'; // default for SaaS
+          
+          if (pageTypeForTrust === 'beta-prelaunch' || pageTypeForTrust === 'waitlist') {
+            trustText = 'No spam · Unsubscribe anytime';
+          } else if (
+            industry.includes('consulting') ||
+            industry.includes('manufacturing') ||
+            industry.includes('services') ||
+            industry.includes('agency') ||
+            industry.includes('professional')
+          ) {
+            trustText = 'Free consultation · No obligation';
+          }
             
           return {
             type: isBetaPage ? "beta-final-cta" : "final-cta",
@@ -1509,6 +1521,22 @@ function GenerateContent() {
         },
       };
       mappedSections.splice(1, 0, diffSection);
+    }
+
+    // ADD credibility-strip if proofStats exist
+    if (consultationData.proofStats && consultationData.proofStats.length > 0) {
+      console.log('🔧 [mapOldGeneratedContent] Adding credibility strip');
+      // Insert after hero (or after differentiator-callout if it exists)
+      const insertIndex = consultationData.sharpDifferentiator ? 2 : 1;
+      const credibilitySection: Section = {
+        type: 'credibility-strip',
+        order: insertIndex,
+        visible: true,
+        content: {
+          stats: consultationData.proofStats,
+        },
+      };
+      mappedSections.splice(insertIndex, 0, credibilitySection);
     }
 
     // ADD audience-fit section if audienceExclusion or target_audience exists

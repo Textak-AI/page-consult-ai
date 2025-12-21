@@ -66,6 +66,13 @@ export interface DevTestData {
   calculatorDisclaimer?: string;
   calculatorNextStep?: string;
   
+  // NEW: Credibility strip stats
+  proofStats?: Array<{
+    value: string;
+    label: string;
+    icon?: string;
+  }>;
+  
   // NEW: Differentiation fields
   painSpike?: string;
   sharpDifferentiator?: string;
@@ -187,6 +194,12 @@ I'm building the tool I wish I had.`,
       yearsInBusiness: '15+ years in business',
       achievements: 'Average 23% efficiency improvement'
     },
+    // NEW: Credibility strip stats
+    proofStats: [
+      { value: '200+', label: 'Manufacturers Served', icon: 'users' },
+      { value: '15+', label: 'Years Experience', icon: 'clock' },
+      { value: '23%', label: 'Avg. Capacity Recovered', icon: 'trending-up' },
+    ],
     brandSettings: {
       primaryColor: '#1E3A5F'
     }
@@ -213,6 +226,12 @@ I'm building the tool I wish I had.`,
     sharpDifferentiator: 'Only iPaaS with built-in security review automation — no more 6-week vendor approvals',
     audienceExclusion: 'Not for companies with dedicated integration engineers or enterprises with existing iPaaS contracts',
     secondaryCTA: 'see-demo',
+    // NEW: Credibility strip stats
+    proofStats: [
+      { value: '500+', label: 'Teams Using', icon: 'users' },
+      { value: '99.9%', label: 'Uptime', icon: 'award' },
+      { value: '4.8★', label: 'G2 Rating', icon: 'award' },
+    ],
     brandSettings: {
       primaryColor: '#6366F1'
     }
@@ -426,6 +445,7 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
         audienceExclusion: testData.audienceExclusion || null,
         secondaryCTA: testData.secondaryCTA || null,
         secondaryCTACustom: testData.secondaryCTACustom || null,
+        proofStats: testData.proofStats || null,
         
         // Beta-specific fields
         ...(testData.betaConfig && {

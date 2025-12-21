@@ -14,6 +14,9 @@ export function AudienceFitSection({ content, onUpdate, isEditing }: AudienceFit
   // Don't render if neither field has content
   if (!content.forWho && !content.notForWho) return null;
 
+  // Determine grid layout based on content
+  const hasBoth = content.forWho && content.notForWho;
+
   return (
     <section className="relative py-16 md:py-24">
       <div className="max-w-4xl mx-auto px-6">
@@ -23,7 +26,7 @@ export function AudienceFitSection({ content, onUpdate, isEditing }: AudienceFit
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-muted-foreground mb-4">
+          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-background/50 border border-border/30 text-sm text-muted-foreground mb-4">
             ✓ Perfect Fit Check
           </span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground">
@@ -31,7 +34,7 @@ export function AudienceFitSection({ content, onUpdate, isEditing }: AudienceFit
           </h2>
         </motion.div>
 
-        <div className={`grid gap-8 ${content.forWho && content.notForWho ? 'md:grid-cols-2' : 'max-w-xl mx-auto'}`}>
+        <div className={`grid gap-8 ${hasBoth ? 'md:grid-cols-2' : 'max-w-xl mx-auto'}`}>
           {/* This IS For - dark theme with green accent */}
           {content.forWho && (
             <motion.div
