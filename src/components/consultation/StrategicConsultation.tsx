@@ -125,9 +125,8 @@ export interface ConsultationData {
   };
 }
 
-// Base steps that apply to all page types
+// Base steps that apply to all page types (website step moved to BrandSetup)
 const BASE_STEPS = [
-  { id: 'website', title: 'Your Website', icon: Globe },
   { id: 'branding', title: 'Brand Customization', icon: Palette },
   { id: 'page-type', title: 'Page Purpose', icon: FileText },
   { id: 'identity', title: 'Business Identity', icon: Building2 },
@@ -642,106 +641,6 @@ ${d.ctaText}
     const step = STEPS[currentStep];
     
     switch (step.id) {
-      case 'website':
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-white mb-2">Let's Start With Your Brand</h2>
-              <p className="text-slate-400">Have a website? I'll pull your branding automatically.</p>
-            </div>
-            
-            <div className="space-y-5">
-              <Label htmlFor="websiteUrl" className="text-slate-400">Website URL (optional)</Label>
-              <div className="flex gap-3">
-                <Input
-                  id="websiteUrl"
-                  placeholder="yourwebsite.com"
-                  value={data.websiteUrl || ''}
-                  onChange={(e) => updateData({ websiteUrl: e.target.value })}
-                  className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
-                />
-                <Button
-                  onClick={handleWebsiteAnalysis}
-                  disabled={!data.websiteUrl || isAnalyzing}
-                  className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white disabled:opacity-50"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Analyze
-                    </>
-                  )}
-                </Button>
-              </div>
-              
-              {analyzeError && (
-                <p className="text-sm text-amber-400">{analyzeError}</p>
-              )}
-              
-              {data.websiteIntelligence && (
-                <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center gap-2 text-cyan-400">
-                    <CheckCircle2 className="w-5 h-5" />
-                    <span className="font-medium">Here's what I found:</span>
-                  </div>
-                  
-                  {data.websiteIntelligence.logoUrl && (
-                    <div className="flex items-center gap-3">
-                      <span className="text-slate-400 text-sm">Logo:</span>
-                      <img 
-                        src={data.websiteIntelligence.logoUrl} 
-                        alt="Logo" 
-                        className="h-8 max-w-[120px] object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  )}
-                  
-                  {data.websiteIntelligence.brandColors.length > 0 && (
-                    <div className="flex items-center gap-3">
-                      <span className="text-slate-400 text-sm">Colors:</span>
-                      <div className="flex gap-1">
-                        {data.websiteIntelligence.brandColors.slice(0, 4).map((color, i) => (
-                          <div
-                            key={i}
-                            className="w-6 h-6 rounded border border-slate-600"
-                            style={{ backgroundColor: color }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {data.websiteIntelligence.tagline && (
-                    <div>
-                      <span className="text-slate-400 text-sm">Tagline:</span>
-                      <p className="text-white mt-1">"{data.websiteIntelligence.tagline}"</p>
-                    </div>
-                  )}
-                  
-                  {data.websiteIntelligence.description && (
-                    <div>
-                      <span className="text-slate-400 text-sm">About:</span>
-                      <p className="text-slate-400 text-sm mt-1">{data.websiteIntelligence.description}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              <p className="text-sm text-slate-500">
-                No website yet? No problem — skip this step and we'll build everything fresh.
-              </p>
-            </div>
-          </div>
-        );
-
       case 'branding':
         // Handled by early return before main render - should not reach here
         return null;

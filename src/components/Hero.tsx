@@ -1,12 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Play, ArrowRight, TrendingUp, Clock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AbstractHeroTeaser from "@/components/AbstractHeroTeaser";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import IntelligenceContext from "@/contexts/IntelligenceContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 const Hero = () => {
+  const navigate = useNavigate();
+  const [isNavigating, setIsNavigating] = useState(false);
+  
   // Try to get intelligence context (may be null if not in provider)
   const intelligenceContext = useContext(IntelligenceContext);
   const extractedIndustry = intelligenceContext?.state?.extracted?.industry;
@@ -15,6 +19,40 @@ const Hero = () => {
   const headline = extractedIndustry
     ? `Landing Pages for ${extractedIndustry}`
     : "Landing Pages That Start With Strategy";
+
+  // Handle CTA click - check for brand first
+  const handleStartConsultation = async () => {
+    setIsNavigating(true);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate('/signup');
+        return;
+      }
+      
+      // Check for existing brand setup
+      const { data: brandBrief } = await supabase
+        .from('brand_briefs')
+        .select('id, logo_url')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      // If no brand or no logo, go to brand setup first
+      if (!brandBrief || !brandBrief.logo_url) {
+        navigate('/brand-setup');
+      } else {
+        navigate('/consultation');
+      }
+    } catch (error) {
+      console.error('Error checking brand:', error);
+      navigate('/brand-setup');
+    } finally {
+      setIsNavigating(false);
+    }
+  };
 
   return (
     <section className="relative pt-32 pb-20 min-h-screen overflow-x-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]">
@@ -103,11 +141,15 @@ const Hero = () => {
               animationFillMode: 'forwards',
               opacity: 0
             }}>
-              <Button asChild size="lg" className="group/btn text-lg px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white border-0 animate-pulse-glow hover:scale-105 rounded-xl font-semibold transition-all duration-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900" aria-label="Start free AI consultation demo">
-                <Link to="/new" className="flex items-center">
-                  <span className="relative z-10">Start Strategic Consultation</span>
-                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover/btn:translate-x-1" />
-                </Link>
+              <Button 
+                onClick={handleStartConsultation}
+                disabled={isNavigating}
+                size="lg" 
+                className="group/btn text-lg px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white border-0 animate-pulse-glow hover:scale-105 rounded-xl font-semibold transition-all duration-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900" 
+                aria-label="Start free AI consultation demo"
+              >
+                <span className="relative z-10">Start Strategic Consultation</span>
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover/btn:translate-x-1" />
               </Button>
               <Button asChild variant="outline" size="lg" className="text-lg px-8 py-4 bg-transparent border-2 border-white/30 text-white hover:border-cyan-400 hover:text-cyan-400 hover:bg-cyan-400/5 hover:shadow-lg hover:shadow-cyan-400/30 rounded-xl font-semibold transition-all duration-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 group" aria-label="Watch product demo video">
                 <a href="#demo" className="flex items-center">

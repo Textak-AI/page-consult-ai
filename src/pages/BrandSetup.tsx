@@ -14,7 +14,8 @@ import {
   Palette,
   Type,
   MessageSquare,
-  Pencil
+  Pencil,
+  Globe
 } from 'lucide-react';
 import { LogoEditor } from '@/components/consultation/LogoEditor';
 import logo from '/logo/whiteAsset_3combimark_darkmode.svg';
@@ -24,6 +25,7 @@ interface BrandBrief {
   name: string;
   logo_url?: string;
   logo_storage_path?: string;
+  website_url?: string;
   colors: {
     primary?: { hex: string; name?: string };
     secondary?: { hex: string; name?: string };
@@ -58,6 +60,11 @@ export default function BrandSetup() {
   const [brandBrief, setBrandBrief] = useState<BrandBrief | null>(null);
   const [showReview, setShowReview] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  
+  // Website URL state
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [isAnalyzingWebsite, setIsAnalyzingWebsite] = useState(false);
+  const [websiteAnalyzed, setWebsiteAnalyzed] = useState(false);
   
   // Logo editor state
   const [logoEditorOpen, setLogoEditorOpen] = useState(false);
@@ -344,6 +351,101 @@ export default function BrandSetup() {
     }
   };
 
+  // Handle website analysis
+  const handleAnalyzeWebsite = async () => {
+    if (!websiteUrl) return;
+    
+    setIsAnalyzingWebsite(true);
+    
+    try {
+      if (!userId) throw new Error('Not authenticated');
+      
+      // Normalize URL
+      let normalizedUrl = websiteUrl.trim();
+      if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+        normalizedUrl = 'https://' + normalizedUrl;
+      }
+      
+      // Call the website intelligence edge function
+      const { data: result, error } = await supabase.functions.invoke('extract-website-intelligence', {
+        body: { url: normalizedUrl }
+      });
+      
+      if (error) throw error;
+      
+      if (result.success && result.data) {
+        // Update brand brief with website data
+        const { data: existingBrief } = await supabase
+          .from('brand_briefs')
+          .select('id')
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        const extractedData = result.data;
+        const brandUpdate: any = {
+          website_url: normalizedUrl,
+          updated_at: new Date().toISOString(),
+        };
+        
+        // Extract logo if found
+        if (extractedData.logoUrl) {
+          setLogoPreview(extractedData.logoUrl);
+          brandUpdate.logo_url = extractedData.logoUrl;
+        }
+        
+        // Extract brand colors if found
+        if (extractedData.brandColors?.length > 0) {
+          brandUpdate.colors = {
+            primary: { hex: extractedData.brandColors[0], name: 'Primary' },
+            secondary: extractedData.brandColors[1] ? { hex: extractedData.brandColors[1], name: 'Secondary' } : null,
+            accent: extractedData.brandColors[2] ? { hex: extractedData.brandColors[2], name: 'Accent' } : null,
+          };
+          setManualColor(extractedData.brandColors[0]);
+        }
+        
+        // Extract company name
+        if (extractedData.companyName) {
+          brandUpdate.name = extractedData.companyName;
+        }
+        
+        if (existingBrief) {
+          await supabase
+            .from('brand_briefs')
+            .update(brandUpdate)
+            .eq('id', existingBrief.id);
+        } else {
+          await supabase
+            .from('brand_briefs')
+            .insert({
+              user_id: userId,
+              ...brandUpdate,
+            });
+        }
+        
+        setWebsiteAnalyzed(true);
+        toast({ 
+          title: 'Website analyzed!', 
+          description: 'We extracted your branding automatically.' 
+        });
+      } else {
+        toast({
+          title: 'Analysis complete',
+          description: 'No branding found. You can upload manually below.',
+        });
+        setWebsiteAnalyzed(true);
+      }
+    } catch (error: any) {
+      console.error('Website analysis error:', error);
+      toast({
+        title: 'Analysis failed',
+        description: error.message || 'Could not analyze website. Continue with manual setup.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAnalyzingWebsite(false);
+    }
+  };
+
   // Handle continue - navigate to wizard, not generate
   const handleContinue = async () => {
     if (noBrandGuide) {
@@ -501,11 +603,77 @@ export default function BrandSetup() {
           </p>
         </div>
 
-        {/* Step 1: Logo */}
+        {/* Step 1: Website URL (Optional) */}
         <div className="bg-card rounded-xl p-8 mb-6 border border-border">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
               1
+            </div>
+            <h2 className="text-xl font-semibold text-foreground">
+              Your Website
+              <span className="text-muted-foreground font-normal text-base ml-2">(Optional)</span>
+            </h2>
+          </div>
+          
+          <p className="text-muted-foreground text-sm mb-4">
+            Have a website? We'll pull your branding automatically.
+          </p>
+          
+          {websiteAnalyzed ? (
+            <div className="flex items-center gap-3 text-primary">
+              <Check className="w-5 h-5" />
+              <span>Website analyzed: {websiteUrl}</span>
+              <button
+                onClick={() => {
+                  setWebsiteAnalyzed(false);
+                  setWebsiteUrl('');
+                }}
+                className="text-muted-foreground text-sm hover:text-foreground transition-colors ml-auto"
+              >
+                Change
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="flex gap-3">
+                <Input
+                  type="url"
+                  placeholder="yourwebsite.com"
+                  value={websiteUrl}
+                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && websiteUrl) {
+                      handleAnalyzeWebsite();
+                    }
+                  }}
+                />
+                <Button 
+                  onClick={handleAnalyzeWebsite}
+                  disabled={!websiteUrl || isAnalyzingWebsite}
+                  variant="outline"
+                >
+                  {isAnalyzingWebsite ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Globe className="w-4 h-4" />
+                  )}
+                  <span className="ml-2">Analyze</span>
+                </Button>
+              </div>
+              
+              <p className="text-muted-foreground/70 text-xs mt-3">
+                No website yet? No problem — continue below.
+              </p>
+            </>
+          )}
+        </div>
+
+        {/* Step 2: Logo */}
+        <div className="bg-card rounded-xl p-8 mb-6 border border-border">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
+              2
             </div>
             <h2 className="text-xl font-semibold text-foreground">Upload Your Logo</h2>
           </div>
@@ -520,7 +688,7 @@ export default function BrandSetup() {
               <img src={logoPreview} alt="Logo" className="h-16 object-contain bg-muted/50 rounded-lg p-2" />
               <div>
                 <p className="text-primary text-sm flex items-center gap-1">
-                  <Check className="w-4 h-4" /> Uploaded
+                  <Check className="w-4 h-4" /> {websiteAnalyzed ? 'Extracted from website' : 'Uploaded'}
                 </p>
                 <button
                   onClick={() => setLogoPreview(null)}
@@ -558,11 +726,11 @@ export default function BrandSetup() {
           </p>
         </div>
 
-        {/* Step 2: Brand Guide */}
+        {/* Step 3: Brand Guide */}
         <div className="bg-card rounded-xl p-8 mb-8 border border-border">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
-              2
+              3
             </div>
             <h2 className="text-xl font-semibold text-foreground">
               Upload Brand Guide
