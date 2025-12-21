@@ -230,13 +230,13 @@ export function CollapsibleBriefPanel({
   const { saveStatus, manualSave } = useAutoSave(wizardData, userId);
   const isEditable = !!onFieldChange;
 
-  // Auto-collapse after 3 seconds on first load
+  // Auto-collapse after 8 seconds on first load (giving users time to see brand is loaded)
   useEffect(() => {
     if (!hasAutoCollapsed) {
       const timer = setTimeout(() => {
         setIsExpanded(false);
         setHasAutoCollapsed(true);
-      }, 3000);
+      }, 8000);
       return () => clearTimeout(timer);
     }
   }, [hasAutoCollapsed]);
@@ -321,11 +321,19 @@ export function CollapsibleBriefPanel({
                 {brandBrief && (
                   <>
                     {brandBrief.logo_url && (
-                      <div className="mb-3">
+                      <div 
+                        className="rounded-lg p-3 mb-3 flex items-center justify-center"
+                        style={{
+                          backgroundColor: '#f1f5f9',
+                          backgroundImage: 'linear-gradient(45deg, #e2e8f0 25%, transparent 25%), linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e2e8f0 75%), linear-gradient(-45deg, transparent 75%, #e2e8f0 75%)',
+                          backgroundSize: '16px 16px',
+                          backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px'
+                        }}
+                      >
                         <img 
                           src={brandBrief.logo_url} 
                           alt="Logo" 
-                          className="h-8 object-contain"
+                          className="h-10 object-contain max-w-full"
                         />
                       </div>
                     )}
