@@ -4,8 +4,9 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Beaker } from 'lucide-react';
+import { Beaker, Palette } from 'lucide-react';
 import { DevTestPanel } from './DevTestPanel';
 
 /**
@@ -47,6 +48,7 @@ function isDevEnvironment(): boolean {
 }
 
 export function DevFloatingButton() {
+  const navigate = useNavigate();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isDevMode, setIsDevMode] = useState(false);
 
@@ -94,6 +96,27 @@ export function DevFloatingButton() {
             </span>
             <span className="text-xs text-slate-500 hidden sm:inline">
               ⌘⇧D
+            </span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Brand Settings Button */}
+      <AnimatePresence>
+        {!isPanelOpen && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, x: -20 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.8, x: -20 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate('/settings/brand')}
+            className="fixed bottom-20 left-6 z-40 flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-purple-800 to-purple-700 border border-purple-600 shadow-lg shadow-black/25 hover:shadow-xl hover:border-purple-400/50 transition-all duration-200 group"
+            title="Brand Settings"
+          >
+            <Palette className="w-4 h-4 text-purple-300 group-hover:text-purple-200" />
+            <span className="text-sm font-medium text-purple-200 group-hover:text-white">
+              Brand
             </span>
           </motion.button>
         )}

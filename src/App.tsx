@@ -28,6 +28,7 @@ import AILoaderPreview from "./pages/AILoaderPreview";
 import IntroPreview from "./pages/IntroPreview";
 import DesignSystemTest from "./pages/DesignSystemTest";
 import TestPage from "./pages/TestPage";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -92,6 +93,8 @@ const App = () => {
               <Route path="/intro-preview" element={<IntroPreview />} />
               <Route path="/design-system-test" element={<DesignSystemTest />} />
               <Route path="/test-page" element={<TestPage />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/settings/brand" element={<Settings />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
