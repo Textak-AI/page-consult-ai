@@ -597,8 +597,26 @@ function GenerateContent() {
 
       if (existingPage) {
         console.log("✅ Found existing page for consultation, loading it:", existingPage.id);
+        
+        // CRITICAL: Inject industryVariant into loaded sections (may be missing from old saves)
+        const industryVariant = detectIndustryVariant(
+          consultationData.industry,
+          consultationData.serviceType || consultationData.service_type,
+          consultationData.pageType || consultationData.page_type
+        );
+        console.log('🎨 [LoadExisting] Injecting industryVariant:', industryVariant);
+        
+        const existingSections = (existingPage.sections as Section[]) || [];
+        const sectionsWithVariant = existingSections.map(section => ({
+          ...section,
+          content: {
+            ...section.content,
+            industryVariant: industryVariant,
+          }
+        }));
+        
         setPageData(existingPage);
-        setSections((existingPage.sections as Section[]) || []);
+        setSections(sectionsWithVariant);
         setPhase("editor");
         return;
       }
