@@ -140,9 +140,12 @@ export function mapBriefToSections(
   console.log('🔧 [mapBriefToSections] isBetaPage:', isBetaPage);
   console.log('🔧 [mapBriefToSections] pageStructure:', pageStructure);
 
+  console.log('🎯 [sectionMapper] Starting section build with industryVariant:', industryVariant);
+
   // Iterate through pageStructure and build sections in EXACT order
   for (const sectionType of pageStructure) {
     const order = sections.length;
+    console.log('🎯 [sectionMapper] Creating section:', sectionType, 'with industryVariant:', industryVariant);
 
     switch (sectionType) {
       case 'hero': {
@@ -222,6 +225,7 @@ export function mapBriefToSections(
             visible: true,
             content: {
               statistics: stats.slice(0, 4), // Max 4 stats
+              industryVariant: industryVariant, // ADD THIS - was missing!
             },
           });
         }
@@ -237,6 +241,7 @@ export function mapBriefToSections(
             content: {
               problem: brief.problemStatement,
               solution: brief.solutionStatement,
+              industryVariant: industryVariant, // ADD THIS - was missing!
             },
           });
         }
