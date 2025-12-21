@@ -86,8 +86,8 @@ export default function BrandSetup() {
         .maybeSingle();
 
       if (existingBrief?.logo_url) {
-        // Already has brand setup, redirect to generate
-        navigate('/generate');
+        // Already has brand setup, redirect to consultation wizard
+        navigate('/consultation');
         return;
       }
 
@@ -344,12 +344,13 @@ export default function BrandSetup() {
     }
   };
 
-  // Handle continue
+  // Handle continue - navigate to wizard, not generate
   const handleContinue = async () => {
     if (noBrandGuide) {
       await saveManualColor();
     }
-    navigate('/generate');
+    // Navigate to consultation wizard, not directly to generate
+    navigate('/consultation');
   };
 
   if (isLoading) {
@@ -651,7 +652,7 @@ export default function BrandSetup() {
           </Button>
 
           <button
-            onClick={() => navigate('/generate')}
+            onClick={() => navigate('/consultation')}
             className="block mx-auto mt-4 text-muted-foreground text-sm hover:text-foreground transition-colors"
           >
             Skip for now (use defaults)
