@@ -57,6 +57,22 @@ export interface DevTestData {
   // Value prop
   uniqueValue: string;
   
+  // NEW: Credibility fields
+  identitySentence?: string;
+  concreteProofStory?: string;
+  proofStoryContext?: string;
+  methodologySteps?: string[];
+  calculatorTypicalResults?: string;
+  calculatorDisclaimer?: string;
+  calculatorNextStep?: string;
+  
+  // NEW: Differentiation fields
+  painSpike?: string;
+  sharpDifferentiator?: string;
+  audienceExclusion?: string;
+  secondaryCTA?: 'none' | 'see-demo' | 'explore-features' | 'view-cases' | 'get-guide' | 'talk-customer' | 'custom';
+  secondaryCTACustom?: string;
+  
   // Beta-specific
   betaConfig?: {
     stage: 'idea' | 'building' | 'alpha' | 'private-beta' | 'public-beta' | 'pre-launch';
@@ -107,6 +123,12 @@ const PRESETS: Record<string, DevTestData> = {
     uniqueValue: 'It reads your mind. Detects cognitive state in real-time and protects focus automatically.',
     ctaText: 'Join the Waitlist',
     primaryGoal: 'Build Waitlist',
+    // NEW: Credibility fields
+    identitySentence: 'Neuroscience-backed focus protection for teams who can\'t afford distraction debt',
+    painSpike: 'Every context switch costs 23 minutes of recovery time — and your best people lose 3+ hours daily',
+    sharpDifferentiator: 'The only focus tool that detects cognitive state in real-time — no more guessing when to protect deep work',
+    audienceExclusion: 'Not for open floor plan offices without private focus spaces, or teams that thrive on constant collaboration',
+    secondaryCTA: 'see-demo',
     betaConfig: {
       stage: 'building',
       timeline: 'Q2 2026',
@@ -143,6 +165,23 @@ I'm building the tool I wish I had.`,
     uniqueValue: 'We identify hidden inefficiencies that cost you 15-30% of production capacity',
     ctaText: 'Schedule Assessment',
     primaryGoal: 'Book Meetings',
+    // NEW: Credibility fields
+    identitySentence: 'Former plant operators who specialize in finding hidden capacity without capital investment',
+    concreteProofStory: 'A food & beverage manufacturer found 18% idle capacity within 60 days',
+    proofStoryContext: 'We mapped their changeover process and found 40 minutes of waste per shift',
+    methodologySteps: [
+      'Floor walk and supervisor interviews',
+      'Constraint mapping and takt time analysis',
+      'Findings presentation with prioritized recommendations'
+    ],
+    calculatorTypicalResults: 'Most clients see 15-30% improvement in production capacity',
+    calculatorDisclaimer: 'Does not account for implementation time or capital investments',
+    calculatorNextStep: 'Schedule your capacity assessment to validate these numbers',
+    // NEW: Differentiation fields
+    painSpike: 'Your best operators are fighting fires instead of improving throughput — and every unplanned stop costs $10,000+',
+    sharpDifferentiator: 'We find hidden capacity without capital investment — most clients recover 6 figures in the first 90 days',
+    audienceExclusion: 'Not for job shops under $5M revenue, or facilities without in-house maintenance teams',
+    secondaryCTA: 'view-cases',
     proofPoints: {
       clientCount: '200+ manufacturers served',
       yearsInBusiness: '15+ years in business',
@@ -160,6 +199,20 @@ I'm building the tool I wish I had.`,
     uniqueValue: 'Sync all your cloud tools in one dashboard with zero engineering effort',
     ctaText: 'Start Free Trial',
     primaryGoal: 'Generate Leads',
+    // NEW: Credibility fields
+    identitySentence: 'Purpose-built for IT teams managing 30-200 SaaS tools without a dedicated integration team',
+    concreteProofStory: 'A 50-person SaaS company reduced integration maintenance from 20 hours/week to 2',
+    proofStoryContext: 'Our pre-built connectors eliminated their custom Zapier workflows entirely',
+    methodologySteps: [
+      'Discovery call to map your current tool stack',
+      'One-click connections with your critical systems',
+      'Go-live with monitoring dashboard in under a week'
+    ],
+    // NEW: Differentiation fields  
+    painSpike: 'Integration failures breaking revenue workflows at 2am with no one to fix them',
+    sharpDifferentiator: 'Only iPaaS with built-in security review automation — no more 6-week vendor approvals',
+    audienceExclusion: 'Not for companies with dedicated integration engineers or enterprises with existing iPaaS contracts',
+    secondaryCTA: 'see-demo',
     brandSettings: {
       primaryColor: '#6366F1'
     }
@@ -357,6 +410,23 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
         unique_value: testData.uniqueValue,
         offer: testData.ctaText,
         pageType: testData.pageType,
+        
+        // NEW: Credibility fields
+        identitySentence: testData.identitySentence || null,
+        concreteProofStory: testData.concreteProofStory || null,
+        proofStoryContext: testData.proofStoryContext || null,
+        methodologySteps: testData.methodologySteps || null,
+        calculatorTypicalResults: testData.calculatorTypicalResults || null,
+        calculatorDisclaimer: testData.calculatorDisclaimer || null,
+        calculatorNextStep: testData.calculatorNextStep || null,
+        
+        // NEW: Differentiation fields
+        painSpike: testData.painSpike || null,
+        sharpDifferentiator: testData.sharpDifferentiator || null,
+        audienceExclusion: testData.audienceExclusion || null,
+        secondaryCTA: testData.secondaryCTA || null,
+        secondaryCTACustom: testData.secondaryCTACustom || null,
+        
         // Beta-specific fields
         ...(testData.betaConfig && {
           betaStage: testData.betaConfig.stage,

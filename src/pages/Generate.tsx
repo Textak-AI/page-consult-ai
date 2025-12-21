@@ -34,6 +34,7 @@ import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief } fr
 import { generateDesignSystem, designSystemToCSSVariables } from "@/config/designSystem";
 import type { DesignSystem } from "@/config/designSystem";
 import { SEOHead } from "@/components/seo/SEOHead";
+import { applyBrandColors } from "@/lib/colorUtils";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -197,6 +198,18 @@ function GenerateContent() {
     { icon: Check, text: "Optimizing for conversion" },
   ];
 
+
+  // Apply brand colors when nav state is available
+  useEffect(() => {
+    const primaryColor = effectiveNavState?.strategicData?.brandSettings?.primaryColor ||
+                         effectiveNavState?.consultationData?.primaryColor ||
+                         null;
+    
+    if (primaryColor) {
+      const cleanup = applyBrandColors(primaryColor);
+      return cleanup;
+    }
+  }, [effectiveNavState]);
 
   useEffect(() => {
     loadConsultation();
@@ -1216,6 +1229,18 @@ function GenerateContent() {
     const isBetaPage = pageType === 'beta-prelaunch';
     console.log('🔧 [mapOldGeneratedContent] pageType:', pageType, '| isBetaPage:', isBetaPage);
 
+    // Helper function for secondary CTA text
+    const getSecondaryCTAText = (type: string): string => {
+      const texts: Record<string, string> = {
+        'see-demo': 'See How It Works',
+        'explore-features': 'Explore Features',
+        'view-cases': 'View Case Studies',
+        'get-guide': "Get the Buyer's Guide",
+        'talk-customer': 'Talk to a Customer',
+      };
+      return texts[type] || '';
+    };
+
     let mappedSections: Section[] = generated.sections.map((sectionType: string, index: number) => {
       switch (sectionType) {
         case "hero":
@@ -1225,12 +1250,20 @@ function GenerateContent() {
             visible: true,
             content: {
               headline: generated.headline,
-              subheadline: generated.subheadline,
+              // USE identitySentence as subheadline if provided
+              subheadline: consultationData.identitySentence || generated.subheadline,
               ctaText: isBetaPage ? "Get Early Access" : generated.ctaText,
               ctaLink: "#signup",
               backgroundImage: heroImageUrl,
               productName: consultationData.productName || consultationData.businessName || consultationData.industry,
               launchDate: consultationData.launchDate || null,
+              // ADD secondary CTA
+              secondaryCTA: consultationData.secondaryCTA && consultationData.secondaryCTA !== 'none' ? {
+                type: consultationData.secondaryCTA,
+                text: consultationData.secondaryCTA === 'custom' 
+                  ? consultationData.secondaryCTACustom 
+                  : getSecondaryCTAText(consultationData.secondaryCTA),
+              } : null,
             },
           };
         case "features":
@@ -1251,7 +1284,8 @@ function GenerateContent() {
             order: index,
             visible: true,
             content: {
-              problem: generated.problemStatement,
+              // Use painSpike as the problem if provided
+              problem: consultationData.painSpike || generated.problemStatement,
               solution: generated.solutionStatement,
             },
           };
@@ -1273,6 +1307,9 @@ function GenerateContent() {
             content: {
               stats: [{ label: generated.socialProof, value: "" }],
               industry: consultationData.industry,
+              // NEW: Concrete proof story callout
+              proofStory: consultationData.concreteProofStory || null,
+              proofStoryContext: consultationData.proofStoryContext || null,
             },
           };
         case "final_cta":
@@ -1383,6 +1420,77 @@ function GenerateContent() {
 
       console.log('🔧 [mapOldGeneratedContent] Final beta sections:', mappedSections.map(s => s.type));
     }
+
+    // ADD differentiator callout if sharpDifferentiator exists
+    if (consultationData.sharpDifferentiator) {
+      console.log('🔧 [mapOldGeneratedContent] Adding differentiator callout');
+      // Insert after hero (index 1)
+      const diffSection: Section = {
+        type: 'differentiator-callout',
+        order: 1,
+        visible: true,
+        content: {
+          text: consultationData.sharpDifferentiator,
+        },
+      };
+      mappedSections.splice(1, 0, diffSection);
+    }
+
+    // ADD audience-fit section if audienceExclusion or target_audience exists
+    if (consultationData.audienceExclusion || consultationData.target_audience) {
+      console.log('🔧 [mapOldGeneratedContent] Adding audience-fit section');
+      // Insert before final CTA
+      const ctaIndex = mappedSections.findIndex(s => s.type === 'final-cta' || s.type === 'beta-final-cta');
+      const audienceSection: Section = {
+        type: 'audience-fit',
+        order: ctaIndex >= 0 ? ctaIndex : mappedSections.length,
+        visible: true,
+        content: {
+          forWho: consultationData.target_audience || null,
+          notForWho: consultationData.audienceExclusion || null,
+        },
+      };
+      if (ctaIndex >= 0) {
+        mappedSections.splice(ctaIndex, 0, audienceSection);
+      } else {
+        mappedSections.push(audienceSection);
+      }
+    }
+
+    // ADD how-it-works if methodologySteps exists
+    const methodologySteps = consultationData.methodologySteps?.filter((s: string) => s && s.trim());
+    if (methodologySteps && methodologySteps.length > 0) {
+      console.log('🔧 [mapOldGeneratedContent] Adding how-it-works from methodology steps');
+      // Check if how-it-works already exists
+      const existingHowItWorks = mappedSections.findIndex(s => s.type === 'how-it-works');
+      if (existingHowItWorks === -1) {
+        // Insert before social-proof or final-cta
+        const socialIndex = mappedSections.findIndex(s => s.type === 'social-proof');
+        const insertIndex = socialIndex >= 0 ? socialIndex : mappedSections.length - 1;
+        
+        const howItWorksSection: Section = {
+          type: 'how-it-works',
+          order: insertIndex,
+          visible: true,
+          content: {
+            title: 'How It Works',
+            subtitle: 'What happens in the first 30 days',
+            steps: methodologySteps.map((step: string, i: number) => ({
+              number: i + 1,
+              title: `Week ${i + 1}${i === 2 ? '-4' : ''}`,
+              description: step,
+            })),
+          },
+        };
+        mappedSections.splice(insertIndex, 0, howItWorksSection);
+      }
+    }
+
+    // REORDER all sections after insertions
+    mappedSections = mappedSections.map((section, index) => ({
+      ...section,
+      order: index,
+    }));
 
     return mappedSections;
   };
