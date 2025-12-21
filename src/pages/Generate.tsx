@@ -1094,6 +1094,14 @@ function GenerateContent() {
     const isBetaPage = pageType === 'beta-prelaunch';
     console.log('🏗️ [mapLegacyStrategyContent] pageType:', pageType, '| isBetaPage:', isBetaPage);
     
+    // CRITICAL: Detect industry variant for styling
+    const industryVariant = detectIndustryVariant(
+      consultationData?.industry || strategicConsultation?.industry,
+      consultationData?.service_type || strategicConsultation?.serviceType,
+      pageType
+    );
+    console.log('🏗️ [mapLegacyStrategyContent] industryVariant:', industryVariant);
+    
     // Get brand settings for passing to sections
     const brandSettings = strategicConsultation?.brandSettings || effectiveNavState?.strategicData?.brandSettings;
     const logoUrl = brandSettings?.logoUrl || strategicConsultation?.websiteIntelligence?.logoUrl || null;
@@ -1158,6 +1166,7 @@ function GenerateContent() {
               launchDate: strategicConsultation?.launchDate || null,
               logoUrl,
               primaryColor,
+              industryVariant,
             } : {
               headline: content.headline,
               subheadline: content.subheadline,
@@ -1166,6 +1175,7 @@ function GenerateContent() {
               backgroundImage: heroImageUrl,
               logoUrl,
               primaryColor,
+              industryVariant,
             },
           });
           break;
@@ -1178,7 +1188,7 @@ function GenerateContent() {
               type: "stats-bar",
               order: order++,
               visible: true,
-              content: { statistics },
+              content: { statistics, industryVariant },
             });
           }
           break;
@@ -1192,6 +1202,7 @@ function GenerateContent() {
               content: {
                 problem: content.problemStatement,
                 solution: content.solutionStatement,
+                industryVariant,
               },
             });
           }
@@ -1209,6 +1220,7 @@ function GenerateContent() {
                 subheadline: "Exclusive benefits for founding members",
                 perks: strategicConsultation?.betaPerks || consultationData.betaPerks || ['lifetime-discount', 'founding-member', 'priority-support'],
                 scarcityMessage: `Only ${strategicConsultation?.maxSignups || consultationData.maxSignups || 100} spots available`,
+                industryVariant,
               },
             });
           } else if (content.features && content.features.length > 0) {
@@ -1224,6 +1236,7 @@ function GenerateContent() {
                   description: f.description,
                   icon: f.icon || "CheckCircle",
                 })),
+                industryVariant,
               },
             });
           }
@@ -1239,6 +1252,7 @@ function GenerateContent() {
                 title: 'How It Works',
                 subtitle: 'Your path to results',
                 steps: content.processSteps,
+                industryVariant,
               },
             });
           }
@@ -1255,19 +1269,20 @@ function GenerateContent() {
             type: "social-proof",
             order: order++,
             visible: true,
-            content: {
-              stats: [],
-              industry: businessName,
-              testimonial: hasRealTestimonial ? {
-                quote: firstTestimonial.quote,
-                name: firstTestimonial.author,
-                title: firstTestimonial.title,
-                company: "",
-                rating: 5,
-              } : undefined,
-            },
-          });
-          break;
+              content: {
+                stats: [],
+                industry: businessName,
+                testimonial: hasRealTestimonial ? {
+                  quote: firstTestimonial.quote,
+                  name: firstTestimonial.author,
+                  title: firstTestimonial.title,
+                  company: "",
+                  rating: 5,
+                } : undefined,
+                industryVariant,
+              },
+            });
+            break;
           
         case 'founder':
           // Add founder section for beta pages
@@ -1276,15 +1291,16 @@ function GenerateContent() {
             type: "founder",
             order: order++,
             visible: true,
-            content: {
-              name: strategicConsultation?.founderName || founder?.name || 'Founder',
-              title: strategicConsultation?.founderTitle || founder?.title || 'Founder & CEO',
-              story: strategicConsultation?.founderStory || founder?.story || '',
-              credentials: strategicConsultation?.founderCredentials || founder?.credentials || [],
-              photo: strategicConsultation?.founderPhoto || founder?.photo || null,
-            },
-          });
-          break;
+              content: {
+                name: strategicConsultation?.founderName || founder?.name || 'Founder',
+                title: strategicConsultation?.founderTitle || founder?.title || 'Founder & CEO',
+                story: strategicConsultation?.founderStory || founder?.story || '',
+                credentials: strategicConsultation?.founderCredentials || founder?.credentials || [],
+                photo: strategicConsultation?.founderPhoto || founder?.photo || null,
+                industryVariant,
+              },
+            });
+            break;
           
         case 'waitlist-proof':
           // Add waitlist proof section for beta pages
@@ -1292,13 +1308,14 @@ function GenerateContent() {
             type: "waitlist-proof",
             order: order++,
             visible: true,
-            content: {
-              totalSignups: 0,
-              todaySignups: 0,
-              spotsRemaining: strategicConsultation?.maxSignups || consultationData.maxSignups || 100,
-            },
-          });
-          break;
+              content: {
+                totalSignups: 0,
+                todaySignups: 0,
+                spotsRemaining: strategicConsultation?.maxSignups || consultationData.maxSignups || 100,
+                industryVariant,
+              },
+            });
+            break;
 
         case 'faq':
           // Use objections as FAQ if available
@@ -1313,6 +1330,7 @@ function GenerateContent() {
                   question: faq.question,
                   answer: faq.answer,
                 })),
+                industryVariant,
               },
             });
           }
@@ -1330,12 +1348,14 @@ function GenerateContent() {
               ctaLink: "#signup",
               spotsRemaining: strategicConsultation?.maxSignups || consultationData.maxSignups || 100,
               primaryColor,
+              industryVariant,
             } : {
               headline: "Ready to Get Started?",
               subheadline: content.solutionStatement?.split(".")[0] || "",
               ctaText: content.ctaText || "Get Started",
               ctaLink: "#contact",
               primaryColor,
+              industryVariant,
             },
           });
           break;
