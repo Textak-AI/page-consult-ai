@@ -152,7 +152,11 @@ function sanitizeCSSValue(value: string | number, type: 'color' | 'size' | 'font
       return trimmed;
     }
     case 'size': {
-      // Valid size formats: numbers with units (px, rem, em, %, vh, vw, etc.)
+      // Valid size formats: numbers with units (px, rem, em, %, vh, vw, etc.) or 'normal', 'auto', 'inherit'
+      const validKeywords = ['normal', 'auto', 'inherit', 'initial', 'unset', 'none'];
+      if (validKeywords.includes(trimmed.toLowerCase())) {
+        return trimmed;
+      }
       const validSizeRegex = /^-?[\d.]+\s*(px|rem|em|%|vh|vw|vmin|vmax|ch|ex)?$/;
       if (!validSizeRegex.test(trimmed)) {
         console.warn('[DesignSystem] Invalid size value:', trimmed);
