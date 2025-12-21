@@ -8,13 +8,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import type { BrandBrief } from '@/hooks/useBrandBrief';
 import { isDevMode } from '@/config/devMode';
+import { LogoEditor } from '@/components/consultation/LogoEditor';
 
 export const BrandSettings: React.FC = () => {
   const [brandBrief, setBrandBrief] = useState<BrandBrief | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-  const [isRemovingBackground, setIsRemovingBackground] = useState(false);
+  const [isLogoEditorOpen, setIsLogoEditorOpen] = useState(false);
   const [planTier, setPlanTier] = useState<string>('starter');
   const logoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -247,58 +248,60 @@ export const BrandSettings: React.FC = () => {
     }
   };
 
-  const handleRemoveBackground = async () => {
+  const handleOpenLogoEditor = () => {
     if (!brandBrief?.logo_url) return;
+    setIsLogoEditorOpen(true);
+  };
 
-    setIsRemovingBackground(true);
+  const handleLogoEditorSave = async (editedImageUrl: string) => {
+    if (!brandBrief) return;
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Fetch the image and convert to base64
-      const response = await fetch(brandBrief.logo_url);
+      // Convert data URL to blob and upload to storage
+      const response = await fetch(editedImageUrl);
       const blob = await response.blob();
       
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-      const imageBase64 = await base64Promise;
-
-      // Call existing edge function
-      const { data, error } = await supabase.functions.invoke('remove-logo-background', {
-        body: { imageBase64 }
-      });
-
-      if (error) throw error;
-
-      if (data?.imageUrl) {
-        // Update state with transparent logo
-        setBrandBrief(prev => prev ? { ...prev, logo_url: data.imageUrl } : null);
-
-        // Save to database
-        await supabase
-          .from('brand_briefs')
-          .update({ 
-            logo_url: data.imageUrl,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', brandBrief.id);
-
-        toast({ title: 'Background removed successfully' });
+      // Delete old logo if exists
+      if (brandBrief.logo_storage_path) {
+        await supabase.storage.from('brand-assets').remove([brandBrief.logo_storage_path]);
       }
+
+      // Upload new edited logo
+      const fileName = `${user.id}/logo-edited-${Date.now()}.png`;
+      const { error: uploadError } = await supabase.storage
+        .from('brand-assets')
+        .upload(fileName, blob);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('brand-assets')
+        .getPublicUrl(fileName);
+
+      // Update database
+      await supabase
+        .from('brand_briefs')
+        .update({ 
+          logo_url: publicUrl,
+          logo_storage_path: fileName,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', brandBrief.id);
+
+      setBrandBrief(prev => prev ? { ...prev, logo_url: publicUrl, logo_storage_path: fileName } : null);
+      toast({ title: 'Logo background removed successfully' });
+
     } catch (error: any) {
-      console.error('[BrandSettings] Background removal failed:', error);
+      console.error('[BrandSettings] Logo editor save error:', error);
       toast({ 
-        title: 'Failed to remove background', 
+        title: 'Failed to save edited logo', 
         description: error.message || 'Please try again',
         variant: 'destructive' 
       });
-    } finally {
-      setIsRemovingBackground(false);
     }
   };
 
@@ -417,26 +420,16 @@ export const BrandSettings: React.FC = () => {
                       }}
                     />
                   </div>
-                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex flex-col items-center gap-2">
                     <div className="flex justify-center gap-2">
                       {isPaidUser ? (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={handleRemoveBackground}
-                          disabled={isRemovingBackground}
+                          onClick={handleOpenLogoEditor}
                         >
-                          {isRemovingBackground ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Removing...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="h-4 w-4 mr-2" />
-                              Remove Background
-                            </>
-                          )}
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Remove Background
                         </Button>
                       ) : (
                         <Button variant="outline" size="sm" disabled className="opacity-60">
@@ -607,6 +600,16 @@ export const BrandSettings: React.FC = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* Logo Editor Modal */}
+      {brandBrief?.logo_url && (
+        <LogoEditor
+          imageUrl={brandBrief.logo_url}
+          open={isLogoEditorOpen}
+          onClose={() => setIsLogoEditorOpen(false)}
+          onSave={handleLogoEditorSave}
+        />
       )}
     </div>
   );
