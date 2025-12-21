@@ -121,20 +121,279 @@ export interface DevTestData {
 // ============================================
 
 const PRESETS: Record<string, DevTestData> = {
-  'hypeflow-beta': {
+  // 🎯 Consulting Firm
+  'consulting': {
+    pageType: 'standard',
+    businessName: 'Stratford Advisory Group',
+    industry: 'Professional Services',
+    yearsInBusiness: '12 years',
+    targetAudience: 'CEOs and executive teams at mid-market companies ($50M-$500M)',
+    uniqueValue: 'We help leadership teams unlock growth by aligning strategy, operations, and culture',
+    ctaText: 'Schedule a Discovery Call',
+    primaryGoal: 'Book Meetings',
+    identitySentence: 'Former Fortune 500 executives who specialize in scaling mid-market companies',
+    concreteProofStory: 'A regional logistics company doubled revenue in 18 months after implementing our growth framework',
+    proofStoryContext: 'We realigned their sales organization and introduced performance metrics that drove accountability',
+    methodologySteps: [
+      'Executive alignment session to surface hidden challenges',
+      'Strategic roadmap with prioritized initiatives',
+      'Quarterly progress reviews with course corrections'
+    ],
+    painSpike: 'Your leadership team is working harder than ever but growth has plateaued — and you\'re not sure why',
+    sharpDifferentiator: 'Unlike big consulting firms, we stay engaged through implementation — not just strategy decks',
+    audienceExclusion: 'Not for early-stage startups or companies seeking transactional project work',
+    secondaryCTA: 'view-cases',
+    proofStats: [
+      { value: '150+', label: 'Clients Served', icon: 'users' },
+      { value: '12', label: 'Years Experience', icon: 'clock' },
+      { value: '$2.3B', label: 'Client Revenue Growth', icon: 'trending-up' }
+    ],
+    brandSettings: {
+      primaryColor: '#0D9488' // Teal
+    }
+  },
+
+  // 🏭 Manufacturing Company
+  'manufacturing': {
+    pageType: 'standard',
+    businessName: 'Precision Manufacturing Consultants',
+    industry: 'Manufacturing',
+    yearsInBusiness: '15+ years',
+    targetAudience: 'Operations VPs at mid-size manufacturers',
+    uniqueValue: 'We identify hidden inefficiencies that cost you 15-30% of production capacity',
+    ctaText: 'Schedule Assessment',
+    primaryGoal: 'Book Meetings',
+    identitySentence: 'Former plant operators who specialize in finding hidden capacity without capital investment',
+    concreteProofStory: 'A food & beverage manufacturer found 18% idle capacity within 60 days',
+    proofStoryContext: 'We mapped their changeover process and found 40 minutes of waste per shift',
+    methodologySteps: [
+      'Floor walk and supervisor interviews',
+      'Constraint mapping and takt time analysis',
+      'Findings presentation with prioritized recommendations'
+    ],
+    calculatorTypicalResults: 'Most clients see 15-30% improvement in production capacity',
+    calculatorDisclaimer: 'Does not account for implementation time or capital investments',
+    calculatorNextStep: 'Schedule your capacity assessment to validate these numbers',
+    painSpike: 'Your best operators are fighting fires instead of improving throughput — and every unplanned stop costs $10,000+',
+    sharpDifferentiator: 'We find hidden capacity without capital investment — most clients recover 6 figures in the first 90 days',
+    audienceExclusion: 'Not for job shops under $5M revenue, or facilities without in-house maintenance teams',
+    secondaryCTA: 'view-cases',
+    proofStats: [
+      { value: '200+', label: 'Manufacturers Served', icon: 'users' },
+      { value: '15+', label: 'Years Experience', icon: 'clock' },
+      { value: '23%', label: 'Avg. Capacity Recovered', icon: 'trending-up' }
+    ],
+    brandSettings: {
+      primaryColor: '#1E3A5F' // Navy
+    }
+  },
+
+  // 💻 SaaS Product
+  'saas': {
+    pageType: 'standard',
+    businessName: 'CloudSync Pro',
+    productName: 'CloudSync',
+    industry: 'B2B SaaS',
+    targetAudience: 'IT Directors at companies with 100-500 employees',
+    uniqueValue: 'Sync all your cloud tools in one dashboard with zero engineering effort',
+    ctaText: 'Start Free Trial',
+    primaryGoal: 'Generate Leads',
+    identitySentence: 'Purpose-built for IT teams managing 30-200 SaaS tools without a dedicated integration team',
+    concreteProofStory: 'A 50-person SaaS company reduced integration maintenance from 20 hours/week to 2',
+    proofStoryContext: 'Our pre-built connectors eliminated their custom Zapier workflows entirely',
+    methodologySteps: [
+      'Discovery call to map your current tool stack',
+      'One-click connections with your critical systems',
+      'Go-live with monitoring dashboard in under a week'
+    ],
+    painSpike: 'Integration failures breaking revenue workflows at 2am with no one to fix them',
+    sharpDifferentiator: 'Only iPaaS with built-in security review automation — no more 6-week vendor approvals',
+    audienceExclusion: 'Not for companies with dedicated integration engineers or enterprises with existing iPaaS contracts',
+    secondaryCTA: 'see-demo',
+    proofStats: [
+      { value: '500+', label: 'Teams Using', icon: 'users' },
+      { value: '99.9%', label: 'Uptime', icon: 'award' },
+      { value: '4.8★', label: 'G2 Rating', icon: 'award' }
+    ],
+    brandSettings: {
+      primaryColor: '#6366F1' // Indigo
+    }
+  },
+
+  // 🏥 Healthcare Provider
+  'healthcare': {
+    pageType: 'standard',
+    businessName: 'Meridian Health Partners',
+    industry: 'Healthcare',
+    yearsInBusiness: '20+ years',
+    targetAudience: 'Hospital administrators and healthcare executives',
+    uniqueValue: 'We optimize clinical workflows to reduce burnout and improve patient outcomes',
+    ctaText: 'Request Consultation',
+    primaryGoal: 'Book Meetings',
+    identitySentence: 'Former hospital administrators who understand the balance between care quality and operational efficiency',
+    concreteProofStory: 'A 300-bed regional hospital reduced nurse overtime by 35% while improving patient satisfaction scores',
+    proofStoryContext: 'We redesigned their shift scheduling and patient flow processes',
+    methodologySteps: [
+      'Workflow assessment with frontline staff interviews',
+      'Process redesign with change management support',
+      'Implementation with ongoing optimization'
+    ],
+    painSpike: 'Staff burnout is driving turnover — and every departing nurse costs you $50,000+ to replace',
+    sharpDifferentiator: 'We work with your staff, not around them — sustainable change that sticks',
+    audienceExclusion: 'Not for single-physician practices or facilities without dedicated operations leadership',
+    secondaryCTA: 'view-cases',
+    proofStats: [
+      { value: '75+', label: 'Healthcare Facilities', icon: 'users' },
+      { value: '20+', label: 'Years in Healthcare', icon: 'clock' },
+      { value: '28%', label: 'Avg. Efficiency Gain', icon: 'trending-up' }
+    ],
+    brandSettings: {
+      primaryColor: '#0891B2' // Cyan
+    }
+  },
+
+  // 💰 Financial Services
+  'financial': {
+    pageType: 'standard',
+    businessName: 'Cornerstone Wealth Advisors',
+    industry: 'Financial Services',
+    yearsInBusiness: '25 years',
+    targetAudience: 'High-net-worth individuals and family offices',
+    uniqueValue: 'Comprehensive wealth management that protects and grows multi-generational assets',
+    ctaText: 'Schedule Private Consultation',
+    primaryGoal: 'Book Meetings',
+    identitySentence: 'CFP® professionals who specialize in complex wealth situations',
+    concreteProofStory: 'A business owner successfully transferred $15M in assets to the next generation with minimal tax impact',
+    proofStoryContext: 'We structured a 10-year succession plan with coordinated estate planning',
+    methodologySteps: [
+      'Confidential discovery meeting to understand your complete financial picture',
+      'Custom strategy presentation with scenario analysis',
+      'Ongoing quarterly reviews and proactive adjustments'
+    ],
+    painSpike: 'You\'ve built significant wealth but aren\'t confident it\'s structured to last generations',
+    sharpDifferentiator: 'Fee-only advisors with no product sales — your interests are our only interests',
+    audienceExclusion: 'Not for investors with less than $2M in investable assets',
+    secondaryCTA: 'get-guide',
+    proofStats: [
+      { value: '$3.2B', label: 'Assets Under Management', icon: 'trending-up' },
+      { value: '25', label: 'Years Serving Clients', icon: 'clock' },
+      { value: '98%', label: 'Client Retention', icon: 'award' }
+    ],
+    brandSettings: {
+      primaryColor: '#1E40AF' // Blue
+    }
+  },
+
+  // 🎨 Creative Agency
+  'creative': {
+    pageType: 'standard',
+    businessName: 'Spark Creative Studio',
+    industry: 'Design / Creative Agency',
+    yearsInBusiness: '8 years',
+    targetAudience: 'Marketing directors at growth-stage companies',
+    uniqueValue: 'We create brand identities that help you stand out in crowded markets',
+    ctaText: 'Start a Project',
+    primaryGoal: 'Generate Leads',
+    identitySentence: 'Brand strategists and designers who build visual identities with business impact',
+    concreteProofStory: 'A B2B software company saw 40% increase in qualified leads after our rebrand',
+    proofStoryContext: 'We repositioned them from "enterprise tool" to "growth partner" with a complete visual overhaul',
+    methodologySteps: [
+      'Brand discovery workshop with key stakeholders',
+      'Strategic positioning and visual concept development',
+      'Complete brand system with usage guidelines'
+    ],
+    painSpike: 'Your brand looks like every competitor — prospects can\'t remember what makes you different',
+    sharpDifferentiator: 'Strategy-led design that connects business goals to creative execution',
+    audienceExclusion: 'Not for companies seeking template-based or low-cost design services',
+    secondaryCTA: 'view-cases',
+    proofStats: [
+      { value: '200+', label: 'Brands Created', icon: 'users' },
+      { value: '15', label: 'Design Awards', icon: 'award' },
+      { value: '8', label: 'Years in Business', icon: 'clock' }
+    ],
+    brandSettings: {
+      primaryColor: '#EC4899' // Pink
+    }
+  },
+
+  // 🎓 Education/Training
+  'education': {
+    pageType: 'standard',
+    businessName: 'Elevate Learning Academy',
+    productName: 'Leadership Accelerator',
+    industry: 'Education / Training',
+    targetAudience: 'HR leaders and L&D professionals at enterprise companies',
+    uniqueValue: 'Transform high-potential employees into effective leaders with our research-backed program',
+    ctaText: 'Download Program Guide',
+    primaryGoal: 'Generate Leads',
+    identitySentence: 'Learning scientists and executive coaches who design programs that drive behavior change',
+    concreteProofStory: 'A Fortune 500 tech company promoted 65% of program graduates within 18 months',
+    proofStoryContext: 'Our cohort-based approach created peer networks that accelerated development',
+    methodologySteps: [
+      'Needs assessment aligned to business objectives',
+      '12-week cohort program with executive coaching',
+      'Impact measurement with manager feedback loops'
+    ],
+    painSpike: 'Your high-performers are leaving because they don\'t see a path to leadership',
+    sharpDifferentiator: 'Unlike generic training, we customize every cohort to your company\'s leadership competencies',
+    audienceExclusion: 'Not for companies seeking one-time workshops or off-the-shelf content',
+    secondaryCTA: 'see-demo',
+    proofStats: [
+      { value: '10,000+', label: 'Leaders Trained', icon: 'users' },
+      { value: '94%', label: 'Completion Rate', icon: 'award' },
+      { value: '65%', label: 'Promotion Rate', icon: 'trending-up' }
+    ],
+    brandSettings: {
+      primaryColor: '#8B5CF6' // Purple
+    }
+  },
+
+  // 🏠 Real Estate
+  'realestate': {
+    pageType: 'standard',
+    businessName: 'Summit Property Group',
+    industry: 'Real Estate',
+    yearsInBusiness: '18 years',
+    targetAudience: 'Commercial real estate investors and developers',
+    uniqueValue: 'We identify and acquire undervalued commercial properties with strong upside potential',
+    ctaText: 'View Current Opportunities',
+    primaryGoal: 'Generate Leads',
+    identitySentence: 'Real estate professionals who combine local market expertise with institutional-grade analysis',
+    concreteProofStory: 'A retail center acquisition generated 22% IRR over 5 years through strategic repositioning',
+    proofStoryContext: 'We identified tenant mix optimization opportunities the previous owner missed',
+    methodologySteps: [
+      'Market analysis and opportunity identification',
+      'Due diligence and financial modeling',
+      'Acquisition execution and asset management'
+    ],
+    painSpike: 'You\'re competing for deals with deep-pocketed institutional buyers who move faster',
+    sharpDifferentiator: 'Off-market deal flow from our 18-year broker network — access properties before they hit the market',
+    audienceExclusion: 'Not for residential investors or those seeking turnkey management services',
+    secondaryCTA: 'view-cases',
+    proofStats: [
+      { value: '$850M', label: 'Assets Managed', icon: 'trending-up' },
+      { value: '18', label: 'Years Experience', icon: 'clock' },
+      { value: '24%', label: 'Avg. IRR', icon: 'award' }
+    ],
+    brandSettings: {
+      primaryColor: '#059669' // Green
+    }
+  },
+
+  // 🚀 Beta/Pre-Launch
+  'beta': {
     pageType: 'beta-prelaunch',
-    businessName: 'Hypeflow AI',
-    productName: 'Flower',
-    industry: 'AI / Machine Learning',
+    businessName: 'FlowState AI',
+    productName: 'FlowState',
+    industry: 'AI / Productivity',
     targetAudience: 'Knowledge workers drowning in distractions',
-    uniqueValue: 'It reads your mind. Detects cognitive state in real-time and protects focus automatically.',
+    uniqueValue: 'AI that detects your cognitive state and protects your focus automatically',
     ctaText: 'Join the Waitlist',
     primaryGoal: 'Build Waitlist',
-    // NEW: Credibility fields
     identitySentence: 'Neuroscience-backed focus protection for teams who can\'t afford distraction debt',
     painSpike: 'Every context switch costs 23 minutes of recovery time — and your best people lose 3+ hours daily',
     sharpDifferentiator: 'The only focus tool that detects cognitive state in real-time — no more guessing when to protect deep work',
-    audienceExclusion: 'Not for open floor plan offices without private focus spaces, or teams that thrive on constant collaboration',
+    audienceExclusion: 'Not for open floor plan offices without private focus spaces',
     secondaryCTA: 'see-demo',
     betaConfig: {
       stage: 'building',
@@ -148,103 +407,34 @@ const PRESETS: Record<string, DevTestData> = {
       ]
     },
     founder: {
-      name: 'Alex Chen',
+      name: 'Jordan Chen',
       title: 'Founder & CEO',
-      story: `After burning out at my third startup, I became obsessed with understanding why some days I could code for 8 hours straight, and other days I couldn't focus for 8 minutes.
-
-The answer wasn't discipline. It was awareness.
-
-Flower reads your mind — not literally, but close. It learns your patterns, detects your state, and protects your focus automatically.
-
-I'm building the tool I wish I had.`,
-      credentials: ['Ex-Google', '2x YC Founder', 'Stanford CS']
+      story: 'After burning out at my third startup, I became obsessed with understanding why some days I could work for 8 hours straight, and other days I couldn\'t focus for 8 minutes. The answer wasn\'t discipline — it was awareness.',
+      credentials: ['Ex-Google', '2x Founder', 'Stanford CS']
     },
     brandSettings: {
-      primaryColor: '#06B6D4'
+      primaryColor: '#06B6D4' // Cyan
     }
   },
-  'manufacturing-standard': {
-    pageType: 'standard',
-    businessName: 'Precision Manufacturing Consultants',
-    industry: 'Manufacturing',
-    yearsInBusiness: '15+ years',
-    targetAudience: 'Operations VPs at mid-size manufacturers',
-    uniqueValue: 'We identify hidden inefficiencies that cost you 15-30% of production capacity',
-    ctaText: 'Schedule Assessment',
-    primaryGoal: 'Book Meetings',
-    // NEW: Credibility fields
-    identitySentence: 'Former plant operators who specialize in finding hidden capacity without capital investment',
-    concreteProofStory: 'A food & beverage manufacturer found 18% idle capacity within 60 days',
-    proofStoryContext: 'We mapped their changeover process and found 40 minutes of waste per shift',
-    methodologySteps: [
-      'Floor walk and supervisor interviews',
-      'Constraint mapping and takt time analysis',
-      'Findings presentation with prioritized recommendations'
-    ],
-    calculatorTypicalResults: 'Most clients see 15-30% improvement in production capacity',
-    calculatorDisclaimer: 'Does not account for implementation time or capital investments',
-    calculatorNextStep: 'Schedule your capacity assessment to validate these numbers',
-    // NEW: Differentiation fields
-    painSpike: 'Your best operators are fighting fires instead of improving throughput — and every unplanned stop costs $10,000+',
-    sharpDifferentiator: 'We find hidden capacity without capital investment — most clients recover 6 figures in the first 90 days',
-    audienceExclusion: 'Not for job shops under $5M revenue, or facilities without in-house maintenance teams',
-    secondaryCTA: 'view-cases',
-    proofPoints: {
-      clientCount: '200+ manufacturers served',
-      yearsInBusiness: '15+ years in business',
-      achievements: 'Average 23% efficiency improvement'
-    },
-    // NEW: Credibility strip stats
-    proofStats: [
-      { value: '200+', label: 'Manufacturers Served', icon: 'users' },
-      { value: '15+', label: 'Years Experience', icon: 'clock' },
-      { value: '23%', label: 'Avg. Capacity Recovered', icon: 'trending-up' },
-    ],
-    brandSettings: {
-      primaryColor: '#1E3A5F'
-    }
-  },
-  'saas-standard': {
-    pageType: 'standard',
-    businessName: 'CloudSync Pro',
-    industry: 'B2B SaaS',
-    targetAudience: 'IT Directors at companies with 100-500 employees',
-    uniqueValue: 'Sync all your cloud tools in one dashboard with zero engineering effort',
-    ctaText: 'Start Free Trial',
-    primaryGoal: 'Generate Leads',
-    // NEW: Credibility fields
-    identitySentence: 'Purpose-built for IT teams managing 30-200 SaaS tools without a dedicated integration team',
-    concreteProofStory: 'A 50-person SaaS company reduced integration maintenance from 20 hours/week to 2',
-    proofStoryContext: 'Our pre-built connectors eliminated their custom Zapier workflows entirely',
-    methodologySteps: [
-      'Discovery call to map your current tool stack',
-      'One-click connections with your critical systems',
-      'Go-live with monitoring dashboard in under a week'
-    ],
-    // NEW: Differentiation fields  
-    painSpike: 'Integration failures breaking revenue workflows at 2am with no one to fix them',
-    sharpDifferentiator: 'Only iPaaS with built-in security review automation — no more 6-week vendor approvals',
-    audienceExclusion: 'Not for companies with dedicated integration engineers or enterprises with existing iPaaS contracts',
-    secondaryCTA: 'see-demo',
-    // NEW: Credibility strip stats
-    proofStats: [
-      { value: '500+', label: 'Teams Using', icon: 'users' },
-      { value: '99.9%', label: 'Uptime', icon: 'award' },
-      { value: '4.8★', label: 'G2 Rating', icon: 'award' },
-    ],
-    brandSettings: {
-      primaryColor: '#6366F1'
-    }
-  },
-  'investor-pitch': {
+
+  // 💼 Investor Pitch
+  'investor': {
     pageType: 'investor',
-    businessName: 'QuantumLeap Labs',
+    businessName: 'NexGen Quantum',
     productName: 'QuantumOS',
     industry: 'Quantum Computing',
     targetAudience: 'Series A investors focused on deep tech',
     uniqueValue: 'First quantum operating system that runs on existing hardware, reducing quantum computing costs by 90%',
-    ctaText: 'Request Deck',
+    ctaText: 'Request Investor Deck',
     primaryGoal: 'Investor Outreach',
+    identitySentence: 'Making quantum computing accessible to enterprises without specialized hardware',
+    painSpike: 'Quantum computing promises 1000x speedups but requires $10M+ in specialized infrastructure',
+    sharpDifferentiator: 'Our software layer runs quantum algorithms on classical hardware — 90% cost reduction',
+    proofStats: [
+      { value: '$2.1M', label: 'ARR', icon: 'trending-up' },
+      { value: '340%', label: 'YoY Growth', icon: 'trending-up' },
+      { value: '3', label: 'Fortune 500 Pilots', icon: 'users' }
+    ],
     proofPoints: {
       clientCount: '3 Fortune 500 pilots',
       achievements: '$2.1M ARR, 340% YoY growth'
@@ -252,13 +442,15 @@ I'm building the tool I wish I had.`,
     founder: {
       name: 'Dr. Sarah Martinez',
       title: 'CEO & Co-Founder',
-      story: 'Former quantum research lead at IBM. PhD MIT. Built the first working prototype in my garage.',
+      story: 'Former quantum research lead at IBM. Built the first working prototype solving real optimization problems.',
       credentials: ['PhD MIT', 'Ex-IBM Quantum', 'Forbes 30 Under 30']
     },
     brandSettings: {
-      primaryColor: '#8B5CF6'
+      primaryColor: '#8B5CF6' // Purple
     }
   },
+
+  // Minimal test case
   'minimal': {
     pageType: 'standard',
     businessName: 'Test Company',
@@ -294,8 +486,8 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
   const { toast } = useToast();
   
   // State
-  const [testData, setTestData] = useState<DevTestData>(PRESETS['hypeflow-beta']);
-  const [jsonText, setJsonText] = useState(JSON.stringify(PRESETS['hypeflow-beta'], null, 2));
+  const [testData, setTestData] = useState<DevTestData>(PRESETS['consulting']);
+  const [jsonText, setJsonText] = useState(JSON.stringify(PRESETS['consulting'], null, 2));
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -315,13 +507,13 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
         setJsonText(JSON.stringify(parsed, null, 2));
       } catch (e) {
         // Fall back to default preset on parse error
-        const defaultPreset = PRESETS['hypeflow-beta'];
+        const defaultPreset = PRESETS['consulting'];
         setTestData(defaultPreset);
         setJsonText(JSON.stringify(defaultPreset, null, 2));
       }
     } else {
       // No saved data, ensure default is loaded with proper JSON text
-      const defaultPreset = PRESETS['hypeflow-beta'];
+      const defaultPreset = PRESETS['consulting'];
       setTestData(defaultPreset);
       setJsonText(JSON.stringify(defaultPreset, null, 2));
     }
