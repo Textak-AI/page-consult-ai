@@ -154,6 +154,9 @@ All colors MUST be HSL.
   .shadow-brand-glow { 
     box-shadow: 0 0 40px var(--color-brand-glow); 
   }
+  .shadow-brand-glow-lg { 
+    box-shadow: 0 0 60px var(--color-brand-glow), 0 10px 40px -10px var(--color-brand-glow); 
+  }
   .bg-brand-muted { background-color: var(--color-brand-muted); }
   .ring-brand { --tw-ring-color: var(--color-brand); }
   

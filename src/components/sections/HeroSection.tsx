@@ -44,6 +44,10 @@ interface HeroSectionProps {
     }>;
     primaryColor?: string;
     logoUrl?: string | null;
+    secondaryCTA?: {
+      type: string;
+      text: string;
+    } | null;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -239,19 +243,17 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.45 }}
-            className="flex flex-col sm:flex-row items-center gap-4 pt-4"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
           >
             {/* Primary CTA */}
             <div className="relative group">
               <Button 
                 size="lg" 
-                className={`relative overflow-hidden text-lg px-10 py-7 h-auto font-semibold transition-all duration-300 hover:scale-[1.02] ${
+                className={`relative overflow-hidden text-lg px-10 py-7 h-auto font-semibold transition-all duration-300 hover:scale-[1.02] bg-brand-gradient shadow-brand-glow hover:shadow-brand-glow-lg ${
                   isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""
                 }`}
                 style={{
-                  background: `linear-gradient(135deg, hsl(189, 95%, 43%), hsl(200, 95%, 50%))`,
                   color: 'white',
-                  boxShadow: '0 0 30px hsla(189, 95%, 43%, 0.3), 0 10px 40px -10px hsla(189, 95%, 43%, 0.5)',
                   borderRadius: '12px',
                 }}
               >
@@ -269,10 +271,21 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
               </Button>
             </div>
+
+            {/* Secondary CTA - only show if configured */}
+            {content.secondaryCTA?.text && (
+              <Button
+                variant="ghost"
+                size="lg"
+                className="text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all text-lg px-8 py-7 h-auto"
+              >
+                {content.secondaryCTA.text}
+              </Button>
+            )}
             
-            {/* Secondary CTA (Urgency) */}
+            {/* Urgency text */}
             {content.fomo?.urgency && (
-              <p className="text-sm font-medium text-cyan-400">
+              <p className="text-sm font-medium text-brand sm:ml-4">
                 ⚡ {content.fomo.urgency}
               </p>
             )}
