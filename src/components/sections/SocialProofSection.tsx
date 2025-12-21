@@ -100,6 +100,9 @@ function getSocialProofHeader(industry?: string): { title: string; subtitle: str
 
 export function SocialProofSection({ content }: SocialProofSectionProps) {
   const header = getSocialProofHeader(content.industry);
+  const isConsulting = (content as any).industryVariant === 'consulting';
+  
+  console.log('🎨 [SocialProofSection] industryVariant:', (content as any).industryVariant, 'isConsulting:', isConsulting);
   
   const testimonial = content.testimonial || {
     quote: header.placeholderQuote,
