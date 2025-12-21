@@ -165,6 +165,26 @@ function GenerateContent() {
     { icon: Check, text: "Optimizing for conversion" },
   ];
 
+  // Check for Dev Panel state from sessionStorage (when reloading on same page)
+  useEffect(() => {
+    const devPanelState = sessionStorage.getItem('devPanelState');
+    if (devPanelState) {
+      console.log('🔧 [Generate] Loading state from Dev Panel reload');
+      try {
+        const parsedState = JSON.parse(devPanelState);
+        // Clear it so it doesn't persist
+        sessionStorage.removeItem('devPanelState');
+        // Replace location state and reload
+        window.history.replaceState({ ...parsedState }, '', window.location.pathname);
+        // Force reload with new state
+        window.location.reload();
+      } catch (e) {
+        console.error('Failed to parse devPanelState:', e);
+        sessionStorage.removeItem('devPanelState');
+      }
+    }
+  }, []);
+
   useEffect(() => {
     loadConsultation();
   }, []);

@@ -396,33 +396,47 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
 
       addLog('info', 'Navigating to generate page with dev mode...');
 
-      // Navigate to generate page with dev mode enabled
-      navigate('/generate', {
-        state: {
-          consultationData,
-          devMode: true,
-          strategicData: {
-            consultationData: {
-              ...consultationData,
-              businessName: testData.businessName,
-              productName: testData.productName,
-              pageType: testData.pageType, // CRITICAL: Explicitly pass pageType for beta sections
-            },
-            brandSettings: {
-              primaryColor: testData.brandSettings?.primaryColor || '#06B6D4',
-              secondaryColor: '#8B5CF6',
-              headingFont: 'Inter',
-              bodyFont: 'Inter',
-              logoUrl: testData.brandSettings?.logoUrl || null,
-              modified: true,
-            },
+      // Build navigation state
+      const navigationState = {
+        consultationData,
+        devMode: true,
+        devTimestamp: Date.now(), // Forces React to see new state
+        strategicData: {
+          consultationData: {
+            ...consultationData,
+            businessName: testData.businessName,
+            productName: testData.productName,
+            pageType: testData.pageType, // CRITICAL: Explicitly pass pageType for beta sections
           },
-          fromStrategicConsultation: true,
+          brandSettings: {
+            primaryColor: testData.brandSettings?.primaryColor || '#06B6D4',
+            secondaryColor: '#8B5CF6',
+            headingFont: 'Inter',
+            bodyFont: 'Inter',
+            logoUrl: testData.brandSettings?.logoUrl || null,
+            modified: true,
+          },
         },
-      });
+        fromStrategicConsultation: true,
+      };
 
-      addLog('success', 'Navigation triggered - page generation starting...');
-      onClose();
+      // Check if already on /generate page
+      const currentPath = window.location.pathname;
+      
+      if (currentPath === '/generate' || currentPath.includes('/generate')) {
+        addLog('info', 'Already on generate page - forcing reload with new data');
+        
+        // Store state in sessionStorage for reload
+        sessionStorage.setItem('devPanelState', JSON.stringify(navigationState));
+        
+        // Force page reload to trigger fresh generation
+        window.location.reload();
+      } else {
+        // Navigate to generate page with dev mode enabled
+        navigate('/generate', { state: navigationState });
+        addLog('success', 'Navigation triggered - page generation starting...');
+        onClose();
+      }
     } catch (error) {
       addLog('error', `Generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       toast({
