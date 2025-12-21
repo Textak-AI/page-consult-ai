@@ -147,6 +147,8 @@ export type Database = {
           created_at: string | null
           id: string
           is_active: boolean | null
+          logo_storage_path: string | null
+          logo_url: string | null
           name: string | null
           source_file_name: string | null
           typography: Json | null
@@ -159,6 +161,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_active?: boolean | null
+          logo_storage_path?: string | null
+          logo_url?: string | null
           name?: string | null
           source_file_name?: string | null
           typography?: Json | null
@@ -171,6 +175,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_active?: boolean | null
+          logo_storage_path?: string | null
+          logo_url?: string | null
           name?: string | null
           source_file_name?: string | null
           typography?: Json | null
