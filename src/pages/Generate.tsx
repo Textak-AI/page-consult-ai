@@ -1022,6 +1022,8 @@ function GenerateContent() {
         logoUrl,
         primaryColor,
         pageType, // CRITICAL: Pass pageType for beta sections
+        industry: consultationData.industry,       // For industry variant detection
+        serviceType: consultationData.service_type, // For industry variant detection
       });
       
       console.log(`✅ Brief-first mapper built ${sections.length} sections`);
