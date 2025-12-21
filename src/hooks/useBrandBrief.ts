@@ -46,6 +46,8 @@ export const useBrandBrief = () => {
           .select('*')
           .eq('user_id', user.id)
           .eq('is_active', true)
+          .order('updated_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
 
         if (error) {
@@ -142,6 +144,8 @@ export const useBrandBrief = () => {
       .select('*')
       .eq('user_id', user.id)
       .eq('is_active', true)
+      .order('updated_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (data) {
