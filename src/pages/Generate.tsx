@@ -199,33 +199,59 @@ function GenerateContent() {
   ];
 
 
-  // Apply brand colors when nav state is available
+  // Apply brand colors when nav state is available OR load from DB
   useEffect(() => {
-    console.log('🎨 Brand color effect running, effectiveNavState:', !!effectiveNavState);
+    const applyBrand = async () => {
+      console.log('🎨 Brand color effect running, effectiveNavState:', !!effectiveNavState);
+      
+      // Check multiple possible paths for primaryColor from nav state
+      const primaryColor = 
+        effectiveNavState?.strategicData?.brandSettings?.primaryColor ||
+        effectiveNavState?.consultationData?.primaryColor ||
+        effectiveNavState?.consultationData?.brandSettings?.primaryColor ||
+        effectiveNavState?.consultationData?.brandColor ||
+        null;
+      
+      console.log('🎨 Brand color paths:', {
+        strategicBrandSettings: effectiveNavState?.strategicData?.brandSettings?.primaryColor,
+        consultationPrimaryColor: effectiveNavState?.consultationData?.primaryColor,
+        consultationBrandSettings: effectiveNavState?.consultationData?.brandSettings?.primaryColor,
+        consultationBrandColor: effectiveNavState?.consultationData?.brandColor,
+        resolved: primaryColor,
+      });
+      
+      if (primaryColor) {
+        console.log('🎨 Applying brand color from nav state:', primaryColor);
+        applyBrandColors(primaryColor);
+        return;
+      }
+      
+      // Fallback: Try loading from database brand_briefs
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        
+        const { data: brandBrief } = await supabase
+          .from('brand_briefs')
+          .select('colors')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .maybeSingle();
+          
+        // Cast colors to expected type
+        const colors = brandBrief?.colors as { primary?: { hex?: string } } | null;
+        if (colors?.primary?.hex) {
+          console.log('🎨 Applying brand color from DB:', colors.primary.hex);
+          applyBrandColors(colors.primary.hex);
+        } else {
+          console.log('🎨 No brand color found, using default');
+        }
+      } catch (error) {
+        console.error('🎨 Error loading brand brief:', error);
+      }
+    };
     
-    // Check multiple possible paths for primaryColor
-    const primaryColor = 
-      effectiveNavState?.strategicData?.brandSettings?.primaryColor ||
-      effectiveNavState?.consultationData?.primaryColor ||
-      effectiveNavState?.consultationData?.brandSettings?.primaryColor ||
-      effectiveNavState?.consultationData?.brandColor ||
-      null;
-    
-    console.log('🎨 Brand color paths:', {
-      strategicBrandSettings: effectiveNavState?.strategicData?.brandSettings?.primaryColor,
-      consultationPrimaryColor: effectiveNavState?.consultationData?.primaryColor,
-      consultationBrandSettings: effectiveNavState?.consultationData?.brandSettings?.primaryColor,
-      consultationBrandColor: effectiveNavState?.consultationData?.brandColor,
-      resolved: primaryColor,
-    });
-    
-    if (primaryColor) {
-      console.log('🎨 Applying brand color:', primaryColor);
-      const cleanup = applyBrandColors(primaryColor);
-      return cleanup;
-    } else {
-      console.log('🎨 No brand color found, using default');
-    }
+    applyBrand();
   }, [effectiveNavState]);
 
   useEffect(() => {

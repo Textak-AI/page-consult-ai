@@ -1,7 +1,46 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+
+// Helper function to build brand context from brand brief
+function buildBrandContext(brief: any): string {
+  if (!brief) return '';
+  
+  let context = '\n\nBRAND GUIDELINES (Apply strictly):\n';
+  
+  if (brief.colors?.primary?.hex) {
+    context += `\nCOLORS:\n`;
+    context += `- Primary: ${brief.colors.primary.hex}\n`;
+    if (brief.colors.secondary?.hex) context += `- Secondary: ${brief.colors.secondary.hex}\n`;
+    if (brief.colors.accent?.hex) context += `- Accent: ${brief.colors.accent.hex}\n`;
+  }
+  
+  if (brief.typography?.headlineFont) {
+    context += `\nTYPOGRAPHY:\n`;
+    context += `- Headlines: ${brief.typography.headlineFont}\n`;
+    if (brief.typography.bodyFont) context += `- Body: ${brief.typography.bodyFont}\n`;
+  }
+  
+  if (brief.voice_tone) {
+    context += `\nVOICE & TONE:\n`;
+    if (brief.voice_tone.personality?.length) {
+      context += `- Personality: ${brief.voice_tone.personality.join(', ')}\n`;
+    }
+    if (brief.voice_tone.description) {
+      context += `- ${brief.voice_tone.description}\n`;
+    }
+    if (brief.voice_tone.doSay?.length) {
+      context += `- DO use: "${brief.voice_tone.doSay.join('", "')}"\n`;
+    }
+    if (brief.voice_tone.dontSay?.length) {
+      context += `- DON'T use: "${brief.voice_tone.dontSay.join('", "')}"\n`;
+    }
+  }
+  
+  return context;
+}
 
 // Validation schema - updated to support both old and new consultation flows
 const GenerateContentRequestSchema = z.object({
@@ -24,6 +63,8 @@ const GenerateContentRequestSchema = z.object({
   structuredBrief: z.any().optional(),
   // NEW: Page type for beta/IR sections
   pageType: z.string().optional(),
+  // NEW: User ID for brand brief lookup
+  userId: z.string().uuid().optional(),
   // NEW: Full consultation data from strategic consultation
   strategicConsultation: z.object({
     businessName: z.string().optional(),
@@ -78,6 +119,33 @@ serve(async (req) => {
         JSON.stringify({ error: 'API key not configured' }), 
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Load brand context from database if userId provided
+    let brandContext = '';
+    if (requestData.userId) {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL');
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+        
+        if (supabaseUrl && supabaseKey) {
+          const supabase = createClient(supabaseUrl, supabaseKey);
+          const { data: brandBrief } = await supabase
+            .from('brand_briefs')
+            .select('colors, typography, voice_tone')
+            .eq('user_id', requestData.userId)
+            .eq('is_active', true)
+            .maybeSingle();
+          
+          if (brandBrief) {
+            brandContext = buildBrandContext(brandBrief);
+            console.log('[generate-page-content] Brand context loaded for user:', requestData.userId);
+          }
+        }
+      } catch (e) {
+        console.error('[generate-page-content] Error loading brand brief:', e);
+        // Continue without brand context
+      }
     }
 
     // Determine which generation mode to use
@@ -250,9 +318,10 @@ INSTRUCTIONS
 3. Build features from messagingPillars
 4. Create FAQ from objections
 5. Apply the specified tone throughout
+${brandContext ? `6. STRICTLY follow the brand guidelines provided below` : ''}
 
 A user should be able to trace EVERY section of the generated page back to the strategy brief.
-
+${brandContext}
 Return valid JSON only.`;
 
     } else {
@@ -267,7 +336,8 @@ CRITICAL RULES:
 2. Use ONLY credentials the user actually provided
 3. NEVER use generic placeholder names like "Sarah M." or "John D."
 4. If no testimonials provided, use format: "[Client Name], [Their Role]" with quote: "[Testimonial will be added]"
-
+${brandContext ? `5. STRICTLY follow the brand guidelines provided below` : ''}
+${brandContext}
 Return ONLY valid JSON with this structure:
 {
   "headline": "string",
