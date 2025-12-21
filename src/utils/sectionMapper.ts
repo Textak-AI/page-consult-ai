@@ -16,6 +16,7 @@ import {
   type IndustryVariant,
   type IndustryDesignTokens 
 } from '@/config/designSystem/industryVariants';
+import type { AuthoritySignal } from '@/lib/briefExtractor';
 import {
   selectBestHeadline,
   extractAuthoritySignals,
@@ -24,7 +25,6 @@ import {
   optimizeFAQs,
   enhanceMessagingPillars,
   getIntelligentSectionHeaders,
-  type AuthoritySignal,
 } from '@/lib/briefExtractor';
 
 // Type definitions
