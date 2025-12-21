@@ -33,6 +33,9 @@ interface SocialProofSectionProps {
       company: string;
       rating?: number;
     };
+    // NEW: Proof story from wizard
+    proofStory?: string | null;
+    proofStoryContext?: string | null;
   };
   onUpdate: (content: any) => void;
 }
@@ -232,6 +235,32 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
             </div>
           </div>
         </motion.div>
+
+        {/* Proof Story Callout - if provided */}
+        {content.proofStory && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-8 max-w-2xl mx-auto"
+          >
+            <div className="relative p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+              <div className="absolute -top-3 left-6">
+                <span className="px-3 py-1 rounded-full bg-brand text-white text-xs font-medium">
+                  Recent Result
+                </span>
+              </div>
+              <blockquote className="text-lg text-foreground font-medium mt-2">
+                "{content.proofStory}"
+              </blockquote>
+              {content.proofStoryContext && (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  — {content.proofStoryContext}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* Stats Grid */}
         {content.stats && content.stats.length > 0 && content.stats.some(s => s.value) && (

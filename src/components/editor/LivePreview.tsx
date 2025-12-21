@@ -9,6 +9,8 @@ import { PhotoGallerySection } from "@/components/sections/PhotoGallerySection";
 import { StatsBarSection } from "@/components/sections/StatsBarSection";
 import { FAQSection } from "@/components/sections/FAQSection";
 import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
+import { DifferentiatorCalloutSection } from "@/components/sections/DifferentiatorCalloutSection";
+import { AudienceFitSection } from "@/components/sections/AudienceFitSection";
 // Beta sections
 import { 
   BetaHeroTeaserSection, 
@@ -266,6 +268,22 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <BetaFinalCTASection
+            content={section.content}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
+          />
+        );
+      case "differentiator-callout":
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <DifferentiatorCalloutSection content={section.content} />
+        );
+      case "audience-fit":
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <AudienceFitSection
             content={section.content}
             onUpdate={updateSection}
             isEditing={editingSection === index}
