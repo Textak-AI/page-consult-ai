@@ -141,6 +141,45 @@ export type Database = {
           },
         ]
       }
+      brand_briefs: {
+        Row: {
+          colors: Json | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string | null
+          source_file_name: string | null
+          typography: Json | null
+          updated_at: string | null
+          user_id: string
+          voice_tone: Json | null
+        }
+        Insert: {
+          colors?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string | null
+          source_file_name?: string | null
+          typography?: Json | null
+          updated_at?: string | null
+          user_id: string
+          voice_tone?: Json | null
+        }
+        Update: {
+          colors?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string | null
+          source_file_name?: string | null
+          typography?: Json | null
+          updated_at?: string | null
+          user_id?: string
+          voice_tone?: Json | null
+        }
+        Relationships: []
+      }
       consultation_sessions: {
         Row: {
           approved_sections: Json | null

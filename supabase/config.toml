@@ -89,3 +89,6 @@ verify_jwt = false
 
 [functions.upscale-logo]
 verify_jwt = false
+
+[functions.extract-brand-brief]
+verify_jwt = true
