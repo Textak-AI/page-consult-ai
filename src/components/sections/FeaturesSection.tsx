@@ -58,11 +58,16 @@ export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSect
     industryVariant = 'default',
   } = content;
 
+  // Debug logging
+  console.log('🎨 [FeaturesSection] content.industryVariant:', content.industryVariant);
+  console.log('🎨 [FeaturesSection] industryVariant (destructured):', industryVariant);
+
   if (!features || features.length === 0) return null;
   
   // Get industry-specific tokens
   const tokens = getIndustryTokens(industryVariant);
   const isLightMode = tokens.mode === 'light';
+  console.log('🎨 [FeaturesSection] tokens.mode:', tokens.mode, 'isLightMode:', isLightMode);
 
   const getGridClass = () => {
     if (features.length <= 2) return "md:grid-cols-2";

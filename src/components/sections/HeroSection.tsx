@@ -59,6 +59,10 @@ interface HeroSectionProps {
 export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) {
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
   const isConsulting = content.industryVariant === 'consulting';
+  
+  // Debug logging
+  console.log('🎨 [HeroSection] content.industryVariant:', content.industryVariant);
+  console.log('🎨 [HeroSection] isConsulting:', isConsulting);
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
