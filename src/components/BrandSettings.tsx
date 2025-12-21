@@ -301,7 +301,7 @@ export const BrandSettings: React.FC = () => {
     }
   };
 
-  const isPaidUser = planTier === 'pro' || planTier === 'agency';
+  const isPaidUser = import.meta.env.DEV || planTier === 'pro' || planTier === 'agency';
 
   const updateBrandBrief = async (updates: Partial<BrandBrief>) => {
     if (!brandBrief) return;
