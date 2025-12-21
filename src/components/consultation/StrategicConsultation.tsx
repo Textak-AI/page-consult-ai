@@ -393,6 +393,27 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
   // Check if brand colors already exist from Brand Setup (PDF extraction or website analysis)
   const hasBrandColors = Boolean(brandBrief?.colors?.primary?.hex);
   
+  // Sync brandBrief to brandSettings when brand is already loaded (skipping branding step)
+  useEffect(() => {
+    if (hasBrandColors && brandBrief && !data.brandSettings) {
+      console.log('🎨 Syncing brandBrief to brandSettings:', {
+        logoUrl: brandBrief.logo_url,
+        primaryColor: brandBrief.colors?.primary?.hex,
+      });
+      setData(prev => ({
+        ...prev,
+        brandSettings: {
+          logoUrl: brandBrief.logo_url || null,
+          primaryColor: brandBrief.colors?.primary?.hex || '#0ea5e9',
+          secondaryColor: brandBrief.colors?.secondary?.hex || '#8b5cf6',
+          headingFont: brandBrief.typography?.headlineFont || 'Inter',
+          bodyFont: brandBrief.typography?.bodyFont || 'Inter',
+          modified: false,
+        },
+      }));
+    }
+  }, [hasBrandColors, brandBrief, data.brandSettings]);
+  
   // Compute STEPS dynamically based on selected page type and brand status
   // Skip branding step if brand colors are already configured
   const STEPS = useMemo(() => getStepsForPageType(data.pageType, hasBrandColors), [data.pageType, hasBrandColors]);

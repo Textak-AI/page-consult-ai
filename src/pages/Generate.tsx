@@ -1068,15 +1068,19 @@ function GenerateContent() {
       const stats: Array<{ value: string; label: string }> = [];
       
       if (content.proofPoints?.clientCount) {
-        const countMatch = content.proofPoints.clientCount.match(/(\d+[\d,+]*)/);
+        const countMatch = content.proofPoints.clientCount.match(/(\d+[\d,]*)/);
         if (countMatch) {
-          stats.push({ value: countMatch[1] + "+", label: "Clients Served" });
+          // Only add "+" if the original string doesn't already contain one
+          const hasPlus = content.proofPoints.clientCount.includes('+');
+          stats.push({ value: countMatch[1] + (hasPlus ? '+' : ''), label: "Clients Served" });
         }
       }
       if (content.proofPoints?.yearsInBusiness) {
         const yearsMatch = content.proofPoints.yearsInBusiness.match(/(\d+)/);
         if (yearsMatch) {
-          stats.push({ value: yearsMatch[1] + "+", label: "Years Experience" });
+          // Only add "+" if the original string doesn't already contain one
+          const hasPlus = content.proofPoints.yearsInBusiness.includes('+');
+          stats.push({ value: yearsMatch[1] + (hasPlus ? '+' : ''), label: "Years Experience" });
         }
       }
       if (content.proofPoints?.otherStats && Array.isArray(content.proofPoints.otherStats)) {
