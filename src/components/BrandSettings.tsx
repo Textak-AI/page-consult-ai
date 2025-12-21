@@ -7,6 +7,7 @@ import { Upload, Check, Loader2, Palette, Type, MessageSquare, FileText, ImageIc
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import type { BrandBrief } from '@/hooks/useBrandBrief';
+import { isDevMode } from '@/config/devMode';
 
 export const BrandSettings: React.FC = () => {
   const [brandBrief, setBrandBrief] = useState<BrandBrief | null>(null);
@@ -301,7 +302,17 @@ export const BrandSettings: React.FC = () => {
     }
   };
 
-  const isPaidUser = import.meta.env.DEV || planTier === 'pro' || planTier === 'agency';
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const getUserEmail = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserEmail(user?.email ?? null);
+    };
+    getUserEmail();
+  }, []);
+
+  const isPaidUser = isDevMode(userEmail) || planTier === 'pro' || planTier === 'agency';
 
   const updateBrandBrief = async (updates: Partial<BrandBrief>) => {
     if (!brandBrief) return;
