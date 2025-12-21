@@ -359,11 +359,47 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
   
   // Load brand brief for the panel
   const { brandBrief, isLoading: brandLoading } = useBrandBrief();
+  
+  // Track user ID for auto-save
+  const [userId, setUserId] = useState<string | null>(null);
+  
+  // Get user ID on mount
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setUserId(user.id);
+    };
+    getUser();
+  }, []);
 
   // Compute STEPS dynamically based on selected page type
   const STEPS = useMemo(() => getStepsForPageType(data.pageType), [data.pageType]);
 
-  // Restore progress on mount
+  // Load draft from database on mount
+  useEffect(() => {
+    const loadDraft = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { data: draft } = await supabase
+        .from('consultation_drafts')
+        .select('wizard_data')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (draft?.wizard_data && typeof draft.wizard_data === 'object') {
+        setData(prev => ({
+          ...prev,
+          ...(draft.wizard_data as Partial<ConsultationData>),
+        }));
+        console.log('📂 Loaded draft from database');
+      }
+    };
+    
+    loadDraft();
+  }, []);
+
+  // Restore progress from localStorage on mount (fallback)
   useEffect(() => {
     const saved = localStorage.getItem('pageconsult_consultation_draft');
     if (saved) {
@@ -402,6 +438,14 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
 
   const updateData = (updates: Partial<ConsultationData>) => {
     setData(prev => ({ ...prev, ...updates }));
+  };
+  
+  // Handle field changes from BriefPanel
+  const handleBriefFieldChange = (key: string, value: string) => {
+    setData(prev => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
   const handleWebsiteAnalysis = async () => {
@@ -1492,7 +1536,9 @@ ${d.ctaText}
           <BriefPanel 
             wizardData={data} 
             brandBrief={brandBrief} 
-            brandLoading={brandLoading} 
+            brandLoading={brandLoading}
+            onFieldChange={handleBriefFieldChange}
+            userId={userId}
           />
         </div>
       </div>

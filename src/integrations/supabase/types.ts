@@ -186,6 +186,30 @@ export type Database = {
         }
         Relationships: []
       }
+      consultation_drafts: {
+        Row: {
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+          wizard_data: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+          wizard_data?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+          wizard_data?: Json | null
+        }
+        Relationships: []
+      }
       consultation_sessions: {
         Row: {
           approved_sections: Json | null
