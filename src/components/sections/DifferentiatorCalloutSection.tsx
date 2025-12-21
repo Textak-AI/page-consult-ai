@@ -8,12 +8,12 @@ interface DifferentiatorCalloutProps {
 }
 
 export function DifferentiatorCalloutSection({ content }: DifferentiatorCalloutProps) {
-  if (!content.text) return null;
+  if (!content?.text) return null;
 
   return (
     <section className="relative py-8 overflow-hidden">
-      {/* Subtle gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-muted to-transparent" />
+      {/* Subtle gradient background using brand color */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[hsl(var(--color-brand-hsl)/0.1)] to-transparent" />
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}

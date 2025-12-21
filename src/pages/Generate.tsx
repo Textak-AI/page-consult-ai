@@ -205,7 +205,14 @@ function GenerateContent() {
                          effectiveNavState?.consultationData?.primaryColor ||
                          null;
     
+    console.log('🎨 Brand color check:', {
+      fromStrategicData: effectiveNavState?.strategicData?.brandSettings?.primaryColor,
+      fromConsultationData: effectiveNavState?.consultationData?.primaryColor,
+      resolved: primaryColor,
+    });
+    
     if (primaryColor) {
+      console.log('🎨 Applying brand color:', primaryColor);
       const cleanup = applyBrandColors(primaryColor);
       return cleanup;
     }
@@ -337,7 +344,7 @@ function GenerateContent() {
           console.log("🔧 DEV MODE: Bypassing authentication");
           const devUserId = "dev-test-user-" + Date.now();
           
-          // Transform demo data to match expected format
+          // Transform demo data to match expected format - INCLUDE ALL new credibility/differentiation fields
           const transformedData = {
             id: demoData.id || "dev-consultation-" + Date.now(),
             user_id: devUserId,
@@ -350,7 +357,47 @@ function GenerateContent() {
             offer: demoData.offer || demoData.goal,
             status: "completed",
             created_at: demoData.timestamp || new Date().toISOString(),
+            
+            // NEW: Credibility fields
+            identitySentence: demoData.identitySentence || null,
+            concreteProofStory: demoData.concreteProofStory || null,
+            proofStoryContext: demoData.proofStoryContext || null,
+            methodologySteps: demoData.methodologySteps || null,
+            calculatorTypicalResults: demoData.calculatorTypicalResults || null,
+            calculatorDisclaimer: demoData.calculatorDisclaimer || null,
+            calculatorNextStep: demoData.calculatorNextStep || null,
+            
+            // NEW: Differentiation fields
+            painSpike: demoData.painSpike || null,
+            sharpDifferentiator: demoData.sharpDifferentiator || null,
+            audienceExclusion: demoData.audienceExclusion || null,
+            secondaryCTA: demoData.secondaryCTA || null,
+            secondaryCTACustom: demoData.secondaryCTACustom || null,
+            
+            // Page type and brand
+            pageType: demoData.pageType || null,
+            primaryColor: demoData.primaryColor || null,
+            
+            // Beta-specific
+            betaPerks: demoData.betaPerks || null,
+            maxSignups: demoData.maxSignups || null,
+            
+            // Founder
+            founder: demoData.founder || null,
+            founderName: demoData.founderName || null,
+            founderTitle: demoData.founderTitle || null,
+            founderStory: demoData.founderStory || null,
+            founderCredentials: demoData.founderCredentials || null,
+            founderPhoto: demoData.founderPhoto || null,
           };
+
+          console.log('🔧 DEV MODE transformedData:', {
+            identitySentence: transformedData.identitySentence,
+            sharpDifferentiator: transformedData.sharpDifferentiator,
+            audienceExclusion: transformedData.audienceExclusion,
+            painSpike: transformedData.painSpike,
+            secondaryCTA: transformedData.secondaryCTA,
+          });
 
           setConsultation(transformedData);
           // In dev mode, skip database operations
@@ -1228,6 +1275,17 @@ function GenerateContent() {
                      null;
     const isBetaPage = pageType === 'beta-prelaunch';
     console.log('🔧 [mapOldGeneratedContent] pageType:', pageType, '| isBetaPage:', isBetaPage);
+    
+    // DEBUG: Log all new wizard fields
+    console.log('🔧 [mapOldGeneratedContent] New fields check:', {
+      identitySentence: consultationData.identitySentence,
+      sharpDifferentiator: consultationData.sharpDifferentiator,
+      audienceExclusion: consultationData.audienceExclusion,
+      painSpike: consultationData.painSpike,
+      secondaryCTA: consultationData.secondaryCTA,
+      concreteProofStory: consultationData.concreteProofStory,
+      methodologySteps: consultationData.methodologySteps,
+    });
 
     // Helper function for secondary CTA text
     const getSecondaryCTAText = (type: string): string => {
