@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 export interface BrandBrief {
   id: string;
   name: string;
+  logo_url?: string;
+  logo_storage_path?: string;
   colors: {
     primary?: { hex: string; name?: string };
     secondary?: { hex: string; name?: string };

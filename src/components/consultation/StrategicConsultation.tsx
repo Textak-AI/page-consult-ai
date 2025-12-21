@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette, FileText, TrendingUp, UserCheck, Rocket, Calendar, Gift, Share2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette, FileText, TrendingUp, UserCheck, Rocket, Calendar, Gift, Share2, Check } from 'lucide-react';
 import { IndustrySelector } from './IndustrySelector';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { AIWorkingLoader } from '@/components/editor/AIWorkingLoader';
 import type { AISeoData } from '@/services/intelligence/types';
 import { BrandCustomization, type BrandSettings, type WebsiteIntelligence } from './BrandCustomization';
+import { BriefPanel } from './BriefPanel';
+import { useBrandBrief } from '@/hooks/useBrandBrief';
 import { 
   PageTypeStep, 
   PAGE_TYPES, 
@@ -354,6 +356,9 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
     savedStep: number;
     savedData: Partial<ConsultationData>;
   } | null>(null);
+  
+  // Load brand brief for the panel
+  const { brandBrief, isLoading: brandLoading } = useBrandBrief();
 
   // Compute STEPS dynamically based on selected page type
   const STEPS = useMemo(() => getStepsForPageType(data.pageType), [data.pageType]);
@@ -1328,7 +1333,20 @@ ${d.ctaText}
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="flex min-h-[calc(100vh-4rem)]">
+      {/* Mobile: Brand indicator */}
+      <div className="md:hidden fixed top-20 left-4 right-4 z-10">
+        {brandBrief && (
+          <div className="bg-card/90 backdrop-blur border border-border rounded-lg px-3 py-2 flex items-center gap-2 text-emerald-400 text-sm">
+            <Check className="w-4 h-4" />
+            Brand loaded: {brandBrief.name}
+          </div>
+        )}
+      </div>
+
+      {/* Left: Wizard Questions */}
+      <div className="flex-1 p-4 md:p-8 overflow-y-auto pt-16 md:pt-8">
+        <div className="max-w-2xl mx-auto">
       {/* Restore Prompt */}
       {showRestorePrompt && pendingRestore && (
         <motion.div
@@ -1463,6 +1481,20 @@ ${d.ctaText}
             </>
           )}
         </Button>
+      </div>
+        </div>
+      </div>
+
+      {/* Right: Live Brief Panel (Desktop only) */}
+      <div className="hidden md:block w-[380px] bg-card/50 border-l border-border p-6 overflow-y-auto sticky top-0 h-screen">
+        <div className="sticky top-0">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Your Brief</h2>
+          <BriefPanel 
+            wizardData={data} 
+            brandBrief={brandBrief} 
+            brandLoading={brandLoading} 
+          />
+        </div>
       </div>
     </div>
   );
