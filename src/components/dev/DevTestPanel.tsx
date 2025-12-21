@@ -466,9 +466,13 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
 
       addLog('info', 'Navigating to generate page with dev mode...');
 
-      // Build navigation state
+      // Build navigation state - pass brandSettings at multiple levels for compatibility
       const navigationState = {
-        consultationData,
+        consultationData: {
+          ...consultationData,
+          primaryColor: testData.brandSettings?.primaryColor || '#06B6D4',
+          brandSettings: testData.brandSettings,
+        },
         devMode: true,
         devTimestamp: Date.now(), // Forces React to see new state
         strategicData: {
@@ -477,6 +481,8 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
             businessName: testData.businessName,
             productName: testData.productName,
             pageType: testData.pageType, // CRITICAL: Explicitly pass pageType for beta sections
+            primaryColor: testData.brandSettings?.primaryColor || '#06B6D4',
+            brandSettings: testData.brandSettings,
           },
           brandSettings: {
             primaryColor: testData.brandSettings?.primaryColor || '#06B6D4',

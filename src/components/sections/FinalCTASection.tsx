@@ -8,6 +8,7 @@ interface FinalCTASectionProps {
     ctaText: string;
     ctaLink: string;
     subtext?: string;
+    trustText?: string;
     trustIndicators?: Array<{ text: string }>;
     primaryColor?: string;
   };
@@ -128,7 +129,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
           >
             {trustIndicators.map((item, i) => (
               <div key={i} className="flex items-center gap-2 text-sm text-slate-400">
-                <CheckCircle className="w-4 h-4 text-cyan-400" strokeWidth={1.5} />
+                <CheckCircle className="w-4 h-4 text-brand" strokeWidth={1.5} />
                 <span>{item.text}</span>
               </div>
             ))}
@@ -141,7 +142,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             transition={{ duration: 0.5, delay: 0.3 }}
             className="text-sm text-slate-500"
           >
-            No credit card required · Free to start
+            {content.trustText || 'No credit card required · Free to start'}
           </motion.p>
         )}
       </div>
