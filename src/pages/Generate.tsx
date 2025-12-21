@@ -837,8 +837,16 @@ function GenerateContent() {
         offer: consultationData.offer,
       });
 
-      console.log("✅ Generated content with sections:", generated.sections);
-      return await mapOldGeneratedContent(generated, consultationData);
+      console.log("✅ Generated content:", generated);
+      
+      // Use mapStrategyBriefContentToSections for intelligent extraction
+      // This calls mapBriefToSections with briefExtractor functions
+      return await mapStrategyBriefContentToSections(generated, consultationData, {
+        businessName: consultationData.companyName || consultationData.industry,
+        pageType: consultationData.pageType,
+        primaryGoal: consultationData.goal,
+        brandSettings: effectiveNavState?.strategicData?.brandSettings,
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       console.error("❌ AI CONTENT GENERATION FAILED:", {
