@@ -6,9 +6,16 @@
  * - NO TEMPLATE DEFAULTS: Don't inject placeholder stats, features, or testimonials
  * - STRICT STRUCTURE: Only render sections listed in pageStructure array, in exact order
  * - PROOF POINTS ONLY: Stats bar shows only values from proofPoints
+ * - INDUSTRY-AWARE: Apply industry-specific headers and styling
  */
 
 import type { LucideIcon } from 'lucide-react';
+import { 
+  detectIndustryVariant, 
+  getIndustryTokens, 
+  type IndustryVariant,
+  type IndustryDesignTokens 
+} from '@/config/designSystem/industryVariants';
 
 // Type definitions
 export interface StructuredBrief {
@@ -63,6 +70,8 @@ export interface MapBriefOptions {
   logoUrl?: string | null;
   primaryColor?: string;
   pageType?: string | null; // 'beta-prelaunch' | 'customer-acquisition' | etc.
+  industry?: string;        // For industry variant detection
+  serviceType?: string;     // For industry variant detection
 }
 
 /**
@@ -101,6 +110,7 @@ function isPlaceholderTestimonial(testimonial: { author: string; quote: string }
 /**
  * Maps a structuredBrief to Section[] array.
  * SINGLE SOURCE OF TRUTH: Only data from the brief is rendered.
+ * INDUSTRY-AWARE: Applies industry-specific headers and styling.
  */
 export function mapBriefToSections(
   brief: StructuredBrief,
@@ -111,12 +121,18 @@ export function mapBriefToSections(
   console.log('🔧 [mapBriefToSections] options.pageType:', options.pageType);
   console.log('🔧 [mapBriefToSections] typeof options.pageType:', typeof options.pageType);
   
-  const { businessName, heroImageUrl, logoUrl, primaryColor, pageType } = options;
+  const { businessName, heroImageUrl, logoUrl, primaryColor, pageType, industry, serviceType } = options;
   const sections: Section[] = [];
   const pageStructure = brief.pageStructure || [];
   
   const isBetaPage = pageType === 'beta-prelaunch';
   
+  // Detect industry variant for styling and headers
+  const industryVariant = detectIndustryVariant(industry, serviceType, pageType);
+  const industryTokens = getIndustryTokens(industryVariant);
+  const isConsulting = industryVariant === 'consulting';
+  
+  console.log('🏭 [mapBriefToSections] Industry variant:', industryVariant);
   console.log('🔧 [mapBriefToSections] isBetaPage:', isBetaPage);
   console.log('🔧 [mapBriefToSections] pageStructure:', pageStructure);
 
@@ -146,12 +162,15 @@ export function mapBriefToSections(
           content: {
             headline: brief.headlines.optionA,
             subheadline: brief.subheadline,
-            ctaText: brief.ctaText,
+            // Use industry-specific CTA text
+            ctaText: isConsulting ? industryTokens.sectionHeaders.cta.ctaText : brief.ctaText,
             ctaLink: '#contact',
             backgroundImage: heroImageUrl || null,
             trustBadges: trustBadges.length > 0 ? trustBadges : undefined,
             logoUrl: logoUrl || null,
             primaryColor: primaryColor || null,
+            // Pass industry variant for styling
+            industryVariant: industryVariant,
           },
         });
         break;
@@ -232,13 +251,20 @@ export function mapBriefToSections(
             order,
             visible: true,
             content: {
-              title: isBetaPage ? 'Early Adopter Perks' : 'Why Choose Us',
-              subtitle: isBetaPage ? `What you get by joining early` : `What sets ${businessName} apart`,
+              // Use industry-specific headers
+              title: isBetaPage 
+                ? 'Early Adopter Perks' 
+                : industryTokens.sectionHeaders.features.title,
+              subtitle: isBetaPage 
+                ? `What you get by joining early` 
+                : industryTokens.sectionHeaders.features.subtitle,
+              eyebrow: industryTokens.sectionHeaders.features.eyebrow,
               features: brief.messagingPillars.map(pillar => ({
                 title: pillar.title,
                 description: pillar.description,
-                icon: pillar.icon, // Must be valid Lucide icon name
+                icon: pillar.icon,
               })),
+              industryVariant: industryVariant,
             },
           });
         }
@@ -253,13 +279,15 @@ export function mapBriefToSections(
             order,
             visible: true,
             content: {
-              title: 'How It Works',
-              subtitle: 'Your path to results',
+              // Use industry-specific headers
+              title: industryTokens.sectionHeaders.process.title,
+              subtitle: industryTokens.sectionHeaders.process.subtitle,
               steps: brief.processSteps.map(step => ({
                 number: step.step,
                 title: step.title,
                 description: step.description,
               })),
+              industryVariant: industryVariant,
             },
           });
         }
@@ -279,7 +307,11 @@ export function mapBriefToSections(
           order,
           visible: true,
           content: {
-            title: isBetaPage ? 'Join the Waitlist' : 'What Our Clients Say',
+            // Use industry-specific headers
+            title: isBetaPage 
+              ? 'Join the Waitlist' 
+              : industryTokens.sectionHeaders.testimonials.title,
+            subtitle: industryTokens.sectionHeaders.testimonials.subtitle,
             testimonials: hasRealTestimonials
               ? brief.testimonials.map(t => ({
                   quote: t.quote,
@@ -289,6 +321,7 @@ export function mapBriefToSections(
                 }))
               : [], // Empty array if no real testimonials
             achievements: brief.proofPoints?.achievements || null,
+            industryVariant: industryVariant,
           },
         });
         break;
@@ -302,11 +335,14 @@ export function mapBriefToSections(
             order,
             visible: true,
             content: {
-              title: 'Frequently Asked Questions',
+              // Use industry-specific headers
+              headline: industryTokens.sectionHeaders.faq.title,
+              eyebrow: industryTokens.sectionHeaders.faq.eyebrow,
               items: brief.objections.map(obj => ({
                 question: obj.question,
                 answer: obj.answer,
               })),
+              industryVariant: industryVariant,
             },
           });
         }
@@ -336,12 +372,20 @@ export function mapBriefToSections(
           order,
           visible: true,
           content: {
-            headline: isBetaPage ? 'Be the First to Know' : 'Ready to Get Started?',
-            subtext: brief.solutionStatement?.split('.')[0] + '.' || '',
-            ctaText: brief.ctaText,
+            // Use industry-specific headers and CTA text
+            headline: isBetaPage 
+              ? 'Be the First to Know' 
+              : industryTokens.sectionHeaders.cta.title,
+            subtext: isBetaPage 
+              ? '' 
+              : industryTokens.sectionHeaders.cta.subtext,
+            ctaText: isConsulting 
+              ? industryTokens.sectionHeaders.cta.ctaText 
+              : brief.ctaText,
             ctaLink: '#contact',
             trustIndicators: trustIndicators.length > 0 ? trustIndicators : undefined,
             primaryColor: primaryColor || null,
+            industryVariant: industryVariant,
           },
         });
         break;
