@@ -68,6 +68,9 @@ export interface ConsultationData {
   yearsInBusiness: string;
   uniqueStrength: string;
   
+  // NEW: Identity Sentence (how you describe yourself to peers)
+  identitySentence?: string;
+  
   // Target Audience (Customer Acquisition flow)
   idealClient: string;
   clientFrustration: string;
@@ -78,16 +81,29 @@ export interface ConsultationData {
   achievements: string;
   testimonialText: string;
   
+  // NEW: Concrete Proof Story
+  concreteProofStory?: string;
+  proofStoryContext?: string;
+  
   // Offer Details (Customer Acquisition flow)
   mainOffer: string;
   offerIncludes: string;
   investmentRange: string;
   processDescription: string;
   
+  // NEW: Methodology (first 30 days)
+  methodologySteps?: string[];
+  methodologyDescription?: string;
+  
   // Page Goals
   primaryGoal: string;
   ctaText: string;
   objectionsToOvercome: string;
+  
+  // NEW: Calculator Context (when calculator is enabled)
+  calculatorTypicalResults?: string;
+  calculatorDisclaimer?: string;
+  calculatorNextStep?: string;
   
   // IR-specific fields
   investorProfile?: InvestorProfileData;
@@ -872,6 +888,31 @@ ${d.ctaText}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
               </div>
+              
+              {/* NEW: Identity Sentence */}
+              <div>
+                <Label htmlFor="identitySentence" className="text-slate-400">
+                  How would you describe your firm in one sentence to a peer in your industry?
+                </Label>
+                <p className="text-xs text-slate-500 mt-1">Not your tagline — your honest positioning.</p>
+                <Textarea
+                  id="identitySentence"
+                  placeholder="e.g., Former plant operators who specialize in finding hidden capacity without capital investment"
+                  value={data.identitySentence || ''}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 200) {
+                      updateData({ identitySentence: e.target.value });
+                    }
+                  }}
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
+                />
+                <div className="flex justify-between mt-1">
+                  <p className="text-xs text-slate-500">Optional but helps differentiate your page</p>
+                  <span className={`text-xs ${(data.identitySentence?.length || 0) > 180 ? 'text-amber-400' : 'text-slate-500'}`}>
+                    {data.identitySentence?.length || 0}/200
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -972,9 +1013,54 @@ ${d.ctaText}
                   placeholder={'e.g., "Working with [you] was the best decision we made. They handled everything professionally and our clients loved them." - Sarah M., Event Planner'}
                   value={data.testimonialText || ''}
                   onChange={(e) => updateData({ testimonialText: e.target.value })}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[120px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
               </div>
+              
+              {/* NEW: Concrete Proof Story */}
+              <div className="pt-4 border-t border-slate-700">
+                <Label htmlFor="concreteProofStory" className="text-slate-400">
+                  Share ONE specific result you're proud of
+                </Label>
+                <p className="text-xs text-slate-500 mt-1">You can anonymize. Format: "[Type of client] achieved [specific outcome] in [timeframe]"</p>
+                <Textarea
+                  id="concreteProofStory"
+                  placeholder="e.g., A food & beverage manufacturer found 18% idle capacity within 60 days"
+                  value={data.concreteProofStory || ''}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 300) {
+                      updateData({ concreteProofStory: e.target.value });
+                    }
+                  }}
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
+                />
+                <div className="flex justify-between mt-1">
+                  <div className="text-xs text-slate-500 space-y-0.5">
+                    <p>Examples:</p>
+                    <p className="text-slate-600">• "A 50-person SaaS company reduced churn from 8% to 3% in one quarter"</p>
+                    <p className="text-slate-600">• "A local dental practice went from 20 to 45 new patients/month in 90 days"</p>
+                  </div>
+                  <span className={`text-xs ${(data.concreteProofStory?.length || 0) > 270 ? 'text-amber-400' : 'text-slate-500'}`}>
+                    {data.concreteProofStory?.length || 0}/300
+                  </span>
+                </div>
+              </div>
+              
+              {/* Proof Story Context - only show if proof story has content */}
+              {data.concreteProofStory && data.concreteProofStory.length > 10 && (
+                <div>
+                  <Label htmlFor="proofStoryContext" className="text-slate-400">
+                    What made this result possible? (One sentence)
+                  </Label>
+                  <Input
+                    id="proofStoryContext"
+                    placeholder="e.g., We mapped their changeover process and found 40 minutes of waste per shift."
+                    value={data.proofStoryContext || ''}
+                    onChange={(e) => updateData({ proofStoryContext: e.target.value })}
+                    className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  />
+                </div>
+              )}
             </div>
           </div>
         );
@@ -1043,6 +1129,110 @@ ${d.ctaText}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
               </div>
+              
+              {/* NEW: Methodology Steps */}
+              <div className="pt-4 border-t border-slate-700">
+                <Label className="text-slate-400">
+                  What happens in the first 30 days of working with you?
+                </Label>
+                <p className="text-xs text-slate-500 mt-1">Just the highlights — 2-3 concrete steps your clients experience</p>
+                
+                <div className="space-y-3 mt-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-cyan-400 font-medium w-16 text-sm">Week 1:</span>
+                    <Input
+                      placeholder="e.g., Discovery call and data collection"
+                      value={data.methodologySteps?.[0] || ''}
+                      onChange={(e) => {
+                        const steps = [...(data.methodologySteps || ['', '', ''])];
+                        steps[0] = e.target.value;
+                        updateData({ methodologySteps: steps });
+                      }}
+                      className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-cyan-400 font-medium w-16 text-sm">Week 2:</span>
+                    <Input
+                      placeholder="e.g., Analysis and constraint mapping"
+                      value={data.methodologySteps?.[1] || ''}
+                      onChange={(e) => {
+                        const steps = [...(data.methodologySteps || ['', '', ''])];
+                        steps[1] = e.target.value;
+                        updateData({ methodologySteps: steps });
+                      }}
+                      className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-cyan-400 font-medium w-16 text-sm">Week 3-4:</span>
+                    <Input
+                      placeholder="e.g., Findings presentation with recommendations"
+                      value={data.methodologySteps?.[2] || ''}
+                      onChange={(e) => {
+                        const steps = [...(data.methodologySteps || ['', '', ''])];
+                        steps[2] = e.target.value;
+                        updateData({ methodologySteps: steps });
+                      }}
+                      className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">Optional — helps power the "How It Works" section</p>
+              </div>
+              
+              {/* NEW: Calculator Context (conditional) */}
+              {data.pageType === 'customer-acquisition' && (
+                <div className="pt-4 border-t border-slate-700">
+                  <div className="flex items-center gap-2 mb-3">
+                    <TrendingUp className="w-4 h-4 text-cyan-400" />
+                    <Label className="text-slate-400 font-medium">ROI Calculator Context</Label>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-4">Optional — If you want a calculator on your page, these fields help set expectations</p>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="calculatorTypicalResults" className="text-slate-400 text-sm">
+                        What's the typical range of results your clients see?
+                      </Label>
+                      <Input
+                        id="calculatorTypicalResults"
+                        placeholder="e.g., Most clients see 15-30% improvement in efficiency"
+                        value={data.calculatorTypicalResults || ''}
+                        onChange={(e) => updateData({ calculatorTypicalResults: e.target.value })}
+                        className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="calculatorDisclaimer" className="text-slate-400 text-sm">
+                        What's NOT included in this estimate?
+                      </Label>
+                      <p className="text-xs text-slate-500 mt-0.5">Builds trust by setting expectations</p>
+                      <Input
+                        id="calculatorDisclaimer"
+                        placeholder="e.g., Doesn't account for implementation time or one-time costs"
+                        value={data.calculatorDisclaimer || ''}
+                        onChange={(e) => updateData({ calculatorDisclaimer: e.target.value })}
+                        className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="calculatorNextStep" className="text-slate-400 text-sm">
+                        What should someone do after seeing the estimate?
+                      </Label>
+                      <Input
+                        id="calculatorNextStep"
+                        placeholder="e.g., Schedule a diagnostic call to validate these numbers"
+                        value={data.calculatorNextStep || ''}
+                        onChange={(e) => updateData({ calculatorNextStep: e.target.value })}
+                        className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
