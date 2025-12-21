@@ -66,7 +66,7 @@ export function AISeoPanel({ aiSeoData, isLoading = false }: Props) {
           <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
             <Search className="w-4 h-4 text-cyan-400" />
           </div>
-          <span className="font-medium text-foreground">AI Search Optimization</span>
+          <span className="font-medium text-white">AI Search Optimization</span>
         </div>
         
         <div className="flex items-center gap-3">
@@ -116,31 +116,31 @@ export function AISeoPanel({ aiSeoData, isLoading = false }: Props) {
                 <>
                   {/* Entity Section */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <div className="flex items-center gap-2 text-sm font-medium text-white">
                       <Building2 className="w-4 h-4 text-cyan-400" />
                       Entity
                     </div>
                     <div className="space-y-2 pl-6">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground w-24">Entity Type</span>
+                        <span className="text-xs text-slate-400 w-24">Entity Type</span>
                         <Badge variant="outline" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/30">
                           {aiSeoData.entity.type}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground w-24">Industry</span>
-                        <span className="text-sm text-foreground">{aiSeoData.entity.industry}</span>
+                        <span className="text-xs text-slate-400 w-24">Industry</span>
+                        <span className="text-sm text-slate-200">{aiSeoData.entity.industry}</span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <span className="text-xs text-muted-foreground w-24 flex-shrink-0">Description</span>
-                        <span className="text-sm text-slate-400">{truncate(aiSeoData.entity.description, 160)}</span>
+                        <span className="text-xs text-slate-400 w-24 flex-shrink-0">Description</span>
+                        <span className="text-sm text-slate-300">{truncate(aiSeoData.entity.description, 160)}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Authority Signals Section */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <div className="flex items-center gap-2 text-sm font-medium text-white">
                       <Sparkles className="w-4 h-4 text-cyan-400" />
                       Authority Signals
                       <Badge variant="outline" className="bg-slate-700/50 text-slate-300 border-slate-600 ml-1">
@@ -159,7 +159,7 @@ export function AISeoPanel({ aiSeoData, isLoading = false }: Props) {
 
                   {/* FAQ Preview Section */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <div className="flex items-center gap-2 text-sm font-medium text-white">
                       <MessageSquare className="w-4 h-4 text-cyan-400" />
                       FAQ Content
                       <Badge variant="outline" className="bg-slate-700/50 text-slate-300 border-slate-600 ml-1">
@@ -169,7 +169,7 @@ export function AISeoPanel({ aiSeoData, isLoading = false }: Props) {
                     <div className="space-y-3 pl-6">
                       {aiSeoData.faqItems.slice(0, 3).map((faq, i) => (
                         <div key={i} className="space-y-1">
-                          <p className="text-sm font-medium text-foreground">{faq.question}</p>
+                          <p className="text-sm font-medium text-slate-100">{faq.question}</p>
                           <p className="text-sm text-slate-400">{truncate(faq.answer, 100)}</p>
                         </div>
                       ))}
@@ -183,7 +183,7 @@ export function AISeoPanel({ aiSeoData, isLoading = false }: Props) {
 
                   {/* Target Queries Section */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <div className="flex items-center gap-2 text-sm font-medium text-white">
                       <Target className="w-4 h-4 text-cyan-400" />
                       Target Queries
                     </div>
@@ -237,7 +237,7 @@ export function AISeoPanel({ aiSeoData, isLoading = false }: Props) {
 
                   {/* Schema Readiness Section */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <div className="flex items-center gap-2 text-sm font-medium text-white">
                       <CheckCircle className="w-4 h-4 text-cyan-400" />
                       Schema Readiness
                     </div>
@@ -247,7 +247,7 @@ export function AISeoPanel({ aiSeoData, isLoading = false }: Props) {
                           value={aiSeoData.schemaReadiness.score} 
                           className="flex-1 h-2 bg-slate-700"
                         />
-                        <span className="text-sm font-medium text-foreground w-12 text-right">
+                        <span className="text-sm font-medium text-slate-100 w-12 text-right">
                           {aiSeoData.schemaReadiness.score}%
                         </span>
                       </div>
