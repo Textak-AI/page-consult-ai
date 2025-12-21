@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -111,8 +111,8 @@ function GenerateContent() {
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Intelligence data from wizard or strategic consultation
-  const navigationState = location.state as {
+  // Intelligence data from wizard or strategic consultation - type definition
+  type NavigationStateType = {
     consultationData?: any;
     intelligenceData?: PersonaIntelligence;
     generatedContentData?: GeneratedContent;
@@ -136,19 +136,51 @@ function GenerateContent() {
     fromStrategicConsultation?: boolean;
   } | null;
   
-  const isDevMode = navigationState?.devMode === true;
-  const fromStrategicConsultation = navigationState?.fromStrategicConsultation === true;
-  const strategicData = navigationState?.strategicData || null;
+  // Get navigation state from location.state or sessionStorage fallback
+  const getInitialNavState = (): NavigationStateType => {
+    // 1. First try location.state (normal navigation)
+    if (location.state && Object.keys(location.state).length > 0) {
+      console.log('📍 [Generate] Using location.state');
+      return location.state as NavigationStateType;
+    }
+    
+    // 2. Then try sessionStorage (fallback for edge cases)
+    const storedState = sessionStorage.getItem('devPanelState');
+    if (storedState) {
+      console.log('📍 [Generate] Using sessionStorage state');
+      try {
+        const parsed = JSON.parse(storedState);
+        // Clear after reading so it doesn't persist incorrectly
+        sessionStorage.removeItem('devPanelState');
+        return parsed as NavigationStateType;
+      } catch (e) {
+        console.error('Failed to parse stored state:', e);
+        sessionStorage.removeItem('devPanelState');
+      }
+    }
+    
+    // 3. No state available
+    console.log('📍 [Generate] No navigation state found');
+    return null;
+  };
+  
+  // Get effective navigation state once on mount
+  const [effectiveNavState] = useState<NavigationStateType>(getInitialNavState);
+  
+  // Derived values from effective nav state
+  const isDevMode = effectiveNavState?.devMode === true;
+  const fromStrategicConsultation = effectiveNavState?.fromStrategicConsultation === true;
+  const strategicData = effectiveNavState?.strategicData || null;
   
   const [intelligence, setIntelligence] = useState<PersonaIntelligence | null>(
-    navigationState?.intelligenceData || null
+    effectiveNavState?.intelligenceData || null
   );
   const [preGeneratedContent, setPreGeneratedContent] = useState<GeneratedContent | null>(
-    navigationState?.generatedContentData || null
+    effectiveNavState?.generatedContentData || null
   );
   // Landing page best practices from market research
   const [landingPageBestPractices, setLandingPageBestPractices] = useState<any>(
-    navigationState?.landingPageBestPractices || null
+    effectiveNavState?.landingPageBestPractices || null
   );
   const [isRegenerating, setIsRegenerating] = useState(false);
   
@@ -165,25 +197,6 @@ function GenerateContent() {
     { icon: Check, text: "Optimizing for conversion" },
   ];
 
-  // Check for Dev Panel state from sessionStorage (when reloading on same page)
-  useEffect(() => {
-    const devPanelState = sessionStorage.getItem('devPanelState');
-    if (devPanelState) {
-      console.log('🔧 [Generate] Loading state from Dev Panel reload');
-      try {
-        const parsedState = JSON.parse(devPanelState);
-        // Clear it so it doesn't persist
-        sessionStorage.removeItem('devPanelState');
-        // Replace location state and reload
-        window.history.replaceState({ ...parsedState }, '', window.location.pathname);
-        // Force reload with new state
-        window.location.reload();
-      } catch (e) {
-        console.error('Failed to parse devPanelState:', e);
-        sessionStorage.removeItem('devPanelState');
-      }
-    }
-  }, []);
 
   useEffect(() => {
     loadConsultation();
@@ -296,11 +309,12 @@ function GenerateContent() {
         return;
       }
 
-      // SECOND: Check if data was passed from demo via React Router state
-      const demoData = location.state?.consultationData;
+      // SECOND: Check if data was passed from demo via React Router state or sessionStorage
+      const demoData = effectiveNavState?.consultationData || location.state?.consultationData;
 
       console.log('🔍 Generate page load - checking for consultation data...');
       console.log('📦 location.state:', location.state);
+      console.log('📦 effectiveNavState:', effectiveNavState);
       console.log('📦 demoData:', demoData);
       console.log('🔧 devMode:', isDevMode);
 
@@ -890,7 +904,7 @@ function GenerateContent() {
     const heroImageUrl = await fetchHeroImage(businessName);
 
     // Get brand settings for passing to sections
-    const brandSettings = strategicConsultation?.brandSettings || navigationState?.strategicData?.brandSettings;
+    const brandSettings = strategicConsultation?.brandSettings || effectiveNavState?.strategicData?.brandSettings;
     const logoUrl = brandSettings?.logoUrl || strategicConsultation?.websiteIntelligence?.logoUrl || null;
     const primaryColor = brandSettings?.primaryColor || designSystem?.colors?.primary || null;
     
@@ -940,7 +954,7 @@ function GenerateContent() {
     console.log('🏗️ [mapLegacyStrategyContent] pageType:', pageType, '| isBetaPage:', isBetaPage);
     
     // Get brand settings for passing to sections
-    const brandSettings = strategicConsultation?.brandSettings || navigationState?.strategicData?.brandSettings;
+    const brandSettings = strategicConsultation?.brandSettings || effectiveNavState?.strategicData?.brandSettings;
     const logoUrl = brandSettings?.logoUrl || strategicConsultation?.websiteIntelligence?.logoUrl || null;
     const primaryColor = brandSettings?.primaryColor || designSystem?.colors?.primary || null;
 
@@ -1197,7 +1211,7 @@ function GenerateContent() {
     
     // CRITICAL: Get pageType for beta section mapping
     const pageType = consultationData.pageType || 
-                     navigationState?.strategicData?.consultationData?.pageType ||
+                     effectiveNavState?.strategicData?.consultationData?.pageType ||
                      null;
     const isBetaPage = pageType === 'beta-prelaunch';
     console.log('🔧 [mapOldGeneratedContent] pageType:', pageType, '| isBetaPage:', isBetaPage);
@@ -1409,7 +1423,7 @@ function GenerateContent() {
   const generateFallbackSections = async (consultationData: any): Promise<Section[]> => {
     // CRITICAL: Get pageType for beta section mapping
     const pageType = consultationData.pageType || 
-                     navigationState?.strategicData?.consultationData?.pageType ||
+                     effectiveNavState?.strategicData?.consultationData?.pageType ||
                      null;
     const isBetaPage = pageType === 'beta-prelaunch';
     console.log('🚀 [generateFallbackSections] pageType:', pageType, '| isBetaPage:', isBetaPage);
@@ -1547,7 +1561,7 @@ function GenerateContent() {
   const handleRegenerate = async () => {
     setIsRegenerating(true);
     try {
-      const consultationData = navigationState?.consultationData || consultation;
+      const consultationData = effectiveNavState?.consultationData || consultation;
       
       const result = await generateIntelligentContent(
         {
@@ -1591,7 +1605,7 @@ function GenerateContent() {
     setIsRegenerating(true);
     
     try {
-      const consultationData = navigationState?.consultationData || consultation;
+      const consultationData = effectiveNavState?.consultationData || consultation;
       
       // Build intelligence context for the API
       const intelligenceContext = intelligence ? {
