@@ -243,7 +243,7 @@ export function BriefPanel({ wizardData, brandBrief, brandLoading, onFieldChange
             <div className="text-sm text-muted-foreground">No brand configured</div>
           )}
           <Link 
-            to="/brand-setup" 
+            to="/settings/brand" 
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             Edit
