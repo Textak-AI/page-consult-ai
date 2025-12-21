@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { getTypography } from "@/lib/typographyScale";
 
 interface Step {
   number: number;
@@ -11,12 +12,17 @@ interface HowItWorksSectionProps {
     title?: string;
     subtitle?: string;
     steps: Step[];
+    industryVariant?: string;
   };
   onUpdate?: (content: any) => void;
 }
 
 export function HowItWorksSection({ content }: HowItWorksSectionProps) {
   const { title = "How It Works", subtitle = "Your path to results", steps } = content;
+  const isConsulting = content.industryVariant === 'consulting';
+  const typography = getTypography(content.industryVariant);
+  
+  console.log('🎨 [HowItWorksSection] industryVariant:', content.industryVariant, 'isConsulting:', isConsulting);
 
   // Don't render if no steps
   if (!steps || steps.length === 0) {
