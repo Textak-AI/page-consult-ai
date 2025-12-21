@@ -32,6 +32,7 @@ import { CreditDisplay, UpgradeDrawer } from "@/components/credits";
 import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid, generateSEOHeadData, type SEOHeadData } from "@/lib/aiSeoIntegration";
 import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief } from "@/utils/sectionMapper";
 import { generateDesignSystem, designSystemToCSSVariables } from "@/config/designSystem";
+import { detectIndustryVariant } from "@/config/designSystem/industryVariants";
 import type { DesignSystem } from "@/config/designSystem";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { applyBrandColors } from "@/lib/colorUtils";
@@ -1318,6 +1319,14 @@ function GenerateContent() {
     const isBetaPage = pageType === 'beta-prelaunch';
     console.log('🔧 [mapOldGeneratedContent] pageType:', pageType, '| isBetaPage:', isBetaPage);
     
+    // CRITICAL: Detect industry variant for styling
+    const industryVariant = detectIndustryVariant(
+      consultationData.industry, 
+      consultationData.serviceType || consultationData.service_type, 
+      pageType
+    );
+    console.log('🎨 [mapOldGeneratedContent] industryVariant:', industryVariant);
+    
     // DEBUG: Log all new wizard fields
     console.log('🔧 [mapOldGeneratedContent] New fields check:', {
       identitySentence: consultationData.identitySentence,
@@ -1621,10 +1630,14 @@ function GenerateContent() {
       }
     }
 
-    // REORDER all sections after insertions
+    // REORDER all sections after insertions AND inject industryVariant into ALL sections
     mappedSections = mappedSections.map((section, index) => ({
       ...section,
       order: index,
+      content: {
+        ...section.content,
+        industryVariant: industryVariant, // CRITICAL: Inject into every section
+      },
     }));
 
     return mappedSections;
