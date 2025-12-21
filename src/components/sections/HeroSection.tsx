@@ -21,6 +21,8 @@ interface CitedStat {
   fullCitation: string;
 }
 
+import type { IndustryVariant } from '@/config/designSystem/industryVariants';
+
 interface HeroSectionProps {
   content: {
     headline: string;
@@ -48,6 +50,7 @@ interface HeroSectionProps {
       type: string;
       text: string;
     } | null;
+    industryVariant?: IndustryVariant;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -55,6 +58,7 @@ interface HeroSectionProps {
 
 export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) {
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
+  const isConsulting = content.industryVariant === 'consulting';
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
@@ -77,41 +81,51 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   const credibilityItems = content.credibilityBar || [];
   const trustBadges = content.trustBadges || [];
 
+  // Consulting: Light mode, warm backgrounds
+  // Default: Dark SaaS style
+  const sectionStyles = isConsulting
+    ? { backgroundColor: '#fafaf9' } // stone-50
+    : { backgroundColor: 'hsl(217, 33%, 6%)' };
+
+  const textStyles = isConsulting
+    ? { primary: '#1c1917', secondary: '#57534e', accent: '#0d9488' } // stone-900, stone-600, teal-600
+    : { primary: 'white', secondary: 'hsl(215, 20%, 65%)', accent: '#22d3ee' };
+
   return (
     <section 
       className={`min-h-screen flex items-center relative overflow-hidden ${isEditing ? "" : ""}`}
-      style={{
-        backgroundColor: 'hsl(217, 33%, 6%)',
-      }}
+      style={sectionStyles}
     >
-      {/* Premium Background Layer */}
-      <div className="absolute inset-0 z-0">
-        {/* Gradient Mesh Background */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(at 40% 20%, hsla(189, 95%, 43%, 0.15) 0px, transparent 50%),
-              radial-gradient(at 80% 0%, hsla(270, 95%, 60%, 0.12) 0px, transparent 50%),
-              radial-gradient(at 0% 50%, hsla(189, 95%, 43%, 0.08) 0px, transparent 50%),
-              radial-gradient(at 100% 100%, hsla(270, 95%, 60%, 0.08) 0px, transparent 50%)
-            `,
-          }}
-        />
-        
-        {/* Subtle Grid Pattern */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-40" />
-        
-        {/* Floating Orbs */}
-        <div 
-          className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px] animate-float-slow"
-          style={{ backgroundColor: 'hsla(189, 95%, 43%, 0.08)' }}
-        />
-        <div 
-          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] animate-float-delayed"
-          style={{ backgroundColor: 'hsla(270, 95%, 60%, 0.06)' }}
-        />
-      </div>
+      {/* Premium Background Layer - only for non-consulting */}
+      {!isConsulting && (
+        <div className="absolute inset-0 z-0">
+          {/* Gradient Mesh Background */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: `
+                radial-gradient(at 40% 20%, hsla(189, 95%, 43%, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, hsla(270, 95%, 60%, 0.12) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, hsla(189, 95%, 43%, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(270, 95%, 60%, 0.08) 0px, transparent 50%)
+              `,
+            }}
+          />
+          
+          {/* Subtle Grid Pattern */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-40" />
+          
+          {/* Floating Orbs */}
+          <div 
+            className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px] animate-float-slow"
+            style={{ backgroundColor: 'hsla(189, 95%, 43%, 0.08)' }}
+          />
+          <div 
+            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] animate-float-delayed"
+            style={{ backgroundColor: 'hsla(270, 95%, 60%, 0.06)' }}
+          />
+        </div>
+      )}
 
       {/* Background Image Layer (if provided) */}
       {content.backgroundImage && (
@@ -174,10 +188,14 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 backdrop-blur-sm"
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
+                isConsulting 
+                  ? 'bg-teal-50 border border-teal-200' 
+                  : 'bg-cyan-500/10 border border-cyan-500/20 backdrop-blur-sm'
+              }`}
             >
-              <Sparkles className="w-4 h-4 text-cyan-400" strokeWidth={1.5} />
-              <span className="text-sm font-medium text-cyan-400 tracking-wide">
+              <Sparkles className={`w-4 h-4 ${isConsulting ? 'text-teal-600' : 'text-cyan-400'}`} strokeWidth={1.5} />
+              <span className={`text-sm font-medium tracking-wide ${isConsulting ? 'text-teal-700' : 'text-cyan-400'}`}>
                 {content.fomo.badge}
               </span>
             </motion.div>
@@ -189,15 +207,19 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.15 }}
-              className="inline-block bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+              className={`inline-block rounded-2xl p-6 ${
+                isConsulting
+                  ? 'bg-white border border-stone-200 shadow-sm'
+                  : 'bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+              }`}
             >
-              <div className="text-4xl md:text-5xl font-bold mb-2 text-gradient-premium">
+              <div className={`text-4xl md:text-5xl font-bold mb-2 ${isConsulting ? 'text-teal-600' : 'text-gradient-premium'}`}>
                 {content.citedStat.statistic}
               </div>
-              <div className="text-base text-slate-300 mb-3">
+              <div className={`text-base mb-3 ${isConsulting ? 'text-stone-600' : 'text-slate-300'}`}>
                 {content.citedStat.claim}
               </div>
-              <cite className="text-xs text-slate-500 not-italic">
+              <cite className={`text-xs not-italic ${isConsulting ? 'text-stone-400' : 'text-slate-500'}`}>
                 Source: {content.citedStat.fullCitation}
               </cite>
             </motion.div>
@@ -215,8 +237,9 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("headline", e)}
             style={{ 
-              color: 'white',
-              textShadow: '0 4px 40px hsla(0, 0%, 0%, 0.5)',
+              color: textStyles.primary,
+              fontFamily: isConsulting ? '"Source Serif 4", Georgia, serif' : undefined,
+              textShadow: isConsulting ? 'none' : '0 4px 40px hsla(0, 0%, 0%, 0.5)',
             }}
           >
             {content.headline}
@@ -233,7 +256,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("subheadline", e)}
-            style={{ color: 'hsl(215, 20%, 65%)' }}
+            style={{ color: textStyles.secondary }}
           >
             {content.subheadline}
           </motion.p>
@@ -249,12 +272,14 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             <div className="relative group">
               <Button 
                 size="lg" 
-                className={`relative overflow-hidden text-lg px-10 py-7 h-auto font-semibold transition-all duration-300 hover:scale-[1.02] bg-brand-gradient shadow-brand-glow hover:shadow-brand-glow-lg ${
-                  isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""
-                }`}
+                className={`relative overflow-hidden text-lg px-10 py-7 h-auto font-semibold transition-all duration-300 hover:scale-[1.02] ${
+                  isConsulting
+                    ? 'bg-teal-600 hover:bg-teal-700 shadow-md hover:shadow-lg'
+                    : 'bg-brand-gradient shadow-brand-glow hover:shadow-brand-glow-lg'
+                } ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`}
                 style={{
                   color: 'white',
-                  borderRadius: '12px',
+                  borderRadius: isConsulting ? '8px' : '12px',
                 }}
               >
                 <span
@@ -267,8 +292,10 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 </span>
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" strokeWidth={2} />
                 
-                {/* Shimmer Effect */}
-                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
+                {/* Shimmer Effect - only for non-consulting */}
+                {!isConsulting && (
+                  <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
+                )}
               </Button>
             </div>
 
@@ -277,7 +304,11 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               <Button
                 variant="ghost"
                 size="lg"
-                className="text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all text-lg px-8 py-7 h-auto"
+                className={`transition-all text-lg px-8 py-7 h-auto ${
+                  isConsulting
+                    ? 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                }`}
               >
                 {content.secondaryCTA.text}
               </Button>
@@ -285,7 +316,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             
             {/* Urgency text */}
             {content.fomo?.urgency && (
-              <p className="text-sm font-medium text-brand sm:ml-4">
+              <p className={`text-sm font-medium sm:ml-4 ${isConsulting ? 'text-teal-600' : 'text-brand'}`}>
                 ⚡ {content.fomo.urgency}
               </p>
             )}
@@ -302,9 +333,9 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               {credibilityItems.map((item, i) => (
                 <div 
                   key={i} 
-                  className="flex items-center gap-2 text-sm text-slate-400"
+                  className={`flex items-center gap-2 text-sm ${isConsulting ? 'text-stone-500' : 'text-slate-400'}`}
                 >
-                  <CheckCircle className="w-4 h-4 text-cyan-400" strokeWidth={1.5} />
+                  <CheckCircle className={`w-4 h-4 ${isConsulting ? 'text-teal-500' : 'text-cyan-400'}`} strokeWidth={1.5} />
                   <span>{item.text}</span>
                 </div>
               ))}
@@ -312,8 +343,8 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 const icons = [Shield, Clock, Award];
                 const Icon = icons[i % icons.length];
                 return (
-                  <div key={i} className="flex items-center gap-2 text-sm text-slate-400">
-                    <Icon className="w-4 h-4 text-cyan-400" strokeWidth={1.5} />
+                  <div key={i} className={`flex items-center gap-2 text-sm ${isConsulting ? 'text-stone-500' : 'text-slate-400'}`}>
+                    <Icon className={`w-4 h-4 ${isConsulting ? 'text-teal-500' : 'text-cyan-400'}`} strokeWidth={1.5} />
                     <span>{badge}</span>
                   </div>
                 );

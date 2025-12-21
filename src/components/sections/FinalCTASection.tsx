@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle, Sparkles } from "lucide-react";
 
+import type { IndustryVariant } from '@/config/designSystem/industryVariants';
+
 interface FinalCTASectionProps {
   content: {
     headline: string;
@@ -11,12 +13,15 @@ interface FinalCTASectionProps {
     trustText?: string;
     trustIndicators?: Array<{ text: string }>;
     primaryColor?: string;
+    industryVariant?: IndustryVariant;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
 }
 
 export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectionProps) {
+  const isConsulting = content.industryVariant === 'consulting';
+  
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
       ...content,
@@ -26,22 +31,32 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
 
   const trustIndicators = content.trustIndicators || [];
 
+  // Consulting: Dark contrast section for emphasis (inverted from light page)
+  // Default SaaS: Dark with glows
+  const sectionStyles = isConsulting
+    ? { backgroundColor: '#1c1917', padding: '96px 24px' }
+    : { backgroundColor: 'hsl(217, 33%, 6%)', padding: '120px 24px' };
+
   return (
     <section 
       className="relative overflow-hidden"
-      style={{ backgroundColor: 'hsl(217, 33%, 6%)', padding: '120px 24px' }}
+      style={sectionStyles}
     >
       {/* Dramatic Background */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-grid-pattern opacity-30" />
-        <div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[150px]"
-          style={{ background: 'radial-gradient(circle, hsla(189, 95%, 43%, 0.15) 0%, transparent 70%)' }}
-        />
-        <div 
-          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px]"
-          style={{ backgroundColor: 'hsla(270, 95%, 60%, 0.08)' }}
-        />
+        {!isConsulting && (
+          <>
+            <div className="absolute inset-0 bg-grid-pattern opacity-30" />
+            <div 
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[150px]"
+              style={{ background: 'radial-gradient(circle, hsla(189, 95%, 43%, 0.15) 0%, transparent 70%)' }}
+            />
+            <div 
+              className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px]"
+              style={{ backgroundColor: 'hsla(270, 95%, 60%, 0.08)' }}
+            />
+          </>
+        )}
       </div>
       
       {isEditing && (
@@ -54,9 +69,13 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight max-w-3xl ${
+          className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight max-w-3xl ${
             isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
           }`}
+          style={{
+            color: isConsulting ? '#fafaf9' : 'white',
+            fontFamily: isConsulting ? '"Source Serif 4", Georgia, serif' : undefined,
+          }}
           contentEditable={isEditing}
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("headline", e)}
@@ -70,7 +89,9 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-lg md:text-xl text-slate-400 max-w-2xl leading-relaxed"
+            className={`text-lg md:text-xl max-w-2xl leading-relaxed ${
+              isConsulting ? 'text-stone-400' : 'text-slate-400'
+            }`}
           >
             {content.subtext}
           </motion.p>
@@ -87,13 +108,17 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
           <div className="relative group">
             <Button 
               size="lg" 
-              className={`relative overflow-hidden text-lg md:text-xl px-12 md:px-16 py-7 md:py-8 h-auto font-semibold transition-all duration-300 hover:scale-[1.02] animate-pulse-glow ${
-                isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""
-              }`}
+              className={`relative overflow-hidden text-lg md:text-xl px-12 md:px-16 py-7 md:py-8 h-auto font-semibold transition-all duration-300 hover:scale-[1.02] ${
+                isConsulting
+                  ? 'bg-teal-500 hover:bg-teal-400 shadow-lg'
+                  : 'animate-pulse-glow'
+              } ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`}
               style={{
-                background: 'linear-gradient(135deg, hsl(189, 95%, 43%), hsl(200, 95%, 50%))',
+                background: isConsulting 
+                  ? undefined 
+                  : 'linear-gradient(135deg, hsl(189, 95%, 43%), hsl(200, 95%, 50%))',
                 color: 'white',
-                borderRadius: '16px',
+                borderRadius: isConsulting ? '8px' : '16px',
               }}
             >
               <span
@@ -106,14 +131,18 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               </span>
               <ArrowRight className="ml-3 w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-1 transition-transform relative z-10" strokeWidth={2} />
               
-              {/* Animated Gradient */}
-              <div 
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                style={{ background: 'linear-gradient(135deg, hsl(200, 95%, 50%), hsl(270, 95%, 60%))' }}
-              />
+              {/* Animated Gradient - only for non-consulting */}
+              {!isConsulting && (
+                <div 
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style={{ background: 'linear-gradient(135deg, hsl(200, 95%, 50%), hsl(270, 95%, 60%))' }}
+                />
+              )}
               
-              {/* Shimmer */}
-              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
+              {/* Shimmer - only for non-consulting */}
+              {!isConsulting && (
+                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
+              )}
             </Button>
           </div>
         </motion.div>
@@ -128,8 +157,10 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             className="flex flex-wrap justify-center gap-6 pt-4"
           >
             {trustIndicators.map((item, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm text-slate-400">
-                <CheckCircle className="w-4 h-4 text-brand" strokeWidth={1.5} />
+              <div key={i} className={`flex items-center gap-2 text-sm ${
+                isConsulting ? 'text-stone-400' : 'text-slate-400'
+              }`}>
+                <CheckCircle className={`w-4 h-4 ${isConsulting ? 'text-teal-400' : 'text-brand'}`} strokeWidth={1.5} />
                 <span>{item.text}</span>
               </div>
             ))}
@@ -140,9 +171,9 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="text-sm text-slate-500"
+            className={`text-sm ${isConsulting ? 'text-stone-500' : 'text-slate-500'}`}
           >
-            {content.trustText || 'No credit card required · Free to start'}
+            {content.trustText || (isConsulting ? 'Free 30-minute consultation · No obligation' : 'No credit card required · Free to start')}
           </motion.p>
         )}
       </div>
