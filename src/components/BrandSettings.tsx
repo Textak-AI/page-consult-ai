@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, Check, Loader2, Palette, Type, MessageSquare, FileText, ImageIcon, X } from 'lucide-react';
+import { Upload, Check, Loader2, Palette, Type, MessageSquare, FileText, ImageIcon, X, Sparkles, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 import type { BrandBrief } from '@/hooks/useBrandBrief';
 
 export const BrandSettings: React.FC = () => {
@@ -12,6 +13,8 @@ export const BrandSettings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isRemovingBackground, setIsRemovingBackground] = useState(false);
+  const [planTier, setPlanTier] = useState<string>('starter');
   const logoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -28,19 +31,30 @@ export const BrandSettings: React.FC = () => {
         return;
       }
 
-      const { data, error } = await supabase
-        .from('brand_briefs')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .maybeSingle();
+      // Load brand brief and user plan tier in parallel
+      const [brandResult, usageResult] = await Promise.all([
+        supabase
+          .from('brand_briefs')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .maybeSingle(),
+        supabase
+          .from('user_usage')
+          .select('plan_tier')
+          .eq('user_id', user.id)
+          .maybeSingle()
+      ]);
 
-      if (error) {
-        console.error('[BrandSettings] Error loading:', error);
+      if (brandResult.error) {
+        console.error('[BrandSettings] Error loading brand brief:', brandResult.error);
+      }
+      if (brandResult.data) {
+        setBrandBrief(brandResult.data as unknown as BrandBrief);
       }
 
-      if (data) {
-        setBrandBrief(data as unknown as BrandBrief);
+      if (usageResult.data?.plan_tier) {
+        setPlanTier(usageResult.data.plan_tier);
       }
     } catch (err) {
       console.error('[BrandSettings] Error:', err);
@@ -232,6 +246,63 @@ export const BrandSettings: React.FC = () => {
     }
   };
 
+  const handleRemoveBackground = async () => {
+    if (!brandBrief?.logo_url) return;
+
+    setIsRemovingBackground(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Fetch the image and convert to base64
+      const response = await fetch(brandBrief.logo_url);
+      const blob = await response.blob();
+      
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      const imageBase64 = await base64Promise;
+
+      // Call existing edge function
+      const { data, error } = await supabase.functions.invoke('remove-logo-background', {
+        body: { imageBase64 }
+      });
+
+      if (error) throw error;
+
+      if (data?.imageUrl) {
+        // Update state with transparent logo
+        setBrandBrief(prev => prev ? { ...prev, logo_url: data.imageUrl } : null);
+
+        // Save to database
+        await supabase
+          .from('brand_briefs')
+          .update({ 
+            logo_url: data.imageUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', brandBrief.id);
+
+        toast({ title: 'Background removed successfully' });
+      }
+    } catch (error: any) {
+      console.error('[BrandSettings] Background removal failed:', error);
+      toast({ 
+        title: 'Failed to remove background', 
+        description: error.message || 'Please try again',
+        variant: 'destructive' 
+      });
+    } finally {
+      setIsRemovingBackground(false);
+    }
+  };
+
+  const isPaidUser = planTier === 'pro' || planTier === 'agency';
+
   const updateBrandBrief = async (updates: Partial<BrandBrief>) => {
     if (!brandBrief) return;
 
@@ -335,23 +406,57 @@ export const BrandSettings: React.FC = () => {
                       }}
                     />
                   </div>
-                  <div className="flex justify-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => logoInputRef.current?.click()}
-                    >
-                      Change Logo
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={handleLogoRemove}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <X className="w-4 h-4 mr-1" />
-                      Remove
-                    </Button>
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex justify-center gap-2">
+                      {isPaidUser ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRemoveBackground}
+                          disabled={isRemovingBackground}
+                        >
+                          {isRemovingBackground ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Removing...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4 mr-2" />
+                              Remove Background
+                            </>
+                          )}
+                        </Button>
+                      ) : (
+                        <Button variant="outline" size="sm" disabled className="opacity-60">
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Remove Background
+                          <Lock className="h-3 w-3 ml-2" />
+                        </Button>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => logoInputRef.current?.click()}
+                      >
+                        Change Logo
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleLogoRemove}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Remove
+                      </Button>
+                    </div>
+                    {!isPaidUser && (
+                      <p className="text-xs text-muted-foreground">
+                        <Link to="/pricing" className="text-primary hover:underline">Upgrade to Pro</Link>
+                        {' '}to remove logo backgrounds
+                      </p>
+                    )}
                   </div>
                 </div>
               ) : (
