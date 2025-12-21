@@ -67,6 +67,13 @@ const Header = () => {
               Demo
               <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full" />
             </a>
+            <Link
+              to="/brand-setup"
+              className="text-gray-300 hover:text-white transition-all duration-300 relative group"
+            >
+              Brand Setup
+              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full" />
+            </Link>
           </nav>
 
           {/* Right side - fixed width for balance */}
