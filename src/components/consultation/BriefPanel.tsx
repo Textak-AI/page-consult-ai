@@ -243,7 +243,7 @@ export function BriefPanel({ wizardData, brandBrief, brandLoading, onFieldChange
             <div className="text-sm text-muted-foreground">No brand configured</div>
           )}
           <Link 
-            to="/settings/brand" 
+            to="/brand-setup" 
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             Edit
@@ -254,11 +254,28 @@ export function BriefPanel({ wizardData, brandBrief, brandLoading, onFieldChange
           <>
             {/* Logo */}
             {brandBrief.logo_url && (
-              <img 
-                src={brandBrief.logo_url} 
-                alt="Logo" 
-                className="h-8 object-contain mb-3"
-              />
+              <div className="mb-3">
+                <img 
+                  src={brandBrief.logo_url} 
+                  alt="Logo" 
+                  className="h-8 object-contain"
+                />
+              </div>
+            )}
+            
+            {/* Website URL */}
+            {brandBrief.website_url && (
+              <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1.5">
+                <span className="text-foreground/70">🌐</span>
+                <a 
+                  href={brandBrief.website_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors truncate"
+                >
+                  {brandBrief.website_url.replace(/^https?:\/\//, '')}
+                </a>
+              </p>
             )}
             
             {/* Colors */}

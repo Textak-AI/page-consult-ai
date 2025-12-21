@@ -6,6 +6,7 @@ export interface BrandBrief {
   name: string;
   logo_url?: string;
   logo_storage_path?: string;
+  website_url?: string;
   colors: {
     primary?: { hex: string; name?: string };
     secondary?: { hex: string; name?: string };
