@@ -384,6 +384,47 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
     addLog('info', `Changed page type to: ${type}`);
   };
 
+  // Reset brand brief for testing
+  const handleResetBrand = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: 'Not logged in',
+          description: 'You need to be logged in to reset brand',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('brand_briefs')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) {
+        toast({
+          title: 'Error resetting brand',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast({
+        title: 'Brand reset',
+        description: 'Refresh to test setup flow',
+      });
+      addLog('success', 'Brand brief deleted — refresh to test setup flow');
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to reset brand',
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Clear all data
   const handleClear = () => {
     const empty = PRESETS['minimal'];
@@ -802,6 +843,14 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
                   >
                     <Copy className="w-4 h-4 mr-2" />
                     Copy State
+                  </Button>
+                  <Button
+                    onClick={handleResetBrand}
+                    variant="outline"
+                    className="border-red-600/50 hover:bg-red-900/30 text-red-400"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Reset Brand
                   </Button>
                 </div>
 
