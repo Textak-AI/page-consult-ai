@@ -420,17 +420,28 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
         fromStrategicConsultation: true,
       };
 
+      // Always store in sessionStorage as backup
+      sessionStorage.setItem('devPanelState', JSON.stringify(navigationState));
+      
       // Check if already on /generate page
       const currentPath = window.location.pathname;
       
       if (currentPath === '/generate' || currentPath.includes('/generate')) {
-        addLog('info', 'Already on generate page - forcing reload with new data');
+        addLog('info', 'Already on generate page - navigating away then back to force remount');
         
-        // Store state in sessionStorage for reload
-        sessionStorage.setItem('devPanelState', JSON.stringify(navigationState));
+        // Close the panel first
+        onClose();
         
-        // Force page reload to trigger fresh generation
-        window.location.reload();
+        // Navigate away then back to force component remount
+        navigate('/', { replace: true });
+        
+        // Small delay then navigate to generate with state
+        setTimeout(() => {
+          navigate('/generate', { 
+            state: navigationState,
+            replace: true 
+          });
+        }, 100);
       } else {
         // Navigate to generate page with dev mode enabled
         navigate('/generate', { state: navigationState });
