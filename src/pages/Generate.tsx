@@ -1116,40 +1116,51 @@ function GenerateContent() {
     
     console.log('🏗️ Legacy mapping with structure:', pageStructure);
 
-    // Build statistics from proof points (NO fabrication)
+    // Build statistics from proof points (NO fabrication) - check multiple possible field locations
     const buildStatistics = () => {
       const stats: Array<{ value: string; label: string }> = [];
       
-      if (content.proofPoints?.clientCount) {
-        const countMatch = content.proofPoints.clientCount.match(/(\d+[\d,]*)/);
+      // Check proofPoints object first
+      const proofPoints = content.proofPoints || {};
+      
+      // Also check top-level fields as fallback
+      const clientCount = proofPoints.clientCount || content.clientCount;
+      const yearsInBusiness = proofPoints.yearsInBusiness || content.yearsInBusiness;
+      const otherStats = proofPoints.otherStats || content.otherStats || [];
+      
+      console.log('🔍 [buildStatistics] Data check:', { clientCount, yearsInBusiness, otherStats });
+      
+      if (clientCount) {
+        const countMatch = String(clientCount).match(/(\d+[\d,]*)/);
         if (countMatch) {
-          // Only add "+" if the original string doesn't already contain one
-          const hasPlus = content.proofPoints.clientCount.includes('+');
+          const hasPlus = String(clientCount).includes('+');
           stats.push({ value: countMatch[1] + (hasPlus ? '+' : ''), label: "Clients Served" });
         }
       }
-      if (content.proofPoints?.yearsInBusiness) {
-        const yearsMatch = content.proofPoints.yearsInBusiness.match(/(\d+)/);
+      if (yearsInBusiness) {
+        const yearsMatch = String(yearsInBusiness).match(/(\d+)/);
         if (yearsMatch) {
-          // Only add "+" if the original string doesn't already contain one
-          const hasPlus = content.proofPoints.yearsInBusiness.includes('+');
+          const hasPlus = String(yearsInBusiness).includes('+');
           stats.push({ value: yearsMatch[1] + (hasPlus ? '+' : ''), label: "Years Experience" });
         }
       }
-      if (content.proofPoints?.otherStats && Array.isArray(content.proofPoints.otherStats)) {
-        content.proofPoints.otherStats.forEach((stat: string) => {
-          const match = stat.match(/^([\d,.$%]+(?:[KMB+])?)\s+(.*)$/i);
+      if (Array.isArray(otherStats)) {
+        otherStats.forEach((stat: string) => {
+          const match = String(stat).match(/^([\d,.$%]+(?:[KMB+])?)\s+(.*)$/i);
           if (match) {
             stats.push({ value: match[1], label: match[2] });
           }
         });
       }
       
+      console.log('🔍 [buildStatistics] Built stats:', stats.length);
       return stats.slice(0, 4);
     };
 
     // Iterate through pageStructure and build sections in order
     for (const sectionType of pageStructure) {
+      console.log('🔍 [mapLegacyStrategyContent] Processing section:', sectionType);
+      
       switch (sectionType) {
         case 'hero':
           sections.push({
@@ -1181,15 +1192,19 @@ function GenerateContent() {
           break;
 
         case 'stats-bar':
+        case 'stats_bar':
           const statistics = buildStatistics();
-          // Only render if we have at least 2 real stats
-          if (statistics.length >= 2) {
+          console.log('🔍 [mapLegacyStrategyContent] stats-bar: found', statistics.length, 'stats');
+          // Render if we have at least 1 stat (lowered threshold)
+          if (statistics.length >= 1) {
             sections.push({
               type: "stats-bar",
               order: order++,
               visible: true,
               content: { statistics, industryVariant },
             });
+          } else {
+            console.log('⚠️ [mapLegacyStrategyContent] stats-bar skipped: no stats found');
           }
           break;
 
@@ -1243,7 +1258,10 @@ function GenerateContent() {
           break;
 
         case 'how-it-works':
-          if (content.processSteps && content.processSteps.length > 0) {
+        case 'process':
+          const processSteps = content.processSteps || content.steps || [];
+          console.log('🔍 [mapLegacyStrategyContent] how-it-works: found', processSteps.length, 'steps');
+          if (processSteps.length > 0) {
             sections.push({
               type: "how-it-works",
               order: order++,
@@ -1251,38 +1269,43 @@ function GenerateContent() {
               content: {
                 title: 'How It Works',
                 subtitle: 'Your path to results',
-                steps: content.processSteps,
+                steps: processSteps,
                 industryVariant,
               },
             });
+          } else {
+            console.log('⚠️ [mapLegacyStrategyContent] how-it-works skipped: no steps found');
           }
           break;
 
         case 'social-proof':
+        case 'testimonials':
           const testimonials = content.testimonials || [];
+          console.log('🔍 [mapLegacyStrategyContent] social-proof: found', testimonials.length, 'testimonials');
           const firstTestimonial = testimonials[0];
           const hasRealTestimonial = firstTestimonial && 
             !firstTestimonial.author?.includes('[') &&
             !firstTestimonial.quote?.includes('[');
 
+          // Always add social-proof section, even without testimonials (can show stats)
           sections.push({
             type: "social-proof",
             order: order++,
             visible: true,
-              content: {
-                stats: [],
-                industry: businessName,
-                testimonial: hasRealTestimonial ? {
-                  quote: firstTestimonial.quote,
-                  name: firstTestimonial.author,
-                  title: firstTestimonial.title,
-                  company: "",
-                  rating: 5,
-                } : undefined,
-                industryVariant,
-              },
-            });
-            break;
+            content: {
+              stats: [],
+              industry: businessName,
+              testimonial: hasRealTestimonial ? {
+                quote: firstTestimonial.quote,
+                name: firstTestimonial.author,
+                title: firstTestimonial.title,
+                company: "",
+                rating: 5,
+              } : undefined,
+              industryVariant,
+            },
+          });
+          break;
           
         case 'founder':
           // Add founder section for beta pages
@@ -1318,21 +1341,25 @@ function GenerateContent() {
             break;
 
         case 'faq':
-          // Use objections as FAQ if available
-          if (content.faqItems && content.faqItems.length > 0) {
+          // Use faqItems or objections as FAQ
+          const faqData = content.faqItems || content.objections || [];
+          console.log('🔍 [mapLegacyStrategyContent] faq: found', faqData.length, 'items');
+          if (faqData.length > 0) {
             sections.push({
               type: "faq",
               order: order++,
               visible: true,
               content: {
                 title: "Frequently Asked Questions",
-                items: content.faqItems.map((faq: any) => ({
+                items: faqData.map((faq: any) => ({
                   question: faq.question,
                   answer: faq.answer,
                 })),
                 industryVariant,
               },
             });
+          } else {
+            console.log('⚠️ [mapLegacyStrategyContent] faq skipped: no items found');
           }
           break;
 
