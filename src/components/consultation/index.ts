@@ -3,6 +3,8 @@ export { StrategyBriefReview } from './StrategyBriefReview';
 export { ConsultationIntro, shouldShowIntro } from './ConsultationIntro';
 export { AISeoPanel } from './AISeoPanel';
 export { BrandCustomization } from './BrandCustomization';
+export { BriefPanel } from './BriefPanel';
+export { CollapsibleBriefPanel } from './CollapsibleBriefPanel';
 export type { ConsultationData } from './StrategicConsultation';
 export type { BrandSettings, WebsiteIntelligence } from './BrandCustomization';
 

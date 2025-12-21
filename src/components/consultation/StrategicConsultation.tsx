@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AIWorkingLoader } from '@/components/editor/AIWorkingLoader';
 import type { AISeoData } from '@/services/intelligence/types';
 import { BrandCustomization, type BrandSettings, type WebsiteIntelligence } from './BrandCustomization';
-import { BriefPanel } from './BriefPanel';
+import { CollapsibleBriefPanel } from './CollapsibleBriefPanel';
 import { useBrandBrief } from '@/hooks/useBrandBrief';
 import { 
   PageTypeStep, 
@@ -368,6 +368,16 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
   // Load brand brief for the panel
   const { brandBrief, isLoading: brandLoading } = useBrandBrief();
   
+  // Track if brand check is complete to prevent flash of branding step
+  const [isBrandCheckComplete, setIsBrandCheckComplete] = useState(false);
+  
+  // Mark brand check as complete once brandLoading is false
+  useEffect(() => {
+    if (!brandLoading) {
+      setIsBrandCheckComplete(true);
+    }
+  }, [brandLoading]);
+  
   // Track user ID for auto-save
   const [userId, setUserId] = useState<string | null>(null);
   
@@ -386,6 +396,18 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
   // Compute STEPS dynamically based on selected page type and brand status
   // Skip branding step if brand colors are already configured
   const STEPS = useMemo(() => getStepsForPageType(data.pageType, hasBrandColors), [data.pageType, hasBrandColors]);
+  
+  // Show loading until we know the brand status
+  if (!isBrandCheckComplete) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+          <p className="text-slate-400">Loading your brand...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Load draft from database on mount
   useEffect(() => {
@@ -1289,19 +1311,9 @@ ${d.ctaText}
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
-      {/* Mobile: Brand indicator */}
-      <div className="md:hidden fixed top-20 left-4 right-4 z-10">
-        {brandBrief && (
-          <div className="bg-card/90 backdrop-blur border border-border rounded-lg px-3 py-2 flex items-center gap-2 text-emerald-400 text-sm">
-            <Check className="w-4 h-4" />
-            Brand loaded: {brandBrief.name}
-          </div>
-        )}
-      </div>
-
-      {/* Left: Wizard Questions */}
-      <div className="flex-1 p-4 md:p-8 overflow-y-auto pt-16 md:pt-8">
+    <div className="min-h-[calc(100vh-4rem)]">
+      {/* Wizard Questions - always centered */}
+      <div className="max-w-4xl mx-auto p-4 md:p-8">
         <div className="max-w-2xl mx-auto">
       {/* Restore Prompt */}
       {showRestorePrompt && pendingRestore && (
@@ -1441,19 +1453,14 @@ ${d.ctaText}
         </div>
       </div>
 
-      {/* Right: Live Brief Panel (Desktop only) */}
-      <div className="hidden md:block w-[380px] bg-card/50 border-l border-border p-6 overflow-y-auto sticky top-0 h-screen">
-        <div className="sticky top-0">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Your Brief</h2>
-          <BriefPanel 
-            wizardData={data} 
-            brandBrief={brandBrief} 
-            brandLoading={brandLoading}
-            onFieldChange={handleBriefFieldChange}
-            userId={userId}
-          />
-        </div>
-      </div>
+      {/* Collapsible Brief Panel - fixed position overlay */}
+      <CollapsibleBriefPanel 
+        wizardData={data} 
+        brandBrief={brandBrief} 
+        brandLoading={brandLoading}
+        onFieldChange={handleBriefFieldChange}
+        userId={userId}
+      />
     </div>
   );
 }
