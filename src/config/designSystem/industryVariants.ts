@@ -172,6 +172,87 @@ export const consultingVariant: IndustryDesignTokens = {
 };
 
 /**
+ * SaaS Industry Variant
+ * 
+ * Design Intent: Modern, innovative, product-led.
+ * - Dark mode for tech-forward feel
+ * - Purple/blue gradients for innovation
+ * - Product-focused layouts
+ * - Self-serve CTAs
+ */
+export const saasVariant: IndustryDesignTokens = {
+  mode: 'dark',
+  
+  colors: {
+    bgPrimary: '222 47% 11%',              // #0F172A - slate-900
+    bgSecondary: '217 33% 17%',            // #1E293B - slate-800
+    bgCard: '217 33% 17%',                 // #1E293B - slate-800
+    bgDark: '222 47% 8%',                  // Darker slate
+    textPrimary: '210 40% 98%',            // #F8FAFC - slate-50
+    textSecondary: '215 20% 65%',          // #94A3B8 - slate-400
+    textOnDark: '210 40% 98%',             // #F8FAFC - slate-50
+    accent: '263 70% 50%',                 // #7C3AED - purple-600
+    accentHover: '263 70% 60%',            // lighter purple
+    border: '217 33% 25%',                 // slate-700
+    borderSubtle: '217 33% 20%',           // darker border
+  },
+  
+  typography: {
+    headingFont: 'Inter, system-ui, sans-serif',
+    bodyFont: 'Inter, system-ui, sans-serif',
+    headingWeight: 700,
+    letterSpacing: '-0.02em',
+    lineHeight: 1.5,
+  },
+  
+  shape: {
+    radiusCard: '1rem',
+    radiusButton: '0.75rem',
+    shadowCard: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
+    shadowButton: '0 0 20px hsla(263, 70%, 50%, 0.3)',
+    borderCard: '1px solid hsla(217, 33%, 25%, 1)',
+    blur: 'blur(12px)',
+    glow: '0 0 40px hsla(263, 70%, 50%, 0.3)',
+  },
+  
+  spacing: {
+    sectionPadding: '96px',
+    contentWidth: '1200px',
+    cardPadding: '2rem',
+    elementGap: '1.5rem',
+  },
+  
+  sectionHeaders: {
+    features: {
+      title: 'Everything you need',
+      subtitle: 'Built for teams who move fast',
+      eyebrow: 'FEATURES',
+    },
+    process: {
+      title: 'Get started in minutes',
+      subtitle: 'Three simple steps to success',
+    },
+    proof: {
+      title: 'Loved by teams everywhere',
+      subtitle: 'See what our customers are saying',
+    },
+    testimonials: {
+      title: 'What teams are saying',
+      subtitle: 'Join thousands of satisfied users',
+    },
+    cta: {
+      title: 'Ready to get started?',
+      ctaText: 'Start your free trial',
+      subtext: 'No credit card required • Cancel anytime',
+    },
+    faq: {
+      title: 'Frequently asked questions',
+      eyebrow: 'FAQ',
+    },
+  },
+};
+
+/**
  * Default SaaS Variant
  * Current dark mode styling - serves as the baseline
  */
@@ -252,7 +333,7 @@ export const defaultVariant: IndustryDesignTokens = {
  */
 export const industryVariants: Record<IndustryVariant, IndustryDesignTokens> = {
   consulting: consultingVariant,
-  saas: defaultVariant,
+  saas: saasVariant,
   healthcare: defaultVariant, // TODO: Implement healthcare variant
   finance: defaultVariant,    // TODO: Implement finance variant
   manufacturing: defaultVariant, // TODO: Implement manufacturing variant
@@ -290,7 +371,11 @@ export function detectIndustryVariant(
     industryLower.includes('saas') ||
     industryLower.includes('software') ||
     industryLower.includes('tech') ||
-    industryLower.includes('app')
+    industryLower.includes('app') ||
+    industryLower.includes('platform') ||
+    industryLower.includes('startup') ||
+    industryLower.includes('cloud') ||
+    industryLower.includes('digital')
   ) {
     return 'saas';
   }

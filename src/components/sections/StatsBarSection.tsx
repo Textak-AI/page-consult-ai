@@ -23,8 +23,9 @@ interface StatsBarSectionProps {
 export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditing }: StatsBarSectionProps) {
   const typography = getTypography(industryVariant);
   const isConsulting = industryVariant === 'consulting';
+  const isSaas = industryVariant === 'saas';
   
-  console.log('🎨 [StatsBarSection] Props received - industryVariant:', industryVariant, 'isConsulting:', isConsulting, 'isEditing:', isEditing);
+  console.log('🎨 [StatsBarSection] Props received - industryVariant:', industryVariant, 'isConsulting:', isConsulting, 'isSaas:', isSaas, 'isEditing:', isEditing);
   console.log('🎨 [StatsBarSection] statistics count:', statistics?.length);
 
   const handleStatBlur = (index: number, field: 'value' | 'label', e: React.FocusEvent<HTMLElement>) => {
@@ -64,6 +65,52 @@ export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditi
     if (cleanStats.length === 3) return "grid-cols-1 md:grid-cols-3";
     return "grid-cols-2 md:grid-cols-4";
   };
+
+  // SaaS variant
+  if (isSaas) {
+    return (
+      <section className={`py-12 bg-slate-800/50 border-y border-slate-700 ${isEditing ? 'relative' : ''}`}>
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-purple-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+        <div className="max-w-5xl mx-auto px-6">
+          <div className={`grid ${getGridClass()} gap-8`}>
+            {cleanStats.map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                className="text-center"
+              >
+                <div 
+                  className={`text-4xl md:text-5xl font-bold text-white mb-2 ${
+                    isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2 inline-block" : ""
+                  }`}
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleStatBlur(i, 'value', e)}
+                >
+                  {formatStatValue(stat.value)}
+                </div>
+                <div 
+                  className={`text-sm text-slate-400 ${
+                    isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-1" : ""
+                  }`}
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleStatBlur(i, 'label', e)}
+                >
+                  {stat.label}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (isConsulting) {
     // Consulting: Light slate background, prominent numbers

@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
+import { AlertTriangle, CheckCircle, ArrowRight, Sparkles, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { EyebrowBadge } from "@/components/ui/PremiumCard";
 import { getTypography } from "@/lib/typographyScale";
@@ -26,9 +26,10 @@ interface ProblemSolutionSectionProps {
 
 export function ProblemSolutionSection({ content, onUpdate, isEditing }: ProblemSolutionSectionProps) {
   const isConsulting = content.industryVariant === 'consulting';
+  const isSaas = content.industryVariant === 'saas';
   const typography = getTypography(content.industryVariant);
   
-  console.log('🎨 [ProblemSolutionSection] industryVariant:', content.industryVariant, 'isConsulting:', isConsulting);
+  console.log('🎨 [ProblemSolutionSection] industryVariant:', content.industryVariant, 'isConsulting:', isConsulting, 'isSaas:', isSaas);
   
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
@@ -36,6 +37,91 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
       [field]: e.currentTarget.textContent || content[field as keyof typeof content],
     });
   };
+
+  // SaaS variant
+  if (isSaas) {
+    return (
+      <section className={`py-24 bg-slate-900 ${isEditing ? 'relative' : ''}`}>
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-purple-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+        
+        <div className="max-w-6xl mx-auto px-6">
+          {/* Section Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
+            <span className="inline-block px-4 py-1 bg-purple-500/20 text-purple-400 text-sm font-semibold rounded-full mb-4">
+              THE PROBLEM
+            </span>
+            <h2
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("sectionTitle", e)}
+              className={`text-3xl md:text-4xl font-bold text-white ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
+            >
+              {content.sectionTitle || "Why teams struggle"}
+            </h2>
+          </motion.div>
+          
+          {/* Cards */}
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Problem Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="p-8 bg-slate-800 border border-slate-700 rounded-2xl"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <XCircle className="w-6 h-6 text-red-400" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-xl font-bold text-white">Without us</h3>
+              </div>
+              <p
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("problem", e)}
+                className={`text-slate-300 leading-relaxed ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
+              >
+                {content.problem}
+              </p>
+            </motion.div>
+            
+            {/* Solution Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="p-8 bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-2xl"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-purple-400" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-xl font-bold text-white">With us</h3>
+              </div>
+              <p
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("solution", e)}
+                className={`text-slate-300 leading-relaxed ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
+              >
+                {content.solution}
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (isConsulting) {
     // Consulting layout: Light mode with colored cards

@@ -91,9 +91,10 @@ function getSocialProofHeader(industry?: string, isConsulting?: boolean): { titl
 
 export function SocialProofSection({ content, onUpdate, isEditing }: SocialProofSectionProps) {
   const isConsulting = content.industryVariant === 'consulting';
+  const isSaas = content.industryVariant === 'saas';
   const header = getSocialProofHeader(content.industry, isConsulting);
   
-  console.log('🎨 [SocialProofSection] industryVariant:', content.industryVariant, 'isConsulting:', isConsulting, 'isEditing:', isEditing);
+  console.log('🎨 [SocialProofSection] industryVariant:', content.industryVariant, 'isConsulting:', isConsulting, 'isSaas:', isSaas, 'isEditing:', isEditing);
   
   const testimonial = content.testimonial || {
     quote: header.placeholderQuote,
@@ -144,6 +145,75 @@ export function SocialProofSection({ content, onUpdate, isEditing }: SocialProof
     };
     input.click();
   };
+  // SaaS variant
+  if (isSaas) {
+    return (
+      <section className={`py-24 ${isEditing ? 'relative' : ''}`} style={{ backgroundColor: '#0F172A' }}>
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-purple-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+        <div className="max-w-4xl mx-auto px-6">
+          {/* Section Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <span className="inline-block px-4 py-1 bg-purple-500/20 text-purple-400 text-sm font-semibold rounded-full mb-4">
+              CUSTOMERS
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">
+              Loved by teams everywhere
+            </h2>
+          </motion.div>
+
+          {/* Featured Testimonial */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="bg-slate-800 border border-slate-700 p-10 rounded-2xl"
+          >
+            {/* Stars */}
+            <div className="flex gap-1 mb-6 justify-center">
+              {[...Array(testimonial.rating || 5)].map((_, i) => (
+                <Star key={i} className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+              ))}
+            </div>
+            
+            {/* Quote */}
+            <blockquote
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("testimonial.quote", e)}
+              className={`text-xl md:text-2xl text-slate-200 leading-relaxed text-center mb-8 ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
+            >
+              "{testimonial.quote}"
+            </blockquote>
+            
+            {/* Attribution */}
+            <div className="flex items-center justify-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-slate-700 flex items-center justify-center overflow-hidden">
+                {testimonial.avatarUrl ? (
+                  <img src={testimonial.avatarUrl} alt={testimonial.name} className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-7 h-7 text-slate-500" />
+                )}
+              </div>
+              <div className="text-left">
+                <div className="font-bold text-white">{testimonial.name}</div>
+                <div className="text-slate-400">{testimonial.title}</div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+    );
+  }
+
   if (isConsulting) {
     // Consulting layout: Light slate background, featured testimonial
     return (

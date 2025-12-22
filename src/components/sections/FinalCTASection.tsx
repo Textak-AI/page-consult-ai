@@ -23,6 +23,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   const tokens = getIndustryTokens(industryVariant);
   const isLightMode = tokens.mode === 'light';
   const isConsulting = industryVariant === 'consulting';
+  const isSaas = industryVariant === 'saas';
   
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
@@ -32,6 +33,69 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   };
 
   const trustIndicators = content.trustIndicators || [];
+
+  // SaaS variant
+  if (isSaas) {
+    return (
+      <section className="py-32 bg-gradient-to-br from-purple-900 via-slate-900 to-blue-900 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-600/20 via-transparent to-transparent" />
+        
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-purple-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+        
+        <div className="relative max-w-3xl mx-auto px-6 text-center z-10">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            contentEditable={isEditing}
+            suppressContentEditableWarning
+            onBlur={(e) => handleBlur("headline", e)}
+            className={`text-3xl md:text-4xl font-bold text-white mb-6 ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
+          >
+            {content.headline || "Ready to get started?"}
+          </motion.h2>
+          
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-xl text-slate-300 mb-10"
+          >
+            {content.subtext || "Join thousands of teams already using us"}
+          </motion.p>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Button 
+              size="lg" 
+              className="px-12 py-6 text-lg font-semibold bg-white text-slate-900 hover:bg-slate-100 rounded-xl shadow-lg"
+            >
+              <span
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("ctaText", e)}
+              >
+                {content.ctaText || "Start your free trial"}
+              </span>
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+          </motion.div>
+          
+          <p className="mt-6 text-sm text-slate-400">
+            No credit card required • Cancel anytime
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   if (isConsulting) {
     // Consulting layout: Dark slate-900 background for contrast

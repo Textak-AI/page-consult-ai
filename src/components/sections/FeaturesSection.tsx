@@ -71,7 +71,8 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
   const tokens = getIndustryTokens(industryVariant);
   const isLightMode = tokens.mode === 'light';
   const isConsulting = industryVariant === 'consulting';
-  console.log('🎨 [FeaturesSection] tokens.mode:', tokens.mode, 'isLightMode:', isLightMode);
+  const isSaas = industryVariant === 'saas';
+  console.log('🎨 [FeaturesSection] tokens.mode:', tokens.mode, 'isLightMode:', isLightMode, 'isSaas:', isSaas);
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     if (!onUpdate) return;
@@ -101,6 +102,93 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
     if (features.length === 5) return "md:grid-cols-2 lg:grid-cols-3";
     return "md:grid-cols-2 lg:grid-cols-3";
   };
+
+  // SaaS variant
+  if (isSaas) {
+    return (
+      <section className={`py-24 bg-slate-800/30 ${isEditing ? 'relative' : ''}`} style={{ backgroundColor: '#0F172A' }}>
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-purple-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+        <div className="max-w-6xl mx-auto px-6">
+          {/* Section Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
+            <span className="inline-block px-4 py-1 bg-purple-500/20 text-purple-400 text-sm font-semibold rounded-full mb-4">
+              FEATURES
+            </span>
+            <h2 
+              className={`text-3xl md:text-4xl font-bold text-white mb-4 ${
+                isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2 inline-block" : ""
+              }`}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("title", e)}
+            >
+              {title}
+            </h2>
+            <p 
+              className={`text-lg text-slate-400 max-w-2xl mx-auto ${
+                isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""
+              }`}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("subtitle", e)}
+            >
+              {subtitle}
+            </p>
+          </motion.div>
+
+          {/* Features Grid */}
+          <div className={`grid gap-8 ${getGridClass()}`}>
+            {features.map((feature, i) => {
+              const Icon = getIconComponent(feature.icon);
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
+                >
+                  <div className="h-full p-8 bg-slate-800 border border-slate-700 rounded-2xl hover:border-purple-500/50 transition-colors">
+                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-6">
+                      <Icon className="w-7 h-7 text-purple-400" strokeWidth={1.5} />
+                    </div>
+                    <h3 
+                      className={`text-xl font-bold text-white mb-3 ${
+                        isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-1" : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleFeatureBlur(i, "title", e)}
+                    >
+                      {feature.title}
+                    </h3>
+                    <p 
+                      className={`text-slate-400 leading-relaxed ${
+                        isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-1" : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleFeatureBlur(i, "description", e)}
+                    >
+                      {feature.description}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (isConsulting) {
     // Consulting layout: Light slate background, white cards
