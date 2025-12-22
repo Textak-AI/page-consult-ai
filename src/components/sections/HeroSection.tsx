@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
+import { LogoUploader } from "@/components/editor/LogoUploader";
 import { useState } from "react";
-import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
+import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
 
@@ -49,6 +50,7 @@ interface HeroSectionProps {
 
 export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) {
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
+  const [logoUploaderOpen, setLogoUploaderOpen] = useState(false);
   
   // Get industry tokens
   const industryVariant = content.industryVariant || 'default';
@@ -73,6 +75,13 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         photographerName: image.user.name,
         photographerLink: image.user.link,
       },
+    });
+  };
+
+  const handleLogoApply = (logoUrl: string | null) => {
+    onUpdate({
+      ...content,
+      logoUrl: logoUrl,
     });
   };
 
@@ -160,23 +169,44 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
       }`}>
         <div className="flex flex-col items-center gap-8 w-full">
           
-          {/* Logo - positioned above trust badge */}
-          {content.logoUrl && (
+          {/* Logo - positioned above trust badge (or add logo button if in edit mode) */}
+          {(content.logoUrl || isEditing) && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="mb-2"
+              className="mb-2 relative"
             >
-              <img 
-                src={content.logoUrl} 
-                alt="Logo" 
-                className="h-12 md:h-14 mx-auto object-contain"
-                onError={(e) => {
-                  console.log('Logo failed to load:', content.logoUrl);
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
+              {content.logoUrl ? (
+                <div className="relative inline-block">
+                  <img 
+                    src={content.logoUrl} 
+                    alt="Logo" 
+                    className="h-12 md:h-14 mx-auto object-contain"
+                    onError={(e) => {
+                      console.log('Logo failed to load:', content.logoUrl);
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                  {isEditing && (
+                    <button
+                      onClick={() => setLogoUploaderOpen(true)}
+                      className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-md"
+                      title="Change logo"
+                    >
+                      <Camera className="w-3 h-3 text-white" />
+                    </button>
+                  )}
+                </div>
+              ) : isEditing ? (
+                <button
+                  onClick={() => setLogoUploaderOpen(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 border-2 border-dashed border-slate-300 rounded-lg hover:border-blue-400 hover:bg-blue-50/50 transition-colors text-slate-500 hover:text-blue-500"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span className="text-sm font-medium">Add Logo</span>
+                </button>
+              ) : null}
             </motion.div>
           )}
 
@@ -414,6 +444,13 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         onClose={() => setImagePickerOpen(false)}
         onSelect={handleImageSelect}
         defaultQuery="business professional"
+      />
+
+      <LogoUploader
+        isOpen={logoUploaderOpen}
+        onClose={() => setLogoUploaderOpen(false)}
+        currentLogoUrl={content.logoUrl || undefined}
+        onApplyLogo={handleLogoApply}
       />
     </section>
   );
