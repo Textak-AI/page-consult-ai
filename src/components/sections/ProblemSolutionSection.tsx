@@ -18,6 +18,7 @@ interface ProblemSolutionSectionProps {
     problemStat?: CitedStat;
     solutionStat?: CitedStat;
     industryVariant?: string;
+    sectionTitle?: string;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -56,8 +57,13 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
             <span className="inline-block px-4 py-1 bg-amber-100 text-amber-800 text-sm font-semibold rounded-full mb-4">
               THE TRANSFORMATION
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
-              Why This Matters
+            <h2 
+              className={`text-3xl md:text-4xl font-bold text-slate-900 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}`}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("sectionTitle", e)}
+            >
+              {content.sectionTitle || "Why This Matters"}
             </h2>
           </motion.div>
           
