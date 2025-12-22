@@ -16,6 +16,8 @@ import {
   Sparkles,
   Save,
   X,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useState } from "react";
 import { TextEffectsMenu } from "./TextEffectsMenu";
@@ -27,6 +29,7 @@ interface EditingToolbarProps {
 
 export function EditingToolbar({ onSave, onCancel }: EditingToolbarProps) {
   const [showEffects, setShowEffects] = useState(false);
+  const [textColorMode, setTextColorMode] = useState<'light' | 'dark'>('dark');
 
   const applyFormat = (command: string) => {
     document.execCommand(command, false);
@@ -35,23 +38,75 @@ export function EditingToolbar({ onSave, onCancel }: EditingToolbarProps) {
   const setAlignment = (align: string) => {
     document.execCommand(`justify${align}`, false);
   };
+  
+  const toggleTextColor = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    const span = document.createElement("span");
+    
+    const newMode = textColorMode === 'dark' ? 'light' : 'dark';
+    setTextColorMode(newMode);
+    
+    span.style.color = newMode === 'light' ? 'white' : '#0f172a';
+    
+    try {
+      range.surroundContents(span);
+    } catch (e) {
+      const contents = range.extractContents();
+      span.appendChild(contents);
+      range.insertNode(span);
+    }
+  };
+
 
   const setTextSize = (size: string) => {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
 
     const range = selection.getRangeAt(0);
+    
+    // Remove existing size classes from selection
+    const container = range.commonAncestorContainer;
+    let element = container.parentElement;
+    while (element && element.tagName !== 'BODY') {
+      ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl'].forEach(cls => {
+        element?.classList.remove(cls);
+      });
+      element = element.parentElement;
+    }
+    
     const span = document.createElement("span");
 
+    // Fixed size mapping - larger values for bigger sizes
     const sizeClasses: { [key: string]: string } = {
       small: "text-sm",
       normal: "text-base",
-      large: "text-lg",
-      huge: "text-2xl",
+      large: "text-xl",
+      huge: "text-3xl",
     };
 
     span.className = sizeClasses[size] || "text-base";
-    range.surroundContents(span);
+    
+    // Apply inline style as backup for immediate visual feedback
+    const sizeStyles: { [key: string]: string } = {
+      small: "0.875rem",
+      normal: "1rem",
+      large: "1.25rem",
+      huge: "1.875rem",
+    };
+    span.style.fontSize = sizeStyles[size] || "1rem";
+    
+    try {
+      range.surroundContents(span);
+    } catch (e) {
+      // If surroundContents fails (e.g., selection spans multiple elements),
+      // extract contents and wrap them
+      const contents = range.extractContents();
+      span.appendChild(contents);
+      range.insertNode(span);
+    }
   };
 
   return (
@@ -113,6 +168,19 @@ export function EditingToolbar({ onSave, onCancel }: EditingToolbarProps) {
             <SelectItem value="huge" className="text-gray-700 hover:bg-gray-100">Huge</SelectItem>
           </SelectContent>
         </Select>
+
+        <div className="w-px h-6 bg-gray-200 mx-1" />
+
+        {/* Text color toggle */}
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={toggleTextColor}
+          className="text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+          title={textColorMode === 'dark' ? 'Switch to Light Text' : 'Switch to Dark Text'}
+        >
+          {textColorMode === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </Button>
 
         <div className="w-px h-6 bg-gray-200 mx-1" />
 
