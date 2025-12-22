@@ -1150,6 +1150,10 @@ function GenerateContent() {
 
     // Build statistics from proof points (NO fabrication) - check multiple possible field locations
     const buildStatistics = () => {
+      console.log('[buildStatistics] ai_seo_data:', consultationData?.ai_seo_data);
+      console.log('[buildStatistics] ai_seo_data type:', typeof consultationData?.ai_seo_data);
+      console.log('[buildStatistics] ai_seo_data keys:', consultationData?.ai_seo_data ? Object.keys(consultationData.ai_seo_data) : 'null');
+      
       const stats: Array<{ value: string; label: string }> = [];
       
       // Check proofPoints object first
