@@ -1,4 +1,4 @@
-import { Pencil, Sparkles, ImageIcon } from "lucide-react";
+import { Pencil, Sparkles, ImageIcon, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -8,10 +8,12 @@ interface SectionToolbarProps {
   onEdit: () => void;
   onAIAssist: () => void;
   onImageGenerate?: () => void;
+  onLogoEdit?: () => void;
   isEditing: boolean;
 }
 
 const IMAGE_CAPABLE_SECTIONS = ['hero', 'features', 'problem-solution', 'photo-gallery'];
+const LOGO_CAPABLE_SECTIONS = ['hero'];
 
 export function SectionToolbar({
   sectionType,
@@ -19,6 +21,7 @@ export function SectionToolbar({
   onEdit,
   onAIAssist,
   onImageGenerate,
+  onLogoEdit,
   isEditing,
 }: SectionToolbarProps) {
   const sectionLabel = sectionType
@@ -27,6 +30,7 @@ export function SectionToolbar({
     .join(" ");
 
   const showImageButton = IMAGE_CAPABLE_SECTIONS.includes(sectionType);
+  const showLogoButton = LOGO_CAPABLE_SECTIONS.includes(sectionType);
 
   return (
     <div
@@ -58,6 +62,18 @@ export function SectionToolbar({
         <Sparkles className="h-3.5 w-3.5" />
         <span className="text-xs">AI</span>
       </Button>
+      {showLogoButton && onLogoEdit && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 gap-1.5"
+          onClick={onLogoEdit}
+          title="Edit Logo"
+        >
+          <Image className="h-3.5 w-3.5" />
+          <span className="text-xs">Logo</span>
+        </Button>
+      )}
       {showImageButton && onImageGenerate && (
         <Button
           variant="ghost"
