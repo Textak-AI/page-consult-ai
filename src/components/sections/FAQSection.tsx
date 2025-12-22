@@ -1,9 +1,20 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, MessageSquare, Edit3 } from 'lucide-react';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { ChevronDown, MessageSquare, Edit3, Trash2, GripVertical, Plus } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { EyebrowBadge } from '@/components/ui/PremiumCard';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import type { FAQItem } from '@/services/intelligence/types';
 
 import type { IndustryVariant } from '@/config/designSystem/industryVariants';
@@ -22,6 +33,7 @@ interface FAQSectionProps {
 export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [editingItem, setEditingItem] = useState<number | null>(null);
+  const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
 
   const headline = content.headline || 'Frequently Asked Questions';
   const eyebrow = content.eyebrow || 'Common Questions';
@@ -48,6 +60,231 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
   const handleHeadlineUpdate = (e: React.FocusEvent<HTMLHeadingElement>) => {
     onUpdate({ ...content, headline: e.currentTarget.textContent || headline });
   };
+
+  const handleAddItem = () => {
+    const newItem: FAQItem = {
+      question: 'New question?',
+      answer: 'Click to add your answer.',
+      source: 'industry_common',
+    };
+    const updatedItems = [...items, newItem];
+    onUpdate({ ...content, items: updatedItems });
+    // Auto-expand and edit the new item
+    setExpandedIndex(updatedItems.length - 1);
+    setEditingItem(updatedItems.length - 1);
+  };
+
+  const handleDeleteItem = (index: number) => {
+    const updatedItems = items.filter((_, i) => i !== index);
+    onUpdate({ ...content, items: updatedItems });
+    setDeleteConfirmIndex(null);
+    // Reset expanded/editing state if needed
+    if (expandedIndex === index) setExpandedIndex(null);
+    if (editingItem === index) setEditingItem(null);
+  };
+
+  const handleReorder = (newOrder: FAQItem[]) => {
+    onUpdate({ ...content, items: newOrder });
+  };
+
+  // Consulting-specific FAQ item component
+  const ConsultingFAQItem = ({ item, index }: { item: FAQItem; index: number }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.05 }}
+      itemScope
+      itemProp="mainEntity"
+      itemType="https://schema.org/Question"
+      className="relative"
+    >
+      <div className="bg-slate-50 rounded-xl overflow-hidden flex">
+        {/* Drag handle - only in edit mode */}
+        {isEditing && (
+          <div className="flex items-center px-2 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600">
+            <GripVertical className="w-4 h-4" strokeWidth={1.5} />
+          </div>
+        )}
+        
+        <div className="flex-1">
+          <button
+            className="w-full p-6 text-left flex items-center justify-between hover:bg-slate-100 transition-colors"
+            onClick={() => handleToggle(index)}
+          >
+            {isEditing && editingItem === index ? (
+              <Input
+                value={item.question}
+                onChange={(e) => handleItemUpdate(index, 'question', e.target.value)}
+                onBlur={() => setEditingItem(null)}
+                className="flex-1 mr-4 bg-white border-slate-300"
+                autoFocus
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <span className="font-semibold text-slate-900 pr-4" itemProp="name">
+                {item.question}
+              </span>
+            )}
+            
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {isEditing && editingItem !== index && (
+                <>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setEditingItem(index); setExpandedIndex(index); }}
+                    className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                    title="Edit"
+                  >
+                    <Edit3 className="w-4 h-4" strokeWidth={1.5} />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDeleteConfirmIndex(index); }}
+                    className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" strokeWidth={1.5} />
+                  </button>
+                </>
+              )}
+              <motion.div animate={{ rotate: expandedIndex === index ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronDown className="w-5 h-5 text-slate-500" strokeWidth={1.5} />
+              </motion.div>
+            </div>
+          </button>
+
+          <AnimatePresence>
+            {expandedIndex === index && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+                itemScope
+                itemProp="acceptedAnswer"
+                itemType="https://schema.org/Answer"
+              >
+                <div className="px-6 pb-6">
+                  {isEditing && editingItem === index ? (
+                    <Textarea
+                      value={item.answer}
+                      onChange={(e) => handleItemUpdate(index, 'answer', e.target.value)}
+                      className="w-full min-h-[100px] bg-white border-slate-300"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <p className="text-slate-600 leading-relaxed" itemProp="text">
+                      {item.answer}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  // Default dark mode FAQ item component
+  const DarkFAQItem = ({ item, index }: { item: FAQItem; index: number }) => (
+    <motion.div
+      className={`relative flex ${index !== items.length - 1 ? "border-b border-white/[0.05]" : ""}`}
+      itemScope
+      itemProp="mainEntity"
+      itemType="https://schema.org/Question"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.05 }}
+    >
+      {/* Drag handle - only in edit mode */}
+      {isEditing && (
+        <div className="flex items-center px-3 cursor-grab active:cursor-grabbing text-slate-500 hover:text-cyan-400">
+          <GripVertical className="w-4 h-4" strokeWidth={1.5} />
+        </div>
+      )}
+      
+      <div className="flex-1">
+        <button
+          className="w-full py-6 px-6 flex items-center justify-between text-left group hover:bg-white/[0.02] transition-colors"
+          onClick={() => handleToggle(index)}
+        >
+          {isEditing && editingItem === index ? (
+            <Input
+              value={item.question}
+              onChange={(e) => handleItemUpdate(index, 'question', e.target.value)}
+              onBlur={() => setEditingItem(null)}
+              className="flex-1 mr-4 bg-slate-800 border-cyan-500"
+              autoFocus
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <h3 
+              className="text-lg font-medium pr-4 flex-1 text-white group-hover:text-cyan-400 transition-colors" 
+              itemProp="name"
+            >
+              {item.question}
+            </h3>
+          )}
+          
+          <div className="flex items-center gap-2">
+            {isEditing && editingItem !== index && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditingItem(index); setExpandedIndex(index); }}
+                  className="p-1 text-slate-500 hover:text-cyan-400 transition-colors"
+                  title="Edit"
+                >
+                  <Edit3 className="w-4 h-4" strokeWidth={1.5} />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDeleteConfirmIndex(index); }}
+                  className="p-1 text-slate-500 hover:text-red-400 transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 className="w-4 h-4" strokeWidth={1.5} />
+                </button>
+              </>
+            )}
+            <motion.div animate={{ rotate: expandedIndex === index ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown className="w-5 h-5 text-slate-500" strokeWidth={1.5} />
+            </motion.div>
+          </div>
+        </button>
+
+        <AnimatePresence>
+          {expandedIndex === index && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+              itemScope
+              itemProp="acceptedAnswer"
+              itemType="https://schema.org/Answer"
+            >
+              <div className="pb-6 px-6">
+                {isEditing && editingItem === index ? (
+                  <Textarea
+                    value={item.answer}
+                    onChange={(e) => handleItemUpdate(index, 'answer', e.target.value)}
+                    className="w-full min-h-[100px] bg-slate-800 border-cyan-500"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <p className="text-slate-400 leading-relaxed" itemProp="text">
+                    {item.answer}
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
 
   if (isConsulting) {
     // Consulting layout: White background, clean accordions
@@ -79,95 +316,65 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
             </h2>
           </div>
 
-          {/* FAQ Accordion */}
-          <div className="space-y-4">
-            {items.map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                itemScope
-                itemProp="mainEntity"
-                itemType="https://schema.org/Question"
-              >
-                <div className="bg-slate-50 rounded-xl overflow-hidden">
-                  <button
-                    className="w-full p-6 text-left flex items-center justify-between hover:bg-slate-100 transition-colors"
-                    onClick={() => handleToggle(index)}
-                  >
-                    {isEditing && editingItem === index ? (
-                      <Input
-                        value={item.question}
-                        onChange={(e) => handleItemUpdate(index, 'question', e.target.value)}
-                        onBlur={() => setEditingItem(null)}
-                        className="flex-1 mr-4 bg-white border-slate-300"
-                        autoFocus
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    ) : (
-                      <span className="font-semibold text-slate-900 pr-4" itemProp="name">
-                        {item.question}
-                      </span>
-                    )}
-                    
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {isEditing && editingItem !== index && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setEditingItem(index); setExpandedIndex(index); }}
-                          className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
-                        >
-                          <Edit3 className="w-4 h-4" strokeWidth={1.5} />
-                        </button>
-                      )}
-                      <motion.div animate={{ rotate: expandedIndex === index ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                        <ChevronDown className="w-5 h-5 text-slate-500" strokeWidth={1.5} />
-                      </motion.div>
-                    </div>
-                  </button>
+          {/* FAQ Accordion with Reorder */}
+          {isEditing ? (
+            <Reorder.Group axis="y" values={items} onReorder={handleReorder} className="space-y-4">
+              {items.map((item, index) => (
+                <Reorder.Item key={item.question + index} value={item}>
+                  <ConsultingFAQItem item={item} index={index} />
+                </Reorder.Item>
+              ))}
+            </Reorder.Group>
+          ) : (
+            <div className="space-y-4">
+              {items.map((item, index) => (
+                <ConsultingFAQItem key={index} item={item} index={index} />
+              ))}
+            </div>
+          )}
 
-                  <AnimatePresence>
-                    {expandedIndex === index && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                        itemScope
-                        itemProp="acceptedAnswer"
-                        itemType="https://schema.org/Answer"
-                      >
-                        <div className="px-6 pb-6">
-                          {isEditing && editingItem === index ? (
-                            <Textarea
-                              value={item.answer}
-                              onChange={(e) => handleItemUpdate(index, 'answer', e.target.value)}
-                              className="w-full min-h-[100px] bg-white border-slate-300"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          ) : (
-                            <p className="text-slate-600 leading-relaxed" itemProp="text">
-                              {item.answer}
-                            </p>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {/* Add Question Button - only in edit mode */}
+          {isEditing && (
+            <div className="mt-6 flex justify-center">
+              <Button
+                variant="outline"
+                onClick={handleAddItem}
+                className="gap-2 border-dashed border-slate-300 text-slate-600 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50"
+              >
+                <Plus className="w-4 h-4" />
+                Add Question
+              </Button>
+            </div>
+          )}
 
           {items.length === 0 && isEditing && (
             <div className="text-center py-12 text-slate-400">
               <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" strokeWidth={1.5} />
-              <p>No FAQ items - add questions in edit mode</p>
+              <p>No FAQ items yet</p>
             </div>
           )}
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteConfirmIndex !== null} onOpenChange={() => setDeleteConfirmIndex(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete FAQ Item?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete this question and answer. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteConfirmIndex !== null && handleDeleteItem(deleteConfirmIndex)}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </section>
     );
   }
@@ -207,97 +414,67 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
           </h2>
         </div>
 
-        {/* FAQ Items */}
+        {/* FAQ Items with Reorder */}
         <div className="rounded-2xl overflow-hidden bg-white/[0.02] backdrop-blur-xl border border-white/[0.05]">
-          {items.map((item, index) => (
-            <motion.div
-              key={index}
-              className={index !== items.length - 1 ? "border-b border-white/[0.05]" : ""}
-              itemScope
-              itemProp="mainEntity"
-              itemType="https://schema.org/Question"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <button
-                className="w-full py-6 px-6 flex items-center justify-between text-left group hover:bg-white/[0.02] transition-colors"
-                onClick={() => handleToggle(index)}
-              >
-                {isEditing && editingItem === index ? (
-                  <Input
-                    value={item.question}
-                    onChange={(e) => handleItemUpdate(index, 'question', e.target.value)}
-                    onBlur={() => setEditingItem(null)}
-                    className="flex-1 mr-4 bg-slate-800 border-cyan-500"
-                    autoFocus
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                ) : (
-                  <h3 
-                    className="text-lg font-medium pr-4 flex-1 text-white group-hover:text-cyan-400 transition-colors" 
-                    itemProp="name"
-                  >
-                    {item.question}
-                  </h3>
-                )}
-                
-                <div className="flex items-center gap-2">
-                  {isEditing && editingItem !== index && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setEditingItem(index); setExpandedIndex(index); }}
-                      className="p-1 text-slate-500 hover:text-cyan-400 transition-colors"
-                    >
-                      <Edit3 className="w-4 h-4" strokeWidth={1.5} />
-                    </button>
-                  )}
-                  <motion.div animate={{ rotate: expandedIndex === index ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                    <ChevronDown className="w-5 h-5 text-slate-500" strokeWidth={1.5} />
-                  </motion.div>
-                </div>
-              </button>
-
-              <AnimatePresence>
-                {expandedIndex === index && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                    itemScope
-                    itemProp="acceptedAnswer"
-                    itemType="https://schema.org/Answer"
-                  >
-                    <div className="pb-6 px-6">
-                      {isEditing && editingItem === index ? (
-                        <Textarea
-                          value={item.answer}
-                          onChange={(e) => handleItemUpdate(index, 'answer', e.target.value)}
-                          className="w-full min-h-[100px] bg-slate-800 border-cyan-500"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      ) : (
-                        <p className="text-slate-400 leading-relaxed" itemProp="text">
-                          {item.answer}
-                        </p>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          ))}
+          {isEditing ? (
+            <Reorder.Group axis="y" values={items} onReorder={handleReorder}>
+              {items.map((item, index) => (
+                <Reorder.Item key={item.question + index} value={item}>
+                  <DarkFAQItem item={item} index={index} />
+                </Reorder.Item>
+              ))}
+            </Reorder.Group>
+          ) : (
+            <>
+              {items.map((item, index) => (
+                <DarkFAQItem key={index} item={item} index={index} />
+              ))}
+            </>
+          )}
         </div>
+
+        {/* Add Question Button - only in edit mode */}
+        {isEditing && (
+          <div className="mt-6 flex justify-center">
+            <Button
+              variant="outline"
+              onClick={handleAddItem}
+              className="gap-2 border-dashed border-slate-600 text-slate-400 hover:border-cyan-400 hover:text-cyan-400 hover:bg-cyan-400/10"
+            >
+              <Plus className="w-4 h-4" />
+              Add Question
+            </Button>
+          </div>
+        )}
 
         {items.length === 0 && isEditing && (
           <div className="text-center py-12 text-slate-500">
             <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" strokeWidth={1.5} />
-            <p>No FAQ items - add questions in edit mode</p>
+            <p>No FAQ items yet</p>
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmIndex !== null} onOpenChange={() => setDeleteConfirmIndex(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete FAQ Item?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this question and answer. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteConfirmIndex !== null && handleDeleteItem(deleteConfirmIndex)}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }
