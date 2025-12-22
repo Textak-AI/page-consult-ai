@@ -25,6 +25,7 @@ import { EditingToolbar } from "@/components/editor/EditingToolbar";
 import { SectionToolbar } from "@/components/editor/SectionToolbar";
 import { SectionAIChat } from "@/components/editor/SectionAIChat";
 import { SectionImageGenerator } from "@/components/editor/SectionImageGenerator";
+import { LogoUploader } from "@/components/editor/LogoUploader";
 import { styleVariants } from "@/lib/styleVariants";
 import { SEOHead } from "@/components/seo/SEOHead";
 import type { SEOHeadData } from "@/lib/aiSeoIntegration";
@@ -54,6 +55,9 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
   
   const [imageGenOpen, setImageGenOpen] = useState(false);
   const [imageGenSection, setImageGenSection] = useState<{ index: number; type: string; content: any } | null>(null);
+  
+  const [logoUploadOpen, setLogoUploadOpen] = useState(false);
+  const [logoUploadSection, setLogoUploadSection] = useState<{ index: number; content: any } | null>(null);
 
   const handleSaveEdit = () => {
     setEditingSection(null);
@@ -125,6 +129,24 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     setImageGenSection(null);
   };
 
+  const handleLogoEdit = (index: number, content: any) => {
+    setLogoUploadSection({ index, content });
+    setLogoUploadOpen(true);
+  };
+
+  const handleLogoApply = (logoUrl: string | null) => {
+    if (logoUploadSection) {
+      const updated = [...sections];
+      updated[logoUploadSection.index].content = {
+        ...updated[logoUploadSection.index].content,
+        logoUrl: logoUrl,
+      };
+      onSectionsChange(updated);
+    }
+    setLogoUploadOpen(false);
+    setLogoUploadSection(null);
+  };
+
   const renderSectionWithToolbar = (section: Section, index: number, sectionElement: React.ReactNode) => {
     const sectionId = getSectionId(section.type);
     
@@ -140,6 +162,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           onEdit={() => handleEditSection(index)}
           onAIAssist={() => handleAIAssist(index, section.type, section.content)}
           onImageGenerate={() => handleImageGenerate(index, section.type, section.content)}
+          onLogoEdit={() => handleLogoEdit(index, section.content)}
           isEditing={editingSection === index}
         />
         {sectionElement}
@@ -423,6 +446,17 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         strategyBrief={strategyBrief}
         industryContext={strategyBrief?.industry}
         onApplyImage={handleApplyImage}
+      />
+      
+      {/* Logo Uploader Drawer */}
+      <LogoUploader
+        isOpen={logoUploadOpen}
+        onClose={() => {
+          setLogoUploadOpen(false);
+          setLogoUploadSection(null);
+        }}
+        currentLogoUrl={logoUploadSection?.content?.logoUrl}
+        onApplyLogo={handleLogoApply}
       />
     </div>
   );
