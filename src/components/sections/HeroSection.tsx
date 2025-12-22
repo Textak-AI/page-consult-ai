@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
 import { LogoUploader } from "@/components/editor/LogoUploader";
 import { useState } from "react";
-import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera } from "lucide-react";
+import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
 
@@ -57,6 +57,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   const tokens = getIndustryTokens(industryVariant);
   const isLightMode = tokens.mode === 'light';
   const isConsulting = industryVariant === 'consulting';
+  const isSaas = industryVariant === 'saas';
   
   console.log('🎨 [HeroSection] industryVariant:', industryVariant, 'isLightMode:', isLightMode);
 
@@ -90,6 +91,150 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   
   // Single trust badge (credential) for consulting hero
   const trustBadge = content.trustBadge || content.fomo?.badge;
+
+  // SaaS variant: Two-column layout with product screenshot area
+  if (isSaas) {
+    return (
+      <section className="relative py-24 md:py-32 overflow-hidden bg-slate-900">
+        {/* Gradient mesh background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-slate-900 to-blue-900/20" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-600/10 via-transparent to-transparent" />
+        
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-purple-500/50 rounded-lg pointer-events-none z-20" />
+        )}
+        
+        <div className="relative max-w-6xl mx-auto px-6 z-10">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left: Content */}
+            <div>
+              {/* Logo */}
+              {(content.logoUrl || isEditing) && (
+                <div className="mb-8">
+                  {content.logoUrl ? (
+                    <div className="relative inline-block">
+                      <img src={content.logoUrl} alt="Logo" className="h-10 object-contain" />
+                      {isEditing && (
+                        <button
+                          onClick={() => setLogoUploaderOpen(true)}
+                          className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors"
+                        >
+                          <Camera className="w-2.5 h-2.5 text-white" />
+                        </button>
+                      )}
+                    </div>
+                  ) : isEditing ? (
+                    <button
+                      onClick={() => setLogoUploaderOpen(true)}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 border-2 border-dashed border-slate-600 rounded-lg hover:border-purple-400 transition-colors text-slate-400 hover:text-purple-400"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      <span className="text-xs font-medium">Add Logo</span>
+                    </button>
+                  ) : null}
+                </div>
+              )}
+              
+              {/* Headline */}
+              <h1
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("headline", e)}
+                className={`text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
+              >
+                {content.headline}
+              </h1>
+              
+              {/* Subheadline */}
+              <p
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("subheadline", e)}
+                className={`text-xl text-slate-300 mb-8 leading-relaxed ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
+              >
+                {content.subheadline}
+              </p>
+              
+              {/* CTA Buttons */}
+              <div className="flex flex-wrap gap-4 mb-8">
+                <Button 
+                  size="lg" 
+                  className={`px-8 py-6 text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl shadow-lg shadow-purple-500/25 ${isEditing ? "outline-dashed outline-2 outline-purple-500/30" : ""}`}
+                >
+                  <span
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleBlur("ctaText", e)}
+                  >
+                    {content.ctaText}
+                  </span>
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+                
+                {content.secondaryCTA?.text && (
+                  <Button variant="outline" size="lg" className="px-8 py-6 text-lg border-slate-600 text-slate-300 hover:bg-slate-800 rounded-xl">
+                    {content.secondaryCTA.text}
+                  </Button>
+                )}
+              </div>
+              
+              {/* Social proof strip */}
+              <div className="flex items-center gap-6 text-sm text-slate-400">
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                  <span className="ml-2">4.9/5 rating</span>
+                </div>
+                <span>•</span>
+                <span>Trusted by 10,000+ teams</span>
+              </div>
+            </div>
+            
+            {/* Right: Product image/screenshot placeholder */}
+            <div className="relative">
+              <div className="bg-slate-800 rounded-2xl border border-slate-700 p-4 shadow-2xl">
+                {content.backgroundImage ? (
+                  <img src={content.backgroundImage} alt="Product" className="rounded-xl w-full" />
+                ) : (
+                  <div className="aspect-video bg-slate-700 rounded-xl flex items-center justify-center">
+                    {isEditing ? (
+                      <Button
+                        variant="ghost"
+                        onClick={() => setImagePickerOpen(true)}
+                        className="text-slate-400 hover:text-white"
+                      >
+                        <ImagePlus className="w-6 h-6 mr-2" />
+                        Add Product Screenshot
+                      </Button>
+                    ) : (
+                      <span className="text-slate-500">Product Screenshot</span>
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Glow effect */}
+              <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 to-blue-600/20 blur-3xl -z-10" />
+            </div>
+          </div>
+        </div>
+
+        <ImagePicker
+          open={imagePickerOpen}
+          onClose={() => setImagePickerOpen(false)}
+          onSelect={handleImageSelect}
+          defaultQuery="software dashboard"
+        />
+
+        <LogoUploader
+          isOpen={logoUploaderOpen}
+          onClose={() => setLogoUploaderOpen(false)}
+          currentLogoUrl={content.logoUrl || undefined}
+          onApplyLogo={handleLogoApply}
+        />
+      </section>
+    );
+  }
 
   return (
     <section 

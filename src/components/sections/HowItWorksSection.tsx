@@ -21,9 +21,10 @@ interface HowItWorksSectionProps {
 export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSectionProps) {
   const { title = "How It Works", subtitle = "Your path to results", steps } = content;
   const isConsulting = content.industryVariant === 'consulting';
+  const isSaas = content.industryVariant === 'saas';
   const typography = getTypography(content.industryVariant);
   
-  console.log('🎨 [HowItWorksSection] industryVariant:', content.industryVariant, 'isConsulting:', isConsulting, 'isEditing:', isEditing);
+  console.log('🎨 [HowItWorksSection] industryVariant:', content.industryVariant, 'isConsulting:', isConsulting, 'isSaas:', isSaas, 'isEditing:', isEditing);
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     if (!onUpdate) return;
@@ -49,6 +50,95 @@ export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSe
   // Don't render if no steps
   if (!steps || steps.length === 0) {
     return null;
+  }
+
+  // SaaS variant
+  if (isSaas) {
+    return (
+      <section className={`py-24 bg-slate-900 ${isEditing ? 'relative' : ''}`}>
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-purple-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+        
+        <div className="max-w-5xl mx-auto px-6">
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
+            <span className="inline-block px-4 py-1 bg-purple-500/20 text-purple-400 text-sm font-semibold rounded-full mb-4">
+              HOW IT WORKS
+            </span>
+            <h2
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("title", e)}
+              className={`text-3xl md:text-4xl font-bold text-white mb-4 ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
+            >
+              {title}
+            </h2>
+            <p
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("subtitle", e)}
+              className={`text-lg text-slate-400 ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
+            >
+              {subtitle}
+            </p>
+          </motion.div>
+
+          {/* Steps */}
+          <div className="relative">
+            {/* Connector line (desktop only) */}
+            {steps.length > 1 && (
+              <div className="hidden md:block absolute top-8 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-purple-600 to-blue-600" />
+            )}
+            
+            <div className={`grid gap-8 md:gap-6 ${
+              steps.length === 2 ? 'md:grid-cols-2' :
+              steps.length === 3 ? 'md:grid-cols-3' :
+              'md:grid-cols-4'
+            }`}>
+              {steps.map((step, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.15, duration: 0.5 }}
+                  className="relative text-center"
+                >
+                  {/* Step Number */}
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6 relative z-10">
+                    {step.number}
+                  </div>
+                  
+                  <h3
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleStepBlur(index, "title", e)}
+                    className={`text-lg font-bold text-white mb-2 ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-1" : ""}`}
+                  >
+                    {step.title}
+                  </h3>
+                  <p
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleStepBlur(index, "description", e)}
+                    className={`text-sm text-slate-400 ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-1" : ""}`}
+                  >
+                    {step.description}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   if (isConsulting) {
