@@ -26,6 +26,7 @@ interface SocialProofSectionProps {
       };
     };
     industry?: string;
+    industryVariant?: string;
     testimonial?: {
       quote: string;
       name: string;
@@ -33,6 +34,7 @@ interface SocialProofSectionProps {
       company: string;
       rating?: number;
     };
+    achievements?: string;
     // NEW: Proof story from wizard
     proofStory?: string | null;
     proofStoryContext?: string | null;
@@ -40,7 +42,15 @@ interface SocialProofSectionProps {
   onUpdate: (content: any) => void;
 }
 
-function getSocialProofHeader(industry?: string): { title: string; subtitle: string; placeholderQuote: string } {
+function getSocialProofHeader(industry?: string, isConsulting?: boolean): { title: string; subtitle: string; placeholderQuote: string } {
+  if (isConsulting) {
+    return {
+      title: 'Client Results',
+      subtitle: 'What our clients say about working with us',
+      placeholderQuote: 'Working with this team has been transformative. Their expertise and dedication to client success is unmatched in the industry.'
+    };
+  }
+  
   const industryLower = industry?.toLowerCase() || '';
   
   if (industryLower.includes('wedding') || industryLower.includes('dj')) {
@@ -67,30 +77,6 @@ function getSocialProofHeader(industry?: string): { title: string; subtitle: str
     };
   }
   
-  if (industryLower.includes('legal') || industryLower.includes('law') || industryLower.includes('attorney')) {
-    return { 
-      title: 'Client Success Stories', 
-      subtitle: 'Proven results you can trust',
-      placeholderQuote: 'Professional, thorough, and dedicated to achieving the best possible outcome. I could not have asked for better representation.'
-    };
-  }
-  
-  if (industryLower.includes('home') || industryLower.includes('contractor') || industryLower.includes('repair')) {
-    return { 
-      title: 'Trusted by Homeowners', 
-      subtitle: 'See what neighbors are saying',
-      placeholderQuote: 'From start to finish, the quality of work and professionalism exceeded all expectations. Our home has never looked better.'
-    };
-  }
-  
-  if (industryLower.includes('health') || industryLower.includes('medical') || industryLower.includes('doctor')) {
-    return { 
-      title: 'What Patients Are Saying', 
-      subtitle: 'Real testimonials from real patients',
-      placeholderQuote: 'Compassionate care combined with expertise. I finally found a provider who truly listens and delivers results.'
-    };
-  }
-  
   return { 
     title: 'What Our Clients Say', 
     subtitle: 'Join hundreds of satisfied customers',
@@ -99,10 +85,10 @@ function getSocialProofHeader(industry?: string): { title: string; subtitle: str
 }
 
 export function SocialProofSection({ content }: SocialProofSectionProps) {
-  const header = getSocialProofHeader(content.industry);
-  const isConsulting = (content as any).industryVariant === 'consulting';
+  const isConsulting = content.industryVariant === 'consulting';
+  const header = getSocialProofHeader(content.industry, isConsulting);
   
-  console.log('🎨 [SocialProofSection] industryVariant:', (content as any).industryVariant, 'isConsulting:', isConsulting);
+  console.log('🎨 [SocialProofSection] industryVariant:', content.industryVariant, 'isConsulting:', isConsulting);
   
   const testimonial = content.testimonial || {
     quote: header.placeholderQuote,
@@ -111,12 +97,83 @@ export function SocialProofSection({ content }: SocialProofSectionProps) {
     company: "",
     rating: 5
   };
+
+  if (isConsulting) {
+    // Consulting layout: Light slate background, featured testimonial
+    return (
+      <section className="py-24 bg-slate-50">
+        <div className="max-w-4xl mx-auto px-6">
+          {/* Section Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <span className="inline-block px-4 py-1 bg-amber-100 text-amber-800 text-sm font-semibold rounded-full mb-4">
+              SUCCESS STORIES
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
+              {header.title}
+            </h2>
+          </motion.div>
+
+          {/* Featured Testimonial */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="bg-white p-10 md:p-12 rounded-2xl shadow-sm border border-slate-100"
+          >
+            {/* Stars */}
+            <div className="flex gap-1 mb-6 justify-center">
+              {[...Array(testimonial.rating || 5)].map((_, i) => (
+                <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />
+              ))}
+            </div>
+            
+            {/* Quote */}
+            <blockquote className="text-xl md:text-2xl text-slate-800 leading-relaxed text-center mb-8 italic">
+              "{testimonial.quote}"
+            </blockquote>
+            
+            {/* Attribution */}
+            <div className="flex items-center justify-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center">
+                <User className="w-7 h-7 text-slate-500" strokeWidth={1.5} />
+              </div>
+              <div className="text-left">
+                <div className="font-bold text-slate-900">{testimonial.name}</div>
+                <div className="text-slate-600">{testimonial.title}{testimonial.company && `, ${testimonial.company}`}</div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Achievements */}
+          {content.achievements && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mt-10 p-6 bg-white rounded-xl border border-slate-200 text-center"
+            >
+              <p className="text-slate-600 leading-relaxed">{content.achievements}</p>
+            </motion.div>
+          )}
+        </div>
+      </section>
+    );
+  }
   
+  // Default dark mode layout
   return (
     <section 
       style={{ 
         backgroundColor: 'var(--color-surface)',
-        padding: 'var(--spacing-section-y) var(--spacing-section-x)',
+        padding: '96px 24px',
       }}
     >
       <div className="container mx-auto max-w-6xl">

@@ -29,11 +29,76 @@ export function HowItWorksSection({ content }: HowItWorksSectionProps) {
     return null;
   }
 
+  if (isConsulting) {
+    // Consulting layout: White background, prominent step circles, connector line
+    return (
+      <section className="py-24 bg-white">
+        <div className="max-w-5xl mx-auto px-6">
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
+            <span className="inline-block px-4 py-1 bg-purple-100 text-purple-800 text-sm font-semibold rounded-full mb-4">
+              YOUR JOURNEY
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Our Process
+            </h2>
+            <p className="text-lg text-slate-600">
+              A collaborative approach to your success
+            </p>
+          </motion.div>
+
+          {/* Steps */}
+          <div className="relative">
+            {/* Connector Line (desktop only) */}
+            <div className="hidden md:block absolute top-10 left-[10%] right-[10%] h-0.5 bg-slate-200" />
+            
+            <div className={`grid gap-8 md:gap-6 ${
+              steps.length === 2 ? 'md:grid-cols-2' :
+              steps.length === 3 ? 'md:grid-cols-3' :
+              steps.length === 4 ? 'md:grid-cols-4' :
+              'md:grid-cols-4'
+            }`}>
+              {steps.map((step, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.15, duration: 0.5 }}
+                  className="relative text-center"
+                >
+                  {/* Step Number */}
+                  <div className="w-20 h-20 rounded-full bg-slate-900 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-6 relative z-10">
+                    {step.number}
+                  </div>
+                  
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">
+                    {step.title}
+                  </h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    {step.description}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Default dark mode layout
   return (
     <section 
       style={{ 
         backgroundColor: 'var(--color-surface)',
-        padding: 'var(--spacing-section-y) var(--spacing-section-x)',
+        padding: '96px 24px',
       }}
     >
       <div className="container mx-auto max-w-6xl">

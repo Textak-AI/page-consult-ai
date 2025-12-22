@@ -52,6 +52,41 @@ export function StatsBarSection({ statistics, industryVariant }: StatsBarSection
     return "grid-cols-2 md:grid-cols-4";
   };
 
+  if (isConsulting) {
+    // Consulting: Light slate background, prominent numbers
+    return (
+      <section className="py-16 bg-slate-50 border-y border-slate-200">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className={`grid ${getGridClass()} gap-8 md:gap-12`}>
+            {cleanStats.map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                className="text-center"
+              >
+                <div className="text-4xl md:text-5xl font-bold text-slate-900 mb-2">
+                  {formatStatValue(stat.value)}
+                </div>
+                <div className="text-sm md:text-base text-slate-600 font-medium">
+                  {stat.label}
+                </div>
+                {stat.source && (
+                  <div className="text-xs text-slate-400 mt-1">
+                    Source: {stat.source}
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Default dark mode styling
   return (
     <section 
       style={{
@@ -60,7 +95,7 @@ export function StatsBarSection({ statistics, industryVariant }: StatsBarSection
         borderBottomWidth: 'var(--border-width)',
         borderColor: 'var(--color-border)',
         borderStyle: 'solid',
-        padding: 'var(--spacing-section-y) var(--spacing-section-x)',
+        padding: '64px 24px',
       }}
     >
       <div className="container mx-auto max-w-6xl">

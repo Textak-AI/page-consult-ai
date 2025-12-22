@@ -4,7 +4,6 @@ import { useState } from "react";
 import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
-import { SPACING } from "@/lib/spacingSystem";
 
 interface CitedStat {
   statistic: string;
@@ -31,6 +30,7 @@ interface HeroSectionProps {
     };
     citedStat?: CitedStat;
     trustBadges?: string[];
+    trustBadge?: string; // Single trust badge for hero (credential)
     credibilityBar?: Array<{
       icon?: string;
       text: string;
@@ -78,21 +78,17 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
 
   const credibilityItems = content.credibilityBar || [];
   const trustBadges = content.trustBadges || [];
-
-  // Light mode (consulting): White/slate backgrounds
-  // Dark mode (SaaS): Dark backgrounds with gradients
-  const sectionStyles = isLightMode
-    ? { backgroundColor: `hsl(${tokens.colors.bgPrimary})` }
-    : { backgroundColor: 'hsl(217, 33%, 6%)' };
-
-  const textPrimary = isLightMode ? `hsl(${tokens.colors.textPrimary})` : 'white';
-  const textSecondary = isLightMode ? `hsl(${tokens.colors.textSecondary})` : 'hsl(215, 20%, 65%)';
-  const accentColor = isLightMode ? `hsl(${tokens.colors.accent})` : '#22d3ee';
+  
+  // Single trust badge (credential) for consulting hero
+  const trustBadge = content.trustBadge || content.fomo?.badge;
 
   return (
     <section 
-      className={`min-h-screen flex items-center relative overflow-hidden ${isEditing ? "" : ""}`}
-      style={sectionStyles}
+      className={`relative overflow-hidden ${isEditing ? "" : ""}`}
+      style={{
+        backgroundColor: isConsulting ? 'white' : 'hsl(217, 33%, 6%)',
+        minHeight: isConsulting ? 'auto' : '100vh',
+      }}
     >
       {/* Premium Background Layer - only for non-consulting */}
       {!isConsulting && (
@@ -159,8 +155,10 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
       )}
 
       {/* Content Layer */}
-      <div className="container mx-auto max-w-5xl text-center relative z-10 px-6 py-32">
-        <div className="flex flex-col items-center gap-8">
+      <div className={`container mx-auto max-w-5xl text-center relative z-10 px-6 ${
+        isConsulting ? 'py-32' : 'py-32 min-h-screen flex items-center'
+      }`}>
+        <div className="flex flex-col items-center gap-8 w-full">
           
           {/* Logo */}
           {content.logoUrl && (
@@ -180,22 +178,37 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             </motion.div>
           )}
 
-          {/* Eyebrow Badge */}
-          {content.fomo?.badge && (
+          {/* Trust Badge - Consulting specific credential */}
+          {isConsulting && trustBadge && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full"
+            >
+              <Award className="w-4 h-4 text-amber-600" strokeWidth={1.5} />
+              <span className="text-sm font-medium text-slate-700">
+                {trustBadge}
+              </span>
+            </motion.div>
+          )}
+
+          {/* Eyebrow Badge - Non-consulting */}
+          {!isConsulting && content.fomo?.badge && (
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
               style={{
-                backgroundColor: isLightMode ? `hsl(${tokens.colors.accent} / 0.1)` : 'hsla(189, 95%, 43%, 0.1)',
-                borderColor: isLightMode ? `hsl(${tokens.colors.accent} / 0.3)` : 'hsla(189, 95%, 43%, 0.2)',
+                backgroundColor: 'hsla(189, 95%, 43%, 0.1)',
+                borderColor: 'hsla(189, 95%, 43%, 0.2)',
                 borderWidth: '1px',
                 borderStyle: 'solid',
               }}
             >
-              <Sparkles className="w-4 h-4" style={{ color: accentColor }} strokeWidth={1.5} />
-              <span className="text-sm font-medium tracking-wide" style={{ color: accentColor }}>
+              <Sparkles className="w-4 h-4 text-cyan-400" strokeWidth={1.5} />
+              <span className="text-sm font-medium tracking-wide text-cyan-400">
                 {content.fomo.badge}
               </span>
             </motion.div>
@@ -209,37 +222,38 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               transition={{ duration: 0.5, delay: 0.15 }}
               className={`inline-block rounded-2xl p-6 ${
                 isConsulting
-                  ? 'bg-white border border-stone-200 shadow-sm'
+                  ? 'bg-white border border-slate-200 shadow-sm'
                   : 'bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
               }`}
             >
-              <div className={`text-4xl md:text-5xl font-bold mb-2 ${isConsulting ? 'text-teal-600' : 'text-gradient-premium'}`}>
+              <div className={`text-4xl md:text-5xl font-bold mb-2 ${isConsulting ? 'text-slate-900' : 'text-gradient-premium'}`}>
                 {content.citedStat.statistic}
               </div>
-              <div className={`text-base mb-3 ${isConsulting ? 'text-stone-600' : 'text-slate-300'}`}>
+              <div className={`text-base mb-3 ${isConsulting ? 'text-slate-600' : 'text-slate-300'}`}>
                 {content.citedStat.claim}
               </div>
-              <cite className={`text-xs not-italic ${isConsulting ? 'text-stone-400' : 'text-slate-500'}`}>
+              <cite className={`text-xs not-italic ${isConsulting ? 'text-slate-400' : 'text-slate-500'}`}>
                 Source: {content.citedStat.fullCitation}
               </cite>
             </motion.div>
           )}
           
-          {/* Headline — THE STATEMENT */}
+          {/* Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] font-bold tracking-tight leading-[1.1] max-w-4xl ${
-              isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
-            }`}
+            className={`font-bold tracking-tight leading-[1.1] max-w-4xl ${
+              isConsulting 
+                ? 'text-4xl sm:text-5xl md:text-6xl' 
+                : 'text-4xl sm:text-5xl md:text-6xl lg:text-7xl'
+            } ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""}`}
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("headline", e)}
             style={{ 
-              color: textPrimary,
+              color: isConsulting ? '#0f172a' : 'white',
               fontFamily: isConsulting ? tokens.typography.headingFont : undefined,
-              textShadow: isLightMode ? 'none' : '0 4px 40px hsla(0, 0%, 0%, 0.5)',
             }}
           >
             {content.headline}
@@ -250,13 +264,13 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.35 }}
-            className={`text-lg md:text-xl lg:text-2xl max-w-2xl leading-relaxed ${
-              isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
-            }`}
+            className={`max-w-3xl leading-relaxed ${
+              isConsulting ? 'text-xl md:text-2xl' : 'text-lg md:text-xl lg:text-2xl'
+            } ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""}`}
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("subheadline", e)}
-            style={{ color: textSecondary }}
+            style={{ color: isConsulting ? '#475569' : 'hsl(215, 20%, 65%)' }}
           >
             {content.subheadline}
           </motion.p>
@@ -273,15 +287,10 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               <Button 
                 size="lg" 
                 className={`relative overflow-hidden text-lg px-10 py-7 h-auto font-semibold transition-all duration-300 hover:scale-[1.02] ${
-                  isLightMode
-                    ? 'shadow-md hover:shadow-lg'
+                  isConsulting
+                    ? 'bg-slate-900 hover:bg-slate-800 text-white shadow-lg hover:shadow-xl rounded-xl'
                     : 'bg-brand-gradient shadow-brand-glow hover:shadow-brand-glow-lg'
                 } ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`}
-                style={{
-                  backgroundColor: isLightMode ? `hsl(${tokens.colors.accent})` : undefined,
-                  color: 'white',
-                  borderRadius: tokens.shape.radiusButton,
-                }}
               >
                 <span
                   contentEditable={isEditing}
@@ -307,7 +316,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 size="lg"
                 className={`transition-all text-lg px-8 py-7 h-auto ${
                   isConsulting
-                    ? 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                     : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
                 }`}
               >
@@ -317,7 +326,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             
             {/* Urgency text */}
             {content.fomo?.urgency && (
-              <p className={`text-sm font-medium sm:ml-4 ${isConsulting ? 'text-teal-600' : 'text-brand'}`}>
+              <p className={`text-sm font-medium sm:ml-4 ${isConsulting ? 'text-slate-600' : 'text-brand'}`}>
                 ⚡ {content.fomo.urgency}
               </p>
             )}
@@ -329,14 +338,14 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 }}
-              className="flex flex-wrap justify-center gap-6 pt-6"
+              className="flex flex-wrap justify-center gap-x-8 gap-y-3 pt-6"
             >
               {credibilityItems.map((item, i) => (
                 <div 
                   key={i} 
-                  className={`flex items-center gap-2 text-sm ${isConsulting ? 'text-stone-500' : 'text-slate-400'}`}
+                  className={`flex items-center gap-2 text-sm ${isConsulting ? 'text-slate-500' : 'text-slate-400'}`}
                 >
-                  <CheckCircle className={`w-4 h-4 ${isConsulting ? 'text-teal-500' : 'text-cyan-400'}`} strokeWidth={1.5} />
+                  <CheckCircle className={`w-4 h-4 ${isConsulting ? 'text-green-600' : 'text-cyan-400'}`} strokeWidth={1.5} />
                   <span>{item.text}</span>
                 </div>
               ))}
@@ -344,8 +353,8 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 const icons = [Shield, Clock, Award];
                 const Icon = icons[i % icons.length];
                 return (
-                  <div key={i} className={`flex items-center gap-2 text-sm ${isConsulting ? 'text-stone-500' : 'text-slate-400'}`}>
-                    <Icon className={`w-4 h-4 ${isConsulting ? 'text-teal-500' : 'text-cyan-400'}`} strokeWidth={1.5} />
+                  <div key={i} className={`flex items-center gap-2 text-sm ${isConsulting ? 'text-slate-500' : 'text-slate-400'}`}>
+                    <CheckCircle className={`w-4 h-4 ${isConsulting ? 'text-green-600' : 'text-cyan-400'}`} strokeWidth={1.5} />
                     <span>{badge}</span>
                   </div>
                 );
