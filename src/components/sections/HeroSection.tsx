@@ -498,18 +498,18 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.15 }}
               className={`inline-block rounded-2xl p-6 ${
-                isConsulting
-                  ? 'bg-white border border-slate-200 shadow-sm'
-                  : 'bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+                useLightText
+                  ? 'bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+                  : 'bg-white border border-slate-200 shadow-sm'
               }`}
             >
-              <div className={`text-4xl md:text-5xl font-bold mb-2 ${isConsulting ? 'text-slate-900' : 'text-gradient-premium'}`}>
+              <div className={`text-4xl md:text-5xl font-bold mb-2 ${useLightText ? 'text-white' : 'text-slate-900'}`}>
                 {content.citedStat.statistic}
               </div>
-              <div className={`text-base mb-3 ${isConsulting ? 'text-slate-600' : 'text-slate-300'}`}>
+              <div className={`text-base mb-3 ${useLightText ? 'text-white/80' : 'text-slate-600'}`}>
                 {content.citedStat.claim}
               </div>
-              <cite className={`text-xs not-italic ${isConsulting ? 'text-slate-400' : 'text-slate-500'}`}>
+              <cite className={`text-xs not-italic ${useLightText ? 'text-white/60' : 'text-slate-400'}`}>
                 Source: {content.citedStat.fullCitation}
               </cite>
             </motion.div>
@@ -592,9 +592,9 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 variant="ghost"
                 size="lg"
                 className={`transition-all text-lg px-8 py-7 h-auto ${
-                  isConsulting
-                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                  useLightText
+                    ? 'text-white/80 hover:text-white hover:bg-white/10'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 {content.secondaryCTA.text}
@@ -603,7 +603,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             
             {/* Urgency text */}
             {content.fomo?.urgency && (
-              <p className={`text-sm font-medium sm:ml-4 ${isConsulting ? 'text-slate-600' : 'text-brand'}`}>
+              <p className={`text-sm font-medium sm:ml-4 ${useLightText ? 'text-cyan-400' : 'text-slate-600'}`}>
                 ⚡ {content.fomo.urgency}
               </p>
             )}
@@ -665,13 +665,13 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
 
       {/* Image Attribution */}
       {content.imageAttribution && (
-        <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs z-10 text-slate-500">
+        <p className={`absolute bottom-4 left-1/2 -translate-x-1/2 text-xs z-10 ${useLightText ? 'text-white/50' : 'text-slate-500'}`}>
           Photo by{' '}
           <a
             href={content.imageAttribution.photographerLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:text-slate-400 transition-colors"
+            className={`underline transition-colors ${useLightText ? 'hover:text-white/70' : 'hover:text-slate-400'}`}
           >
             {content.imageAttribution.photographerName}
           </a>
