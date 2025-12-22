@@ -83,9 +83,11 @@ export interface MapBriefOptions {
   pageGoal?: string;
   industry?: string;
   serviceType?: string;
+  // Support both string[] (legacy) and AISeoData.authoritySignals structure
   aiSearchOptimization?: {
-    authoritySignals?: string[];
-  };
+    authoritySignals?: Array<string | { raw?: string; optimized?: string; type?: string }>;
+    entity?: { type?: string; name?: string };
+  } | null;
 }
 
 /**

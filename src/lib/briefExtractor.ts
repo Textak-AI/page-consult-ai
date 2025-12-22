@@ -102,7 +102,9 @@ export function extractAuthoritySignals(
     achievements?: string | null;
     otherStats?: string[];
   },
-  aiSearchOptimization?: { authoritySignals?: string[] }
+  aiSearchOptimization?: { 
+    authoritySignals?: Array<string | { raw?: string; optimized?: string; type?: string }>;
+  } | null
 ): AuthoritySignal[] {
   const signals: AuthoritySignal[] = [];
 
@@ -161,15 +163,22 @@ export function extractAuthoritySignals(
   }
 
   // Extract from AI Search Optimization if available
-  if (aiSearchOptimization?.authoritySignals) {
-    aiSearchOptimization.authoritySignals.forEach((signal: string) => {
-      const numMatch = signal.match(/(\d+[\d,]*[%+]?)/);
+  if (aiSearchOptimization?.authoritySignals && Array.isArray(aiSearchOptimization.authoritySignals)) {
+    aiSearchOptimization.authoritySignals.forEach((signal) => {
+      // Handle both string and object formats
+      const signalText = typeof signal === 'string' 
+        ? signal 
+        : (signal.optimized || signal.raw || '');
+      
+      if (!signalText) return;
+      
+      const numMatch = signalText.match(/(\d+[\d,]*[%+]?)/);
       if (numMatch) {
         const exists = signals.some(s => s.value === numMatch[1]);
         if (!exists) {
           signals.push({
             value: numMatch[1],
-            label: signal.replace(numMatch[1], '').trim(),
+            label: signalText.replace(numMatch[1], '').trim(),
             type: 'social-proof',
             strength: 6,
           });
