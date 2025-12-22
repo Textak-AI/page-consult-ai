@@ -253,7 +253,11 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         return renderSectionWithToolbar(
           section,
           index,
-          <HowItWorksSection content={section.content} onUpdate={updateSection} />
+          <HowItWorksSection 
+            content={section.content} 
+            onUpdate={updateSection} 
+            isEditing={editingSection === index}
+          />
         );
       // Beta section types
       case "beta-hero-teaser":
