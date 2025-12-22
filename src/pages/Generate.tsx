@@ -1085,6 +1085,12 @@ function GenerateContent() {
     strategicConsultation: any,
     heroImageUrl: string
   ): Promise<Section[]> => {
+    // DEBUG: Log full content structure to find where data lives
+    console.log('🔍 [mapLegacyStrategyContent] Full content keys:', Object.keys(content || {}));
+    console.log('🔍 [mapLegacyStrategyContent] Full content:', JSON.stringify(content, null, 2).slice(0, 3000));
+    console.log('🔍 [mapLegacyStrategyContent] consultationData keys:', Object.keys(consultationData || {}));
+    console.log('🔍 [mapLegacyStrategyContent] strategicConsultation keys:', Object.keys(strategicConsultation || {}));
+    
     const sections: Section[] = [];
     let order = 0;
     const businessName = strategicConsultation?.businessName || consultationData.industry;
