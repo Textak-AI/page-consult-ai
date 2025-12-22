@@ -743,18 +743,19 @@ function GenerateContent() {
     // 2. Generate with intelligence context (best quality, uses market research + persona)
     // 3. Fallback to old generation without intelligence (backwards compatibility)
     try {
-      // PRIORITY 0: Use strategy brief from strategic consultation
-      if (fromStrategicConsultation && strategicData?.strategyBrief) {
-        console.log('📋 Generating with STRATEGY BRIEF from strategic consultation');
+      // PRIORITY 0: Use structuredBrief directly from strategic consultation
+      // BRIEF-FIRST: The brief already contains all strategic content - NO AI REGENERATION
+      if (fromStrategicConsultation && strategicData?.structuredBrief && isStructuredBriefContent(strategicData.structuredBrief)) {
+        console.log('📋 BRIEF-FIRST: Using structuredBrief directly (NO AI call)');
+        console.log('📐 Page structure:', strategicData.structuredBrief.pageStructure);
+        console.log('📊 Proof points:', strategicData.structuredBrief.proofPoints);
+        console.log('🎯 Headlines:', strategicData.structuredBrief.headlines);
         
         // Generate design system from industry + tone + brand colors
         const structuredBrief = strategicData.structuredBrief;
         const brandSettings = strategicData.brandSettings || strategicData.consultationData?.brandSettings;
         
-        // DEBUG: Log brand settings flow
-        console.log('🎨 Brand settings from consultationData:', strategicData.consultationData?.brandSettings);
-        console.log('🎨 Brand settings from strategicData:', strategicData.brandSettings);
-        console.log('🎨 Final brandSettings:', brandSettings);
+        console.log('🎨 Brand settings:', brandSettings);
         
         const ds = generateDesignSystem({
           industry: consultationData.industry || 'default',
@@ -770,27 +771,70 @@ function GenerateContent() {
         });
         setDesignSystem(ds);
         setCssVariables(designSystemToCSSVariables(ds));
-        console.log('🎨 Generated design system:', ds);
-        console.log('🎨 Design system primary color:', ds.colors.primary);
-        console.log('🎨 Brand override applied:', brandSettings?.modified ? 'customized' : 'default');
+        console.log('🎨 Generated design system:', ds.id);
+        
+        // Fetch hero image
+        const businessName = strategicData.consultationData?.businessName || consultationData.industry || 'Our Company';
+        const heroImageUrl = await fetchHeroImage(businessName);
+        
+        // Get brand settings for passing to sections
+        const logoUrl = brandSettings?.logoUrl || strategicData.consultationData?.websiteIntelligence?.logoUrl || null;
+        const primaryColor = brandSettings?.primaryColor || ds.colors?.primary || null;
+        const pageType = strategicData.consultationData?.pageType || null;
+        const pageGoal = strategicData.consultationData?.goal || consultationData.goal || 'generate-leads';
+        
+        console.log('🖼️ Logo URL:', logoUrl);
+        console.log('🎨 Primary color:', primaryColor);
+        console.log('📄 Page type:', pageType);
+        console.log('🎯 Page goal:', pageGoal);
+        
+        // DIRECT MAPPING: Use the brief as-is, no AI regeneration
+        const sections = mapBriefToSections(structuredBrief, {
+          businessName,
+          heroImageUrl,
+          logoUrl,
+          primaryColor,
+          pageType,
+          pageGoal,
+          industry: consultationData.industry,
+          serviceType: consultationData.service_type,
+          aiSearchOptimization: strategicData.consultationData?.ai_seo_data || null,
+        });
+        
+        console.log(`✅ BRIEF-FIRST: Built ${sections.length} sections directly from structuredBrief`);
+        return sections;
+      }
+      
+      // FALLBACK: If we have strategyBrief text but no structuredBrief, call the edge function
+      if (fromStrategicConsultation && strategicData?.strategyBrief && !strategicData?.structuredBrief) {
+        console.log('📋 Using strategyBrief text (requires AI parsing)');
+        
+        const brandSettings = strategicData.brandSettings || strategicData.consultationData?.brandSettings;
+        const ds = generateDesignSystem({
+          industry: consultationData.industry || 'default',
+          tone: 'professional',
+          brandOverrides: brandSettings ? {
+            primaryColor: brandSettings.primaryColor,
+            secondaryColor: brandSettings.secondaryColor,
+          } : undefined,
+        });
+        setDesignSystem(ds);
+        setCssVariables(designSystemToCSSVariables(ds));
         
         const { data: result, error } = await supabase.functions.invoke('generate-page-content', {
           body: {
             strategyBrief: strategicData.strategyBrief,
-            structuredBrief: strategicData.structuredBrief || null,
+            structuredBrief: null,
             strategicConsultation: strategicData.consultationData,
             industry: consultationData.industry,
-            pageType: strategicData.consultationData?.pageType || null, // CRITICAL: Pass pageType for beta sections
+            pageType: strategicData.consultationData?.pageType || null,
           }
         });
-        
-        console.log('[Generate] Passed pageType to generator:', strategicData.consultationData?.pageType);
         
         if (error) {
           console.warn('⚠️ Strategy brief generation failed:', error);
         } else if (result?.success && result?.content) {
-          console.log('✅ Strategy brief generated content:', result.content);
-          console.log('📐 Page structure from brief:', result.content.pageStructure);
+          console.log('✅ Strategy brief parsed content:', result.content);
           return await mapStrategyBriefContentToSections(result.content, consultationData, strategicData.consultationData);
         }
       }
@@ -1150,9 +1194,6 @@ function GenerateContent() {
 
     // Build statistics from proof points (NO fabrication) - check multiple possible field locations
     const buildStatistics = () => {
-      console.log('[buildStatistics] ai_seo_data:', consultationData?.ai_seo_data);
-      console.log('[buildStatistics] ai_seo_data type:', typeof consultationData?.ai_seo_data);
-      console.log('[buildStatistics] ai_seo_data keys:', consultationData?.ai_seo_data ? Object.keys(consultationData.ai_seo_data) : 'null');
       
       const stats: Array<{ value: string; label: string }> = [];
       
