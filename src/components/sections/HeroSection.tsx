@@ -160,18 +160,20 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
       }`}>
         <div className="flex flex-col items-center gap-8 w-full">
           
-          {/* Logo */}
+          {/* Logo - positioned above trust badge */}
           {content.logoUrl && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
+              className="mb-2"
             >
               <img 
                 src={content.logoUrl} 
-                alt="Company logo" 
-                className="h-12 md:h-16 object-contain"
+                alt="Logo" 
+                className="h-12 md:h-14 mx-auto object-contain"
                 onError={(e) => {
+                  console.log('Logo failed to load:', content.logoUrl);
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
               />
