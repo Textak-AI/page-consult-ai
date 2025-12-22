@@ -22,7 +22,8 @@ export function StatsBarSection({ statistics, industryVariant }: StatsBarSection
   const typography = getTypography(industryVariant);
   const isConsulting = industryVariant === 'consulting';
   
-  console.log('🎨 [StatsBarSection] industryVariant:', industryVariant, 'isConsulting:', isConsulting);
+  console.log('🎨 [StatsBarSection] Props received - industryVariant:', industryVariant, 'isConsulting:', isConsulting);
+  console.log('🎨 [StatsBarSection] statistics count:', statistics?.length);
   
   // NO FABRICATION: Only render stats that actually exist
   // Don't pad with defaults, return null if no real stats

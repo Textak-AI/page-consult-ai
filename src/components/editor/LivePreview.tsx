@@ -171,10 +171,14 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           />
         );
       case "stats-bar":
+        console.log('🎨 [LivePreview] Rendering stats-bar with industryVariant:', section.content.industryVariant);
         return renderSectionWithToolbar(
           section,
           index,
-          <StatsBarSection statistics={section.content.statistics || []} />
+          <StatsBarSection 
+            statistics={section.content.statistics || []} 
+            industryVariant={section.content.industryVariant}
+          />
         );
       case "problem-solution":
         return renderSectionWithToolbar(

@@ -142,8 +142,9 @@ export default function NewConsultation() {
 
       console.log('✅ Consultation saved to database:', consultationRecord.id);
 
-      // Navigate to generate page with all data INCLUDING structuredBrief
+      // Navigate to generate page with all data INCLUDING structuredBrief and aiSeoData
       console.log('🚀 Navigating to /generate with structuredBrief:', !!structuredBrief);
+      console.log('🚀 Navigating to /generate with aiSeoData:', !!aiSeoData, aiSeoData?.entity?.type);
       
       navigate("/generate", {
         state: {
@@ -179,6 +180,8 @@ export default function NewConsultation() {
             strategyBrief,
             // CRITICAL: Include the structured JSON brief for direct mapping
             structuredBrief,
+            // CRITICAL: Include AI SEO data for intelligent optimization
+            aiSeoData,
             brandSettings: consultationData.brandSettings,
           },
           fromStrategicConsultation: true,
@@ -253,6 +256,8 @@ export default function NewConsultation() {
           strategyBrief: mockStrategyBrief,
           // CRITICAL: Include structured brief for direct mapping
           structuredBrief: mockStructuredBrief,
+          // CRITICAL: Include AI SEO data
+          aiSeoData: mockAiSeoData,
         },
         fromStrategicConsultation: true,
       },
