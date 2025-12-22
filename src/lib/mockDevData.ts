@@ -107,6 +107,87 @@ Acceler8ors positions as the antidote to agency chaos for B2B tech startups. The
 - Occasional humor that shows self-awareness
 - Numbers and specifics over vague claims`;
 
+// Mock structured brief JSON - this is what the edge function returns
+export const mockStructuredBrief = {
+  headlines: {
+    optionA: "Stop Burning Time With Agencies That Don't Get Tech",
+    optionB: "6 Months of Brand Progress. 6 Weeks.",
+    optionC: "Finally, A Creative Agency Built for B2B Tech"
+  },
+  subheadline: "6 months of brand progress in 6 weeks. Built by a team from Google, Spotify, and Pentagram who actually understand B2B tech.",
+  messagingPillars: [
+    {
+      title: "Strategy-First Speed",
+      description: "We're fast because we start with strategy, not because we skip it. Our focused sprint methodology eliminates wasted cycles.",
+      icon: "Zap"
+    },
+    {
+      title: "B2B Tech Fluency",
+      description: "Team from Google, Spotify, Pentagram understands your world. No more explaining what a SaaS product is.",
+      icon: "Target"
+    },
+    {
+      title: "Startup Flexibility",
+      description: "No bloated teams, no endless meetings, no surprises. Just senior talent focused on your success.",
+      icon: "Users"
+    }
+  ],
+  proofPoints: {
+    clientCount: "75+ B2B tech companies",
+    yearsInBusiness: "5+ years",
+    achievements: "Featured in Communication Arts, team includes alumni from Google, Spotify, and Pentagram. Average client NPS of 72.",
+    otherStats: ["6-week delivery", "NPS 72"]
+  },
+  problemStatement: "You're tired of agencies that don't understand tech. Slow turnaround times, managing multiple vendors, and ending up with generic work that doesn't reflect your innovation. Your last agency took 6 months to deliver mediocrity.",
+  solutionStatement: "The Brand Acceleration Sprint delivers complete brand identity, website, and pitch deck in 6 weeks. No bloated teams. No endless meetings. No surprises. We're fast because we're focused, not because we cut corners.",
+  tone: "confident" as const,
+  objections: [
+    {
+      question: "Why does this cost $25-50K for branding?",
+      answer: "Our Brand Acceleration Sprint includes complete brand identity, website design, pitch deck, and 90-day marketing roadmap. The investment pays for itself when you avoid the typical 18-month agency cycle that goes nowhere."
+    },
+    {
+      question: "How can you deliver a complete brand in 6 weeks?",
+      answer: "We use a sprint methodology with weekly creative reviews. Our strategy-first approach means we start building immediately after our 2-hour strategy session, with no wasted cycles."
+    },
+    {
+      question: "I've been burned by agencies before. Why are you different?",
+      answer: "Our team comes from Google, Spotify, and Pentagram — we understand both tech and brand building. We only take 2 clients per month so we can give you senior-level attention, not junior busywork."
+    }
+  ],
+  pageStructure: ["hero", "stats-bar", "problem-solution", "features", "how-it-works", "social-proof", "faq", "final-cta"],
+  processSteps: [
+    {
+      step: 1,
+      title: "Discovery Call",
+      description: "15-minute call to discuss your goals and see if we're a fit."
+    },
+    {
+      step: 2,
+      title: "Custom Proposal",
+      description: "Detailed proposal within 48 hours including timeline and investment."
+    },
+    {
+      step: 3,
+      title: "Strategy Session",
+      description: "2-hour deep dive into positioning, messaging, and competitive differentiation."
+    },
+    {
+      step: 4,
+      title: "Sprint Delivery",
+      description: "6 weekly creative reviews with unlimited revisions until you're thrilled."
+    }
+  ],
+  testimonials: [
+    {
+      quote: "Acceler8ors delivered in 6 weeks what 3 previous agencies couldn't do in 18 months. They actually understood our product and our market.",
+      author: "Marcus Chen",
+      title: "CEO, DataStack"
+    }
+  ],
+  ctaText: "Book a Discovery Call"
+};
+
 export const mockGeneratedSections = [
   {
     id: "hero-1",
