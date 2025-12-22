@@ -1122,6 +1122,19 @@ function GenerateContent() {
     
     console.log('🏗️ Legacy mapping with structure:', pageStructure);
 
+    // Helper to parse objections string into FAQ items
+    const parseObjectionsString = (objStr: string): Array<{ question: string; answer: string }> => {
+      if (!objStr) return [];
+      // Split by comma and create Q&A pairs
+      return objStr.split(',').map(q => {
+        const trimmed = q.trim();
+        return {
+          question: trimmed.endsWith('?') ? trimmed : trimmed + '?',
+          answer: 'We address this concern directly in our consultation process and provide clear solutions tailored to your situation.'
+        };
+      }).filter(item => item.question.length > 5);
+    };
+
     // Build statistics from proof points (NO fabrication) - check multiple possible field locations
     const buildStatistics = () => {
       const stats: Array<{ value: string; label: string }> = [];
@@ -1129,12 +1142,16 @@ function GenerateContent() {
       // Check proofPoints object first
       const proofPoints = content.proofPoints || {};
       
-      // Also check top-level fields as fallback
-      const clientCount = proofPoints.clientCount || content.clientCount;
-      const yearsInBusiness = proofPoints.yearsInBusiness || content.yearsInBusiness;
-      const otherStats = proofPoints.otherStats || content.otherStats || [];
+      // Check content first, then consultationData as fallback
+      const clientCount = proofPoints.clientCount || content.clientCount || consultationData?.clientCount;
+      const yearsInBusiness = proofPoints.yearsInBusiness || content.yearsInBusiness || consultationData?.yearsInBusiness;
+      const otherStats = proofPoints.otherStats || content.otherStats || consultationData?.otherStats || [];
       
-      console.log('🔍 [buildStatistics] Data check:', { clientCount, yearsInBusiness, otherStats });
+      console.log('🔍 [buildStatistics] Sources:', { 
+        fromContent: { clientCount: content.clientCount, yearsInBusiness: content.yearsInBusiness },
+        fromConsultation: { clientCount: consultationData?.clientCount, yearsInBusiness: consultationData?.yearsInBusiness },
+        resolved: { clientCount, yearsInBusiness }
+      });
       
       if (clientCount) {
         const countMatch = String(clientCount).match(/(\d+[\d,]*)/);
@@ -1347,8 +1364,15 @@ function GenerateContent() {
             break;
 
         case 'faq':
-          // Use faqItems or objections as FAQ
-          const faqData = content.faqItems || content.objections || [];
+          // Use faqItems or objections from content, or parse objections string from consultationData
+          let faqData = content.faqItems || content.objections || [];
+          
+          // If no FAQ items in content, try parsing objections string from consultationData
+          if (faqData.length === 0 && consultationData?.objections) {
+            console.log('🔍 [mapLegacyStrategyContent] faq: parsing objections from consultationData:', consultationData.objections);
+            faqData = parseObjectionsString(consultationData.objections);
+          }
+          
           console.log('🔍 [mapLegacyStrategyContent] faq: found', faqData.length, 'items');
           if (faqData.length > 0) {
             sections.push({
