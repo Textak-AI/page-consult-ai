@@ -594,6 +594,10 @@ function GenerateContent() {
 
   const animatePageBuild = async (consultationData: any, userId: string) => {
     try {
+      // Check for force regenerate query param (for testing)
+      const searchParams = new URLSearchParams(window.location.search);
+      const forceRegenerate = searchParams.get('regenerate') === 'true';
+      
       // Check if a page already exists for this consultation
       const { data: existingPage } = await supabase
         .from("landing_pages")
@@ -602,7 +606,7 @@ function GenerateContent() {
         .eq("consultation_id", consultationData.id)
         .maybeSingle();
 
-      if (existingPage) {
+      if (existingPage && !forceRegenerate) {
         console.log("✅ Found existing page for consultation, loading it:", existingPage.id);
         
         // CRITICAL: Inject industryVariant into loaded sections (may be missing from old saves)
@@ -626,6 +630,8 @@ function GenerateContent() {
         setSections(sectionsWithVariant);
         setPhase("editor");
         return;
+      } else if (forceRegenerate && existingPage) {
+        console.log('🔄 Force regenerate - skipping existing page for consultation:', existingPage.id);
       }
 
       // Generate content (parallel API calls inside)
