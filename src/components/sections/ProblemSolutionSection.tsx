@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
+import { AlertTriangle, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { EyebrowBadge } from "@/components/ui/PremiumCard";
 import { getTypography } from "@/lib/typographyScale";
@@ -36,37 +36,160 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
     });
   };
 
-  // Light mode styles for consulting
-  const sectionBg = isConsulting ? 'hsl(40, 30%, 97%)' : 'hsl(217, 33%, 6%)';
-  const cardBg = isConsulting ? 'white' : 'hsla(0, 0%, 100%, 0.02)';
-  const cardBorder = isConsulting ? 'hsl(40, 20%, 88%)' : 'hsla(0, 0%, 100%, 0.05)';
-  const textPrimary = isConsulting ? 'hsl(217, 33%, 17%)' : 'hsl(210, 40%, 80%)';
-  const textSecondary = isConsulting ? 'hsl(217, 20%, 40%)' : 'hsl(210, 20%, 60%)';
-  const problemStatBg = isConsulting ? 'hsl(0, 60%, 97%)' : 'hsla(0, 0%, 100%, 0.03)';
-  const solutionStatBg = isConsulting ? 'hsl(189, 60%, 97%)' : 'hsla(189, 95%, 43%, 0.05)';
+  if (isConsulting) {
+    // Consulting layout: Light mode with colored cards
+    return (
+      <section className="py-24 bg-white">
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+
+        <div className="max-w-6xl mx-auto px-6">
+          {/* Section Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
+            <span className="inline-block px-4 py-1 bg-amber-100 text-amber-800 text-sm font-semibold rounded-full mb-4">
+              THE TRANSFORMATION
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
+              Why This Matters
+            </h2>
+          </motion.div>
+          
+          {/* Cards */}
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Problem Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="p-10 bg-red-50 border border-red-100 rounded-2xl"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-red-600" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-xl font-bold text-red-900">The Challenge</h3>
+              </div>
+              <p 
+                className={`text-slate-700 leading-relaxed text-lg ${
+                  isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
+                }`}
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("problem", e)}
+              >
+                {content.problem}
+              </p>
+              
+              {content.problemStat && (
+                <div className="mt-6 p-5 rounded-xl bg-red-100/50 border border-red-200">
+                  <div className="text-2xl font-bold text-red-700 mb-2">
+                    {content.problemStat.statistic}
+                  </div>
+                  <p className="text-slate-700 text-sm">
+                    {content.problemStat.claim}
+                  </p>
+                  <cite className="text-xs text-slate-500 not-italic block mt-2">
+                    Source: {content.problemStat.fullCitation}
+                  </cite>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Solution Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="p-10 bg-emerald-50 border border-emerald-100 rounded-2xl"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-emerald-600" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-xl font-bold text-emerald-900">Our Solution</h3>
+              </div>
+              <p 
+                className={`text-slate-700 leading-relaxed text-lg ${
+                  isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
+                }`}
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("solution", e)}
+              >
+                {content.solution}
+              </p>
+              
+              {content.solutionStat && (
+                <div className="mt-6 p-5 rounded-xl bg-emerald-100/50 border border-emerald-200">
+                  <div className="text-2xl font-bold text-emerald-700 mb-2">
+                    {content.solutionStat.statistic}
+                  </div>
+                  <p className="text-slate-700 text-sm">
+                    {content.solutionStat.claim}
+                  </p>
+                  <cite className="text-xs text-slate-500 not-italic block mt-2">
+                    Source: {content.solutionStat.fullCitation}
+                  </cite>
+                </div>
+              )}
+            </motion.div>
+          </div>
+
+          {/* Visual Connector */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="hidden md:flex justify-center mt-10"
+          >
+            <div className="flex items-center gap-4 text-slate-400">
+              <span className="text-sm font-medium">From Problem</span>
+              <div className="w-24 h-px bg-slate-300 relative">
+                <ArrowRight className="absolute -right-2 -top-2 w-4 h-4 text-slate-400" strokeWidth={1.5} />
+              </div>
+              <span className="text-sm font-medium text-emerald-600">To Solution</span>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+    );
+  }
+
+  // Default dark mode layout
+  const sectionBg = 'hsl(217, 33%, 6%)';
+  const cardBg = 'hsla(0, 0%, 100%, 0.02)';
+  const cardBorder = 'hsla(0, 0%, 100%, 0.05)';
+  const textPrimary = 'hsl(210, 40%, 80%)';
+  const textSecondary = 'hsl(210, 20%, 60%)';
 
   return (
     <section 
       className={`relative overflow-hidden ${isEditing ? "relative" : ""}`}
       style={{
         backgroundColor: sectionBg,
-        padding: '120px 24px',
+        padding: '96px 24px',
       }}
     >
-      {/* Background Elements - only show in dark mode */}
-      {!isConsulting && (
-        <>
-          <div className="absolute inset-0 bg-grid-pattern opacity-30" />
-          <div 
-            className="absolute top-1/2 left-0 w-[600px] h-[600px] rounded-full blur-[150px] -translate-y-1/2"
-            style={{ backgroundColor: 'hsla(0, 70%, 50%, 0.05)' }}
-          />
-          <div 
-            className="absolute top-1/2 right-0 w-[600px] h-[600px] rounded-full blur-[150px] -translate-y-1/2"
-            style={{ backgroundColor: 'hsla(189, 95%, 43%, 0.05)' }}
-          />
-        </>
-      )}
+      {/* Background Elements */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-30" />
+      <div 
+        className="absolute top-1/2 left-0 w-[600px] h-[600px] rounded-full blur-[150px] -translate-y-1/2"
+        style={{ backgroundColor: 'hsla(0, 70%, 50%, 0.05)' }}
+      />
+      <div 
+        className="absolute top-1/2 right-0 w-[600px] h-[600px] rounded-full blur-[150px] -translate-y-1/2"
+        style={{ backgroundColor: 'hsla(189, 95%, 43%, 0.05)' }}
+      />
 
       {isEditing && (
         <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
@@ -106,7 +229,6 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
             style={{ 
               backgroundColor: cardBg, 
               border: `1px solid ${cardBorder}`,
-              boxShadow: isConsulting ? '0 4px 20px -4px hsla(0, 0%, 0%, 0.08)' : 'none',
             }}
           >
             {/* Red accent gradient */}
@@ -123,7 +245,7 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
                   boxShadow: '0 8px 20px -4px hsla(0, 70%, 50%, 0.4)',
                 }}
               >
-                <AlertCircle className="w-7 h-7 text-white" strokeWidth={1.5} />
+                <AlertTriangle className="w-7 h-7 text-white" strokeWidth={1.5} />
               </div>
               <h3 className={typography.cardTitle} style={{ color: 'hsl(0, 70%, 50%)' }}>
                 The Challenge
@@ -146,7 +268,7 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
               <div 
                 className="mt-6 p-5 rounded-xl"
                 style={{ 
-                  backgroundColor: problemStatBg, 
+                  backgroundColor: 'hsla(0, 0%, 100%, 0.03)', 
                   border: '1px solid hsla(0, 70%, 50%, 0.2)' 
                 }}
               >
@@ -173,7 +295,6 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
             style={{ 
               backgroundColor: cardBg, 
               border: `1px solid ${cardBorder}`,
-              boxShadow: isConsulting ? '0 4px 20px -4px hsla(0, 0%, 0%, 0.08)' : 'none',
             }}
           >
             {/* Cyan accent gradient */}
@@ -213,7 +334,7 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
               <div 
                 className="mt-6 p-5 rounded-xl"
                 style={{ 
-                  backgroundColor: solutionStatBg, 
+                  backgroundColor: 'hsla(189, 95%, 43%, 0.05)', 
                   border: '1px solid hsla(189, 95%, 43%, 0.2)' 
                 }}
               >
@@ -242,9 +363,8 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
           <div 
             className="flex items-center gap-4 px-6 py-3 rounded-full backdrop-blur-sm"
             style={{ 
-              backgroundColor: isConsulting ? 'white' : 'hsla(0, 0%, 100%, 0.03)',
-              border: `1px solid ${isConsulting ? 'hsl(40, 20%, 88%)' : 'hsla(0, 0%, 100%, 0.08)'}`,
-              boxShadow: isConsulting ? '0 2px 12px -2px hsla(0, 0%, 0%, 0.06)' : 'none',
+              backgroundColor: 'hsla(0, 0%, 100%, 0.03)',
+              border: '1px solid hsla(0, 0%, 100%, 0.08)',
             }}
           >
             <span className="text-sm font-semibold" style={{ color: textSecondary }}>From Problem</span>
