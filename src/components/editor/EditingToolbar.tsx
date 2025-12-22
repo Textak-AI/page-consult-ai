@@ -63,7 +63,11 @@ export function EditingToolbar({ onSave, onCancel }: EditingToolbarProps) {
 
   const setTextSize = (size: string) => {
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
+
+    // Store the selection text to restore later
+    const selectedText = selection.toString();
+    if (!selectedText) return;
 
     const range = selection.getRangeAt(0);
     
@@ -107,6 +111,14 @@ export function EditingToolbar({ onSave, onCancel }: EditingToolbarProps) {
       span.appendChild(contents);
       range.insertNode(span);
     }
+
+    // Restore the selection on the new span
+    requestAnimationFrame(() => {
+      const newRange = document.createRange();
+      newRange.selectNodeContents(span);
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+    });
   };
 
   return (
