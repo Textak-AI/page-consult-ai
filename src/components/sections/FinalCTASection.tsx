@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle, Sparkles } from "lucide-react";
-
-import type { IndustryVariant } from '@/config/designSystem/industryVariants';
+import { ArrowRight, CheckCircle } from "lucide-react";
+import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
+import { SPACING } from "@/lib/spacingSystem";
 
 interface FinalCTASectionProps {
   content: {
@@ -20,7 +20,9 @@ interface FinalCTASectionProps {
 }
 
 export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectionProps) {
-  const isConsulting = content.industryVariant === 'consulting';
+  const industryVariant = content.industryVariant || 'default';
+  const tokens = getIndustryTokens(industryVariant);
+  const isLightMode = tokens.mode === 'light';
   
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
@@ -31,20 +33,21 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
 
   const trustIndicators = content.trustIndicators || [];
 
-  // Consulting: Dark contrast section for emphasis (inverted from light page)
-  // Default SaaS: Dark with glows
-  const sectionStyles = isConsulting
-    ? { backgroundColor: '#1c1917', padding: '96px 24px' }
-    : { backgroundColor: 'hsl(217, 33%, 6%)', padding: '120px 24px' };
+  // For light mode pages (consulting), Final CTA uses dark background for contrast
+  // For dark mode pages (SaaS), it uses the same dark with glows
+  const sectionStyles = {
+    backgroundColor: `hsl(${tokens.colors.bgDark})`,
+    padding: `${SPACING.sectionY.md} 24px`,
+  };
 
   return (
     <section 
       className="relative overflow-hidden"
       style={sectionStyles}
     >
-      {/* Dramatic Background */}
+      {/* Dramatic Background - only for dark mode SaaS */}
       <div className="absolute inset-0">
-        {!isConsulting && (
+        {!isLightMode && (
           <>
             <div className="absolute inset-0 bg-grid-pattern opacity-30" />
             <div 
@@ -73,8 +76,8 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
           }`}
           style={{
-            color: isConsulting ? '#fafaf9' : 'white',
-            fontFamily: isConsulting ? '"Source Serif 4", Georgia, serif' : undefined,
+            color: `hsl(${tokens.colors.textOnDark})`,
+            fontFamily: isLightMode ? tokens.typography.headingFont : undefined,
           }}
           contentEditable={isEditing}
           suppressContentEditableWarning
@@ -89,9 +92,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className={`text-lg md:text-xl max-w-2xl leading-relaxed ${
-              isConsulting ? 'text-stone-400' : 'text-slate-400'
-            }`}
+            className="text-lg md:text-xl max-w-2xl leading-relaxed text-slate-400"
           >
             {content.subtext}
           </motion.p>
@@ -109,16 +110,16 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             <Button 
               size="lg" 
               className={`relative overflow-hidden text-lg md:text-xl px-12 md:px-16 py-7 md:py-8 h-auto font-semibold transition-all duration-300 hover:scale-[1.02] ${
-                isConsulting
-                  ? 'bg-teal-500 hover:bg-teal-400 shadow-lg'
+                isLightMode
+                  ? 'bg-white hover:bg-slate-100 shadow-lg'
                   : 'animate-pulse-glow'
               } ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`}
               style={{
-                background: isConsulting 
+                background: isLightMode 
                   ? undefined 
                   : 'linear-gradient(135deg, hsl(189, 95%, 43%), hsl(200, 95%, 50%))',
-                color: 'white',
-                borderRadius: isConsulting ? '8px' : '16px',
+                color: isLightMode ? `hsl(${tokens.colors.accent})` : 'white',
+                borderRadius: tokens.shape.radiusButton,
               }}
             >
               <span
@@ -131,16 +132,16 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               </span>
               <ArrowRight className="ml-3 w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-1 transition-transform relative z-10" strokeWidth={2} />
               
-              {/* Animated Gradient - only for non-consulting */}
-              {!isConsulting && (
+              {/* Animated Gradient - only for dark mode */}
+              {!isLightMode && (
                 <div 
                   className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                   style={{ background: 'linear-gradient(135deg, hsl(200, 95%, 50%), hsl(270, 95%, 60%))' }}
                 />
               )}
               
-              {/* Shimmer - only for non-consulting */}
-              {!isConsulting && (
+              {/* Shimmer - only for dark mode */}
+              {!isLightMode && (
                 <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
               )}
             </Button>
@@ -157,10 +158,8 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             className="flex flex-wrap justify-center gap-6 pt-4"
           >
             {trustIndicators.map((item, i) => (
-              <div key={i} className={`flex items-center gap-2 text-sm ${
-                isConsulting ? 'text-stone-400' : 'text-slate-400'
-              }`}>
-                <CheckCircle className={`w-4 h-4 ${isConsulting ? 'text-teal-400' : 'text-brand'}`} strokeWidth={1.5} />
+              <div key={i} className="flex items-center gap-2 text-sm text-slate-400">
+                <CheckCircle className="w-4 h-4 text-white/60" strokeWidth={1.5} />
                 <span>{item.text}</span>
               </div>
             ))}
@@ -171,9 +170,9 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className={`text-sm ${isConsulting ? 'text-stone-500' : 'text-slate-500'}`}
+            className="text-sm text-slate-500"
           >
-            {content.trustText || (isConsulting ? 'Free 30-minute consultation · No obligation' : 'No credit card required · Free to start')}
+            {content.trustText || tokens.sectionHeaders.cta.subtext}
           </motion.p>
         )}
       </div>

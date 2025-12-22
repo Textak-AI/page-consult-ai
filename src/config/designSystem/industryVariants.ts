@@ -89,74 +89,83 @@ export interface IndustryDesignTokens {
  * - Serif headings signal expertise and authority
  * - Generous spacing for executive readers
  * - Goal: "trusted advisor" not "tech startup"
+ * 
+ * Layout characteristics:
+ * - Trust-first hero with credentials
+ * - Heavy upfront proof (stats bar right after hero)
+ * - Professional photography, clean, spacious
  */
 export const consultingVariant: IndustryDesignTokens = {
   mode: 'light',
   
   colors: {
-    bgPrimary: '30 6% 98%',           // warm white (stone-50)
-    bgSecondary: '30 6% 96%',         // stone-100
-    bgCard: '0 0% 100%',              // clean white
-    bgDark: '20 14% 11%',             // stone-900 for contrast sections
-    textPrimary: '20 14% 11%',        // stone-900
-    textSecondary: '25 5% 34%',       // stone-600
-    textOnDark: '30 6% 98%',          // warm white
-    accent: '174 84% 32%',            // teal-600 (default, overridden by brand)
-    accentHover: '174 84% 28%',       // teal-700
-    border: '30 6% 91%',              // stone-200
-    borderSubtle: '30 6% 94%',        // stone-100
+    // Backgrounds (slate-based for professional feel)
+    bgPrimary: '0 0% 100%',              // #FFFFFF - pure white
+    bgSecondary: '210 40% 98%',          // #F8FAFC - slate-50
+    bgCard: '0 0% 100%',                 // #FFFFFF - white cards
+    bgDark: '222 47% 11%',               // #0F172A - slate-900 for contrast
+    // Text
+    textPrimary: '222 47% 11%',          // #0F172A - slate-900
+    textSecondary: '215 16% 47%',        // #64748B - slate-500
+    textOnDark: '210 40% 98%',           // #F8FAFC - slate-50
+    // Accent (brand color, falls back to blue)
+    accent: '217 91% 60%',               // #3B82F6 - blue-500 (overridden by user brand)
+    accentHover: '217 91% 50%',          // #2563EB - blue-600
+    // Borders
+    border: '214 32% 91%',               // #E2E8F0 - slate-200
+    borderSubtle: '210 40% 96%',         // #F1F5F9 - slate-100
   },
   
   typography: {
     headingFont: '"Source Serif 4", Georgia, serif',
     bodyFont: 'Inter, system-ui, sans-serif',
-    headingWeight: 600,
+    headingWeight: 700,
     letterSpacing: '-0.01em',
-    lineHeight: 1.75,
+    lineHeight: 1.6,
   },
   
   shape: {
-    radiusCard: '0.75rem',      // 12px - soft but professional
-    radiusButton: '0.5rem',     // 8px
-    shadowCard: '0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03)',
+    radiusCard: '1rem',           // 16px - modern rounded
+    radiusButton: '0.5rem',       // 8px
+    shadowCard: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
     shadowButton: '0 1px 2px rgba(0, 0, 0, 0.05)',
-    borderCard: '1px solid hsl(30 6% 91%)',
-    blur: 'none',               // No glassmorphism
-    glow: 'none',               // No button glow
+    borderCard: '1px solid hsl(214 32% 91%)',
+    blur: 'none',                 // No glassmorphism
+    glow: 'none',                 // No button glow
   },
   
   spacing: {
-    sectionPadding: '6rem',     // Generous breathing room
-    contentWidth: '1100px',     // Slightly narrower, editorial
+    sectionPadding: '96px',       // Standard section padding
+    contentWidth: '1024px',       // Focused, editorial width
     cardPadding: '2rem',
     elementGap: '1.5rem',
   },
   
   sectionHeaders: {
     features: {
-      title: 'How We Help',
+      title: 'Why Choose Us',
       subtitle: 'Expertise that drives real results',
-      eyebrow: 'Our Approach',
+      eyebrow: 'Our Expertise',
     },
     process: {
-      title: 'How We Work Together',
-      subtitle: 'A collaborative approach to your success',
+      title: 'How It Works',
+      subtitle: 'Your path to results',
     },
     proof: {
       title: 'Results That Speak',
       subtitle: 'Trusted by leaders across industries',
     },
     testimonials: {
-      title: 'Client Perspectives',
-      subtitle: 'What our clients say about working with us',
+      title: 'What Our Clients Say',
+      subtitle: 'Real results from real clients',
     },
     cta: {
-      title: "Let's Start a Conversation",
-      ctaText: 'Schedule a Discovery Call',
-      subtext: 'Free 30-minute consultation • No obligation',
+      title: 'Ready to Get Started?',
+      ctaText: 'Schedule a Consultation',
+      subtext: 'No commitment required • Response within 24 hours',
     },
     faq: {
-      title: 'Questions We Often Hear',
+      title: 'Frequently Asked Questions',
       eyebrow: 'Common Questions',
     },
   },
