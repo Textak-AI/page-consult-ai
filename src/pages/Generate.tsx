@@ -1901,7 +1901,16 @@ function GenerateContent() {
                      effectiveNavState?.strategicData?.consultationData?.pageType ||
                      null;
     const isBetaPage = pageType === 'beta-prelaunch';
-    console.log('🚀 [generateFallbackSections] pageType:', pageType, '| isBetaPage:', isBetaPage);
+    
+    // CRITICAL: Detect industry variant for proper styling (consulting = light mode)
+    const { detectIndustryVariant } = await import("@/config/designSystem/industryVariants");
+    const industryVariant = detectIndustryVariant(
+      consultationData.industry,
+      consultationData.service_type || consultationData.serviceType,
+      pageType
+    );
+    
+    console.log('🚀 [generateFallbackSections] pageType:', pageType, '| isBetaPage:', isBetaPage, '| industryVariant:', industryVariant);
     
     const {
       generateHeadline: genHeadline,
@@ -2003,31 +2012,31 @@ function GenerateContent() {
         type: "hero",
         order: 0,
         visible: true,
-        content: { headline, subheadline, ctaText: cta.text, ctaLink: "#signup" },
+        content: { headline, subheadline, ctaText: cta.text, ctaLink: "#signup", industryVariant },
       },
       {
         type: "problem-solution",
         order: 1,
         visible: true,
-        content: { problem: problemStatement, solution: solutionStatement },
+        content: { problem: problemStatement, solution: solutionStatement, industryVariant },
       },
       {
         type: "features",
         order: 2,
         visible: true,
-        content: { features },
+        content: { features, industryVariant },
       },
       {
         type: "social-proof",
         order: 3,
         visible: true,
-        content: { ...socialProof, industry: consultationData.industry },
+        content: { ...socialProof, industry: consultationData.industry, industryVariant },
       },
       {
         type: "final-cta",
         order: 4,
         visible: true,
-        content: { headline: "Ready to Get Started?", ctaText: cta.text, ctaLink: "#signup" },
+        content: { headline: "Ready to Get Started?", ctaText: cta.text, ctaLink: "#signup", industryVariant },
       },
     ];
   };
