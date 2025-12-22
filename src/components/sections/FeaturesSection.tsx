@@ -24,6 +24,7 @@ interface FeaturesSectionProps {
     businessName?: string;
   };
   onUpdate?: (content: any) => void;
+  isEditing?: boolean;
   iconStyle?: "outline" | "solid" | "duotone";
 }
 
@@ -50,7 +51,7 @@ const getIconComponent = (iconName: string): LucideIcon => {
   return CheckCircle;
 };
 
-export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSectionProps) {
+export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "outline" }: FeaturesSectionProps) {
   const { 
     title = "Why Choose Us", 
     subtitle = "Everything you need to succeed",
@@ -61,7 +62,7 @@ export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSect
   } = content;
 
   // Debug logging
-  console.log('🎨 [FeaturesSection] content.industryVariant:', content.industryVariant);
+  console.log('🎨 [FeaturesSection] content.industryVariant:', content.industryVariant, 'isEditing:', isEditing);
   console.log('🎨 [FeaturesSection] industryVariant (destructured):', industryVariant);
 
   if (!features || features.length === 0) return null;
@@ -71,6 +72,27 @@ export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSect
   const isLightMode = tokens.mode === 'light';
   const isConsulting = industryVariant === 'consulting';
   console.log('🎨 [FeaturesSection] tokens.mode:', tokens.mode, 'isLightMode:', isLightMode);
+
+  const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
+    if (!onUpdate) return;
+    onUpdate({
+      ...content,
+      [field]: e.currentTarget.textContent || content[field as keyof typeof content],
+    });
+  };
+
+  const handleFeatureBlur = (index: number, field: string, e: React.FocusEvent<HTMLElement>) => {
+    if (!onUpdate) return;
+    const updatedFeatures = [...features];
+    updatedFeatures[index] = {
+      ...updatedFeatures[index],
+      [field]: e.currentTarget.textContent || updatedFeatures[index][field as keyof typeof updatedFeatures[0]],
+    };
+    onUpdate({
+      ...content,
+      features: updatedFeatures,
+    });
+  };
 
   const getGridClass = () => {
     if (features.length <= 2) return "md:grid-cols-2";
@@ -83,7 +105,10 @@ export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSect
   if (isConsulting) {
     // Consulting layout: Light slate background, white cards
     return (
-      <section className="py-24 bg-slate-50">
+      <section className={`py-24 bg-slate-50 ${isEditing ? 'relative' : ''}`}>
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
+        )}
         <div className="max-w-6xl mx-auto px-6">
           {/* Section Header */}
           <motion.div 
@@ -96,10 +121,24 @@ export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSect
             <span className="inline-block px-4 py-1 bg-blue-100 text-blue-800 text-sm font-semibold rounded-full mb-4">
               OUR EXPERTISE
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-              How We Help
+            <h2 
+              className={`text-3xl md:text-4xl font-bold text-slate-900 mb-4 ${
+                isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2 inline-block" : ""
+              }`}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("title", e)}
+            >
+              {title}
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p 
+              className={`text-lg text-slate-600 max-w-2xl mx-auto ${
+                isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
+              }`}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("subtitle", e)}
+            >
               {businessName ? `What sets ${businessName} apart` : subtitle}
             </p>
           </motion.div>
@@ -123,12 +162,26 @@ export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSect
                     </div>
                     
                     {/* Title */}
-                    <h3 className="text-xl font-bold text-slate-900 mb-3">
+                    <h3 
+                      className={`text-xl font-bold text-slate-900 mb-3 ${
+                        isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleFeatureBlur(i, "title", e)}
+                    >
                       {feature.title}
                     </h3>
                     
                     {/* Description */}
-                    <p className="text-slate-600 leading-relaxed">
+                    <p 
+                      className={`text-slate-600 leading-relaxed ${
+                        isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleFeatureBlur(i, "description", e)}
+                    >
                       {feature.description}
                     </p>
                   </div>
@@ -144,12 +197,15 @@ export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSect
   // Default dark mode layout
   return (
     <section 
-      className="relative overflow-hidden"
+      className={`relative overflow-hidden ${isEditing ? 'relative' : ''}`}
       style={{ 
         backgroundColor: 'hsl(217, 33%, 6%)',
         padding: '96px 24px',
       }}
     >
+      {isEditing && (
+        <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
+      )}
       {/* Subtle Background */}
       <div className="absolute inset-0 bg-grid-pattern opacity-30" />
       <div 
@@ -172,10 +228,24 @@ export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSect
             className="mb-6"
           />
           
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 tracking-tight text-white">
+          <h2 
+            className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-6 tracking-tight text-white ${
+              isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2 inline-block" : ""
+            }`}
+            contentEditable={isEditing}
+            suppressContentEditableWarning
+            onBlur={(e) => handleBlur("title", e)}
+          >
             {title}
           </h2>
-          <p className="text-lg md:text-xl leading-relaxed text-slate-400">
+          <p 
+            className={`text-lg md:text-xl leading-relaxed text-slate-400 ${
+              isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
+            }`}
+            contentEditable={isEditing}
+            suppressContentEditableWarning
+            onBlur={(e) => handleBlur("subtitle", e)}
+          >
             {subtitle}
           </p>
         </motion.div>
@@ -202,11 +272,25 @@ export function FeaturesSection({ content, iconStyle = "outline" }: FeaturesSect
                     <Icon className="w-7 h-7 text-white" strokeWidth={1.5} />
                   </GradientIcon>
                   
-                  <h3 className="text-xl md:text-2xl font-semibold mb-4 text-white group-hover:text-cyan-400 transition-colors">
+                  <h3 
+                    className={`text-xl md:text-2xl font-semibold mb-4 text-white group-hover:text-cyan-400 transition-colors ${
+                      isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                    }`}
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleFeatureBlur(i, "title", e)}
+                  >
                     {feature.title}
                   </h3>
                   
-                  <p className="text-base md:text-lg text-slate-400 leading-relaxed">
+                  <p 
+                    className={`text-base md:text-lg text-slate-400 leading-relaxed ${
+                      isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                    }`}
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleFeatureBlur(i, "description", e)}
+                  >
                     {feature.description}
                   </p>
                 </PremiumCard>
