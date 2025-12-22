@@ -3,15 +3,8 @@ import { ImagePicker } from "@/components/editor/ImagePicker";
 import { useState } from "react";
 import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-
-const getButtonTextColor = (primaryColor: string): string => {
-  const hex = primaryColor.replace('#', '');
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.5 ? '#1E293B' : '#FFFFFF';
-};
+import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
+import { SPACING } from "@/lib/spacingSystem";
 
 interface CitedStat {
   statistic: string;
@@ -20,8 +13,6 @@ interface CitedStat {
   year: number;
   fullCitation: string;
 }
-
-import type { IndustryVariant } from '@/config/designSystem/industryVariants';
 
 interface HeroSectionProps {
   content: {
@@ -58,11 +49,14 @@ interface HeroSectionProps {
 
 export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) {
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
-  const isConsulting = content.industryVariant === 'consulting';
   
-  // Debug logging
-  console.log('🎨 [HeroSection] content.industryVariant:', content.industryVariant);
-  console.log('🎨 [HeroSection] isConsulting:', isConsulting);
+  // Get industry tokens
+  const industryVariant = content.industryVariant || 'default';
+  const tokens = getIndustryTokens(industryVariant);
+  const isLightMode = tokens.mode === 'light';
+  const isConsulting = industryVariant === 'consulting';
+  
+  console.log('🎨 [HeroSection] industryVariant:', industryVariant, 'isLightMode:', isLightMode);
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
@@ -85,15 +79,15 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   const credibilityItems = content.credibilityBar || [];
   const trustBadges = content.trustBadges || [];
 
-  // Consulting: Light mode, warm backgrounds
-  // Default: Dark SaaS style
-  const sectionStyles = isConsulting
-    ? { backgroundColor: '#fafaf9' } // stone-50
+  // Light mode (consulting): White/slate backgrounds
+  // Dark mode (SaaS): Dark backgrounds with gradients
+  const sectionStyles = isLightMode
+    ? { backgroundColor: `hsl(${tokens.colors.bgPrimary})` }
     : { backgroundColor: 'hsl(217, 33%, 6%)' };
 
-  const textStyles = isConsulting
-    ? { primary: '#1c1917', secondary: '#57534e', accent: '#0d9488' } // stone-900, stone-600, teal-600
-    : { primary: 'white', secondary: 'hsl(215, 20%, 65%)', accent: '#22d3ee' };
+  const textPrimary = isLightMode ? `hsl(${tokens.colors.textPrimary})` : 'white';
+  const textSecondary = isLightMode ? `hsl(${tokens.colors.textSecondary})` : 'hsl(215, 20%, 65%)';
+  const accentColor = isLightMode ? `hsl(${tokens.colors.accent})` : '#22d3ee';
 
   return (
     <section 
@@ -192,14 +186,16 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
-                isConsulting 
-                  ? 'bg-teal-50 border border-teal-200' 
-                  : 'bg-cyan-500/10 border border-cyan-500/20 backdrop-blur-sm'
-              }`}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
+              style={{
+                backgroundColor: isLightMode ? `hsl(${tokens.colors.accent} / 0.1)` : 'hsla(189, 95%, 43%, 0.1)',
+                borderColor: isLightMode ? `hsl(${tokens.colors.accent} / 0.3)` : 'hsla(189, 95%, 43%, 0.2)',
+                borderWidth: '1px',
+                borderStyle: 'solid',
+              }}
             >
-              <Sparkles className={`w-4 h-4 ${isConsulting ? 'text-teal-600' : 'text-cyan-400'}`} strokeWidth={1.5} />
-              <span className={`text-sm font-medium tracking-wide ${isConsulting ? 'text-teal-700' : 'text-cyan-400'}`}>
+              <Sparkles className="w-4 h-4" style={{ color: accentColor }} strokeWidth={1.5} />
+              <span className="text-sm font-medium tracking-wide" style={{ color: accentColor }}>
                 {content.fomo.badge}
               </span>
             </motion.div>
@@ -241,9 +237,9 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("headline", e)}
             style={{ 
-              color: textStyles.primary,
-              fontFamily: isConsulting ? '"Source Serif 4", Georgia, serif' : undefined,
-              textShadow: isConsulting ? 'none' : '0 4px 40px hsla(0, 0%, 0%, 0.5)',
+              color: textPrimary,
+              fontFamily: isConsulting ? tokens.typography.headingFont : undefined,
+              textShadow: isLightMode ? 'none' : '0 4px 40px hsla(0, 0%, 0%, 0.5)',
             }}
           >
             {content.headline}
@@ -260,7 +256,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("subheadline", e)}
-            style={{ color: textStyles.secondary }}
+            style={{ color: textSecondary }}
           >
             {content.subheadline}
           </motion.p>
@@ -277,13 +273,14 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               <Button 
                 size="lg" 
                 className={`relative overflow-hidden text-lg px-10 py-7 h-auto font-semibold transition-all duration-300 hover:scale-[1.02] ${
-                  isConsulting
-                    ? 'bg-teal-600 hover:bg-teal-700 shadow-md hover:shadow-lg'
+                  isLightMode
+                    ? 'shadow-md hover:shadow-lg'
                     : 'bg-brand-gradient shadow-brand-glow hover:shadow-brand-glow-lg'
                 } ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`}
                 style={{
+                  backgroundColor: isLightMode ? `hsl(${tokens.colors.accent})` : undefined,
                   color: 'white',
-                  borderRadius: isConsulting ? '8px' : '12px',
+                  borderRadius: tokens.shape.radiusButton,
                 }}
               >
                 <span
