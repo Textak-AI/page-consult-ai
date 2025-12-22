@@ -332,8 +332,13 @@ function GenerateContent() {
 
   const loadConsultation = async () => {
     try {
-      // FIRST: Check if we're loading an existing page by ID
-      if (pageId) {
+      // Check for force regenerate query param (for testing)
+      const searchParams = new URLSearchParams(window.location.search);
+      const forceRegenerate = searchParams.get('regenerate') === 'true';
+      console.log('[Generate] forceRegenerate:', forceRegenerate);
+
+      // FIRST: Check if we're loading an existing page by ID (unless force regenerating)
+      if (pageId && !forceRegenerate) {
         console.log('🔍 Loading existing page:', pageId);
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
@@ -364,6 +369,8 @@ function GenerateContent() {
         setSections((existingPage.sections as Section[]) || []);
         setPhase("editor");
         return;
+      } else if (forceRegenerate) {
+        console.log('🔄 Force regenerate enabled - bypassing cached page');
       }
 
       // SECOND: Check if data was passed from demo via React Router state or sessionStorage
