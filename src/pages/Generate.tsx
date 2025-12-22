@@ -381,6 +381,13 @@ function GenerateContent() {
       console.log('📦 effectiveNavState:', effectiveNavState);
       console.log('📦 demoData:', demoData);
       console.log('🔧 devMode:', isDevMode);
+      console.log('📋 fromStrategicConsultation:', fromStrategicConsultation);
+      console.log('📊 strategicData?.structuredBrief present:', !!strategicData?.structuredBrief);
+      if (strategicData?.structuredBrief) {
+        console.log('📊 structuredBrief keys:', Object.keys(strategicData.structuredBrief));
+        console.log('📊 structuredBrief.headlines:', strategicData.structuredBrief.headlines);
+        console.log('📊 structuredBrief.proofPoints:', strategicData.structuredBrief.proofPoints);
+      }
 
       if (demoData) {
         // DEV MODE: Skip auth check for testing

@@ -8,7 +8,7 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import iconmark from "@/assets/iconmark-darkmode.svg";
 import { DevToolbar, useDevMode } from "@/components/dev/DevToolbar";
-import { mockConsultation, mockStrategyBrief, mockAiSeoData } from "@/lib/mockDevData";
+import { mockConsultation, mockStrategyBrief, mockAiSeoData, mockStructuredBrief } from "@/lib/mockDevData";
 import { AIWorkingLoader } from "@/components/editor/AIWorkingLoader";
 import type { AISeoData } from "@/services/intelligence/types";
 
@@ -41,6 +41,7 @@ export default function NewConsultation() {
   const [userId, setUserId] = useState<string | null>(null);
   const [consultationData, setConsultationData] = useState<ConsultationData | null>(null);
   const [strategyBrief, setStrategyBrief] = useState<string>('');
+  const [structuredBrief, setStructuredBrief] = useState<any>(null);
   const [aiSeoData, setAiSeoData] = useState<AISeoData | null>(null);
   const [consultationStep, setConsultationStep] = useState(1);
   const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
@@ -92,13 +93,18 @@ export default function NewConsultation() {
     checkAuth();
   }, [navigate, searchParams, prefillData]);
 
-  // Handle consultation completion
-  const handleConsultationComplete = (data: ConsultationData, brief: string, seoData?: AISeoData | null) => {
+  // Handle consultation completion - now includes structuredBrief JSON
+  const handleConsultationComplete = (data: ConsultationData, brief: string, seoData?: AISeoData | null, structuredBriefData?: any) => {
     console.log('📋 Consultation complete:', data);
     console.log('📝 Strategy brief generated');
+    console.log('📊 structuredBrief present:', !!structuredBriefData);
+    if (structuredBriefData) {
+      console.log('📊 structuredBrief keys:', Object.keys(structuredBriefData));
+    }
     if (seoData) console.log('🔍 AI SEO data available:', seoData.entity?.type);
     setConsultationData(data);
     setStrategyBrief(brief);
+    setStructuredBrief(structuredBriefData || null);
     setAiSeoData(seoData || null);
     setStage('brief-review');
   };
@@ -136,7 +142,9 @@ export default function NewConsultation() {
 
       console.log('✅ Consultation saved to database:', consultationRecord.id);
 
-      // Navigate to generate page with all data
+      // Navigate to generate page with all data INCLUDING structuredBrief
+      console.log('🚀 Navigating to /generate with structuredBrief:', !!structuredBrief);
+      
       navigate("/generate", {
         state: {
           consultationData: {
@@ -169,6 +177,8 @@ export default function NewConsultation() {
             consultationData,
             websiteIntelligence: consultationData.websiteIntelligence,
             strategyBrief,
+            // CRITICAL: Include the structured JSON brief for direct mapping
+            structuredBrief,
             brandSettings: consultationData.brandSettings,
           },
           fromStrategicConsultation: true,
@@ -194,6 +204,7 @@ export default function NewConsultation() {
   const handleRestart = () => {
     setConsultationData(null);
     setStrategyBrief('');
+    setStructuredBrief(null);
     setStage('consultation');
   };
 
@@ -209,6 +220,7 @@ export default function NewConsultation() {
     setTimeout(() => {
       setConsultationData(mockConsultation as unknown as ConsultationData);
       setStrategyBrief(mockStrategyBrief);
+      setStructuredBrief(mockStructuredBrief);
       setStage('brief-review');
     }, 10000);
   };
@@ -216,6 +228,7 @@ export default function NewConsultation() {
   const handleDevJumpToBriefReview = () => {
     setConsultationData(mockConsultation as unknown as ConsultationData);
     setStrategyBrief(mockStrategyBrief);
+    setStructuredBrief(mockStructuredBrief);
     setAiSeoData(mockAiSeoData);
     setStage('brief-review');
   };
@@ -238,6 +251,8 @@ export default function NewConsultation() {
           consultationData: mockConsultation,
           websiteIntelligence: mockConsultation.websiteIntelligence,
           strategyBrief: mockStrategyBrief,
+          // CRITICAL: Include structured brief for direct mapping
+          structuredBrief: mockStructuredBrief,
         },
         fromStrategicConsultation: true,
       },

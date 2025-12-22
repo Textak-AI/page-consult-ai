@@ -305,7 +305,7 @@ interface PrefillData {
 }
 
 interface Props {
-  onComplete: (data: ConsultationData, strategyBrief: string, aiSeoData?: AISeoData | null) => void;
+  onComplete: (data: ConsultationData, strategyBrief: string, aiSeoData?: AISeoData | null, structuredBrief?: any) => void;
   onBack?: () => void;
   prefillData?: PrefillData | null;
 }
@@ -649,21 +649,32 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
         console.warn('⚠️ AI SEO extraction failed:', seoResult.error);
       }
       
+      // CRITICAL: Capture BOTH the text brief AND the structured JSON brief
+      const strategyBriefText = briefResult.data.strategyBrief;
+      const structuredBrief = briefResult.data.structuredBrief;
+      
+      console.log('📋 Strategy brief generated');
+      console.log('📊 structuredBrief present:', !!structuredBrief);
+      if (structuredBrief) {
+        console.log('📊 structuredBrief keys:', Object.keys(structuredBrief));
+      }
+      
       // Clear the draft since consultation is complete
       localStorage.removeItem('pageconsult_consultation_draft');
       console.log('🗑️ Cleared consultation draft');
       
-      onComplete(data as ConsultationData, briefResult.data.strategyBrief, aiSeoData);
+      // Pass BOTH the text brief AND the structured JSON brief
+      onComplete(data as ConsultationData, strategyBriefText, aiSeoData, structuredBrief);
     } catch (err) {
       console.error('Strategy brief generation error:', err);
-      // Fallback: proceed with basic brief
+      // Fallback: proceed with basic brief (no structured brief available)
       const fallbackBrief = generateFallbackBrief(data as ConsultationData);
       
       // Clear the draft since consultation is complete
       localStorage.removeItem('pageconsult_consultation_draft');
       console.log('🗑️ Cleared consultation draft');
       
-      onComplete(data as ConsultationData, fallbackBrief, null);
+      onComplete(data as ConsultationData, fallbackBrief, null, null);
     } finally {
       setIsGeneratingBrief(false);
     }
