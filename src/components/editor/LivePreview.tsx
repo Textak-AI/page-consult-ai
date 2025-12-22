@@ -178,6 +178,8 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           <StatsBarSection 
             statistics={section.content.statistics || []} 
             industryVariant={section.content.industryVariant}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
           />
         );
       case "problem-solution":
@@ -203,6 +205,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           <FeaturesSection
             content={section.content}
             onUpdate={updateSection}
+            isEditing={editingSection === index}
             iconStyle={iconStyle}
           />
         );
@@ -220,7 +223,11 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         return renderSectionWithToolbar(
           section,
           index,
-          <SocialProofSection content={section.content} onUpdate={updateSection} />
+          <SocialProofSection 
+            content={section.content} 
+            onUpdate={updateSection} 
+            isEditing={editingSection === index}
+          />
         );
       case "final-cta":
         return renderSectionWithToolbar(

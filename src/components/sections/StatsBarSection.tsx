@@ -10,6 +10,8 @@ interface Statistic {
 interface StatsBarSectionProps {
   statistics: Statistic[];
   industryVariant?: string;
+  onUpdate?: (content: any) => void;
+  isEditing?: boolean;
 }
 
 /**
@@ -18,12 +20,22 @@ interface StatsBarSectionProps {
  * CRITICAL: Only shows statistics passed from the brief.
  * NO fallback stats, NO fabrication, NO template defaults.
  */
-export function StatsBarSection({ statistics, industryVariant }: StatsBarSectionProps) {
+export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditing }: StatsBarSectionProps) {
   const typography = getTypography(industryVariant);
   const isConsulting = industryVariant === 'consulting';
   
-  console.log('🎨 [StatsBarSection] Props received - industryVariant:', industryVariant, 'isConsulting:', isConsulting);
+  console.log('🎨 [StatsBarSection] Props received - industryVariant:', industryVariant, 'isConsulting:', isConsulting, 'isEditing:', isEditing);
   console.log('🎨 [StatsBarSection] statistics count:', statistics?.length);
+
+  const handleStatBlur = (index: number, field: 'value' | 'label', e: React.FocusEvent<HTMLElement>) => {
+    if (!onUpdate) return;
+    const updatedStats = [...statistics];
+    updatedStats[index] = {
+      ...updatedStats[index],
+      [field]: e.currentTarget.textContent || updatedStats[index][field],
+    };
+    onUpdate({ statistics: updatedStats, industryVariant });
+  };
   
   // NO FABRICATION: Only render stats that actually exist
   // Don't pad with defaults, return null if no real stats
@@ -56,7 +68,10 @@ export function StatsBarSection({ statistics, industryVariant }: StatsBarSection
   if (isConsulting) {
     // Consulting: Light slate background, prominent numbers
     return (
-      <section className="py-16 bg-slate-50 border-y border-slate-200">
+      <section className={`py-16 bg-slate-50 border-y border-slate-200 ${isEditing ? 'relative' : ''}`}>
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
+        )}
         <div className="max-w-5xl mx-auto px-6">
           <div className={`grid ${getGridClass()} gap-8 md:gap-12`}>
             {cleanStats.map((stat, i) => (
@@ -68,10 +83,24 @@ export function StatsBarSection({ statistics, industryVariant }: StatsBarSection
                 transition={{ delay: i * 0.1, duration: 0.5 }}
                 className="text-center"
               >
-                <div className="text-4xl md:text-5xl font-bold text-slate-900 mb-2">
+                <div 
+                  className={`text-4xl md:text-5xl font-bold text-slate-900 mb-2 ${
+                    isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2 inline-block" : ""
+                  }`}
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleStatBlur(i, 'value', e)}
+                >
                   {formatStatValue(stat.value)}
                 </div>
-                <div className="text-sm md:text-base text-slate-600 font-medium">
+                <div 
+                  className={`text-sm md:text-base text-slate-600 font-medium ${
+                    isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                  }`}
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleStatBlur(i, 'label', e)}
+                >
                   {stat.label}
                 </div>
                 {stat.source && (
@@ -90,6 +119,7 @@ export function StatsBarSection({ statistics, industryVariant }: StatsBarSection
   // Default dark mode styling
   return (
     <section 
+      className={isEditing ? 'relative' : ''}
       style={{
         backgroundColor: 'var(--color-background-alt)',
         borderTopWidth: 'var(--border-width)',
@@ -99,6 +129,9 @@ export function StatsBarSection({ statistics, industryVariant }: StatsBarSection
         padding: '64px 24px',
       }}
     >
+      {isEditing && (
+        <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
+      )}
       <div className="container mx-auto max-w-6xl">
         <div className={`grid ${getGridClass()}`} style={{ gap: 'var(--spacing-card-gap)' }}>
           {cleanStats.map((stat, i) => (
@@ -120,22 +153,32 @@ export function StatsBarSection({ statistics, industryVariant }: StatsBarSection
               }}
             >
               <div 
-                className={typography.statValue}
+                className={`${typography.statValue} ${
+                  isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2 inline-block" : ""
+                }`}
                 style={{ 
                   color: 'var(--color-primary)',
                   fontFamily: 'var(--font-heading)',
                   fontWeight: 'var(--font-weight-heading)',
                 }}
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleStatBlur(i, 'value', e)}
               >
                 {formatStatValue(stat.value)}
               </div>
               <div 
-                className={typography.statLabel}
+                className={`${typography.statLabel} ${
+                  isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                }`}
                 style={{ 
                   color: 'var(--color-text-primary)',
                   fontFamily: 'var(--font-body)',
                   fontWeight: 'var(--font-weight-body)',
                 }}
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleStatBlur(i, 'label', e)}
               >
                 {stat.label}
               </div>
