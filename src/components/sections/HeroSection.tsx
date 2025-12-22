@@ -1,10 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
 import { LogoUploader } from "@/components/editor/LogoUploader";
-import { useState } from "react";
-import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star, Image } from "lucide-react";
+import { useState, useMemo } from "react";
+import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star, Image, Layers } from "lucide-react";
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CitedStat {
   statistic: string;
@@ -13,6 +22,8 @@ interface CitedStat {
   year: number;
   fullCitation: string;
 }
+
+type LogoSize = 'small' | 'medium' | 'large';
 
 interface HeroSectionProps {
   content: {
@@ -31,13 +42,15 @@ interface HeroSectionProps {
     };
     citedStat?: CitedStat;
     trustBadges?: string[];
-    trustBadge?: string; // Single trust badge for hero (credential)
+    trustBadge?: string;
     credibilityBar?: Array<{
       icon?: string;
       text: string;
     }>;
     primaryColor?: string;
     logoUrl?: string | null;
+    logoSize?: LogoSize;
+    darkOverlay?: boolean;
     secondaryCTA?: {
       type: string;
       text: string;
@@ -47,6 +60,13 @@ interface HeroSectionProps {
   onUpdate: (content: any) => void;
   isEditing?: boolean;
 }
+
+// Logo size mapping
+const logoSizeClasses: Record<LogoSize, string> = {
+  small: 'h-8 md:h-10',
+  medium: 'h-12 md:h-14',
+  large: 'h-16 md:h-20',
+};
 
 export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) {
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
@@ -59,7 +79,15 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   const isConsulting = industryVariant === 'consulting';
   const isSaas = industryVariant === 'saas';
   
-  console.log('🎨 [HeroSection] industryVariant:', industryVariant, 'isLightMode:', isLightMode);
+  // Determine if we should use light text (when bg image exists)
+  const hasBackgroundImage = !!content.backgroundImage;
+  const showDarkOverlay = hasBackgroundImage && (content.darkOverlay !== false); // Default to true when bg image exists
+  const useLightText = hasBackgroundImage || !isConsulting;
+  
+  // Logo size with default
+  const logoSize = content.logoSize || 'medium';
+  
+  console.log('🎨 [HeroSection] industryVariant:', industryVariant, 'hasBackgroundImage:', hasBackgroundImage, 'useLightText:', useLightText);
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
@@ -76,6 +104,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         photographerName: image.user.name,
         photographerLink: image.user.link,
       },
+      darkOverlay: true, // Auto-enable overlay when adding bg image
     });
   };
 
@@ -83,6 +112,20 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
     onUpdate({
       ...content,
       logoUrl: logoUrl,
+    });
+  };
+  
+  const handleLogoSizeChange = (size: LogoSize) => {
+    onUpdate({
+      ...content,
+      logoSize: size,
+    });
+  };
+  
+  const handleToggleOverlay = (enabled: boolean) => {
+    onUpdate({
+      ...content,
+      darkOverlay: enabled,
     });
   };
 
@@ -285,27 +328,41 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             backgroundPosition: 'center',
           }}
         >
-          <div 
-            className="absolute inset-0" 
-            style={{
-              background: `linear-gradient(135deg, hsla(217, 33%, 6%, 0.85), hsla(217, 33%, 6%, 0.75))`,
-            }}
-          />
+          {showDarkOverlay && (
+            <div 
+              className="absolute inset-0 bg-black/60" 
+            />
+          )}
         </div>
       )}
       
       {isEditing && (
-        <>
-          <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-20" />
+        <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
           <Button
-            className="absolute top-4 right-4 z-20"
             size="sm"
             onClick={() => setImagePickerOpen(true)}
           >
             <ImagePlus className="h-4 w-4 mr-2" />
             {content.backgroundImage ? 'Change' : 'Add'} Background
           </Button>
-        </>
+          
+          {/* Dark overlay toggle - only show when bg image exists */}
+          {hasBackgroundImage && (
+            <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-md">
+              <Layers className="h-4 w-4 text-slate-600" />
+              <Label htmlFor="overlay-toggle" className="text-sm text-slate-700 whitespace-nowrap">Dark Overlay</Label>
+              <Switch
+                id="overlay-toggle"
+                checked={showDarkOverlay}
+                onCheckedChange={handleToggleOverlay}
+              />
+            </div>
+          )}
+        </div>
+      )}
+      
+      {isEditing && (
+        <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
       )}
 
       {/* Content Layer */}
@@ -323,33 +380,46 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               className="mb-2 relative"
             >
               {content.logoUrl ? (
-                <div className="relative inline-block">
+                <div className="relative inline-flex flex-col items-center gap-2">
                   <img 
                     src={content.logoUrl} 
                     alt="Logo" 
-                    className="h-12 md:h-14 mx-auto object-contain"
+                    className={`${logoSizeClasses[logoSize]} mx-auto object-contain`}
                     onError={(e) => {
                       console.log('Logo failed to load:', content.logoUrl);
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
                   {isEditing && (
-                    <button
-                      onClick={() => setLogoUploaderOpen(true)}
-                      className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-md"
-                      title="Change logo"
-                    >
-                      <Camera className="w-3 h-3 text-white" />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setLogoUploaderOpen(true)}
+                        className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-md"
+                        title="Change logo"
+                      >
+                        <Camera className="w-3 h-3 text-white" />
+                      </button>
+                      {/* Logo size selector */}
+                      <Select value={logoSize} onValueChange={(v) => handleLogoSizeChange(v as LogoSize)}>
+                        <SelectTrigger className="w-24 h-7 text-xs bg-white/90 backdrop-blur-sm border-slate-200">
+                          <SelectValue placeholder="Size" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-slate-200">
+                          <SelectItem value="small" className="text-xs">Small</SelectItem>
+                          <SelectItem value="medium" className="text-xs">Medium</SelectItem>
+                          <SelectItem value="large" className="text-xs">Large</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </>
                   )}
                 </div>
               ) : isEditing ? (
                 <button
                   onClick={() => setLogoUploaderOpen(true)}
                   className={`w-[120px] h-[48px] flex flex-col items-center justify-center gap-1 border-2 border-dashed rounded-lg transition-all ${
-                    isConsulting 
-                      ? 'border-slate-300 hover:border-cyan-400 hover:bg-cyan-50/50 text-slate-400 hover:text-cyan-600'
-                      : 'border-slate-600 hover:border-cyan-400 hover:bg-cyan-500/10 text-slate-500 hover:text-cyan-400'
+                    useLightText 
+                      ? 'border-slate-500 hover:border-cyan-400 hover:bg-cyan-500/10 text-slate-400 hover:text-cyan-400'
+                      : 'border-slate-300 hover:border-cyan-400 hover:bg-cyan-50/50 text-slate-400 hover:text-cyan-600'
                   }`}
                 >
                   <Image className="w-5 h-5" />
@@ -359,8 +429,8 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             </motion.div>
           )}
 
-          {/* Trust Badge - Consulting specific credential */}
-          {isConsulting && trustBadge && (
+          {/* Trust Badge - Consulting specific credential (adjust for bg image) */}
+          {isConsulting && trustBadge && !hasBackgroundImage && (
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -370,6 +440,26 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               <Award className="w-4 h-4 text-amber-600" strokeWidth={1.5} />
               <span 
                 className={`text-sm font-medium text-slate-700 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}`}
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("trustBadge", e)}
+              >
+                {trustBadge}
+              </span>
+            </motion.div>
+          )}
+          
+          {/* Trust Badge - light version for when bg image exists */}
+          {isConsulting && trustBadge && hasBackgroundImage && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20"
+            >
+              <Award className="w-4 h-4 text-amber-400" strokeWidth={1.5} />
+              <span 
+                className={`text-sm font-medium text-white ${isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}`}
                 contentEditable={isEditing}
                 suppressContentEditableWarning
                 onBlur={(e) => handleBlur("trustBadge", e)}
@@ -438,7 +528,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("headline", e)}
             style={{ 
-              color: isConsulting ? '#0f172a' : 'white',
+              color: useLightText ? 'white' : '#0f172a',
               fontFamily: isConsulting ? tokens.typography.headingFont : undefined,
             }}
           >
@@ -456,7 +546,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("subheadline", e)}
-            style={{ color: isConsulting ? '#475569' : 'hsl(215, 20%, 65%)' }}
+            style={{ color: useLightText ? 'rgba(255,255,255,0.85)' : '#475569' }}
           >
             {content.subheadline}
           </motion.p>
@@ -529,9 +619,9 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               {credibilityItems.map((item, i) => (
                 <div 
                   key={i} 
-                  className={`flex items-center gap-2 text-sm ${isConsulting ? 'text-slate-500' : 'text-slate-400'}`}
+                  className={`flex items-center gap-2 text-sm ${useLightText ? 'text-white/70' : 'text-slate-500'}`}
                 >
-                  <CheckCircle className={`w-4 h-4 ${isConsulting ? 'text-green-600' : 'text-cyan-400'}`} strokeWidth={1.5} />
+                  <CheckCircle className={`w-4 h-4 ${useLightText ? 'text-cyan-400' : 'text-green-600'}`} strokeWidth={1.5} />
                   <span
                     className={isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}
                     contentEditable={isEditing}
@@ -550,8 +640,8 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 const icons = [Shield, Clock, Award];
                 const Icon = icons[i % icons.length];
                 return (
-                  <div key={i} className={`flex items-center gap-2 text-sm ${isConsulting ? 'text-slate-500' : 'text-slate-400'}`}>
-                    <CheckCircle className={`w-4 h-4 ${isConsulting ? 'text-green-600' : 'text-cyan-400'}`} strokeWidth={1.5} />
+                  <div key={i} className={`flex items-center gap-2 text-sm ${useLightText ? 'text-white/70' : 'text-slate-500'}`}>
+                    <CheckCircle className={`w-4 h-4 ${useLightText ? 'text-cyan-400' : 'text-green-600'}`} strokeWidth={1.5} />
                     <span
                       className={isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}
                       contentEditable={isEditing}
