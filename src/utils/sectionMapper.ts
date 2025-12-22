@@ -99,6 +99,43 @@ function isPlaceholderTestimonial(testimonial: { author: string; quote: string }
 }
 
 /**
+ * Extract primary credential from achievements string for trust badge
+ * Looks for patterns like "Certified Speaking Professional", "CSP", "25+ years", etc.
+ */
+function extractPrimaryCredential(achievements: string | null | undefined): string | null {
+  if (!achievements) return null;
+  
+  // Priority patterns - look for credentials first
+  const patterns = [
+    /Certified[^,.]+(?=,|\.|$)/i,           // "Certified Speaking Professional"
+    /\bCSP\b/,                               // CSP designation
+    /\bCPA\b/,                               // CPA
+    /\bMBA\b/,                               // MBA
+    /\bPhD\b/i,                              // PhD
+    /Author of[^,.]+/i,                      // "Author of..."
+    /\d+\+?\s*years?[^,.]+/i,               // "25+ years experience"
+    /Fortune\s*\d+[^,.]+/i,                  // "Fortune 500 clients"
+  ];
+  
+  for (const pattern of patterns) {
+    const match = achievements.match(pattern);
+    if (match) {
+      const credential = match[0].trim();
+      // Clean up trailing punctuation
+      return credential.replace(/[,.]$/, '').trim();
+    }
+  }
+  
+  // Fallback: first segment before comma if it's short enough
+  const firstSegment = achievements.split(/[,.]/)[0]?.trim();
+  if (firstSegment && firstSegment.length < 50 && firstSegment.length > 3) {
+    return firstSegment;
+  }
+  
+  return null;
+}
+
+/**
  * Maps a structuredBrief to Section[] array using intelligent extraction.
  * SINGLE SOURCE OF TRUTH: Only data from the brief is rendered.
  * INDUSTRY-AWARE: Applies industry-specific headers and styling.
@@ -155,6 +192,12 @@ export function mapBriefToSections(
         // Build trust badges from top authority signals
         const trustBadges = authoritySignals.slice(0, 2).map(s => `${s.value} ${s.label}`);
 
+        // Extract primary credential for trust badge (consulting only)
+        const primaryCredential = extractPrimaryCredential(brief.proofPoints?.achievements);
+        if (primaryCredential) {
+          console.log('[sectionMapper] Extracted primary credential:', primaryCredential);
+        }
+
         // Use beta-hero-teaser for beta pages, standard hero otherwise
         const heroType = isBetaPage ? 'beta-hero-teaser' : 'hero';
         console.log('[sectionMapper] Hero type:', heroType);
@@ -173,6 +216,8 @@ export function mapBriefToSections(
             logoUrl: logoUrl || null,
             primaryColor: primaryColor || null,
             industryVariant: industryVariant,
+            // Trust badge for consulting hero
+            trustBadge: isConsulting ? primaryCredential : null,
           },
         });
         break;
@@ -282,6 +327,19 @@ export function mapBriefToSections(
         
         const socialProofType = isBetaPage ? 'waitlist-proof' : 'social-proof';
         console.log('[sectionMapper] Social proof type:', socialProofType);
+        console.log('[sectionMapper] Has real testimonials:', hasRealTestimonials);
+        if (hasRealTestimonials) {
+          console.log('[sectionMapper] First testimonial:', rankedTestimonials[0]);
+        }
+
+        // Extract the primary testimonial for the featured display
+        const primaryTestimonial = hasRealTestimonials ? {
+          quote: rankedTestimonials[0].quote,
+          name: rankedTestimonials[0].author,
+          title: rankedTestimonials[0].title || '',
+          company: '',
+          rating: 5,
+        } : undefined;
 
         sections.push({
           type: socialProofType,
@@ -292,6 +350,9 @@ export function mapBriefToSections(
               ? 'Join the Waitlist' 
               : (intelligentHeaders.proof?.title || industryTokens.sectionHeaders.testimonials.title),
             subtitle: intelligentHeaders.proof?.subtitle || industryTokens.sectionHeaders.testimonials.subtitle,
+            // Pass single testimonial object for component compatibility
+            testimonial: primaryTestimonial,
+            // Also keep array for components that need multiple
             testimonials: hasRealTestimonials
               ? rankedTestimonials.slice(0, 3).map(t => ({
                   quote: t.quote,

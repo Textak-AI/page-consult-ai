@@ -126,6 +126,7 @@ function GenerateContent() {
       websiteIntelligence?: any;
       strategyBrief?: string;
       structuredBrief?: any;
+      aiSeoData?: any;
       brandSettings?: {
         logoUrl: string | null;
         primaryColor: string;
@@ -805,8 +806,11 @@ function GenerateContent() {
           pageGoal,
           industry: consultationData.industry,
           serviceType: consultationData.service_type,
-          aiSearchOptimization: strategicData.consultationData?.ai_seo_data || null,
+          // Check multiple paths for AI SEO data
+          aiSearchOptimization: strategicData.aiSeoData || strategicData.consultationData?.ai_seo_data || strategicData.consultationData?.aiSeoData || null,
         });
+        
+        console.log('📊 aiSearchOptimization passed to mapper:', strategicData.aiSeoData ? 'from strategicData.aiSeoData' : strategicData.consultationData?.ai_seo_data ? 'from consultationData.ai_seo_data' : 'null');
         
         console.log(`✅ BRIEF-FIRST: Built ${sections.length} sections directly from structuredBrief`);
         return sections;
