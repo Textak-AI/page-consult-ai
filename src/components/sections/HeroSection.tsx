@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
 import { LogoUploader } from "@/components/editor/LogoUploader";
 import { useState } from "react";
-import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star } from "lucide-react";
+import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star, Image } from "lucide-react";
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
 
@@ -126,9 +126,9 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                   ) : isEditing ? (
                     <button
                       onClick={() => setLogoUploaderOpen(true)}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 border-2 border-dashed border-slate-600 rounded-lg hover:border-purple-400 transition-colors text-slate-400 hover:text-purple-400"
+                      className="w-[120px] h-[48px] flex flex-col items-center justify-center gap-1 border-2 border-dashed border-slate-600 rounded-lg hover:border-purple-400 hover:bg-purple-500/10 transition-all text-slate-400 hover:text-purple-400"
                     >
-                      <Camera className="w-3.5 h-3.5" />
+                      <Image className="w-5 h-5" />
                       <span className="text-xs font-medium">Add Logo</span>
                     </button>
                   ) : null}
@@ -346,10 +346,14 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               ) : isEditing ? (
                 <button
                   onClick={() => setLogoUploaderOpen(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 border-2 border-dashed border-slate-300 rounded-lg hover:border-blue-400 hover:bg-blue-50/50 transition-colors text-slate-500 hover:text-blue-500"
+                  className={`w-[120px] h-[48px] flex flex-col items-center justify-center gap-1 border-2 border-dashed rounded-lg transition-all ${
+                    isConsulting 
+                      ? 'border-slate-300 hover:border-cyan-400 hover:bg-cyan-50/50 text-slate-400 hover:text-cyan-600'
+                      : 'border-slate-600 hover:border-cyan-400 hover:bg-cyan-500/10 text-slate-500 hover:text-cyan-400'
+                  }`}
                 >
-                  <Camera className="w-4 h-4" />
-                  <span className="text-sm font-medium">Add Logo</span>
+                  <Image className="w-5 h-5" />
+                  <span className="text-xs font-medium">Add Logo</span>
                 </button>
               ) : null}
             </motion.div>
