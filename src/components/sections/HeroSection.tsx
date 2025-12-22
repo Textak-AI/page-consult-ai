@@ -187,7 +187,12 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full"
             >
               <Award className="w-4 h-4 text-amber-600" strokeWidth={1.5} />
-              <span className="text-sm font-medium text-slate-700">
+              <span 
+                className={`text-sm font-medium text-slate-700 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}`}
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("trustBadge", e)}
+              >
                 {trustBadge}
               </span>
             </motion.div>
@@ -346,7 +351,18 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                   className={`flex items-center gap-2 text-sm ${isConsulting ? 'text-slate-500' : 'text-slate-400'}`}
                 >
                   <CheckCircle className={`w-4 h-4 ${isConsulting ? 'text-green-600' : 'text-cyan-400'}`} strokeWidth={1.5} />
-                  <span>{item.text}</span>
+                  <span
+                    className={isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => {
+                      const newItems = [...credibilityItems];
+                      newItems[i] = { ...newItems[i], text: e.currentTarget.textContent || item.text };
+                      onUpdate({ ...content, credibilityBar: newItems });
+                    }}
+                  >
+                    {item.text}
+                  </span>
                 </div>
               ))}
               {trustBadges.map((badge, i) => {
@@ -355,7 +371,18 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 return (
                   <div key={i} className={`flex items-center gap-2 text-sm ${isConsulting ? 'text-slate-500' : 'text-slate-400'}`}>
                     <CheckCircle className={`w-4 h-4 ${isConsulting ? 'text-green-600' : 'text-cyan-400'}`} strokeWidth={1.5} />
-                    <span>{badge}</span>
+                    <span
+                      className={isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => {
+                        const newBadges = [...trustBadges];
+                        newBadges[i] = e.currentTarget.textContent || badge;
+                        onUpdate({ ...content, trustBadges: newBadges });
+                      }}
+                    >
+                      {badge}
+                    </span>
                   </div>
                 );
               })}

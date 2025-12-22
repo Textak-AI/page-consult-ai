@@ -62,9 +62,12 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-xl text-slate-300 mb-10"
+            className={`text-xl text-slate-300 mb-10 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}`}
+            contentEditable={isEditing}
+            suppressContentEditableWarning
+            onBlur={(e) => handleBlur("subtext", e)}
           >
-            Free consultation • No obligation
+            {content.subtext || "Free consultation • No obligation"}
           </motion.p>
           
           <motion.div 
@@ -102,7 +105,18 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               {trustIndicators.map((item, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm text-slate-400">
                   <CheckCircle className="w-4 h-4 text-emerald-500" strokeWidth={1.5} />
-                  <span>{item.text}</span>
+                  <span
+                    className={isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => {
+                      const newIndicators = [...trustIndicators];
+                      newIndicators[i] = { ...newIndicators[i], text: e.currentTarget.textContent || item.text };
+                      onUpdate({ ...content, trustIndicators: newIndicators });
+                    }}
+                  >
+                    {item.text}
+                  </span>
                 </div>
               ))}
             </motion.div>
@@ -223,7 +237,18 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             {trustIndicators.map((item, i) => (
               <div key={i} className="flex items-center gap-2 text-sm text-slate-400">
                 <CheckCircle className="w-4 h-4 text-white/60" strokeWidth={1.5} />
-                <span>{item.text}</span>
+                <span
+                  className={isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => {
+                    const newIndicators = [...trustIndicators];
+                    newIndicators[i] = { ...newIndicators[i], text: e.currentTarget.textContent || item.text };
+                    onUpdate({ ...content, trustIndicators: newIndicators });
+                  }}
+                >
+                  {item.text}
+                </span>
               </div>
             ))}
           </motion.div>

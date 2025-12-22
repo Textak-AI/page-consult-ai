@@ -29,6 +29,7 @@ interface SocialProofSectionProps {
     };
     industry?: string;
     industryVariant?: string;
+    sectionTitle?: string;
     testimonial?: {
       quote: string;
       name: string;
@@ -162,8 +163,13 @@ export function SocialProofSection({ content, onUpdate, isEditing }: SocialProof
             <span className="inline-block px-4 py-1 bg-amber-100 text-amber-800 text-sm font-semibold rounded-full mb-4">
               SUCCESS STORIES
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
-              {header.title}
+            <h2 
+              className={`text-3xl md:text-4xl font-bold text-slate-900 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}`}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("sectionTitle", e)}
+            >
+              {content.sectionTitle || header.title}
             </h2>
           </motion.div>
 
