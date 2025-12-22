@@ -79,10 +79,11 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   const isConsulting = industryVariant === 'consulting';
   const isSaas = industryVariant === 'saas';
   
-  // Determine if we should use light text (when bg image exists)
+  // Determine if we should use light text (when dark overlay is active OR when not in consulting mode)
   const hasBackgroundImage = !!content.backgroundImage;
   const showDarkOverlay = hasBackgroundImage && (content.darkOverlay !== false); // Default to true when bg image exists
-  const useLightText = hasBackgroundImage || !isConsulting;
+  // Use light text when: overlay is active on bg image, or when not in consulting mode
+  const useLightText = showDarkOverlay || !isConsulting;
   
   // Logo size with default
   const logoSize = content.logoSize || 'medium';
@@ -429,8 +430,8 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             </motion.div>
           )}
 
-          {/* Trust Badge - Consulting specific credential (adjust for bg image) */}
-          {isConsulting && trustBadge && !hasBackgroundImage && (
+          {/* Trust Badge - Consulting specific credential (dark version for light backgrounds) */}
+          {isConsulting && trustBadge && !useLightText && (
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -449,8 +450,8 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             </motion.div>
           )}
           
-          {/* Trust Badge - light version for when bg image exists */}
-          {isConsulting && trustBadge && hasBackgroundImage && (
+          {/* Trust Badge - light version for dark backgrounds (when overlay is active) */}
+          {isConsulting && trustBadge && useLightText && (
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
