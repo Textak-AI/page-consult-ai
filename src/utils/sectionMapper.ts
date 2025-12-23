@@ -148,6 +148,7 @@ export function mapBriefToSections(
 ): Section[] {
   console.log('🧠 [sectionMapper] Starting intelligent extraction');
   console.log('🧠 [sectionMapper] options:', JSON.stringify(options, null, 2));
+  console.log('🖼️ [sectionMapper] heroImageUrl:', options.heroImageUrl);
   
   const { businessName, heroImageUrl, logoUrl, primaryColor, pageType, pageGoal, industry, serviceType, aiSearchOptimization } = options;
   const sections: Section[] = [];
