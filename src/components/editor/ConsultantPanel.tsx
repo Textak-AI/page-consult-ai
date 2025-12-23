@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Check, Pencil, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Check, Pencil, X, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 interface ConsultantPanelProps {
   isOpen: boolean;
+  isLoading?: boolean;
   summary: string;
   suggestions: CopySuggestion[];
   onAccept: (id: string, value: string) => void;
@@ -19,6 +20,7 @@ interface ConsultantPanelProps {
 
 export function ConsultantPanel({
   isOpen,
+  isLoading = false,
   summary,
   suggestions,
   onAccept,
@@ -34,9 +36,9 @@ export function ConsultantPanel({
   const pendingSuggestions = suggestions.filter(s => s.status === 'pending');
   const hasAccepted = suggestions.some(s => s.status === 'accepted' || s.status === 'modified');
 
-  // Show toast when panel first opens with suggestions
+  // Show toast when panel first opens with suggestions (not loading)
   useEffect(() => {
-    if (isOpen && suggestions.length > 0 && !hasShownToast) {
+    if (isOpen && suggestions.length > 0 && !isLoading && !hasShownToast) {
       toast(
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-600" />
@@ -49,7 +51,7 @@ export function ConsultantPanel({
     if (!isOpen) {
       setHasShownToast(false);
     }
-  }, [isOpen, suggestions.length, hasShownToast]);
+  }, [isOpen, suggestions.length, isLoading, hasShownToast]);
 
   const handleStartEdit = (suggestion: CopySuggestion) => {
     setEditingId(suggestion.id);
@@ -87,7 +89,7 @@ export function ConsultantPanel({
                 <div>
                   <h3 className="font-semibold text-foreground">Strategic Insights</h3>
                   <p className="text-xs text-muted-foreground">
-                    {pendingSuggestions.length} suggestion{pendingSuggestions.length !== 1 ? 's' : ''}
+                    {isLoading ? 'Analyzing...' : `${pendingSuggestions.length} suggestion${pendingSuggestions.length !== 1 ? 's' : ''}`}
                   </p>
                 </div>
               </div>
@@ -114,15 +116,30 @@ export function ConsultantPanel({
 
           {!isMinimized && (
             <>
+              {/* Loading State */}
+              {isLoading && (
+                <div className="p-8 flex flex-col items-center justify-center">
+                  <div className="relative">
+                    <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+                    <Sparkles className="w-4 h-4 text-purple-400 absolute -top-1 -right-1 animate-pulse" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground mt-4">Analyzing your changes...</p>
+                  <p className="text-xs text-muted-foreground mt-1">Finding strategic improvements</p>
+                </div>
+              )}
+
               {/* Summary */}
-              <div className="p-4 border-b bg-muted/30">
-                <p className="text-sm text-foreground leading-relaxed">{summary}</p>
-              </div>
+              {!isLoading && summary && (
+                <div className="p-4 border-b bg-muted/30">
+                  <p className="text-sm text-foreground leading-relaxed">{summary}</p>
+                </div>
+              )}
 
               {/* Suggestions */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {suggestions.map((suggestion) => (
-                  <motion.div
+              {!isLoading && suggestions.length > 0 && (
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {suggestions.map((suggestion) => (
+                    <motion.div
                     key={suggestion.id}
                     layout
                     initial={{ opacity: 0, y: 10 }}
@@ -224,9 +241,11 @@ export function ConsultantPanel({
                   </motion.div>
                 ))}
               </div>
+              )}
 
               {/* Footer */}
-              <div className="p-4 border-t bg-muted/30 flex justify-between">
+              {!isLoading && suggestions.length > 0 && (
+                <div className="p-4 border-t bg-muted/30 flex justify-between">
                 <Button variant="ghost" onClick={onDismiss}>
                   Dismiss All
                 </Button>
@@ -237,6 +256,7 @@ export function ConsultantPanel({
                   </Button>
                 )}
               </div>
+              )}
             </>
           )}
 
