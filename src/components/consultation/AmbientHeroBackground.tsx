@@ -47,11 +47,14 @@ export function AmbientHeroBackground({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 1.2, ease: 'easeInOut' }}
-              className="absolute inset-0"
+              className="absolute inset-0 flex items-center justify-center"
             >
               <div 
-                className="absolute inset-0 bg-cover bg-center animate-slow-zoom"
-                style={{ backgroundImage: `url(${url})` }}
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat animate-slow-zoom"
+                style={{ 
+                  backgroundImage: `url(${url})`,
+                  backgroundPosition: 'center center'
+                }}
               />
             </motion.div>
           )
