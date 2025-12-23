@@ -1,9 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getPromptVariations } from "./industryPrompts";
+import { generateBrandScene } from "./brandSceneGeneration";
 
 export interface HeroImage {
   url: string;
   prompt: string;
+  type: 'industry' | 'brand';
 }
 
 export interface HeroImageResult {
@@ -27,7 +29,7 @@ export async function generateHeroImages(
   const cachedResult = await checkCache(cacheKey);
   if (cachedResult) {
     return {
-      images: cachedResult.map((url, i) => ({ url, prompt: '' })),
+      images: cachedResult.map((url, i) => ({ url, prompt: '', type: 'industry' as const })),
       fromCache: true,
       cacheKey,
     };
@@ -49,7 +51,68 @@ export async function generateHeroImages(
   }
   
   return {
-    images: data.images,
+    images: data.images.map((img: { url: string; prompt: string }) => ({
+      ...img,
+      type: 'industry' as const
+    })),
+    fromCache: false,
+    cacheKey,
+  };
+}
+
+/**
+ * Generate combined hero images: industry scenes + brand scenes (logo in scene)
+ * Brand scenes are prioritized when logo is available
+ */
+export async function generateCombinedHeroImages(
+  industry: string,
+  subcategory?: string,
+  logoUrl?: string | null,
+  styleKeywords?: string
+): Promise<HeroImageResult> {
+  const cacheKey = `combined::${industry.toLowerCase()}::${subcategory?.toLowerCase() || 'default'}::${logoUrl ? 'with-logo' : 'no-logo'}`;
+  
+  const allImages: HeroImage[] = [];
+  
+  // Generate industry scenes (FLUX) - 2 images
+  try {
+    const industryResult = await generateHeroImages(industry, subcategory, 2);
+    allImages.push(...industryResult.images);
+  } catch (error) {
+    console.error('Failed to generate industry scenes:', error);
+  }
+  
+  // Generate brand scenes (Gemini with logo) - 2 images if logo available
+  if (logoUrl) {
+    try {
+      console.log('🎨 Generating brand scenes with logo...');
+      
+      // Generate 2 brand scenes
+      const brandPromises = [
+        generateBrandScene(logoUrl, industry, subcategory, styleKeywords),
+        generateBrandScene(logoUrl, industry, subcategory, styleKeywords ? `${styleKeywords}, different angle` : 'different angle')
+      ];
+      
+      const brandResults = await Promise.allSettled(brandPromises);
+      
+      brandResults.forEach((result, i) => {
+        if (result.status === 'fulfilled' && result.value.images.length > 0) {
+          allImages.unshift({ // Add brand scenes at the beginning (prioritized)
+            url: result.value.images[0],
+            prompt: result.value.prompt,
+            type: 'brand' as const
+          });
+        } else if (result.status === 'rejected') {
+          console.error(`Brand scene ${i + 1} failed:`, result.reason);
+        }
+      });
+    } catch (error) {
+      console.error('Failed to generate brand scenes:', error);
+    }
+  }
+  
+  return {
+    images: allImages,
     fromCache: false,
     cacheKey,
   };
@@ -98,8 +161,24 @@ export async function regenerateHeroImages(
   }
   
   return {
-    images: data.images,
+    images: data.images.map((img: { url: string; prompt: string }) => ({
+      ...img,
+      type: 'industry' as const
+    })),
     fromCache: false,
     cacheKey,
   };
+}
+
+/**
+ * Force regenerate combined images (bypass cache)
+ */
+export async function regenerateCombinedHeroImages(
+  industry: string,
+  subcategory?: string,
+  logoUrl?: string | null,
+  styleKeywords?: string
+): Promise<HeroImageResult> {
+  // Just call the combined function - it doesn't use cache currently
+  return generateCombinedHeroImages(industry, subcategory, logoUrl, styleKeywords);
 }

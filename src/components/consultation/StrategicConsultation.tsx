@@ -13,7 +13,7 @@ import { BrandCustomization, type BrandSettings, type WebsiteIntelligence } from
 import { CollapsibleBriefPanel } from './CollapsibleBriefPanel';
 import { useBrandBrief } from '@/hooks/useBrandBrief';
 import { AmbientHeroBackground } from './AmbientHeroBackground';
-import { generateHeroImages, regenerateHeroImages } from '@/lib/heroImages';
+import { generateHeroImages, regenerateHeroImages, generateCombinedHeroImages, regenerateCombinedHeroImages, type HeroImage } from '@/lib/heroImages';
 import { 
   PageTypeStep, 
   PAGE_TYPES, 
@@ -371,7 +371,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
   } | null>(null);
   
   // Hero background state
-  const [heroImages, setHeroImages] = useState<string[]>([]);
+  const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
   const [heroCurrentIndex, setHeroCurrentIndex] = useState(0);
   const [isHeroLocked, setIsHeroLocked] = useState(false);
   const [heroLockedIndex, setHeroLockedIndex] = useState(0);
@@ -435,37 +435,48 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
     return () => clearInterval(interval);
   }, [heroImages.length, isHeroLocked]);
 
-  // Hero background: Generate on industry select
+  // Hero background: Generate on industry select (combined: FLUX + brand scenes if logo available)
+  const logoUrl = data.brandSettings?.logoUrl || brandBrief?.logo_url;
+  
   useEffect(() => {
     if (data.industryCategory) {
       setIsHeroGenerating(true);
-      generateHeroImages(data.industryCategory, data.industrySubcategory, 4)
+      
+      // Use combined generation if logo is available
+      const generateFn = logoUrl 
+        ? generateCombinedHeroImages(data.industryCategory, data.industrySubcategory, logoUrl)
+        : generateHeroImages(data.industryCategory, data.industrySubcategory, 4);
+      
+      generateFn
         .then(result => {
-          setHeroImages(result.images.map(i => i.url));
+          setHeroImages(result.images);
         })
         .catch(console.error)
         .finally(() => setIsHeroGenerating(false));
     }
-  }, [data.industryCategory, data.industrySubcategory]);
+  }, [data.industryCategory, data.industrySubcategory, logoUrl]);
 
   const handleHeroSelect = useCallback(() => {
     setIsHeroLocked(true);
     setHeroLockedIndex(heroCurrentIndex);
-    updateData({ heroBackgroundUrl: heroImages[heroCurrentIndex] });
+    updateData({ heroBackgroundUrl: heroImages[heroCurrentIndex]?.url });
   }, [heroCurrentIndex, heroImages]);
 
   const handleHeroRegenerate = useCallback(async () => {
     if (!data.industryCategory) return;
     setIsHeroGenerating(true);
     try {
-      const result = await regenerateHeroImages(data.industryCategory, data.industrySubcategory, 4);
-      setHeroImages(result.images.map(i => i.url));
+      // Use combined regeneration if logo is available
+      const result = logoUrl
+        ? await regenerateCombinedHeroImages(data.industryCategory, data.industrySubcategory, logoUrl)
+        : await regenerateHeroImages(data.industryCategory, data.industrySubcategory, 4);
+      setHeroImages(result.images);
       setHeroCurrentIndex(0);
       setIsHeroLocked(false);
     } finally {
       setIsHeroGenerating(false);
     }
-  }, [data.industryCategory, data.industrySubcategory]);
+  }, [data.industryCategory, data.industrySubcategory, logoUrl]);
 
   const handleHeroUnlock = useCallback(() => {
     setIsHeroLocked(false);

@@ -95,3 +95,6 @@ verify_jwt = true
 
 [functions.generate-hero-images]
 verify_jwt = true
+
+[functions.generate-brand-scene]
+verify_jwt = true
