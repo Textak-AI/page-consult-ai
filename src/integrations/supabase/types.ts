@@ -462,6 +462,30 @@ export type Database = {
           },
         ]
       }
+      hero_image_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          id: string
+          images: string[]
+          updated_at: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          id?: string
+          images?: string[]
+          updated_at?: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          id?: string
+          images?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       landing_pages: {
         Row: {
           ai_seo_breakdown: Json | null

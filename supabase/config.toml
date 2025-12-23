@@ -92,3 +92,6 @@ verify_jwt = false
 
 [functions.extract-brand-brief]
 verify_jwt = true
+
+[functions.generate-hero-images]
+verify_jwt = true

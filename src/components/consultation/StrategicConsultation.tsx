@@ -12,6 +12,7 @@ import type { AISeoData } from '@/services/intelligence/types';
 import { BrandCustomization, type BrandSettings, type WebsiteIntelligence } from './BrandCustomization';
 import { CollapsibleBriefPanel } from './CollapsibleBriefPanel';
 import { useBrandBrief } from '@/hooks/useBrandBrief';
+import { HeroBackgroundCarousel } from '@/components/HeroBackgroundCarousel';
 import { 
   PageTypeStep, 
   PAGE_TYPES, 
@@ -123,6 +124,9 @@ export interface ConsultationData {
     rewardTiers: RewardTier[];
     founderStory?: string;
   };
+  
+  // Hero Background (AI-generated)
+  heroBackgroundUrl?: string;
 }
 
 // Base steps that apply to all page types (website step moved to BrandSetup)
@@ -869,6 +873,20 @@ ${d.ctaText}
                   />
                 </div>
               </div>
+              
+              {/* AI-Generated Hero Background Carousel */}
+              {data.industryCategory && (
+                <div>
+                  <Label className="text-slate-400 mb-2 block">Hero Background</Label>
+                  <p className="text-xs text-slate-500 mb-3">AI-generated backgrounds based on your industry. Select one for your landing page.</p>
+                  <HeroBackgroundCarousel
+                    industry={data.industryCategory}
+                    subcategory={data.industrySubcategory}
+                    selectedImage={data.heroBackgroundUrl}
+                    onSelect={(imageUrl) => updateData({ heroBackgroundUrl: imageUrl })}
+                  />
+                </div>
+              )}
               
               <div>
                 <Label htmlFor="yearsInBusiness" className="text-slate-400">Years in Business</Label>
