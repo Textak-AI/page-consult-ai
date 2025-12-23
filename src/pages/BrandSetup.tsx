@@ -19,7 +19,6 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { LogoEditor } from '@/components/consultation/LogoEditor';
-import { PageConsultLogo } from '@/components/ui/PageConsultLogo';
 
 interface BrandBrief {
   id: string;
@@ -495,7 +494,7 @@ export default function BrandSetup() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
-            <PageConsultLogo className="h-8 w-auto text-slate-700" />
+            <img src="/pageconsult-logo.png" alt="PageConsult AI" className="h-10 w-auto" />
           </div>
         </header>
         
@@ -627,7 +626,7 @@ export default function BrandSetup() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <PageConsultLogo className="h-8 w-auto text-slate-700" />
+          <img src="/pageconsult-logo.png" alt="PageConsult AI" className="h-10 w-auto" />
         </div>
       </header>
 
