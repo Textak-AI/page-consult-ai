@@ -233,18 +233,18 @@ All colors MUST be HSL.
     animation: float-slow 30s ease-in-out infinite;
   }
 
-  /* Ken Burns Slow Zoom for Hero Backgrounds */
-  @keyframes slow-zoom {
+  /* Subtle Ken Burns Zoom for Hero Backgrounds - barely perceptible */
+  @keyframes subtle-zoom {
     0% { 
-      transform: scale(1) translateX(0) translateY(0); 
+      transform: scale(1); 
     }
     100% { 
-      transform: scale(1.15) translateX(-3%) translateY(-2%); 
+      transform: scale(1.03); 
     }
   }
 
-  .animate-slow-zoom {
-    animation: slow-zoom 25s ease-in-out infinite alternate;
+  .animate-subtle-zoom {
+    animation: subtle-zoom 30s ease-in-out infinite alternate;
   }
 
   /* Shimmer Animation for CTAs */

@@ -431,7 +431,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
     if (heroImages.length <= 1 || isHeroLocked) return;
     const interval = setInterval(() => {
       setHeroCurrentIndex((prev) => (prev + 1) % heroImages.length);
-    }, 6000);
+    }, 10000); // 10 seconds for calm, ambient feel
     return () => clearInterval(interval);
   }, [heroImages.length, isHeroLocked]);
 
