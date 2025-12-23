@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette, FileText, TrendingUp, UserCheck, Rocket, Calendar, Gift, Share2, Check } from 'lucide-react';
 import { IndustrySelector } from './IndustrySelector';
@@ -12,7 +12,8 @@ import type { AISeoData } from '@/services/intelligence/types';
 import { BrandCustomization, type BrandSettings, type WebsiteIntelligence } from './BrandCustomization';
 import { CollapsibleBriefPanel } from './CollapsibleBriefPanel';
 import { useBrandBrief } from '@/hooks/useBrandBrief';
-import { HeroBackgroundCarousel } from '@/components/HeroBackgroundCarousel';
+import { AmbientHeroBackground } from './AmbientHeroBackground';
+import { generateHeroImages, regenerateHeroImages } from '@/lib/heroImages';
 import { 
   PageTypeStep, 
   PAGE_TYPES, 
@@ -369,6 +370,13 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
     savedData: Partial<ConsultationData>;
   } | null>(null);
   
+  // Hero background state
+  const [heroImages, setHeroImages] = useState<string[]>([]);
+  const [heroCurrentIndex, setHeroCurrentIndex] = useState(0);
+  const [isHeroLocked, setIsHeroLocked] = useState(false);
+  const [heroLockedIndex, setHeroLockedIndex] = useState(0);
+  const [isHeroGenerating, setIsHeroGenerating] = useState(false);
+  
   // Load brand brief for the panel
   const { brandBrief, isLoading: brandLoading } = useBrandBrief();
   
@@ -417,6 +425,58 @@ export function StrategicConsultation({ onComplete, onBack, prefillData }: Props
       }));
     }
   }, [hasBrandColors, brandBrief, data.brandSettings]);
+  
+  // Hero background: Auto-rotate
+  useEffect(() => {
+    if (heroImages.length <= 1 || isHeroLocked) return;
+    const interval = setInterval(() => {
+      setHeroCurrentIndex((prev) => (prev + 1) % heroImages.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [heroImages.length, isHeroLocked]);
+
+  // Hero background: Generate on industry select
+  useEffect(() => {
+    if (data.industryCategory) {
+      setIsHeroGenerating(true);
+      generateHeroImages(data.industryCategory, data.industrySubcategory, 4)
+        .then(result => {
+          setHeroImages(result.images.map(i => i.url));
+        })
+        .catch(console.error)
+        .finally(() => setIsHeroGenerating(false));
+    }
+  }, [data.industryCategory, data.industrySubcategory]);
+
+  const handleHeroSelect = useCallback(() => {
+    setIsHeroLocked(true);
+    setHeroLockedIndex(heroCurrentIndex);
+    updateData({ heroBackgroundUrl: heroImages[heroCurrentIndex] });
+  }, [heroCurrentIndex, heroImages]);
+
+  const handleHeroRegenerate = useCallback(async () => {
+    if (!data.industryCategory) return;
+    setIsHeroGenerating(true);
+    try {
+      const result = await regenerateHeroImages(data.industryCategory, data.industrySubcategory, 4);
+      setHeroImages(result.images.map(i => i.url));
+      setHeroCurrentIndex(0);
+      setIsHeroLocked(false);
+    } finally {
+      setIsHeroGenerating(false);
+    }
+  }, [data.industryCategory, data.industrySubcategory]);
+
+  const handleHeroUnlock = useCallback(() => {
+    setIsHeroLocked(false);
+    updateData({ heroBackgroundUrl: '' });
+  }, []);
+
+  const handleHeroDotClick = useCallback((index: number) => {
+    if (!isHeroLocked) {
+      setHeroCurrentIndex(index);
+    }
+  }, [isHeroLocked]);
   
   // Compute STEPS dynamically based on selected page type and brand status
   // Skip branding step if brand colors are already configured
@@ -874,19 +934,7 @@ ${d.ctaText}
                 </div>
               </div>
               
-              {/* AI-Generated Hero Background Carousel */}
-              {data.industryCategory && (
-                <div>
-                  <Label className="text-slate-400 mb-2 block">Hero Background</Label>
-                  <p className="text-xs text-slate-500 mb-3">AI-generated backgrounds based on your industry. Select one for your landing page.</p>
-                  <HeroBackgroundCarousel
-                    industry={data.industryCategory}
-                    subcategory={data.industrySubcategory}
-                    selectedImage={data.heroBackgroundUrl}
-                    onSelect={(imageUrl) => updateData({ heroBackgroundUrl: imageUrl })}
-                  />
-                </div>
-              )}
+              {/* Hero background is now shown as ambient background in the wrapper */}
               
               <div>
                 <Label htmlFor="yearsInBusiness" className="text-slate-400">Years in Business</Label>
@@ -1361,9 +1409,24 @@ ${d.ctaText}
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)]">
-      {/* Wizard Questions - always centered */}
-      <div className="max-w-4xl mx-auto p-4 md:p-8">
+    <div className="min-h-[calc(100vh-4rem)] relative">
+      {/* Ambient Hero Background */}
+      {data.industryCategory && (
+        <AmbientHeroBackground
+          images={heroImages}
+          isLocked={isHeroLocked}
+          lockedIndex={heroLockedIndex}
+          currentIndex={heroCurrentIndex}
+          isGenerating={isHeroGenerating}
+          onSelect={handleHeroSelect}
+          onRegenerate={handleHeroRegenerate}
+          onUnlock={handleHeroUnlock}
+          onDotClick={handleHeroDotClick}
+        />
+      )}
+      
+      {/* Wizard Questions - floating above background */}
+      <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-8">
         <div className="max-w-2xl mx-auto">
       {/* Restore Prompt */}
       {showRestorePrompt && pendingRestore && (
