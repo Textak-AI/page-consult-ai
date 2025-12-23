@@ -50,6 +50,7 @@ export default function NewConsultation() {
   const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
   const [extractedBrand, setExtractedBrand] = useState<ExtractedBrand | null>(null);
   const [extractedWebsiteUrl, setExtractedWebsiteUrl] = useState<string | null>(null);
+  const [skipDraftLoad, setSkipDraftLoad] = useState(false);
   const [isDevModeActive] = useDevMode();
 
   // Parse prefill data from query params
@@ -108,11 +109,15 @@ export default function NewConsultation() {
   // Handle brand extracted
   const handleBrandExtracted = (brand: ExtractedBrand, websiteUrl: string) => {
     console.log('🎨 Brand extracted:', brand);
-    setExtractedBrand(brand);
-    setExtractedWebsiteUrl(websiteUrl);
+    
+    // Skip loading any saved drafts - this is a fresh start
+    setSkipDraftLoad(true);
     
     // CLEAR prefill data so it doesn't override extracted brand
     setPrefillData(null);
+    
+    setExtractedBrand(brand);
+    setExtractedWebsiteUrl(websiteUrl);
     
     sonnerToast.success(`Welcome, ${brand.companyName || brand.domain}!`, {
       description: "We've pre-filled some info for you"
@@ -423,6 +428,7 @@ export default function NewConsultation() {
                 ...extractedBrand,
                 websiteUrl: extractedWebsiteUrl || undefined
               } : null}
+              skipDraftLoad={skipDraftLoad}
             />
           </motion.div>
         )}

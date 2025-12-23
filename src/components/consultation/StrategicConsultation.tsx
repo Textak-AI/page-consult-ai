@@ -327,9 +327,10 @@ interface Props {
   onBack?: () => void;
   prefillData?: PrefillData | null;
   extractedBrand?: ExtractedBrandData | null;
+  skipDraftLoad?: boolean;
 }
 
-export function StrategicConsultation({ onComplete, onBack, prefillData, extractedBrand }: Props) {
+export function StrategicConsultation({ onComplete, onBack, prefillData, extractedBrand, skipDraftLoad }: Props) {
   // Check if dev mode is active
   const [isDevModeActive] = useDevMode();
   
@@ -560,8 +561,15 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   const STEPS = useMemo(() => getStepsForPageType(data.pageType, hasBrandColors), [data.pageType, hasBrandColors]);
 
   // Load draft from database on mount
+  // Skip if we have extracted brand (fresh start) or if explicitly told to skip
   useEffect(() => {
     const loadDraft = async () => {
+      // Don't load draft if we have fresh extracted brand or skipDraftLoad is true
+      if (skipDraftLoad || extractedBrand) {
+        console.log('🚫 Skipping draft load - using extracted brand data');
+        return;
+      }
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       
@@ -581,7 +589,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     };
     
     loadDraft();
-  }, []);
+  }, [skipDraftLoad, extractedBrand]);
 
   // Restore progress from localStorage on mount (fallback)
   useEffect(() => {
