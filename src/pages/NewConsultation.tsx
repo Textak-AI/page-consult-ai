@@ -50,10 +50,14 @@ export default function NewConsultation() {
   const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
   const [extractedBrand, setExtractedBrand] = useState<ExtractedBrand | null>(null);
   const [extractedWebsiteUrl, setExtractedWebsiteUrl] = useState<string | null>(null);
-  const isDevMode = useDevMode();
+  const [isDevModeActive] = useDevMode();
 
   // Parse prefill data from query params
+  // Only run if we don't already have an extracted brand
   useEffect(() => {
+    // Don't set prefill if we already have extracted brand
+    if (extractedBrand) return;
+    
     const prefillParam = searchParams.get('prefill');
     if (prefillParam) {
       try {
@@ -72,7 +76,7 @@ export default function NewConsultation() {
         console.error('Failed to parse prefill data:', err);
       }
     }
-  }, [searchParams, toast]);
+  }, [searchParams, toast, extractedBrand]);
 
   // Check auth on mount
   useEffect(() => {
@@ -106,6 +110,9 @@ export default function NewConsultation() {
     console.log('🎨 Brand extracted:', brand);
     setExtractedBrand(brand);
     setExtractedWebsiteUrl(websiteUrl);
+    
+    // CLEAR prefill data so it doesn't override extracted brand
+    setPrefillData(null);
     
     sonnerToast.success(`Welcome, ${brand.companyName || brand.domain}!`, {
       description: "We've pre-filled some info for you"
@@ -439,7 +446,7 @@ export default function NewConsultation() {
       </main>
 
       {/* Dev Toolbar */}
-      {isDevMode && (
+      {isDevModeActive && (
         <DevToolbar
           onJumpToLoading={handleDevJumpToLoading}
           onJumpToBriefReview={handleDevJumpToBriefReview}
