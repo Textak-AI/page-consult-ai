@@ -24,6 +24,12 @@ import { useCredits } from "@/hooks/useCredits";
 import { useConsultantIntegration } from '@/hooks/useConsultantIntegration';
 import { usePageBuilder } from '@/hooks/usePageBuilder';
 import { PageStrengthMeter } from '@/components/consultation/PageStrengthMeter';
+import { DigitalChampionMeter } from '@/components/consultation/DigitalChampionMeter';
+import { ShareableAchievementCard } from '@/components/consultation/ShareableAchievementCard';
+import { SectionLockOverlay } from '@/components/editor/SectionLockOverlay';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Trophy, Share2 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { StylePresetName } from "@/styles/presets";
 import {
   UsageIndicator,
@@ -2421,7 +2427,12 @@ function EditorContent({
     callback: () => void;
     sectionType?: string;
   } | null>(null);
-  const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
+const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
+  
+  // Achievement modal and confetti celebration
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const [hasShownConversionReady, setHasShownConversionReady] = useState(false);
+  const [showDigitalChampion, setShowDigitalChampion] = useState(true); // Toggle between meter styles
 
   // Show low balance alert when needed
   useEffect(() => {
@@ -2429,6 +2440,24 @@ function EditorContent({
       setShowLowBalanceAlert(true);
     }
   }, [aiActions.isLowBalance, aiActions.isZeroBalance]);
+  
+  // Celebrate when hitting conversion-ready for the first time
+  useEffect(() => {
+    if (pageBuilder.isConversionReady && !hasShownConversionReady) {
+      setHasShownConversionReady(true);
+      
+      // Confetti celebration!
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      
+      setTimeout(() => {
+        setShowAchievementModal(true);
+      }, 1500);
+    }
+  }, [pageBuilder.isConversionReady, hasShownConversionReady]);
 
   // Wrapper function to check and track AI actions
   const executeWithUsageCheck = async (
@@ -2700,22 +2729,49 @@ function EditorContent({
       {/* Editor layout */}
       <div className="flex-1 flex overflow-hidden relative z-10">
         {/* Left sidebar with Credits + Persona Insights + Section Manager */}
-        <div className="w-72 border-r border-white/10 bg-white/5 backdrop-blur-md flex flex-col overflow-hidden">
-          {/* Page Strength Meter */}
+<div className="w-72 border-r border-white/10 bg-white/5 backdrop-blur-md flex flex-col overflow-hidden">
+          {/* Gamification: Digital Champion Meter or Page Strength Meter */}
           <div className="p-3 border-b border-white/10">
-            <PageStrengthMeter 
-              completeness={pageBuilder.completeness}
-              showMilestones={true}
-              className="bg-white/5 border-white/10"
-            />
+            {showDigitalChampion ? (
+              <DigitalChampionMeter 
+                completeness={pageBuilder.completeness}
+                brandName={strategicData?.consultationData?.businessName || consultation?.industry || 'Your Brand'}
+                logoUrl={strategicData?.brandSettings?.logoUrl || strategicData?.consultationData?.websiteIntelligence?.logoUrl}
+                className="bg-transparent border-white/10"
+              />
+            ) : (
+              <PageStrengthMeter 
+                completeness={pageBuilder.completeness}
+                showMilestones={true}
+                className="bg-white/5 border-white/10"
+              />
+            )}
+            {/* Toggle between views */}
+            <button 
+              onClick={() => setShowDigitalChampion(!showDigitalChampion)}
+              className="w-full mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showDigitalChampion ? '← Simple view' : '→ Gamified view'}
+            </button>
           </div>
           
           {/* Conversion Ready Banner */}
           {pageBuilder.isConversionReady && (
-            <div className="p-3 border-b border-white/10 bg-gradient-to-r from-green-500/10 to-emerald-500/10">
-              <div className="flex items-center gap-2 text-green-400 mb-2">
-                <Rocket className="w-4 h-4" />
-                <span className="font-medium text-sm">Conversion-Ready!</span>
+            <div className="p-3 border-b border-white/10 bg-gradient-to-r from-green-500/10 to-emerald-500/10 animate-glow-green">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 text-green-400">
+                  <Trophy className="w-4 h-4" />
+                  <span className="font-medium text-sm">Conversion-Ready!</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAchievementModal(true)}
+                  className="h-7 px-2 text-green-400 hover:text-green-300 hover:bg-green-500/20"
+                >
+                  <Share2 className="w-3 h-3 mr-1" />
+                  Share
+                </Button>
               </div>
               <p className="text-xs text-green-300/80 mb-2">
                 Your page has all the elements for high conversion.
@@ -2779,11 +2835,12 @@ function EditorContent({
           </div>
         </div>
         
-        <LivePreview 
+<LivePreview 
           sections={sections} 
           onSectionsChange={setSections} 
           cssVariables={cssVariables}
           iconStyle={designSystem?.components?.iconStyle}
+          getSectionLockStatus={pageBuilder.getSectionLockStatus}
         />
       </div>
 
@@ -2901,7 +2958,7 @@ function EditorContent({
         }}
       />
 
-      {/* AI Consultant Panel - slides in from right when suggestions available */}
+{/* AI Consultant Panel - slides in from right when suggestions available */}
       <ConsultantPanel
         isOpen={consultantIntegration.isOpen}
         isLoading={consultantIntegration.isLoading}
@@ -2912,6 +2969,17 @@ function EditorContent({
         onAcceptAll={consultantIntegration.acceptAll}
         onDismiss={consultantIntegration.dismiss}
       />
+
+      {/* Achievement Share Modal */}
+      <Dialog open={showAchievementModal} onOpenChange={setShowAchievementModal}>
+        <DialogContent className="max-w-lg p-0 overflow-hidden bg-gradient-to-br from-background to-muted border-2 border-primary/20">
+          <ShareableAchievementCard
+            completeness={pageBuilder.completeness}
+            brandName={strategicData?.consultationData?.businessName || consultation?.industry || 'Your Brand'}
+            logoUrl={strategicData?.brandSettings?.logoUrl || strategicData?.consultationData?.websiteIntelligence?.logoUrl}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

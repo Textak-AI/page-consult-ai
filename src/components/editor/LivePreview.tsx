@@ -26,9 +26,12 @@ import { SectionToolbar } from "@/components/editor/SectionToolbar";
 import { SectionAIChat } from "@/components/editor/SectionAIChat";
 import { SectionImageGenerator } from "@/components/editor/SectionImageGenerator";
 import { LogoUploader } from "@/components/editor/LogoUploader";
+import { SectionLockOverlay } from "@/components/editor/SectionLockOverlay";
 import { styleVariants } from "@/lib/styleVariants";
 import { SEOHead } from "@/components/seo/SEOHead";
 import type { SEOHeadData } from "@/lib/aiSeoIntegration";
+import { cn } from "@/lib/utils";
+import { Sparkles } from "lucide-react";
 
 type Section = {
   type: string;
@@ -44,9 +47,16 @@ interface LivePreviewProps {
   iconStyle?: "outline" | "solid" | "duotone";
   strategyBrief?: any;
   seoData?: SEOHeadData;
+  getSectionLockStatus?: (sectionType: string) => {
+    status: 'unlocked' | 'partial' | 'locked';
+    isLocked: boolean;
+    isPartial: boolean;
+    requirement?: string;
+    progress?: string;
+  };
 }
 
-export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData }: LivePreviewProps) {
+export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, getSectionLockStatus }: LivePreviewProps) {
   const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();
   const currentStyle = styleVariants[pageStyle];
   
@@ -147,15 +157,37 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     setLogoUploadSection(null);
   };
 
-  const renderSectionWithToolbar = (section: Section, index: number, sectionElement: React.ReactNode) => {
+const renderSectionWithToolbar = (section: Section, index: number, sectionElement: React.ReactNode) => {
     const sectionId = getSectionId(section.type);
+    const lockStatus = getSectionLockStatus?.(section.type);
+    const isLocked = lockStatus?.isLocked ?? false;
+    const justUpdated = (section as any)._justUpdated;
     
     return (
       <div 
         key={index} 
         id={sectionId} 
-        className="relative group transition-all duration-300"
+        className={cn(
+          "relative group transition-all duration-300",
+          justUpdated && "animate-ring-pulse",
+          isLocked && "opacity-75"
+        )}
       >
+        {/* Lock Overlay for locked sections */}
+        <SectionLockOverlay
+          isLocked={isLocked}
+          requirement={lockStatus?.requirement}
+          progress={lockStatus?.progress}
+        />
+        
+        {/* Updated Badge - shows when consultant applies a change */}
+        {justUpdated && (
+          <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 px-2 py-1 bg-purple-500/90 text-white text-xs font-medium rounded-full animate-fade-in">
+            <Sparkles className="w-3 h-3" />
+            Updated
+          </div>
+        )}
+        
         <SectionToolbar
           sectionType={section.type}
           sectionContent={section.content}
@@ -165,7 +197,11 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           onLogoEdit={() => handleLogoEdit(index, section.content)}
           isEditing={editingSection === index}
         />
-        {sectionElement}
+        
+        {/* Section Content - dimmed when locked */}
+        <div className={cn(isLocked && "pointer-events-none")}>
+          {sectionElement}
+        </div>
       </div>
     );
   };
