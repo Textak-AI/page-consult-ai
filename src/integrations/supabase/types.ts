@@ -189,6 +189,69 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_scene_cache: {
+        Row: {
+          cache_key: string
+          created_at: string | null
+          id: string
+          industry: string
+          logo_hash: string
+          scenes: Json
+          subcategory: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string | null
+          id?: string
+          industry: string
+          logo_hash: string
+          scenes: Json
+          subcategory?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string | null
+          id?: string
+          industry?: string
+          logo_hash?: string
+          scenes?: Json
+          subcategory?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      brand_scene_generations: {
+        Row: {
+          cache_key: string | null
+          consultation_id: string | null
+          created_at: string | null
+          from_cache: boolean | null
+          id: string
+          scenes_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          cache_key?: string | null
+          consultation_id?: string | null
+          created_at?: string | null
+          from_cache?: boolean | null
+          id?: string
+          scenes_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          cache_key?: string | null
+          consultation_id?: string | null
+          created_at?: string | null
+          from_cache?: boolean | null
+          id?: string
+          scenes_count?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       consultation_drafts: {
         Row: {
           created_at: string | null
