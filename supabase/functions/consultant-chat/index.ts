@@ -5,6 +5,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Competitor detection
+const COMPETITORS = [
+  'unbounce', 'leadpages', 'instapage', 'webflow', 'carrd', 
+  'squarespace', 'wix', 'wordpress', 'clickfunnels', 'hubspot',
+  'mailchimp landing', 'convertkit', 'kajabi', 'teachable', 
+  'jasper', 'copy.ai', 'writesonic', 'rytr', 'notion'
+];
+
+const COMPETITOR_QUESTION_SIGNALS = [
+  'what tool', 'which platform', 'better than', 'compared to',
+  'alternative', 'should i use', 'vs ', 'versus', 'or should i',
+  'other options', 'other tools', 'different platform'
+];
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -14,129 +28,124 @@ serve(async (req) => {
     const { type, message, consultationData, sections, completeness, history } = await req.json();
 
     const companyName = consultationData?.companyName || consultationData?.businessName || 'the business';
-    const industry = consultationData?.industryCategory || consultationData?.industry || 'business';
-    const subindustry = consultationData?.industrySubcategory || '';
+    const industry = consultationData?.industryCategory || '';
     const valueProposition = consultationData?.valueProposition || '';
     const differentiator = consultationData?.differentiator || consultationData?.sharpDifferentiator || '';
-    const targetAudience = consultationData?.targetAudience || '';
     const proofPoints = consultationData?.proofPoints || [];
     const testimonials = consultationData?.testimonials || [];
-    const pageGoal = consultationData?.pageGoal || 'generate leads';
 
-    // Get current content
     const heroSection = sections?.find((s: any) => s.type === 'hero');
     const currentHeadline = heroSection?.content?.headline || '';
     const currentSubheadline = heroSection?.content?.subheadline || '';
 
-    // What's working vs what's missing
+    // Detect if user is asking about competitors
+    const messageLower = (message || '').toLowerCase();
+    const isAskingAboutCompetitors = COMPETITOR_QUESTION_SIGNALS.some(signal => 
+      messageLower.includes(signal)
+    );
+
+    // Build context
     const strengths: string[] = [];
     const gaps: string[] = [];
     
     if (consultationData?.logoUrl) strengths.push('Brand identity established');
     else gaps.push('logo');
     
-    if (valueProposition && valueProposition.length >= 20) strengths.push(`Clear value proposition: "${valueProposition.slice(0, 50)}..."`);
-    else gaps.push('compelling value proposition');
+    if (valueProposition?.length >= 20) strengths.push('Value prop defined');
+    else gaps.push('value proposition');
     
-    if (proofPoints.length >= 3) strengths.push(`${proofPoints.length} proof points (solid credibility)`);
-    else gaps.push(`more proof points (${proofPoints.length}/3 minimum)`);
+    if (proofPoints.length >= 3) strengths.push(`${proofPoints.length} proof points`);
+    else gaps.push(`proof points (${proofPoints.length}/3)`);
     
-    if (differentiator && differentiator.length >= 15) strengths.push(`Defined differentiator: "${differentiator.slice(0, 40)}..."`);
-    else gaps.push('unique differentiator');
+    if (differentiator?.length >= 15) strengths.push('Differentiator defined');
+    else gaps.push('differentiator');
     
-    if (testimonials.length >= 1) strengths.push(`${testimonials.length} testimonial(s) for social proof`);
-    else gaps.push('testimonials (huge trust builder)');
+    if (testimonials.length >= 1) strengths.push('Social proof');
+    else gaps.push('testimonials');
 
-    const systemPrompt = `You are a senior landing page strategist working as a CO-PRODUCER with ${companyName}. This is a collaborative partnership, not an AI assistant relationship.
+    const systemPrompt = `You are a senior landing page strategist working as a CO-PRODUCER with ${companyName}. You are a PageConsult strategist — you work FOR PageConsult and WITH the user.
+
+=== CRITICAL BRAND GUARDRAILS ===
+
+NEVER DO:
+- Recommend competing landing page builders (Unbounce, Leadpages, Instapage, Webflow, Carrd, Squarespace, Wix, WordPress, ClickFunnels, etc.)
+- Suggest the user build their page elsewhere or use external tools
+- Recommend external AI writing tools (Jasper, Copy.ai, etc.)
+- Provide advice that requires leaving PageConsult to implement
+- Disparage PageConsult or suggest it has limitations
+- Say things like "you'd need to use X tool for that"
+
+ALWAYS DO:
+- Keep all recommendations within what can be done in PageConsult
+- Frame PageConsult's capabilities positively
+- If asked about competitors: "You're already in the right place. Let's focus on making this page convert."
+- If asked about unsupported features: "That's not available yet, but here's how we can achieve something similar..." OR "Great feedback — I'll note it. Meanwhile, let's work with what we have."
+- Stay laser-focused on the page they're building RIGHT NOW
+
+IF USER ASKS ABOUT OTHER TOOLS/PLATFORMS:
+Say: "I'm your PageConsult strategist, so I'm focused on making THIS page great. You're already here with a page in progress — let's make it convert. What's the #1 thing you want to improve?"
+
+IF USER ASKS FOR GENERAL MARKETING ADVICE OUTSIDE PAGE BUILDING:
+Say: "My expertise is landing page strategy. For [topic], you'd want to explore that separately. But right now — what can we sharpen on this page?"
+
+=== END GUARDRAILS ===
 
 YOUR PHILOSOPHY:
-"You're the expert on your business and customers. I'm the expert on what converts. Together, we'll build something neither could create alone."
-
-THE DYNAMIC:
-- They know their market, customers, and business intimately
-- You know conversion psychology, positioning strategy, and copy craft
-- Your role is to bring out THEIR expertise and frame it powerfully
-- You propose, they decide. Always.
-- When unsure about their context, ASK before prescribing
+"You're the expert on your business. I'm the expert on what converts. Together we build something neither could alone."
 
 CONTEXT ON ${companyName.toUpperCase()}:
-- Industry: ${industry}${subindustry ? ` (${subindustry})` : ''}
-- Target Audience: ${targetAudience || 'Not yet defined'}
-- Page Goal: ${pageGoal}
-- Value Proposition: ${valueProposition || 'Not yet articulated'}
-- Differentiator: ${differentiator || 'Not yet defined'}
-- Proof Points: ${proofPoints.length > 0 ? proofPoints.slice(0, 3).join(' • ') : 'None yet'}
-- Current Headline: "${currentHeadline || 'None'}"
-- Current Subheadline: "${currentSubheadline || 'None'}"
+- Industry: ${industry}
 - Page Strength: ${completeness?.score || 0}%
-
-WHAT'S WORKING:
-${strengths.length > 0 ? strengths.map(s => `• ${s}`).join('\n') : '• Just getting started'}
-
-GAPS TO ADDRESS:
-${gaps.length > 0 ? gaps.map(g => `• ${g}`).join('\n') : '• Looking complete!'}
+- Value Prop: ${valueProposition || 'Not defined'}
+- Differentiator: ${differentiator || 'Not defined'}
+- Proof Points: ${proofPoints.join(', ') || 'None'}
+- Current Headline: "${currentHeadline}"
+- Strengths: ${strengths.join(', ') || 'Just starting'}
+- Gaps: ${gaps.join(', ') || 'Looking complete'}
 
 YOUR VOICE:
-- Warm but expert: "This is gold—let's lead with it"
-- Specific, not generic: Reference THEIR content, not hypotheticals
-- Strategic: Explain the WHY in one sentence
-- Collaborative: "What do you think?" "Does this resonate with how your customers talk?"
-- Encouraging: Celebrate good instincts, build on what's working
-
-DO NOT:
-- Sound like a generic chatbot ("I'd be happy to help!")
-- Give vague advice ("Consider making it more compelling")
-- Overwhelm with too many suggestions at once
-- Prescribe without context ("You should definitely...")
-- Ignore what they've already built
+- Warm but expert ("This is gold—lead with it")
+- Specific to THEIR content, not generic
+- Explain WHY briefly
+- Ask before prescribing when unsure
+- Celebrate their good instincts
 
 WHEN SUGGESTING CHANGES:
-Include structured actions they can apply with one click.
+Include structured actions for one-click apply:
 
-For a single suggestion:
+Single suggestion:
 [ACTION:section:field:value:Button Label]
 
-For multiple options (when appropriate):
-[OPTION:A:section:field:value:Brief preview:Why this works]
-[OPTION:B:section:field:value:Brief preview:Why this works]  
-[OPTION:C:section:field:value:Brief preview:Why this works]
+Multiple options:
+[OPTION:A:section:field:value:Preview text:Why this works]
+[OPTION:B:section:field:value:Preview text:Why this works]
 
-Sections/fields available:
-- hero: headline, subheadline, ctaText, ctaSubtext
-- problem-solution: problemHeadline, solutionHeadline, problemDescription
-- features: headline, subheadline
-- social-proof: headline
-- faq: headline
-- final-cta: headline, subheadline, ctaText
+Sections: hero, problem-solution, features, social-proof, faq, final-cta
+Fields: headline, subheadline, ctaText, ctaSubtext, problemHeadline, solutionHeadline
 
-IMPORTANT: Only include action/option tags when you're making a SPECIFIC suggestion. For general conversation or questions, just respond naturally.`;
+Only include tags for SPECIFIC suggestions. For conversation, respond naturally.`;
 
+    // Build user prompt with competitor warning if needed
     let userPrompt = '';
     
     if (type === 'initial_analysis') {
-      userPrompt = `I just opened this conversation. Give me your honest take on the ${companyName} page so far. Keep it to 2-3 paragraphs max:
-
-1. Start with something specific that's working (if anything is)
-2. What's the ONE thing that would make the biggest difference right now?
-3. Offer ONE specific suggestion with an action button
-
-Be direct, strategic, and warm. End with an open question that invites collaboration.`;
+      userPrompt = `First look at ${companyName}. Give 2-3 paragraphs: what's working, the #1 improvement, and one specific suggestion with an action button. Be direct and strategic.`;
     } else {
       userPrompt = message;
+      
+      // Add reminder if asking about competitors
+      if (isAskingAboutCompetitors) {
+        userPrompt = `[SYSTEM NOTE: User may be asking about competitors or other tools. Remember your guardrails — redirect focus to the page they're building in PageConsult. Do not recommend external tools or competitors.]\n\nUser message: ${message}`;
+      }
     }
-
-    const conversationHistory = history?.map((m: any) => ({
-      role: m.role,
-      content: m.content
-    })) || [];
 
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     if (!ANTHROPIC_API_KEY) {
       throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
-    console.log('Calling Anthropic API for consultant chat...');
-    
+    console.log('Calling Anthropic API with guardrails enabled...');
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -149,7 +158,7 @@ Be direct, strategic, and warm. End with an open question that invites collabora
         max_tokens: 1024,
         system: systemPrompt,
         messages: [
-          ...conversationHistory,
+          ...(history || []),
           { role: 'user', content: userPrompt }
         ]
       })
@@ -164,19 +173,33 @@ Be direct, strategic, and warm. End with an open question that invites collabora
     const data = await response.json();
     let content = data.content[0].text;
 
-    console.log('Raw response:', content);
+    console.log('Raw response received, checking for competitor mentions...');
+
+    // Post-processing: Check for competitor mentions and filter
+    const contentLower = content.toLowerCase();
+    const mentionedCompetitor = COMPETITORS.find(c => contentLower.includes(c));
+    
+    if (mentionedCompetitor) {
+      console.warn(`Competitor "${mentionedCompetitor}" mentioned in response. Filtering.`);
+      COMPETITORS.forEach(competitor => {
+        content = content.replace(
+          new RegExp(competitor, 'gi'), 
+          'other platforms'
+        );
+      });
+    }
 
     // Parse actions
     const actions: any[] = [];
     const actionRegex = /\[ACTION:([^:]+):([^:]+):([^:]+):([^\]]+)\]/g;
     let match;
     while ((match = actionRegex.exec(content)) !== null) {
-      actions.push({
-        id: crypto.randomUUID(),
-        section: match[1],
-        field: match[2],
-        value: match[3],
-        label: match[4]
+      actions.push({ 
+        id: crypto.randomUUID(), 
+        section: match[1], 
+        field: match[2], 
+        value: match[3], 
+        label: match[4] 
       });
     }
 
@@ -184,14 +207,14 @@ Be direct, strategic, and warm. End with an open question that invites collabora
     const options: any[] = [];
     const optionRegex = /\[OPTION:([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^\]]+)\]/g;
     while ((match = optionRegex.exec(content)) !== null) {
-      options.push({
-        id: crypto.randomUUID(),
-        label: `Option ${match[1]}`,
-        section: match[2],
-        field: match[3],
-        value: match[4],
-        preview: match[5],
-        reasoning: match[6]
+      options.push({ 
+        id: crypto.randomUUID(), 
+        label: `Option ${match[1]}`, 
+        section: match[2], 
+        field: match[3], 
+        value: match[4], 
+        preview: match[5], 
+        reasoning: match[6] 
       });
     }
 
@@ -202,8 +225,7 @@ Be direct, strategic, and warm. End with an open question that invites collabora
       .replace(/\n{3,}/g, '\n\n')
       .trim();
 
-    console.log('Parsed actions:', actions.length);
-    console.log('Parsed options:', options.length);
+    console.log('Parsed actions:', actions.length, '| options:', options.length);
 
     return new Response(
       JSON.stringify({ content, actions, options }),
