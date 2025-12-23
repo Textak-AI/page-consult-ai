@@ -524,6 +524,88 @@ All colors MUST be HSL.
     }
   }
 
+  /* Section unlock animation */
+  @keyframes section-unlock {
+    0% { 
+      opacity: 0; 
+      transform: scale(0.96); 
+      filter: blur(4px);
+    }
+    60% { 
+      transform: scale(1.01); 
+    }
+    100% { 
+      opacity: 1; 
+      transform: scale(1); 
+      filter: blur(0);
+    }
+  }
+
+  .animate-section-unlock {
+    animation: section-unlock 0.6s ease-out forwards;
+  }
+
+  /* Ring pulse for updated sections */
+  @keyframes ring-pulse {
+    0%, 100% { 
+      box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4);
+    }
+    50% { 
+      box-shadow: 0 0 0 8px rgba(168, 85, 247, 0);
+    }
+  }
+
+  .animate-ring-pulse {
+    animation: ring-pulse 1s ease-out;
+  }
+
+  /* Shimmer overlay effect for updated content */
+  @keyframes shimmer-overlay {
+    0% { 
+      background-position: -200% 0; 
+    }
+    100% { 
+      background-position: 200% 0; 
+    }
+  }
+
+  .animate-shimmer-overlay {
+    position: relative;
+  }
+
+  .animate-shimmer-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(168, 85, 247, 0.08) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-overlay 1.5s ease-in-out;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  /* Milestone celebration pulse */
+  @keyframes milestone-pulse {
+    0% { 
+      transform: scale(1); 
+    }
+    50% { 
+      transform: scale(1.05); 
+    }
+    100% { 
+      transform: scale(1); 
+    }
+  }
+
+  .animate-milestone {
+    animation: milestone-pulse 0.5s ease-out;
+  }
+
   /* Reduced motion support */
   @media (prefers-reduced-motion: reduce) {
     .animate-float,
@@ -534,7 +616,10 @@ All colors MUST be HSL.
     .animate-shimmer,
     .animate-bounce-slow,
     .animate-pulse,
-    .animate-pulse-glow {
+    .animate-pulse-glow,
+    .animate-section-unlock,
+    .animate-ring-pulse,
+    .animate-milestone {
       animation: none !important;
     }
     
