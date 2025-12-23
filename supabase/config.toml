@@ -98,3 +98,6 @@ verify_jwt = true
 
 [functions.generate-brand-scene]
 verify_jwt = true
+
+[functions.consultant-suggestions]
+verify_jwt = true
