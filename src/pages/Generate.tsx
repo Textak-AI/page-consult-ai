@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check, Sparkles, Wand2, Palette, Undo2, Redo2, Brain } from "lucide-react";
+import { Loader2, Check, Sparkles, Wand2, Palette, Undo2, Redo2, Brain, Rocket } from "lucide-react";
 import { PersonaInsightsPanel } from "@/components/editor/PersonaInsightsPanel";
 import { SectionManager } from "@/components/editor/SectionManager";
 import { LivePreview } from "@/components/editor/LivePreview";
@@ -21,7 +21,9 @@ import { cn } from "@/lib/utils";
 import logo from "/logo/whiteAsset_3combimark_darkmode.svg";
 import { useAIActions, type AIActionType } from "@/hooks/useAIActions";
 import { useCredits } from "@/hooks/useCredits";
-import { useConsultantIntegration } from "@/hooks/useConsultantIntegration";
+import { useConsultantIntegration } from '@/hooks/useConsultantIntegration';
+import { usePageBuilder } from '@/hooks/usePageBuilder';
+import { PageStrengthMeter } from '@/components/consultation/PageStrengthMeter';
 import { StylePresetName } from "@/styles/presets";
 import {
   UsageIndicator,
@@ -2398,6 +2400,14 @@ function EditorContent({
     enabled: sections.length > 0
   });
 
+  // Page builder integration for completeness tracking
+  const pageBuilder = usePageBuilder({
+    consultationData: strategicData?.consultationData || consultation || {},
+    sections: sections.map((s: any) => ({ type: s.type, content: s.content })),
+    onSectionsChange: setSections,
+    consultantEnabled: false // Using consultantIntegration separately
+  });
+
   // AI Actions usage tracking (pass email for dev mode detection)
   const aiActions = useAIActions(userId, userEmail);
   const { credits } = useCredits(userId);
@@ -2691,6 +2701,48 @@ function EditorContent({
       <div className="flex-1 flex overflow-hidden relative z-10">
         {/* Left sidebar with Credits + Persona Insights + Section Manager */}
         <div className="w-72 border-r border-white/10 bg-white/5 backdrop-blur-md flex flex-col overflow-hidden">
+          {/* Page Strength Meter */}
+          <div className="p-3 border-b border-white/10">
+            <PageStrengthMeter 
+              completeness={pageBuilder.completeness}
+              showMilestones={true}
+              className="bg-white/5 border-white/10"
+            />
+          </div>
+          
+          {/* Conversion Ready Banner */}
+          {pageBuilder.isConversionReady && (
+            <div className="p-3 border-b border-white/10 bg-gradient-to-r from-green-500/10 to-emerald-500/10">
+              <div className="flex items-center gap-2 text-green-400 mb-2">
+                <Rocket className="w-4 h-4" />
+                <span className="font-medium text-sm">Conversion-Ready!</span>
+              </div>
+              <p className="text-xs text-green-300/80 mb-2">
+                Your page has all the elements for high conversion.
+              </p>
+              <Button
+                size="sm"
+                onClick={() => setPublishModalOpen(true)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              >
+                Preview & Publish
+              </Button>
+            </div>
+          )}
+
+          {/* Strong Page Banner */}
+          {pageBuilder.isStrong && !pageBuilder.isConversionReady && (
+            <div className="p-3 border-b border-white/10 bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
+              <div className="flex items-center gap-2 text-blue-400 mb-1">
+                <Sparkles className="w-4 h-4" />
+                <span className="font-medium text-sm">Looking Strong!</span>
+              </div>
+              <p className="text-xs text-blue-300/80">
+                {pageBuilder.nextUnlock?.hint || "Add more content to reach conversion-ready status."}
+              </p>
+            </div>
+          )}
+
           {/* Credit Display */}
           {userId && !aiActions.loading && (
             <div className="p-3 border-b border-white/10">
