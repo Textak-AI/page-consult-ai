@@ -564,9 +564,15 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   // Skip if we have extracted brand (fresh start) or if explicitly told to skip
   useEffect(() => {
     const loadDraft = async () => {
-      // Don't load draft if we have fresh extracted brand or skipDraftLoad is true
-      if (skipDraftLoad || extractedBrand) {
-        console.log('🚫 Skipping draft load - using extracted brand data');
+      // CRITICAL: If we have extracted brand data, DO NOT load any draft
+      if (extractedBrand?.companyName) {
+        console.log('🚫 Extracted brand exists - skipping draft load');
+        return; // EXIT EARLY - don't load draft
+      }
+      
+      // Also skip if explicitly told to skip
+      if (skipDraftLoad) {
+        console.log('🚫 skipDraftLoad flag set - skipping draft load');
         return;
       }
       
@@ -592,7 +598,14 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   }, [skipDraftLoad, extractedBrand]);
 
   // Restore progress from localStorage on mount (fallback)
+  // Skip if we have extracted brand (fresh start)
   useEffect(() => {
+    // CRITICAL: If we have extracted brand, don't restore from localStorage
+    if (extractedBrand?.companyName || skipDraftLoad) {
+      console.log('🚫 Extracted brand exists - skipping localStorage restore');
+      return;
+    }
+    
     const saved = localStorage.getItem('pageconsult_consultation_draft');
     if (saved) {
       try {
@@ -614,7 +627,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         localStorage.removeItem('pageconsult_consultation_draft');
       }
     }
-  }, []);
+  }, [extractedBrand, skipDraftLoad]);
 
   // Save progress whenever data or step changes
   useEffect(() => {
