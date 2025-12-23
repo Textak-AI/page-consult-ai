@@ -34,6 +34,7 @@ import {
   BetaViralStep,
   type RewardTier
 } from './beta';
+import { useDevMode } from '@/components/dev/DevToolbar';
 
 export interface ConsultationData {
   // Page Type
@@ -329,11 +330,15 @@ interface Props {
 }
 
 export function StrategicConsultation({ onComplete, onBack, prefillData, extractedBrand }: Props) {
+  // Check if dev mode is active
+  const [isDevModeActive] = useDevMode();
+  
   // Initialize data with prefill values if available
   const getInitialData = (): Partial<ConsultationData> => {
     const initial: Partial<ConsultationData> = {};
     
-    // First, apply extracted brand data if available
+    // EXTRACTED BRAND ALWAYS TAKES PRIORITY
+    // This is real user data from their website - never override it
     if (extractedBrand) {
       if (extractedBrand.companyName) {
         initial.businessName = extractedBrand.companyName;
@@ -369,10 +374,19 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         testimonials: [],
         companyName: extractedBrand.companyName,
       };
+      
+      // When extracted brand exists, skip prefill data entirely
+      // (extracted brand = real user data, prefill = dev/demo data)
+      return initial;
     }
     
-    // Then overlay with prefill data if available
-    if (prefillData?.extracted) {
+    // Only apply prefill data if:
+    // 1. No extracted brand (real user data takes priority)
+    // 2. Dev mode is active OR source is landing_demo
+    const shouldApplyPrefill = prefillData?.extracted && 
+      (isDevModeActive || prefillData.source === 'landing_demo');
+    
+    if (shouldApplyPrefill && prefillData?.extracted) {
       // Map industry from demo extraction
       if (prefillData.extracted.industry) {
         // Try to match to our industry list
@@ -392,8 +406,8 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         initial.idealClient = prefillData.extracted.audience;
       }
       
-      // Map value prop to unique strength (only if not already set by brand)
-      if (prefillData.extracted.valueProp && !initial.uniqueStrength) {
+      // Map value prop to unique strength
+      if (prefillData.extracted.valueProp) {
         initial.uniqueStrength = prefillData.extracted.valueProp;
       }
       
