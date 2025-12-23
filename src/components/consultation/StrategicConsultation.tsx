@@ -309,51 +309,103 @@ interface PrefillData {
   source?: string;
 }
 
+// Extracted brand from BrandExtractor
+interface ExtractedBrandData {
+  companyName: string | null;
+  faviconUrl: string | null;
+  description: string | null;
+  tagline: string | null;
+  themeColor: string | null;
+  ogImage: string | null;
+  domain: string;
+  websiteUrl?: string;
+}
+
 interface Props {
   onComplete: (data: ConsultationData, strategyBrief: string, aiSeoData?: AISeoData | null, structuredBrief?: any) => void;
   onBack?: () => void;
   prefillData?: PrefillData | null;
+  extractedBrand?: ExtractedBrandData | null;
 }
 
-export function StrategicConsultation({ onComplete, onBack, prefillData }: Props) {
+export function StrategicConsultation({ onComplete, onBack, prefillData, extractedBrand }: Props) {
   // Initialize data with prefill values if available
   const getInitialData = (): Partial<ConsultationData> => {
-    if (!prefillData?.extracted) return {};
-    
     const initial: Partial<ConsultationData> = {};
     
-    // Map industry from demo extraction
-    if (prefillData.extracted.industry) {
-      // Try to match to our industry list
-      const matchedIndustry = INDUSTRIES.find(
-        ind => ind.toLowerCase().includes(prefillData.extracted!.industry!.toLowerCase())
-      );
-      if (matchedIndustry) {
-        initial.industry = matchedIndustry;
-      } else {
-        initial.industry = 'Other';
-        initial.industryOther = prefillData.extracted.industry;
+    // First, apply extracted brand data if available
+    if (extractedBrand) {
+      if (extractedBrand.companyName) {
+        initial.businessName = extractedBrand.companyName;
       }
+      if (extractedBrand.websiteUrl) {
+        initial.websiteUrl = extractedBrand.websiteUrl;
+      }
+      if (extractedBrand.tagline || extractedBrand.description) {
+        initial.uniqueStrength = extractedBrand.tagline || extractedBrand.description || '';
+      }
+      if (extractedBrand.themeColor) {
+        initial.brandSettings = {
+          logoUrl: extractedBrand.faviconUrl || null,
+          primaryColor: extractedBrand.themeColor,
+          secondaryColor: '',
+          headingFont: 'Inter',
+          bodyFont: 'Inter',
+          modified: true,
+        };
+      }
+      // Store OG image as potential hero background
+      if (extractedBrand.ogImage) {
+        initial.heroBackgroundUrl = extractedBrand.ogImage;
+      }
+      // Build website intelligence from extracted brand
+      initial.websiteIntelligence = {
+        logoUrl: extractedBrand.faviconUrl,
+        brandColors: extractedBrand.themeColor ? [extractedBrand.themeColor] : [],
+        title: extractedBrand.companyName,
+        tagline: extractedBrand.tagline,
+        description: extractedBrand.description,
+        heroText: null,
+        testimonials: [],
+        companyName: extractedBrand.companyName,
+      };
     }
     
-    // Map audience
-    if (prefillData.extracted.audience) {
-      initial.idealClient = prefillData.extracted.audience;
-    }
-    
-    // Map value prop to unique strength
-    if (prefillData.extracted.valueProp) {
-      initial.uniqueStrength = prefillData.extracted.valueProp;
-    }
-    
-    // Map buyer persona to desired outcome if available
-    if (prefillData.market?.buyerPersona) {
-      initial.desiredOutcome = prefillData.market.buyerPersona;
-    }
-    
-    // Map common objections
-    if (prefillData.market?.commonObjections?.length) {
-      initial.objectionsToOvercome = prefillData.market.commonObjections.join('; ');
+    // Then overlay with prefill data if available
+    if (prefillData?.extracted) {
+      // Map industry from demo extraction
+      if (prefillData.extracted.industry) {
+        // Try to match to our industry list
+        const matchedIndustry = INDUSTRIES.find(
+          ind => ind.toLowerCase().includes(prefillData.extracted!.industry!.toLowerCase())
+        );
+        if (matchedIndustry) {
+          initial.industry = matchedIndustry;
+        } else {
+          initial.industry = 'Other';
+          initial.industryOther = prefillData.extracted.industry;
+        }
+      }
+      
+      // Map audience
+      if (prefillData.extracted.audience) {
+        initial.idealClient = prefillData.extracted.audience;
+      }
+      
+      // Map value prop to unique strength (only if not already set by brand)
+      if (prefillData.extracted.valueProp && !initial.uniqueStrength) {
+        initial.uniqueStrength = prefillData.extracted.valueProp;
+      }
+      
+      // Map buyer persona to desired outcome if available
+      if (prefillData.market?.buyerPersona) {
+        initial.desiredOutcome = prefillData.market.buyerPersona;
+      }
+      
+      // Map common objections
+      if (prefillData.market?.commonObjections?.length) {
+        initial.objectionsToOvercome = prefillData.market.commonObjections.join('; ');
+      }
     }
     
     return initial;

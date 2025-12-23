@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
 import { StrategicConsultation, StrategyBriefReview, ConsultationIntro, shouldShowIntro, type ConsultationData } from "@/components/consultation";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,11 @@ import iconmark from "@/assets/iconmark-darkmode.svg";
 import { DevToolbar, useDevMode } from "@/components/dev/DevToolbar";
 import { mockConsultation, mockStrategyBrief, mockAiSeoData, mockStructuredBrief } from "@/lib/mockDevData";
 import { AIWorkingLoader } from "@/components/editor/AIWorkingLoader";
+import { BrandExtractor } from "@/components/consultation/BrandExtractor";
+import { ExtractedBrand } from "@/lib/brandExtraction";
 import type { AISeoData } from "@/services/intelligence/types";
 
-type Stage = 'loading' | 'intro' | 'consultation' | 'brief-review' | 'generating' | 'dev-loading';
+type Stage = 'loading' | 'brand-extractor' | 'intro' | 'consultation' | 'brief-review' | 'generating' | 'dev-loading';
 
 // Type for prefill data from landing demo
 interface PrefillData {
@@ -45,6 +48,8 @@ export default function NewConsultation() {
   const [aiSeoData, setAiSeoData] = useState<AISeoData | null>(null);
   const [consultationStep, setConsultationStep] = useState(1);
   const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
+  const [extractedBrand, setExtractedBrand] = useState<ExtractedBrand | null>(null);
+  const [extractedWebsiteUrl, setExtractedWebsiteUrl] = useState<string | null>(null);
   const isDevMode = useDevMode();
 
   // Parse prefill data from query params
@@ -83,15 +88,37 @@ export default function NewConsultation() {
         return;
       }
       setUserId(user.id);
-      // Skip intro if coming from demo with prefill data
-      if (prefillData?.source === 'landing_demo' || !shouldShowIntro()) {
+      // Skip intro and brand extractor if coming from demo with prefill data
+      if (prefillData?.source === 'landing_demo') {
         setStage('consultation');
+      } else if (!shouldShowIntro()) {
+        // Skip intro but show brand extractor
+        setStage('brand-extractor');
       } else {
         setStage('intro');
       }
     };
     checkAuth();
   }, [navigate, searchParams, prefillData]);
+
+  // Handle brand extracted
+  const handleBrandExtracted = (brand: ExtractedBrand, websiteUrl: string) => {
+    console.log('🎨 Brand extracted:', brand);
+    setExtractedBrand(brand);
+    setExtractedWebsiteUrl(websiteUrl);
+    
+    sonnerToast.success(`Welcome, ${brand.companyName || brand.domain}!`, {
+      description: "We've pre-filled some info for you"
+    });
+    
+    // Move to consultation (skip intro since they've engaged)
+    setStage('consultation');
+  };
+
+  // Handle skip brand extractor
+  const handleSkipBrandExtractor = () => {
+    setStage('consultation');
+  };
 
   // Handle consultation completion - now includes structuredBrief JSON
   const handleConsultationComplete = (data: ConsultationData, brief: string, seoData?: AISeoData | null, structuredBriefData?: any) => {
@@ -292,10 +319,28 @@ export default function NewConsultation() {
     );
   }
 
-  // Intro state
+  // Intro state - after intro, show brand extractor
   if (stage === 'intro') {
     return (
-      <ConsultationIntro onComplete={() => setStage('consultation')} />
+      <ConsultationIntro onComplete={() => setStage('brand-extractor')} />
+    );
+  }
+
+  // Brand extractor state
+  if (stage === 'brand-extractor') {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-slate-900/50 border border-slate-700/50 rounded-2xl p-8 max-w-lg w-full"
+        >
+          <BrandExtractor
+            onExtracted={handleBrandExtracted}
+            onSkip={handleSkipBrandExtractor}
+          />
+        </motion.div>
+      </div>
     );
   }
 
@@ -367,6 +412,10 @@ export default function NewConsultation() {
               onComplete={handleConsultationComplete}
               onBack={handleBackFromConsultation}
               prefillData={prefillData}
+              extractedBrand={extractedBrand ? {
+                ...extractedBrand,
+                websiteUrl: extractedWebsiteUrl || undefined
+              } : null}
             />
           </motion.div>
         )}
