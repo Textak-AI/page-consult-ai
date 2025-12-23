@@ -12,10 +12,11 @@ import { DevToolbar, useDevMode } from "@/components/dev/DevToolbar";
 import { mockConsultation, mockStrategyBrief, mockAiSeoData, mockStructuredBrief } from "@/lib/mockDevData";
 import { AIWorkingLoader } from "@/components/editor/AIWorkingLoader";
 import { BrandExtractor } from "@/components/consultation/BrandExtractor";
+import { WebsiteAnalyzer } from "@/components/consultation/WebsiteAnalyzer";
 import { ExtractedBrand } from "@/lib/brandExtraction";
 import type { AISeoData } from "@/services/intelligence/types";
 
-type Stage = 'loading' | 'brand-extractor' | 'intro' | 'consultation' | 'brief-review' | 'generating' | 'dev-loading';
+type Stage = 'loading' | 'brand-extractor' | 'website-analyzer' | 'intro' | 'consultation' | 'brief-review' | 'generating' | 'dev-loading';
 
 // Type for prefill data from landing demo
 interface PrefillData {
@@ -51,6 +52,7 @@ export default function NewConsultation() {
   const [extractedBrand, setExtractedBrand] = useState<ExtractedBrand | null>(null);
   const [extractedWebsiteUrl, setExtractedWebsiteUrl] = useState<string | null>(null);
   const [skipDraftLoad, setSkipDraftLoad] = useState(false);
+  const [websiteAnalysis, setWebsiteAnalysis] = useState<any>(null);
   const [isDevModeActive] = useDevMode();
 
   // Parse prefill data from query params
@@ -106,7 +108,7 @@ export default function NewConsultation() {
     checkAuth();
   }, [navigate, searchParams, prefillData]);
 
-  // Handle brand extracted
+  // Handle brand extracted - go to website analyzer step
   const handleBrandExtracted = (brand: ExtractedBrand, websiteUrl: string) => {
     console.log('🎨 Brand extracted:', brand);
     
@@ -120,10 +122,22 @@ export default function NewConsultation() {
     setExtractedWebsiteUrl(websiteUrl);
     
     sonnerToast.success(`Welcome, ${brand.companyName || brand.domain}!`, {
-      description: "We've pre-filled some info for you"
+      description: "We've found your brand info"
     });
     
-    // Move to consultation (skip intro since they've engaged)
+    // Move to website analyzer step
+    setStage('website-analyzer');
+  };
+
+  // Handle website analysis complete
+  const handleAnalysisComplete = (analysis: any) => {
+    console.log('📊 Website analysis complete:', analysis);
+    setWebsiteAnalysis(analysis);
+    setStage('consultation');
+  };
+
+  // Handle skip analysis
+  const handleSkipAnalysis = () => {
     setStage('consultation');
   };
 
@@ -356,6 +370,20 @@ export default function NewConsultation() {
     );
   }
 
+  // Website analyzer state
+  if (stage === 'website-analyzer') {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <WebsiteAnalyzer
+          websiteUrl={extractedWebsiteUrl || ''}
+          extractedBrand={extractedBrand}
+          onAnalysisComplete={handleAnalysisComplete}
+          onSkip={handleSkipAnalysis}
+        />
+      </div>
+    );
+  }
+
   // Dev loading state (shows AI working loader for 10 seconds)
   if (stage === 'dev-loading') {
     return <AIWorkingLoader />;
@@ -429,6 +457,7 @@ export default function NewConsultation() {
                 websiteUrl: extractedWebsiteUrl || undefined
               } : null}
               skipDraftLoad={skipDraftLoad}
+              websiteAnalysis={websiteAnalysis}
             />
           </motion.div>
         )}

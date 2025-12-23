@@ -322,15 +322,31 @@ interface ExtractedBrandData {
   websiteUrl?: string;
 }
 
+interface WebsiteAnalysis {
+  companyName?: string;
+  industry?: string;
+  targetAudience?: string;
+  problemStatement?: string;
+  solutionStatement?: string;
+  uniqueDifferentiator?: string;
+  proofPoints?: string[];
+  testimonials?: { quote: string; author: string; title?: string }[];
+  services?: { name: string; description: string }[];
+  recommendedCTA?: string;
+  recommendedOffer?: string;
+  gaps?: { field: string; message: string; guidance: string }[];
+}
+
 interface Props {
   onComplete: (data: ConsultationData, strategyBrief: string, aiSeoData?: AISeoData | null, structuredBrief?: any) => void;
   onBack?: () => void;
   prefillData?: PrefillData | null;
   extractedBrand?: ExtractedBrandData | null;
   skipDraftLoad?: boolean;
+  websiteAnalysis?: WebsiteAnalysis | null;
 }
 
-export function StrategicConsultation({ onComplete, onBack, prefillData, extractedBrand, skipDraftLoad }: Props) {
+export function StrategicConsultation({ onComplete, onBack, prefillData, extractedBrand, skipDraftLoad, websiteAnalysis }: Props) {
   // Check if dev mode is active
   const [isDevModeActive] = useDevMode();
   
@@ -338,7 +354,50 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   const getInitialData = (): Partial<ConsultationData> => {
     const initial: Partial<ConsultationData> = {};
     
-    // EXTRACTED BRAND ALWAYS TAKES PRIORITY
+    // WEBSITE ANALYSIS TAKES TOP PRIORITY (AI analyzed the full site)
+    if (websiteAnalysis) {
+      console.log('🤖 Using AI website analysis for initial data');
+      initial.businessName = websiteAnalysis.companyName || extractedBrand?.companyName || '';
+      initial.websiteUrl = extractedBrand?.websiteUrl || '';
+      initial.industry = websiteAnalysis.industry || '';
+      initial.idealClient = websiteAnalysis.targetAudience || '';
+      initial.clientFrustration = websiteAnalysis.problemStatement || '';
+      initial.uniqueStrength = websiteAnalysis.solutionStatement || '';
+      initial.mainOffer = websiteAnalysis.recommendedOffer || '';
+      initial.ctaText = websiteAnalysis.recommendedCTA || '';
+      initial.achievements = websiteAnalysis.proofPoints?.join('\n') || '';
+      initial.testimonialText = websiteAnalysis.testimonials?.[0]?.quote || '';
+      
+      // Apply brand settings from extracted brand
+      if (extractedBrand?.themeColor) {
+        initial.brandSettings = {
+          logoUrl: extractedBrand.faviconUrl || null,
+          primaryColor: extractedBrand.themeColor,
+          secondaryColor: '',
+          headingFont: 'Inter',
+          bodyFont: 'Inter',
+          modified: true,
+        };
+      }
+      if (extractedBrand?.ogImage) {
+        initial.heroBackgroundUrl = extractedBrand.ogImage;
+      }
+      // Build website intelligence
+      initial.websiteIntelligence = {
+        logoUrl: extractedBrand?.faviconUrl || null,
+        brandColors: extractedBrand?.themeColor ? [extractedBrand.themeColor] : [],
+        title: websiteAnalysis.companyName || extractedBrand?.companyName || null,
+        tagline: extractedBrand?.tagline || null,
+        description: extractedBrand?.description || null,
+        heroText: null,
+        testimonials: websiteAnalysis.testimonials?.map(t => t.quote) || [],
+        companyName: websiteAnalysis.companyName || extractedBrand?.companyName || null,
+      };
+      
+      return initial;
+    }
+    
+    // EXTRACTED BRAND TAKES SECOND PRIORITY
     // This is real user data from their website - never override it
     if (extractedBrand) {
       if (extractedBrand.companyName) {
