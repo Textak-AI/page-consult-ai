@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { CalculatorUpgradeModal } from "@/components/editor/CalculatorUpgradeMod
 import { StylePicker } from "@/components/editor/StylePicker";
 import { PageGenerationLoader } from "@/components/editor/PageGenerationLoader";
 import { StrategyBriefPanel } from "@/components/builder/StrategyBriefPanel";
+import { ConsultantPanel } from "@/components/editor/ConsultantPanel";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
 import { generateIntelligentContent, runIntelligencePipeline } from "@/services/intelligence";
 import type { PersonaIntelligence, GeneratedContent, AISeoData } from "@/services/intelligence/types";
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 import logo from "/logo/whiteAsset_3combimark_darkmode.svg";
 import { useAIActions, type AIActionType } from "@/hooks/useAIActions";
 import { useCredits } from "@/hooks/useCredits";
+import { useConsultantIntegration } from "@/hooks/useConsultantIntegration";
 import { StylePresetName } from "@/styles/presets";
 import {
   UsageIndicator,
@@ -2367,6 +2369,35 @@ function EditorContent({
     });
   }, []);
 
+  // Handler for applying consultant suggestions to sections
+  const handleApplyConsultantChange = useCallback((
+    sectionType: string, 
+    field: string, 
+    value: string
+  ) => {
+    setSections((prev: any[]) => prev.map(section => {
+      if (section.type === sectionType) {
+        return {
+          ...section,
+          content: {
+            ...section.content,
+            [field]: value
+          }
+        };
+      }
+      return section;
+    }));
+  }, [setSections]);
+
+  // Consultant integration for AI-powered copy suggestions  
+  const consultantIntegration = useConsultantIntegration({
+    consultationData: strategicData?.consultationData || consultation || {},
+    sections: sections.map((s: any) => ({ type: s.type, content: s.content })),
+    onApplyChange: handleApplyConsultantChange,
+    debounceMs: 2500,
+    enabled: sections.length > 0
+  });
+
   // AI Actions usage tracking (pass email for dev mode detection)
   const aiActions = useAIActions(userId, userEmail);
   const { credits } = useCredits(userId);
@@ -2816,6 +2847,18 @@ function EditorContent({
             description: `Purchasing ${amount} actions`,
           });
         }}
+      />
+
+      {/* AI Consultant Panel - slides in from right when suggestions available */}
+      <ConsultantPanel
+        isOpen={consultantIntegration.isOpen}
+        isLoading={consultantIntegration.isLoading}
+        summary={consultantIntegration.summary}
+        suggestions={consultantIntegration.suggestions}
+        onAccept={consultantIntegration.acceptSuggestion}
+        onSkip={consultantIntegration.skipSuggestion}
+        onAcceptAll={consultantIntegration.acceptAll}
+        onDismiss={consultantIntegration.dismiss}
       />
     </div>
   );
