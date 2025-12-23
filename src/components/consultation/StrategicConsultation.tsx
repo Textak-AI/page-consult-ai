@@ -1400,30 +1400,52 @@ ${d.ctaText}
         <div className="flex justify-between items-center mb-3">
           {STEPS.map((step, index) => {
             const Icon = step.icon;
-            return (
-              <div
+            const isCompleted = index < currentStep;
+            const isCurrent = index === currentStep;
+            const isUpcoming = index > currentStep;
+            
+            const stepButton = (
+              <button
                 key={step.id}
-                className={`flex items-center gap-2 ${
+                onClick={() => isCompleted && setCurrentStep(index)}
+                disabled={!isCompleted}
+                className={`flex items-center gap-2 group relative ${
+                  isCompleted ? 'cursor-pointer' : isCurrent ? 'cursor-default' : 'cursor-not-allowed'
+                } ${
                   index <= currentStep ? 'text-cyan-400' : 'text-slate-600'
                 }`}
+                aria-label={`${step.title}${isCompleted ? ' - Click to edit' : ''}`}
               >
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
-                    index < currentStep
-                      ? 'bg-cyan-500 border-cyan-500 text-white'
-                      : index === currentStep
-                      ? 'border-cyan-500 text-cyan-400'
-                      : 'border-slate-700 text-slate-600'
+                    isCompleted
+                      ? 'bg-cyan-500 border-cyan-500 text-white hover:bg-cyan-400 hover:border-cyan-400 hover:scale-110'
+                      : isCurrent
+                      ? 'border-cyan-500 text-cyan-400 ring-2 ring-cyan-500/30'
+                      : 'border-slate-700 text-slate-600 opacity-50'
                   }`}
                 >
-                  {index < currentStep ? (
+                  {isCompleted ? (
                     <CheckCircle2 className="w-5 h-5" />
                   ) : (
                     <Icon className="w-5 h-5" />
                   )}
                 </div>
-              </div>
+                
+                {/* Custom tooltip */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                  <div className="bg-slate-900 text-white text-xs px-3 py-1.5 rounded-md whitespace-nowrap border border-slate-700 shadow-lg">
+                    {step.title}
+                    {isCompleted && <span className="text-cyan-400 ml-1">• Click to edit</span>}
+                  </div>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
+                    <div className="border-4 border-transparent border-t-slate-900"></div>
+                  </div>
+                </div>
+              </button>
             );
+            
+            return stepButton;
           })}
         </div>
         <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
