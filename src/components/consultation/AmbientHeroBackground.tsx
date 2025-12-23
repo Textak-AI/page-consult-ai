@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, RefreshCw, Loader2, Unlock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { HeroImage } from '@/lib/heroImages';
 
 interface AmbientHeroBackgroundProps {
-  images: string[];
+  images: HeroImage[];
   isLocked: boolean;
   lockedIndex: number;
   currentIndex: number;
@@ -30,6 +31,7 @@ export function AmbientHeroBackground({
   
   const displayIndex = isLocked ? lockedIndex : currentIndex;
   const hasImages = images.length > 0;
+  const currentImage = images[displayIndex];
 
   return (
     <div 
@@ -39,10 +41,10 @@ export function AmbientHeroBackground({
     >
       {/* Background Images with Ken Burns */}
       <AnimatePresence mode="wait">
-        {images.map((url, index) => (
+        {images.map((image, index) => (
           index === displayIndex && (
             <motion.div
-              key={`${url}-${index}`}
+              key={`${image.url}-${index}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -52,7 +54,7 @@ export function AmbientHeroBackground({
               <div 
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat animate-subtle-zoom"
                 style={{ 
-                  backgroundImage: `url(${url})`,
+                  backgroundImage: `url(${image.url})`,
                   backgroundPosition: 'center center'
                 }}
               />
@@ -140,10 +142,24 @@ export function AmbientHeroBackground({
         </>
       )}
       
+      {/* Image type label (brand vs industry) */}
+      {hasImages && currentImage && (
+        <div className="absolute bottom-6 right-6 z-10">
+          <div className={cn(
+            "px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm",
+            currentImage.type === 'brand' 
+              ? "bg-purple-500/80 text-white" 
+              : "bg-white/20 text-white/80"
+          )}>
+            {currentImage.type === 'brand' ? '✨ Your Brand' : 'Industry Scene'}
+          </div>
+        </div>
+      )}
+      
       {/* Dot Indicators (bottom-left, always visible when images exist) */}
       {images.length > 1 && (
         <div className="absolute bottom-6 left-6 flex items-center gap-2 z-10">
-          {images.map((_, index) => (
+          {images.map((image, index) => (
             <button
               key={index}
               onClick={() => onDotClick(index)}
@@ -153,7 +169,8 @@ export function AmbientHeroBackground({
                 index === displayIndex 
                   ? "bg-white w-8" 
                   : "bg-white/40 hover:bg-white/60 w-2",
-                isLocked && "cursor-not-allowed opacity-50"
+                isLocked && "cursor-not-allowed opacity-50",
+                image.type === 'brand' && index === displayIndex && "bg-purple-400"
               )}
             />
           ))}
