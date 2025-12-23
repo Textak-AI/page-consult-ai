@@ -35,6 +35,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
+import { useDevMode } from './DevToolbar';
 
 // ============================================
 // TYPE DEFINITIONS
@@ -484,6 +485,7 @@ interface DevTestPanelProps {
 export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isDevModeEnabled, setIsDevModeEnabled] = useDevMode();
   
   // State
   const [testData, setTestData] = useState<DevTestData>(PRESETS['consulting']);
@@ -874,12 +876,31 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
                   <p className="text-xs text-slate-400">Rapid page generation testing</p>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-4">
+                {/* Dev Mode Toggle */}
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-700/50 border border-slate-600">
+                  <Label htmlFor="dev-mode-toggle" className="text-xs text-slate-300 cursor-pointer">
+                    Dev Mode
+                  </Label>
+                  <Switch
+                    id="dev-mode-toggle"
+                    checked={isDevModeEnabled}
+                    onCheckedChange={(checked) => {
+                      setIsDevModeEnabled(checked);
+                      if (!checked) {
+                        onClose();
+                        window.location.reload();
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Content */}
