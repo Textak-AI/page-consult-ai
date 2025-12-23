@@ -26,6 +26,7 @@ import { usePageBuilder } from '@/hooks/usePageBuilder';
 import { PageStrengthMeter } from '@/components/consultation/PageStrengthMeter';
 import { DigitalChampionMeter } from '@/components/consultation/DigitalChampionMeter';
 import { ShareableAchievementCard } from '@/components/consultation/ShareableAchievementCard';
+import { ConsultantChat } from '@/components/consultation/ConsultantChat';
 import { SectionLockOverlay } from '@/components/editor/SectionLockOverlay';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Trophy, Share2 } from 'lucide-react';
@@ -2968,6 +2969,14 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         onSkip={consultantIntegration.skipSuggestion}
         onAcceptAll={consultantIntegration.acceptAll}
         onDismiss={consultantIntegration.dismiss}
+      />
+
+      {/* Premium AI Consultant Chat - floating bottom right */}
+      <ConsultantChat
+        consultationData={strategicData?.consultationData || consultation || {}}
+        sections={sections}
+        completeness={pageBuilder.completeness}
+        onApplyChange={handleApplyConsultantChange}
       />
 
       {/* Achievement Share Modal */}

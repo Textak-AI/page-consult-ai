@@ -101,3 +101,6 @@ verify_jwt = true
 
 [functions.consultant-suggestions]
 verify_jwt = true
+
+[functions.consultant-chat]
+verify_jwt = false
