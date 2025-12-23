@@ -17,7 +17,7 @@ interface DevToolbarProps {
   totalSteps?: number;
 }
 
-export function useDevMode() {
+export function useDevMode(): [boolean, (enabled: boolean) => void] {
   const [isDevMode, setIsDevMode] = useState(false);
   const { toast } = useToast();
 
@@ -37,31 +37,33 @@ export function useDevMode() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
         e.preventDefault();
-        setIsDevMode(prev => {
-          const newValue = !prev;
-          if (newValue) {
-            localStorage.setItem('pageconsult_dev_mode', 'true');
-            toast({
-              title: "🛠️ Dev mode enabled",
-              description: "Development tools are now visible",
-            });
-          } else {
-            localStorage.removeItem('pageconsult_dev_mode');
-            toast({
-              title: "Dev mode disabled",
-              description: "Development tools hidden",
-            });
-          }
-          return newValue;
-        });
+        toggleDevMode(!isDevMode);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toast]);
+  }, [toast, isDevMode]);
 
-  return isDevMode;
+  const toggleDevMode = (enabled: boolean) => {
+    setIsDevMode(enabled);
+    if (enabled) {
+      localStorage.setItem('pageconsult_dev_mode', 'true');
+      toast({
+        title: "🛠️ Dev mode enabled",
+        description: "Development tools are now visible",
+      });
+    } else {
+      localStorage.removeItem('pageconsult_dev_mode');
+      localStorage.removeItem('dev_test_panel_data');
+      toast({
+        title: "Dev mode disabled",
+        description: "Development tools hidden",
+      });
+    }
+  };
+
+  return [isDevMode, toggleDevMode];
 }
 
 export function DevToolbar({
@@ -73,7 +75,7 @@ export function DevToolbar({
   totalSteps = 6,
 }: DevToolbarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isDevMode = useDevMode();
+  const [isDevMode] = useDevMode();
 
   if (!isDevMode) return null;
 
