@@ -127,6 +127,7 @@ function GenerateContent() {
       strategyBrief?: string;
       structuredBrief?: any;
       aiSeoData?: any;
+      heroBackgroundUrl?: string;
       brandSettings?: {
         logoUrl: string | null;
         primaryColor: string;
@@ -781,9 +782,12 @@ function GenerateContent() {
         setCssVariables(designSystemToCSSVariables(ds));
         console.log('🎨 Generated design system:', ds.id);
         
-        // Fetch hero image
+        // Use user-selected hero background from consultation OR fetch from Unsplash
         const businessName = strategicData.consultationData?.businessName || consultationData.industry || 'Our Company';
-        const heroImageUrl = await fetchHeroImage(businessName);
+        const userSelectedHeroImage = strategicData.heroBackgroundUrl || strategicData.consultationData?.heroBackgroundUrl;
+        console.log('🖼️ [Generate] User-selected heroBackgroundUrl:', userSelectedHeroImage);
+        const heroImageUrl = userSelectedHeroImage || await fetchHeroImage(businessName);
+        console.log('🖼️ [Generate] Final heroImageUrl:', heroImageUrl);
         
         // Get brand settings for passing to sections
         const logoUrl = brandSettings?.logoUrl || strategicData.consultationData?.websiteIntelligence?.logoUrl || null;

@@ -91,6 +91,7 @@ export function HeroBackgroundCarousel({
 
   const handleSelect = () => {
     if (images[currentIndex]) {
+      console.log('🖼️ [HeroBackgroundCarousel] Image selected:', images[currentIndex].url);
       onSelect(images[currentIndex].url);
       setIsLocked(true);
     }

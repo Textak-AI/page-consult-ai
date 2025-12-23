@@ -146,6 +146,9 @@ export default function NewConsultation() {
       console.log('🚀 Navigating to /generate with structuredBrief:', !!structuredBrief);
       console.log('🚀 Navigating to /generate with aiSeoData:', !!aiSeoData, aiSeoData?.entity?.type);
       
+      // Log heroBackgroundUrl for debugging
+      console.log('🖼️ [NewConsultation] heroBackgroundUrl:', consultationData.heroBackgroundUrl);
+      
       navigate("/generate", {
         state: {
           consultationData: {
@@ -173,6 +176,8 @@ export default function NewConsultation() {
             objectionsToOvercome: consultationData.objectionsToOvercome,
             // Brand settings from customization
             brandSettings: consultationData.brandSettings,
+            // Hero background from AI carousel
+            heroBackgroundUrl: consultationData.heroBackgroundUrl,
           },
           strategicData: {
             consultationData,
@@ -183,6 +188,8 @@ export default function NewConsultation() {
             // CRITICAL: Include AI SEO data for intelligent optimization
             aiSeoData,
             brandSettings: consultationData.brandSettings,
+            // CRITICAL: Include hero background URL for direct use
+            heroBackgroundUrl: consultationData.heroBackgroundUrl,
           },
           fromStrategicConsultation: true,
         },
