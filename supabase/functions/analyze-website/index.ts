@@ -88,20 +88,35 @@ ${textContent}
 
 ${aboutContent ? `ABOUT PAGE:\n${aboutContent}` : ''}
 
+CRITICAL RULES:
+- NEVER invent fake testimonials, quotes, or attributions
+- NEVER make up statistics, numbers, or proof points that aren't on the website
+- NEVER use generic placeholder text like "Lorem ipsum" or "[Your value here]"
+- If something isn't found, leave it EMPTY and add to "gaps" array with guidance
+- Only include what you can actually verify from the website content
+- It's better to have an empty field with guidance than fake content
+
+For example:
+- If no testimonials found → testimonials: [] (empty array) + add gap with guidance
+- If no specific stats found → proofPoints: [] or only include what's actually mentioned
+- If audience isn't clear → targetAudience: "" (empty) + add gap asking user to clarify
+
+The user will fill in gaps themselves. Your job is to extract what EXISTS, not invent what doesn't.
+
 Return JSON:
 
 {
-  "companyName": "Company name",
-  "industry": "Primary industry (e.g., Environmental Services, SaaS, Healthcare)",
-  "targetAudience": "Specific description of ideal customer - job titles, company types, situations they're in",
-  "problemStatement": "The painful problem customers face. Write from customer's perspective. 2-3 sentences.",
-  "solutionStatement": "How they solve it - focus on transformation and outcomes, not just features. 2-3 sentences.",
-  "uniqueDifferentiator": "What makes them different from competitors? Why choose them? Be specific.",
-  "proofPoints": ["Certifications", "Awards", "Stats", "Years in business", "Notable clients"],
-  "testimonials": [{"quote": "...", "author": "Name", "title": "Title"}],
-  "services": [{"name": "Service", "description": "Brief description"}],
-  "recommendedCTA": "Best call-to-action for this business",
-  "recommendedOffer": "What they should offer to capture leads",
+  "companyName": "Company name (from website)",
+  "industry": "Primary industry if mentioned, or empty string",
+  "targetAudience": "Only if explicitly mentioned on the site, otherwise empty string",
+  "problemStatement": "Only if clearly stated on website, otherwise empty string",
+  "solutionStatement": "Only if clearly stated on website, otherwise empty string",
+  "uniqueDifferentiator": "Only if explicitly claimed on site, otherwise empty string",
+  "proofPoints": ["Only real certifications, awards, stats actually on the website"],
+  "testimonials": [{"quote": "Exact quote from website", "author": "Real name", "title": "Real title"}],
+  "services": [{"name": "Service name from site", "description": "Description from site"}],
+  "recommendedCTA": "Suggest based on their business type",
+  "recommendedOffer": "Suggest based on their industry",
   "gaps": [
     {
       "field": "fieldName",
@@ -113,11 +128,12 @@ Return JSON:
 
 IMPORTANT:
 - Be SPECIFIC to this company
-- If something isn't found, add to "gaps" with actionable guidance
+- Add to "gaps" for EVERY field you couldn't fill from the website
 - For missing testimonials, include email template for requesting them
-- Write problem/solution that would resonate with target audience
+- recommendedCTA and recommendedOffer are the only fields where you can suggest (not extract)
 
 Return ONLY valid JSON.`;
+
 
     const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
