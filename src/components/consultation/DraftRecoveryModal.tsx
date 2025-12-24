@@ -46,7 +46,7 @@ export function DraftRecoveryModal({
             <Button
               onClick={onStartFresh}
               variant="outline"
-              className="w-full justify-start gap-3 border-slate-600 text-slate-200 hover:bg-slate-800 h-12"
+              className="w-full justify-start gap-3 border-slate-600 bg-slate-800 text-white hover:bg-slate-700 h-12"
             >
               <Plus className="w-5 h-5" />
               Start a new consultation
