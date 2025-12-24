@@ -55,7 +55,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative pt-32 pb-20 min-h-screen overflow-x-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]">
+    <section className="relative min-h-[90vh] flex items-center py-20 overflow-x-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]">
       {/* Background layer - BEHIND everything */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         {/* Animated ambient orbs */}
@@ -71,9 +71,10 @@ const Hero = () => {
       </div>
 
       {/* Main content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
-        {/* Hero grid - balanced layout with larger gap */}
-        <div className="grid lg:grid-cols-[1fr_520px] gap-12 lg:gap-24 items-center">
+      <div className="container mx-auto px-6 relative z-20">
+        
+        {/* Main hero grid - centered with max-width */}
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center max-w-6xl mx-auto">
           
           {/* Left content */}
           <div style={{
@@ -89,7 +90,7 @@ const Hero = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
-                className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-white tracking-tight antialiased mb-6" 
+                className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight antialiased mb-6" 
                 style={{
                   lineHeight: '1.2',
                   textRendering: 'optimizeLegibility'
@@ -125,7 +126,7 @@ const Hero = () => {
             </AnimatePresence>
             
             {/* Subheadline */}
-            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed mb-10" style={{
+            <p className="text-lg md:text-xl text-gray-300 leading-relaxed mb-8" style={{
               textRendering: 'optimizeLegibility',
               animation: 'fade-in 800ms ease-out 400ms forwards',
               animationFillMode: 'forwards',
@@ -169,8 +170,8 @@ const Hero = () => {
             </p>
           </div>
 
-          {/* Right - Animated Flow Demo */}
-          <div className="relative flex items-center justify-center" style={{
+          {/* Right - Animated Flow Demo - CENTERED */}
+          <div className="flex items-center justify-center" style={{
             animation: 'scale-in 1000ms ease-out 800ms forwards',
             animationFillMode: 'forwards',
             opacity: 0
@@ -180,16 +181,15 @@ const Hero = () => {
           
         </div>
 
-        {/* Stats row - full width, aligned with content edges */}
+        {/* Stats row - BELOW grid, CENTERED */}
         <div 
-          className="mt-16 lg:mt-20 flex flex-col sm:flex-row justify-between items-center gap-6 sm:gap-4"
+          className="flex flex-wrap justify-center gap-6 mt-16 max-w-2xl mx-auto"
           style={{
             animation: 'fade-in 800ms ease-out 1000ms forwards',
             animationFillMode: 'forwards',
             opacity: 0
           }}
         >
-          {/* Left stat - aligns with headline */}
           <div className="flex items-center gap-3 bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl px-5 py-3">
             <div className="w-10 h-10 rounded-xl bg-green-400/10 flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-green-400" />
@@ -200,7 +200,6 @@ const Hero = () => {
             </div>
           </div>
           
-          {/* Right stat - aligns with visualization */}
           <div className="flex items-center gap-3 bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl px-5 py-3">
             <div className="w-10 h-10 rounded-xl bg-cyan-400/10 flex items-center justify-center">
               <Clock className="w-5 h-5 text-cyan-400" />
@@ -211,16 +210,12 @@ const Hero = () => {
             </div>
           </div>
         </div>
-      </div>
-      
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce-slow hidden md:flex transition-colors duration-300 group cursor-default z-30">
-        <span className="text-gray-400 text-xs uppercase tracking-widest animate-pulse">Scroll to explore</span>
-        <div className="w-6 h-10 border-2 border-gray-600 group-hover:border-gray-400 rounded-full relative flex justify-center transition-colors duration-300">
-          <div className="w-1 h-3 bg-gradient-to-b from-cyan-400 to-transparent rounded-full mt-2" style={{
-            animation: 'scroll-pill 2s ease-in-out infinite'
-          }} />
+
+        {/* Scroll indicator */}
+        <div className="text-center mt-12">
+          <span className="text-xs text-slate-500 uppercase tracking-wider">Scroll to explore</span>
         </div>
+        
       </div>
     </section>
   );
