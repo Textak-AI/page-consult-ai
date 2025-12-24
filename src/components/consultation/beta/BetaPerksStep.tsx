@@ -8,11 +8,8 @@ import {
   Users,
   Shirt,
   Star,
-  Check,
-  ArrowRight,
-  ArrowLeft
+  Check
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface PerkOption {
@@ -120,24 +117,6 @@ export function BetaPerksStep({ value, onChange, onContinue, onBack }: Props) {
           {value.length} perk{value.length !== 1 ? 's' : ''} selected
         </p>
       )}
-
-      {/* Navigation */}
-      <div className="flex justify-between pt-4">
-        <Button 
-          variant="ghost" 
-          onClick={onBack} 
-          className="text-slate-300 hover:text-white hover:bg-slate-700"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back
-        </Button>
-        <Button 
-          onClick={onContinue} 
-          disabled={value.length === 0} 
-          className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white hover:from-cyan-600 hover:to-purple-600"
-        >
-          Continue <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
-      </div>
     </div>
   );
 }

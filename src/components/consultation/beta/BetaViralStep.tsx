@@ -3,8 +3,6 @@ import {
   Share2,
   Plus,
   Trash2,
-  ArrowRight,
-  ArrowLeft,
   Gift
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -184,23 +182,6 @@ export function BetaViralStep({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Navigation */}
-      <div className="flex justify-between pt-4">
-        <Button 
-          variant="ghost" 
-          onClick={onBack} 
-          className="text-slate-300 hover:text-white hover:bg-slate-700"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back
-        </Button>
-        <Button 
-          onClick={onContinue} 
-          className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white hover:from-cyan-600 hover:to-purple-600"
-        >
-          Continue <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
-      </div>
     </div>
   );
 }

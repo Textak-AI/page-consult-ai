@@ -6,11 +6,8 @@ import {
   Handshake, 
   Calendar,
   Rocket,
-  Check,
-  ArrowRight,
-  ArrowLeft
+  Check
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface PageType {
@@ -146,15 +143,6 @@ export function PageTypeStep({ value, onChange, onContinue, onBack }: Props) {
         })}
       </div>
 
-      {/* Navigation */}
-      <div className="flex justify-between pt-4">
-        <Button variant="ghost" onClick={onBack} className="text-slate-400">
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back
-        </Button>
-        <Button onClick={onContinue} disabled={!value} className="bg-cyan-500 hover:bg-cyan-600">
-          Continue <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
-      </div>
     </div>
   );
 }
