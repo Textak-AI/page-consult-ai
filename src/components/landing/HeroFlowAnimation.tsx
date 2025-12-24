@@ -217,7 +217,7 @@ export function HeroFlowAnimation() {
   ];
 
   return (
-    <div className="relative w-[420px] h-[340px] flex items-center justify-center">
+    <div className="relative w-[520px] h-[400px] flex items-center justify-center">
       {/* Ambient glow behind all cards */}
       <div 
         className="absolute inset-0 rounded-3xl opacity-30 blur-2xl pointer-events-none"
@@ -233,12 +233,12 @@ export function HeroFlowAnimation() {
         return (
           <motion.div
             key={card.id}
-            className="absolute w-[360px] h-[280px] rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-5 shadow-2xl"
+            className="absolute w-[420px] h-[320px] rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-6 shadow-2xl"
             animate={{
-              x: depth * -35,
-              y: depth * 22,
-              scale: 1 - depth * 0.07,
-              opacity: depth === 0 ? 1 : 0.5 - depth * 0.15,
+              x: depth * -40,
+              y: depth * 25,
+              scale: 1 - depth * 0.06,
+              opacity: depth === 0 ? 1 : Math.max(0.15, 0.6 - depth * 0.2),
             }}
             transition={{
               type: 'spring',
