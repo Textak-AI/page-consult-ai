@@ -217,7 +217,15 @@ export function HeroFlowAnimation() {
   ];
 
   return (
-    <div className="relative w-80 h-72">
+    <div className="relative w-96 h-80 flex items-center justify-center">
+      {/* Ambient glow behind all cards */}
+      <div 
+        className="absolute inset-0 rounded-3xl opacity-30 blur-2xl pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.3), transparent 70%)',
+        }}
+      />
+      
       {cards.map((card, index) => {
         const depth = getDepth(index);
         const isActive = depth === 0;
@@ -225,12 +233,12 @@ export function HeroFlowAnimation() {
         return (
           <motion.div
             key={card.id}
-            className="absolute inset-0 rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-700/50 p-4 shadow-2xl"
+            className={`absolute w-80 h-64 rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-700/50 p-4 shadow-2xl ${isActive ? 'synthwave-card' : ''}`}
             animate={{
-              x: depth * 20,
-              y: depth * 12,
-              scale: 1 - depth * 0.05,
-              opacity: depth === 0 ? 1 : 0.4 - depth * 0.15,
+              x: depth * 28,
+              y: depth * 16,
+              scale: 1 - depth * 0.07,
+              opacity: depth === 0 ? 1 : 0.5 - depth * 0.15,
             }}
             transition={{
               type: 'spring',
@@ -241,16 +249,6 @@ export function HeroFlowAnimation() {
               zIndex: 30 - depth * 10,
             }}
           >
-            {/* Synthwave glow on active card only */}
-            {isActive && (
-              <div 
-                className="absolute inset-0 rounded-xl pointer-events-none"
-                style={{
-                  boxShadow: '0 0 30px -5px rgba(6, 182, 212, 0.4), 0 0 20px -5px rgba(236, 72, 153, 0.3)',
-                }}
-              />
-            )}
-            
             {/* Step indicator */}
             <div className="flex items-center gap-2 mb-3">
               <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center text-[10px] font-bold text-white">
@@ -264,13 +262,14 @@ export function HeroFlowAnimation() {
           </motion.div>
         );
       })}
+      
       {/* Step indicators */}
-      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-30">
+      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-40">
         {cards.map((_, i) => (
           <button
             key={i}
             onClick={() => setActiveIndex(i)}
-            className={`h-1.5 rounded-full transition-all duration-300 synthwave-dot ${
+            className={`h-1.5 rounded-full transition-all duration-300 ${
               i === activeIndex
                 ? 'w-6 bg-gradient-to-r from-cyan-400 to-pink-500'
                 : 'w-1.5 bg-slate-600 hover:bg-slate-500'
