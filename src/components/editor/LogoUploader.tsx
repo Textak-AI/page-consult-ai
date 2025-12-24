@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { LogoEditor } from "@/components/consultation/LogoEditor";
+import { optimizeLogo, optimizeEditedLogo } from "@/lib/logoOptimizer";
 
 interface LogoUploaderProps {
   isOpen: boolean;
@@ -65,16 +66,17 @@ export function LogoUploader({
         throw new Error("Please sign in to upload a logo");
       }
 
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `logos/${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      // Optimize the logo (SVGs pass through, raster → 600px WebP)
+      const { blob, fileName: optimizedName, contentType } = await optimizeLogo(file);
+      const filePath = `logos/${user.id}/${optimizedName}`;
 
-      // Upload to Supabase Storage
+      // Upload optimized logo to Supabase Storage
       const { data, error: uploadError } = await supabase.storage
         .from('brand-assets')
-        .upload(fileName, file, {
-          cacheControl: '3600',
+        .upload(filePath, blob, {
+          cacheControl: '31536000', // 1 year cache for optimized assets
           upsert: false,
+          contentType,
         });
 
       if (uploadError) {
@@ -151,7 +153,6 @@ export function LogoUploader({
   };
 
   const handleEditorSave = async (editedDataUrl: string) => {
-    // Convert data URL to blob and upload
     setIsUploading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -159,20 +160,17 @@ export function LogoUploader({
         throw new Error("Please sign in to save the edited logo");
       }
 
-      // Convert data URL to blob
-      const response = await fetch(editedDataUrl);
-      const blob = await response.blob();
+      // Optimize edited logo to WebP
+      const { blob, fileName: optimizedName, contentType } = await optimizeEditedLogo(editedDataUrl);
+      const filePath = `logos/${user.id}/${optimizedName}`;
 
-      // Generate unique filename for edited version
-      const fileName = `logos/${user.id}/${Date.now()}-edited-${Math.random().toString(36).substring(7)}.png`;
-
-      // Upload to Supabase Storage
+      // Upload optimized logo to Supabase Storage
       const { data, error: uploadError } = await supabase.storage
         .from('brand-assets')
-        .upload(fileName, blob, {
-          cacheControl: '3600',
+        .upload(filePath, blob, {
+          cacheControl: '31536000', // 1 year cache
           upsert: false,
-          contentType: 'image/png',
+          contentType,
         });
 
       if (uploadError) {
