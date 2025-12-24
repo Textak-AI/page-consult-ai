@@ -235,7 +235,7 @@ export function HeroFlowAnimation() {
             key={card.id}
             className="absolute w-[360px] h-[280px] rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-5 shadow-2xl"
             animate={{
-              x: depth * 35,
+              x: depth * -35,
               y: depth * 22,
               scale: 1 - depth * 0.07,
               opacity: depth === 0 ? 1 : 0.5 - depth * 0.15,

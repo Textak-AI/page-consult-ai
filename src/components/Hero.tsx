@@ -170,8 +170,8 @@ const Hero = () => {
             </p>
           </div>
 
-          {/* Right - Animated Flow Demo - CENTERED */}
-          <div className="flex items-center justify-center" style={{
+          {/* Right - Animated Flow Demo - aligned to right edge */}
+          <div className="flex items-center justify-end" style={{
             animation: 'scale-in 1000ms ease-out 800ms forwards',
             animationFillMode: 'forwards',
             opacity: 0
