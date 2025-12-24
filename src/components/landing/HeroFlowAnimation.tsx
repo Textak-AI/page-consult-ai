@@ -146,47 +146,93 @@ export function HeroFlowAnimation() {
               damping: 30,
             }}
           >
-            {/* Breathing edge lights - only on active card */}
+            {/* Synthwave edge reflection - only on active card */}
             {isActive && (
               <>
-                {/* Top-left cyan */}
-                <motion.div
-                  className="absolute -top-12 -left-12 w-32 h-32 pointer-events-none z-0"
-                  animate={{ opacity: [0.3, 0.6, 0.3] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                {/* Animated edge glow container */}
+                <div className="absolute inset-0 rounded-xl pointer-events-none">
+                  {/* Top edge reflection */}
+                  <motion.div
+                    className="absolute top-0 left-[20%] w-[30%] h-[2px]"
+                    animate={{ 
+                      opacity: [0.3, 0.8, 0.3],
+                      left: ['20%', '50%', '20%'],
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    style={{
+                      background: 'linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.9), transparent)',
+                      boxShadow: '0 0 15px 2px rgba(6, 182, 212, 0.6)',
+                    }}
+                  />
+                  
+                  {/* Right edge reflection */}
+                  <motion.div
+                    className="absolute right-0 top-[30%] w-[2px] h-[25%]"
+                    animate={{ 
+                      opacity: [0.2, 0.7, 0.2],
+                      top: ['30%', '55%', '30%'],
+                    }}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                    style={{
+                      background: 'linear-gradient(180deg, transparent, rgba(236, 72, 153, 0.9), transparent)',
+                      boxShadow: '0 0 15px 2px rgba(236, 72, 153, 0.6)',
+                    }}
+                  />
+                  
+                  {/* Bottom edge reflection */}
+                  <motion.div
+                    className="absolute bottom-0 right-[25%] w-[35%] h-[2px]"
+                    animate={{ 
+                      opacity: [0.2, 0.75, 0.2],
+                      right: ['25%', '45%', '25%'],
+                    }}
+                    transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+                    style={{
+                      background: 'linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.9), transparent)',
+                      boxShadow: '0 0 15px 2px rgba(139, 92, 246, 0.6)',
+                    }}
+                  />
+                  
+                  {/* Left edge reflection */}
+                  <motion.div
+                    className="absolute left-0 bottom-[20%] w-[2px] h-[30%]"
+                    animate={{ 
+                      opacity: [0.3, 0.65, 0.3],
+                      bottom: ['20%', '40%', '20%'],
+                    }}
+                    transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                    style={{
+                      background: 'linear-gradient(180deg, transparent, rgba(6, 182, 212, 0.8), transparent)',
+                      boxShadow: '0 0 12px 2px rgba(6, 182, 212, 0.5)',
+                    }}
+                  />
+                  
+                  {/* Corner accent - top right */}
+                  <motion.div
+                    className="absolute -top-[1px] -right-[1px] w-16 h-16"
+                    animate={{ opacity: [0.2, 0.5, 0.2] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+                    style={{
+                      background: 'radial-gradient(circle at top right, rgba(236, 72, 153, 0.4) 0%, transparent 70%)',
+                    }}
+                  />
+                  
+                  {/* Corner accent - bottom left */}
+                  <motion.div
+                    className="absolute -bottom-[1px] -left-[1px] w-16 h-16"
+                    animate={{ opacity: [0.15, 0.4, 0.15] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+                    style={{
+                      background: 'radial-gradient(circle at bottom left, rgba(6, 182, 212, 0.4) 0%, transparent 70%)',
+                    }}
+                  />
+                </div>
+                
+                {/* Outer glow halo */}
+                <div 
+                  className="absolute -inset-[1px] rounded-xl pointer-events-none -z-10"
                   style={{
-                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.6) 0%, transparent 70%)',
-                    filter: 'blur(20px)',
-                  }}
-                />
-                {/* Top-right magenta */}
-                <motion.div
-                  className="absolute -top-10 -right-10 w-28 h-28 pointer-events-none z-0"
-                  animate={{ opacity: [0.2, 0.5, 0.2] }}
-                  transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
-                  style={{
-                    background: 'radial-gradient(circle, rgba(236, 72, 153, 0.5) 0%, transparent 70%)',
-                    filter: 'blur(20px)',
-                  }}
-                />
-                {/* Bottom-right purple */}
-                <motion.div
-                  className="absolute -bottom-10 -right-10 w-32 h-32 pointer-events-none z-0"
-                  animate={{ opacity: [0.2, 0.45, 0.2] }}
-                  transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
-                  style={{
-                    background: 'radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%)',
-                    filter: 'blur(20px)',
-                  }}
-                />
-                {/* Bottom-left cyan */}
-                <motion.div
-                  className="absolute -bottom-8 -left-8 w-24 h-24 pointer-events-none z-0"
-                  animate={{ opacity: [0.2, 0.4, 0.2] }}
-                  transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-                  style={{
-                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.4) 0%, transparent 70%)',
-                    filter: 'blur(18px)',
+                    boxShadow: '0 0 20px 1px rgba(6, 182, 212, 0.15), 0 0 40px 2px rgba(139, 92, 246, 0.1)',
                   }}
                 />
               </>
