@@ -132,7 +132,7 @@ export function HeroFlowAnimation() {
         return (
           <motion.div
             key={card.id}
-            className="absolute top-0 right-0 w-[340px] h-full rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-5 overflow-hidden"
+            className="absolute top-0 right-0 w-[340px] h-full rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-5"
             animate={{
               x: depth * -50,
               y: depth * 15,
@@ -149,78 +149,44 @@ export function HeroFlowAnimation() {
             {/* Breathing edge lights - only on active card */}
             {isActive && (
               <>
-                {/* Top-left cyan light */}
+                {/* Top-left cyan */}
                 <motion.div
-                  className="absolute -top-20 -left-20 w-40 h-40 pointer-events-none"
-                  animate={{ opacity: [0.15, 0.4, 0.15] }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }}
+                  className="absolute -top-12 -left-12 w-32 h-32 pointer-events-none z-0"
+                  animate={{ opacity: [0.3, 0.6, 0.3] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                   style={{
-                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.5) 0%, transparent 70%)',
-                    filter: 'blur(15px)',
+                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.6) 0%, transparent 70%)',
+                    filter: 'blur(20px)',
                   }}
                 />
-                {/* Top-right magenta light */}
+                {/* Top-right magenta */}
                 <motion.div
-                  className="absolute -top-16 -right-16 w-36 h-36 pointer-events-none"
-                  animate={{ opacity: [0.1, 0.35, 0.1] }}
-                  transition={{
-                    duration: 5,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                    delay: 1.2,
-                  }}
+                  className="absolute -top-10 -right-10 w-28 h-28 pointer-events-none z-0"
+                  animate={{ opacity: [0.2, 0.5, 0.2] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
                   style={{
-                    background: 'radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%)',
-                    filter: 'blur(15px)',
+                    background: 'radial-gradient(circle, rgba(236, 72, 153, 0.5) 0%, transparent 70%)',
+                    filter: 'blur(20px)',
                   }}
                 />
-                {/* Bottom-right purple light */}
+                {/* Bottom-right purple */}
                 <motion.div
-                  className="absolute -bottom-16 -right-16 w-44 h-44 pointer-events-none"
-                  animate={{ opacity: [0.1, 0.3, 0.1] }}
-                  transition={{
-                    duration: 6,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                    delay: 2.5,
-                  }}
+                  className="absolute -bottom-10 -right-10 w-32 h-32 pointer-events-none z-0"
+                  animate={{ opacity: [0.2, 0.45, 0.2] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
                   style={{
-                    background: 'radial-gradient(circle, rgba(139, 92, 246, 0.35) 0%, transparent 70%)',
+                    background: 'radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%)',
+                    filter: 'blur(20px)',
+                  }}
+                />
+                {/* Bottom-left cyan */}
+                <motion.div
+                  className="absolute -bottom-8 -left-8 w-24 h-24 pointer-events-none z-0"
+                  animate={{ opacity: [0.2, 0.4, 0.2] }}
+                  transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+                  style={{
+                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.4) 0%, transparent 70%)',
                     filter: 'blur(18px)',
-                  }}
-                />
-                {/* Bottom-left cyan light */}
-                <motion.div
-                  className="absolute -bottom-14 -left-14 w-32 h-32 pointer-events-none"
-                  animate={{ opacity: [0.1, 0.25, 0.1] }}
-                  transition={{
-                    duration: 7,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                    delay: 3.5,
-                  }}
-                  style={{
-                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%)',
-                    filter: 'blur(12px)',
-                  }}
-                />
-                {/* Subtle ambient glow behind card */}
-                <motion.div
-                  className="absolute -inset-8 -z-10 pointer-events-none"
-                  animate={{ opacity: [0.2, 0.35, 0.2] }}
-                  transition={{
-                    duration: 8,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }}
-                  style={{
-                    background:
-                      'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.05) 50%, transparent 70%)',
-                    filter: 'blur(25px)',
                   }}
                 />
               </>
