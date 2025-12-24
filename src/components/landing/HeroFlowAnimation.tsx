@@ -217,11 +217,11 @@ export function HeroFlowAnimation() {
   ];
 
   return (
-    // Container: card width (420) + back cards overflow (2 * 70 = 140) = 560px
-    <div className="relative w-[560px] h-[380px]">
+    // Container: card width (420) + back cards overflow (2 * 70 = 140) = 560px, height matches card
+    <div className="relative w-[560px] h-[320px]">
       {/* Ambient glow behind all cards - positioned to right */}
       <div 
-        className="absolute right-0 top-0 w-[480px] h-full rounded-3xl opacity-30 blur-2xl pointer-events-none"
+        className="absolute right-0 top-1/2 -translate-y-1/2 w-[480px] h-[360px] rounded-3xl opacity-30 blur-2xl pointer-events-none"
         style={{
           background: 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.3), transparent 70%)',
         }}
@@ -234,7 +234,7 @@ export function HeroFlowAnimation() {
         return (
           <motion.div
             key={card.id}
-            className="absolute right-0 top-1/2 -translate-y-1/2 w-[420px] h-[320px] rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-6 shadow-2xl"
+            className="absolute right-0 top-0 w-[420px] h-[320px] rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-6 shadow-2xl"
             animate={{
               x: depth * -70,
               y: depth * 15,
