@@ -201,65 +201,50 @@ export function HeroFlowAnimation() {
     },
   ];
 
-  // Calculate position in the Ferris wheel rotation
-  const getCardTransform = (cardIndex: number) => {
+  // Calculate offset with wrap-around
+  const getOffset = (cardIndex: number) => {
     let offset = cardIndex - activeIndex;
-
-    // Normalize to -1, 0, 1 range (handles wrap-around)
     if (offset > 1) offset -= totalCards;
     if (offset < -1) offset += totalCards;
-
-    // Y position: arc movement
-    const y = offset * 100;
-
-    // Z position: center is closest
-    const z = -Math.abs(offset) * 80;
-
-    // Scale: largest at center, smaller at edges
-    const scale = 1 - Math.abs(offset) * 0.15;
-
-    // Opacity: full at center, fading at edges
-    const opacity = Math.abs(offset) === 0 ? 1 : 0.3 - Math.abs(offset) * 0.1;
-
-    // Slight rotation for 3D feel
-    const rotateX = offset * 15;
-
-    // Z-index: center card on top
-    const zIndex = 10 - Math.abs(offset) * 5;
-
-    // Blur: sharp at center, slightly blurred at edges
-    const blur = Math.abs(offset) * 2;
-
-    return { y, z, scale, opacity, rotateX, zIndex, blur };
+    return offset;
   };
 
   return (
-    <div className="relative w-full max-w-sm h-80 perspective-1000 overflow-hidden">
+    <div className="relative w-full max-w-sm h-80 perspective-1000">
+      {/* Void gradient at top */}
+      <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-slate-950 to-transparent pointer-events-none z-20" />
+      
       {/* Cards container */}
       <div className="relative w-full h-full flex items-center justify-center">
         {cards.map((card, index) => {
-          const { y, z, scale, opacity, rotateX, zIndex, blur } = getCardTransform(index);
+          const offset = getOffset(index);
 
           return (
             <motion.div
               key={card.id}
               className="synthwave-edge absolute w-full max-w-[320px] h-64 rounded-xl bg-slate-900/95 backdrop-blur-sm p-4 shadow-2xl"
               animate={{
-                y,
-                z,
-                scale,
-                opacity,
-                rotateX,
-                filter: `blur(${blur}px)`,
+                // Vertical arc: center=0, above=-120, below=+120
+                y: offset === 0 ? 0 : offset > 0 ? -120 : 120,
+                // Keep depth
+                z: offset * -40,
+                // No horizontal offset
+                x: 0,
+                // Scale: smaller when not centered
+                scale: offset === 0 ? 1 : 0.85,
+                // Opacity: fade out when above/below
+                opacity: offset === 0 ? 1 : 0.15,
+                // Slight tilt based on vertical position
+                rotateX: offset * 15,
               }}
               transition={{
                 type: 'spring',
-                stiffness: 200,
-                damping: 25,
+                stiffness: 300,
+                damping: 30,
               }}
               style={{
                 transformStyle: 'preserve-3d',
-                zIndex,
+                zIndex: 10 - Math.abs(offset) * 5,
               }}
             >
               {/* Step indicator */}
@@ -277,8 +262,11 @@ export function HeroFlowAnimation() {
         })}
       </div>
 
+      {/* Void gradient at bottom */}
+      <div className="absolute inset-x-0 bottom-8 h-20 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none z-20" />
+
       {/* Step indicators */}
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 z-30">
         {cards.map((_, i) => (
           <button
             key={i}
@@ -292,10 +280,6 @@ export function HeroFlowAnimation() {
           />
         ))}
       </div>
-
-      {/* Void gradients for fade effect */}
-      <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-background to-transparent pointer-events-none z-10" />
-      <div className="absolute inset-x-0 bottom-8 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none z-10" />
     </div>
   );
 }
