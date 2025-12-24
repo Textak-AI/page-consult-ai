@@ -15,8 +15,9 @@ import { BrandExtractor } from "@/components/consultation/BrandExtractor";
 import { WebsiteAnalyzer } from "@/components/consultation/WebsiteAnalyzer";
 import { ExtractedBrand } from "@/lib/brandExtraction";
 import type { AISeoData } from "@/services/intelligence/types";
+import { DraftRecoveryModal } from "@/components/consultation/DraftRecoveryModal";
 
-type Stage = 'loading' | 'brand-extractor' | 'website-analyzer' | 'intro' | 'consultation' | 'brief-review' | 'generating' | 'dev-loading';
+type Stage = 'loading' | 'checking-draft' | 'brand-extractor' | 'website-analyzer' | 'intro' | 'consultation' | 'brief-review' | 'generating' | 'dev-loading';
 
 // Type for prefill data from landing demo
 interface PrefillData {
@@ -37,6 +38,12 @@ interface PrefillData {
   sessionId?: string;
 }
 
+interface ExistingDraft {
+  id: string;
+  wizard_data: any;
+  updated_at: string;
+}
+
 export default function NewConsultation() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -54,6 +61,10 @@ export default function NewConsultation() {
   const [skipDraftLoad, setSkipDraftLoad] = useState(false);
   const [websiteAnalysis, setWebsiteAnalysis] = useState<any>(null);
   const [isDevModeActive] = useDevMode();
+  
+  // Draft recovery state
+  const [showDraftModal, setShowDraftModal] = useState(false);
+  const [existingDraft, setExistingDraft] = useState<ExistingDraft | null>(null);
 
   // Parse prefill data from query params
   // Only run if we don't already have an extracted brand
@@ -81,9 +92,9 @@ export default function NewConsultation() {
     }
   }, [searchParams, toast, extractedBrand]);
 
-  // Check auth on mount
+  // Check auth and draft on mount
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthAndDraft = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         // Preserve prefill data in redirect
@@ -95,18 +106,80 @@ export default function NewConsultation() {
         return;
       }
       setUserId(user.id);
+      
       // Skip intro and brand extractor if coming from demo with prefill data
       if (prefillData?.source === 'landing_demo') {
         setStage('consultation');
-      } else if (!shouldShowIntro()) {
-        // Skip intro but show brand extractor
-        setStage('brand-extractor');
+        return;
+      }
+      
+      // Check for existing draft
+      setStage('checking-draft');
+      const { data: draft } = await supabase
+        .from('consultation_drafts')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (draft && draft.wizard_data) {
+        // Show draft recovery modal
+        setExistingDraft(draft as ExistingDraft);
+        setShowDraftModal(true);
+        setStage('loading'); // Keep loading until user makes a choice
       } else {
-        setStage('intro');
+        // No draft, proceed normally
+        proceedToStart();
       }
     };
-    checkAuth();
+    checkAuthAndDraft();
   }, [navigate, searchParams, prefillData]);
+
+  // Helper to proceed to the starting point
+  const proceedToStart = () => {
+    if (!shouldShowIntro()) {
+      setStage('brand-extractor');
+    } else {
+      setStage('intro');
+    }
+  };
+
+  // Draft recovery handlers
+  const handleContinueDraft = () => {
+    if (existingDraft?.wizard_data) {
+      // Pre-populate the consultation data from draft
+      setConsultationData(existingDraft.wizard_data as ConsultationData);
+      setSkipDraftLoad(false); // Allow StrategicConsultation to load the draft
+    }
+    setShowDraftModal(false);
+    setStage('consultation');
+  };
+
+  const handleStartFresh = () => {
+    // Keep draft in DB but start new consultation
+    setSkipDraftLoad(true); // Skip loading the draft
+    setShowDraftModal(false);
+    proceedToStart();
+  };
+
+  const handleDiscardDraft = async () => {
+    // Delete the draft from database
+    if (userId) {
+      await supabase
+        .from('consultation_drafts')
+        .delete()
+        .eq('user_id', userId);
+    }
+    
+    // Clear localStorage too
+    localStorage.removeItem('pageconsult_consultation_draft');
+    
+    setExistingDraft(null);
+    setSkipDraftLoad(true);
+    setShowDraftModal(false);
+    proceedToStart();
+  };
 
   // Handle brand extracted - go to website analyzer step
   const handleBrandExtracted = (brand: ExtractedBrand, websiteUrl: string) => {
@@ -330,18 +403,32 @@ export default function NewConsultation() {
   };
 
   // Loading state
-  if (stage === 'loading') {
+  if (stage === 'loading' || stage === 'checking-draft') {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mx-auto mb-4" />
-          <p className="text-slate-400">Loading...</p>
-        </motion.div>
-      </div>
+      <>
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center"
+          >
+            <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mx-auto mb-4" />
+            <p className="text-slate-400">Loading...</p>
+          </motion.div>
+        </div>
+        
+        {/* Draft Recovery Modal */}
+        {existingDraft && (
+          <DraftRecoveryModal
+            isOpen={showDraftModal}
+            draftDate={new Date(existingDraft.updated_at)}
+            draftBusinessName={existingDraft.wizard_data?.businessName}
+            onContinue={handleContinueDraft}
+            onStartFresh={handleStartFresh}
+            onDiscard={handleDiscardDraft}
+          />
+        )}
+      </>
     );
   }
 
