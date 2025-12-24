@@ -165,8 +165,11 @@ function sectionHasContent(section: { type: string; content: any }): boolean {
       return !!(content.headline && content.headline.trim());
     
     case 'problem-solution':
-      return !!(content.problem && content.problem.trim()) || 
-             !!(content.solution && content.solution.trim());
+      // Check BOTH possible field names (brief uses Statement suffix, some mappers don't)
+      return !!(content.problemStatement?.trim()) || 
+             !!(content.solutionStatement?.trim()) ||
+             !!(content.problem?.trim()) ||
+             !!(content.solution?.trim());
     
     case 'features':
     case 'beta-perks':
