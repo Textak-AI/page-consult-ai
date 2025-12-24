@@ -728,4 +728,62 @@ All colors MUST be HSL.
     pointer-events: none;
     opacity: 0.6;
   }
+
+  /* Synthwave card with fixed color animation */
+  @keyframes synthwave-glow {
+    0%, 100% {
+      --glow-1: rgba(6, 182, 212, 0.5);
+      --glow-2: rgba(236, 72, 153, 0.3);
+    }
+    33% {
+      --glow-1: rgba(236, 72, 153, 0.5);
+      --glow-2: rgba(139, 92, 246, 0.3);
+    }
+    66% {
+      --glow-1: rgba(139, 92, 246, 0.5);
+      --glow-2: rgba(6, 182, 212, 0.3);
+    }
+  }
+
+  .synthwave-card {
+    --glow-1: rgba(6, 182, 212, 0.5);
+    --glow-2: rgba(236, 72, 153, 0.3);
+    animation: synthwave-glow 6s ease-in-out infinite;
+    position: relative;
+  }
+
+  .synthwave-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      var(--glow-1),
+      transparent 40%,
+      transparent 60%,
+      var(--glow-2)
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .synthwave-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 
+      0 0 25px -5px var(--glow-1),
+      0 0 10px -3px var(--glow-2);
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .synthwave-dot {
+    box-shadow: 0 0 8px -2px rgba(6, 182, 212, 0.4);
+  }
 }
