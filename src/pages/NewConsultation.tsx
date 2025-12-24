@@ -496,7 +496,7 @@ export default function NewConsultation() {
   return (
     <div className="min-h-screen bg-slate-950">
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-xl sticky top-0 z-10">
+      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-3">
           <Button
             variant="ghost"
@@ -528,7 +528,7 @@ export default function NewConsultation() {
       </header>
 
       {/* Main Content */}
-      <main className="py-8 px-4">
+      <main className="py-8 px-4 relative z-10">
         {stage === 'consultation' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
