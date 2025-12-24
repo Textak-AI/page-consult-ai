@@ -113,6 +113,14 @@ export default function NewConsultation() {
         return;
       }
       
+      // Check if we should skip the draft modal (e.g., coming from Edit button)
+      const skipModal = searchParams.get('skipDraftModal') === 'true';
+      if (skipModal) {
+        setSkipDraftLoad(true);
+        proceedToStart();
+        return;
+      }
+      
       // Check for existing draft
       setStage('checking-draft');
       const { data: draft } = await supabase
