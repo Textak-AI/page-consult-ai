@@ -23,12 +23,88 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
   };
 }
 
-// Validation schema
+// Validation schema - supports both legacy query and smart industry-based search
 const UnsplashSearchSchema = z.object({
-  query: z.string().trim().min(1).max(200),
+  query: z.string().trim().min(1).max(200).optional(),
+  industry: z.string().optional(),
+  subIndustry: z.string().optional(),
+  pageType: z.string().optional(),
+  tone: z.string().optional(),
   page: z.number().int().min(1).max(100).default(1),
   perPage: z.number().int().min(1).max(30).default(12),
 });
+
+// Industry-specific visual themes for smart queries
+const INDUSTRY_VISUALS: Record<string, { primary: string[]; style: string[] }> = {
+  'saas': {
+    primary: ['modern office workspace', 'technology interface', 'digital collaboration'],
+    style: ['minimal', 'professional', 'bright'],
+  },
+  'marketing': {
+    primary: ['creative workspace', 'marketing strategy', 'data dashboard'],
+    style: ['dynamic', 'colorful', 'energetic'],
+  },
+  'environmental': {
+    primary: ['nature restoration', 'clean water landscape', 'green technology'],
+    style: ['natural', 'hopeful', 'professional'],
+  },
+  'consulting': {
+    primary: ['executive meeting', 'strategy session', 'business discussion'],
+    style: ['premium', 'trustworthy', 'warm'],
+  },
+  'healthcare': {
+    primary: ['medical professional', 'healthcare technology', 'modern clinic'],
+    style: ['clean', 'trustworthy', 'caring'],
+  },
+  'finance': {
+    primary: ['financial district', 'modern banking', 'wealth management'],
+    style: ['prestigious', 'secure', 'modern'],
+  },
+  'education': {
+    primary: ['modern learning', 'workshop training', 'knowledge sharing'],
+    style: ['inspiring', 'bright', 'hopeful'],
+  },
+  'realestate': {
+    primary: ['modern architecture', 'luxury interior', 'city skyline'],
+    style: ['aspirational', 'luxurious', 'bright'],
+  },
+  'technology': {
+    primary: ['innovation technology', 'futuristic workspace', 'tech startup'],
+    style: ['cutting-edge', 'modern', 'sleek'],
+  },
+  'default': {
+    primary: ['modern business', 'professional workspace', 'success achievement'],
+    style: ['professional', 'clean', 'modern'],
+  },
+};
+
+function detectIndustryKey(industry: string, subIndustry?: string): string {
+  const combined = `${industry} ${subIndustry || ''}`.toLowerCase();
+  
+  if (combined.includes('saas') || combined.includes('software')) return 'saas';
+  if (combined.includes('marketing') || combined.includes('sales')) return 'marketing';
+  if (combined.includes('environmental') || combined.includes('waste')) return 'environmental';
+  if (combined.includes('consulting') || combined.includes('professional service')) return 'consulting';
+  if (combined.includes('health') || combined.includes('medical')) return 'healthcare';
+  if (combined.includes('finance') || combined.includes('fintech')) return 'finance';
+  if (combined.includes('education') || combined.includes('training')) return 'education';
+  if (combined.includes('real estate') || combined.includes('property')) return 'realestate';
+  if (combined.includes('tech') || combined.includes('ai') || combined.includes('startup')) return 'technology';
+  
+  return 'default';
+}
+
+function generateSmartQueries(industry: string, subIndustry?: string): string[] {
+  const industryKey = detectIndustryKey(industry, subIndustry);
+  const config = INDUSTRY_VISUALS[industryKey] || INDUSTRY_VISUALS['default'];
+  
+  return [
+    `${config.primary[0]} ${config.style[0]}`,
+    `${config.primary[1] || config.primary[0]} ${config.style[1] || config.style[0]}`,
+    `${config.primary[0]} minimal negative space`,
+    `${config.style[0]} business professional`,
+  ];
+}
 
 serve(async (req) => {
   const origin = req.headers.get('Origin');
@@ -118,16 +194,21 @@ serve(async (req) => {
       );
     }
 
-    const { query, page, perPage } = validation.data;
+    const { query: legacyQuery, industry, subIndustry, page, perPage } = validation.data;
     
-    if (!query) {
+    // Build smart queries if industry provided, otherwise use legacy query
+    let searchQueries: string[];
+    if (industry) {
+      searchQueries = generateSmartQueries(industry, subIndustry);
+      console.log('🧠 Smart queries generated for industry:', industry, '->', searchQueries);
+    } else if (legacyQuery) {
+      searchQueries = [legacyQuery];
+    } else {
       return new Response(
-        JSON.stringify({ error: 'Query parameter is required' }),
+        JSON.stringify({ error: 'Either query or industry parameter is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    
-    console.log('Unsplash search query:', query, 'page:', page);
     
     const unsplashKey = Deno.env.get('UNSPLASH_ACCESS_KEY');
 
@@ -139,33 +220,54 @@ serve(async (req) => {
       );
     }
 
-    console.log('Calling Unsplash API...');
-    const response = await fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}&orientation=landscape`,
-      {
-        headers: {
-          'Authorization': `Client-ID ${unsplashKey}`,
-          'Accept-Version': 'v1',
-        },
+    // Try each query until we get good results
+    let allResults: any[] = [];
+    let successfulQuery = '';
+    
+    for (const searchQuery of searchQueries) {
+      console.log(`🔍 Searching Unsplash: "${searchQuery}"`);
+      
+      const response = await fetch(
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&page=${page}&per_page=${perPage}&orientation=landscape`,
+        {
+          headers: {
+            'Authorization': `Client-ID ${unsplashKey}`,
+            'Accept-Version': 'v1',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.warn(`Query "${searchQuery}" failed with status:`, response.status);
+        continue;
       }
-    );
 
-    console.log('Unsplash API response status:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Unsplash API error:', response.status, errorText);
+      const data = await response.json();
+      
+      if (data.results?.length >= 3) {
+        console.log(`✓ Query "${searchQuery}" returned ${data.results.length} images`);
+        allResults = data.results;
+        successfulQuery = searchQuery;
+        break;
+      } else if (data.results?.length > 0 && allResults.length === 0) {
+        // Store partial results in case no query returns 3+ images
+        allResults = data.results;
+        successfulQuery = searchQuery;
+      }
+    }
+    
+    if (allResults.length === 0) {
+      console.warn('No images found for any query');
       return new Response(
-        JSON.stringify({ error: `Failed to fetch from Unsplash: ${response.status}` }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ results: [], total: 0, usedQuery: searchQueries[0] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const data = await response.json();
-    console.log('Unsplash returned', data.results?.length || 0, 'images');
+    console.log(`📸 Returning ${allResults.length} images from query: "${successfulQuery}"`);
     
     // Transform the response to only include what we need
-    const results = data.results.map((photo: any) => ({
+    const results = allResults.map((photo: any) => ({
       id: photo.id,
       description: photo.description || photo.alt_description || 'Unsplash photo',
       urls: {
@@ -194,7 +296,7 @@ serve(async (req) => {
 
     console.log('Returning', results.length, 'images to client');
     return new Response(
-      JSON.stringify({ results, total: data.total }),
+      JSON.stringify({ results, total: results.length, usedQuery: successfulQuery }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
