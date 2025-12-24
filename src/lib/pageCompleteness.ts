@@ -42,7 +42,11 @@ const COMPLETENESS_CHECKS: CompletenessCheck[] = [
   { field: 'ctaText', weight: 4, minLength: 3, unlocks: ['cta-buttons'], label: 'CTA text' },
 ];
 
-export function calculateCompleteness(data: any): CompletenessState {
+/**
+ * Calculate completeness from consultation data AND section content.
+ * If sections have content, they are considered unlocked regardless of consultation data.
+ */
+export function calculateCompleteness(data: any, sections?: Array<{ type: string; content: any }>): CompletenessState {
   if (!data || typeof data !== 'object') {
     return {
       score: 0,
@@ -59,13 +63,33 @@ export function calculateCompleteness(data: any): CompletenessState {
   const milestones: Array<{ name: string; achieved: boolean; description: string }> = [];
   let nextUnlock: { section: string; hint: string } | null = null;
 
+  // Build a map of sections that have actual content
+  const sectionsWithContent = new Set<string>();
+  if (sections && sections.length > 0) {
+    for (const section of sections) {
+      if (sectionHasContent(section)) {
+        sectionsWithContent.add(section.type);
+      }
+    }
+  }
+
   for (const check of COMPLETENESS_CHECKS) {
     const value = data[check.field];
     let isComplete = false;
     let progress = '';
     let currentCount = 0;
 
-    if (check.minItems) {
+    // First check: Does any section unlocked by this check already have content?
+    const sectionHasExistingContent = check.unlocks.some(unlockKey => {
+      // Map unlock keys to section types
+      const sectionType = unlockKeyToSectionType(unlockKey);
+      return sectionType && sectionsWithContent.has(sectionType);
+    });
+
+    // If section already has content, mark as complete
+    if (sectionHasExistingContent) {
+      isComplete = true;
+    } else if (check.minItems) {
       const items = Array.isArray(value) ? value : [];
       currentCount = items.filter((v: any) => {
         if (!v) return false;
@@ -126,6 +150,72 @@ export function calculateCompleteness(data: any): CompletenessState {
   }
 
   return { score, unlockedSections, lockedSections, nextUnlock, milestones };
+}
+
+/**
+ * Check if a section has actual content (not just empty placeholders)
+ */
+function sectionHasContent(section: { type: string; content: any }): boolean {
+  const { type, content } = section;
+  if (!content) return false;
+
+  switch (type) {
+    case 'hero':
+    case 'beta-hero-teaser':
+      return !!(content.headline && content.headline.trim());
+    
+    case 'problem-solution':
+      return !!(content.problem && content.problem.trim()) || 
+             !!(content.solution && content.solution.trim());
+    
+    case 'features':
+    case 'beta-perks':
+      return Array.isArray(content.features) && content.features.length > 0;
+    
+    case 'stats-bar':
+      return Array.isArray(content.statistics) && content.statistics.length > 0;
+    
+    case 'social-proof':
+    case 'waitlist-proof':
+      return (Array.isArray(content.testimonials) && content.testimonials.length > 0) ||
+             (content.testimonial && content.testimonial.quote);
+    
+    case 'faq':
+      return Array.isArray(content.items) && content.items.length > 0;
+    
+    case 'final-cta':
+    case 'beta-final-cta':
+      return !!(content.headline && content.headline.trim());
+    
+    case 'how-it-works':
+      return Array.isArray(content.steps) && content.steps.length > 0;
+    
+    default:
+      // For unknown section types, assume they have content if content object exists
+      return Object.keys(content).length > 0;
+  }
+}
+
+/**
+ * Map unlock keys to actual section types
+ */
+function unlockKeyToSectionType(unlockKey: string): string | null {
+  const mapping: Record<string, string> = {
+    'hero-text': 'hero',
+    'hero-headline': 'hero',
+    'hero-brand': 'hero',
+    'hero-differentiator': 'hero',
+    'stats-bar': 'stats-bar',
+    'problem-solution': 'problem-solution',
+    'features': 'features',
+    'social-proof': 'social-proof',
+    'faq': 'faq',
+    'cta-buttons': 'final-cta',
+    'header-logo': 'hero',
+    'design-system': 'hero',
+    'color-theme': 'hero',
+  };
+  return mapping[unlockKey] || null;
 }
 
 export function getSectionStatus(

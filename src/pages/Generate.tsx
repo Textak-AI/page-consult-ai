@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -121,7 +121,8 @@ function GenerateContent() {
   const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
   const [stylePickerOpen, setStylePickerOpen] = useState(false);
   const [calculatorUpgradeOpen, setCalculatorUpgradeOpen] = useState(false);
-  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedSectionsRef = useRef<string>('');
   const [isSaving, setIsSaving] = useState(false);
   
   // Intelligence data from wizard or strategic consultation - type definition
@@ -272,25 +273,46 @@ function GenerateContent() {
     loadConsultation();
   }, []);
 
-  // Auto-save when sections change (with debounce)
+  // Auto-save when sections change (with debounce and change detection)
   useEffect(() => {
-    if (phase === "editor" && pageData && sections.length > 0) {
-      // Clear existing timeout
-      if (autoSaveTimeout) {
-        clearTimeout(autoSaveTimeout);
-      }
+    if (phase !== "editor" || !pageData || sections.length === 0) return;
+    
+    // Compare sections to last saved - skip if no actual changes
+    const sectionsJson = JSON.stringify(sections);
+    if (sectionsJson === lastSavedSectionsRef.current) return;
 
-      // Set new timeout for auto-save after 2 seconds of no changes
-      const timeout = setTimeout(() => {
-        handleAutoSave();
-      }, 2000);
-
-      setAutoSaveTimeout(timeout);
-
-      return () => {
-        if (timeout) clearTimeout(timeout);
-      };
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
     }
+
+    // Set new timeout for auto-save after 3 seconds of no changes
+    autoSaveTimeoutRef.current = setTimeout(async () => {
+      // Double-check sections changed before saving
+      const currentSectionsJson = JSON.stringify(sections);
+      if (currentSectionsJson === lastSavedSectionsRef.current) return;
+      
+      setIsSaving(true);
+      const { error } = await supabase
+        .from("landing_pages")
+        .update({ sections, updated_at: new Date().toISOString() })
+        .eq("id", pageData.id);
+
+      if (error) {
+        console.error("Auto-save failed:", error);
+      } else {
+        console.log("✓ Auto-saved");
+        lastSavedSectionsRef.current = currentSectionsJson;
+      }
+      
+      setTimeout(() => setIsSaving(false), 1500);
+    }, 3000);
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
   }, [sections, phase, pageData]);
 
   // Initialize history when sections first load
@@ -2175,24 +2197,6 @@ function GenerateContent() {
     }
   };
 
-  const handleAutoSave = async () => {
-    if (!pageData) return;
-
-    setIsSaving(true);
-    const { error } = await supabase
-      .from("landing_pages")
-      .update({ sections, updated_at: new Date().toISOString() })
-      .eq("id", pageData.id);
-
-    if (error) {
-      console.error("Auto-save failed:", error);
-    } else {
-      console.log("✓ Auto-saved");
-    }
-    
-    // Show saved indicator for 2 seconds
-    setTimeout(() => setIsSaving(false), 2000);
-  };
 
   const handleSave = async () => {
     if (!pageData) return;
