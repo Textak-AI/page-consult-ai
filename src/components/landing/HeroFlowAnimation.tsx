@@ -27,18 +27,11 @@ export function HeroFlowAnimation() {
     }
   }, [activeIndex]);
 
-  // Simple stacked card positioning
-  const getCardStyle = (cardIndex: number) => {
-    const offset = cardIndex - activeIndex;
-    const isActive = offset === 0;
-
-    return {
-      x: offset * 15,
-      y: isActive ? 0 : offset * 12,
-      scale: isActive ? 1 : 0.92,
-      opacity: isActive ? 1 : 0.25,
-      rotateY: offset * -5,
-    };
+  // Calculate depth: 0 = front (active), 1 = one behind, 2 = two behind
+  const getDepth = (cardIndex: number) => {
+    let depth = cardIndex - activeIndex;
+    if (depth < 0) depth += totalCards; // Wrap around
+    return depth;
   };
 
   const cards = [
@@ -224,49 +217,53 @@ export function HeroFlowAnimation() {
   ];
 
   return (
-    <div className="relative w-full max-w-sm h-72 perspective-1000">
-      {/* Cards container */}
-      <div className="relative w-full h-full flex items-center justify-center">
-        {cards.map((card, index) => {
-          const style = getCardStyle(index);
-          const isActive = index === activeIndex;
+    <div className="relative w-80 h-72">
+      {cards.map((card, index) => {
+        const depth = getDepth(index);
+        const isActive = depth === 0;
 
-          return (
-            <motion.div
-              key={card.id}
-              className="synthwave-card absolute w-full max-w-[320px] h-64 rounded-xl bg-slate-900/95 backdrop-blur-sm p-4 shadow-2xl"
-              animate={{
-                ...style,
-                y: isActive ? [0, -4, 0] : style.y,
-              }}
-              transition={isActive ? {
-                y: { repeat: Infinity, duration: 3, ease: 'easeInOut' },
-                default: { type: 'spring', stiffness: 300, damping: 30 }
-              } : {
-                type: 'spring',
-                stiffness: 300,
-                damping: 30,
-              }}
-              style={{
-                transformStyle: 'preserve-3d',
-                zIndex: 10 - Math.abs(index - activeIndex),
-              }}
-            >
-              {/* Step indicator */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center text-[10px] font-bold text-white">
-                  {index + 1}
-                </div>
-                <span className="text-xs font-medium text-white">{card.title}</span>
+        return (
+          <motion.div
+            key={card.id}
+            className="absolute inset-0 rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-700/50 p-4 shadow-2xl"
+            animate={{
+              x: depth * 20,
+              y: depth * 12,
+              scale: 1 - depth * 0.05,
+              opacity: depth === 0 ? 1 : 0.4 - depth * 0.15,
+            }}
+            transition={{
+              type: 'spring',
+              stiffness: 300,
+              damping: 30,
+            }}
+            style={{
+              zIndex: 30 - depth * 10,
+            }}
+          >
+            {/* Synthwave glow on active card only */}
+            {isActive && (
+              <div 
+                className="absolute inset-0 rounded-xl pointer-events-none"
+                style={{
+                  boxShadow: '0 0 30px -5px rgba(6, 182, 212, 0.4), 0 0 20px -5px rgba(236, 72, 153, 0.3)',
+                }}
+              />
+            )}
+            
+            {/* Step indicator */}
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center text-[10px] font-bold text-white">
+                {index + 1}
               </div>
+              <span className="text-xs font-medium text-white">{card.title}</span>
+            </div>
 
-              {/* Card content */}
-              <div className="h-[calc(100%-2rem)]">{card.content(isActive)}</div>
-            </motion.div>
-          );
-        })}
-      </div>
-
+            {/* Card content */}
+            <div className="h-48">{card.content(isActive)}</div>
+          </motion.div>
+        );
+      })}
       {/* Step indicators */}
       <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-30">
         {cards.map((_, i) => (
