@@ -217,10 +217,11 @@ export function HeroFlowAnimation() {
   ];
 
   return (
-    <div className="relative w-[600px] h-[400px] flex items-center justify-center">
-      {/* Ambient glow behind all cards */}
+    // Container: card width (420) + back cards overflow (2 * 70 = 140) = 560px
+    <div className="relative w-[560px] h-[380px]">
+      {/* Ambient glow behind all cards - positioned to right */}
       <div 
-        className="absolute inset-0 rounded-3xl opacity-30 blur-2xl pointer-events-none"
+        className="absolute right-0 top-0 w-[480px] h-full rounded-3xl opacity-30 blur-2xl pointer-events-none"
         style={{
           background: 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.3), transparent 70%)',
         }}
@@ -321,8 +322,8 @@ export function HeroFlowAnimation() {
         );
       })}
       
-      {/* Step indicators */}
-      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-40">
+      {/* Step indicators - right aligned to match card stack */}
+      <div className="absolute -bottom-8 right-[180px] flex gap-2 z-40">
         {cards.map((_, i) => (
           <button
             key={i}
