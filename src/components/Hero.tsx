@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Play, ArrowRight, TrendingUp, Clock } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import AbstractHeroTeaser from "@/components/AbstractHeroTeaser";
+import { useNavigate } from "react-router-dom";
+import { HeroFlowAnimation } from "@/components/landing/HeroFlowAnimation";
 import { useContext, useState } from "react";
 import IntelligenceContext from "@/contexts/IntelligenceContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -169,13 +169,13 @@ const Hero = () => {
             </p>
           </div>
 
-          {/* Right - Abstract teaser visualization */}
+          {/* Right - Animated Flow Demo */}
           <div className="relative flex items-center justify-center" style={{
             animation: 'scale-in 1000ms ease-out 800ms forwards',
             animationFillMode: 'forwards',
             opacity: 0
           }}>
-            <AbstractHeroTeaser />
+            <HeroFlowAnimation />
           </div>
           
         </div>
