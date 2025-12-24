@@ -311,7 +311,7 @@ export function CollapsibleBriefPanel({
                     <div className="text-sm text-slate-400">No brand configured</div>
                   )}
                   <Link 
-                    to="/brand-setup" 
+                    to="/brand-setup?skipDraftModal=true" 
                     className="text-xs text-slate-400 hover:text-white transition-colors"
                   >
                     Edit
