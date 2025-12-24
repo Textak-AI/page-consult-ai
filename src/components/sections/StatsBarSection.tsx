@@ -141,7 +141,7 @@ export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditi
                   {formatStatValue(stat.value)}
                 </div>
                 <div 
-                  className={`text-sm md:text-base text-slate-600 font-medium ${
+                  className={`text-sm md:text-base text-slate-700 font-medium ${
                     isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
                   }`}
                   contentEditable={isEditing}
@@ -151,7 +151,7 @@ export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditi
                   {stat.label}
                 </div>
                 {stat.source && (
-                  <div className="text-xs text-slate-400 mt-1">
+                  <div className="text-xs text-slate-500 mt-1">
                     Source: {stat.source}
                   </div>
                 )}

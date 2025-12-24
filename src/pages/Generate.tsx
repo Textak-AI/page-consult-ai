@@ -27,7 +27,7 @@ import { PageStrengthMeter } from '@/components/consultation/PageStrengthMeter';
 import { DigitalChampionMeter } from '@/components/consultation/DigitalChampionMeter';
 import { ShareableAchievementCard } from '@/components/consultation/ShareableAchievementCard';
 import { ConsultantChat } from '@/components/consultation/ConsultantChat';
-import { SectionLockOverlay } from '@/components/editor/SectionLockOverlay';
+import { LockedSectionOverlay } from '@/components/sections/LockedSectionOverlay';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Trophy, Share2 } from 'lucide-react';
 import confetti from 'canvas-confetti';

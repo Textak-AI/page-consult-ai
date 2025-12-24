@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { ProblemSolutionSection } from "@/components/sections/ProblemSolutionSection";
 import { CalculatorSection } from "@/components/sections/CalculatorSection";
@@ -26,7 +26,7 @@ import { SectionToolbar } from "@/components/editor/SectionToolbar";
 import { SectionAIChat } from "@/components/editor/SectionAIChat";
 import { SectionImageGenerator } from "@/components/editor/SectionImageGenerator";
 import { LogoUploader } from "@/components/editor/LogoUploader";
-import { SectionLockOverlay } from "@/components/editor/SectionLockOverlay";
+import { LockedSectionOverlay } from "@/components/sections/LockedSectionOverlay";
 import { styleVariants } from "@/lib/styleVariants";
 import { SEOHead } from "@/components/seo/SEOHead";
 import type { SEOHeadData } from "@/lib/aiSeoIntegration";
@@ -157,11 +157,36 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     setLogoUploadSection(null);
   };
 
-const renderSectionWithToolbar = (section: Section, index: number, sectionElement: React.ReactNode) => {
+  const handleUnlockAction = useCallback((sectionType: string) => {
+    console.log('🔓 Unlock action triggered for:', sectionType);
+    // TODO: Open appropriate modal based on section type
+    // For now, just log - modals can be added later
+  }, []);
+
+  const renderSectionWithToolbar = useCallback((section: Section, index: number, sectionElement: React.ReactNode) => {
     const sectionId = getSectionId(section.type);
     const lockStatus = getSectionLockStatus?.(section.type);
     const isLocked = lockStatus?.isLocked ?? false;
     const justUpdated = (section as any)._justUpdated;
+    
+    // If locked, show the gamified overlay
+    if (isLocked) {
+      return (
+        <div 
+          key={index} 
+          id={sectionId} 
+          className="relative group transition-all duration-300"
+        >
+          <LockedSectionOverlay
+            sectionType={section.type}
+            onUnlockAction={() => handleUnlockAction(section.type)}
+          >
+            {/* Blurred preview of section */}
+            {sectionElement}
+          </LockedSectionOverlay>
+        </div>
+      );
+    }
     
     return (
       <div 
@@ -169,17 +194,9 @@ const renderSectionWithToolbar = (section: Section, index: number, sectionElemen
         id={sectionId} 
         className={cn(
           "relative group transition-all duration-300",
-          justUpdated && "animate-ring-pulse",
-          isLocked && "opacity-75"
+          justUpdated && "animate-ring-pulse"
         )}
       >
-        {/* Lock Overlay for locked sections */}
-        <SectionLockOverlay
-          isLocked={isLocked}
-          requirement={lockStatus?.requirement}
-          progress={lockStatus?.progress}
-        />
-        
         {/* Updated Badge - shows when consultant applies a change */}
         {justUpdated && (
           <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 px-2 py-1 bg-purple-500/90 text-white text-xs font-medium rounded-full animate-fade-in">
@@ -198,13 +215,10 @@ const renderSectionWithToolbar = (section: Section, index: number, sectionElemen
           isEditing={editingSection === index}
         />
         
-        {/* Section Content - dimmed when locked */}
-        <div className={cn(isLocked && "pointer-events-none")}>
-          {sectionElement}
-        </div>
+        {sectionElement}
       </div>
     );
-  };
+  }, [getSectionLockStatus, handleUnlockAction, editingSection, handleEditSection, handleAIAssist, handleImageGenerate, handleLogoEdit]);
 
   const renderSection = (section: Section, index: number) => {
     // Debug logging
