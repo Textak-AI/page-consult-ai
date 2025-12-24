@@ -6,8 +6,10 @@ export { BrandCustomization } from './BrandCustomization';
 export { BriefPanel } from './BriefPanel';
 export { CollapsibleBriefPanel } from './CollapsibleBriefPanel';
 export { DraftRecoveryModal } from './DraftRecoveryModal';
+export { QuestionExplainer, QUESTION_EXPLAINERS } from './QuestionExplainer';
 export type { ConsultationData } from './StrategicConsultation';
 export type { BrandSettings, WebsiteIntelligence } from './BrandCustomization';
+export type { QuestionMeta } from './QuestionExplainer';
 
 // Beta components
 export * from './beta';
