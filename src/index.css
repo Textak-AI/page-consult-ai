@@ -677,4 +677,55 @@ All colors MUST be HSL.
       animation-duration: 0.01ms !important;
     }
   }
+
+  /* Synthwave edge lighting effect */
+  @property --glow-hue {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: true;
+  }
+
+  @keyframes synthwave-shift {
+    0% { --glow-hue: 0deg; }
+    100% { --glow-hue: 360deg; }
+  }
+
+  .synthwave-edge {
+    --glow-hue: 0deg;
+    animation: synthwave-shift 8s linear infinite;
+    position: relative;
+  }
+
+  .synthwave-edge::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      calc(135deg + var(--glow-hue)),
+      hsl(calc(180 + var(--glow-hue) / 1deg) 80% 50% / 0.5),
+      transparent 30%,
+      transparent 70%,
+      hsl(calc(300 + var(--glow-hue) / 1deg) 80% 50% / 0.3)
+    );
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .synthwave-edge::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 
+      0 0 25px -5px hsl(calc(180 + var(--glow-hue) / 1deg) 80% 50% / 0.4),
+      0 0 10px -3px hsl(calc(300 + var(--glow-hue) / 1deg) 80% 50% / 0.3);
+    pointer-events: none;
+    opacity: 0.6;
+  }
 }
