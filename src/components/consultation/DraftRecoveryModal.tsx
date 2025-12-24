@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileText, Plus, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -25,6 +25,9 @@ export function DraftRecoveryModal({
       <DialogContent className="sm:max-w-md bg-slate-900 border-slate-700">
         <DialogHeader>
           <DialogTitle className="text-xl text-white">Welcome Back</DialogTitle>
+          <DialogDescription className="text-slate-400">
+            Choose how to continue with your consultation.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="py-4">
