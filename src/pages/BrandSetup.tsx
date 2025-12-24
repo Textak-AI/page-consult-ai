@@ -51,6 +51,8 @@ export default function BrandSetup() {
   
   // Check if this is a fresh start (e.g., from Reset Brand or new user)
   const isFreshStart = searchParams.get('fresh') === 'true';
+  // Check if we should skip draft modal (coming from Edit button in wizard)
+  const skipDraftModal = searchParams.get('skipDraftModal') === 'true';
   
   // State
   const [isLoading, setIsLoading] = useState(true);
@@ -77,7 +79,7 @@ export default function BrandSetup() {
   // Check if user already has brand setup
   useEffect(() => {
     checkExistingBrand();
-  }, [isFreshStart]);
+  }, [isFreshStart, skipDraftModal]);
 
   const checkExistingBrand = async () => {
     try {
@@ -89,8 +91,29 @@ export default function BrandSetup() {
       
       setUserId(user.id);
 
-      // If fresh start, don't load existing data and don't redirect
-      if (isFreshStart) {
+      // If fresh start or skipDraftModal, don't redirect and don't load existing data
+      if (isFreshStart || skipDraftModal) {
+        // Load existing data for display/editing but don't redirect
+        const { data: existingBrief } = await supabase
+          .from('brand_briefs')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .maybeSingle();
+          
+        if (existingBrief) {
+          if (existingBrief.logo_url) {
+            setLogoPreview(existingBrief.logo_url);
+          }
+          const colors = existingBrief.colors as { primary?: { hex: string } } | null;
+          if (colors?.primary?.hex) {
+            setManualColor(colors.primary.hex);
+          }
+          if (existingBrief.website_url) {
+            setWebsiteUrl(existingBrief.website_url);
+            setWebsiteAnalyzed(true);
+          }
+        }
         setIsLoading(false);
         return;
       }
