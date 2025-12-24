@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { AIWorkingLoader } from '@/components/editor/AIWorkingLoader';
+import { QuestionExplainer, QUESTION_EXPLAINERS } from './QuestionExplainer';
 import type { AISeoData } from '@/services/intelligence/types';
 import { BrandCustomization, type BrandSettings, type WebsiteIntelligence } from './BrandCustomization';
 import { CollapsibleBriefPanel } from './CollapsibleBriefPanel';
@@ -1050,7 +1051,10 @@ ${d.ctaText}
             
             <div className="space-y-5">
               <div>
-                <Label htmlFor="businessName" className="text-slate-400">Business Name *</Label>
+                <Label htmlFor="businessName" className="text-slate-400 inline-flex items-center">
+                  Business Name *
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.businessName} />
+                </Label>
                 <Input
                   id="businessName"
                   placeholder="e.g., Acme Solutions"
@@ -1061,7 +1065,10 @@ ${d.ctaText}
               </div>
               
               <div>
-                <Label htmlFor="productName" className="text-slate-400">Product Name</Label>
+                <Label htmlFor="productName" className="text-slate-400 inline-flex items-center">
+                  Product Name
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.productName} />
+                </Label>
                 <Input
                   id="productName"
                   placeholder="e.g., Claude, Notion, Figma (leave blank if same as business)"
@@ -1073,7 +1080,10 @@ ${d.ctaText}
               </div>
               
               <div>
-                <Label htmlFor="industry" className="text-slate-400">Industry *</Label>
+                <Label htmlFor="industry" className="text-slate-400 inline-flex items-center">
+                  Industry *
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.industry} />
+                </Label>
                 <div className="mt-2">
                   <IndustrySelector
                     value={{
@@ -1105,12 +1115,13 @@ ${d.ctaText}
               </div>
               
               <div>
-                <Label htmlFor="uniqueStrength" className="text-slate-400">
+                <Label htmlFor="uniqueStrength" className="text-slate-400 inline-flex items-center flex-wrap">
                   {data.pageType === 'beta-prelaunch'
                     ? `What will make ${data.productName || data.businessName || 'your product'} worth the wait? *`
                     : data.productName
                     ? `What's the ONE thing ${data.productName} does better than anything else? *`
                     : "What's the ONE thing you do better than anyone else? *"}
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.uniqueStrength} />
                 </Label>
                 <Textarea
                   id="uniqueStrength"
@@ -1129,8 +1140,9 @@ ${d.ctaText}
               
               {/* NEW: Identity Sentence */}
               <div>
-                <Label htmlFor="identitySentence" className="text-slate-400">
+                <Label htmlFor="identitySentence" className="text-slate-400 inline-flex items-center">
                   How would you describe your firm in one sentence to a peer in your industry?
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.identitySentence} />
                 </Label>
                 <p className="text-xs text-slate-500 mt-1">Not your tagline — your honest positioning.</p>
                 <Textarea
@@ -1166,8 +1178,9 @@ ${d.ctaText}
             
             <div className="space-y-5">
               <div>
-                <Label htmlFor="idealClient" className="text-slate-400">
+                <Label htmlFor="idealClient" className="text-slate-400 inline-flex items-center">
                   Describe your ideal client in detail *
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.idealClient} />
                 </Label>
                 <Textarea
                   id="idealClient"
@@ -1179,8 +1192,9 @@ ${d.ctaText}
               </div>
               
               <div>
-                <Label htmlFor="clientFrustration" className="text-slate-400">
+                <Label htmlFor="clientFrustration" className="text-slate-400 inline-flex items-center">
                   What's their biggest frustration when hiring in your space? *
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.clientFrustration} />
                 </Label>
                 <Textarea
                   id="clientFrustration"
@@ -1192,8 +1206,9 @@ ${d.ctaText}
               </div>
               
               <div>
-                <Label htmlFor="desiredOutcome" className="text-slate-400">
+                <Label htmlFor="desiredOutcome" className="text-slate-400 inline-flex items-center">
                   What outcome are they really buying? (Not your service, the result) *
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.desiredOutcome} />
                 </Label>
                 <Textarea
                   id="desiredOutcome"
@@ -1217,8 +1232,9 @@ ${d.ctaText}
             
             <div className="space-y-5">
               <div>
-                <Label htmlFor="clientCount" className="text-slate-400">
+                <Label htmlFor="clientCount" className="text-slate-400 inline-flex items-center">
                   Approximately how many clients/projects have you completed?
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.clientCount} />
                 </Label>
                 <Input
                   id="clientCount"
@@ -1230,8 +1246,9 @@ ${d.ctaText}
               </div>
               
               <div>
-                <Label htmlFor="achievements" className="text-slate-400">
+                <Label htmlFor="achievements" className="text-slate-400 inline-flex items-center">
                   Any notable achievements? (Awards, certifications, press, notable clients)
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.achievements} />
                 </Label>
                 <Textarea
                   id="achievements"
@@ -1243,8 +1260,9 @@ ${d.ctaText}
               </div>
               
               <div>
-                <Label htmlFor="testimonialText" className="text-slate-400">
+                <Label htmlFor="testimonialText" className="text-slate-400 inline-flex items-center">
                   Paste 1-2 real testimonials, or describe what clients typically say about you
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.testimonialText} />
                 </Label>
                 <Textarea
                   id="testimonialText"
@@ -1257,8 +1275,9 @@ ${d.ctaText}
               
               {/* NEW: Concrete Proof Story */}
               <div className="pt-4 border-t border-slate-700">
-                <Label htmlFor="concreteProofStory" className="text-slate-400">
+                <Label htmlFor="concreteProofStory" className="text-slate-400 inline-flex items-center">
                   Share ONE specific result you're proud of
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.concreteProofStory} />
                 </Label>
                 <p className="text-xs text-slate-500 mt-1">You can anonymize. Format: "[Type of client] achieved [specific outcome] in [timeframe]"</p>
                 <Textarea
@@ -1313,8 +1332,9 @@ ${d.ctaText}
             
             <div className="space-y-5">
               <div>
-                <Label htmlFor="mainOffer" className="text-slate-400">
+                <Label htmlFor="mainOffer" className="text-slate-400 inline-flex items-center">
                   Main service or product name *
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.mainOffer} />
                 </Label>
                 <Input
                   id="mainOffer"
@@ -1356,8 +1376,9 @@ ${d.ctaText}
               </div>
               
               <div>
-                <Label htmlFor="processDescription" className="text-slate-400">
+                <Label htmlFor="processDescription" className="text-slate-400 inline-flex items-center">
                   What happens after they contact you? Describe your process.
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.processDescription} />
                 </Label>
                 <Textarea
                   id="processDescription"
@@ -1485,7 +1506,10 @@ ${d.ctaText}
             
             <div className="space-y-5">
               <div>
-                <Label className="text-slate-400">Primary goal *</Label>
+                <Label className="text-slate-400 inline-flex items-center">
+                  Primary goal *
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.primaryGoal} />
+                </Label>
                 <div className="grid grid-cols-2 gap-3 mt-2">
                   {PRIMARY_GOALS.map(goal => (
                     <button
@@ -1505,8 +1529,9 @@ ${d.ctaText}
               </div>
               
               <div>
-                <Label htmlFor="ctaText" className="text-slate-400">
+                <Label htmlFor="ctaText" className="text-slate-400 inline-flex items-center">
                   What should the main button say? *
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.ctaText} />
                 </Label>
                 <Input
                   id="ctaText"
@@ -1518,8 +1543,9 @@ ${d.ctaText}
               </div>
               
               <div>
-                <Label htmlFor="objectionsToOvercome" className="text-slate-400">
+                <Label htmlFor="objectionsToOvercome" className="text-slate-400 inline-flex items-center">
                   Any specific objections or concerns you need to address on this page?
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.objectionsToOvercome} />
                 </Label>
                 <Textarea
                   id="objectionsToOvercome"
