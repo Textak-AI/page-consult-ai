@@ -4,88 +4,35 @@ import { Check, Sparkles, Eye, Send } from 'lucide-react';
 
 export function HeroFlowAnimation() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [questionIndex, setQuestionIndex] = useState(0);
 
-  const totalCards = 3;
-
-  // Auto-rotate every 4 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % totalCards);
+      setActiveIndex((prev) => (prev + 1) % 3);
     }, 4000);
     return () => clearInterval(interval);
   }, []);
-
-  // Reset question animation when card 1 comes to front
-  useEffect(() => {
-    if (activeIndex === 0) {
-      setQuestionIndex(0);
-      const questionInterval = setInterval(() => {
-        setQuestionIndex((prev) => Math.min(prev + 1, 3));
-      }, 600);
-      return () => clearInterval(questionInterval);
-    }
-  }, [activeIndex]);
-
-  // Calculate depth: 0 = front (active), 1 = one behind, 2 = two behind
-  const getDepth = (cardIndex: number) => {
-    let depth = cardIndex - activeIndex;
-    if (depth < 0) depth += totalCards; // Wrap around
-    return depth;
-  };
 
   const cards = [
     {
       id: 'wizard',
       title: 'Strategic Questions',
-      content: (isActive: boolean) => (
+      content: (
         <div className="flex flex-col h-full">
           <div className="space-y-2 flex-1">
-            {["What's your business?", "Who's your ideal customer?", 'What makes you unique?'].map((q, i) => (
-              <motion.div
-                key={q}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{
-                  opacity: isActive && questionIndex > i ? 1 : 0.3,
-                  x: isActive && questionIndex > i ? 0 : -10,
-                }}
-                transition={{ duration: 0.3, delay: isActive ? i * 0.1 : 0 }}
-                className="flex items-center gap-2 text-sm"
-              >
-                {questionIndex > i ? (
-                  <Check className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-                ) : (
-                  <div className="w-3 h-3 rounded-full border border-slate-600 flex-shrink-0" />
-                )}
-                <span className={questionIndex > i ? 'text-slate-200' : 'text-slate-500'}>{q}</span>
-                {isActive && questionIndex === i && (
-                  <motion.span
-                    animate={{ opacity: [1, 0, 1] }}
-                    transition={{ repeat: Infinity, duration: 1 }}
-                    className="text-cyan-400 ml-1"
-                  >
-                    |
-                  </motion.span>
-                )}
-              </motion.div>
+            {['What\'s your business?', 'Who\'s your ideal customer?', 'What makes you unique?'].map((q) => (
+              <div key={q} className="flex items-center gap-2 text-sm">
+                <Check className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                <span className="text-slate-200">{q}</span>
+              </div>
             ))}
           </div>
           <div className="mt-4 pt-3 border-t border-slate-800/50">
             <div className="flex items-center gap-2 text-xs text-slate-400">
-              <motion.div
-                animate={isActive ? { scale: [1, 1.2, 1] } : { scale: 1 }}
-                transition={{ repeat: isActive ? Infinity : 0, duration: 1.5 }}
-                className="w-1.5 h-1.5 rounded-full bg-cyan-400"
-              />
+              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
               <span>Building your strategy...</span>
             </div>
             <div className="mt-2 h-1 bg-slate-800 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500"
-                initial={{ width: '0%' }}
-                animate={{ width: isActive ? '100%' : '0%' }}
-                transition={{ duration: 3, ease: 'easeOut' }}
-              />
+              <div className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 w-3/4" />
             </div>
           </div>
         </div>
@@ -94,7 +41,7 @@ export function HeroFlowAnimation() {
     {
       id: 'brief',
       title: 'Strategy Brief Generated',
-      content: (isActive: boolean) => (
+      content: (
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-slate-400">Page Strength</span>
@@ -104,12 +51,7 @@ export function HeroFlowAnimation() {
             </div>
           </div>
           <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mb-4">
-            <motion.div
-              className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full"
-              initial={{ width: '0%' }}
-              animate={{ width: isActive ? '98%' : '0%' }}
-              transition={{ duration: 1.5, ease: 'easeOut', delay: 0.3 }}
-            />
+            <div className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full w-[98%]" />
           </div>
           <div className="space-y-1.5 flex-1">
             {[
@@ -117,32 +59,19 @@ export function HeroFlowAnimation() {
               { label: 'Messaging pillars', count: '4 points' },
               { label: 'Proof points', count: '5 items' },
               { label: 'FAQ answers', count: '4 Q&As' },
-            ].map((item, i) => (
-              <motion.div
-                key={item.label}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: isActive ? 1 : 0.5, x: isActive ? 0 : -10 }}
-                transition={{ delay: isActive ? 0.2 + i * 0.1 : 0, duration: 0.3 }}
-                className="flex items-center justify-between text-xs"
-              >
+            ].map((item) => (
+              <div key={item.label} className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <Check className="w-3 h-3 text-emerald-400" />
                   <span className="text-slate-300">{item.label}</span>
                 </div>
                 <span className="text-slate-500">{item.count}</span>
-              </motion.div>
+              </div>
             ))}
           </div>
           <div className="mt-3 pt-3 border-t border-slate-800/50">
             <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Top Headline</div>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isActive ? 1 : 0.5 }}
-              transition={{ delay: 0.8 }}
-              className="text-xs text-cyan-300 font-medium truncate"
-            >
-              "Transform Your Landing Pages With..."
-            </motion.div>
+            <div className="text-xs text-cyan-300 font-medium truncate">"Transform Your Landing Pages With..."</div>
           </div>
         </div>
       ),
@@ -150,33 +79,24 @@ export function HeroFlowAnimation() {
     {
       id: 'dashboard',
       title: 'Ready to Publish',
-      content: (isActive: boolean) => (
+      content: (
         <div className="flex flex-col h-full">
-          <div className="bg-slate-800/50 rounded-lg p-2 mb-3">
-            <div className="space-y-1.5">
-              {[
-                { name: 'Hero', active: true },
-                { name: 'Problem', active: false },
-                { name: 'Features', active: false },
-                { name: 'FAQ', active: false },
-                { name: 'CTA', active: false },
-              ].map((section, i) => (
-                <motion.div 
-                  key={section.name} 
-                  className="flex items-center gap-2"
-                  initial={{ opacity: 0, x: -5 }}
-                  animate={{ opacity: isActive ? 1 : 0.5, x: isActive ? 0 : -5 }}
-                  transition={{ delay: isActive ? i * 0.05 : 0 }}
-                >
-                  <div
-                    className={`h-2 rounded-sm flex-1 ${
-                      section.active
-                        ? 'bg-gradient-to-r from-cyan-500/50 to-emerald-500/50'
-                        : 'bg-slate-700/50'
-                    }`}
-                  />
-                  <span className="text-[9px] text-slate-500 w-12">{section.name}</span>
-                </motion.div>
+          <div className="bg-slate-800/50 rounded-lg p-2 mb-3 flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded bg-gradient-to-br from-cyan-500/30 to-emerald-500/30 flex items-center justify-center">
+                <span className="text-[8px] text-cyan-300">HERO</span>
+              </div>
+              <div className="flex-1 space-y-1">
+                <div className="h-1.5 bg-slate-700 rounded w-3/4" />
+                <div className="h-1 bg-slate-700/50 rounded w-1/2" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              {['Features', 'FAQ', 'CTA'].map((section) => (
+                <div key={section} className="flex items-center gap-2">
+                  <div className="h-1.5 bg-slate-700/50 rounded flex-1" />
+                  <span className="text-[8px] text-slate-500 w-10">{section}</span>
+                </div>
               ))}
             </div>
           </div>
@@ -185,28 +105,14 @@ export function HeroFlowAnimation() {
               <Eye className="w-2.5 h-2.5" />
               Preview
             </div>
-            <motion.div
-              animate={isActive ? {
-                boxShadow: [
-                  '0 0 0 0 rgba(16, 185, 129, 0)',
-                  '0 0 0 4px rgba(16, 185, 129, 0.2)',
-                  '0 0 0 0 rgba(16, 185, 129, 0)',
-                ],
-              } : {}}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded bg-gradient-to-r from-cyan-600 to-emerald-600 text-[10px] text-white font-medium"
-            >
+            <div className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded bg-gradient-to-r from-cyan-600 to-emerald-600 text-[10px] text-white font-medium">
               <Send className="w-2.5 h-2.5" />
               Publish
-            </motion.div>
+            </div>
           </div>
-          <div className="mt-auto pt-2 border-t border-slate-800/50">
+          <div className="pt-2 border-t border-slate-800/50">
             <div className="flex items-center gap-2 text-xs">
-              <div className="flex -space-x-1">
-                <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <Check className="w-2.5 h-2.5 text-emerald-400" />
-                </div>
-              </div>
+              <Check className="w-3 h-3 text-emerald-400" />
               <span className="text-slate-400">Conversion-ready in</span>
               <span className="text-emerald-400 font-medium">10 min</span>
             </div>
@@ -217,88 +123,103 @@ export function HeroFlowAnimation() {
   ];
 
   return (
-    // Container: card width (420) + back cards overflow (2 * 70 = 140) = 560px, height matches card
-    <div className="relative w-[560px] h-[320px]">
-      {/* Ambient glow behind all cards - positioned to right */}
-      <div 
-        className="absolute right-0 top-1/2 -translate-y-1/2 w-[480px] h-[360px] rounded-3xl opacity-30 blur-2xl pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.3), transparent 70%)',
-        }}
-      />
-      
+    <div className="relative w-[450px] h-[340px]">
       {cards.map((card, index) => {
-        const depth = getDepth(index);
+        let depth = index - activeIndex;
+        if (depth < 0) depth += 3;
         const isActive = depth === 0;
 
         return (
           <motion.div
             key={card.id}
-            className="absolute right-0 top-0 w-[420px] h-[320px] rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-6 shadow-2xl"
+            className="absolute top-0 right-0 w-[340px] h-full rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-5 overflow-hidden"
             animate={{
-              x: depth * -70,
+              x: depth * -50,
               y: depth * 15,
               scale: 1 - depth * 0.03,
-              opacity: depth === 0 ? 1 : 0.6 - depth * 0.15,
+              opacity: isActive ? 1 : 0.4,
+              zIndex: 30 - depth * 10,
             }}
             transition={{
               type: 'spring',
               stiffness: 300,
               damping: 30,
             }}
-            style={{
-              zIndex: 30 - depth * 10,
-              transformOrigin: 'right center',
-            }}
           >
-            {/* Sweeping edge glow - only on active card */}
+            {/* Breathing edge lights - only on active card */}
             {isActive && (
               <>
-                <div className="absolute -inset-[2px] rounded-xl overflow-hidden pointer-events-none">
-                  <motion.div
-                    className="absolute inset-0"
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 8,
-                      repeat: Infinity,
-                      ease: 'linear',
-                    }}
-                    style={{
-                      background: `conic-gradient(
-                        from 0deg,
-                        rgba(6, 182, 212, 0.8) 0deg,
-                        rgba(6, 182, 212, 0.4) 40deg,
-                        transparent 80deg,
-                        transparent 180deg,
-                        rgba(236, 72, 153, 0.4) 260deg,
-                        rgba(139, 92, 246, 0.6) 310deg,
-                        rgba(6, 182, 212, 0.8) 360deg
-                      )`,
-                    }}
-                  />
-                  {/* Inner mask - reveals only the edge */}
-                  <div className="absolute inset-[2px] rounded-[10px] bg-slate-900" />
-                </div>
-                
-                {/* Outer ambient glow that follows */}
+                {/* Top-left cyan light */}
                 <motion.div
-                  className="absolute -inset-8 rounded-3xl pointer-events-none -z-10"
-                  animate={{ rotate: 360 }}
+                  className="absolute -top-20 -left-20 w-40 h-40 pointer-events-none"
+                  animate={{ opacity: [0.15, 0.4, 0.15] }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                  style={{
+                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.5) 0%, transparent 70%)',
+                    filter: 'blur(15px)',
+                  }}
+                />
+                {/* Top-right magenta light */}
+                <motion.div
+                  className="absolute -top-16 -right-16 w-36 h-36 pointer-events-none"
+                  animate={{ opacity: [0.1, 0.35, 0.1] }}
+                  transition={{
+                    duration: 5,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: 1.2,
+                  }}
+                  style={{
+                    background: 'radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%)',
+                    filter: 'blur(15px)',
+                  }}
+                />
+                {/* Bottom-right purple light */}
+                <motion.div
+                  className="absolute -bottom-16 -right-16 w-44 h-44 pointer-events-none"
+                  animate={{ opacity: [0.1, 0.3, 0.1] }}
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: 2.5,
+                  }}
+                  style={{
+                    background: 'radial-gradient(circle, rgba(139, 92, 246, 0.35) 0%, transparent 70%)',
+                    filter: 'blur(18px)',
+                  }}
+                />
+                {/* Bottom-left cyan light */}
+                <motion.div
+                  className="absolute -bottom-14 -left-14 w-32 h-32 pointer-events-none"
+                  animate={{ opacity: [0.1, 0.25, 0.1] }}
+                  transition={{
+                    duration: 7,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                    delay: 3.5,
+                  }}
+                  style={{
+                    background: 'radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%)',
+                    filter: 'blur(12px)',
+                  }}
+                />
+                {/* Subtle ambient glow behind card */}
+                <motion.div
+                  className="absolute -inset-8 -z-10 pointer-events-none"
+                  animate={{ opacity: [0.2, 0.35, 0.2] }}
                   transition={{
                     duration: 8,
                     repeat: Infinity,
-                    ease: 'linear',
+                    ease: 'easeInOut',
                   }}
                   style={{
-                    background: `conic-gradient(
-                      from 0deg,
-                      rgba(6, 182, 212, 0.15) 0deg,
-                      transparent 60deg,
-                      transparent 180deg,
-                      rgba(236, 72, 153, 0.1) 270deg,
-                      rgba(139, 92, 246, 0.1) 320deg,
-                      rgba(6, 182, 212, 0.15) 360deg
-                    )`,
+                    background:
+                      'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.05) 50%, transparent 70%)',
                     filter: 'blur(25px)',
                   }}
                 />
@@ -306,34 +227,31 @@ export function HeroFlowAnimation() {
             )}
 
             {/* Card content */}
-            <div className="relative z-10">
+            <div className="relative z-10 h-full">
               {/* Step indicator */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center text-[10px] font-bold text-white">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center text-xs font-bold text-white">
                   {index + 1}
                 </div>
-                <span className="text-xs font-medium text-white">{card.title}</span>
+                <span className="text-sm font-medium text-white">{card.title}</span>
               </div>
 
-              {/* Card body content */}
-              <div className="h-52">{card.content(isActive)}</div>
+              {/* Card body */}
+              <div className="h-52">{card.content}</div>
             </div>
           </motion.div>
         );
       })}
-      
-      {/* Step indicators - right aligned to match card stack */}
-      <div className="absolute -bottom-8 right-[180px] flex gap-2 z-40">
-        {cards.map((_, i) => (
+
+      {/* Step dots */}
+      <div className="absolute -bottom-10 right-0 flex gap-2">
+        {[0, 1, 2].map((i) => (
           <button
             key={i}
             onClick={() => setActiveIndex(i)}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              i === activeIndex
-                ? 'w-6 bg-gradient-to-r from-cyan-400 to-pink-500'
-                : 'w-1.5 bg-slate-600 hover:bg-slate-500'
+            className={`h-1.5 rounded-full transition-all ${
+              i === activeIndex ? 'w-6 bg-gradient-to-r from-cyan-400 to-pink-500' : 'w-1.5 bg-slate-600'
             }`}
-            aria-label={`Go to step ${i + 1}`}
           />
         ))}
       </div>
