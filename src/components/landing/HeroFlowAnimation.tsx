@@ -233,7 +233,7 @@ export function HeroFlowAnimation() {
         return (
           <motion.div
             key={card.id}
-            className="absolute w-[420px] h-[320px] rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-6 shadow-2xl"
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-[420px] h-[320px] rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-6 shadow-2xl"
             animate={{
               x: depth * -70,
               y: depth * 15,
@@ -247,6 +247,7 @@ export function HeroFlowAnimation() {
             }}
             style={{
               zIndex: 30 - depth * 10,
+              transformOrigin: 'right center',
             }}
           >
             {/* Sweeping edge glow - only on active card */}
