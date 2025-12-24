@@ -25,10 +25,11 @@ export function usePageBuilder({
   consultantEnabled = true
 }: UsePageBuilderOptions) {
   
-  // Calculate completeness
+  // Calculate completeness - pass both consultation data AND sections
+  // so we can check if sections already have content
   const completeness = useMemo(() => 
-    calculateCompleteness(consultationData), 
-    [consultationData]
+    calculateCompleteness(consultationData, sections), 
+    [consultationData, sections]
   );
 
   // Handle section updates from consultant
