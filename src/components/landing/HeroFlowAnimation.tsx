@@ -217,7 +217,7 @@ export function HeroFlowAnimation() {
   ];
 
   return (
-    <div className="relative w-96 h-80 flex items-center justify-center">
+    <div className="relative w-[420px] h-[340px] flex items-center justify-center">
       {/* Ambient glow behind all cards */}
       <div 
         className="absolute inset-0 rounded-3xl opacity-30 blur-2xl pointer-events-none"
@@ -233,10 +233,10 @@ export function HeroFlowAnimation() {
         return (
           <motion.div
             key={card.id}
-            className={`absolute w-80 h-64 rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-700/50 p-4 shadow-2xl ${isActive ? 'synthwave-card' : ''}`}
+            className="absolute w-[360px] h-[280px] rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-5 shadow-2xl"
             animate={{
-              x: depth * 28,
-              y: depth * 16,
+              x: depth * 35,
+              y: depth * 22,
               scale: 1 - depth * 0.07,
               opacity: depth === 0 ? 1 : 0.5 - depth * 0.15,
             }}
@@ -249,16 +249,73 @@ export function HeroFlowAnimation() {
               zIndex: 30 - depth * 10,
             }}
           >
-            {/* Step indicator */}
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center text-[10px] font-bold text-white">
-                {index + 1}
-              </div>
-              <span className="text-xs font-medium text-white">{card.title}</span>
-            </div>
+            {/* Sweeping edge glow - only on active card */}
+            {isActive && (
+              <>
+                <div className="absolute -inset-[2px] rounded-xl overflow-hidden pointer-events-none">
+                  <motion.div
+                    className="absolute inset-0"
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 8,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                    style={{
+                      background: `conic-gradient(
+                        from 0deg,
+                        rgba(6, 182, 212, 0.8) 0deg,
+                        rgba(6, 182, 212, 0.4) 40deg,
+                        transparent 80deg,
+                        transparent 180deg,
+                        rgba(236, 72, 153, 0.4) 260deg,
+                        rgba(139, 92, 246, 0.6) 310deg,
+                        rgba(6, 182, 212, 0.8) 360deg
+                      )`,
+                    }}
+                  />
+                  {/* Inner mask - reveals only the edge */}
+                  <div className="absolute inset-[2px] rounded-[10px] bg-slate-900" />
+                </div>
+                
+                {/* Outer ambient glow that follows */}
+                <motion.div
+                  className="absolute -inset-8 rounded-3xl pointer-events-none -z-10"
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 8,
+                    repeat: Infinity,
+                    ease: 'linear',
+                  }}
+                  style={{
+                    background: `conic-gradient(
+                      from 0deg,
+                      rgba(6, 182, 212, 0.15) 0deg,
+                      transparent 60deg,
+                      transparent 180deg,
+                      rgba(236, 72, 153, 0.1) 270deg,
+                      rgba(139, 92, 246, 0.1) 320deg,
+                      rgba(6, 182, 212, 0.15) 360deg
+                    )`,
+                    filter: 'blur(25px)',
+                  }}
+                />
+              </>
+            )}
 
             {/* Card content */}
-            <div className="h-48">{card.content(isActive)}</div>
+            <div className="relative z-10">
+              {/* Step indicator */}
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center text-[10px] font-bold text-white">
+                  {index + 1}
+                </div>
+                <span className="text-xs font-medium text-white">{card.title}</span>
+              </div>
+
+              {/* Card body content */}
+              <div className="h-52">{card.content(isActive)}</div>
+            </div>
           </motion.div>
         );
       })}
