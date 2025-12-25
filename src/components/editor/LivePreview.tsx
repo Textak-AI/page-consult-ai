@@ -27,6 +27,7 @@ import { SectionAIChat } from "@/components/editor/SectionAIChat";
 import { SectionImageGenerator } from "@/components/editor/SectionImageGenerator";
 import { LogoUploader } from "@/components/editor/LogoUploader";
 import { LockedSectionOverlay } from "@/components/sections/LockedSectionOverlay";
+import { TestimonialAcquisitionModal } from "@/components/modals/TestimonialAcquisitionModal";
 import { styleVariants } from "@/lib/styleVariants";
 import { SEOHead } from "@/components/seo/SEOHead";
 import type { SEOHeadData } from "@/lib/aiSeoIntegration";
@@ -68,6 +69,9 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
   
   const [logoUploadOpen, setLogoUploadOpen] = useState(false);
   const [logoUploadSection, setLogoUploadSection] = useState<{ index: number; content: any } | null>(null);
+  
+  // Testimonial acquisition modal state
+  const [testimonialModalOpen, setTestimonialModalOpen] = useState(false);
 
   const handleSaveEdit = () => {
     setEditingSection(null);
@@ -162,9 +166,12 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     
     switch (action) {
       case 'primary':
-        // Open the main unlock modal (testimonials form, etc.)
-        console.log(`Opening primary unlock modal for ${sectionType}`);
-        // TODO: setUnlockModal({ isOpen: true, sectionType, mode: 'custom' });
+        // Open the main unlock modal based on section type
+        if (sectionType === 'testimonials' || sectionType === 'social-proof') {
+          setTestimonialModalOpen(true);
+        } else {
+          console.log(`Opening primary unlock modal for ${sectionType}`);
+        }
         break;
         
       case 'generate-industry-stats':
@@ -551,6 +558,16 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         }}
         currentLogoUrl={logoUploadSection?.content?.logoUrl}
         onApplyLogo={handleLogoApply}
+      />
+      
+      {/* Testimonial Acquisition Modal */}
+      <TestimonialAcquisitionModal
+        isOpen={testimonialModalOpen}
+        onClose={() => setTestimonialModalOpen(false)}
+        businessName={strategyBrief?.businessName || 'Your Business'}
+        industry={strategyBrief?.industry || 'consulting'}
+        ownerName={strategyBrief?.ownerName}
+        serviceDescription={strategyBrief?.serviceDescription}
       />
     </div>
   );
