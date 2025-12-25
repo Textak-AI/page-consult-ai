@@ -66,10 +66,10 @@ export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditi
     return "grid-cols-2 md:grid-cols-4";
   };
 
-  // SaaS variant
+  // SaaS variant - HIGH CONTRAST: dark bg with cyan values and white labels
   if (isSaas) {
     return (
-      <section className={`py-12 bg-slate-800/50 border-y border-slate-700 ${isEditing ? 'relative' : ''}`}>
+      <section className={`py-12 bg-gradient-to-r from-slate-800 to-slate-900 border-y border-slate-700 ${isEditing ? 'relative' : ''}`}>
         {isEditing && (
           <div className="absolute inset-0 border-2 border-purple-500/50 rounded-lg pointer-events-none z-10" />
         )}
@@ -85,7 +85,7 @@ export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditi
                 className="text-center"
               >
                 <div 
-                  className={`text-4xl md:text-5xl font-bold text-white mb-2 ${
+                  className={`text-4xl md:text-5xl font-bold text-cyan-400 mb-2 ${
                     isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2 inline-block" : ""
                   }`}
                   contentEditable={isEditing}
@@ -95,7 +95,7 @@ export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditi
                   {formatStatValue(stat.value)}
                 </div>
                 <div 
-                  className={`text-sm text-slate-400 ${
+                  className={`text-sm text-slate-300 font-medium ${
                     isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-1" : ""
                   }`}
                   contentEditable={isEditing}
