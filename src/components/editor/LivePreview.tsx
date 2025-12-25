@@ -157,10 +157,54 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     setLogoUploadSection(null);
   };
 
-  const handleUnlockAction = useCallback((sectionType: string) => {
-    console.log('🔓 Unlock action triggered for:', sectionType);
-    // TODO: Open appropriate modal based on section type
-    // For now, just log - modals can be added later
+  const handleUnlockAction = useCallback((sectionType: string, action: string) => {
+    console.log('🔓 Unlock action triggered:', { sectionType, action });
+    
+    switch (action) {
+      case 'primary':
+        // Open the main unlock modal (testimonials form, etc.)
+        console.log(`Opening primary unlock modal for ${sectionType}`);
+        // TODO: setUnlockModal({ isOpen: true, sectionType, mode: 'custom' });
+        break;
+        
+      case 'generate-industry-stats':
+        console.log(`Generating industry statistics for ${sectionType}`);
+        // TODO: Generate and insert industry statistics section
+        break;
+        
+      case 'add-trust-badges':
+        console.log(`Opening trust badge selector for ${sectionType}`);
+        // TODO: Open trust badge selector modal
+        break;
+        
+      case 'add-client-logos':
+        console.log(`Opening logo upload modal for ${sectionType}`);
+        // TODO: Open logo upload modal
+        break;
+        
+      case 'generate-benchmarks':
+        console.log(`Generating industry benchmarks for ${sectionType}`);
+        // TODO: Generate benchmark section
+        break;
+        
+      case 'expand-process':
+        console.log(`Expanding process section for ${sectionType}`);
+        // TODO: Expand process/methodology section
+        break;
+        
+      case 'static-roi':
+        console.log(`Inserting static ROI projection for ${sectionType}`);
+        // TODO: Insert static ROI projection
+        break;
+        
+      case 'show-credentials':
+        console.log(`Showing credentials for ${sectionType}`);
+        // TODO: Open credentials modal
+        break;
+        
+      default:
+        console.log(`Unknown action: ${action}`);
+    }
   }, []);
 
   const renderSectionWithToolbar = useCallback((section: Section, index: number, sectionElement: React.ReactNode) => {
@@ -179,7 +223,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         >
           <LockedSectionOverlay
             sectionType={section.type}
-            onUnlockAction={() => handleUnlockAction(section.type)}
+            onUnlockAction={(action) => handleUnlockAction(section.type, action)}
           >
             {/* Blurred preview of section */}
             {sectionElement}
