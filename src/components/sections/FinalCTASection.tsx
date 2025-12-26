@@ -89,9 +89,20 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             </Button>
           </motion.div>
           
-          <p className="mt-6 text-sm text-slate-400">
-            No credit card required • Cancel anytime
-          </p>
+          <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm text-slate-400">
+            <span className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-400" />
+              No credit card required
+            </span>
+            <span className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-400" />
+              14-day free trial
+            </span>
+            <span className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-400" />
+              Cancel anytime
+            </span>
+          </div>
         </div>
       </section>
     );

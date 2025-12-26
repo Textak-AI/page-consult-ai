@@ -286,6 +286,34 @@ const FAQItemEditor = memo(function FAQItemEditor({
   );
 });
 
+// Transform statements into question format
+function ensureQuestionFormat(text: string): string {
+  if (!text) return text;
+  const trimmed = text.trim();
+  if (trimmed.endsWith('?')) return trimmed;
+  
+  // Direct replacements for known patterns
+  const lower = trimmed.toLowerCase();
+  if (lower.includes('trust issues') || lower.includes('trust concerns')) {
+    return 'How can I trust a new vendor or service provider?';
+  }
+  if (lower.includes('skepticism about roi') || lower.includes('roi concerns')) {
+    return 'Will I actually see ROI compared to other options?';
+  }
+  if (lower.includes('implementation') || lower.includes('onboarding')) {
+    return 'What does the implementation process look like?';
+  }
+  if (lower.includes('pricing') || lower.includes('cost')) {
+    return 'How does pricing work?';
+  }
+  if (lower.includes('support') || lower.includes('help')) {
+    return 'What kind of support is available?';
+  }
+  
+  // Default: wrap as question
+  return `What about ${trimmed.replace(/[.!]$/, '').toLowerCase()}?`;
+}
+
 export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [editingItem, setEditingItem] = useState<number | null>(null);
@@ -293,7 +321,11 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
 
   const headline = content.headline || 'Frequently Asked Questions';
   const eyebrow = content.eyebrow || 'Common Questions';
-  const items = content.items || [];
+  // Transform FAQ items to ensure questions end with ?
+  const items = (content.items || []).map(item => ({
+    ...item,
+    question: ensureQuestionFormat(item.question)
+  }));
   const isConsulting = content.industryVariant === 'consulting';
 
   // Don't render section at all if no FAQ items (unless editing)
