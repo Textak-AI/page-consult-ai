@@ -265,39 +265,48 @@ export function LockedSectionOverlay({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 25 }}
-          className="bg-slate-800/95 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 max-w-md text-center shadow-2xl"
+          className={cn(
+            "bg-slate-800/95 backdrop-blur-sm border border-slate-700/50 rounded-2xl shadow-2xl",
+            "p-8", // Consistent padding
+            "min-h-[400px]", // Minimum height for consistency
+            "w-full max-w-md mx-auto",
+            "flex flex-col" // Allow content to spread
+          )}
         >
-          {/* Section Type Badge */}
-          <div className="inline-flex items-center gap-2 bg-slate-700/50 px-3 py-1.5 rounded-full text-xs text-slate-300 mb-4">
-            <Icon className="w-3.5 h-3.5" />
-            <span>{config.sectionTypeName} Section</span>
+          {/* Header section - fixed at top */}
+          <div className="flex-shrink-0 text-center">
+            {/* Section Type Badge */}
+            <div className="inline-flex items-center gap-2 bg-slate-700/50 px-3 py-1.5 rounded-full text-sm text-slate-300 mb-6">
+              <Icon className="w-4 h-4" />
+              <span>{config.sectionTypeName} Section</span>
+            </div>
+            
+            {/* Lock Icon with glow */}
+            <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-amber-400" />
+            </div>
+            
+            {/* Unlock Prompt */}
+            <h3 className="text-xl font-bold text-white mb-2">
+              {config.unlockAction}
+            </h3>
+            
+            {/* Points & Score Impact */}
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <span className="text-amber-400 font-semibold">+{config.points} points</span>
+              <span className="text-slate-500">•</span>
+              <span className="text-slate-400">
+                Boosts {config.scoreCategory} to ~{estimatedNewScore}%
+              </span>
+            </div>
           </div>
           
-          {/* Lock Icon with glow */}
-          <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
-            <Lock className="w-7 h-7 text-amber-400" />
-          </div>
-          
-          {/* Unlock Prompt */}
-          <h3 className="text-lg font-semibold text-white mb-3">
-            {config.unlockAction}
-          </h3>
-          
-          {/* Points & Score Impact */}
-          <div className="flex items-center justify-center gap-3 mb-4 flex-wrap">
-            <span className="text-amber-400 font-bold text-sm">+{config.points} points</span>
-            <span className="text-slate-600">•</span>
-            <span className="text-slate-400 text-sm">
-              Boosts {config.scoreCategory} to ~{estimatedNewScore}%
-            </span>
-          </div>
-          
-          {/* Current → After visualization */}
-          <div className="bg-slate-900/60 rounded-lg p-3 mb-5">
+          {/* Progress bar - always present */}
+          <div className="flex-shrink-0 bg-slate-900/60 rounded-lg p-4 my-6">
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="text-slate-400">{config.scoreCategory}</span>
-              <span className="text-slate-300">
-                {currentScore}% → <span className="text-emerald-400 font-medium">{estimatedNewScore}%</span>
+              <span className="text-white">
+                {currentScore}% <span className="text-slate-500">→</span> <span className="text-cyan-400">{estimatedNewScore}%</span>
               </span>
             </div>
             <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
@@ -322,59 +331,60 @@ export function LockedSectionOverlay({
           
           {/* Benefit hint */}
           {config.benefitHint && (
-            <p className="text-xs text-slate-500 mb-4 italic">
-              "{config.benefitHint}"
+            <p className="flex-shrink-0 text-slate-400 text-sm italic text-center mb-6">
+              &ldquo;{config.benefitHint}&rdquo;
             </p>
           )}
           
-          {/* Primary Action Button */}
+          {/* Spacer to push CTA to bottom */}
+          <div className="flex-grow" />
+          
+          {/* Primary Action Button - always at bottom */}
           <Button 
-            className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white font-medium py-3 px-4 rounded-lg transition-all hover:shadow-lg hover:shadow-purple-500/20"
+            className="flex-shrink-0 w-full py-4 text-base font-semibold bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white transition-all hover:shadow-lg hover:shadow-purple-500/20"
             onClick={() => onUnlockAction?.('primary')}
           >
             <Sparkles className="w-4 h-4 mr-2" />
             {config.actionButtonText}
-            <span className="ml-2 text-xs opacity-75">(+{config.points} pts)</span>
+            <span className="ml-2 text-white/70">(+{config.points} pts)</span>
           </Button>
           
-          {/* Alternative Options */}
+          {/* Alternative Options - if present */}
           {alternatives.length > 0 && (
-            <>
+            <div className="flex-shrink-0 mt-6">
               {/* Divider */}
-              <div className="flex items-center gap-3 my-4">
-                <div className="flex-1 h-px bg-slate-600" />
-                <span className="text-xs text-slate-500">or try these alternatives</span>
-                <div className="flex-1 h-px bg-slate-600" />
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex-grow h-px bg-slate-700" />
+                <span className="text-slate-500 text-sm">or try these alternatives</span>
+                <div className="flex-grow h-px bg-slate-700" />
               </div>
               
               {/* Alternative Options List */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {alternatives.map((alt, i) => (
                   <motion.button
                     key={i}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 + i * 0.1 }}
-                    className="w-full p-3 rounded-lg bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 hover:border-slate-500 text-left transition-all group"
+                    className="w-full flex items-center justify-between p-4 bg-slate-800/50 hover:bg-slate-700 rounded-lg border border-slate-700/50 hover:border-slate-500 transition-colors"
                     onClick={() => onUnlockAction?.(alt.action)}
                   >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">
-                          {alt.label}
-                        </div>
-                        <div className="text-xs text-slate-400 mt-0.5">
-                          {alt.description}
-                        </div>
+                    <div className="text-left">
+                      <div className="font-medium text-white">
+                        {alt.label}
                       </div>
-                      <span className="text-xs text-amber-400 font-medium shrink-0 ml-2">
-                        +{alt.points} pts
-                      </span>
+                      <div className="text-sm text-slate-400">
+                        {alt.description}
+                      </div>
                     </div>
+                    <span className="text-cyan-400 text-sm font-medium shrink-0 ml-2">
+                      +{alt.points} pts
+                    </span>
                   </motion.button>
                 ))}
               </div>
-            </>
+            </div>
           )}
         </motion.div>
       </motion.div>
