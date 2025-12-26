@@ -12,7 +12,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { SessionProvider } from "@/contexts/SessionContext";
 import { DevFloatingButton } from "@/components/dev";
-import Index from "./pages/Index";
+import HomePage from "./pages/HomePage";
 import Wizard from "./pages/Wizard";
 import WizardReview from "./pages/WizardReview";
 import Signup from "./pages/Signup";
@@ -79,7 +79,7 @@ const App = () => {
           <BrowserRouter>
             <DevFloatingButton />
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<HomePage />} />
               <Route path="/new" element={<NewConsultation />} />
               <Route path="/consultation" element={<NewConsultation />} />
               <Route path="/wizard" element={<Wizard />} />
