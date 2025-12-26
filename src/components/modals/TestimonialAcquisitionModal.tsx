@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Copy, Mail, ExternalLink, Clock, Sparkles, CheckCircle, MessageSquare, Lightbulb, HelpCircle } from 'lucide-react';
+import { Copy, Mail, ExternalLink, Clock, Sparkles, CheckCircle, MessageSquare, Lightbulb, HelpCircle, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateEmailTemplates, generateRequestPageUrl, getIndustryHints } from '@/lib/testimonialTemplates';
 import { TestimonialCoach } from '@/components/testimonials/TestimonialCoach';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface TestimonialAcquisitionModalProps {
   isOpen: boolean;
@@ -16,6 +18,7 @@ interface TestimonialAcquisitionModalProps {
   industry: string;
   ownerName?: string;
   serviceDescription?: string;
+  consultationId?: string;
 }
 
 export function TestimonialAcquisitionModal({ 
@@ -24,14 +27,18 @@ export function TestimonialAcquisitionModal({
   businessName,
   industry,
   ownerName,
-  serviceDescription 
+  serviceDescription,
+  consultationId
 }: TestimonialAcquisitionModalProps) {
+  const { user } = useAuth();
   const [selectedTemplate, setSelectedTemplate] = useState(0);
   const [clientEmail, setClientEmail] = useState('');
   const [clientName, setClientName] = useState('');
   const [reminder, setReminder] = useState('none');
   const [showCoach, setShowCoach] = useState(false);
   const [customEmailBody, setCustomEmailBody] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [sentEmails, setSentEmails] = useState<string[]>([]);
   
   const templates = generateEmailTemplates({
     businessName,
@@ -65,6 +72,67 @@ export function TestimonialAcquisitionModal({
     navigator.clipboard.writeText(requestPageUrl);
     toast.success('Link copied!');
   };
+
+  const handleSendEmail = async () => {
+    if (!clientEmail || !clientName) {
+      toast.error('Please enter client name and email');
+      return;
+    }
+    
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    if (!user?.id) {
+      toast.error('Please sign in to send emails');
+      return;
+    }
+
+    if (sentEmails.includes(clientEmail)) {
+      toast.error('Email already sent to this recipient');
+      return;
+    }
+    
+    setIsSending(true);
+    
+    try {
+      const emailBody = customEmailBody || templates[selectedTemplate].body(clientName);
+      
+      const { data, error } = await supabase.functions.invoke('send-testimonial-request', {
+        body: {
+          to: clientEmail,
+          clientName: clientName,
+          senderName: ownerName || 'The Team',
+          businessName: businessName,
+          emailSubject: templates[selectedTemplate].subject,
+          emailBody: emailBody,
+          requestPageUrl: requestPageUrl,
+          userId: user.id,
+          consultationId: consultationId,
+        },
+      });
+
+      if (error) throw error;
+
+      setSentEmails(prev => [...prev, clientEmail]);
+      toast.success(`Email sent to ${clientName}!`, {
+        description: 'They\'ll receive it in a few moments.',
+      });
+      
+      // Clear fields for next recipient
+      setClientEmail('');
+      setClientName('');
+      
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast.error('Failed to send email. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const alreadySent = sentEmails.includes(clientEmail);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -183,24 +251,69 @@ export function TestimonialAcquisitionModal({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3">
+            <div className="space-y-3">
+              {/* Primary: Send directly */}
               <Button
-                onClick={handleOpenEmailClient}
-                className="flex-1 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400"
-                disabled={!clientEmail}
+                onClick={handleSendEmail}
+                className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400"
+                disabled={!clientEmail || !clientName || isSending || alreadySent}
               >
-                <Mail className="w-4 h-4 mr-2" />
-                Open in Email Client
+                {isSending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : alreadySent ? (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Sent!
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Email Now
+                  </>
+                )}
               </Button>
-              <Button
-                variant="outline"
-                onClick={handleCopyEmail}
-                className="border-slate-600 text-slate-300 hover:bg-slate-700"
-              >
-                <Copy className="w-4 h-4 mr-2" />
-                Copy All
-              </Button>
+              
+              {/* Secondary options */}
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleOpenEmailClient}
+                  className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+                  disabled={!clientEmail}
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Open in Email App
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCopyEmail}
+                  className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy Text
+                </Button>
+              </div>
             </div>
+
+            {/* Sent confirmation */}
+            {sentEmails.length > 0 && (
+              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-green-400 text-sm font-medium mb-2">
+                  <CheckCircle className="w-4 h-4" />
+                  Sent to {sentEmails.length} recipient{sentEmails.length > 1 ? 's' : ''}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {sentEmails.map((email, i) => (
+                    <span key={i} className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded-full">
+                      {email}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Industry Hints */}
             <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-700">
