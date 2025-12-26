@@ -4,8 +4,7 @@ import { ProblemSolutionSection } from "@/components/sections/ProblemSolutionSec
 import { CalculatorSection } from "@/components/sections/CalculatorSection";
 import { FeaturesSection } from "@/components/sections/FeaturesSection";
 import { SocialProofSection } from "@/components/sections/SocialProofSection";
-import { FinalCTASection } from "@/components/sections/FinalCTASection";
-import { InteractiveFinalCTA } from "@/components/sections/InteractiveFinalCTA";
+import { PremiumShowcaseCTA } from "@/components/sections/PremiumShowcaseCTA";
 import { PhotoGallerySection } from "@/components/sections/PhotoGallerySection";
 import { StatsBarSection } from "@/components/sections/StatsBarSection";
 import { FAQSection } from "@/components/sections/FAQSection";
@@ -355,21 +354,12 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           />
         );
       case "final-cta":
-        // Use interactive version when content.interactive is true
-        if (section.content?.interactive) {
-          return renderSectionWithToolbar(
-            section,
-            index,
-            <InteractiveFinalCTA content={section.content} />
-          );
-        }
+        console.log('🎯 [FinalCTA] Rendering PremiumShowcaseCTA');
         return renderSectionWithToolbar(
           section,
           index,
-          <FinalCTASection
-            content={section.content}
-            onUpdate={updateSection}
-            isEditing={editingSection === index}
+          <PremiumShowcaseCTA 
+            primaryColor={section.content?.primaryColor}
           />
         );
       case "faq":
