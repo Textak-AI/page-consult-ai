@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette, FileText, TrendingUp, UserCheck, Rocket, Calendar, Gift, Share2, Check } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette, FileText, TrendingUp, UserCheck, Rocket, Calendar, Gift, Share2, Check, Save } from 'lucide-react';
+import { toast } from 'sonner';
+import { formatDistanceToNow } from 'date-fns';
 import { IndustrySelector } from './IndustrySelector';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -496,6 +498,8 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     savedStep: number;
     savedData: Partial<ConsultationData>;
   } | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   
   // Hero background state
   const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
@@ -620,6 +624,62 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   // Skip branding step if brand colors are already configured
   const STEPS = useMemo(() => getStepsForPageType(data.pageType, hasBrandColors), [data.pageType, hasBrandColors]);
 
+  // Helper to find first incomplete step based on current data
+  const findFirstIncompleteStep = useCallback((savedData: Partial<ConsultationData>, steps: typeof STEPS): number => {
+    for (let i = 0; i < steps.length; i++) {
+      const stepId = steps[i].id;
+      switch (stepId) {
+        case 'branding':
+          // Branding is optional, consider complete if skipped or has settings
+          break;
+        case 'page-type':
+          if (!savedData.pageType) return i;
+          break;
+        case 'identity':
+          if (!savedData.businessName || !savedData.industry || !savedData.uniqueStrength) return i;
+          break;
+        case 'audience':
+          if (!savedData.idealClient || !savedData.clientFrustration || !savedData.desiredOutcome) return i;
+          break;
+        case 'credibility':
+          // Optional step - consider complete
+          break;
+        case 'offer':
+          if (!savedData.mainOffer || !savedData.offerIncludes) return i;
+          break;
+        case 'goals':
+          if (!savedData.primaryGoal || !savedData.ctaText) return i;
+          break;
+        // IR-specific steps
+        case 'investor-profile':
+          if (!savedData.investorProfile?.investorTypes?.length) return i;
+          break;
+        case 'traction':
+        case 'team':
+          // Optional
+          break;
+        case 'ir-opportunity':
+          if (!savedData.investmentOpportunity?.irEmail) return i;
+          break;
+        // Beta-specific steps
+        case 'beta-stage':
+          if (!savedData.betaConfig?.stage) return i;
+          break;
+        case 'beta-timeline':
+          if (!savedData.betaConfig?.timeline) return i;
+          break;
+        case 'beta-perks':
+          if (!savedData.betaConfig?.perks?.length) return i;
+          break;
+        case 'beta-viral':
+          // Optional
+          break;
+      }
+    }
+    // All complete - return last step
+    return Math.max(0, steps.length - 1);
+  }, []);
+
   // Load draft from database on mount
   // Skip if we have extracted brand (fresh start) or if explicitly told to skip
   useEffect(() => {
@@ -646,16 +706,22 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         .maybeSingle();
       
       if (draft?.wizard_data && typeof draft.wizard_data === 'object') {
-        setData(prev => ({
-          ...prev,
-          ...(draft.wizard_data as Partial<ConsultationData>),
-        }));
-        console.log('📂 Loaded draft from database');
+        const savedData = draft.wizard_data as Partial<ConsultationData>;
+        setData(prev => ({ ...prev, ...savedData }));
+        
+        // Calculate the first incomplete step and resume there
+        const resumeStep = findFirstIncompleteStep(savedData, STEPS);
+        setCurrentStep(resumeStep);
+        
+        console.log('📂 Loaded draft from database, resuming at step', resumeStep);
+        toast.success('Welcome back!', {
+          description: `Resuming from "${STEPS[resumeStep]?.title || 'Step ' + (resumeStep + 1)}"`
+        });
       }
     };
     
     loadDraft();
-  }, [skipDraftLoad, extractedBrand]);
+  }, [skipDraftLoad, extractedBrand, STEPS, findFirstIncompleteStep]);
 
   // Restore progress from localStorage on mount (fallback)
   // Skip if we have extracted brand (fresh start)
@@ -676,8 +742,10 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         const hasMeaningfulData = savedData.businessName || savedData.industry || savedData.idealClient;
         
         if (isRecent && hasMeaningfulData) {
+          // Calculate best resume position
+          const resumeStep = findFirstIncompleteStep(savedData, STEPS);
           setShowRestorePrompt(true);
-          setPendingRestore({ savedStep, savedData });
+          setPendingRestore({ savedStep: resumeStep, savedData });
         } else {
           // Clear stale data
           localStorage.removeItem('pageconsult_consultation_draft');
@@ -687,7 +755,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         localStorage.removeItem('pageconsult_consultation_draft');
       }
     }
-  }, [extractedBrand, skipDraftLoad]);
+  }, [extractedBrand, skipDraftLoad, STEPS, findFirstIncompleteStep]);
 
   // Save progress whenever data or step changes
   useEffect(() => {
@@ -700,6 +768,40 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       console.log('💾 Consultation progress saved');
     }
   }, [currentStep, data]);
+
+  // Manual save handler
+  const handleSaveProgress = async () => {
+    setIsSaving(true);
+    
+    try {
+      // Always save to localStorage
+      localStorage.setItem('pageconsult_consultation_draft', JSON.stringify({
+        currentStep,
+        data,
+        timestamp: Date.now()
+      }));
+      
+      // If authenticated, also save to database
+      if (userId) {
+        await supabase.from('consultation_drafts').upsert(
+          {
+            user_id: userId,
+            wizard_data: data as any,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' }
+        );
+      }
+      
+      setLastSaved(new Date());
+      toast.success('Progress saved!');
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error('Failed to save progress');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Show loading until we know the brand status (AFTER all hooks)
   if (!isBrandCheckComplete) {
@@ -1666,26 +1768,26 @@ ${d.ctaText}
             const Icon = step.icon;
             const isCompleted = index < currentStep;
             const isCurrent = index === currentStep;
-            const isUpcoming = index > currentStep;
+            const isClickable = index <= currentStep; // Can click completed or current step
             
             const stepButton = (
               <button
                 key={step.id}
-                onClick={() => isCompleted && setCurrentStep(index)}
-                disabled={!isCompleted}
+                onClick={() => isClickable && setCurrentStep(index)}
+                disabled={!isClickable}
                 className={`flex items-center gap-2 group relative ${
-                  isCompleted ? 'cursor-pointer' : isCurrent ? 'cursor-default' : 'cursor-not-allowed'
+                  isClickable ? 'cursor-pointer' : 'cursor-not-allowed'
                 } ${
                   index <= currentStep ? 'text-cyan-400' : 'text-slate-600'
                 }`}
-                aria-label={`${step.title}${isCompleted ? ' - Click to edit' : ''}`}
+                aria-label={`Go to step ${index + 1}: ${step.title}${isCompleted ? ' - Click to edit' : ''}`}
               >
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
                     isCompleted
                       ? 'bg-cyan-500 border-cyan-500 text-white hover:bg-cyan-400 hover:border-cyan-400 hover:scale-110'
                       : isCurrent
-                      ? 'border-cyan-500 text-cyan-400 ring-2 ring-cyan-500/30'
+                      ? 'border-cyan-500 text-cyan-400 ring-2 ring-cyan-500/30 hover:ring-cyan-500/50'
                       : 'border-slate-700 text-slate-600 opacity-50'
                   }`}
                 >
@@ -1701,6 +1803,7 @@ ${d.ctaText}
                   <div className="bg-slate-900 text-white text-xs px-3 py-1.5 rounded-md whitespace-nowrap border border-slate-700 shadow-lg">
                     {step.title}
                     {isCompleted && <span className="text-cyan-400 ml-1">• Click to edit</span>}
+                    {isCurrent && <span className="text-cyan-400 ml-1">• Current</span>}
                   </div>
                   <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
                     <div className="border-4 border-transparent border-t-slate-900"></div>
@@ -1740,7 +1843,7 @@ ${d.ctaText}
       </AnimatePresence>
 
       {/* Navigation */}
-      <div className="flex justify-between mt-6">
+      <div className="flex justify-between items-center mt-6">
         <Button
           variant="outline"
           onClick={handleBack}
@@ -1749,6 +1852,33 @@ ${d.ctaText}
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
+        
+        {/* Save Progress Button */}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={handleSaveProgress}
+            disabled={isSaving}
+            className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save
+              </>
+            )}
+          </Button>
+          {lastSaved && (
+            <span className="text-xs text-slate-500 hidden sm:inline">
+              Saved {formatDistanceToNow(lastSaved, { addSuffix: true })}
+            </span>
+          )}
+        </div>
         
         <Button
           onClick={handleNext}
