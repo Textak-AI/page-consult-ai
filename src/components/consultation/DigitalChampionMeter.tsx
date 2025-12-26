@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { CompletenessState, getStrengthLabel } from '@/lib/pageCompleteness';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Trophy, Unlock } from 'lucide-react';
+import { MascotSVG } from '@/components/ui/MascotSVG';
 
 interface DigitalChampionMeterProps {
   completeness: CompletenessState;
@@ -11,9 +12,6 @@ interface DigitalChampionMeterProps {
   logoUrl?: string;
   className?: string;
 }
-
-// Pixel art character frames for rotation effect
-const PIXEL_FRAMES = ['front', 'right', 'back', 'left'] as const;
 
 export function DigitalChampionMeter({ 
   completeness, 
@@ -23,18 +21,9 @@ export function DigitalChampionMeter({
 }: DigitalChampionMeterProps) {
   const { score, unlockedSections, milestones } = completeness;
   const strength = getStrengthLabel(score);
-  const [currentFrame, setCurrentFrame] = useState(0);
   
   const prevUnlockedRef = useRef<string[]>([]);
   const prevMilestonesRef = useRef<string[]>([]);
-
-  // Rotate character animation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentFrame(f => (f + 1) % 4);
-    }, 800);
-    return () => clearInterval(interval);
-  }, []);
 
   // Calculate individual stats from completeness data
   const stats = {
@@ -111,64 +100,9 @@ export function DigitalChampionMeter({
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Pixel Character with Logo */}
+        {/* Mascot Character */}
         <div className="flex justify-center">
           <div className="relative">
-            {/* Character body - pixel art style */}
-            <div className="relative w-16 h-20 flex flex-col items-center">
-              {/* Head */}
-              <div className="relative w-10 h-10 bg-primary/20 rounded-sm border-2 border-primary/40 flex items-center justify-center overflow-hidden">
-                {/* Eyes change based on rotation frame */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {currentFrame === 0 && (
-                    <div className="flex gap-2">
-                      <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                      <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                    </div>
-                  )}
-                  {currentFrame === 1 && (
-                    <div className="flex items-center justify-end w-full pr-1">
-                      <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                    </div>
-                  )}
-                  {currentFrame === 2 && (
-                    <div className="w-6 h-6 bg-primary/30 rounded-sm" />
-                  )}
-                  {currentFrame === 3 && (
-                    <div className="flex items-center justify-start w-full pl-1">
-                      <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Body with logo */}
-              <div className="w-8 h-8 bg-primary/15 border-2 border-primary/30 rounded-sm mt-0.5 flex items-center justify-center overflow-hidden">
-                {logoUrl ? (
-                  <img 
-                    src={logoUrl} 
-                    alt="Brand logo" 
-                    className="w-6 h-6 object-contain"
-                    style={{ imageRendering: 'pixelated' }}
-                  />
-                ) : (
-                  <div className="w-4 h-4 bg-primary/30 rounded-sm" />
-                )}
-              </div>
-              
-              {/* Legs */}
-              <div className="flex gap-1 mt-0.5">
-                <motion.div 
-                  className="w-2.5 h-3 bg-primary/20 border border-primary/30 rounded-sm"
-                  animate={{ y: currentFrame % 2 === 0 ? 0 : -1 }}
-                />
-                <motion.div 
-                  className="w-2.5 h-3 bg-primary/20 border border-primary/30 rounded-sm"
-                  animate={{ y: currentFrame % 2 === 1 ? 0 : -1 }}
-                />
-              </div>
-            </div>
-            
             {/* Glow effect based on power level */}
             <div 
               className="absolute inset-0 -z-10 blur-xl rounded-full"
@@ -176,6 +110,18 @@ export function DigitalChampionMeter({
                 background: `radial-gradient(circle, hsl(var(--primary) / ${score / 200}) 0%, transparent 70%)`,
               }}
             />
+            
+            {/* Float animation wrapper */}
+            <motion.div
+              animate={{ y: [0, -4, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <MascotSVG 
+                size={80} 
+                accentColor="hsl(var(--primary))"
+                className="drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]"
+              />
+            </motion.div>
           </div>
         </div>
 
