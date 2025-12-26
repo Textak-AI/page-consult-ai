@@ -833,6 +833,31 @@ function GenerateContent() {
         console.log('📄 Page type:', pageType);
         console.log('🎯 Page goal:', pageGoal);
         
+        // ============ BRIEF TO PAGE DEBUG ============
+        console.log('📋 ============ BRIEF TO PAGE DEBUG ============');
+        console.log('📋 Strategy Brief received:', {
+          hasHeadlines: !!structuredBrief?.headlines,
+          headlineOptions: structuredBrief?.headlines,
+          hasProofPoints: !!structuredBrief?.proofPoints,
+          proofPoints: structuredBrief?.proofPoints,
+          hasMessagingPillars: !!structuredBrief?.messagingPillars,
+          pillarCount: structuredBrief?.messagingPillars?.length,
+          pillars: structuredBrief?.messagingPillars,
+          hasObjections: !!structuredBrief?.objections,
+          objectionCount: structuredBrief?.objections?.length,
+          objections: structuredBrief?.objections,
+          hasProblemStatement: !!structuredBrief?.problemStatement,
+          problemStatement: structuredBrief?.problemStatement?.substring(0, 100),
+          hasAISearchOptimization: !!(strategicData.aiSeoData || strategicData.consultationData?.ai_seo_data || strategicData.consultationData?.aiSeoData),
+          authoritySignals: strategicData.aiSeoData?.authoritySignals || strategicData.consultationData?.ai_seo_data?.authoritySignals,
+          hasPageStructure: !!structuredBrief?.pageStructure,
+          pageStructure: structuredBrief?.pageStructure,
+          hasTestimonials: !!structuredBrief?.testimonials,
+          testimonialCount: structuredBrief?.testimonials?.length,
+          tone: structuredBrief?.tone,
+        });
+        console.log('📋 Full structuredBrief object:', structuredBrief);
+        
         // DIRECT MAPPING: Use the brief as-is, no AI regeneration
         const sections = mapBriefToSections(structuredBrief, {
           businessName,
@@ -848,6 +873,24 @@ function GenerateContent() {
         });
         
         console.log('📊 aiSearchOptimization passed to mapper:', strategicData.aiSeoData ? 'from strategicData.aiSeoData' : strategicData.consultationData?.ai_seo_data ? 'from consultationData.ai_seo_data' : 'null');
+        
+        // Log mapped sections for debugging
+        console.log('📋 Mapped sections:', sections.map(s => ({
+          type: s.type,
+          order: s.order,
+          visible: s.visible,
+          hasContent: !!s.content,
+          contentKeys: Object.keys(s.content || {}),
+          // Show key content values for debugging
+          contentPreview: {
+            headline: s.content?.headline?.substring?.(0, 50),
+            subheadline: s.content?.subheadline?.substring?.(0, 50),
+            featureCount: s.content?.features?.length,
+            statCount: s.content?.stats?.length,
+            faqCount: s.content?.faqItems?.length,
+          }
+        })));
+        console.log('📋 ============ END BRIEF DEBUG ============');
         
         console.log(`✅ BRIEF-FIRST: Built ${sections.length} sections directly from structuredBrief`);
         return sections;
