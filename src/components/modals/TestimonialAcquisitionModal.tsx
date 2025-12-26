@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Copy, Mail, ExternalLink, Clock, Sparkles, CheckCircle, MessageSquare, Lightbulb } from 'lucide-react';
+import { Copy, Mail, ExternalLink, Clock, Sparkles, CheckCircle, MessageSquare, Lightbulb, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateEmailTemplates, generateRequestPageUrl, getIndustryHints } from '@/lib/testimonialTemplates';
+import { TestimonialCoach } from '@/components/testimonials/TestimonialCoach';
 
 interface TestimonialAcquisitionModalProps {
   isOpen: boolean;
@@ -29,6 +30,8 @@ export function TestimonialAcquisitionModal({
   const [clientEmail, setClientEmail] = useState('');
   const [clientName, setClientName] = useState('');
   const [reminder, setReminder] = useState('none');
+  const [showCoach, setShowCoach] = useState(false);
+  const [customEmailBody, setCustomEmailBody] = useState<string | null>(null);
   
   const templates = generateEmailTemplates({
     businessName,
@@ -41,15 +44,21 @@ export function TestimonialAcquisitionModal({
   const hints = getIndustryHints(industry);
 
   const handleCopyEmail = () => {
-    const emailText = templates[selectedTemplate].body(clientName || '[Client Name]');
+    const emailText = customEmailBody || templates[selectedTemplate].body(clientName || '[Client Name]');
     navigator.clipboard.writeText(emailText);
     toast.success('Email copied to clipboard!');
   };
 
   const handleOpenEmailClient = () => {
     const subject = encodeURIComponent(templates[selectedTemplate].subject);
-    const body = encodeURIComponent(templates[selectedTemplate].body(clientName || '[Client Name]'));
+    const body = encodeURIComponent(customEmailBody || templates[selectedTemplate].body(clientName || '[Client Name]'));
     window.open(`mailto:${clientEmail}?subject=${subject}&body=${body}`);
+  };
+
+  const handleApplyEmail = (subject: string, body: string) => {
+    setCustomEmailBody(body);
+    setShowCoach(false);
+    toast.success('Custom email applied! Review it below.');
   };
 
   const handleCopyLink = () => {
@@ -136,21 +145,40 @@ export function TestimonialAcquisitionModal({
             {/* Generated Email Preview */}
             <div className="bg-slate-900/60 rounded-lg p-4 border border-slate-700">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-sm text-slate-400">
-                  Subject: <span className="text-slate-200">{templates[selectedTemplate].subject}</span>
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCopyEmail}
-                  className="text-slate-400 hover:text-white"
-                >
-                  <Copy className="w-4 h-4 mr-1" />
-                  Copy
-                </Button>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-400">
+                    Subject: <span className="text-slate-200">{templates[selectedTemplate].subject}</span>
+                  </span>
+                  {customEmailBody && (
+                    <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">
+                      Custom
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {customEmailBody && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCustomEmailBody(null)}
+                      className="text-slate-500 hover:text-white text-xs"
+                    >
+                      Reset
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCopyEmail}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    <Copy className="w-4 h-4 mr-1" />
+                    Copy
+                  </Button>
+                </div>
               </div>
               <pre className="text-sm text-slate-300 whitespace-pre-wrap font-sans leading-relaxed max-h-64 overflow-y-auto">
-                {templates[selectedTemplate].body(clientName || '[Client Name]')}
+                {customEmailBody || templates[selectedTemplate].body(clientName || '[Client Name]')}
               </pre>
             </div>
 
@@ -313,26 +341,44 @@ export function TestimonialAcquisitionModal({
           </TabsContent>
         </Tabs>
 
-        {/* Reminder Setup */}
+        {/* Reminder Setup & Help Button */}
         <div className="mt-4 pt-4 border-t border-slate-700">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-slate-400">
-              <Clock className="w-4 h-4" />
-              Set a reminder to follow up
+            <button
+              onClick={() => setShowCoach(true)}
+              className="text-sm text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition-colors"
+            >
+              <HelpCircle className="w-4 h-4" />
+              Need help deciding who to ask?
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-sm text-slate-400">
+                <Clock className="w-4 h-4" />
+                Reminder
+              </div>
+              <Select value={reminder} onValueChange={setReminder}>
+                <SelectTrigger className="w-32 bg-slate-700 border-slate-600 text-slate-300">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700">
+                  <SelectItem value="none">No reminder</SelectItem>
+                  <SelectItem value="3days">In 3 days</SelectItem>
+                  <SelectItem value="1week">In 1 week</SelectItem>
+                  <SelectItem value="2weeks">In 2 weeks</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={reminder} onValueChange={setReminder}>
-              <SelectTrigger className="w-36 bg-slate-700 border-slate-600 text-slate-300">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
-                <SelectItem value="none">No reminder</SelectItem>
-                <SelectItem value="3days">In 3 days</SelectItem>
-                <SelectItem value="1week">In 1 week</SelectItem>
-                <SelectItem value="2weeks">In 2 weeks</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
+
+        {/* Testimonial Coach */}
+        <TestimonialCoach
+          businessName={businessName}
+          industry={industry}
+          isOpen={showCoach}
+          onClose={() => setShowCoach(false)}
+          onApplyEmail={handleApplyEmail}
+        />
       </DialogContent>
     </Dialog>
   );
