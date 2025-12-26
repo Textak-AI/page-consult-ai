@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion';
-import { Lock, Quote, Calculator, FileText, Users, Star, TrendingUp, Zap, Sparkles } from 'lucide-react';
+import { Lock, Quote, Calculator, FileText, Users, Star, TrendingUp, Zap, Sparkles, ListOrdered } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 interface LockedSectionConfig {
   sectionTypeName: string;
-  sectionIcon: 'Quote' | 'Calculator' | 'FileText' | 'Users' | 'Star' | 'TrendingUp' | 'Zap';
+  sectionIcon: 'Quote' | 'Calculator' | 'FileText' | 'Users' | 'Star' | 'TrendingUp' | 'Zap' | 'ListOrdered';
   unlockAction: string;
   points: number;
   scoreCategory: string;
@@ -109,6 +109,28 @@ const SECTION_CONFIGS: Record<string, LockedSectionConfig> = {
     actionButtonText: 'Define Audience',
     benefitHint: 'Clear targeting increases conversion quality'
   },
+  'how-it-works': {
+    sectionTypeName: 'How It Works',
+    sectionIcon: 'ListOrdered',
+    unlockAction: 'Complete Your Process Steps',
+    points: 10,
+    scoreCategory: 'Authority',
+    currentScore: 70,
+    estimatedNewScore: 80,
+    actionButtonText: 'Add Process Steps',
+    benefitHint: 'Showing your process builds trust and sets expectations'
+  },
+  'howItWorks': {
+    sectionTypeName: 'How It Works',
+    sectionIcon: 'ListOrdered',
+    unlockAction: 'Complete Your Process Steps',
+    points: 10,
+    scoreCategory: 'Authority',
+    currentScore: 70,
+    estimatedNewScore: 80,
+    actionButtonText: 'Add Process Steps',
+    benefitHint: 'Showing your process builds trust and sets expectations'
+  },
   'default': {
     sectionTypeName: 'Section',
     sectionIcon: 'Zap',
@@ -199,7 +221,8 @@ const IconMap = {
   Users,
   Star,
   TrendingUp,
-  Zap
+  Zap,
+  ListOrdered
 };
 
 export function LockedSectionOverlay({
