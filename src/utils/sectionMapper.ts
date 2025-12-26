@@ -406,6 +406,14 @@ export function mapBriefToSections(
       }
 
       case 'final-cta': {
+        // Log all possible data sources for debugging
+        console.log('🎯 [Final CTA] Building with sources:', {
+          briefCtaText: brief.ctaText,
+          pageGoal: pageGoal,
+          industryVariant: industryVariant,
+          authoritySignalsCount: authoritySignals.length,
+        });
+
         // Build trust signal from top authority signal
         const trustSignal = authoritySignals[0]
           ? `${authoritySignals[0].value} ${authoritySignals[0].label}`
@@ -415,26 +423,55 @@ export function mapBriefToSections(
         const ctaType = isBetaPage ? 'beta-final-cta' : 'final-cta';
         console.log('[sectionMapper] CTA type:', ctaType);
 
+        // Build headline based on page goal
+        const goalHeadlines: Record<string, string> = {
+          'book-meetings': 'Ready to Schedule Your Discovery Call?',
+          'generate-leads': 'Get Your Free Assessment',
+          'drive-sales': 'Ready to Get Started?',
+          'signups': 'Start Your Free Trial Today',
+          'demo': 'See It In Action',
+        };
+
+        // Extract headline - prefer intelligent headers, then goal-based, then industry default
+        const ctaHeadline = isBetaPage 
+          ? 'Be the First to Know' 
+          : (intelligentHeaders.cta?.title || 
+             goalHeadlines[pageGoal || 'generate-leads'] || 
+             industryTokens.sectionHeaders.cta.title);
+
+        // Extract CTA text - prefer brief ctaText, then industry default
+        const ctaButtonText = isConsulting 
+          ? industryTokens.sectionHeaders.cta.ctaText 
+          : (brief.ctaText || industryTokens.sectionHeaders.cta.ctaText || 'Get Started');
+
+        // Extract subtext - prefer intelligent headers, then industry default
+        const ctaSubtext = isBetaPage 
+          ? '' 
+          : (intelligentHeaders.cta?.subtitle || industryTokens.sectionHeaders.cta.subtext);
+
+        // Build trust indicators from authority signals
+        const ctaTrustIndicators = authoritySignals.slice(0, 3).map(s => ({ 
+          text: `${s.value} ${s.label}` 
+        }));
+
+        const ctaContent = {
+          headline: ctaHeadline,
+          subtext: ctaSubtext,
+          ctaText: ctaButtonText,
+          ctaLink: '#contact',
+          trustSignal,
+          trustIndicators: ctaTrustIndicators,
+          primaryColor: primaryColor || null,
+          industryVariant: industryVariant,
+        };
+
+        console.log('🎯 [Final CTA] Built content:', ctaContent);
+
         sections.push({
           type: ctaType,
           order,
           visible: true,
-          content: {
-            headline: isBetaPage 
-              ? 'Be the First to Know' 
-              : (intelligentHeaders.cta?.title || industryTokens.sectionHeaders.cta.title),
-            subtext: isBetaPage 
-              ? '' 
-              : (intelligentHeaders.cta?.subtitle || industryTokens.sectionHeaders.cta.subtext),
-            ctaText: isConsulting 
-              ? industryTokens.sectionHeaders.cta.ctaText 
-              : brief.ctaText,
-            ctaLink: '#contact',
-            trustSignal,
-            trustIndicators: authoritySignals.slice(0, 3).map(s => ({ text: `${s.value} ${s.label}` })),
-            primaryColor: primaryColor || null,
-            industryVariant: industryVariant,
-          },
+          content: ctaContent,
         });
         break;
       }
