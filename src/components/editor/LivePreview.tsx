@@ -5,6 +5,7 @@ import { CalculatorSection } from "@/components/sections/CalculatorSection";
 import { FeaturesSection } from "@/components/sections/FeaturesSection";
 import { SocialProofSection } from "@/components/sections/SocialProofSection";
 import { FinalCTASection } from "@/components/sections/FinalCTASection";
+import { InteractiveFinalCTA } from "@/components/sections/InteractiveFinalCTA";
 import { PhotoGallerySection } from "@/components/sections/PhotoGallerySection";
 import { StatsBarSection } from "@/components/sections/StatsBarSection";
 import { FAQSection } from "@/components/sections/FAQSection";
@@ -354,6 +355,14 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           />
         );
       case "final-cta":
+        // Use interactive version when content.interactive is true
+        if (section.content?.interactive) {
+          return renderSectionWithToolbar(
+            section,
+            index,
+            <InteractiveFinalCTA content={section.content} />
+          );
+        }
         return renderSectionWithToolbar(
           section,
           index,
