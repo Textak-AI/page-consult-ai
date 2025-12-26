@@ -88,6 +88,17 @@ export interface MapBriefOptions {
     authoritySignals?: Array<string | { raw?: string; optimized?: string; type?: string }>;
     entity?: { type?: string; name?: string };
   } | null;
+  // Consultation data for CTA extraction
+  consultationData?: {
+    primaryCTA?: string;
+    secondaryCTA?: string;
+    urgencyAngle?: string;
+    guaranteeOffer?: string;
+    pageGoal?: string;
+    uniqueValue?: string;
+    clientCount?: string;
+    ctaLink?: string;
+  };
 }
 
 /**
@@ -406,22 +417,38 @@ export function mapBriefToSections(
       }
 
       case 'final-cta': {
+        // Extract consultation data
+        const consultation = options.consultationData || {};
+        
         // Log all possible data sources for debugging
         console.log('🎯 [Final CTA] Building with sources:', {
+          consultationData: {
+            primaryCTA: consultation.primaryCTA,
+            secondaryCTA: consultation.secondaryCTA,
+            urgencyAngle: consultation.urgencyAngle,
+            guaranteeOffer: consultation.guaranteeOffer,
+            pageGoal: consultation.pageGoal,
+          },
           briefCtaText: brief.ctaText,
           pageGoal: pageGoal,
           industryVariant: industryVariant,
           authoritySignalsCount: authoritySignals.length,
         });
 
-        // Build trust signal from top authority signal
-        const trustSignal = authoritySignals[0]
-          ? `${authoritySignals[0].value} ${authoritySignals[0].label}`
-          : undefined;
-
-        // For beta pages, use a different CTA style
-        const ctaType = isBetaPage ? 'beta-final-cta' : 'final-cta';
-        console.log('[sectionMapper] CTA type:', ctaType);
+        // CTA Text - check multiple sources
+        const ctaButtonText = consultation.primaryCTA || 
+                              brief.ctaText || 
+                              industryTokens.sectionHeaders.cta.ctaText || 
+                              'Get Started';
+        
+        // Secondary CTA
+        const secondaryCta = consultation.secondaryCTA || null;
+        
+        // Urgency text
+        const urgencyText = consultation.urgencyAngle || null;
+        
+        // Guarantee text
+        const guaranteeText = consultation.guaranteeOffer || null;
 
         // Build headline based on page goal
         const goalHeadlines: Record<string, string> = {
@@ -432,35 +459,52 @@ export function mapBriefToSections(
           'demo': 'See It In Action',
         };
 
+        const effectivePageGoal = consultation.pageGoal || pageGoal || 'generate-leads';
+        
         // Extract headline - prefer intelligent headers, then goal-based, then industry default
         const ctaHeadline = isBetaPage 
           ? 'Be the First to Know' 
           : (intelligentHeaders.cta?.title || 
-             goalHeadlines[pageGoal || 'generate-leads'] || 
+             goalHeadlines[effectivePageGoal] || 
              industryTokens.sectionHeaders.cta.title);
 
-        // Extract CTA text - prefer brief ctaText, then industry default
-        const ctaButtonText = isConsulting 
-          ? industryTokens.sectionHeaders.cta.ctaText 
-          : (brief.ctaText || industryTokens.sectionHeaders.cta.ctaText || 'Get Started');
-
-        // Extract subtext - prefer intelligent headers, then industry default
+        // Extract subtext - prefer uniqueValue from consultation, then intelligent headers
         const ctaSubtext = isBetaPage 
           ? '' 
-          : (intelligentHeaders.cta?.subtitle || industryTokens.sectionHeaders.cta.subtext);
+          : (consultation.uniqueValue?.slice(0, 150) || 
+             intelligentHeaders.cta?.subtitle || 
+             industryTokens.sectionHeaders.cta.subtext);
+
+        // Build trust signal from top authority signal
+        const trustSignal = consultation.clientCount 
+          ? `${consultation.clientCount}+ clients`
+          : authoritySignals[0]
+            ? `${authoritySignals[0].value} ${authoritySignals[0].label}`
+            : undefined;
 
         // Build trust indicators from authority signals
         const ctaTrustIndicators = authoritySignals.slice(0, 3).map(s => ({ 
           text: `${s.value} ${s.label}` 
         }));
 
+        // For beta pages, use a different CTA style
+        const ctaType = isBetaPage ? 'beta-final-cta' : 'final-cta';
+        console.log('[sectionMapper] CTA type:', ctaType);
+
         const ctaContent = {
           headline: ctaHeadline,
           subtext: ctaSubtext,
           ctaText: ctaButtonText,
-          ctaLink: '#contact',
+          ctaLink: consultation.ctaLink || '#contact',
+          secondaryCta,
+          urgencyText,
+          guaranteeText,
           trustSignal,
-          trustIndicators: ctaTrustIndicators,
+          trustIndicators: ctaTrustIndicators.length > 0 ? ctaTrustIndicators : [
+            { text: 'No credit card required' },
+            { text: 'Free to start' },
+            { text: 'Cancel anytime' },
+          ],
           primaryColor: primaryColor || null,
           industryVariant: industryVariant,
         };
