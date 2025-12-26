@@ -1,7 +1,7 @@
 // Shared CORS configuration for edge functions
-// Uses origin whitelist instead of wildcard for security
+// Supports production, preview, and local development origins
 
-const allowedOrigins = [
+const ALLOWED_ORIGINS = [
   'https://page-consult-ai.lovable.app',
   'https://preview--page-consult-ai.lovable.app',
   'http://localhost:3000',
@@ -9,10 +9,22 @@ const allowedOrigins = [
   'http://localhost:8080',
 ];
 
+/**
+ * Check if origin is allowed:
+ * - Exact match against ALLOWED_ORIGINS
+ * - Any *.lovableproject.com subdomain (Lovable preview URLs)
+ * - Any *.lovable.app subdomain (Lovable production/preview URLs)
+ */
+export function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  if (origin.endsWith('.lovableproject.com')) return true;
+  if (origin.endsWith('.lovable.app')) return true;
+  return false;
+}
+
 export function getCorsHeaders(origin: string | null): Record<string, string> {
-  const allowedOrigin = origin && allowedOrigins.some(o => origin.startsWith(o.replace(/\/$/, '')))
-    ? origin 
-    : allowedOrigins[0];
+  const allowedOrigin = isAllowedOrigin(origin) ? origin! : ALLOWED_ORIGINS[0];
   
   return {
     'Access-Control-Allow-Origin': allowedOrigin,

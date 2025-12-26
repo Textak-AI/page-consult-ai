@@ -1,16 +1,14 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Replicate from 'https://esm.sh/replicate@0.25.2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts'
 
 serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
+  const corsResponse = handleCorsPreflightRequest(req)
+  if (corsResponse) return corsResponse
+
+  const origin = req.headers.get('Origin')
+  const corsHeaders = getCorsHeaders(origin)
 
   try {
     const { 
