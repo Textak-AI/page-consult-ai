@@ -241,39 +241,48 @@ export function LockedSectionOverlay({
   const estimatedNewScore = Math.min(100, currentScore + config.points);
 
   return (
-    <div className={cn("relative", className)}>
-      {/* Blurred preview of what section would look like */}
+    <section className={cn(
+      "relative",
+      "py-24 lg:py-32",
+      "min-h-[650px]",
+      "flex items-center justify-center",
+      className
+    )}>
+      {/* Background with blurred preview */}
       {children && (
-        <div className="blur-sm opacity-40 pointer-events-none select-none">
+        <div className="absolute inset-0 blur-sm opacity-30 pointer-events-none select-none overflow-hidden">
           {children}
         </div>
       )}
       
-      {/* Placeholder if no children */}
+      {/* Fallback gradient background if no children */}
       {!children && (
-        <div className="h-64 bg-gradient-to-br from-slate-800/50 to-slate-900/50 blur-sm opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-800/50 to-slate-900/50" />
       )}
       
-      {/* Overlay */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/60 to-slate-900/90 flex items-center justify-center p-4"
-      >
+      {/* Dark overlay for contrast */}
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-slate-900/70 to-slate-900/90" />
+      
+      {/* Card container */}
+      <div className="relative z-10 w-full px-4">
         {/* Unlock Card */}
         <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
+          initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 25 }}
           className={cn(
-            "bg-slate-800/95 backdrop-blur-sm border border-slate-700/50 rounded-2xl shadow-2xl",
-            "p-8", // Consistent padding
-            "min-h-[400px]", // Minimum height for consistency
+            // Card styling
+            "bg-gray-900/95 backdrop-blur-sm rounded-2xl",
+            "border border-gray-700/50",
+            // Consistent dimensions
+            "p-8",
+            "min-h-[480px]",
             "w-full max-w-md mx-auto",
-            "flex flex-col" // Allow content to spread
+            // Flex layout for content distribution
+            "flex flex-col"
           )}
         >
-          {/* Header section - fixed at top */}
+          {/* Header content - stays at top */}
           <div className="flex-shrink-0 text-center">
             {/* Section Type Badge */}
             <div className="inline-flex items-center gap-2 bg-slate-700/50 px-3 py-1.5 rounded-full text-sm text-slate-300 mb-6">
@@ -301,7 +310,7 @@ export function LockedSectionOverlay({
             </div>
           </div>
           
-          {/* Progress bar - always present */}
+          {/* Progress bar */}
           <div className="flex-shrink-0 bg-slate-900/60 rounded-lg p-4 my-6">
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="text-slate-400">{config.scoreCategory}</span>
@@ -329,19 +338,19 @@ export function LockedSectionOverlay({
             </div>
           </div>
           
-          {/* Benefit hint */}
+          {/* Tip text */}
           {config.benefitHint && (
-            <p className="flex-shrink-0 text-slate-400 text-sm italic text-center mb-6">
+            <p className="flex-shrink-0 text-gray-400 text-sm italic text-center">
               &ldquo;{config.benefitHint}&rdquo;
             </p>
           )}
           
-          {/* Spacer to push CTA to bottom */}
-          <div className="flex-grow" />
+          {/* SPACER - pushes CTA to bottom */}
+          <div className="flex-grow min-h-[24px]" />
           
-          {/* Primary Action Button - always at bottom */}
+          {/* Primary CTA - anchored at bottom */}
           <Button 
-            className="flex-shrink-0 w-full py-4 text-base font-semibold bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white transition-all hover:shadow-lg hover:shadow-purple-500/20"
+            className="w-full py-4 flex-shrink-0 text-base font-semibold bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white transition-all hover:shadow-lg hover:shadow-purple-500/20"
             onClick={() => onUnlockAction?.('primary')}
           >
             <Sparkles className="w-4 h-4 mr-2" />
@@ -349,9 +358,9 @@ export function LockedSectionOverlay({
             <span className="ml-2 text-white/70">(+{config.points} pts)</span>
           </Button>
           
-          {/* Alternative Options - if present */}
+          {/* Alternatives - if present, also at bottom */}
           {alternatives.length > 0 && (
-            <div className="flex-shrink-0 mt-6">
+            <div className="mt-6 flex-shrink-0">
               {/* Divider */}
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex-grow h-px bg-slate-700" />
@@ -387,8 +396,8 @@ export function LockedSectionOverlay({
             </div>
           )}
         </motion.div>
-      </motion.div>
-    </div>
+      </div>
+    </section>
   );
 }
 
