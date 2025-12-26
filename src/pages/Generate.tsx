@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check, Sparkles, Wand2, Palette, Undo2, Redo2, Brain, Rocket } from "lucide-react";
+import { Loader2, Check, Sparkles, Wand2, Undo2, Redo2, Brain, Rocket } from "lucide-react";
 import { PersonaInsightsPanel } from "@/components/editor/PersonaInsightsPanel";
 import { SectionManager } from "@/components/editor/SectionManager";
 import { LivePreview } from "@/components/editor/LivePreview";
@@ -11,6 +11,7 @@ import { PublishModal } from "@/components/editor/PublishModal";
 import { AIConsultantSidebar } from "@/components/editor/AIConsultantSidebar";
 import { CalculatorUpgradeModal } from "@/components/editor/CalculatorUpgradeModal";
 import { StylePicker } from "@/components/editor/StylePicker";
+import { VariantGeneratorModal } from "@/components/editor/VariantGeneratorModal";
 import { PageGenerationLoader } from "@/components/editor/PageGenerationLoader";
 import { StrategyBriefPanel } from "@/components/builder/StrategyBriefPanel";
 import { ConsultantPanel } from "@/components/editor/ConsultantPanel";
@@ -2491,6 +2492,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [hasShownConversionReady, setHasShownConversionReady] = useState(false);
   const [showDigitalChampion, setShowDigitalChampion] = useState(true); // Toggle between meter styles
+  const [variantModalOpen, setVariantModalOpen] = useState(false);
 
   // Show low balance alert when needed
   useEffect(() => {
@@ -2748,12 +2750,12 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setStylePickerOpen(true)}
-            className="gap-2 relative pl-5 builder-button change-style-btn bg-white/5 border-white/10 text-white hover:bg-white/10"
+            onClick={() => setVariantModalOpen(true)}
+            className="gap-2 relative pl-5 builder-button bg-white/5 border-white/10 text-white hover:bg-white/10"
           >
             <span className="absolute left-0 top-0 w-1 h-full bg-purple-500 rounded-l"></span>
-            <Palette className="w-4 h-4" />
-            Change Style
+            <Sparkles className="w-4 h-4" />
+            Generate Variant
           </Button>
           <Button
             variant="outline"
@@ -2943,6 +2945,19 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         onOpenChange={setStylePickerOpen}
         currentStyle={pageStyle}
         onStyleSelect={handleStyleChangeWithUsage}
+      />
+
+      <VariantGeneratorModal
+        isOpen={variantModalOpen}
+        onClose={() => setVariantModalOpen(false)}
+        originalPageData={pageData}
+        onGenerateVariant={async (variantType, config) => {
+          console.log('Generating variant:', { variantType, config });
+          toast({
+            title: 'Variant feature coming soon!',
+            description: `${variantType} variant will be generated based on your configuration.`,
+          });
+        }}
       />
 
       <CalculatorUpgradeModal
