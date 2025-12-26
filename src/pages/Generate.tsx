@@ -439,11 +439,20 @@ function GenerateContent() {
       // Check for force regenerate query param (for testing)
       const searchParams = new URLSearchParams(window.location.search);
       const forceRegenerate = searchParams.get('regenerate') === 'true';
-      console.log('[Generate] forceRegenerate:', forceRegenerate);
+      
+      // Support both route params (/generate/:pageId) and query params (?id=xxx)
+      const effectivePageId = pageId || searchParams.get('id');
+      
+      console.log('[Generate] Loading with:', {
+        routePageId: pageId,
+        queryParamId: searchParams.get('id'),
+        effectivePageId,
+        forceRegenerate,
+      });
 
       // FIRST: Check if we're loading an existing page by ID (unless force regenerating)
-      if (pageId && !forceRegenerate) {
-        console.log('🔍 Loading existing page:', pageId);
+      if (effectivePageId && !forceRegenerate) {
+        console.log('🔍 Loading existing page:', effectivePageId);
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           navigate("/signup");
@@ -453,9 +462,9 @@ function GenerateContent() {
         const { data: existingPage, error } = await supabase
           .from("landing_pages")
           .select("*")
-          .eq("id", pageId)
+          .eq("id", effectivePageId)
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (error || !existingPage) {
           console.error("❌ Page not found:", error);
@@ -468,7 +477,7 @@ function GenerateContent() {
           return;
         }
 
-        console.log("✅ Loaded existing page:", existingPage);
+        console.log("✅ Loaded existing page:", existingPage.id, "with", (existingPage.sections as any[])?.length, "sections");
         
         // Get consultation data for patching sections
         const consultationData = existingPage.consultation_data as any || {};
