@@ -709,13 +709,19 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         const savedData = draft.wizard_data as Partial<ConsultationData>;
         setData(prev => ({ ...prev, ...savedData }));
         
-        // Calculate the first incomplete step and resume there
-        const resumeStep = findFirstIncompleteStep(savedData, STEPS);
-        setCurrentStep(resumeStep);
+        // Get the correct STEPS based on saved pageType
+        const savedSteps = getStepsForPageType(savedData.pageType, hasBrandColors);
         
-        console.log('📂 Loaded draft from database, resuming at step', resumeStep);
+        // Calculate the first incomplete step and resume there (clamped to valid range)
+        const resumeStep = Math.min(
+          findFirstIncompleteStep(savedData, savedSteps),
+          savedSteps.length - 1
+        );
+        setCurrentStep(Math.max(0, resumeStep));
+        
+        console.log('📂 Loaded draft from database, resuming at step', resumeStep, 'of', savedSteps.length);
         toast.success('Welcome back!', {
-          description: `Resuming from "${STEPS[resumeStep]?.title || 'Step ' + (resumeStep + 1)}"`
+          description: `Resuming from "${savedSteps[resumeStep]?.title || 'Step ' + (resumeStep + 1)}"`
         });
       }
     };
@@ -742,10 +748,15 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         const hasMeaningfulData = savedData.businessName || savedData.industry || savedData.idealClient;
         
         if (isRecent && hasMeaningfulData) {
-          // Calculate best resume position
-          const resumeStep = findFirstIncompleteStep(savedData, STEPS);
+          // Get the correct STEPS based on saved pageType
+          const savedSteps = getStepsForPageType(savedData.pageType, hasBrandColors);
+          // Calculate best resume position (clamped to valid range)
+          const resumeStep = Math.min(
+            findFirstIncompleteStep(savedData, savedSteps),
+            savedSteps.length - 1
+          );
           setShowRestorePrompt(true);
-          setPendingRestore({ savedStep: resumeStep, savedData });
+          setPendingRestore({ savedStep: Math.max(0, resumeStep), savedData });
         } else {
           // Clear stale data
           localStorage.removeItem('pageconsult_consultation_draft');
@@ -857,7 +868,10 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   };
 
   const canProceed = () => {
-    switch (STEPS[currentStep].id) {
+    const step = STEPS[currentStep];
+    if (!step) return false;
+    
+    switch (step.id) {
       case 'website':
         return true; // Optional step
       case 'branding':
@@ -915,8 +929,10 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   };
 
   const handleNext = async () => {
+    const currentStepId = STEPS[currentStep]?.id;
+    
     // If moving from website step and no website intelligence, skip branding step
-    if (STEPS[currentStep].id === 'website' && !data.websiteIntelligence) {
+    if (currentStepId === 'website' && !data.websiteIntelligence) {
       // Skip branding step (index 1) and go directly to page-type (index 2)
       setCurrentStep(currentStep + 2);
       return;
@@ -934,8 +950,10 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   };
 
   const handleBack = () => {
+    const currentStepId = STEPS[currentStep]?.id;
+    
     // If going back to branding step but no website intelligence, skip to website step
-    if (STEPS[currentStep].id === 'page-type' && !data.websiteIntelligence) {
+    if (currentStepId === 'page-type' && !data.websiteIntelligence) {
       // Skip branding step and go back to website (index 0)
       setCurrentStep(0);
       return;
@@ -1030,6 +1048,21 @@ ${d.ctaText}
 
   const renderStepContent = () => {
     const step = STEPS[currentStep];
+    
+    // Guard against invalid step index
+    if (!step) {
+      console.warn('Invalid step index:', currentStep, 'STEPS length:', STEPS.length);
+      // Reset to valid step
+      if (currentStep >= STEPS.length) {
+        setCurrentStep(Math.max(0, STEPS.length - 1));
+      }
+      return (
+        <div className="text-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin mx-auto text-cyan-500" />
+          <p className="text-slate-400 mt-2">Loading step...</p>
+        </div>
+      );
+    }
     
     switch (step.id) {
       case 'branding':
@@ -1671,7 +1704,7 @@ ${d.ctaText}
   }
 
   // Brand customization step renders as full-page component
-  if (STEPS[currentStep].id === 'branding') {
+  if (STEPS[currentStep]?.id === 'branding') {
     const brandingIntelligence: WebsiteIntelligence = {
       url: data.websiteUrl || '',
       logoUrl: data.websiteIntelligence?.logoUrl,
@@ -1824,7 +1857,7 @@ ${d.ctaText}
           />
         </div>
         <div className="text-center text-sm text-slate-400 mt-2">
-          Step {currentStep + 1} of {STEPS.length}: {STEPS[currentStep].title}
+          Step {currentStep + 1} of {STEPS.length}: {STEPS[currentStep]?.title || 'Loading...'}
         </div>
       </div>
 
