@@ -1654,6 +1654,42 @@ function GenerateContent() {
           break;
 
         case 'final-cta':
+          // Consultation data takes PRIORITY over AI-generated content
+          console.log('🎯 [final-cta] Building with sources:', {
+            aiCtaText: content.ctaText,
+            consultationPrimaryCTA: consultationData.primaryCTA || consultationData.primary_cta,
+            consultationUrgency: consultationData.urgencyAngle || consultationData.urgency_angle,
+            consultationGuarantee: consultationData.guaranteeOffer || consultationData.guarantee_offer,
+            consultationSecondaryCTA: consultationData.secondaryCTA || consultationData.secondary_cta,
+          });
+          
+          const ctaText = consultationData.primaryCTA || 
+                          consultationData.primary_cta ||
+                          strategicConsultation?.primaryCTA ||
+                          content.ctaText || 
+                          'Get Started';
+          
+          const secondaryCta = consultationData.secondaryCTA ||
+                               consultationData.secondary_cta ||
+                               strategicConsultation?.secondaryCTA ||
+                               null;
+          
+          const urgencyText = consultationData.urgencyAngle ||
+                              consultationData.urgency_angle ||
+                              strategicConsultation?.urgencyAngle ||
+                              null;
+          
+          const guaranteeText = consultationData.guaranteeOffer ||
+                                consultationData.guarantee_offer ||
+                                consultationData.guarantee ||
+                                strategicConsultation?.guaranteeOffer ||
+                                null;
+          
+          const ctaSubtext = consultationData.uniqueValue?.slice(0, 150) ||
+                             consultationData.unique_value?.slice(0, 150) ||
+                             content.solutionStatement?.split(".")[0] ||
+                             null;
+          
           sections.push({
             type: isBetaPage ? "beta-final-cta" : "final-cta",
             order: order++,
@@ -1661,18 +1697,29 @@ function GenerateContent() {
             content: isBetaPage ? {
               headline: "Join the Waitlist",
               subheadline: "Be first to experience the future",
-              ctaText: content.ctaText || "Get Early Access",
+              ctaText: ctaText || "Get Early Access",
               ctaLink: "#signup",
               spotsRemaining: strategicConsultation?.maxSignups || consultationData.maxSignups || 100,
               primaryColor,
               industryVariant,
+              secondaryCta,
+              urgencyText,
+              guaranteeText,
             } : {
               headline: "Ready to Get Started?",
-              subheadline: content.solutionStatement?.split(".")[0] || "",
-              ctaText: content.ctaText || "Get Started",
+              subtext: ctaSubtext,
+              ctaText,
               ctaLink: "#contact",
               primaryColor,
               industryVariant,
+              secondaryCta,
+              urgencyText,
+              guaranteeText,
+              trustIndicators: [
+                { icon: 'check', text: 'No credit card required' },
+                { icon: 'check', text: 'Free consultation' },
+                { icon: 'check', text: 'Cancel anytime' },
+              ],
             },
           });
           break;
