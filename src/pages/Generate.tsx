@@ -110,43 +110,58 @@ function patchSectionsWithConsultationData(
   return sections.map(section => {
     // Patch Final CTA with fresh consultation data
     if (section.type === 'final-cta') {
-      console.log('🔄 [Patch] Updating final-cta with consultation data:', {
-        primaryCTA: consultationData.primaryCTA || consultationData.primary_cta,
-        secondaryCTA: consultationData.secondaryCTA || consultationData.secondary_cta,
-        urgencyAngle: consultationData.urgencyAngle || consultationData.urgency_angle,
-        guaranteeOffer: consultationData.guaranteeOffer || consultationData.guarantee_offer,
+      // Derive CTA values from existing consultation data
+      const derivedCta = consultationData.primaryCTA || 
+                         consultationData.primary_cta || 
+                         consultationData.ctaText ||
+                         section.content?.ctaText || 
+                         'Get Started';
+      
+      // Derive urgency from beta config if present
+      const derivedUrgency = consultationData.urgencyAngle ||
+                             consultationData.urgency_angle ||
+                             (consultationData.betaConfig?.stage === 'building' 
+                               ? 'Beta pricing available — early supporters get lifetime discounts'
+                               : null) ||
+                             section.content?.urgencyText ||
+                             null;
+      
+      // Derive guarantee from process description or existing fields
+      const derivedGuarantee = consultationData.guaranteeOffer ||
+                               consultationData.guarantee_offer ||
+                               consultationData.guarantee ||
+                               (consultationData.processDescription?.toLowerCase().includes('no credit card')
+                                 ? 'Start free — no credit card required'
+                                 : null) ||
+                               section.content?.guaranteeText ||
+                               null;
+      
+      // Derive subtext from unique strength or value proposition
+      const derivedSubtext = consultationData.uniqueStrength?.slice(0, 150) ||
+                             consultationData.uniqueValue?.slice(0, 150) ||
+                             consultationData.unique_value?.slice(0, 150) ||
+                             consultationData.valueProposition?.slice(0, 150) ||
+                             section.content?.subtext;
+      
+      console.log('🔄 [Patch] Derived CTA values:', {
+        cta: derivedCta,
+        urgency: derivedUrgency,
+        guarantee: derivedGuarantee,
+        subtext: derivedSubtext?.slice(0, 50) + '...',
       });
       
       return {
         ...section,
         content: {
           ...section.content,
-          // CTA button text
-          ctaText: consultationData.primaryCTA || 
-                   consultationData.primary_cta || 
-                   section.content?.ctaText || 
-                   'Get Started',
-          // Secondary CTA
+          ctaText: derivedCta,
           secondaryCta: consultationData.secondaryCTA || 
                         consultationData.secondary_cta || 
                         section.content?.secondaryCta || 
                         null,
-          // Urgency message
-          urgencyText: consultationData.urgencyAngle || 
-                       consultationData.urgency_angle || 
-                       section.content?.urgencyText || 
-                       null,
-          // Guarantee message
-          guaranteeText: consultationData.guaranteeOffer || 
-                         consultationData.guarantee_offer || 
-                         consultationData.guarantee ||
-                         section.content?.guaranteeText || 
-                         null,
-          // Value proposition for subtext
-          subtext: consultationData.uniqueValue?.slice(0, 150) ||
-                   consultationData.unique_value?.slice(0, 150) ||
-                   consultationData.valueProposition?.slice(0, 150) ||
-                   section.content?.subtext,
+          urgencyText: derivedUrgency,
+          guaranteeText: derivedGuarantee,
+          subtext: derivedSubtext,
         }
       };
     }
