@@ -152,7 +152,12 @@ export function mapBriefToSections(
   
   const { businessName, heroImageUrl, logoUrl, primaryColor, pageType, pageGoal, industry, serviceType, aiSearchOptimization } = options;
   const sections: Section[] = [];
-  const pageStructure = brief.pageStructure || [];
+  // Use brief's page structure or fall back to default structure with all sections
+  const pageStructure = (brief.pageStructure && brief.pageStructure.length > 0) 
+    ? brief.pageStructure 
+    : DEFAULT_PAGE_STRUCTURE;
+  
+  console.log('🧠 [sectionMapper] Using page structure:', pageStructure, '(default:', !brief.pageStructure || brief.pageStructure.length === 0, ')');
   
   const isBetaPage = pageType === 'beta-prelaunch';
   
@@ -301,8 +306,16 @@ export function mapBriefToSections(
       }
 
       case 'how-it-works': {
-        // Only render if we have processSteps
-        if (brief.processSteps && brief.processSteps.length > 0) {
+        // Use brief processSteps or fallback to builder function
+        const steps = (brief.processSteps && brief.processSteps.length > 0)
+          ? brief.processSteps.map(step => ({
+              number: step.step,
+              title: step.title,
+              description: step.description,
+            }))
+          : buildProcessSteps({}, industryVariant);
+        
+        if (steps.length > 0) {
           sections.push({
             type: 'how-it-works',
             order,
@@ -310,11 +323,7 @@ export function mapBriefToSections(
             content: {
               title: intelligentHeaders.process?.title || industryTokens.sectionHeaders.process.title,
               subtitle: intelligentHeaders.process?.subtitle || industryTokens.sectionHeaders.process.subtitle,
-              steps: brief.processSteps.map(step => ({
-                number: step.step,
-                title: step.title,
-                description: step.description,
-              })),
+              steps,
               industryVariant: industryVariant,
             },
           });
@@ -450,3 +459,254 @@ export function isStructuredBriefContent(content: any): content is StructuredBri
     'proofPoints' in content &&
     'pageStructure' in content;
 }
+
+// ============================================
+// LEGACY FALLBACK BUILDERS
+// For when structured brief data is incomplete
+// ============================================
+
+/**
+ * Build statistics from consultation data with comprehensive path checking
+ */
+export function buildStatistics(sources: any, industryVariant: string): Array<{value: string, label: string}> {
+  const stats: Array<{value: string, label: string}> = [];
+  
+  // DETAILED LOGGING - what are we actually receiving?
+  console.log('🔍 [buildStatistics] Full sources object:', JSON.stringify(sources, null, 2));
+  console.log('🔍 [buildStatistics] consultationData keys:', sources.consultationData ? Object.keys(sources.consultationData) : 'none');
+  
+  // Check multiple possible locations for proof data
+  const possibleProofSources = [
+    sources.proofPoints,
+    sources.consultationData?.proofPoints,
+    sources.consultationData?.proof_points,
+    sources.consultationData?.step4_proof,
+    sources.consultationData?.credibility,
+  ];
+  
+  console.log('🔍 [buildStatistics] Checking proof sources:', possibleProofSources.map((s, i) => `[${i}]: ${!!s}`));
+  
+  // Find the first valid proof source
+  const proofData = possibleProofSources.find(s => s && (s.keyMetrics || s.clientCount || s.yearsInBusiness));
+  
+  if (proofData) {
+    console.log('✅ [buildStatistics] Found proof data:', proofData);
+    
+    // Extract from keyMetrics array if present
+    if (proofData.keyMetrics && Array.isArray(proofData.keyMetrics)) {
+      proofData.keyMetrics.forEach((metric: {value: string, label: string}) => {
+        stats.push({ value: metric.value, label: metric.label });
+      });
+    }
+    
+    // Extract from individual fields
+    if (proofData.clientCount && stats.length < 4) {
+      stats.push({ value: proofData.clientCount + '+', label: 'Clients Served' });
+    }
+    if (proofData.yearsInBusiness && stats.length < 4) {
+      stats.push({ value: proofData.yearsInBusiness + '+', label: 'Years Experience' });
+    }
+    if (proofData.successRate && stats.length < 4) {
+      stats.push({ value: proofData.successRate, label: 'Success Rate' });
+    }
+    if (proofData.satisfaction && stats.length < 4) {
+      stats.push({ value: proofData.satisfaction, label: 'Client Satisfaction' });
+    }
+  }
+  
+  // Also check flat consultation data fields
+  const consultData = sources.consultationData;
+  if (consultData && stats.length < 4) {
+    if (consultData.client_count || consultData.clientCount) {
+      const count = consultData.client_count || consultData.clientCount;
+      if (!stats.some(s => s.label.includes('Client'))) {
+        stats.push({ value: count + '+', label: 'Clients Served' });
+      }
+    }
+    if (consultData.years_in_business || consultData.yearsInBusiness) {
+      const years = consultData.years_in_business || consultData.yearsInBusiness;
+      if (!stats.some(s => s.label.includes('Years'))) {
+        stats.push({ value: years + '+', label: 'Years Experience' });
+      }
+    }
+  }
+  
+  // Only use fallback if we found nothing
+  if (stats.length < 2) {
+    console.log('⚠️ [buildStatistics] Using fallback - only found', stats.length, 'stats');
+    return getIndustryFallbackStats(industryVariant);
+  }
+  
+  console.log('✅ [buildStatistics] Extracted', stats.length, 'stats from consultation data');
+  return stats;
+}
+
+function getIndustryFallbackStats(industryVariant: string): Array<{value: string, label: string}> {
+  const fallbacks: Record<string, Array<{value: string, label: string}>> = {
+    consulting: [
+      { value: '10+', label: 'Years Experience' },
+      { value: '100+', label: 'Clients Served' },
+    ],
+    manufacturing: [
+      { value: '25+', label: 'Years in Industry' },
+      { value: '500+', label: 'Projects Completed' },
+    ],
+    healthcare: [
+      { value: '15+', label: 'Years Serving Patients' },
+      { value: '10,000+', label: 'Patients Treated' },
+    ],
+    default: [
+      { value: '5+', label: 'Years Experience' },
+      { value: '50+', label: 'Happy Clients' },
+    ],
+  };
+  return fallbacks[industryVariant] || fallbacks.default;
+}
+
+/**
+ * Build FAQs from consultation data with comprehensive path checking
+ */
+export function buildFAQs(sources: any, industryVariant: string): Array<{question: string, answer: string}> {
+  const faqs: Array<{question: string, answer: string}> = [];
+  
+  console.log('🔍 [buildFAQs] Full sources object:', JSON.stringify(sources, null, 2));
+  
+  // Check multiple possible locations for objections
+  const possibleObjectionSources = [
+    sources.objections,
+    sources.consultationData?.objections,
+    sources.consultationData?.common_objections,
+    sources.consultationData?.step5_objections?.commonObjections,
+    sources.consultationData?.faqItems,
+  ];
+  
+  console.log('🔍 [buildFAQs] Checking objection sources:', possibleObjectionSources.map((s, i) => `[${i}]: ${!!s && (Array.isArray(s) ? s.length : 'obj')}`));
+  
+  // Find valid objections
+  const objectionsData = possibleObjectionSources.find(s => s && (Array.isArray(s) ? s.length > 0 : Object.keys(s).length > 0));
+  
+  if (objectionsData && Array.isArray(objectionsData)) {
+    console.log('✅ [buildFAQs] Found objections array:', objectionsData.length, 'items');
+    
+    objectionsData.slice(0, 5).forEach((item: any) => {
+      // Handle different formats
+      const question = item.question || item.objection || convertToQuestion(item);
+      const answer = item.answer || item.response || item;
+      
+      if (question && answer && typeof answer === 'string') {
+        faqs.push({ 
+          question: question.endsWith('?') ? question : question + '?',
+          answer: answer 
+        });
+      }
+    });
+  }
+  
+  if (faqs.length < 2) {
+    console.log('⚠️ [buildFAQs] Using fallback - only found', faqs.length, 'FAQs');
+    return getIndustryFallbackFAQs(industryVariant);
+  }
+  
+  console.log('✅ [buildFAQs] Extracted', faqs.length, 'FAQs from consultation data');
+  return faqs;
+}
+
+function convertToQuestion(objection: string): string {
+  // Convert statement objections to questions
+  const conversions: Record<string, string> = {
+    'expensive': 'What kind of ROI can we expect?',
+    'cost': 'How does pricing work?',
+    'time': 'How long does this take?',
+    'trust': 'How do we know this will work?',
+    'consultants': 'How are you different from other consultants?',
+    'busy': 'What time commitment is required?',
+  };
+  
+  const lower = objection.toLowerCase();
+  for (const [keyword, question] of Object.entries(conversions)) {
+    if (lower.includes(keyword)) return question;
+  }
+  
+  return `What about "${objection}"?`;
+}
+
+function getIndustryFallbackFAQs(industryVariant: string): Array<{question: string, answer: string}> {
+  const fallbacks: Record<string, Array<{question: string, answer: string}>> = {
+    consulting: [
+      { question: 'How do you work with clients?', answer: 'We start with a discovery call to understand your needs, then develop a customized approach tailored to your goals.' },
+      { question: 'What results can we expect?', answer: 'Results vary by engagement, but our clients typically see measurable improvements within the first 90 days.' },
+    ],
+    manufacturing: [
+      { question: 'What industries do you serve?', answer: 'We work across multiple industries including aerospace, automotive, and industrial manufacturing.' },
+      { question: 'How do you ensure quality?', answer: 'We follow rigorous quality management processes and hold relevant certifications.' },
+    ],
+    default: [
+      { question: 'How do I get started?', answer: 'Simply reach out through our contact form and we\'ll schedule a free consultation.' },
+      { question: 'What makes you different?', answer: 'We focus on delivering measurable results with a personalized approach.' },
+    ],
+  };
+  return fallbacks[industryVariant] || fallbacks.default;
+}
+
+/**
+ * Build process steps from consultation data
+ */
+export function buildProcessSteps(consultationData: any, industryVariant: string): Array<{number: number, title: string, description: string}> {
+  // Check for process steps in consultation data
+  const methodologySteps = consultationData?.methodologySteps;
+  if (methodologySteps && Array.isArray(methodologySteps) && methodologySteps.length > 0) {
+    return methodologySteps.map((step: any, index: number) => ({
+      number: index + 1,
+      title: step.title || step,
+      description: step.description || '',
+    }));
+  }
+  
+  // Fallback based on industry
+  const fallbacks: Record<string, Array<{number: number, title: string, description: string}>> = {
+    consulting: [
+      { number: 1, title: 'Discovery Call', description: 'We learn about your challenges and goals' },
+      { number: 2, title: 'Strategy Development', description: 'We create a customized roadmap' },
+      { number: 3, title: 'Implementation', description: 'We execute together and measure results' },
+    ],
+    default: [
+      { number: 1, title: 'Initial Consultation', description: 'Learn about your needs' },
+      { number: 2, title: 'Custom Solution', description: 'Tailored to your requirements' },
+      { number: 3, title: 'Delivery & Support', description: 'Ongoing partnership' },
+    ],
+  };
+  
+  return fallbacks[industryVariant] || fallbacks.default;
+}
+
+/**
+ * Build testimonials from consultation data
+ */
+export function buildTestimonials(consultationData: any, industryVariant: string): Array<{quote: string, author: string, title: string, rating: number}> {
+  const testimonials = consultationData?.testimonials;
+  if (testimonials && Array.isArray(testimonials) && testimonials.length > 0) {
+    return testimonials.filter((t: any) => !isPlaceholderTestimonial(t)).map((t: any) => ({
+      quote: t.quote,
+      author: t.author || t.name,
+      title: t.title || '',
+      rating: t.rating || 5,
+    }));
+  }
+  
+  // Return empty - don't fabricate testimonials
+  return [];
+}
+
+/**
+ * Default page structure including all recommended sections
+ */
+export const DEFAULT_PAGE_STRUCTURE = [
+  'hero',
+  'stats-bar',
+  'problem-solution',
+  'features',
+  'how-it-works',
+  'social-proof',
+  'faq',
+  'final-cta'
+];

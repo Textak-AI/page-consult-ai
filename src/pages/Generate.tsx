@@ -184,8 +184,18 @@ function GenerateContent() {
   const [effectiveNavState] = useState<NavigationStateType>(getInitialNavState);
   
   // Derived values from effective nav state
-  const isDevMode = effectiveNavState?.devMode === true;
+  // DEV MODE: Only enabled if explicitly set via URL param OR navigation state
+  const isDevMode = (() => {
+    // Check URL param first (allows ?dev=true for testing)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('dev') === 'true') return true;
+    // Then check navigation state
+    return effectiveNavState?.devMode === true;
+  })();
   const fromStrategicConsultation = effectiveNavState?.fromStrategicConsultation === true;
+  
+  // Log dev mode status
+  console.log('🔧 [Generate] devMode:', isDevMode, '(URL param:', new URLSearchParams(window.location.search).get('dev'), ', navState:', effectiveNavState?.devMode, ')');
   const strategicData = effectiveNavState?.strategicData || null;
   
   const [intelligence, setIntelligence] = useState<PersonaIntelligence | null>(
