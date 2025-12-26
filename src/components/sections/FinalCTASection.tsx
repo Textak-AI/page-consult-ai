@@ -71,10 +71,24 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-xl text-slate-300 mb-10"
+            className="text-xl text-slate-300 mb-6"
           >
             {content.subtext || "Join thousands of teams already using us"}
           </motion.p>
+
+          {/* Urgency Banner */}
+          {urgencyText && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/40 text-amber-300 px-5 py-2.5 rounded-full text-sm font-medium mb-8"
+            >
+              <span>⏰</span>
+              <span>{urgencyText}</span>
+            </motion.div>
+          )}
           
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -96,6 +110,20 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
           </motion.div>
+
+          {/* Guarantee */}
+          {guaranteeText && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.25 }}
+              className="flex items-center justify-center gap-2 text-green-400 mt-6"
+            >
+              <Shield className="w-5 h-5" />
+              <span className="text-sm font-medium">{guaranteeText}</span>
+            </motion.div>
+          )}
           
           <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm text-slate-400">
             <span className="flex items-center gap-2">
@@ -145,13 +173,27 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className={`text-xl text-slate-300 mb-10 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}`}
+            className={`text-xl text-slate-300 mb-6 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}`}
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("subtext", e)}
           >
             {content.subtext || "Free consultation • No obligation"}
           </motion.p>
+
+          {/* Urgency Banner */}
+          {urgencyText && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/40 text-amber-300 px-5 py-2.5 rounded-full text-sm font-medium mb-8"
+            >
+              <span>⏰</span>
+              <span>{urgencyText}</span>
+            </motion.div>
+          )}
           
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -175,6 +217,20 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
             </Button>
           </motion.div>
+
+          {/* Guarantee */}
+          {guaranteeText && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.25 }}
+              className="flex items-center justify-center gap-2 text-green-400 mt-6 mb-4"
+            >
+              <Shield className="w-5 h-5" />
+              <span className="text-sm font-medium">{guaranteeText}</span>
+            </motion.div>
+          )}
 
           {/* Trust Indicators */}
           {trustIndicators.length > 0 && (
