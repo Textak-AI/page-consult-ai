@@ -32,32 +32,19 @@ serve(async (req) => {
 
   let event: Stripe.Event;
 
-  // SECURITY FIX: Always require signature verification in production
-  // Only allow bypass in development environment
-  const isDevelopment = Deno.env.get('ENVIRONMENT') === 'development';
-  
-  if (!webhookSecret && !isDevelopment) {
-    console.error('STRIPE_WEBHOOK_SECRET not configured in production');
-    return new Response('Webhook secret required in production', { status: 500 });
+  // SECURITY: Always require signature verification - no development bypass
+  if (!webhookSecret) {
+    console.error('STRIPE_WEBHOOK_SECRET not configured');
+    return new Response('Webhook secret required', { status: 500 });
   }
   
-  if (!signature && !isDevelopment) {
+  if (!signature) {
     console.error('Missing stripe-signature header');
     return new Response('Missing signature', { status: 400 });
   }
 
   try {
-    if (webhookSecret && signature) {
-      // Normal secure path: verify signature
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } else if (isDevelopment) {
-      // Development-only bypass with explicit warning
-      event = JSON.parse(body);
-      console.warn('⚠️ DEV MODE: Webhook signature verification skipped - NOT SAFE FOR PRODUCTION');
-    } else {
-      // Should never reach here due to checks above, but defensive
-      return new Response('Webhook signature required', { status: 400 });
-    }
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err: unknown) {
     console.error('Webhook signature verification failed:', err);
     const message = err instanceof Error ? err.message : 'Unknown error';
