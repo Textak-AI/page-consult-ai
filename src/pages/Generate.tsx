@@ -97,6 +97,64 @@ type Section = {
   content: any;
 };
 
+// Patch sections with fresh consultation data (especially for final-cta)
+function patchSectionsWithConsultationData(
+  sections: Section[],
+  consultationData: any
+): Section[] {
+  if (!consultationData || Object.keys(consultationData).length === 0) {
+    console.log('🔄 [Patch] No consultation data to patch with');
+    return sections;
+  }
+  
+  return sections.map(section => {
+    // Patch Final CTA with fresh consultation data
+    if (section.type === 'final-cta') {
+      console.log('🔄 [Patch] Updating final-cta with consultation data:', {
+        primaryCTA: consultationData.primaryCTA || consultationData.primary_cta,
+        secondaryCTA: consultationData.secondaryCTA || consultationData.secondary_cta,
+        urgencyAngle: consultationData.urgencyAngle || consultationData.urgency_angle,
+        guaranteeOffer: consultationData.guaranteeOffer || consultationData.guarantee_offer,
+      });
+      
+      return {
+        ...section,
+        content: {
+          ...section.content,
+          // CTA button text
+          ctaText: consultationData.primaryCTA || 
+                   consultationData.primary_cta || 
+                   section.content?.ctaText || 
+                   'Get Started',
+          // Secondary CTA
+          secondaryCta: consultationData.secondaryCTA || 
+                        consultationData.secondary_cta || 
+                        section.content?.secondaryCta || 
+                        null,
+          // Urgency message
+          urgencyText: consultationData.urgencyAngle || 
+                       consultationData.urgency_angle || 
+                       section.content?.urgencyText || 
+                       null,
+          // Guarantee message
+          guaranteeText: consultationData.guaranteeOffer || 
+                         consultationData.guarantee_offer || 
+                         consultationData.guarantee ||
+                         section.content?.guaranteeText || 
+                         null,
+          // Value proposition for subtext
+          subtext: consultationData.uniqueValue?.slice(0, 150) ||
+                   consultationData.unique_value?.slice(0, 150) ||
+                   consultationData.valueProposition?.slice(0, 150) ||
+                   section.content?.subtext,
+        }
+      };
+    }
+    
+    return section;
+  });
+}
+
 export default function Generate() {
   return (
     <EditingProvider>
@@ -411,8 +469,19 @@ function GenerateContent() {
         }
 
         console.log("✅ Loaded existing page:", existingPage);
+        
+        // Get consultation data for patching sections
+        const consultationData = existingPage.consultation_data as any || {};
+        console.log('🔄 [Patch] Consultation data from page:', consultationData);
+        
+        // Patch sections with fresh consultation data (especially final-cta)
+        const patchedSections = patchSectionsWithConsultationData(
+          (existingPage.sections as Section[]) || [],
+          consultationData
+        );
+        
         setPageData(existingPage);
-        setSections((existingPage.sections as Section[]) || []);
+        setSections(patchedSections);
         setPhase("editor");
         return;
       } else if (forceRegenerate) {
