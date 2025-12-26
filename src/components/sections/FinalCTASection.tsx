@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle } from "lucide-react";
+import { ArrowRight, CheckCircle, Shield } from "lucide-react";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
 
 interface FinalCTASectionProps {
@@ -13,12 +13,19 @@ interface FinalCTASectionProps {
     trustIndicators?: Array<{ text: string }>;
     primaryColor?: string;
     industryVariant?: IndustryVariant;
+    // New fields for richer CTA
+    secondaryCta?: string;
+    urgencyText?: string;
+    guaranteeText?: string;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
 }
 
 export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectionProps) {
+  // Log what we receive for debugging
+  console.log('🎯 [FinalCTASection] Rendering with:', content);
+  
   const industryVariant = content.industryVariant || 'default';
   const tokens = getIndustryTokens(industryVariant);
   const isLightMode = tokens.mode === 'light';
@@ -33,6 +40,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   };
 
   const trustIndicators = content.trustIndicators || [];
+  const { urgencyText, guaranteeText, secondaryCta } = content;
 
   // SaaS variant
   if (isSaas) {
@@ -257,14 +265,27 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             {content.subtext}
           </motion.p>
         )}
+
+        {/* Urgency Banner */}
+        {urgencyText && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="inline-block bg-amber-500/20 border border-amber-500/40 text-amber-300 px-4 py-2 rounded-full text-sm font-medium"
+          >
+            ⏰ {urgencyText}
+          </motion.div>
+        )}
         
-        {/* CTA Button */}
+        {/* CTA Buttons */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="pt-4"
+          className="flex flex-col sm:flex-row gap-4 pt-4"
         >
           <div className="relative group">
             <Button 
@@ -273,7 +294,9 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
                 isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""
               }`}
               style={{
-                background: 'linear-gradient(135deg, hsl(189, 95%, 43%), hsl(200, 95%, 50%))',
+                background: content.primaryColor 
+                  ? content.primaryColor 
+                  : 'linear-gradient(135deg, hsl(189, 95%, 43%), hsl(200, 95%, 50%))',
                 color: 'white',
                 borderRadius: tokens.shape.radiusButton,
               }}
@@ -298,10 +321,35 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
             </Button>
           </div>
+
+          {/* Secondary CTA */}
+          {secondaryCta && (
+            <Button
+              variant="outline"
+              size="lg"
+              className="text-lg px-8 py-7 md:py-8 h-auto border-white/30 text-white hover:bg-white/10"
+            >
+              {secondaryCta}
+            </Button>
+          )}
         </motion.div>
 
+        {/* Guarantee */}
+        {guaranteeText && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="flex items-center justify-center gap-2 text-green-400"
+          >
+            <Shield className="w-5 h-5" />
+            <span>{guaranteeText}</span>
+          </motion.div>
+        )}
+
         {/* Micro-trust below CTA */}
-        {trustIndicators.length > 0 ? (
+        {!guaranteeText && trustIndicators.length > 0 ? (
           <motion.div 
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -327,7 +375,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               </div>
             ))}
           </motion.div>
-        ) : (
+        ) : !guaranteeText ? (
           <motion.p 
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -337,7 +385,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
           >
             {content.trustText || tokens.sectionHeaders.cta.subtext}
           </motion.p>
-        )}
+        ) : null}
       </div>
     </section>
   );
