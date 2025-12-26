@@ -694,6 +694,74 @@ export type Database = {
           },
         ]
       }
+      testimonial_requests: {
+        Row: {
+          clicked_at: string | null
+          consultation_id: string | null
+          created_at: string | null
+          email_body: string
+          email_subject: string
+          follow_up_scheduled_at: string | null
+          follow_up_sent_at: string | null
+          id: string
+          opened_at: string | null
+          recipient_email: string
+          recipient_name: string | null
+          request_page_url: string
+          resend_id: string | null
+          responded_at: string | null
+          sent_at: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          clicked_at?: string | null
+          consultation_id?: string | null
+          created_at?: string | null
+          email_body: string
+          email_subject: string
+          follow_up_scheduled_at?: string | null
+          follow_up_sent_at?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email: string
+          recipient_name?: string | null
+          request_page_url: string
+          resend_id?: string | null
+          responded_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          clicked_at?: string | null
+          consultation_id?: string | null
+          created_at?: string | null
+          email_body?: string
+          email_subject?: string
+          follow_up_scheduled_at?: string | null
+          follow_up_sent_at?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email?: string
+          recipient_name?: string | null
+          request_page_url?: string
+          resend_id?: string | null
+          responded_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "testimonial_requests_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_log: {
         Row: {
           action_cost: number
