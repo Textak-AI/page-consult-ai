@@ -4,7 +4,7 @@ import { ProblemSolutionSection } from "@/components/sections/ProblemSolutionSec
 import { CalculatorSection } from "@/components/sections/CalculatorSection";
 import { FeaturesSection } from "@/components/sections/FeaturesSection";
 import { SocialProofSection } from "@/components/sections/SocialProofSection";
-import { PremiumShowcaseCTA } from "@/components/sections/PremiumShowcaseCTA";
+import { ThreeStageShowcase } from "@/components/sections/ThreeStageShowcase";
 import { PhotoGallerySection } from "@/components/sections/PhotoGallerySection";
 import { StatsBarSection } from "@/components/sections/StatsBarSection";
 import { FAQSection } from "@/components/sections/FAQSection";
@@ -354,11 +354,11 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           />
         );
       case "final-cta":
-        console.log('🎯 [FinalCTA] Rendering PremiumShowcaseCTA');
+        console.log('🎯 [FinalCTA] Rendering ThreeStageShowcase');
         return renderSectionWithToolbar(
           section,
           index,
-          <PremiumShowcaseCTA 
+          <ThreeStageShowcase 
             primaryColor={section.content?.primaryColor}
           />
         );
