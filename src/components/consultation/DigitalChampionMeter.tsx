@@ -1,25 +1,74 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { CompletenessState } from '@/lib/pageCompleteness';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { Trophy, Unlock, Sparkles, Palette, Award, Users, Shield } from 'lucide-react';
+import { Trophy, Unlock, Sparkles, Palette, Award, Users, Shield, ChevronRight, ChevronDown, Check, Circle } from 'lucide-react';
 import { SCORE_CATEGORIES } from '@/lib/categoryColors';
+
+interface ScoreFactor {
+  id: string;
+  label: string;
+  complete: boolean;
+  points: number;
+  section?: string;
+}
 
 interface DigitalChampionMeterProps {
   completeness: CompletenessState;
   brandName?: string;
   logoUrl?: string;
   className?: string;
+  onScrollToSection?: (sectionType: string) => void;
+}
+
+// Factor definitions for each category
+function getFactorsForCategory(
+  categoryId: string,
+  completeness: CompletenessState,
+  logoUrl?: string
+): ScoreFactor[] {
+  const { unlockedSections, milestones, score } = completeness;
+  
+  const factors: Record<string, ScoreFactor[]> = {
+    brand: [
+      { id: 'hero', label: 'Hero section', complete: unlockedSections.includes('hero'), points: 25, section: 'hero' },
+      { id: 'headline', label: 'Compelling headline', complete: score >= 20, points: 25, section: 'hero' },
+      { id: 'logo', label: 'Logo uploaded', complete: !!logoUrl, points: 25, section: 'hero' },
+      { id: 'color', label: 'Brand color set', complete: true, points: 25, section: 'hero' },
+    ],
+    authority: [
+      { id: 'stats', label: 'Statistics section', complete: unlockedSections.includes('stats-bar'), points: 25, section: 'stats-bar' },
+      { id: 'features', label: 'Features section', complete: unlockedSections.includes('features'), points: 25, section: 'features' },
+      { id: 'howItWorks', label: 'How it works section', complete: unlockedSections.includes('how-it-works'), points: 25, section: 'how-it-works' },
+      { id: 'credentials', label: 'Credentials shown', complete: score >= 50, points: 25, section: 'features' },
+    ],
+    proof: [
+      { id: 'testimonials', label: 'Testimonials section', complete: unlockedSections.includes('social-proof'), points: 25, section: 'social-proof' },
+      { id: 'multipleReviews', label: '2+ testimonials', complete: milestones.some(m => m.name.includes('testimonial') && m.achieved), points: 25, section: 'social-proof' },
+      { id: 'namedSources', label: 'Named sources', complete: score >= 60, points: 25, section: 'social-proof' },
+      { id: 'proofSection', label: 'Dedicated proof section', complete: unlockedSections.includes('social-proof'), points: 25, section: 'social-proof' },
+    ],
+    trust: [
+      { id: 'faq', label: 'FAQ section', complete: unlockedSections.includes('faq'), points: 25, section: 'faq' },
+      { id: 'faqItems', label: '3+ FAQ items', complete: score >= 70, points: 25, section: 'faq' },
+      { id: 'guarantee', label: 'Guarantee statement', complete: unlockedSections.includes('final-cta'), points: 25, section: 'final-cta' },
+      { id: 'cta', label: 'Clear CTA', complete: unlockedSections.includes('final-cta'), points: 25, section: 'final-cta' },
+    ],
+  };
+  
+  return factors[categoryId] || [];
 }
 
 export function DigitalChampionMeter({ 
   completeness, 
   brandName = 'YOUR BRAND',
   logoUrl,
-  className 
+  className,
+  onScrollToSection
 }: DigitalChampionMeterProps) {
   const { score, unlockedSections, milestones } = completeness;
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   
   const prevUnlockedRef = useRef<string[]>([]);
   const prevMilestonesRef = useRef<string[]>([]);
@@ -143,36 +192,107 @@ export function DigitalChampionMeter({
         </p>
       </div>
 
-      {/* Score Bars */}
-      <div className="p-4 space-y-3">
-        {categories.map(({ id, name, value, color, Icon }) => (
-          <div key={id}>
-            <div className="flex items-center justify-between text-sm mb-1.5">
-              <div className="flex items-center gap-2">
-                <Icon className="w-3.5 h-3.5" style={{ color }} />
-                <span className="text-slate-400">{name}</span>
-              </div>
-              <span className="text-white font-medium">{value}%</span>
-            </div>
-            
-            {/* Edge-glow progress bar */}
-            <div className="relative h-2.5 bg-slate-800 rounded-full overflow-visible">
-              {/* The fill */}
-              <motion.div 
-                className="h-full bg-slate-600 rounded-full relative"
-                initial={{ width: 0 }}
-                animate={{ width: `${value}%` }}
-                transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+      {/* Score Bars - Now Expandable */}
+      <div className="divide-y divide-slate-700/30">
+        {categories.map(({ id, name, value, color, Icon }) => {
+          const isExpanded = expandedCategory === id;
+          const factors = getFactorsForCategory(id, completeness, logoUrl);
+          const missingFactors = factors.filter(f => !f.complete);
+          
+          return (
+            <div key={id}>
+              <button
+                onClick={() => setExpandedCategory(isExpanded ? null : id)}
+                className="w-full p-3 flex items-center gap-3 hover:bg-slate-800/50 transition-colors cursor-pointer"
               >
-                {/* Right edge glow (at fill point) */}
-                <div 
-                  className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-4 rounded-full blur-sm opacity-80"
-                  style={{ backgroundColor: color }}
-                />
-              </motion.div>
+                {/* Chevron indicator */}
+                <div className="flex items-center justify-center w-4">
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  )}
+                </div>
+                
+                <Icon className="w-4 h-4 shrink-0" style={{ color }} />
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between text-sm mb-1.5">
+                    <span className="text-slate-300">{name}</span>
+                    <div className="flex items-center gap-2">
+                      {missingFactors.length > 0 && (
+                        <span className="text-xs px-1.5 py-0.5 rounded-full bg-slate-700/50 text-slate-400">
+                          +{missingFactors.length}
+                        </span>
+                      )}
+                      <span className="text-white font-medium">{value}%</span>
+                    </div>
+                  </div>
+                  
+                  {/* Edge-glow progress bar */}
+                  <div className="relative h-2 bg-slate-800 rounded-full overflow-visible">
+                    <motion.div 
+                      className="h-full bg-slate-600 rounded-full relative"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${value}%` }}
+                      transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+                    >
+                      <div 
+                        className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-3 rounded-full blur-sm opacity-80"
+                        style={{ backgroundColor: color }}
+                      />
+                    </motion.div>
+                  </div>
+                </div>
+              </button>
+              
+              {/* Expandable breakdown */}
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pl-8 pr-3 pb-3 pt-1 space-y-2 border-l-2 border-slate-700 ml-5">
+                      {factors.map(factor => (
+                        <div 
+                          key={factor.id} 
+                          className="flex items-center justify-between text-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            {factor.complete ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-500" />
+                            ) : (
+                              <Circle className="w-3.5 h-3.5 text-slate-600" />
+                            )}
+                            <span className={factor.complete ? "text-slate-500" : "text-slate-300"}>
+                              {factor.label}
+                            </span>
+                          </div>
+                          
+                          {!factor.complete && factor.section && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onScrollToSection?.(factor.section!);
+                              }}
+                              className="text-purple-400 hover:text-purple-300 text-xs"
+                            >
+                              +{factor.points} pts →
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Footer */}
