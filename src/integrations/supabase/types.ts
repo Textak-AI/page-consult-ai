@@ -605,6 +605,7 @@ export type Database = {
           created_at: string
           id: string
           is_published: boolean | null
+          last_change_summary: string | null
           meta_description: string | null
           meta_title: string | null
           published_at: string | null
@@ -629,6 +630,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_published?: boolean | null
+          last_change_summary?: string | null
           meta_description?: string | null
           meta_title?: string | null
           published_at?: string | null
@@ -653,6 +655,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_published?: boolean | null
+          last_change_summary?: string | null
           meta_description?: string | null
           meta_title?: string | null
           published_at?: string | null
