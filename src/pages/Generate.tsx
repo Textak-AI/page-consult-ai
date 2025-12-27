@@ -2983,19 +2983,6 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             </div>
           )}
 
-          {/* Credit Display */}
-          {userId && !aiActions.loading && (
-            <div className="p-3 border-b border-white/10">
-              <CreditDisplay
-                available={credits.available}
-                total={credits.total}
-                resetDate={credits.resetDate}
-                isUnlimited={credits.isUnlimited}
-                onUpgrade={() => setUpgradeDrawerOpen(true)}
-                onGetMoreActions={() => setUpgradeDrawerOpen(true)}
-              />
-            </div>
-          )}
           
           {/* Persona Insights Panel */}
           {intelligence?.synthesizedPersona && (
