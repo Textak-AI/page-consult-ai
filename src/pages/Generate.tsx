@@ -194,7 +194,6 @@ function GenerateContent() {
   const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
   const [stylePickerOpen, setStylePickerOpen] = useState(false);
   const [calculatorUpgradeOpen, setCalculatorUpgradeOpen] = useState(false);
-  const [strategyBriefOpen, setStrategyBriefOpen] = useState(false);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedSectionsRef = useRef<string>('');
   const [isSaving, setIsSaving] = useState(false);
@@ -2569,6 +2568,8 @@ function EditorContent({
   // Get current user
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [strategyBriefOpen, setStrategyBriefOpen] = useState(false);
+  
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUserId(user?.id || null);
