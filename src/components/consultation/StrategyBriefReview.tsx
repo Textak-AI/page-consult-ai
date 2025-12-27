@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Edit3, RotateCcw, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { FileText, Edit3, RotateCcw, ArrowRight, CheckCircle2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import { AISeoPanel } from './AISeoPanel';
-import { CollapsibleCodeBlock } from '@/components/strategy-brief/CollapsibleCodeBlock';
 import type { ConsultationData } from './StrategicConsultation';
 import type { AISeoData } from '@/services/intelligence/types';
 
@@ -65,30 +64,60 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, onAppr
             </div>
           </div>
         ) : (
-          <div className="prose prose-invert prose-slate max-w-none">
+          <div className="prose prose-invert prose-sm max-w-none">
             <ReactMarkdown
               components={{
-                h1: ({ children }) => <h1 className="text-2xl font-bold text-cyan-400 mb-4">{children}</h1>,
-                h2: ({ children }) => <h2 className="text-xl font-semibold text-white mt-6 mb-3">{children}</h2>,
-                h3: ({ children }) => <h3 className="text-lg font-medium text-slate-200 mt-4 mb-2">{children}</h3>,
-                p: ({ children }) => <p className="text-slate-400 mb-3 leading-relaxed">{children}</p>,
-                ul: ({ children }) => <ul className="list-disc list-inside text-slate-400 space-y-1 mb-4">{children}</ul>,
-                ol: ({ children }) => <ol className="list-decimal list-inside text-slate-400 space-y-1 mb-4">{children}</ol>,
-                li: ({ children }) => <li className="text-slate-400">{children}</li>,
-                strong: ({ children }) => <strong className="text-white font-semibold">{children}</strong>,
-                blockquote: ({ children }) => <blockquote className="border-l-4 border-cyan-500 pl-4 italic text-slate-400">{children}</blockquote>,
-                pre: ({ children }) => (
-                  <CollapsibleCodeBlock title="View Code" defaultOpen={false}>
-                    <pre className="bg-slate-900 p-4 overflow-x-auto text-sm m-0">{children}</pre>
-                  </CollapsibleCodeBlock>
+                h1: ({ children }) => (
+                  <h1 className="text-2xl font-bold text-cyan-400 mt-0 mb-6">{children}</h1>
                 ),
+                h2: ({ children }) => (
+                  <div className="flex items-center gap-3 mt-8 mb-4 first:mt-0">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                      <ChevronRight className="w-4 h-4 text-cyan-400" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-white m-0">{children}</h2>
+                  </div>
+                ),
+                h3: ({ children }) => (
+                  <h3 className="text-base font-medium text-slate-200 mt-5 mb-2 pl-11">{children}</h3>
+                ),
+                p: ({ children }) => (
+                  <p className="text-slate-400 mb-3 leading-relaxed pl-11">{children}</p>
+                ),
+                ul: ({ children }) => (
+                  <ul className="space-y-2 mb-4 pl-11">{children}</ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="space-y-2 mb-4 pl-11 list-decimal list-inside">{children}</ol>
+                ),
+                li: ({ children }) => (
+                  <li className="text-slate-400 flex items-start gap-2">
+                    <span className="text-cyan-400 mt-0.5">•</span>
+                    <span>{children}</span>
+                  </li>
+                ),
+                strong: ({ children }) => (
+                  <strong className="text-white font-semibold">{children}</strong>
+                ),
+                blockquote: ({ children }) => (
+                  <blockquote className="border-l-4 border-cyan-500 pl-4 ml-11 italic text-slate-400 my-4 bg-cyan-500/5 py-3 pr-4 rounded-r-lg">
+                    {children}
+                  </blockquote>
+                ),
+                // Hide code blocks - they're not useful for reviewing
+                pre: () => null,
                 code: ({ className, children, ...props }) => {
                   const isInline = !className;
                   if (isInline) {
                     return <code className="bg-slate-800 px-1.5 py-0.5 rounded text-sm text-cyan-300" {...props}>{children}</code>;
                   }
-                  return <code className="text-slate-300" {...props}>{children}</code>;
+                  // Hide block-level code
+                  return null;
                 },
+                // Add visual separators between major sections
+                hr: () => (
+                  <div className="my-6 border-t border-slate-700" />
+                ),
               }}
             >
               {brief}
