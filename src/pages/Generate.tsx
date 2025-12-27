@@ -194,6 +194,7 @@ function GenerateContent() {
   const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
   const [stylePickerOpen, setStylePickerOpen] = useState(false);
   const [calculatorUpgradeOpen, setCalculatorUpgradeOpen] = useState(false);
+  const [strategyBriefOpen, setStrategyBriefOpen] = useState(false);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedSectionsRef = useRef<string>('');
   const [isSaving, setIsSaving] = useState(false);
@@ -3023,6 +3024,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         businessName={strategicData?.consultationData?.businessName || (pageData?.consultation_data as any)?.businessName}
         consultationData={strategicData?.consultationData || (pageData?.consultation_data as any) || consultation}
         consultationId={consultation?.id || pageData?.consultation_id}
+        aiSeoData={strategicData?.aiSeoData || (pageData?.consultation_data as any)?.aiSeoData || null}
         onDataUpdated={(updatedData) => {
           // Update local state with new data
           console.log('Brief data updated:', updatedData);
@@ -3032,6 +3034,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           console.log('Regenerating with updated brief:', updatedData);
           handleRegenerate();
         }}
+        onOpenChange={setStrategyBriefOpen}
       />
 
       <PublishModal
@@ -3167,13 +3170,15 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         onDismiss={consultantIntegration.dismiss}
       />
 
-      {/* Premium AI Consultant Chat - floating bottom right */}
-      <ConsultantChat
-        consultationData={strategicData?.consultationData || consultation || {}}
-        sections={sections}
-        completeness={pageBuilder.completeness}
-        onApplyChange={handleApplyConsultantChange}
-      />
+      {/* Premium AI Consultant Chat - floating bottom right, hidden when Strategy Brief is open */}
+      {!strategyBriefOpen && (
+        <ConsultantChat
+          consultationData={strategicData?.consultationData || consultation || {}}
+          sections={sections}
+          completeness={pageBuilder.completeness}
+          onApplyChange={handleApplyConsultantChange}
+        />
+      )}
 
       {/* Achievement Share Modal */}
       <Dialog open={showAchievementModal} onOpenChange={setShowAchievementModal}>

@@ -17,6 +17,7 @@ interface Props {
   aiSeoData?: AISeoData | null;
   onDataUpdated?: (data: any) => void;
   onRegenerate?: (data: any) => Promise<void>;
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 export function StrategyBriefPanel({ 
@@ -26,10 +27,17 @@ export function StrategyBriefPanel({
   consultationId,
   aiSeoData,
   onDataUpdated,
-  onRegenerate 
+  onRegenerate,
+  onOpenChange
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+
+  // Notify parent of open state changes
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    onOpenChange?.(open);
+  };
 
   if (!brief) return null;
 
@@ -88,7 +96,7 @@ export function StrategyBriefPanel({
     <>
       {/* Toggle Button - Fixed position on right edge */}
       <motion.button
-        onClick={() => setIsOpen(true)}
+        onClick={() => handleOpenChange(true)}
         className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-gradient-to-r from-primary to-accent text-primary-foreground px-3 py-4 rounded-l-xl shadow-lg hover:from-primary/90 hover:to-accent/90 transition-all group"
         whileHover={{ x: -4 }}
         title="View Strategy Brief"
@@ -110,8 +118,8 @@ export function StrategyBriefPanel({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/50 z-40"
+              onClick={() => handleOpenChange(false)}
+              className="fixed inset-0 bg-black/50 z-[60]"
             />
 
             {/* Panel */}
@@ -120,7 +128,7 @@ export function StrategyBriefPanel({
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed right-0 top-0 h-full w-full max-w-xl bg-background border-l border-border shadow-2xl z-50 flex flex-col"
+              className="fixed right-0 top-0 h-full w-full max-w-xl bg-background border-l border-border shadow-2xl z-[70] flex flex-col"
             >
               {/* Header */}
               <div className="p-6 border-b border-border flex-shrink-0">
@@ -139,7 +147,7 @@ export function StrategyBriefPanel({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => handleOpenChange(false)}
                     className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="w-5 h-5" />
