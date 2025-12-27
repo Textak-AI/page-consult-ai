@@ -166,16 +166,19 @@ export default function Dashboard() {
   const existingPageTitle = inProgressConsultation?.existingPage?.title;
 
   const handleContinueConsultation = async (consultationId: string) => {
-    // Check if a page exists for this consultation
-    const consultation = consultations?.find(c => c.id === consultationId);
+    // Direct query to check if a page exists for this consultation
+    const { data: existingPage } = await supabase
+      .from('landing_pages')
+      .select('id')
+      .eq('consultation_id', consultationId)
+      .limit(1)
+      .maybeSingle();
     
-    if (consultation?.existingPage?.id) {
-      // Page exists — go to the editor
-      console.log('📄 Page already exists, navigating to editor:', consultation.existingPage.id);
-      navigate(`/generate?id=${consultation.existingPage.id}`);
+    if (existingPage?.id) {
+      console.log('📄 Page exists, going to editor:', existingPage.id);
+      navigate(`/generate?id=${existingPage.id}`);
     } else {
-      // No page yet — resume the wizard
-      console.log('📝 No page yet, resuming wizard for consultation:', consultationId);
+      console.log('📝 No page yet, resuming wizard');
       navigate('/new', { state: { resumeConsultationId: consultationId } });
     }
   };
