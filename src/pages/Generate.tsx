@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check, Sparkles, Wand2, Undo2, Redo2, Brain, Rocket } from "lucide-react";
+import { Loader2, Check, Sparkles, Wand2, Undo2, Redo2, Brain, Rocket, Zap } from "lucide-react";
 import { PersonaInsightsPanel } from "@/components/editor/PersonaInsightsPanel";
 import { SectionManager } from "@/components/editor/SectionManager";
 import { LivePreview } from "@/components/editor/LivePreview";
@@ -2816,18 +2816,20 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             </div>
           )}
           
-          {/* Usage Indicator */}
-          {userId && !aiActions.loading && !aiActions.devMode && (
-            <UsageIndicator
-              available={aiActions.available}
-              limit={aiActions.limit}
-              percentRemaining={aiActions.percentRemaining}
-              daysUntilReset={aiActions.daysUntilReset}
-              isUnlimited={aiActions.isUnlimited}
-              isPro={aiActions.isPro}
-              rollover={aiActions.usage?.ai_actions_rollover}
+          {/* Credits Display - Simple understated style matching main Header */}
+          {userId && !aiActions.loading && (
+            <div 
+              className="flex items-center gap-1.5 text-sm text-slate-400 cursor-pointer hover:text-slate-300 transition-colors"
               onClick={() => setUsageHistoryOpen(true)}
-            />
+            >
+              <Zap className="w-3.5 h-3.5" />
+              <span>
+                {aiActions.isUnlimited 
+                  ? '∞' 
+                  : aiActions.available
+                } credits
+              </span>
+            </div>
           )}
           
           {/* Intelligence badge */}
