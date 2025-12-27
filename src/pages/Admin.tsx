@@ -49,7 +49,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 // Admin emails - must match edge function
-const ADMIN_EMAILS = ['kyle@pageconsult.ai'];
+const ADMIN_EMAILS = ['kyle@pageconsult.ai', 'kyle@textak.ai'];
 
 interface AdminStats {
   userCount: number;
