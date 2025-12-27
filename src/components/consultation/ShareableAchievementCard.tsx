@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { CompletenessState } from '@/lib/pageCompleteness';
 import { DigitalChampionMeter } from './DigitalChampionMeter';
@@ -13,15 +13,44 @@ interface ShareableAchievementCardProps {
   className?: string;
 }
 
+// Helper to get missing items for improvement summary
+function getMissingItems(scores: { brand: number; authority: number; proof: number; trust: number }): string[] {
+  const missing: string[] = [];
+  
+  if (scores.proof < 100) {
+    missing.push('another testimonial');
+  }
+  if (scores.trust < 100) {
+    missing.push('a guarantee statement');
+  }
+  if (scores.authority < 100) {
+    missing.push('more statistics or credentials');
+  }
+  if (scores.brand < 100) {
+    missing.push('brand customization');
+  }
+  
+  return missing.slice(0, 2); // Max 2 suggestions
+}
+
 export function ShareableAchievementCard({
   completeness,
   brandName = 'YOUR BRAND',
   logoUrl,
   className
 }: ShareableAchievementCardProps) {
-  const [mode, setMode] = useState<'mascot' | 'professional'>('mascot');
   const cardRef = useRef<HTMLDivElement>(null);
-  const { score } = completeness;
+  const { score, milestones } = completeness;
+
+  // Calculate category scores
+  const scores = useMemo(() => ({
+    brand: Math.min(100, Math.round((score * 1.2) + (logoUrl ? 15 : 0))),
+    authority: Math.min(100, Math.round(score * 0.9)),
+    proof: Math.min(100, Math.round((milestones.filter(m => m.achieved).length / Math.max(milestones.length, 1)) * 100)),
+    trust: Math.min(100, Math.round(score * 0.85)),
+  }), [score, logoUrl, milestones]);
+
+  const missingItems = useMemo(() => getMissingItems(scores), [scores]);
 
   const getShareText = () => {
     const powerLevel = score >= 90 ? 'LEGENDARY' : score >= 75 ? 'POWERFUL' : score >= 50 ? 'GROWING' : 'BUILDING';
@@ -37,7 +66,6 @@ export function ShareableAchievementCard({
 
   const handleLinkedInShare = useCallback(() => {
     const url = encodeURIComponent(window.location.href);
-    const title = encodeURIComponent(`${brandName} - ${score}% Page Strength Achieved!`);
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank', 'width=550,height=420');
     toast.success('Opening LinkedIn to share!');
   }, [score, brandName]);
@@ -46,7 +74,6 @@ export function ShareableAchievementCard({
     if (!cardRef.current) return;
     
     try {
-      // Dynamic import html2canvas only when needed
       const html2canvas = (await import('html2canvas')).default;
       
       const canvas = await html2canvas(cardRef.current, {
@@ -71,19 +98,11 @@ export function ShareableAchievementCard({
     <div className={cn("space-y-4", className)}>
       {/* The Card to Share */}
       <div ref={cardRef}>
-        {mode === 'mascot' ? (
-          <DigitalChampionMeter
-            completeness={completeness}
-            brandName={brandName}
-            logoUrl={logoUrl}
-          />
-        ) : (
-          <ProfessionalStatsCard
-            completeness={completeness}
-            brandName={brandName}
-            logoUrl={logoUrl}
-          />
-        )}
+        <DigitalChampionMeter
+          completeness={completeness}
+          brandName={brandName}
+          logoUrl={logoUrl}
+        />
       </div>
 
       {/* Share Controls */}
@@ -128,34 +147,19 @@ export function ShareableAchievementCard({
           </Button>
         </div>
 
-        {/* Mode Toggle */}
-        <div className="flex items-center gap-4 pt-2 border-t">
-          <label className="flex items-center gap-2 cursor-pointer text-sm">
-            <input
-              type="radio"
-              name="cardMode"
-              checked={mode === 'mascot'}
-              onChange={() => setMode('mascot')}
-              className="w-4 h-4 text-primary"
-            />
-            <span className={cn(mode === 'mascot' ? 'text-foreground' : 'text-muted-foreground')}>
-              Show mascot
-            </span>
-          </label>
-          
-          <label className="flex items-center gap-2 cursor-pointer text-sm">
-            <input
-              type="radio"
-              name="cardMode"
-              checked={mode === 'professional'}
-              onChange={() => setMode('professional')}
-              className="w-4 h-4 text-primary"
-            />
-            <span className={cn(mode === 'professional' ? 'text-foreground' : 'text-muted-foreground')}>
-              Professional mode
-            </span>
-          </label>
-        </div>
+        {/* Improvement Summary - shown only when not at 100% */}
+        {score < 100 && missingItems.length > 0 && (
+          <div className="pt-2 border-t border-border">
+            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
+              <p className="text-sm text-slate-300">
+                <span className="text-white font-medium">Almost there!</span>
+                {' '}To reach 100%, try adding{' '}
+                {missingItems.join(' and ')}.
+                {' '}These small additions can significantly boost conversions.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
