@@ -417,36 +417,22 @@ export function PageScorePanel({
                   </div>
                   
                   {/* Edge-glow progress bar */}
-                  <div className="relative h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                    {/* Track glow on left edge */}
+                  <div className="relative h-2.5 bg-slate-800 rounded-full overflow-visible">
+                    {/* Left edge glow */}
                     <div 
-                      className="absolute left-0 top-0 bottom-0 w-2 rounded-full blur-sm"
-                      style={{ backgroundColor: `${category.colorLight}40` }}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-4 rounded-full blur-sm opacity-60"
+                      style={{ backgroundColor: category.color }}
                     />
                     
                     {/* The fill */}
                     <div 
-                      className="absolute left-0 top-0 bottom-0 rounded-full transition-all duration-700"
-                      style={{ 
-                        width: `${animatedScores[category.id] || 0}%`,
-                        backgroundColor: category.color
-                      }}
+                      className="h-full bg-slate-600 rounded-full relative transition-all duration-700"
+                      style={{ width: `${animatedScores[category.id] || 0}%` }}
                     >
                       {/* Right edge glow (at fill point) */}
                       <div 
-                        className="absolute right-0 top-0 bottom-0 w-3 rounded-full blur-sm"
-                        style={{ 
-                          backgroundColor: category.colorLight,
-                          boxShadow: `0 0 8px 2px ${category.colorLight}80`
-                        }}
-                      />
-                      
-                      {/* Subtle inner highlight */}
-                      <div 
-                        className="absolute inset-0 rounded-full opacity-30"
-                        style={{
-                          background: `linear-gradient(to bottom, ${category.colorLight}40, transparent)`
-                        }}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-4 rounded-full blur-sm opacity-80"
+                        style={{ backgroundColor: category.color }}
                       />
                     </div>
                   </div>
