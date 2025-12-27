@@ -1,18 +1,84 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, X, ChevronRight, Sparkles } from 'lucide-react';
+import { FileText, X, ChevronRight, Sparkles, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
+import { StrategyBriefEditor } from '@/components/strategy-brief/StrategyBriefEditor';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Props {
   brief: string | null;
   businessName?: string;
+  consultationData?: any;
+  consultationId?: string;
+  onDataUpdated?: (data: any) => void;
+  onRegenerate?: (data: any) => Promise<void>;
 }
 
-export function StrategyBriefPanel({ brief, businessName }: Props) {
+export function StrategyBriefPanel({ 
+  brief, 
+  businessName, 
+  consultationData,
+  consultationId,
+  onDataUpdated,
+  onRegenerate 
+}: Props) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   if (!brief) return null;
+
+  const handleSave = async (updatedData: any) => {
+    if (!consultationId) {
+      toast.error('Cannot save: No consultation ID');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('consultations')
+        .update({
+          industry: updatedData.industry,
+          target_audience: updatedData.idealClient,
+          unique_value: updatedData.uniqueStrength,
+          offer: updatedData.primaryCTA,
+          audience_pain_points: updatedData.audiencePainPoints,
+          audience_goals: updatedData.audienceGoals,
+          key_benefits: updatedData.keyBenefits,
+          competitor_differentiator: updatedData.competitorDifferentiator,
+          authority_markers: updatedData.authorityMarkers,
+          credentials: updatedData.credentials,
+          client_count: updatedData.clientCount,
+          case_study_highlight: updatedData.caseStudyHighlight,
+          guarantee_offer: updatedData.guaranteeOffer,
+          risk_reversals: updatedData.riskReversals,
+          primary_cta: updatedData.primaryCTA,
+          secondary_cta: updatedData.secondaryCTA,
+          urgency_angle: updatedData.urgencyAngle,
+          business_name: updatedData.businessName,
+          website_url: updatedData.websiteUrl,
+        })
+        .eq('id', consultationId);
+
+      if (error) throw error;
+
+      toast.success('Strategy brief saved');
+      onDataUpdated?.(updatedData);
+    } catch (err) {
+      console.error('Failed to save brief:', err);
+      toast.error('Failed to save changes');
+    }
+  };
+
+  const handleRegenerate = async (updatedData: any) => {
+    await handleSave(updatedData);
+    if (onRegenerate) {
+      await onRegenerate(updatedData);
+    } else {
+      toast.info('Page regeneration not available');
+    }
+  };
 
   return (
     <>
@@ -124,8 +190,20 @@ export function StrategyBriefPanel({ brief, businessName }: Props) {
                 </div>
               </div>
 
-              {/* Footer */}
+              {/* Footer with Edit Button */}
               <div className="p-4 border-t border-border flex-shrink-0 bg-muted/30">
+                {consultationData && (
+                  <Button
+                    onClick={() => {
+                      setIsOpen(false);
+                      setIsEditorOpen(true);
+                    }}
+                    className="w-full mb-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white"
+                  >
+                    <Edit3 className="w-4 h-4 mr-2" />
+                    Edit Strategy Brief
+                  </Button>
+                )}
                 <p className="text-xs text-muted-foreground text-center">
                   This brief was generated from your consultation. Use it as a guide while editing your page.
                 </p>
@@ -134,6 +212,17 @@ export function StrategyBriefPanel({ brief, businessName }: Props) {
           </>
         )}
       </AnimatePresence>
+
+      {/* Strategy Brief Editor */}
+      {consultationData && (
+        <StrategyBriefEditor
+          isOpen={isEditorOpen}
+          onClose={() => setIsEditorOpen(false)}
+          consultationData={consultationData}
+          onSave={handleSave}
+          onRegenerate={handleRegenerate}
+        />
+      )}
     </>
   );
 }
