@@ -154,8 +154,36 @@ export default function NewConsultation() {
   };
 
   // Draft recovery handlers
-  const handleContinueDraft = () => {
+  const handleContinueDraft = async () => {
+    if (!userId) return;
+    
+    // First, check if a landing page already exists for a completed consultation
+    // This handles the case where user completed the wizard but didn't finish editing
+    try {
+      // Check for any existing landing page for this user
+      const { data: existingPage } = await supabase
+        .from('landing_pages')
+        .select('id, consultation_id')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (existingPage?.id) {
+        // Page exists - go directly to editor
+        console.log('📄 [DraftRecovery] Page exists, going to editor:', existingPage.id);
+        setShowDraftModal(false);
+        navigate(`/generate/${existingPage.id}`);
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking for existing page:', error);
+      // Continue with draft recovery if check fails
+    }
+    
+    // No page exists - resume the wizard draft
     if (existingDraft?.wizard_data) {
+      console.log('📝 [DraftRecovery] No page, resuming wizard draft');
       // Pre-populate the consultation data from draft
       setConsultationData(existingDraft.wizard_data as ConsultationData);
       setSkipDraftLoad(false); // Allow StrategicConsultation to load the draft
