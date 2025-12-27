@@ -3048,6 +3048,17 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
       <StrategyBriefPanel
         brief={strategicData?.strategyBrief || (pageData?.strategy_brief as string | null) || null}
         businessName={strategicData?.consultationData?.businessName || (pageData?.consultation_data as any)?.businessName}
+        consultationData={strategicData?.consultationData || (pageData?.consultation_data as any) || consultation}
+        consultationId={consultation?.id || pageData?.consultation_id}
+        onDataUpdated={(updatedData) => {
+          // Update local state with new data
+          console.log('Brief data updated:', updatedData);
+        }}
+        onRegenerate={async (updatedData) => {
+          // Trigger page regeneration with updated data
+          console.log('Regenerating with updated brief:', updatedData);
+          handleRegenerate();
+        }}
       />
 
       <PublishModal

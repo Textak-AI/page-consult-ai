@@ -321,54 +321,99 @@ export type Database = {
       consultations: {
         Row: {
           ai_seo_data: Json | null
+          audience_goals: string[] | null
+          audience_pain_points: string[] | null
+          authority_markers: string[] | null
+          business_name: string | null
           calculator_config: Json | null
+          case_study_highlight: string | null
           challenge: string | null
+          client_count: string | null
+          competitor_differentiator: string | null
           created_at: string
+          credentials: string | null
           goal: string | null
+          guarantee_offer: string | null
           id: string
           industry: string | null
+          key_benefits: string[] | null
           offer: string | null
+          primary_cta: string | null
+          risk_reversals: string[] | null
+          secondary_cta: string | null
           service_type: string | null
           status: string
           target_audience: string | null
           unique_value: string | null
           updated_at: string
+          urgency_angle: string | null
           user_id: string
           wants_calculator: boolean | null
+          website_url: string | null
         }
         Insert: {
           ai_seo_data?: Json | null
+          audience_goals?: string[] | null
+          audience_pain_points?: string[] | null
+          authority_markers?: string[] | null
+          business_name?: string | null
           calculator_config?: Json | null
+          case_study_highlight?: string | null
           challenge?: string | null
+          client_count?: string | null
+          competitor_differentiator?: string | null
           created_at?: string
+          credentials?: string | null
           goal?: string | null
+          guarantee_offer?: string | null
           id?: string
           industry?: string | null
+          key_benefits?: string[] | null
           offer?: string | null
+          primary_cta?: string | null
+          risk_reversals?: string[] | null
+          secondary_cta?: string | null
           service_type?: string | null
           status?: string
           target_audience?: string | null
           unique_value?: string | null
           updated_at?: string
+          urgency_angle?: string | null
           user_id: string
           wants_calculator?: boolean | null
+          website_url?: string | null
         }
         Update: {
           ai_seo_data?: Json | null
+          audience_goals?: string[] | null
+          audience_pain_points?: string[] | null
+          authority_markers?: string[] | null
+          business_name?: string | null
           calculator_config?: Json | null
+          case_study_highlight?: string | null
           challenge?: string | null
+          client_count?: string | null
+          competitor_differentiator?: string | null
           created_at?: string
+          credentials?: string | null
           goal?: string | null
+          guarantee_offer?: string | null
           id?: string
           industry?: string | null
+          key_benefits?: string[] | null
           offer?: string | null
+          primary_cta?: string | null
+          risk_reversals?: string[] | null
+          secondary_cta?: string | null
           service_type?: string | null
           status?: string
           target_audience?: string | null
           unique_value?: string | null
           updated_at?: string
+          urgency_angle?: string | null
           user_id?: string
           wants_calculator?: boolean | null
+          website_url?: string | null
         }
         Relationships: []
       }
