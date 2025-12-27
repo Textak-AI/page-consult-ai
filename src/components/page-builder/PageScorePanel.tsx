@@ -14,6 +14,7 @@ interface ScoreFactor {
   present: boolean;
   weight: number;
   hint?: string;
+  section?: string;
 }
 
 interface ScoreCategory {
@@ -53,12 +54,14 @@ interface PageScorePanelProps {
   };
   className?: string;
   onImprovementClick?: (categoryId: string, factorId: string) => void;
+  onEditSection?: (sectionType: string) => void;
 }
 
 export function PageScorePanel({ 
   pageData, 
   className,
-  onImprovementClick 
+  onImprovementClick,
+  onEditSection
 }: PageScorePanelProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [animatedScores, setAnimatedScores] = useState<Record<string, number>>({});
@@ -74,35 +77,40 @@ export function PageScorePanel({
         label: 'Company Name', 
         present: !!(pageData.companyName || pageData.businessName), 
         weight: 20,
-        hint: 'Add your company name to the hero section'
+        hint: 'Add your company name to the hero section',
+        section: 'hero'
       },
       { 
         id: 'hero_headline',
         label: 'Hero Headline', 
         present: !!(pageData.heroHeadline && pageData.heroHeadline.length > 10), 
         weight: 25,
-        hint: 'Create a compelling headline that speaks to your audience'
+        hint: 'Create a compelling headline that speaks to your audience',
+        section: 'hero'
       },
       { 
         id: 'value_prop',
         label: 'Value Proposition', 
         present: !!(pageData.heroSubheadline && pageData.heroSubheadline.length > 20), 
         weight: 25,
-        hint: 'Add a subheadline explaining your unique value'
+        hint: 'Add a subheadline explaining your unique value',
+        section: 'hero'
       },
       { 
         id: 'hero_image',
         label: 'Hero Visual', 
         present: !!pageData.heroImage, 
         weight: 15,
-        hint: 'Add an image or video to your hero section'
+        hint: 'Add an image or video to your hero section',
+        section: 'hero'
       },
       { 
         id: 'cta_button',
         label: 'Call-to-Action', 
         present: !!(pageData.ctaText && pageData.ctaText.length > 2), 
         weight: 15,
-        hint: 'Add a clear CTA button'
+        hint: 'Add a clear CTA button',
+        section: 'final-cta'
       },
     ];
     
@@ -117,14 +125,16 @@ export function PageScorePanel({
         label: 'Key Statistics', 
         present: hasStats, 
         weight: 30,
-        hint: 'Add 3-4 impressive numbers (clients served, years experience, etc.)'
+        hint: 'Add 3-4 impressive numbers (clients served, years experience, etc.)',
+        section: 'stats-bar'
       },
       { 
         id: 'stats_quality',
         label: 'Multiple Stats', 
         present: statsCount >= 3, 
         weight: 20,
-        hint: 'Include at least 3 statistics for credibility'
+        hint: 'Include at least 3 statistics for credibility',
+        section: 'stats-bar'
       },
       { 
         id: 'expertise_claims',
@@ -132,14 +142,16 @@ export function PageScorePanel({
         present: !!(pageData.heroHeadline?.match(/expert|proven|leading|trusted|#1|best|top/i) ||
                    pageData.authorityMarkers?.length), 
         weight: 25,
-        hint: 'Include expertise language or credentials'
+        hint: 'Include expertise language or credentials',
+        section: 'features'
       },
       { 
         id: 'industry_specific',
         label: 'Industry Focus', 
         present: !!(pageData.industry && pageData.heroHeadline?.toLowerCase().includes(pageData.industry.toLowerCase().split(' ')[0])), 
         weight: 25,
-        hint: 'Reference your specific industry in messaging'
+        hint: 'Reference your specific industry in messaging',
+        section: 'features'
       },
     ];
     
@@ -154,28 +166,32 @@ export function PageScorePanel({
         label: 'Testimonials', 
         present: hasTestimonials, 
         weight: 35,
-        hint: 'Add customer testimonials to build trust'
+        hint: 'Add customer testimonials to build trust',
+        section: 'social-proof'
       },
       { 
         id: 'testimonial_quality',
         label: 'Multiple Reviews', 
         present: testimonialCount >= 2, 
         weight: 20,
-        hint: 'Include 2-3 testimonials for stronger proof'
+        hint: 'Include 2-3 testimonials for stronger proof',
+        section: 'social-proof'
       },
       { 
         id: 'testimonial_details',
         label: 'Named Sources', 
         present: pageData.testimonials?.some(t => t.author && t.author.length > 3) || false, 
         weight: 25,
-        hint: 'Include names and titles with testimonials'
+        hint: 'Include names and titles with testimonials',
+        section: 'social-proof'
       },
       { 
         id: 'social_section',
         label: 'Proof Section', 
         present: sectionTypes.includes('social-proof'), 
         weight: 20,
-        hint: 'Add a dedicated social proof section'
+        hint: 'Add a dedicated social proof section',
+        section: 'social-proof'
       },
     ];
     
@@ -190,28 +206,32 @@ export function PageScorePanel({
         label: 'Guarantee', 
         present: !!pageData.guaranteeOffer, 
         weight: 30,
-        hint: 'Add a money-back guarantee or risk-free offer'
+        hint: 'Add a money-back guarantee or risk-free offer',
+        section: 'final-cta'
       },
       { 
         id: 'faq',
         label: 'FAQ Section', 
         present: hasFAQ, 
         weight: 25,
-        hint: 'Add FAQ to address common objections'
+        hint: 'Add FAQ to address common objections',
+        section: 'faq'
       },
       { 
         id: 'faq_quality',
         label: 'Complete FAQ', 
         present: faqCount >= 3, 
         weight: 20,
-        hint: 'Include 3-5 frequently asked questions'
+        hint: 'Include 3-5 frequently asked questions',
+        section: 'faq'
       },
       { 
         id: 'urgency',
         label: 'Urgency Element', 
         present: !!pageData.urgencyAngle, 
         weight: 25,
-        hint: 'Add a reason to act now (limited offer, deadline, etc.)'
+        hint: 'Add a reason to act now (limited offer, deadline, etc.)',
+        section: 'final-cta'
       },
     ];
     
@@ -481,10 +501,25 @@ export function PageScorePanel({
                         </div>
                         
                         {!factor.present && (
-                          <span className="text-xs text-purple-400 flex items-center gap-1">
-                            <Zap className="w-3 h-3" />
-                            Fix
-                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Scroll to section
+                              if (factor.section) {
+                                const sectionElement = document.getElementById(`section-${factor.section}`);
+                                if (sectionElement) {
+                                  sectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                                // Trigger section editing
+                                onEditSection?.(factor.section);
+                              }
+                              onImprovementClick?.(category.id, factor.id);
+                            }}
+                            className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
+                          >
+                            +{factor.weight} pts
+                            <ChevronDown className="w-3 h-3 rotate-[-90deg]" />
+                          </button>
                         )}
                       </div>
                     ))}
