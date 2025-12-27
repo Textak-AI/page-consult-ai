@@ -603,11 +603,14 @@ export type Database = {
           consultation_data: Json | null
           consultation_id: string | null
           created_at: string
+          hero_thumbnail_url: string | null
           id: string
+          is_current_version: boolean | null
           is_published: boolean | null
           last_change_summary: string | null
           meta_description: string | null
           meta_title: string | null
+          parent_page_id: string | null
           published_at: string | null
           published_url: string | null
           sections: Json
@@ -618,6 +621,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          version_number: number | null
           website_intelligence: Json | null
         }
         Insert: {
@@ -628,11 +632,14 @@ export type Database = {
           consultation_data?: Json | null
           consultation_id?: string | null
           created_at?: string
+          hero_thumbnail_url?: string | null
           id?: string
+          is_current_version?: boolean | null
           is_published?: boolean | null
           last_change_summary?: string | null
           meta_description?: string | null
           meta_title?: string | null
+          parent_page_id?: string | null
           published_at?: string | null
           published_url?: string | null
           sections?: Json
@@ -643,6 +650,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          version_number?: number | null
           website_intelligence?: Json | null
         }
         Update: {
@@ -653,11 +661,14 @@ export type Database = {
           consultation_data?: Json | null
           consultation_id?: string | null
           created_at?: string
+          hero_thumbnail_url?: string | null
           id?: string
+          is_current_version?: boolean | null
           is_published?: boolean | null
           last_change_summary?: string | null
           meta_description?: string | null
           meta_title?: string | null
+          parent_page_id?: string | null
           published_at?: string | null
           published_url?: string | null
           sections?: Json
@@ -668,6 +679,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          version_number?: number | null
           website_intelligence?: Json | null
         }
         Relationships: [
@@ -676,6 +688,13 @@ export type Database = {
             columns: ["consultation_id"]
             isOneToOne: false
             referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "landing_pages_parent_page_id_fkey"
+            columns: ["parent_page_id"]
+            isOneToOne: false
+            referencedRelation: "landing_pages"
             referencedColumns: ["id"]
           },
         ]
