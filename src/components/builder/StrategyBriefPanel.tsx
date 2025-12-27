@@ -4,6 +4,7 @@ import { FileText, X, ChevronRight, Sparkles, Edit3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import { StrategyBriefEditor } from '@/components/strategy-brief/StrategyBriefEditor';
+import { CollapsibleCodeBlock } from '@/components/strategy-brief/CollapsibleCodeBlock';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -180,9 +181,18 @@ export function StrategyBriefPanel({
                           {children}
                         </blockquote>
                       ),
-                      code: ({ children }) => (
-                        <code className="bg-muted px-1.5 py-0.5 rounded text-sm text-foreground">{children}</code>
+                      pre: ({ children }) => (
+                        <CollapsibleCodeBlock title="View Code" defaultOpen={false}>
+                          <pre className="bg-muted p-4 overflow-x-auto text-sm m-0">{children}</pre>
+                        </CollapsibleCodeBlock>
                       ),
+                      code: ({ className, children, ...props }) => {
+                        const isInline = !className;
+                        if (isInline) {
+                          return <code className="bg-muted px-1.5 py-0.5 rounded text-sm text-foreground" {...props}>{children}</code>;
+                        }
+                        return <code className="text-muted-foreground" {...props}>{children}</code>;
+                      },
                     }}
                   >
                     {brief}

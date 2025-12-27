@@ -4,6 +4,7 @@ import { FileText, Edit3, RotateCcw, ArrowRight, CheckCircle2 } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import { AISeoPanel } from './AISeoPanel';
+import { CollapsibleCodeBlock } from '@/components/strategy-brief/CollapsibleCodeBlock';
 import type { ConsultationData } from './StrategicConsultation';
 import type { AISeoData } from '@/services/intelligence/types';
 
@@ -76,6 +77,18 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, onAppr
                 li: ({ children }) => <li className="text-slate-400">{children}</li>,
                 strong: ({ children }) => <strong className="text-white font-semibold">{children}</strong>,
                 blockquote: ({ children }) => <blockquote className="border-l-4 border-cyan-500 pl-4 italic text-slate-400">{children}</blockquote>,
+                pre: ({ children }) => (
+                  <CollapsibleCodeBlock title="View Code" defaultOpen={false}>
+                    <pre className="bg-slate-900 p-4 overflow-x-auto text-sm m-0">{children}</pre>
+                  </CollapsibleCodeBlock>
+                ),
+                code: ({ className, children, ...props }) => {
+                  const isInline = !className;
+                  if (isInline) {
+                    return <code className="bg-slate-800 px-1.5 py-0.5 rounded text-sm text-cyan-300" {...props}>{children}</code>;
+                  }
+                  return <code className="text-slate-300" {...props}>{children}</code>;
+                },
               }}
             >
               {brief}
