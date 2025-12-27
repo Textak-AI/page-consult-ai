@@ -9,7 +9,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { 
   Plus, ArrowRight, Clock, Sparkles, 
-  Zap, Search, FileText
+  Zap, Search, FileText, Edit3
 } from 'lucide-react';
 import { format, parseISO, startOfDay } from 'date-fns';
 import { DayAccordion } from '@/components/dashboard/DayAccordion';
@@ -43,17 +43,37 @@ export default function Dashboard() {
     enabled: !!user?.id
   });
 
-  // Fetch user's consultations
+  // Fetch user's consultations with their landing pages
   const { data: consultations } = useQuery({
-    queryKey: ['user-consultations', user?.id],
+    queryKey: ['user-consultations-with-pages', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get consultations
+      const { data: consultsData, error: consultsError } = await supabase
         .from('consultations')
         .select('*')
         .eq('user_id', user?.id)
         .order('updated_at', { ascending: false });
-      if (error) throw error;
-      return data;
+      if (consultsError) throw consultsError;
+      
+      // For each consultation, check if there's an existing page
+      const consultationsWithPages = await Promise.all(
+        (consultsData || []).map(async (consult) => {
+          const { data: pageData } = await supabase
+            .from('landing_pages')
+            .select('id, title')
+            .eq('consultation_id', consult.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          return {
+            ...consult,
+            existingPage: pageData || null
+          };
+        })
+      );
+      
+      return consultationsWithPages;
     },
     enabled: !!user?.id
   });
@@ -135,7 +155,30 @@ export default function Dashboard() {
   // Calculate actual page count (unique pages, not versions)
   const actualPageCount = pagesWithVersions.length;
 
-  const inProgressConsultation = consultations?.find(c => c.status === 'in_progress');
+  // Find in-progress consultation (that doesn't already have a page generated)
+  const inProgressConsultation = consultations?.find(c => 
+    c.status === 'in_progress'
+  );
+
+  // Check if the in-progress consultation has an existing page
+  const hasExistingPage = inProgressConsultation?.existingPage !== null;
+  const existingPageId = inProgressConsultation?.existingPage?.id;
+  const existingPageTitle = inProgressConsultation?.existingPage?.title;
+
+  const handleContinueConsultation = async (consultationId: string) => {
+    // Check if a page exists for this consultation
+    const consultation = consultations?.find(c => c.id === consultationId);
+    
+    if (consultation?.existingPage?.id) {
+      // Page exists — go to the editor
+      console.log('📄 Page already exists, navigating to editor:', consultation.existingPage.id);
+      navigate(`/generate?id=${consultation.existingPage.id}`);
+    } else {
+      // No page yet — resume the wizard
+      console.log('📝 No page yet, resuming wizard for consultation:', consultationId);
+      navigate('/new', { state: { resumeConsultationId: consultationId } });
+    }
+  };
 
   const getUserDisplayName = () => {
     if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
@@ -293,24 +336,33 @@ export default function Dashboard() {
           {/* In Progress Alert */}
           {inProgressConsultation && (
             <div className="mb-8">
-              <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/30 rounded-xl p-5">
+              <div className={`bg-gradient-to-r ${hasExistingPage ? 'from-emerald-500/10 to-cyan-500/10 border-emerald-500/30' : 'from-primary/10 to-secondary/10 border-primary/30'} border rounded-xl p-5`}>
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 bg-primary/20 rounded-lg">
-                      <Clock className="w-6 h-6 text-primary" />
+                    <div className={`p-3 ${hasExistingPage ? 'bg-emerald-500/20' : 'bg-primary/20'} rounded-lg`}>
+                      {hasExistingPage ? (
+                        <Edit3 className="w-6 h-6 text-emerald-400" />
+                      ) : (
+                        <Clock className="w-6 h-6 text-primary" />
+                      )}
                     </div>
                     <div>
-                      <p className="text-foreground font-semibold">Consultation in Progress</p>
+                      <p className="text-foreground font-semibold">
+                        {hasExistingPage ? 'Page Ready for Editing' : 'Consultation in Progress'}
+                      </p>
                       <p className="text-muted-foreground text-sm">
-                        {inProgressConsultation.industry || 'Untitled'} — Continue where you left off
+                        {hasExistingPage 
+                          ? `${existingPageTitle || inProgressConsultation.industry || 'Your Page'} — Continue editing your landing page`
+                          : `${inProgressConsultation.industry || 'Untitled'} — Continue where you left off`
+                        }
                       </p>
                     </div>
                   </div>
                   <Button 
-                    onClick={() => navigate('/new')}
-                    className="bg-primary hover:bg-primary/90"
+                    onClick={() => handleContinueConsultation(inProgressConsultation.id)}
+                    className={hasExistingPage ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-primary hover:bg-primary/90'}
                   >
-                    Continue
+                    {hasExistingPage ? 'Edit Page' : 'Continue'}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
