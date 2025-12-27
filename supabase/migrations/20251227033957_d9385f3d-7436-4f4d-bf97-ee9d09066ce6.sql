@@ -1,0 +1,1 @@
+ALTER TABLE landing_pages ADD COLUMN IF NOT EXISTS last_change_summary TEXT;
