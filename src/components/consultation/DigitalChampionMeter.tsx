@@ -157,12 +157,6 @@ export function DigitalChampionMeter({
             
             {/* Edge-glow progress bar */}
             <div className="relative h-2.5 bg-slate-800 rounded-full overflow-visible">
-              {/* Left edge glow */}
-              <div 
-                className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-4 rounded-full blur-sm opacity-60"
-                style={{ backgroundColor: color }}
-              />
-              
               {/* The fill */}
               <motion.div 
                 className="h-full bg-slate-600 rounded-full relative"

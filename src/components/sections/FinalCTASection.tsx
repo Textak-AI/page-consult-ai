@@ -45,7 +45,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   // SaaS variant
   if (isSaas) {
     return (
-      <section className="py-32 bg-gradient-to-br from-purple-900 via-slate-900 to-blue-900 relative overflow-hidden">
+      <section className="py-32 pb-48 bg-gradient-to-br from-purple-900 via-slate-900 to-blue-900 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-600/20 via-transparent to-transparent" />
         
         {isEditing && (
@@ -147,7 +147,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   if (isConsulting) {
     // Consulting layout: Dark slate-900 background for contrast
     return (
-      <section className="py-32 bg-slate-900 relative overflow-hidden">
+      <section className="py-32 pb-48 bg-slate-900 relative overflow-hidden">
         {isEditing && (
           <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
         )}
@@ -268,10 +268,11 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   // Default dark mode layout with glows
   return (
     <section 
-      className="relative overflow-hidden"
+      className="relative overflow-hidden pb-24"
       style={{
         backgroundColor: `hsl(${tokens.colors.bgDark})`,
         padding: '128px 24px',
+        paddingBottom: '128px',
       }}
     >
       {/* Dramatic Background */}
