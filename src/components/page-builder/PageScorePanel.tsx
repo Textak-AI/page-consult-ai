@@ -2,10 +2,11 @@ import { useState, useMemo, useEffect } from 'react';
 import { 
   Twitter, Linkedin, Download, Check, Circle,
   Shield, Users, Award, Sparkles, ChevronDown,
-  ChevronUp, Zap, Lightbulb
+  ChevronUp, Zap, Lightbulb, Palette
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { SCORE_CATEGORIES, type ScoreCategoryId } from '@/lib/categoryColors';
 
 interface ScoreFactor {
   id: string;
@@ -16,12 +17,12 @@ interface ScoreFactor {
 }
 
 interface ScoreCategory {
-  id: string;
+  id: ScoreCategoryId;
   name: string;
-  icon: React.ComponentType<{ className?: string }>;
-  gradient: string;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  color: string;
+  colorLight: string;
   glowColor: string;
-  accentColor: string;
   factors: ScoreFactor[];
   score?: number;
 }
@@ -223,38 +224,38 @@ export function PageScorePanel({
     const categories: ScoreCategory[] = [
       {
         id: 'brand',
-        name: 'Brand Identity',
-        icon: Sparkles,
-        gradient: 'from-purple-500 to-violet-600',
-        glowColor: 'rgba(139, 92, 246, 0.3)',
-        accentColor: 'text-purple-400',
+        name: SCORE_CATEGORIES.brand.name,
+        icon: Palette,
+        color: SCORE_CATEGORIES.brand.color,
+        colorLight: SCORE_CATEGORIES.brand.colorLight,
+        glowColor: `${SCORE_CATEGORIES.brand.color}4D`,
         factors: brandFactors,
       },
       {
         id: 'authority',
-        name: 'Authority',
+        name: SCORE_CATEGORIES.authority.name,
         icon: Award,
-        gradient: 'from-blue-500 to-cyan-500',
-        glowColor: 'rgba(59, 130, 246, 0.3)',
-        accentColor: 'text-blue-400',
+        color: SCORE_CATEGORIES.authority.color,
+        colorLight: SCORE_CATEGORIES.authority.colorLight,
+        glowColor: `${SCORE_CATEGORIES.authority.color}4D`,
         factors: authorityFactors,
       },
       {
-        id: 'social',
-        name: 'Social Proof',
+        id: 'proof',
+        name: SCORE_CATEGORIES.proof.name,
         icon: Users,
-        gradient: 'from-emerald-500 to-teal-500',
-        glowColor: 'rgba(16, 185, 129, 0.3)',
-        accentColor: 'text-emerald-400',
+        color: SCORE_CATEGORIES.proof.color,
+        colorLight: SCORE_CATEGORIES.proof.colorLight,
+        glowColor: `${SCORE_CATEGORIES.proof.color}4D`,
         factors: socialFactors,
       },
       {
         id: 'trust',
-        name: 'Trust Signals',
+        name: SCORE_CATEGORIES.trust.name,
         icon: Shield,
-        gradient: 'from-amber-500 to-orange-500',
-        glowColor: 'rgba(245, 158, 11, 0.3)',
-        accentColor: 'text-amber-400',
+        color: SCORE_CATEGORIES.trust.color,
+        colorLight: SCORE_CATEGORIES.trust.colorLight,
+        glowColor: `${SCORE_CATEGORIES.trust.color}4D`,
         factors: trustFactors,
       },
     ];
@@ -397,9 +398,12 @@ export function PageScorePanel({
               >
                 <div 
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ boxShadow: `0 0 20px ${category.glowColor}` }}
+                  style={{ 
+                    boxShadow: `0 0 20px ${category.glowColor}`,
+                    backgroundColor: `${category.color}20`
+                  }}
                 >
-                  <Icon className={cn("w-4 h-4", category.accentColor)} />
+                  <Icon className="w-4 h-4" style={{ color: category.color }} />
                 </div>
                 
                 <div className="flex-1 min-w-0">
@@ -407,26 +411,44 @@ export function PageScorePanel({
                     <span className="text-sm font-medium text-white">
                       {category.name}
                     </span>
-                    <span className={cn("text-sm font-semibold", category.accentColor)}>
+                    <span className="text-sm font-semibold" style={{ color: category.colorLight }}>
                       {category.score}%
                     </span>
                   </div>
                   
-                  <div className="relative h-1.5 bg-slate-700/50 rounded-full overflow-hidden">
+                  {/* Edge-glow progress bar */}
+                  <div className="relative h-2 bg-slate-700/50 rounded-full overflow-hidden">
+                    {/* Track glow on left edge */}
                     <div 
-                      className="absolute inset-0 opacity-40 blur-sm rounded-full"
+                      className="absolute left-0 top-0 bottom-0 w-2 rounded-full blur-sm"
+                      style={{ backgroundColor: `${category.colorLight}40` }}
+                    />
+                    
+                    {/* The fill */}
+                    <div 
+                      className="absolute left-0 top-0 bottom-0 rounded-full transition-all duration-700"
                       style={{ 
-                        width: `${category.score}%`,
-                        background: `linear-gradient(to right, ${category.glowColor}, ${category.glowColor})`
+                        width: `${animatedScores[category.id] || 0}%`,
+                        backgroundColor: category.color
                       }}
-                    />
-                    <div 
-                      className={cn(
-                        "h-full rounded-full bg-gradient-to-r transition-all duration-700",
-                        category.gradient
-                      )}
-                      style={{ width: `${animatedScores[category.id] || 0}%` }}
-                    />
+                    >
+                      {/* Right edge glow (at fill point) */}
+                      <div 
+                        className="absolute right-0 top-0 bottom-0 w-3 rounded-full blur-sm"
+                        style={{ 
+                          backgroundColor: category.colorLight,
+                          boxShadow: `0 0 8px 2px ${category.colorLight}80`
+                        }}
+                      />
+                      
+                      {/* Subtle inner highlight */}
+                      <div 
+                        className="absolute inset-0 rounded-full opacity-30"
+                        style={{
+                          background: `linear-gradient(to bottom, ${category.colorLight}40, transparent)`
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
                 
