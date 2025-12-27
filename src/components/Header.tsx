@@ -148,14 +148,10 @@ const Header = () => {
             ) : user ? (
               // Logged-in actions
               <>
-                {/* Credits display */}
-                <div className="hidden sm:flex items-center gap-2 text-sm mr-2">
-                  <Zap className="w-4 h-4 text-amber-400" />
-                  <span className="text-slate-300">
-                    <span className="font-medium text-white">
-                      {credits.isUnlimited ? '∞' : credits.available}
-                    </span> credits
-                  </span>
+                {/* Credits display - understated */}
+                <div className="hidden sm:flex items-center gap-1.5 text-sm text-slate-500">
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>{credits.isUnlimited ? '∞' : credits.available} credits</span>
                 </div>
                 
                 <Button 
