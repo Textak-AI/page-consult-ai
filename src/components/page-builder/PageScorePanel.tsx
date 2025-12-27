@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { 
   Twitter, Linkedin, Download, Check, Circle,
   Shield, Users, Award, Sparkles, ChevronDown,
-  ChevronUp, Zap, Lightbulb, Palette
+  ChevronRight, Zap, Lightbulb, Palette
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -414,10 +414,19 @@ export function PageScorePanel({
             <div key={category.id}>
               <button
                 onClick={() => setExpandedCategory(isExpanded ? null : category.id)}
-                className="w-full p-3 flex items-center gap-3 hover:bg-slate-800/80 transition-colors"
+                className="w-full p-3 flex items-center gap-3 hover:bg-slate-800/50 rounded-lg transition-colors cursor-pointer"
               >
+                {/* Chevron indicator - visible cue that it's expandable */}
+                <div className="flex items-center justify-center w-5">
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  )}
+                </div>
+                
                 <div 
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                   style={{ 
                     boxShadow: `0 0 20px ${category.glowColor}`,
                     backgroundColor: `${category.color}20`
@@ -431,9 +440,16 @@ export function PageScorePanel({
                     <span className="text-sm font-medium text-white">
                       {category.name}
                     </span>
-                    <span className="text-sm font-semibold" style={{ color: category.colorLight }}>
-                      {category.score}%
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {missingFactors.length > 0 && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/50 text-slate-400">
+                          +{missingFactors.length}
+                        </span>
+                      )}
+                      <span className="text-sm font-semibold" style={{ color: category.colorLight }}>
+                        {category.score}%
+                      </span>
+                    </div>
                   </div>
                   
                   {/* Edge-glow progress bar */}
@@ -450,19 +466,6 @@ export function PageScorePanel({
                       />
                     </div>
                   </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  {missingFactors.length > 0 && (
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/50 text-slate-400">
-                      +{missingFactors.length}
-                    </span>
-                  )}
-                  {isExpanded ? (
-                    <ChevronUp className="w-4 h-4 text-slate-400" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-slate-400" />
-                  )}
                 </div>
               </button>
               
