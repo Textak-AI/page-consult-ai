@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, X, ChevronRight, Sparkles, Edit3 } from 'lucide-react';
+import { FileText, X, ChevronRight, Sparkles, Edit3, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import { StrategyBriefEditor } from '@/components/strategy-brief/StrategyBriefEditor';
-import { CollapsibleCodeBlock } from '@/components/strategy-brief/CollapsibleCodeBlock';
+import { AISeoPanel } from '@/components/consultation/AISeoPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { AISeoData } from '@/services/intelligence/types';
 
 interface Props {
   brief: string | null;
   businessName?: string;
   consultationData?: any;
   consultationId?: string;
+  aiSeoData?: AISeoData | null;
   onDataUpdated?: (data: any) => void;
   onRegenerate?: (data: any) => Promise<void>;
 }
@@ -22,6 +24,7 @@ export function StrategyBriefPanel({
   businessName, 
   consultationData,
   consultationId,
+  aiSeoData,
   onDataUpdated,
   onRegenerate 
 }: Props) {
@@ -145,59 +148,76 @@ export function StrategyBriefPanel({
               </div>
 
               {/* Brief Content */}
-              <div className="flex-1 overflow-auto p-6">
+              <div className="flex-1 overflow-auto p-6 space-y-6">
+                {/* Main Strategy Brief */}
                 <div className="prose prose-invert prose-sm max-w-none">
                   <ReactMarkdown
                     components={{
                       h1: ({ children }) => (
-                        <h1 className="text-2xl font-bold text-foreground mt-0 mb-4">{children}</h1>
+                        <h1 className="text-2xl font-bold text-foreground mt-0 mb-6">{children}</h1>
                       ),
                       h2: ({ children }) => (
-                        <div className="flex items-center gap-2 text-lg font-semibold text-foreground mt-6 mb-3 pb-2 border-b border-border">
-                          <ChevronRight className="w-4 h-4 text-primary" />
-                          {children}
+                        <div className="flex items-center gap-3 mt-8 mb-4 first:mt-0">
+                          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                            <ChevronRight className="w-4 h-4 text-primary" />
+                          </div>
+                          <h2 className="text-lg font-semibold text-foreground m-0">{children}</h2>
                         </div>
                       ),
                       h3: ({ children }) => (
-                        <h3 className="text-base font-medium text-foreground mt-4 mb-2">{children}</h3>
+                        <h3 className="text-base font-medium text-foreground mt-5 mb-2 pl-11">{children}</h3>
                       ),
                       p: ({ children }) => (
-                        <p className="text-muted-foreground mb-3 leading-relaxed">{children}</p>
+                        <p className="text-muted-foreground mb-3 leading-relaxed pl-11">{children}</p>
                       ),
                       ul: ({ children }) => (
-                        <ul className="space-y-2 mb-4 ml-4">{children}</ul>
+                        <ul className="space-y-2 mb-4 pl-11">{children}</ul>
                       ),
                       ol: ({ children }) => (
-                        <ol className="space-y-2 mb-4 ml-4 list-decimal">{children}</ol>
+                        <ol className="space-y-2 mb-4 pl-11 list-decimal list-inside">{children}</ol>
                       ),
                       li: ({ children }) => (
-                        <li className="text-muted-foreground before:content-['•'] before:text-primary before:mr-2">{children}</li>
+                        <li className="text-muted-foreground flex items-start gap-2">
+                          <span className="text-primary mt-0.5">•</span>
+                          <span>{children}</span>
+                        </li>
                       ),
                       strong: ({ children }) => (
                         <strong className="text-foreground font-semibold">{children}</strong>
                       ),
                       blockquote: ({ children }) => (
-                        <blockquote className="border-l-4 border-primary pl-4 italic text-muted-foreground my-4">
+                        <blockquote className="border-l-4 border-primary pl-4 ml-11 italic text-muted-foreground my-4 bg-primary/5 py-3 pr-4 rounded-r-lg">
                           {children}
                         </blockquote>
                       ),
-                      pre: ({ children }) => (
-                        <CollapsibleCodeBlock title="View Code" defaultOpen={false}>
-                          <pre className="bg-muted p-4 overflow-x-auto text-sm m-0">{children}</pre>
-                        </CollapsibleCodeBlock>
-                      ),
+                      // Hide code blocks in production - they're not useful for viewing
+                      pre: () => null,
                       code: ({ className, children, ...props }) => {
                         const isInline = !className;
                         if (isInline) {
                           return <code className="bg-muted px-1.5 py-0.5 rounded text-sm text-foreground" {...props}>{children}</code>;
                         }
-                        return <code className="text-muted-foreground" {...props}>{children}</code>;
+                        // Hide block-level code
+                        return null;
                       },
+                      // Add visual separators between major sections
+                      hr: () => (
+                        <div className="my-6 border-t border-border" />
+                      ),
                     }}
                   >
                     {brief}
                   </ReactMarkdown>
                 </div>
+
+                {/* Separator before AI SEO */}
+                {aiSeoData && (
+                  <>
+                    <div className="border-t border-border pt-6">
+                      <AISeoPanel aiSeoData={aiSeoData} />
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Footer with Edit Button */}
