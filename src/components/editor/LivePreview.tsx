@@ -28,6 +28,7 @@ import { SectionImageGenerator } from "@/components/editor/SectionImageGenerator
 import { LogoUploader } from "@/components/editor/LogoUploader";
 import { LockedSectionOverlay } from "@/components/sections/LockedSectionOverlay";
 import { TestimonialAcquisitionModal } from "@/components/modals/TestimonialAcquisitionModal";
+import { PageFooter } from "@/components/PageFooter";
 import { styleVariants } from "@/lib/styleVariants";
 import { SEOHead } from "@/components/seo/SEOHead";
 import type { SEOHeadData } from "@/lib/aiSeoIntegration";
@@ -519,6 +520,9 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         {sections
           .sort((a, b) => a.order - b.order)
           .map((section, index) => renderSection(section, index))}
+        
+        {/* Footer */}
+        <PageFooter />
       </div>
       
       {/* AI Chat Drawer */}

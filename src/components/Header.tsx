@@ -3,8 +3,9 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, LogOut, User, Settings, ChevronDown } from "lucide-react";
+import { Plus, LogOut, User, Settings, ChevronDown, Zap } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +20,7 @@ const Header = () => {
   const [logoLoaded, setLogoLoaded] = useState(false);
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const { credits } = useCredits(user?.id ?? null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -146,6 +148,16 @@ const Header = () => {
             ) : user ? (
               // Logged-in actions
               <>
+                {/* Credits display */}
+                <div className="hidden sm:flex items-center gap-2 text-sm mr-2">
+                  <Zap className="w-4 h-4 text-amber-400" />
+                  <span className="text-slate-300">
+                    <span className="font-medium text-white">
+                      {credits.isUnlimited ? '∞' : credits.available}
+                    </span> credits
+                  </span>
+                </div>
+                
                 <Button 
                   onClick={() => navigate('/new')}
                   className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-medium hidden sm:flex"
