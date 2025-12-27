@@ -1,10 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { CompletenessState, getStrengthLabel } from '@/lib/pageCompleteness';
+import { CompletenessState } from '@/lib/pageCompleteness';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { Trophy, Unlock } from 'lucide-react';
-import { MascotSVG } from '@/components/ui/MascotSVG';
+import { Trophy, Unlock, Sparkles, Palette, Award, Users, Shield } from 'lucide-react';
+import { SCORE_CATEGORIES } from '@/lib/categoryColors';
 
 interface DigitalChampionMeterProps {
   completeness: CompletenessState;
@@ -20,18 +20,17 @@ export function DigitalChampionMeter({
   className 
 }: DigitalChampionMeterProps) {
   const { score, unlockedSections, milestones } = completeness;
-  const strength = getStrengthLabel(score);
   
   const prevUnlockedRef = useRef<string[]>([]);
   const prevMilestonesRef = useRef<string[]>([]);
 
   // Calculate individual stats from completeness data
-  const stats = {
+  const stats = useMemo(() => ({
     brand: Math.min(100, Math.round((score * 1.2) + (logoUrl ? 15 : 0))),
     authority: Math.min(100, Math.round(score * 0.9)),
     proof: Math.min(100, Math.round((milestones.filter(m => m.achieved).length / Math.max(milestones.length, 1)) * 100)),
     trust: Math.min(100, Math.round(score * 0.85)),
-  };
+  }), [score, logoUrl, milestones]);
 
   // Toast on unlock (keeping existing behavior)
   useEffect(() => {
@@ -44,9 +43,9 @@ export function DigitalChampionMeter({
     );
     newlyUnlocked.forEach(section => {
       toast.success(
-        <div className="flex items-center gap-2 font-mono">
-          <Unlock className="w-4 h-4 text-primary" />
-          <span className="uppercase text-xs">{section.replace(/-/g, ' ')} unlocked!</span>
+        <div className="flex items-center gap-2">
+          <Unlock className="w-4 h-4 text-purple-400" />
+          <span className="text-sm">{section.replace(/-/g, ' ')} unlocked!</span>
         </div>,
         { duration: 3000 }
       );
@@ -66,9 +65,9 @@ export function DigitalChampionMeter({
     );
     newMilestones.forEach(milestone => {
       toast.success(
-        <div className="flex items-center gap-2 font-mono">
+        <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-amber-500" />
-          <span className="uppercase text-xs">Achievement: {milestone}</span>
+          <span className="text-sm">Achievement: {milestone}</span>
         </div>,
         { duration: 4000 }
       );
@@ -76,152 +75,118 @@ export function DigitalChampionMeter({
     prevMilestonesRef.current = achievedMilestones;
   }, [milestones]);
 
-  const getPowerMessage = () => {
-    if (score >= 90) return '"LEGENDARY STATUS!"';
-    if (score >= 75) return '"Looking powerful!"';
-    if (score >= 50) return '"Growing stronger..."';
-    if (score >= 25) return '"Keep building!"';
-    return '"Just getting started"';
+  const getScoreLabel = (s: number) => {
+    if (s >= 90) return 'Conversion-Ready';
+    if (s >= 75) return 'Strong Foundation';
+    if (s >= 50) return 'Good Progress';
+    if (s >= 25) return 'Building Up';
+    return 'Getting Started';
   };
+
+  const categories = [
+    { 
+      id: 'brand', 
+      name: 'Brand Identity', 
+      value: stats.brand, 
+      color: SCORE_CATEGORIES.brand.color,
+      Icon: Palette 
+    },
+    { 
+      id: 'authority', 
+      name: 'Authority', 
+      value: stats.authority, 
+      color: SCORE_CATEGORIES.authority.color,
+      Icon: Award 
+    },
+    { 
+      id: 'proof', 
+      name: 'Social Proof', 
+      value: stats.proof, 
+      color: SCORE_CATEGORIES.proof.color,
+      Icon: Users 
+    },
+    { 
+      id: 'trust', 
+      name: 'Trust Signals', 
+      value: stats.trust, 
+      color: SCORE_CATEGORIES.trust.color,
+      Icon: Shield 
+    },
+  ];
 
   return (
     <div className={cn(
-      "relative overflow-hidden rounded-lg border-4 border-primary/30 bg-background font-mono text-xs",
-      "shadow-[0_0_20px_rgba(168,85,247,0.2)]",
+      "bg-slate-900/95 backdrop-blur-xl rounded-xl border border-slate-700/50 overflow-hidden",
       className
     )}>
-      {/* Scanline overlay effect */}
-      <div className="absolute inset-0 pointer-events-none bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.03)_2px,rgba(0,0,0,0.03)_4px)] z-10" />
-      
       {/* Header */}
-      <div className="bg-primary/10 border-b-2 border-primary/30 px-3 py-2 flex items-center justify-between">
-        <span className="text-primary font-bold tracking-wider">★ DIGITAL CHAMPION ★</span>
-        <span className="text-muted-foreground text-[10px]">32-BIT</span>
+      <div className="p-4 border-b border-slate-700/50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-400" />
+            <span className="font-semibold text-white">Page Score</span>
+          </div>
+          <motion.span 
+            className="text-2xl font-bold text-white"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            key={score}
+          >
+            {score}%
+          </motion.span>
+        </div>
+        <p className={cn(
+          "text-sm mt-1",
+          score >= 75 ? "text-emerald-400" : score >= 50 ? "text-amber-400" : "text-slate-400"
+        )}>
+          {getScoreLabel(score)}
+        </p>
       </div>
 
-      <div className="p-4 space-y-4">
-        {/* Mascot Character */}
-        <div className="flex justify-center">
-          <div className="relative">
-            {/* Glow effect based on power level */}
-            <div 
-              className="absolute inset-0 -z-10 blur-xl rounded-full"
-              style={{
-                background: `radial-gradient(circle, hsl(var(--primary) / ${score / 200}) 0%, transparent 70%)`,
-              }}
-            />
+      {/* Score Bars */}
+      <div className="p-4 space-y-3">
+        {categories.map(({ id, name, value, color, Icon }) => (
+          <div key={id}>
+            <div className="flex items-center justify-between text-sm mb-1.5">
+              <div className="flex items-center gap-2">
+                <Icon className="w-3.5 h-3.5" style={{ color }} />
+                <span className="text-slate-400">{name}</span>
+              </div>
+              <span className="text-white font-medium">{value}%</span>
+            </div>
             
-            {/* Float animation wrapper */}
-            <motion.div
-              animate={{ y: [0, -4, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <MascotSVG 
-                size={80} 
-                accentColor="hsl(var(--primary))"
-                className="drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]"
+            {/* Edge-glow progress bar */}
+            <div className="relative h-2.5 bg-slate-800 rounded-full overflow-visible">
+              {/* Left edge glow */}
+              <div 
+                className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-4 rounded-full blur-sm opacity-60"
+                style={{ backgroundColor: color }}
               />
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="border-t-2 border-dashed border-primary/20" />
-
-        {/* Brand Name */}
-        <div className="text-center">
-          <div className="text-primary font-bold text-sm tracking-widest uppercase truncate">
-            {brandName}
-          </div>
-          <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-primary/40 to-transparent mt-1" />
-        </div>
-
-        {/* Stat Bars */}
-        <div className="space-y-2">
-          <StatBar label="BRAND" value={stats.brand} color="from-purple-500 to-pink-500" />
-          <StatBar label="AUTHORITY" value={stats.authority} color="from-blue-500 to-cyan-500" />
-          <StatBar label="PROOF" value={stats.proof} color="from-green-500 to-emerald-500" />
-          <StatBar label="TRUST" value={stats.trust} color="from-amber-500 to-yellow-500" />
-        </div>
-
-        {/* Divider */}
-        <div className="border-t-2 border-primary/20" />
-
-        {/* Power Level */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-primary">
-            <span className="text-base">⚡</span>
-            <span className="font-bold tracking-wider">POWER LEVEL</span>
-          </div>
-          
-          <div className="relative h-4 bg-muted/50 rounded overflow-hidden border border-primary/20">
-            <motion.div
-              className={cn(
-                "absolute inset-y-0 left-0 rounded",
-                score >= 90 ? "bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500" :
-                score >= 75 ? "bg-gradient-to-r from-green-500 to-emerald-400" :
-                score >= 50 ? "bg-gradient-to-r from-blue-500 to-cyan-400" :
-                "bg-gradient-to-r from-purple-500 to-pink-400"
-              )}
-              initial={{ width: 0 }}
-              animate={{ width: `${score}%` }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            />
-            {/* Pixel block effect overlay */}
-            <div className="absolute inset-0 flex">
-              {Array.from({ length: 20 }).map((_, i) => (
+              
+              {/* The fill */}
+              <motion.div 
+                className="h-full bg-slate-600 rounded-full relative"
+                initial={{ width: 0 }}
+                animate={{ width: `${value}%` }}
+                transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+              >
+                {/* Right edge glow (at fill point) */}
                 <div 
-                  key={i} 
-                  className="flex-1 border-r border-background/20 last:border-r-0"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-4 rounded-full blur-sm opacity-80"
+                  style={{ backgroundColor: color }}
                 />
-              ))}
+              </motion.div>
             </div>
           </div>
-          
-          <div className="flex justify-between items-center">
-            <span className={cn(
-              "font-bold text-lg",
-              score >= 90 ? "text-yellow-500" :
-              score >= 75 ? "text-green-500" :
-              score >= 50 ? "text-blue-500" :
-              "text-purple-500"
-            )}>
-              {score}%
-            </span>
-          </div>
-        </div>
-
-        {/* Status Message */}
-        <div className="text-center text-muted-foreground italic text-[11px] pt-1">
-          {getPowerMessage()}
-        </div>
+        ))}
       </div>
-    </div>
-  );
-}
 
-// Stat bar component
-function StatBar({ 
-  label, 
-  value, 
-  color 
-}: { 
-  label: string; 
-  value: number; 
-  color: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="w-20 text-[10px] text-muted-foreground tracking-wider">{label}</span>
-      <div className="flex-1 h-2 bg-muted/30 rounded-sm overflow-hidden border border-primary/10">
-        <motion.div
-          className={cn("h-full bg-gradient-to-r rounded-sm", color)}
-          initial={{ width: 0 }}
-          animate={{ width: `${value}%` }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
-        />
+      {/* Footer */}
+      <div className="px-4 py-2 bg-slate-800/30 border-t border-slate-700/30">
+        <p className="text-[10px] text-slate-500 text-center">
+          {brandName}
+        </p>
       </div>
-      <span className="w-8 text-right text-[10px] text-muted-foreground">{value}%</span>
     </div>
   );
 }
