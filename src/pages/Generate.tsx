@@ -24,7 +24,6 @@ import { useAIActions, type AIActionType } from "@/hooks/useAIActions";
 import { useCredits } from "@/hooks/useCredits";
 import { useConsultantIntegration } from '@/hooks/useConsultantIntegration';
 import { usePageBuilder } from '@/hooks/usePageBuilder';
-import { PageStrengthMeter } from '@/components/consultation/PageStrengthMeter';
 import { DigitalChampionMeter } from '@/components/consultation/DigitalChampionMeter';
 import { ShareableAchievementCard } from '@/components/consultation/ShareableAchievementCard';
 import { ConsultantChat } from '@/components/consultation/ConsultantChat';
@@ -2631,7 +2630,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
   // Achievement modal and confetti celebration
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [hasShownConversionReady, setHasShownConversionReady] = useState(false);
-  const [showDigitalChampion, setShowDigitalChampion] = useState(true); // Toggle between meter styles
+  // Removed showDigitalChampion toggle - using single consistent design
   const [variantModalOpen, setVariantModalOpen] = useState(false);
 
   // Show low balance alert when needed
@@ -2930,29 +2929,14 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
       <div className="flex-1 flex overflow-hidden relative z-10">
         {/* Left sidebar with Credits + Persona Insights + Section Manager */}
 <div className="w-72 border-r border-white/10 bg-white/5 backdrop-blur-md flex flex-col overflow-hidden">
-          {/* Gamification: Digital Champion Meter or Page Strength Meter */}
+          {/* Page Score Meter - Single consistent design */}
           <div className="p-3 border-b border-white/10">
-            {showDigitalChampion ? (
-              <DigitalChampionMeter 
-                completeness={pageBuilder.completeness}
-                brandName={strategicData?.consultationData?.businessName || consultation?.industry || 'Your Brand'}
-                logoUrl={strategicData?.brandSettings?.logoUrl || strategicData?.consultationData?.websiteIntelligence?.logoUrl}
-                className="bg-transparent border-white/10"
-              />
-            ) : (
-              <PageStrengthMeter 
-                completeness={pageBuilder.completeness}
-                showMilestones={true}
-                className="bg-white/5 border-white/10"
-              />
-            )}
-            {/* Toggle between views */}
-            <button 
-              onClick={() => setShowDigitalChampion(!showDigitalChampion)}
-              className="w-full mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {showDigitalChampion ? '← Simple view' : '→ Gamified view'}
-            </button>
+            <DigitalChampionMeter 
+              completeness={pageBuilder.completeness}
+              brandName={strategicData?.consultationData?.businessName || consultation?.industry || 'Your Brand'}
+              logoUrl={strategicData?.brandSettings?.logoUrl || strategicData?.consultationData?.websiteIntelligence?.logoUrl}
+              className="bg-transparent border-white/10"
+            />
           </div>
           
           {/* Conversion Ready Banner */}
