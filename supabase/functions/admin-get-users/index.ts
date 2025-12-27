@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 // Hardcoded admin emails - update as needed
-const ADMIN_EMAILS = ['kyle@pageconsult.ai'];
+const ADMIN_EMAILS = ['kyle@pageconsult.ai', 'kyle@textak.ai'];
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
