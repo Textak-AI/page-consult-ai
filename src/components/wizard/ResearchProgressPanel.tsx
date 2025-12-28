@@ -34,7 +34,7 @@ export function ResearchProgressPanel({ steps }: ResearchProgressPanelProps) {
       
       {/* Progress Steps */}
       <div className="flex-1 flex flex-col items-center justify-center p-6">
-        <div className="w-full max-w-xs space-y-4">
+        <div className="w-full max-w-sm">
           {steps.map((step, idx) => {
             const isActive = !step.done && steps.findIndex(s => !s.done) === idx;
             
@@ -44,7 +44,7 @@ export function ResearchProgressPanel({ steps }: ResearchProgressPanelProps) {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.15 }}
-                className="flex items-center gap-3"
+                className="flex items-center gap-3 py-2"
               >
                 <div className={cn(
                   "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300",
@@ -78,7 +78,7 @@ export function ResearchProgressPanel({ steps }: ResearchProgressPanelProps) {
         </div>
         
         {/* Progress bar */}
-        <div className="w-full max-w-xs mt-8">
+        <div className="w-full max-w-sm mt-8">
           <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full"
