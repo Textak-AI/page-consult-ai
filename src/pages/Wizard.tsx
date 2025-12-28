@@ -84,6 +84,7 @@ export default function Wizard() {
   ]);
   const [researchData, setResearchData] = useState<any>(null);
   const [showPrefillBanner, setShowPrefillBanner] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -440,6 +441,9 @@ export default function Wizard() {
         // Store session data in ref - survives auth state changes
         sessionDataRef.current = data;
         
+        // Store session ID in state for later use (e.g., navigating to Brief)
+        setCurrentSessionId(sessionId);
+        
         // Mark as loaded
         sessionLoadedRef.current = true;
         initCompleteRef.current = true;
@@ -631,8 +635,55 @@ ${conversationText}` }
       if (!response.ok) throw new Error("Research failed");
       
       const data = await response.json();
-      setResearchData({ ...data, tiles, overallReadiness });
+      const researchPayload = { 
+        ...data, 
+        tiles: tiles.map(t => ({ id: t.id, insight: t.insight, fill: t.fill })), 
+        overallReadiness 
+      };
+      setResearchData(researchPayload);
       
+      // Build extracted intelligence for Brief page
+      const extractedIntel = {
+        industry: tiles.find(t => t.id === 'industry')?.insight || null,
+        audience: tiles.find(t => t.id === 'audience')?.insight || null,
+        valueProp: tiles.find(t => t.id === 'value')?.insight || null,
+        competitive: tiles.find(t => t.id === 'competitive')?.insight || null,
+        goals: tiles.find(t => t.id === 'goals')?.insight || null,
+        swagger: tiles.find(t => t.id === 'swagger')?.insight || null,
+        businessName: collectedInfo?.businessName || null,
+      };
+      
+      // Build market research data for Brief page
+      const marketResearchData = {
+        positioning: data.message?.split('\n')[0] || null,
+        messagingDirection: data.message?.split('\n').slice(1, 3).join(' ') || null,
+        competitiveAngle: tiles.find(t => t.id === 'competitive')?.insight || null,
+        industryInsights: data.message?.split('\n').filter((line: string) => line.trim()).slice(0, 4) || [],
+      };
+      
+      // Determine session ID for saving and navigation
+      const sessionIdToUse = currentSessionId || searchParams.get('session') || localStorage.getItem('pageconsult_session_id');
+      
+      if (sessionIdToUse) {
+        // Save research data to session
+        console.log('💾 [Wizard] Saving research to session:', sessionIdToUse);
+        await supabase
+          .from('demo_sessions')
+          .update({ 
+            market_research: marketResearchData,
+            extracted_intelligence: extractedIntel,
+            readiness: overallReadiness,
+            completed: true
+          })
+          .eq('session_id', sessionIdToUse);
+        
+        // Navigate to Brief page
+        console.log('🚀 [Wizard] Navigating to Brief page');
+        navigate(`/brief/${sessionIdToUse}`);
+        return;
+      }
+      
+      // Fallback: No session ID - stay in wizard (shouldn't happen normally)
       await new Promise(resolve => setTimeout(resolve, 1000));
       setPhase("presenting");
       
@@ -654,7 +705,7 @@ ${conversationText}` }
       });
       setPhase("strategy");
     }
-  }, [messages, tiles, overallReadiness, researchSteps]);
+  }, [messages, tiles, overallReadiness, researchSteps, currentSessionId, searchParams, navigate, collectedInfo]);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
