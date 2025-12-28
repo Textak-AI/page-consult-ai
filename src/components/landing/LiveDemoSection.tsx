@@ -6,6 +6,8 @@ import { MessageSquare, User, Sparkles, ArrowRight, Send, TrendingUp, Users, Tar
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import EmailGateModal from './EmailGateModal';
+import ConversionCTAPanel from './ConversionCTAPanel';
+import { savePrefillData, PrefillData } from '@/lib/consultationPrefill';
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -130,6 +132,8 @@ export default function LiveDemoSection() {
   const navigate = useNavigate();
   const { state, processUserMessage, resetIntelligence, submitEmail, dismissEmailGate } = useIntelligence();
   const [inputValue, setInputValue] = useState('');
+  const [showConversionCTA, setShowConversionCTA] = useState(false);
+  const [dismissedCTA, setDismissedCTA] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasInitialized = useRef(false);
@@ -150,6 +154,17 @@ export default function LiveDemoSection() {
       // For now, we'll simulate this by not calling processUserMessage
     }
   }, [state.conversation.length]);
+
+  // Show conversion CTA when readiness hits 70%+ OR email is captured
+  useEffect(() => {
+    if (!dismissedCTA && (state.readiness >= 70 || state.emailCaptured)) {
+      // Small delay so user sees the latest message first
+      const timer = setTimeout(() => {
+        setShowConversionCTA(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [state.readiness, state.emailCaptured, dismissedCTA]);
 
   // Scroll to bottom on new messages - only within chat container
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -188,13 +203,32 @@ export default function LiveDemoSection() {
     await processUserMessage(message);
   };
 
-  const handleContinue = () => {
-    const prefillData = {
-      extracted: state.extracted,
-      market: state.market,
+  const handleContinueToWizard = () => {
+    // Build prefill data from extracted intelligence
+    const prefillData: PrefillData = {
+      industry: state.extracted.industry || undefined,
+      targetAudience: state.extracted.audience || undefined,
+      valueProposition: state.extracted.valueProp || undefined,
+      businessType: state.extracted.businessType || undefined,
+      marketSize: state.market.marketSize || undefined,
+      buyerPersona: state.market.buyerPersona || undefined,
+      commonObjections: state.market.commonObjections || [],
+      industryInsights: state.market.industryInsights || [],
       source: 'landing_demo',
+      email: state.email || undefined,
+      sessionId: state.sessionId,
     };
-    navigate(`/new?prefill=${encodeURIComponent(JSON.stringify(prefillData))}`);
+    
+    // Save to session storage for persistence
+    savePrefillData(prefillData);
+    
+    // Navigate with prefill param
+    navigate(`/wizard?prefill=true`);
+  };
+
+  const handleKeepChatting = () => {
+    setShowConversionCTA(false);
+    setDismissedCTA(true);
   };
 
   // Build display conversation (with initial AI message if needed)
@@ -405,42 +439,34 @@ export default function LiveDemoSection() {
               </motion.div>
             )}
 
-            {/* Readiness Ring */}
-            <div ref={continueRef} className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
-              <h4 className="text-sm font-medium text-slate-300 mb-4 text-center">Strategy Readiness</h4>
-              <ReadinessRing percentage={state.readiness} />
-              
-              {/* Continue button - only show when email captured AND readiness >= 60 */}
-              <AnimatePresence mode="wait">
-                {state.readiness >= 60 && state.emailCaptured ? (
-                  <motion.div
-                    key="continue-button"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="mt-6"
-                  >
-                    <Button
-                      onClick={handleContinue}
-                      className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white py-3 text-base font-medium"
-                    >
-                      Continue Full Strategy Session
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </motion.div>
-                ) : state.readiness >= 50 && !state.emailCaptured ? (
+            {/* Conversion CTA Panel - Show when 70%+ or email captured */}
+            <AnimatePresence>
+              {showConversionCTA && (
+                <ConversionCTAPanel
+                  readiness={state.readiness}
+                  onContinue={handleContinueToWizard}
+                  onKeepChatting={handleKeepChatting}
+                />
+              )}
+            </AnimatePresence>
+
+            {/* Readiness Ring - Only show if CTA not visible */}
+            {!showConversionCTA && (
+              <div ref={continueRef} className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
+                <h4 className="text-sm font-medium text-slate-300 mb-4 text-center">Strategy Readiness</h4>
+                <ReadinessRing percentage={state.readiness} />
+                
+                {state.readiness >= 50 && !state.emailCaptured && (
                   <motion.p
-                    key="email-prompt"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
                     className="mt-4 text-center text-sm text-slate-400"
                   >
-                    Enter your email above to continue...
+                    Enter your email to unlock market insights...
                   </motion.p>
-                ) : null}
-              </AnimatePresence>
-            </div>
+                )}
+              </div>
+            )}
           </motion.div>
         </div>
       </div>
