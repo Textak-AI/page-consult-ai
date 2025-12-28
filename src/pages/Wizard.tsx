@@ -264,18 +264,48 @@ export default function Wizard() {
       async (event, session) => {
         console.log('🔐 [Wizard] Auth state changed:', event);
         
+        const sessionId = searchParams.get('session');
+        console.log('🔐 [Wizard] Debug:', {
+          event,
+          sessionId,
+          hasSessionDataRef: !!sessionDataRef.current,
+          isSignedIn: event === 'SIGNED_IN',
+          isTokenRefreshed: event === 'TOKEN_REFRESHED',
+          isInitialSession: event === 'INITIAL_SESSION'
+        });
+        
         // When user signs in or token refreshes, reload session data
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-          const sessionId = searchParams.get('session');
-          if (sessionId && sessionDataRef.current) {
-            console.log('🔄 [Wizard] Reloading session after auth change:', sessionId);
-            
-            // Small delay to let React settle after auth state change
-            setTimeout(() => {
-              console.log('📂 [Wizard] Re-applying session data after auth');
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') && sessionId) {
+          console.log('🔄 [Wizard] Reloading session after auth change:', sessionId);
+          
+          // Small delay to let React settle after auth state change
+          setTimeout(async () => {
+            // If we have cached data, use it; otherwise fetch fresh
+            if (sessionDataRef.current) {
+              console.log('📂 [Wizard] Re-applying cached session data after auth');
               applySessionData(sessionDataRef.current);
-            }, 200);
-          }
+            } else {
+              console.log('📂 [Wizard] Fetching session data after auth (no cache)');
+              try {
+                const { data, error } = await supabase
+                  .from('demo_sessions')
+                  .select('*')
+                  .eq('session_id', sessionId)
+                  .maybeSingle();
+                
+                console.log('📂 [Wizard] Fetched session:', { hasData: !!data, error: error?.message });
+                
+                if (data && !error) {
+                  sessionDataRef.current = data;
+                  applySessionData(data);
+                }
+              } catch (err) {
+                console.error('❌ [Wizard] Error fetching session:', err);
+              }
+            }
+          }, 200);
+        } else {
+          console.log('⏭️ [Wizard] Skipping reload - conditions not met');
         }
       }
     );
