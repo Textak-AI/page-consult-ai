@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import iconmark from "@/assets/iconmark-darkmode.svg";
 import { getAuthHeaders } from "@/lib/authHelpers";
 import { motion, AnimatePresence } from "framer-motion";
 import { IntelligencePanel, IntelligenceTile, getDefaultTiles } from "@/components/wizard/IntelligencePanel";
+import PrefillBanner from "@/components/wizard/PrefillBanner";
+import { loadPrefillData, clearPrefillData, analyzeGaps, PrefillData } from "@/lib/consultationPrefill";
 import { cn } from "@/lib/utils";
 
 type Message = {
@@ -44,9 +46,11 @@ const categoryNames: Record<string, string> = {
 };
 
 const INITIAL_MESSAGE = "Hey — I'm your AI Associate at PageConsult. Before I dig into your market and prepare for our consultation, tell me a bit about what brings you here today.";
+const PREFILLED_MESSAGE = "Welcome back! I've got your intelligence from our earlier chat. Let me summarize what we know and what we still need to build your perfect page.";
 
 export default function Wizard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([
     { id: "1", role: "assistant", content: INITIAL_MESSAGE }
   ]);
@@ -65,6 +69,8 @@ export default function Wizard() {
     { label: "Finding market statistics", done: false },
   ]);
   const [researchData, setResearchData] = useState<any>(null);
+  const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
+  const [showPrefillBanner, setShowPrefillBanner] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -93,6 +99,90 @@ export default function Wizard() {
     };
     checkAuth();
   }, [navigate]);
+
+  // Check for prefill data on mount
+  useEffect(() => {
+    const hasPrefillParam = searchParams.get('prefill');
+    if (hasPrefillParam) {
+      const data = loadPrefillData();
+      if (data) {
+        setPrefillData(data);
+        setShowPrefillBanner(true);
+        
+        // Pre-fill tiles from prefill data
+        setTiles(prev => prev.map(tile => {
+          let insight = "Not yet known";
+          let fill = 0;
+          let state: IntelligenceTile["state"] = "empty";
+          
+          switch (tile.id) {
+            case "industry":
+              if (data.industry) {
+                insight = data.industry;
+                fill = 100;
+                state = "confirmed";
+              }
+              break;
+            case "audience":
+              if (data.targetAudience) {
+                insight = data.targetAudience;
+                fill = 100;
+                state = "confirmed";
+              }
+              break;
+            case "value":
+              if (data.valueProposition) {
+                insight = data.valueProposition;
+                fill = 100;
+                state = "confirmed";
+              }
+              break;
+            case "competitive":
+              if (data.marketSize || data.industryInsights?.length) {
+                insight = data.marketSize || data.industryInsights?.[0] || "Market research available";
+                fill = 80;
+                state = "developing";
+              }
+              break;
+          }
+          
+          return { ...tile, insight, fill, state };
+        }));
+        
+        // Calculate readiness from prefill data
+        let readiness = 0;
+        if (data.industry) readiness += 25;
+        if (data.targetAudience) readiness += 25;
+        if (data.valueProposition) readiness += 20;
+        if (data.marketSize || data.industryInsights?.length) readiness += 15;
+        setOverallReadiness(readiness);
+        
+        // Set a welcome back message
+        const gapAnalysis = analyzeGaps(data);
+        const missingRequired = gapAnalysis.requiredActions.filter(a => a.priority === 'required');
+        
+        let welcomeMessage = `Welcome back! I've got your intelligence from our earlier chat.\n\n`;
+        welcomeMessage += `✓ Industry: ${data.industry || 'Not specified'}\n`;
+        welcomeMessage += `✓ Audience: ${data.targetAudience || 'Not specified'}\n`;
+        welcomeMessage += `✓ Value Prop: ${data.valueProposition || 'Not specified'}\n\n`;
+        
+        if (missingRequired.length > 0) {
+          welcomeMessage += `To generate your page, I still need: ${missingRequired.map(a => a.label).join(', ')}.\n\n`;
+          welcomeMessage += `What's your business name and website URL?`;
+        } else {
+          welcomeMessage += `You're ${gapAnalysis.percentComplete}% complete! Ready to add your brand assets and generate your page?`;
+        }
+        
+        setMessages([{ id: "1", role: "assistant", content: welcomeMessage }]);
+        
+        // Store collected info
+        setCollectedInfo({
+          ...data,
+          prefilled: true,
+        });
+      }
+    }
+  }, [searchParams]);
 
   // Update tiles from intelligence data
   const updateTilesFromIntelligence = useCallback((intelligence: any) => {
@@ -414,6 +504,18 @@ Ready to build this? Or want to adjust the approach first?`,
           {/* Messages */}
           <div className="flex-1 overflow-y-auto">
             <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+              {/* Prefill Banner */}
+              <AnimatePresence>
+                {showPrefillBanner && prefillData && (
+                  <PrefillBanner 
+                    gapAnalysis={analyzeGaps(prefillData)} 
+                    onDismiss={() => {
+                      setShowPrefillBanner(false);
+                      clearPrefillData();
+                    }}
+                  />
+                )}
+              </AnimatePresence>
               {messages.map((message) => (
                 <motion.div
                   key={message.id}
