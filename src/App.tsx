@@ -32,6 +32,7 @@ import Settings from "./pages/Settings";
 import BrandSetup from "./pages/BrandSetup";
 import TestimonialRequest from "./pages/TestimonialRequest";
 import Admin from "./pages/Admin";
+import Brief from "./pages/Brief";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -102,6 +103,8 @@ const App = () => {
               <Route path="/brand-setup" element={<BrandSetup />} />
               <Route path="/review/:businessSlug" element={<TestimonialRequest />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/brief/:sessionId" element={<Brief />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
