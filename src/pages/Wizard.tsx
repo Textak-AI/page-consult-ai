@@ -9,6 +9,9 @@ import iconmark from "@/assets/iconmark-darkmode.svg";
 import { getAuthHeaders } from "@/lib/authHelpers";
 import { motion, AnimatePresence } from "framer-motion";
 import { IntelligencePanel, IntelligenceTile, TileState, getDefaultTiles } from "@/components/wizard/IntelligencePanel";
+import { ResearchReadyPanel } from "@/components/wizard/ResearchReadyPanel";
+import { ResearchProgressPanel } from "@/components/wizard/ResearchProgressPanel";
+import { ReadyToGeneratePanel } from "@/components/wizard/ReadyToGeneratePanel";
 import PrefillBanner from "@/components/wizard/PrefillBanner";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +23,8 @@ type Message = {
 };
 
 type Phase = "intake" | "researching" | "presenting" | "strategy" | "building";
+
+type ConsultationPhase = "gathering" | "research-ready" | "researching" | "ready-to-generate";
 
 type ResearchStep = {
   label: string;
@@ -932,6 +937,26 @@ Ready to build this? Or want to adjust the approach first?`,
   
   // Only enable research/generate at 90%+ with all required fields
   const isResearchReady = overallReadiness >= 90 && hasRequiredFields();
+  
+  // Determine consultation phase for right panel display
+  const getConsultationPhase = (): ConsultationPhase => {
+    // Phase 4: Research complete, ready to generate
+    if (phase === "strategy" || phase === "presenting") {
+      return "ready-to-generate";
+    }
+    // Phase 3: Currently researching
+    if (phase === "researching") {
+      return "researching";
+    }
+    // Phase 2: Research ready (90%+ with all fields)
+    if (isResearchReady) {
+      return "research-ready";
+    }
+    // Phase 1: Still gathering info
+    return "gathering";
+  };
+  
+  const consultationPhase = getConsultationPhase();
 
   // Show loading state while fetching session from Supabase
   if (isLoadingSession) {
@@ -1184,7 +1209,7 @@ Ready to build this? Or want to adjust the approach first?`,
           </div>
         </div>
 
-        {/* Intelligence Panel */}
+        {/* Right Panel - Phase Based */}
         <AnimatePresence>
           {showPanel && (
             <motion.div
@@ -1194,12 +1219,38 @@ Ready to build this? Or want to adjust the approach first?`,
               transition={{ duration: 0.3 }}
               className="flex-shrink-0 overflow-hidden"
             >
-              <IntelligencePanel
-                tiles={tiles}
-                overallReadiness={overallReadiness}
-                onBeginResearch={runResearch}
-                isResearchReady={isResearchReady}
-              />
+              {/* Phase 1: Gathering - Show Intelligence Profile tiles */}
+              {consultationPhase === "gathering" && (
+                <IntelligencePanel
+                  tiles={tiles}
+                  overallReadiness={overallReadiness}
+                  onBeginResearch={runResearch}
+                  isResearchReady={isResearchReady}
+                />
+              )}
+              
+              {/* Phase 2: Research Ready - Show summary + CTA */}
+              {consultationPhase === "research-ready" && (
+                <ResearchReadyPanel
+                  tiles={tiles}
+                  overallReadiness={overallReadiness}
+                  onBeginResearch={runResearch}
+                />
+              )}
+              
+              {/* Phase 3: Researching - Show progress checklist */}
+              {consultationPhase === "researching" && (
+                <ResearchProgressPanel steps={researchSteps} />
+              )}
+              
+              {/* Phase 4: Ready to Generate - Show success + CTA */}
+              {consultationPhase === "ready-to-generate" && (
+                <ReadyToGeneratePanel
+                  researchHighlights={researchData?.message?.split('\n').filter((line: string) => line.trim()).slice(0, 3)}
+                  onGenerate={handleBuild}
+                  onReviewResearch={() => setPhase("presenting")}
+                />
+              )}
             </motion.div>
           )}
         </AnimatePresence>
