@@ -375,98 +375,103 @@ export default function LiveDemoSection() {
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="space-y-6 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent"
+            className="relative flex flex-col h-[500px]"
           >
-            {/* Intelligence Profile Card */}
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-cyan-400" />
-                Intelligence Profile
-              </h3>
+            {/* Scrollable content area */}
+            <div className="flex-1 overflow-y-auto pb-32 space-y-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+              {/* Intelligence Profile Card */}
+              <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-cyan-400" />
+                  Intelligence Profile
+                </h3>
 
-              <div className="space-y-5">
-                <IntelligenceBar
-                  label="Industry"
-                  value={state.extracted.industry}
-                  icon={TrendingUp}
-                  filled={!!state.extracted.industry}
-                />
-                <IntelligenceBar
-                  label="Audience"
-                  value={state.extracted.audience}
-                  icon={Users}
-                  filled={!!state.extracted.audience}
-                />
-                <IntelligenceBar
-                  label="Value Proposition"
-                  value={state.extracted.valueProp}
-                  icon={Target}
-                  filled={!!state.extracted.valueProp}
-                />
+                <div className="space-y-5">
+                  <IntelligenceBar
+                    label="Industry"
+                    value={state.extracted.industry}
+                    icon={TrendingUp}
+                    filled={!!state.extracted.industry}
+                  />
+                  <IntelligenceBar
+                    label="Audience"
+                    value={state.extracted.audience}
+                    icon={Users}
+                    filled={!!state.extracted.audience}
+                  />
+                  <IntelligenceBar
+                    label="Value Proposition"
+                    value={state.extracted.valueProp}
+                    icon={Target}
+                    filled={!!state.extracted.valueProp}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Market Insights (appears when loaded) */}
-            <AnimatePresence>
-              {marketInsights.length > 0 && (
+              {/* Market Insights (appears when loaded) */}
+              <AnimatePresence>
+                {marketInsights.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6"
+                  >
+                    <h4 className="text-sm font-medium text-slate-300 mb-4">Market Insights</h4>
+                    <div className="space-y-3">
+                      {marketInsights.map((insight, i) => (
+                        <InsightTile key={i} insight={insight} delay={i * 0.15} />
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Loading state for market research */}
+              {state.market.isLoading && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6"
                 >
-                  <h4 className="text-sm font-medium text-slate-300 mb-4">Market Insights</h4>
-                  <div className="space-y-3">
-                    {marketInsights.map((insight, i) => (
-                      <InsightTile key={i} insight={insight} delay={i * 0.15} />
-                    ))}
+                  <div className="flex items-center gap-3 text-slate-400">
+                    <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
+                    <span className="text-sm">Researching your market...</span>
                   </div>
                 </motion.div>
               )}
-            </AnimatePresence>
 
-            {/* Loading state for market research */}
-            {state.market.isLoading && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6"
-              >
-                <div className="flex items-center gap-3 text-slate-400">
-                  <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
-                  <span className="text-sm">Researching your market...</span>
+              {/* Readiness Ring - Only show if CTA not visible */}
+              {!showConversionCTA && (
+                <div ref={continueRef} className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
+                  <h4 className="text-sm font-medium text-slate-300 mb-4 text-center">Strategy Readiness</h4>
+                  <ReadinessRing percentage={state.readiness} />
+                  
+                  {state.readiness >= 50 && !state.emailCaptured && (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="mt-4 text-center text-sm text-slate-400"
+                    >
+                      Enter your email to unlock market insights...
+                    </motion.p>
+                  )}
                 </div>
-              </motion.div>
-            )}
+              )}
+            </div>
 
-            {/* Conversion CTA Panel - Show when 70%+ or email captured */}
+            {/* Fixed CTA at bottom - always visible when ready */}
             <AnimatePresence>
               {showConversionCTA && (
-                <ConversionCTAPanel
-                  readiness={state.readiness}
-                  onContinue={handleContinueToWizard}
-                  onKeepChatting={handleKeepChatting}
-                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900 via-slate-900 to-transparent pt-8 pb-2 px-1">
+                  <ConversionCTAPanel
+                    readiness={state.readiness}
+                    onContinue={handleContinueToWizard}
+                    onKeepChatting={handleKeepChatting}
+                  />
+                </div>
               )}
             </AnimatePresence>
-
-            {/* Readiness Ring - Only show if CTA not visible */}
-            {!showConversionCTA && (
-              <div ref={continueRef} className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
-                <h4 className="text-sm font-medium text-slate-300 mb-4 text-center">Strategy Readiness</h4>
-                <ReadinessRing percentage={state.readiness} />
-                
-                {state.readiness >= 50 && !state.emailCaptured && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="mt-4 text-center text-sm text-slate-400"
-                  >
-                    Enter your email to unlock market insights...
-                  </motion.p>
-                )}
-              </div>
-            )}
           </motion.div>
         </div>
       </div>
