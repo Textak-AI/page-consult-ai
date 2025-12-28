@@ -231,7 +231,24 @@ export default function Wizard() {
         
         let msg = `Welcome back! I've loaded your strategy session.\n\n`;
         
-        // What we know
+        // At 90%+ readiness, show a summary of what we captured (don't ask questions)
+        if (readiness >= 90) {
+          msg += `**Here's what I captured:**\n`;
+          if (businessName) msg += `✓ Company: ${businessName}\n`;
+          if (industry) msg += `✓ Industry: ${industry}\n`;
+          if (audience) msg += `✓ Audience: ${audience}\n`;
+          if (valueProp) msg += `✓ Value Prop: ${valueProp.substring(0, 60)}${valueProp.length > 60 ? '...' : ''}\n`;
+          if (competitive) msg += `✓ Positioning: ${competitive.substring(0, 60)}${competitive.length > 60 ? '...' : ''}\n`;
+          if (goals) msg += `✓ Goals: ${goals}\n`;
+          if (swagger) msg += `✓ Tone: ${swagger}\n`;
+          
+          msg += `\n**You're at ${readiness}% readiness.**\n\n`;
+          msg += `🎯 Ready to run market research! Say "yes" or "let's go" to start.`;
+          
+          return msg;
+        }
+        
+        // Below 90%, show what we know and ask about missing fields
         msg += `**What I know:**\n`;
         if (businessName) msg += `• Company: ${businessName}\n`;
         if (industry) msg += `• Industry: ${industry}\n`;
@@ -243,23 +260,7 @@ export default function Wizard() {
         
         msg += `\nYou're at **${readiness}% readiness**.\n\n`;
         
-        // Check what's missing
-        const missingRequired: string[] = [];
-        if (!competitive) missingRequired.push('competitive position');
-        if (!goals) missingRequired.push('page goals');
-        if (!swagger) missingRequired.push('brand voice/tone');
-        if (!businessName) missingRequired.push('business name');
-        
-        // Determine next action
-        const hasAllRequired = missingRequired.length === 0 && industry && audience && valueProp;
-        
-        if (hasAllRequired && readiness >= 90) {
-          msg += `✅ **Ready to generate!** I have everything needed to build your landing page.\n\n`;
-          msg += `Would you like to:\n`;
-          msg += `• Generate your page now\n`;
-          msg += `• Add brand assets (logo, colors) first\n`;
-          msg += `• Refine any details before we build`;
-        } else if (readiness >= 70) {
+        if (readiness >= 70) {
           msg += `**Good foundation!** To build a page that actually converts, I still need:\n\n`;
           
           // Ask about the FIRST missing thing (don't overwhelm)
@@ -278,6 +279,9 @@ export default function Wizard() {
           } else if (!businessName) {
             msg += `**What's your company name?**\n`;
             msg += `I need this for the page header and throughout the copy.`;
+          } else {
+            // All individual fields present but readiness still under 90
+            msg += `Let's refine a few more details before we're ready.`;
           }
         } else {
           msg += `Let's keep building your strategy. Tell me more about your business.`;
