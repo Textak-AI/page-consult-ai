@@ -193,53 +193,69 @@ export default function Wizard() {
       insight: t.insight.substring(0, 50)
     })));
     
-    setTiles(prefilledTiles);
-    setOverallReadiness(data.readiness || 0);
-    setShowPrefillBanner(true);
-    
-    // Conversation history for AI context
-    if (messages.length > 0) {
-      setConversationHistory(messages.map((m: any) => ({ role: m.role, content: m.content })));
-    }
-    
-    // Market research
-    if (researchComplete) {
-      setResearchData({
-        industryInsights,
-        commonObjections,
-        marketSize,
-        buyerPersona: market.buyerPersona,
+    // NUCLEAR FIX: Delay state updates to run AFTER React's render cycle
+    // This ensures updates happen after any auth-related re-renders
+    setTimeout(() => {
+      console.log('⏰ [Wizard] Delayed state update executing');
+      
+      setTiles(prefilledTiles);
+      setOverallReadiness(data.readiness || 0);
+      setShowPrefillBanner(true);
+      
+      // Conversation history for AI context
+      if (messages.length > 0) {
+        setConversationHistory(messages.map((m: any) => ({ role: m.role, content: m.content })));
+      }
+      
+      // Market research
+      if (researchComplete) {
+        setResearchData({
+          industryInsights,
+          commonObjections,
+          marketSize,
+          buyerPersona: market.buyerPersona,
+        });
+        setResearchSteps(prev => prev.map(step => ({ ...step, done: true })));
+      }
+      
+      // Build welcome message
+      let msg = `Welcome back! I've loaded your strategy session.\n\n`;
+      msg += `**What I know:**\n`;
+      if (industry) msg += `• Industry: ${industry}\n`;
+      if (audience) msg += `• Audience: ${audience}\n`;
+      if (valueProp) msg += `• Value Prop: ${valueProp.substring(0, 50)}...\n`;
+      msg += `\nYou're at **${data.readiness || 0}% readiness**.`;
+      
+      if (data.readiness >= 70) {
+        msg += `\n\nWe have enough information to generate your page! Would you like to proceed, or add more details?`;
+      } else {
+        msg += `\n\nLet's continue building your page strategy.`;
+      }
+      
+      setMessages([{ id: "1", role: "assistant", content: msg }]);
+      
+      setCollectedInfo({
+        industry,
+        targetAudience: audience,
+        valueProposition: valueProp,
+        competitivePosition: competitive,
+        goals: goals ? [goals] : [],
+        swagger,
+        businessType,
+        marketResearch: market,
+        fromDemo: true,
       });
-      setResearchSteps(prev => prev.map(step => ({ ...step, done: true })));
-    }
+      
+      console.log('✅ [Wizard] Delayed state update complete');
+    }, 100);
     
-    // Build welcome message
-    let msg = `Welcome back! I've loaded your strategy session.\n\n`;
-    msg += `**What I know:**\n`;
-    if (industry) msg += `• Industry: ${industry}\n`;
-    if (audience) msg += `• Audience: ${audience}\n`;
-    if (valueProp) msg += `• Value Prop: ${valueProp.substring(0, 50)}...\n`;
-    msg += `\nYou're at **${data.readiness || 0}% readiness**.`;
+    // Backup: force re-apply after 500ms if auth causes reset
+    setTimeout(() => {
+      console.log('⏰ [Wizard] Backup re-apply check');
+      // Re-apply tiles directly to ensure they persist
+      setTiles(prefilledTiles);
+    }, 500);
     
-    if (data.readiness >= 70) {
-      msg += `\n\nWe have enough information to generate your page! Would you like to proceed, or add more details?`;
-    } else {
-      msg += `\n\nLet's continue building your page strategy.`;
-    }
-    
-    setMessages([{ id: "1", role: "assistant", content: msg }]);
-    
-    setCollectedInfo({
-      industry,
-      targetAudience: audience,
-      valueProposition: valueProp,
-      competitivePosition: competitive,
-      goals: goals ? [goals] : [],
-      swagger,
-      businessType,
-      marketResearch: market,
-      fromDemo: true,
-    });
   }, []);
 
   // Load demo session from Supabase
