@@ -51,9 +51,13 @@ const PREFILLED_MESSAGE = "Welcome back! I've got your intelligence from our ear
 export default function Wizard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [messages, setMessages] = useState<Message[]>([
-    { id: "1", role: "assistant", content: INITIAL_MESSAGE }
-  ]);
+  
+  // Ref to track if prefill was applied - prevents race conditions
+  const prefillAppliedRef = useRef(false);
+  const initCompleteRef = useRef(false);
+  
+  // Start with empty messages - will be set by initialization logic
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -103,15 +107,25 @@ export default function Wizard() {
   // State for conversation history from demo
   const [conversationHistory, setConversationHistory] = useState<Array<{role: string; content: string}>>([]);
 
-  // Check for prefill data on mount
+  // Check for prefill data on mount - runs FIRST
   useEffect(() => {
+    // Already initialized
+    if (initCompleteRef.current) return;
+    
     const hasPrefillParam = searchParams.get('prefill');
     if (hasPrefillParam) {
       const data = loadPrefillData();
       if (!data) {
         console.warn('⚠️ [Wizard] Prefill param present but no stored data');
+        // Fall back to default initialization
+        setMessages([{ id: "1", role: "assistant", content: INITIAL_MESSAGE }]);
+        initCompleteRef.current = true;
         return;
       }
+      
+      // Mark as applied FIRST to prevent race conditions
+      prefillAppliedRef.current = true;
+      initCompleteRef.current = true;
       
       console.log('📂 [Wizard] Loading prefill data:', {
         hasExtracted: !!data.extracted,
@@ -278,10 +292,18 @@ export default function Wizard() {
       
       // Clear prefill data after successful load
       clearPrefillData();
+      
+      console.log('✅ [Wizard] Prefill applied successfully, readiness:', readiness);
+    } else {
+      // No prefill param - set default message
+      if (!initCompleteRef.current) {
+        setMessages([{ id: "1", role: "assistant", content: INITIAL_MESSAGE }]);
+        initCompleteRef.current = true;
+      }
     }
   }, [searchParams]);
 
-  // Update tiles from intelligence data
+  // Update tiles from intelligence data (but respect prefilled data)
   const updateTilesFromIntelligence = useCallback((intelligence: any) => {
     if (!intelligence?.tiles) return;
     
@@ -289,6 +311,14 @@ export default function Wizard() {
       return prev.map(tile => {
         const newData = intelligence.tiles[tile.id];
         if (!newData) return tile;
+        
+        // Don't overwrite confirmed tiles from prefill with lower-quality data
+        if (prefillAppliedRef.current && tile.state === 'confirmed' && tile.fill === 100) {
+          // Only update if new data is better
+          if (newData.fill < tile.fill) {
+            return tile;
+          }
+        }
         
         return {
           ...tile,
