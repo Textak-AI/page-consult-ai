@@ -392,9 +392,8 @@ export default function Wizard() {
         // Apply the data to wizard state
         applySessionData(data);
         
-        // Clear localStorage after successful load
-        localStorage.removeItem('pageconsult_session_id');
-        console.log('🧹 [Wizard] Cleared session ID from localStorage');
+        // DON'T clear localStorage here - auth listener needs it after redirect
+        // It will be cleared in the auth state change handler after successful reload
         
         console.log('✅ [Wizard] Session loaded successfully, readiness:', data.readiness);
         
