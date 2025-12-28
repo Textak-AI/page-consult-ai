@@ -55,6 +55,9 @@ export default function Wizard() {
   const sessionLoadedRef = useRef(false);
   const initCompleteRef = useRef(false);
   
+  // Ref to store session data - survives re-renders and auth state changes
+  const sessionDataRef = useRef<any>(null);
+  
   // Loading state for session fetch
   const [isLoadingSession, setIsLoadingSession] = useState(false);
   
@@ -291,6 +294,9 @@ export default function Wizard() {
           console.log('🔒 [Wizard] Session claimed by user:', user.id);
         }
         
+        // Store session data in ref - survives auth state changes
+        sessionDataRef.current = data;
+        
         // Mark as loaded
         sessionLoadedRef.current = true;
         initCompleteRef.current = true;
@@ -311,6 +317,25 @@ export default function Wizard() {
     
     loadDemoSession();
   }, [searchParams, applySessionData]);
+
+  // Re-apply session data if state gets reset after auth changes
+  useEffect(() => {
+    // If we have session data but tiles are all empty, re-apply
+    const allTilesEmpty = tiles.every(t => t.fill === 0);
+    
+    if (sessionDataRef.current && allTilesEmpty && sessionLoadedRef.current) {
+      console.log('🔄 [Wizard] Re-applying session data after state reset');
+      applySessionData(sessionDataRef.current);
+    }
+  }, [tiles, applySessionData]);
+
+  // Debug: log tile state changes
+  useEffect(() => {
+    console.log('🔍 [Wizard] Tiles state changed:', tiles.map(t => ({
+      id: t.id, 
+      fill: t.fill
+    })));
+  }, [tiles]);
 
   // Update tiles from intelligence data (but respect session-loaded data)
   const updateTilesFromIntelligence = useCallback((intelligence: any) => {
