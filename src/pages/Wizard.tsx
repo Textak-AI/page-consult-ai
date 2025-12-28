@@ -1014,6 +1014,9 @@ Ready to build this? Or want to adjust the approach first?`,
   // Only enable research/generate at 90%+ with all required fields
   const isResearchReady = overallReadiness >= 90 && hasRequiredFields();
   
+  // Collapse to single-column when ready for research or researching
+  const shouldCollapseLayout = overallReadiness >= 90 || phase === 'researching';
+  
   // Determine consultation phase for right panel display
   const getConsultationPhase = (): ConsultationPhase => {
     // Phase 4: Research complete, ready to generate
@@ -1072,15 +1075,17 @@ Ready to build this? Or want to adjust the approach first?`,
             </span>
           </div>
           
-          {/* Panel toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowPanel(!showPanel)}
-            className="ml-auto text-white/60 hover:text-white hover:bg-white/10"
-          >
-            {showPanel ? <PanelRightClose className="w-5 h-5" /> : <PanelRight className="w-5 h-5" />}
-          </Button>
+          {/* Panel toggle - only show when not collapsed */}
+          {!shouldCollapseLayout && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowPanel(!showPanel)}
+              className="ml-auto text-white/60 hover:text-white hover:bg-white/10"
+            >
+              {showPanel ? <PanelRightClose className="w-5 h-5" /> : <PanelRight className="w-5 h-5" />}
+            </Button>
+          )}
         </div>
       </header>
 
@@ -1138,10 +1143,10 @@ Ready to build this? Or want to adjust the approach first?`,
 
       {/* Main Content - Split Screen */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Chat Area */}
+        {/* Chat Area - full width when collapsed */}
         <div className={cn(
           "flex-1 flex flex-col transition-all duration-300",
-          showPanel ? "w-[60%]" : "w-full"
+          shouldCollapseLayout ? "w-full" : showPanel ? "w-[60%]" : "w-full"
         )}>
           {/* Messages */}
           <div className="flex-1 overflow-y-auto">
@@ -1285,9 +1290,9 @@ Ready to build this? Or want to adjust the approach first?`,
           </div>
         </div>
 
-        {/* Right Panel - Phase Based */}
+        {/* Right Panel - Phase Based - Hide when collapsed */}
         <AnimatePresence>
-          {showPanel && (
+          {showPanel && !shouldCollapseLayout && (
             <motion.div
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: "40%", opacity: 1 }}
