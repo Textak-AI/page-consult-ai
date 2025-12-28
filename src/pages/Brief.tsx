@@ -101,7 +101,8 @@ const Brief = () => {
         await supabase
           .from('demo_sessions')
           .update({ 
-            completed: true 
+            completed: true,
+            brief_viewed_at: new Date().toISOString()
           })
           .eq('session_id', sessionId);
           
