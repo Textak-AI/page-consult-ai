@@ -267,9 +267,19 @@ export function IntelligencePanel({
         </AnimatePresence>
         
         {!isResearchReady && (
-          <p className="text-xs text-center text-white/40">
-            Keep chatting to build your intelligence profile
-          </p>
+          <div className="text-center space-y-2">
+            <p className="text-xs text-white/40">
+              {overallReadiness >= 70 
+                ? "Almost there! Fill in missing details to unlock generation."
+                : "Keep chatting to build your intelligence profile"
+              }
+            </p>
+            {overallReadiness >= 70 && (
+              <p className="text-[10px] text-white/30">
+                Need 90%+ readiness with all required fields
+              </p>
+            )}
+          </div>
         )}
       </div>
     </div>
