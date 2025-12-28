@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import LiveDemoSection from "@/components/landing/LiveDemoSection";
 import HowItWorks from "@/components/HowItWorks";
+import TimelineComparison from "@/components/TimelineComparison";
 import Features from "@/components/Features";
 import SocialProof from "@/components/SocialProof";
 import Pricing from "@/components/Pricing";
@@ -24,6 +25,7 @@ const Index = () => {
           <Hero />
           <LiveDemoSection />
           <HowItWorks />
+          <TimelineComparison />
           <Features />
           <SocialProof />
           <Pricing />
