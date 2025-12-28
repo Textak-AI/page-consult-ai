@@ -1,34 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
 // Validation schema
 const CreateSessionSchema = z.object({
   session_token: z.string().uuid('Invalid session token format'),
 });
 
-const allowedOrigins = [
-  'https://page-consult-ai.lovable.app',
-  'https://preview--page-consult-ai.lovable.app',
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://localhost:8080'
-];
-
-const corsHeaders = (origin: string | null) => ({
-  'Access-Control-Allow-Origin': origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0],
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Credentials': 'true',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS'
-});
-
 serve(async (req) => {
+  // Handle CORS preflight
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
   const origin = req.headers.get('origin');
-  const headers = corsHeaders(origin);
-  
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers });
-  }
+  const headers = getCorsHeaders(origin);
 
   try {
     // Parse and validate request body
