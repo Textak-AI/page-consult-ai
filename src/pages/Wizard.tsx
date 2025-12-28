@@ -152,8 +152,8 @@ export default function Wizard() {
       const commonObjections = data.market?.commonObjections || data.commonObjections || [];
       const researchComplete = data.market?.researchComplete || industryInsights.length > 0;
       
-      // Pre-fill tiles from prefill data
-      setTiles(prev => prev.map(tile => {
+      // Pre-fill tiles from prefill data - use getDefaultTiles() directly to avoid race conditions
+      const prefilledTiles = getDefaultTiles().map(tile => {
         let insight = "Not yet known";
         let fill = 0;
         let tileState: IntelligenceTile["state"] = "empty";
@@ -204,7 +204,16 @@ export default function Wizard() {
         }
         
         return { ...tile, insight, fill, state: tileState };
-      }));
+      });
+      
+      console.log('🎯 [Wizard] Setting prefilled tiles:', prefilledTiles.map(t => ({
+        id: t.id,
+        fill: t.fill,
+        state: t.state,
+        insight: t.insight.substring(0, 50)
+      })));
+      
+      setTiles(prefilledTiles);
       
       // Use readiness from demo if available, otherwise calculate
       let readiness = data.meta?.readiness || 0;
