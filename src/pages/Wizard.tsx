@@ -258,6 +258,33 @@ export default function Wizard() {
     
   }, []);
 
+  // Listen for auth state changes and re-apply session data after auth completes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('🔐 [Wizard] Auth state changed:', event);
+        
+        // When user signs in or token refreshes, reload session data
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+          const sessionId = searchParams.get('session');
+          if (sessionId && sessionDataRef.current) {
+            console.log('🔄 [Wizard] Reloading session after auth change:', sessionId);
+            
+            // Small delay to let React settle after auth state change
+            setTimeout(() => {
+              console.log('📂 [Wizard] Re-applying session data after auth');
+              applySessionData(sessionDataRef.current);
+            }, 200);
+          }
+        }
+      }
+    );
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [searchParams, applySessionData]);
+
   // Load demo session from Supabase
   useEffect(() => {
     const loadDemoSession = async () => {
