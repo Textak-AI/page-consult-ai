@@ -204,8 +204,56 @@ export default function LiveDemoSection() {
   };
 
   const handleContinueToWizard = () => {
-    // Build prefill data from extracted intelligence
+    // Build COMPLETE prefill data from all extracted intelligence
     const prefillData: PrefillData = {
+      // All extracted intelligence
+      extracted: {
+        businessName: '',
+        industry: state.extracted.industry || '',
+        audience: state.extracted.audience || '',
+        valueProp: state.extracted.valueProp || '',
+        competitive: '',
+        goals: '',
+        swagger: '',
+        primaryCTA: '',
+        secondaryCTA: '',
+        tone: '',
+        proofPoints: [],
+        objections: state.market.commonObjections || [],
+        methodology: '',
+        businessType: state.extracted.businessType || undefined,
+      },
+      
+      // All market research
+      market: {
+        industryInsights: state.market.industryInsights || [],
+        competitorPositioning: [],
+        audiencePainPoints: [],
+        marketStatistics: [],
+        commonObjections: state.market.commonObjections || [],
+        buyerPersona: state.market.buyerPersona || '',
+        marketSize: state.market.marketSize || '',
+        researchComplete: (state.market.industryInsights?.length || 0) > 0,
+      },
+      
+      // Full conversation history
+      conversation: state.conversation.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp?.toISOString() || new Date().toISOString(),
+      })),
+      
+      // Session metadata
+      meta: {
+        email: state.email || '',
+        sessionId: state.sessionId || '',
+        readiness: state.readiness || 0,
+        source: 'landing_demo',
+        savedAt: new Date().toISOString(),
+        demoCompleted: state.readiness >= 70,
+      },
+      
+      // Legacy fields for backwards compatibility
       industry: state.extracted.industry || undefined,
       targetAudience: state.extracted.audience || undefined,
       valueProposition: state.extracted.valueProp || undefined,
@@ -219,11 +267,18 @@ export default function LiveDemoSection() {
       sessionId: state.sessionId,
     };
     
-    // Save to session storage for persistence
+    console.log('🚀 [Demo→Wizard] Saving complete prefill data:', {
+      extracted: prefillData.extracted,
+      marketResearchComplete: prefillData.market.researchComplete,
+      conversationLength: prefillData.conversation.length,
+      readiness: prefillData.meta.readiness,
+    });
+    
+    // Save to localStorage (survives auth redirects)
     savePrefillData(prefillData);
     
-    // Navigate with prefill param
-    navigate(`/wizard?prefill=true`);
+    // Navigate with prefill indicator
+    navigate('/wizard?prefill=demo');
   };
 
   const handleKeepChatting = () => {
