@@ -100,87 +100,184 @@ export default function Wizard() {
     checkAuth();
   }, [navigate]);
 
+  // State for conversation history from demo
+  const [conversationHistory, setConversationHistory] = useState<Array<{role: string; content: string}>>([]);
+
   // Check for prefill data on mount
   useEffect(() => {
     const hasPrefillParam = searchParams.get('prefill');
     if (hasPrefillParam) {
       const data = loadPrefillData();
-      if (data) {
-        setPrefillData(data);
-        setShowPrefillBanner(true);
+      if (!data) {
+        console.warn('⚠️ [Wizard] Prefill param present but no stored data');
+        return;
+      }
+      
+      console.log('📂 [Wizard] Loading prefill data:', {
+        hasExtracted: !!data.extracted,
+        hasMarket: !!data.market,
+        conversationLength: data.conversation?.length || 0,
+        readiness: data.meta?.readiness || 0,
+      });
+      
+      setPrefillData(data);
+      setShowPrefillBanner(true);
+      
+      // Get values from new format or fall back to legacy
+      const industry = data.extracted?.industry || data.industry || '';
+      const audience = data.extracted?.audience || data.targetAudience || '';
+      const valueProp = data.extracted?.valueProp || data.valueProposition || '';
+      const competitive = data.extracted?.competitive || data.competitivePosition || '';
+      const goals = data.extracted?.goals || data.goals?.[0] || '';
+      const swagger = data.extracted?.swagger || '';
+      const businessName = data.extracted?.businessName || data.businessName || '';
+      
+      // Market research
+      const marketSize = data.market?.marketSize || data.marketSize || '';
+      const industryInsights = data.market?.industryInsights || data.industryInsights || [];
+      const commonObjections = data.market?.commonObjections || data.commonObjections || [];
+      const researchComplete = data.market?.researchComplete || industryInsights.length > 0;
+      
+      // Pre-fill tiles from prefill data
+      setTiles(prev => prev.map(tile => {
+        let insight = "Not yet known";
+        let fill = 0;
+        let tileState: IntelligenceTile["state"] = "empty";
         
-        // Pre-fill tiles from prefill data
-        setTiles(prev => prev.map(tile => {
-          let insight = "Not yet known";
-          let fill = 0;
-          let state: IntelligenceTile["state"] = "empty";
-          
-          switch (tile.id) {
-            case "industry":
-              if (data.industry) {
-                insight = data.industry;
-                fill = 100;
-                state = "confirmed";
-              }
-              break;
-            case "audience":
-              if (data.targetAudience) {
-                insight = data.targetAudience;
-                fill = 100;
-                state = "confirmed";
-              }
-              break;
-            case "value":
-              if (data.valueProposition) {
-                insight = data.valueProposition;
-                fill = 100;
-                state = "confirmed";
-              }
-              break;
-            case "competitive":
-              if (data.marketSize || data.industryInsights?.length) {
-                insight = data.marketSize || data.industryInsights?.[0] || "Market research available";
-                fill = 80;
-                state = "developing";
-              }
-              break;
-          }
-          
-          return { ...tile, insight, fill, state };
-        }));
-        
-        // Calculate readiness from prefill data
-        let readiness = 0;
-        if (data.industry) readiness += 25;
-        if (data.targetAudience) readiness += 25;
-        if (data.valueProposition) readiness += 20;
-        if (data.marketSize || data.industryInsights?.length) readiness += 15;
-        setOverallReadiness(readiness);
-        
-        // Set a welcome back message
-        const gapAnalysis = analyzeGaps(data);
-        const missingRequired = gapAnalysis.requiredActions.filter(a => a.priority === 'required');
-        
-        let welcomeMessage = `Welcome back! I've got your intelligence from our earlier chat.\n\n`;
-        welcomeMessage += `✓ Industry: ${data.industry || 'Not specified'}\n`;
-        welcomeMessage += `✓ Audience: ${data.targetAudience || 'Not specified'}\n`;
-        welcomeMessage += `✓ Value Prop: ${data.valueProposition || 'Not specified'}\n\n`;
-        
-        if (missingRequired.length > 0) {
-          welcomeMessage += `To generate your page, I still need: ${missingRequired.map(a => a.label).join(', ')}.\n\n`;
-          welcomeMessage += `What's your business name and website URL?`;
-        } else {
-          welcomeMessage += `You're ${gapAnalysis.percentComplete}% complete! Ready to add your brand assets and generate your page?`;
+        switch (tile.id) {
+          case "industry":
+            if (industry) {
+              insight = industry;
+              fill = 100;
+              tileState = "confirmed";
+            }
+            break;
+          case "audience":
+            if (audience) {
+              insight = audience;
+              fill = 100;
+              tileState = "confirmed";
+            }
+            break;
+          case "value":
+            if (valueProp) {
+              insight = valueProp;
+              fill = 100;
+              tileState = "confirmed";
+            }
+            break;
+          case "competitive":
+            if (competitive || marketSize || industryInsights.length) {
+              insight = competitive || marketSize || industryInsights[0] || "Market research available";
+              fill = competitive ? 100 : 80;
+              tileState = competitive ? "confirmed" : "developing";
+            }
+            break;
+          case "goals":
+            if (goals) {
+              insight = goals;
+              fill = 100;
+              tileState = "confirmed";
+            }
+            break;
+          case "swagger":
+            if (swagger) {
+              insight = swagger;
+              fill = 100;
+              tileState = "confirmed";
+            }
+            break;
         }
         
-        setMessages([{ id: "1", role: "assistant", content: welcomeMessage }]);
-        
-        // Store collected info
-        setCollectedInfo({
-          ...data,
-          prefilled: true,
-        });
+        return { ...tile, insight, fill, state: tileState };
+      }));
+      
+      // Use readiness from demo if available, otherwise calculate
+      let readiness = data.meta?.readiness || 0;
+      if (!readiness) {
+        if (industry) readiness += 20;
+        if (audience) readiness += 20;
+        if (valueProp) readiness += 20;
+        if (competitive) readiness += 15;
+        if (goals) readiness += 15;
+        if (researchComplete) readiness += 10;
       }
+      setOverallReadiness(readiness);
+      
+      // Load research data if available
+      if (researchComplete) {
+        setResearchData({
+          industryInsights,
+          commonObjections,
+          marketSize,
+          buyerPersona: data.market?.buyerPersona || data.buyerPersona,
+        });
+        // Mark research steps as done
+        setResearchSteps(prev => prev.map(step => ({ ...step, done: true })));
+      }
+      
+      // Store conversation history for AI context
+      if (data.conversation?.length) {
+        setConversationHistory(data.conversation.map(m => ({ role: m.role, content: m.content })));
+      }
+      
+      // Build contextual welcome message
+      const gapAnalysis = analyzeGaps(data);
+      const missingRequired = gapAnalysis.requiredActions.filter(a => a.priority === 'required');
+      
+      let welcomeMessage = `Welcome back! I've loaded everything from our earlier conversation.\n\n`;
+      welcomeMessage += `**What I know about your business:**\n`;
+      if (businessName) welcomeMessage += `• Company: ${businessName}\n`;
+      if (industry) welcomeMessage += `• Industry: ${industry}\n`;
+      if (audience) welcomeMessage += `• Target: ${audience}\n`;
+      if (valueProp) welcomeMessage += `• Value Prop: ${valueProp}\n`;
+      welcomeMessage += `\n`;
+      
+      // Note market research status
+      if (researchComplete) {
+        welcomeMessage += `✓ Market research complete with ${industryInsights.length} insights\n\n`;
+      }
+      
+      // Progress status
+      welcomeMessage += `You're at **${readiness}% readiness**. `;
+      
+      // What's needed next
+      if (missingRequired.length > 0) {
+        welcomeMessage += `To generate your page, I still need: ${missingRequired.map(a => a.label).join(', ')}.\n\n`;
+        if (!businessName) {
+          welcomeMessage += `What's your business name?`;
+        } else {
+          welcomeMessage += `Let's fill in the remaining details.`;
+        }
+      } else {
+        welcomeMessage += `We have everything needed to generate your page!\n\n`;
+        welcomeMessage += `Would you like to add brand customization (logo, colors), or shall we generate your page now?`;
+      }
+      
+      setMessages([{ id: "1", role: "assistant", content: welcomeMessage }]);
+      
+      // Store all collected info for brief generation
+      setCollectedInfo({
+        businessName,
+        industry,
+        targetAudience: audience,
+        valueProposition: valueProp,
+        competitivePosition: competitive,
+        goals: goals ? [goals] : [],
+        swagger,
+        marketResearch: data.market || {
+          industryInsights,
+          commonObjections,
+          marketSize,
+          buyerPersona: data.buyerPersona,
+        },
+        fromDemo: true,
+        prefilled: true,
+        conversationHistory: data.conversation,
+      });
+      
+      // Clear prefill data after successful load
+      clearPrefillData();
     }
   }, [searchParams]);
 
@@ -289,7 +386,14 @@ ${conversationText}` }
     try {
       const headers = await getAuthHeaders();
       
-      const conversationHistory = [...messages, userMessage].map(msg => ({
+      // Include demo conversation history if available
+      const demoContext = conversationHistory.length > 0
+        ? `The user already completed a demo consultation. Here's what was discussed:\n\n${
+            conversationHistory.map(m => `${m.role}: ${m.content}`).join('\n\n')
+          }\n\nDO NOT re-ask questions that were already answered. Continue from where we left off.\n\n`
+        : '';
+      
+      const currentConversation = [...messages, userMessage].map(msg => ({
         role: msg.role,
         content: msg.content
       }));
@@ -299,7 +403,11 @@ ${conversationText}` }
         {
           method: "POST",
           headers,
-          body: JSON.stringify({ messages: conversationHistory })
+          body: JSON.stringify({ 
+            messages: currentConversation,
+            systemContext: demoContext,
+            collectedInfo: collectedInfo,
+          })
         }
       );
 
@@ -322,7 +430,12 @@ ${conversationText}` }
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-      setCollectedInfo({ conversationHistory: [...messages, userMessage, assistantMessage], tiles, intelligence: data.intelligence });
+      setCollectedInfo(prev => ({
+        ...prev,
+        conversationHistory: [...messages, userMessage, assistantMessage], 
+        tiles, 
+        intelligence: data.intelligence,
+      }));
 
     } catch (error) {
       console.error("Error sending message:", error);
