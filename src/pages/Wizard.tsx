@@ -707,6 +707,13 @@ ${conversationText}` }
     }
   }, [messages, tiles, overallReadiness, researchSteps, currentSessionId, searchParams, navigate, collectedInfo]);
 
+  // Helper to detect research confirmation messages
+  const isResearchConfirmation = useCallback((msg: string): boolean => {
+    const triggers = ['yes', 'do it', "let's go", 'run it', 'start', 'go ahead', 'ready', 'begin', 'sounds good', 'sure', 'yep', 'yeah', 'ok', 'okay', 'absolutely', 'definitely', 'please', 'go for it'];
+    const lower = msg.toLowerCase().trim();
+    return triggers.some(t => lower.includes(t) || lower === t);
+  }, []);
+
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -722,6 +729,24 @@ ${conversationText}` }
     
     // Extract local intelligence from user message (for competitive, goals, swagger)
     extractLocalIntelligence(input.trim());
+
+    // Auto-trigger research if readiness is high and user confirms
+    if (overallReadiness >= 90 && isResearchConfirmation(input.trim()) && phase === "intake") {
+      // Add confirmation message
+      const confirmMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: "Starting market research now — I'll analyze your competitive landscape and find strategic insights. This takes about 60 seconds."
+      };
+      setMessages(prev => [...prev, confirmMessage]);
+      setIsLoading(false);
+      
+      // Trigger research after a brief delay
+      setTimeout(() => {
+        runResearch();
+      }, 500);
+      return;
+    }
 
     try {
       const headers = await getAuthHeaders();
