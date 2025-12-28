@@ -476,6 +476,8 @@ export type Database = {
       }
       demo_sessions: {
         Row: {
+          claimed_at: string | null
+          claimed_by: string | null
           completed: boolean | null
           continued_to_consultation: boolean | null
           created_at: string | null
@@ -485,9 +487,12 @@ export type Database = {
           market_research: Json | null
           message_count: number | null
           messages: Json | null
+          readiness: number | null
           session_id: string
         }
         Insert: {
+          claimed_at?: string | null
+          claimed_by?: string | null
           completed?: boolean | null
           continued_to_consultation?: boolean | null
           created_at?: string | null
@@ -497,9 +502,12 @@ export type Database = {
           market_research?: Json | null
           message_count?: number | null
           messages?: Json | null
+          readiness?: number | null
           session_id: string
         }
         Update: {
+          claimed_at?: string | null
+          claimed_by?: string | null
           completed?: boolean | null
           continued_to_consultation?: boolean | null
           created_at?: string | null
@@ -509,6 +517,7 @@ export type Database = {
           market_research?: Json | null
           message_count?: number | null
           messages?: Json | null
+          readiness?: number | null
           session_id?: string
         }
         Relationships: []

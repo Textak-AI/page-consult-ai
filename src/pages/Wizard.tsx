@@ -10,7 +10,6 @@ import { getAuthHeaders } from "@/lib/authHelpers";
 import { motion, AnimatePresence } from "framer-motion";
 import { IntelligencePanel, IntelligenceTile, getDefaultTiles } from "@/components/wizard/IntelligencePanel";
 import PrefillBanner from "@/components/wizard/PrefillBanner";
-import { loadPrefillData, clearPrefillData, analyzeGaps, PrefillData } from "@/lib/consultationPrefill";
 import { cn } from "@/lib/utils";
 
 type Message = {
@@ -52,9 +51,12 @@ export default function Wizard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  // Ref to track if prefill was applied - prevents race conditions
-  const prefillAppliedRef = useRef(false);
+  // Ref to track if session was loaded - prevents race conditions
+  const sessionLoadedRef = useRef(false);
   const initCompleteRef = useRef(false);
+  
+  // Loading state for session fetch
+  const [isLoadingSession, setIsLoadingSession] = useState(false);
   
   // Start with empty messages - will be set by initialization logic
   const [messages, setMessages] = useState<Message[]>([]);
@@ -73,7 +75,6 @@ export default function Wizard() {
     { label: "Finding market statistics", done: false },
   ]);
   const [researchData, setResearchData] = useState<any>(null);
-  const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
   const [showPrefillBanner, setShowPrefillBanner] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -107,216 +108,211 @@ export default function Wizard() {
   // State for conversation history from demo
   const [conversationHistory, setConversationHistory] = useState<Array<{role: string; content: string}>>([]);
 
-  // Check for prefill data on mount - runs FIRST
-  useEffect(() => {
-    // Already initialized
-    if (initCompleteRef.current) return;
+  // Function to apply session data to wizard state
+  const applySessionData = useCallback((data: any) => {
+    const extracted = data.extracted_intelligence || {};
+    const market = data.market_research || {};
+    const messages = data.messages || [];
     
-    const hasPrefillParam = searchParams.get('prefill');
-    if (hasPrefillParam) {
-      const data = loadPrefillData();
-      if (!data) {
-        console.warn('⚠️ [Wizard] Prefill param present but no stored data');
-        // Fall back to default initialization
-        setMessages([{ id: "1", role: "assistant", content: INITIAL_MESSAGE }]);
-        initCompleteRef.current = true;
+    // Get values from session data
+    const industry = extracted.industry || '';
+    const audience = extracted.audience || '';
+    const valueProp = extracted.valueProp || '';
+    const competitive = extracted.competitive || '';
+    const goals = extracted.goals || '';
+    const swagger = extracted.swagger || '';
+    const businessType = extracted.businessType || '';
+    
+    // Market research
+    const marketSize = market.marketSize || '';
+    const industryInsights = market.industryInsights || [];
+    const commonObjections = market.commonObjections || [];
+    const researchComplete = industryInsights.length > 0;
+    
+    // Build tiles from session data
+    const prefilledTiles = getDefaultTiles().map(tile => {
+      let insight = "Not yet known";
+      let fill = 0;
+      let tileState: IntelligenceTile["state"] = "empty";
+      
+      switch (tile.id) {
+        case "industry":
+          if (industry) {
+            insight = industry;
+            fill = 100;
+            tileState = "confirmed";
+          }
+          break;
+        case "audience":
+          if (audience) {
+            insight = audience;
+            fill = 100;
+            tileState = "confirmed";
+          }
+          break;
+        case "value":
+          if (valueProp) {
+            insight = valueProp;
+            fill = 100;
+            tileState = "confirmed";
+          }
+          break;
+        case "competitive":
+          if (competitive || marketSize || industryInsights.length) {
+            insight = competitive || marketSize || industryInsights[0] || "Market research available";
+            fill = competitive ? 100 : 80;
+            tileState = competitive ? "confirmed" : "developing";
+          }
+          break;
+        case "goals":
+          if (goals) {
+            insight = goals;
+            fill = 100;
+            tileState = "confirmed";
+          }
+          break;
+        case "swagger":
+          if (swagger) {
+            insight = swagger;
+            fill = 100;
+            tileState = "confirmed";
+          }
+          break;
+      }
+      
+      return { ...tile, insight, fill, state: tileState };
+    });
+    
+    console.log('🎯 [Wizard] Applying session tiles:', prefilledTiles.map(t => ({
+      id: t.id,
+      fill: t.fill,
+      state: t.state,
+      insight: t.insight.substring(0, 50)
+    })));
+    
+    setTiles(prefilledTiles);
+    setOverallReadiness(data.readiness || 0);
+    setShowPrefillBanner(true);
+    
+    // Conversation history for AI context
+    if (messages.length > 0) {
+      setConversationHistory(messages.map((m: any) => ({ role: m.role, content: m.content })));
+    }
+    
+    // Market research
+    if (researchComplete) {
+      setResearchData({
+        industryInsights,
+        commonObjections,
+        marketSize,
+        buyerPersona: market.buyerPersona,
+      });
+      setResearchSteps(prev => prev.map(step => ({ ...step, done: true })));
+    }
+    
+    // Build welcome message
+    let msg = `Welcome back! I've loaded your strategy session.\n\n`;
+    msg += `**What I know:**\n`;
+    if (industry) msg += `• Industry: ${industry}\n`;
+    if (audience) msg += `• Audience: ${audience}\n`;
+    if (valueProp) msg += `• Value Prop: ${valueProp.substring(0, 50)}...\n`;
+    msg += `\nYou're at **${data.readiness || 0}% readiness**.`;
+    
+    if (data.readiness >= 70) {
+      msg += `\n\nWe have enough information to generate your page! Would you like to proceed, or add more details?`;
+    } else {
+      msg += `\n\nLet's continue building your page strategy.`;
+    }
+    
+    setMessages([{ id: "1", role: "assistant", content: msg }]);
+    
+    setCollectedInfo({
+      industry,
+      targetAudience: audience,
+      valueProposition: valueProp,
+      competitivePosition: competitive,
+      goals: goals ? [goals] : [],
+      swagger,
+      businessType,
+      marketResearch: market,
+      fromDemo: true,
+    });
+  }, []);
+
+  // Load demo session from Supabase
+  useEffect(() => {
+    const loadDemoSession = async () => {
+      // Already initialized
+      if (initCompleteRef.current) return;
+      
+      const sessionId = searchParams.get('session');
+      if (!sessionId) {
+        // No session param - set default message
+        if (!initCompleteRef.current) {
+          setMessages([{ id: "1", role: "assistant", content: INITIAL_MESSAGE }]);
+          initCompleteRef.current = true;
+        }
         return;
       }
       
-      // Mark as applied FIRST to prevent race conditions
-      prefillAppliedRef.current = true;
-      initCompleteRef.current = true;
+      setIsLoadingSession(true);
+      console.log('📂 [Wizard] Loading session from Supabase:', sessionId);
       
-      console.log('📂 [Wizard] Loading prefill data:', {
-        hasExtracted: !!data.extracted,
-        hasMarket: !!data.market,
-        conversationLength: data.conversation?.length || 0,
-        readiness: data.meta?.readiness || 0,
-      });
-      
-      setPrefillData(data);
-      setShowPrefillBanner(true);
-      
-      // Get values from new format or fall back to legacy
-      const industry = data.extracted?.industry || data.industry || '';
-      const audience = data.extracted?.audience || data.targetAudience || '';
-      const valueProp = data.extracted?.valueProp || data.valueProposition || '';
-      const competitive = data.extracted?.competitive || data.competitivePosition || '';
-      const goals = data.extracted?.goals || data.goals?.[0] || '';
-      const swagger = data.extracted?.swagger || '';
-      const businessName = data.extracted?.businessName || data.businessName || '';
-      
-      // Market research
-      const marketSize = data.market?.marketSize || data.marketSize || '';
-      const industryInsights = data.market?.industryInsights || data.industryInsights || [];
-      const commonObjections = data.market?.commonObjections || data.commonObjections || [];
-      const researchComplete = data.market?.researchComplete || industryInsights.length > 0;
-      
-      // Pre-fill tiles from prefill data - use getDefaultTiles() directly to avoid race conditions
-      const prefilledTiles = getDefaultTiles().map(tile => {
-        let insight = "Not yet known";
-        let fill = 0;
-        let tileState: IntelligenceTile["state"] = "empty";
+      try {
+        const { data, error } = await supabase
+          .from('demo_sessions')
+          .select('*')
+          .eq('session_id', sessionId)
+          .maybeSingle();
         
-        switch (tile.id) {
-          case "industry":
-            if (industry) {
-              insight = industry;
-              fill = 100;
-              tileState = "confirmed";
-            }
-            break;
-          case "audience":
-            if (audience) {
-              insight = audience;
-              fill = 100;
-              tileState = "confirmed";
-            }
-            break;
-          case "value":
-            if (valueProp) {
-              insight = valueProp;
-              fill = 100;
-              tileState = "confirmed";
-            }
-            break;
-          case "competitive":
-            if (competitive || marketSize || industryInsights.length) {
-              insight = competitive || marketSize || industryInsights[0] || "Market research available";
-              fill = competitive ? 100 : 80;
-              tileState = competitive ? "confirmed" : "developing";
-            }
-            break;
-          case "goals":
-            if (goals) {
-              insight = goals;
-              fill = 100;
-              tileState = "confirmed";
-            }
-            break;
-          case "swagger":
-            if (swagger) {
-              insight = swagger;
-              fill = 100;
-              tileState = "confirmed";
-            }
-            break;
+        if (error) {
+          console.error('Failed to load demo session:', error);
+          setMessages([{ id: "1", role: "assistant", content: INITIAL_MESSAGE }]);
+          initCompleteRef.current = true;
+          setIsLoadingSession(false);
+          return;
         }
         
-        return { ...tile, insight, fill, state: tileState };
-      });
-      
-      console.log('🎯 [Wizard] Setting prefilled tiles:', prefilledTiles.map(t => ({
-        id: t.id,
-        fill: t.fill,
-        state: t.state,
-        insight: t.insight.substring(0, 50)
-      })));
-      
-      setTiles(prefilledTiles);
-      
-      // Use readiness from demo if available, otherwise calculate
-      let readiness = data.meta?.readiness || 0;
-      if (!readiness) {
-        if (industry) readiness += 20;
-        if (audience) readiness += 20;
-        if (valueProp) readiness += 20;
-        if (competitive) readiness += 15;
-        if (goals) readiness += 15;
-        if (researchComplete) readiness += 10;
-      }
-      setOverallReadiness(readiness);
-      
-      // Load research data if available
-      if (researchComplete) {
-        setResearchData({
-          industryInsights,
-          commonObjections,
-          marketSize,
-          buyerPersona: data.market?.buyerPersona || data.buyerPersona,
-        });
-        // Mark research steps as done
-        setResearchSteps(prev => prev.map(step => ({ ...step, done: true })));
-      }
-      
-      // Store conversation history for AI context
-      if (data.conversation?.length) {
-        setConversationHistory(data.conversation.map(m => ({ role: m.role, content: m.content })));
-      }
-      
-      // Build contextual welcome message
-      const gapAnalysis = analyzeGaps(data);
-      const missingRequired = gapAnalysis.requiredActions.filter(a => a.priority === 'required');
-      
-      let welcomeMessage = `Welcome back! I've loaded everything from our earlier conversation.\n\n`;
-      welcomeMessage += `**What I know about your business:**\n`;
-      if (businessName) welcomeMessage += `• Company: ${businessName}\n`;
-      if (industry) welcomeMessage += `• Industry: ${industry}\n`;
-      if (audience) welcomeMessage += `• Target: ${audience}\n`;
-      if (valueProp) welcomeMessage += `• Value Prop: ${valueProp}\n`;
-      welcomeMessage += `\n`;
-      
-      // Note market research status
-      if (researchComplete) {
-        welcomeMessage += `✓ Market research complete with ${industryInsights.length} insights\n\n`;
-      }
-      
-      // Progress status
-      welcomeMessage += `You're at **${readiness}% readiness**. `;
-      
-      // What's needed next
-      if (missingRequired.length > 0) {
-        welcomeMessage += `To generate your page, I still need: ${missingRequired.map(a => a.label).join(', ')}.\n\n`;
-        if (!businessName) {
-          welcomeMessage += `What's your business name?`;
-        } else {
-          welcomeMessage += `Let's fill in the remaining details.`;
+        if (!data) {
+          console.warn('⚠️ [Wizard] No session found for ID:', sessionId);
+          setMessages([{ id: "1", role: "assistant", content: INITIAL_MESSAGE }]);
+          initCompleteRef.current = true;
+          setIsLoadingSession(false);
+          return;
         }
-      } else {
-        welcomeMessage += `We have everything needed to generate your page!\n\n`;
-        welcomeMessage += `Would you like to add brand customization (logo, colors), or shall we generate your page now?`;
-      }
-      
-      setMessages([{ id: "1", role: "assistant", content: welcomeMessage }]);
-      
-      // Store all collected info for brief generation
-      setCollectedInfo({
-        businessName,
-        industry,
-        targetAudience: audience,
-        valueProposition: valueProp,
-        competitivePosition: competitive,
-        goals: goals ? [goals] : [],
-        swagger,
-        marketResearch: data.market || {
-          industryInsights,
-          commonObjections,
-          marketSize,
-          buyerPersona: data.buyerPersona,
-        },
-        fromDemo: true,
-        prefilled: true,
-        conversationHistory: data.conversation,
-      });
-      
-      // Clear prefill data after React's StrictMode double-render completes
-      // Using setTimeout to ensure state is committed before clearing
-      setTimeout(() => {
-        clearPrefillData();
-        console.log('🧹 [Wizard] Prefill data cleared from storage');
-      }, 500);
-      
-      console.log('✅ [Wizard] Prefill applied successfully, readiness:', readiness);
-    } else {
-      // No prefill param - set default message
-      if (!initCompleteRef.current) {
+        
+        // Claim session for authenticated user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id && !data.claimed_by) {
+          await supabase
+            .from('demo_sessions')
+            .update({ claimed_by: user.id, claimed_at: new Date().toISOString() })
+            .eq('session_id', sessionId);
+          console.log('🔒 [Wizard] Session claimed by user:', user.id);
+        }
+        
+        // Mark as loaded
+        sessionLoadedRef.current = true;
+        initCompleteRef.current = true;
+        
+        // Apply the data to wizard state
+        applySessionData(data);
+        
+        console.log('✅ [Wizard] Session loaded successfully, readiness:', data.readiness);
+        
+      } catch (err) {
+        console.error('Error loading session:', err);
         setMessages([{ id: "1", role: "assistant", content: INITIAL_MESSAGE }]);
         initCompleteRef.current = true;
+      } finally {
+        setIsLoadingSession(false);
       }
-    }
-  }, [searchParams]);
+    };
+    
+    loadDemoSession();
+  }, [searchParams, applySessionData]);
 
-  // Update tiles from intelligence data (but respect prefilled data)
+  // Update tiles from intelligence data (but respect session-loaded data)
   const updateTilesFromIntelligence = useCallback((intelligence: any) => {
     if (!intelligence?.tiles) return;
     
@@ -325,8 +321,8 @@ export default function Wizard() {
         const newData = intelligence.tiles[tile.id];
         if (!newData) return tile;
         
-        // Don't overwrite confirmed tiles from prefill with lower-quality data
-        if (prefillAppliedRef.current && tile.state === 'confirmed' && tile.fill === 100) {
+        // Don't overwrite confirmed tiles from session with lower-quality data
+        if (sessionLoadedRef.current && tile.state === 'confirmed' && tile.fill === 100) {
           // Only update if new data is better
           if (newData.fill < tile.fill) {
             return tile;
@@ -541,17 +537,17 @@ Ready to build this? Or want to adjust the approach first?`,
       // STEP 1: Extract structured consultation data from intelligence tiles
       const extractedData = {
         // Core business info from tiles
-        industry: tiles.find(t => t.id === 'industry')?.insight || prefillData?.industry || null,
-        targetAudience: tiles.find(t => t.id === 'audience')?.insight || prefillData?.targetAudience || null,
-        uniqueValue: tiles.find(t => t.id === 'value')?.insight || prefillData?.valueProposition || null,
-        competitivePosition: tiles.find(t => t.id === 'competitive')?.insight || prefillData?.marketSize || null,
-        goal: tiles.find(t => t.id === 'goals')?.insight || prefillData?.goals?.[0] || 'Generate qualified leads',
+        industry: tiles.find(t => t.id === 'industry')?.insight || collectedInfo?.industry || null,
+        targetAudience: tiles.find(t => t.id === 'audience')?.insight || collectedInfo?.targetAudience || null,
+        uniqueValue: tiles.find(t => t.id === 'value')?.insight || collectedInfo?.valueProposition || null,
+        competitivePosition: tiles.find(t => t.id === 'competitive')?.insight || collectedInfo?.competitivePosition || null,
+        goal: tiles.find(t => t.id === 'goals')?.insight || collectedInfo?.goals?.[0] || 'Generate qualified leads',
         swaggerLevel: tiles.find(t => t.id === 'swagger')?.insight || 'confident',
         
-        // Additional fields from prefill if available
-        businessName: prefillData?.businessName || collectedInfo?.businessName || null,
-        challenge: prefillData?.commonObjections?.[0] || null,
-        offer: prefillData?.goals?.[0] || null,
+        // Additional fields from collected info
+        businessName: collectedInfo?.businessName || null,
+        challenge: collectedInfo?.marketResearch?.commonObjections?.[0] || null,
+        offer: collectedInfo?.goals?.[0] || null,
         
         // Research data if available
         industryInsights: researchData?.intelligence?.tiles || null,
@@ -672,6 +668,18 @@ Ready to build this? Or want to adjust the approach first?`,
 
   const isResearchReady = overallReadiness >= 80;
 
+  // Show loading state while fetching session from Supabase
+  if (isLoadingSession) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0f0a1f] via-[#1a1332] to-[#0f0a1f] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-cyan-500 mx-auto mb-4" />
+          <p className="text-slate-300">Loading your strategy session...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f0a1f] via-[#1a1332] to-[#0f0a1f] flex flex-col">
       {/* Header */}
@@ -772,16 +780,28 @@ Ready to build this? Or want to adjust the approach first?`,
           {/* Messages */}
           <div className="flex-1 overflow-y-auto">
             <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-              {/* Prefill Banner */}
+              {/* Session Loaded Banner */}
               <AnimatePresence>
-                {showPrefillBanner && prefillData && (
-                  <PrefillBanner 
-                    gapAnalysis={analyzeGaps(prefillData)} 
-                    onDismiss={() => {
-                      setShowPrefillBanner(false);
-                      clearPrefillData();
-                    }}
-                  />
+                {showPrefillBanner && collectedInfo?.fromDemo && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg px-4 py-3 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2 text-cyan-400 text-sm">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Your demo session has been loaded</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPrefillBanner(false)}
+                      className="text-cyan-400 hover:text-cyan-300 h-auto p-1"
+                    >
+                      Dismiss
+                    </Button>
+                  </motion.div>
                 )}
               </AnimatePresence>
               {messages.map((message) => (

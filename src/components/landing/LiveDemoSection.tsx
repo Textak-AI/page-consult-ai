@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import EmailGateModal from './EmailGateModal';
 import ConversionCTAPanel from './ConversionCTAPanel';
-import { savePrefillData, PrefillData } from '@/lib/consultationPrefill';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -203,82 +204,71 @@ export default function LiveDemoSection() {
     await processUserMessage(message);
   };
 
-  const handleContinueToWizard = () => {
-    // Build COMPLETE prefill data from all extracted intelligence
-    const prefillData: PrefillData = {
-      // All extracted intelligence
-      extracted: {
-        businessName: '',
-        industry: state.extracted.industry || '',
-        audience: state.extracted.audience || '',
-        valueProp: state.extracted.valueProp || '',
-        competitive: '',
-        goals: '',
-        swagger: '',
-        primaryCTA: '',
-        secondaryCTA: '',
-        tone: '',
-        proofPoints: [],
-        objections: state.market.commonObjections || [],
-        methodology: '',
-        businessType: state.extracted.businessType || undefined,
+  const [isSavingSession, setIsSavingSession] = useState(false);
+
+  const handleContinueToWizard = async () => {
+    setIsSavingSession(true);
+    
+    const sessionId = crypto.randomUUID();
+    
+    console.log('🚀 [Demo→Wizard] Saving session to Supabase:', sessionId);
+    
+    const sessionData = {
+      session_id: sessionId,
+      extracted_intelligence: {
+        industry: state.extracted.industry || null,
+        audience: state.extracted.audience || null,
+        valueProp: state.extracted.valueProp || null,
+        businessType: state.extracted.businessType || null,
+        competitive: null,
+        goals: null,
+        swagger: null,
+        primaryCTA: null,
       },
-      
-      // All market research
-      market: {
+      market_research: {
         industryInsights: state.market.industryInsights || [],
-        competitorPositioning: [],
-        audiencePainPoints: [],
-        marketStatistics: [],
         commonObjections: state.market.commonObjections || [],
-        buyerPersona: state.market.buyerPersona || '',
-        marketSize: state.market.marketSize || '',
-        researchComplete: (state.market.industryInsights?.length || 0) > 0,
+        buyerPersona: state.market.buyerPersona || null,
+        marketSize: state.market.marketSize || null,
       },
-      
-      // Full conversation history
-      conversation: state.conversation.map(msg => ({
+      messages: state.conversation.map(msg => ({
         role: msg.role,
         content: msg.content,
-        timestamp: msg.timestamp?.toISOString() || new Date().toISOString(),
       })),
-      
-      // Session metadata
-      meta: {
-        email: state.email || '',
-        sessionId: state.sessionId || '',
-        readiness: state.readiness || 0,
-        source: 'landing_demo',
-        savedAt: new Date().toISOString(),
-        demoCompleted: state.readiness >= 70,
-      },
-      
-      // Legacy fields for backwards compatibility
-      industry: state.extracted.industry || undefined,
-      targetAudience: state.extracted.audience || undefined,
-      valueProposition: state.extracted.valueProp || undefined,
-      businessType: state.extracted.businessType || undefined,
-      marketSize: state.market.marketSize || undefined,
-      buyerPersona: state.market.buyerPersona || undefined,
-      commonObjections: state.market.commonObjections || [],
-      industryInsights: state.market.industryInsights || [],
-      source: 'landing_demo',
-      email: state.email || undefined,
-      sessionId: state.sessionId,
+      readiness: state.readiness || 0,
+      completed: state.readiness >= 70,
+      continued_to_consultation: true,
     };
     
-    console.log('🚀 [Demo→Wizard] Saving complete prefill data:', {
-      extracted: prefillData.extracted,
-      marketResearchComplete: prefillData.market.researchComplete,
-      conversationLength: prefillData.conversation.length,
-      readiness: prefillData.meta.readiness,
-    });
-    
-    // Save to localStorage (survives auth redirects)
-    savePrefillData(prefillData);
-    
-    // Navigate with prefill indicator
-    navigate('/wizard?prefill=demo');
+    try {
+      const { error } = await supabase
+        .from('demo_sessions')
+        .insert(sessionData);
+      
+      if (error) {
+        console.error('Failed to save demo session:', error);
+        toast({
+          title: "Error saving session",
+          description: "Couldn't save your progress. Please try again.",
+          variant: "destructive"
+        });
+        setIsSavingSession(false);
+        return;
+      }
+      
+      console.log('✅ [Demo→Wizard] Session saved successfully');
+      
+      // Navigate with session ID (survives auth redirect)
+      navigate(`/wizard?session=${sessionId}`);
+    } catch (err) {
+      console.error('Error saving demo session:', err);
+      toast({
+        title: "Error saving session",
+        description: "Couldn't save your progress. Please try again.",
+        variant: "destructive"
+      });
+      setIsSavingSession(false);
+    }
   };
 
   const handleKeepChatting = () => {
