@@ -376,19 +376,131 @@ Ready to build this? Or want to adjust the approach first?`,
     }
   };
 
-  const handleBuild = () => {
+  const handleBuild = async () => {
     setPhase("building");
     
-    setTimeout(() => {
+    try {
+      const headers = await getAuthHeaders();
+      
+      // STEP 1: Extract structured consultation data from intelligence tiles
+      const extractedData = {
+        // Core business info from tiles
+        industry: tiles.find(t => t.id === 'industry')?.insight || prefillData?.industry || null,
+        targetAudience: tiles.find(t => t.id === 'audience')?.insight || prefillData?.targetAudience || null,
+        uniqueValue: tiles.find(t => t.id === 'value')?.insight || prefillData?.valueProposition || null,
+        competitivePosition: tiles.find(t => t.id === 'competitive')?.insight || prefillData?.marketSize || null,
+        goal: tiles.find(t => t.id === 'goals')?.insight || prefillData?.goals?.[0] || 'Generate qualified leads',
+        swaggerLevel: tiles.find(t => t.id === 'swagger')?.insight || 'confident',
+        
+        // Additional fields from prefill if available
+        businessName: prefillData?.businessName || collectedInfo?.businessName || null,
+        challenge: prefillData?.commonObjections?.[0] || null,
+        offer: prefillData?.goals?.[0] || null,
+        
+        // Research data if available
+        industryInsights: researchData?.intelligence?.tiles || null,
+        marketResearch: researchData?.tiles || null,
+        
+        // Meta
+        conversationHistory: messages.map(m => ({ role: m.role, content: m.content })),
+        overallReadiness: overallReadiness,
+      };
+      
+      console.log('📋 [Wizard] Extracted consultation data:', extractedData);
+      console.log('📋 [Wizard] Tiles state:', tiles.map(t => ({ id: t.id, insight: t.insight, fill: t.fill })));
+      
+      // STEP 2: Generate strategy brief from extracted data
+      console.log('📋 [Wizard] Calling generate-strategy-brief...');
+      const briefResponse = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-strategy-brief`,
+        {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            consultationData: {
+              businessName: extractedData.businessName,
+              industry: extractedData.industry,
+              idealClient: extractedData.targetAudience,
+              clientFrustration: extractedData.challenge,
+              uniqueStrength: extractedData.uniqueValue,
+              mainOffer: extractedData.offer,
+              primaryGoal: extractedData.goal,
+              achievements: extractedData.competitivePosition,
+              // Pass conversation for additional context
+              conversationContext: extractedData.conversationHistory
+                .filter(m => m.role === 'user')
+                .map(m => m.content)
+                .join('\n'),
+            }
+          })
+        }
+      );
+      
+      let strategyBrief = null;
+      let structuredBrief = null;
+      
+      if (briefResponse.ok) {
+        const briefData = await briefResponse.json();
+        if (briefData.success) {
+          strategyBrief = briefData.strategyBrief;
+          structuredBrief = briefData.structuredBrief;
+          console.log('✅ [Wizard] Strategy brief generated:', {
+            hasMarkdown: !!strategyBrief,
+            hasStructured: !!structuredBrief,
+            headlines: structuredBrief?.headlines,
+          });
+        } else {
+          console.warn('⚠️ [Wizard] Strategy brief generation failed:', briefData.error);
+        }
+      } else {
+        console.warn('⚠️ [Wizard] Strategy brief request failed:', briefResponse.status);
+      }
+      
+      // STEP 3: Navigate to generate with complete data
       navigate("/generate", {
         state: {
-          consultationData: collectedInfo,
+          // New strategic consultation format
+          fromStrategicConsultation: true,
+          strategicData: {
+            consultationData: {
+              businessName: extractedData.businessName,
+              industry: extractedData.industry,
+              targetAudience: extractedData.targetAudience,
+              uniqueStrength: extractedData.uniqueValue,
+              goal: extractedData.goal,
+              challenge: extractedData.challenge,
+              offer: extractedData.offer,
+            },
+            strategyBrief: strategyBrief,
+            structuredBrief: structuredBrief,
+            websiteIntelligence: null,
+            aiSeoData: null,
+            heroBackgroundUrl: null,
+          },
+          // Legacy format for fallback
+          consultationData: {
+            ...extractedData,
+            industry: extractedData.industry,
+            target_audience: extractedData.targetAudience,
+            unique_value: extractedData.uniqueValue,
+            service_type: extractedData.industry,
+          },
           researchData: researchData,
           tiles: tiles,
-          fromWizard: true
+          intelligence: collectedInfo?.intelligence,
+          fromWizard: true,
         }
       });
-    }, 500);
+      
+    } catch (error) {
+      console.error('❌ [Wizard] Build preparation failed:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to prepare page generation. Please try again.',
+        variant: 'destructive',
+      });
+      setPhase('strategy');
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
