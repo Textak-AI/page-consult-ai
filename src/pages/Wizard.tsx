@@ -8,7 +8,7 @@ import { Send, Loader2, Bot, User, Search, CheckCircle2, ArrowRight, Sparkles, P
 import iconmark from "@/assets/iconmark-darkmode.svg";
 import { getAuthHeaders } from "@/lib/authHelpers";
 import { motion, AnimatePresence } from "framer-motion";
-import { IntelligencePanel, IntelligenceTile, getDefaultTiles } from "@/components/wizard/IntelligencePanel";
+import { IntelligencePanel, IntelligenceTile, TileState, getDefaultTiles } from "@/components/wizard/IntelligencePanel";
 import PrefillBanner from "@/components/wizard/PrefillBanner";
 import { cn } from "@/lib/utils";
 
@@ -218,21 +218,71 @@ export default function Wizard() {
         setResearchSteps(prev => prev.map(step => ({ ...step, done: true })));
       }
       
-      // Build welcome message
-      let msg = `Welcome back! I've loaded your strategy session.\n\n`;
-      msg += `**What I know:**\n`;
-      if (industry) msg += `• Industry: ${industry}\n`;
-      if (audience) msg += `• Audience: ${audience}\n`;
-      if (valueProp) msg += `• Value Prop: ${valueProp.substring(0, 50)}...\n`;
-      msg += `\nYou're at **${data.readiness || 0}% readiness**.`;
+      // Build welcome message based on what we have and what's missing
+      const buildWelcomeMessage = (): string => {
+        const readiness = data.readiness || 0;
+        const businessName = extracted.businessName || '';
+        
+        let msg = `Welcome back! I've loaded your strategy session.\n\n`;
+        
+        // What we know
+        msg += `**What I know:**\n`;
+        if (businessName) msg += `• Company: ${businessName}\n`;
+        if (industry) msg += `• Industry: ${industry}\n`;
+        if (audience) msg += `• Audience: ${audience}\n`;
+        if (valueProp) msg += `• Value Prop: ${valueProp.substring(0, 60)}...\n`;
+        if (competitive) msg += `• Positioning: ${competitive.substring(0, 60)}...\n`;
+        if (goals) msg += `• Goals: ${goals}\n`;
+        if (swagger) msg += `• Tone: ${swagger}\n`;
+        
+        msg += `\nYou're at **${readiness}% readiness**.\n\n`;
+        
+        // Check what's missing
+        const missingRequired: string[] = [];
+        if (!competitive) missingRequired.push('competitive position');
+        if (!goals) missingRequired.push('page goals');
+        if (!swagger) missingRequired.push('brand voice/tone');
+        if (!businessName) missingRequired.push('business name');
+        
+        // Determine next action
+        const hasAllRequired = missingRequired.length === 0 && industry && audience && valueProp;
+        
+        if (hasAllRequired && readiness >= 90) {
+          msg += `✅ **Ready to generate!** I have everything needed to build your landing page.\n\n`;
+          msg += `Would you like to:\n`;
+          msg += `• Generate your page now\n`;
+          msg += `• Add brand assets (logo, colors) first\n`;
+          msg += `• Refine any details before we build`;
+        } else if (readiness >= 70) {
+          msg += `**Good foundation!** To build a page that actually converts, I still need:\n\n`;
+          
+          // Ask about the FIRST missing thing (don't overwhelm)
+          if (!competitive) {
+            msg += `**What makes you different?**\n`;
+            msg += `You're not the only option out there. What's your unfair advantage? `;
+            msg += `Why would someone choose you over doing it themselves or hiring an agency?`;
+          } else if (!goals) {
+            msg += `**What should this page achieve?**\n`;
+            msg += `What's the primary action you want visitors to take? `;
+            msg += `Waitlist signup? Demo request? Sales call booking?`;
+          } else if (!swagger) {
+            msg += `**What's your brand voice?**\n`;
+            msg += `How should this page feel? Confident and bold? Friendly and approachable? `;
+            msg += `Technical and precise? Give me a sense of your personality.`;
+          } else if (!businessName) {
+            msg += `**What's your company name?**\n`;
+            msg += `I need this for the page header and throughout the copy.`;
+          }
+        } else {
+          msg += `Let's keep building your strategy. Tell me more about your business.`;
+        }
+        
+        return msg;
+      };
       
-      if (data.readiness >= 70) {
-        msg += `\n\nWe have enough information to generate your page! Would you like to proceed, or add more details?`;
-      } else {
-        msg += `\n\nLet's continue building your page strategy.`;
-      }
+      const welcomeMessage = buildWelcomeMessage();
       
-      setMessages([{ id: "1", role: "assistant", content: msg }]);
+      setMessages([{ id: "1", role: "assistant", content: welcomeMessage }]);
       
       setCollectedInfo({
         industry,
@@ -457,6 +507,82 @@ export default function Wizard() {
     setOverallReadiness(intelligence.overallReadiness || 0);
   }, []);
 
+  // Extract intelligence from user message for competitive, goals, swagger
+  const extractLocalIntelligence = useCallback((message: string) => {
+    const lower = message.toLowerCase();
+    const updates: Record<string, { insight: string; fill: number; state: TileState }> = {};
+    
+    // Competitive position triggers
+    if (lower.includes('different') || lower.includes('unique') || 
+        lower.includes('advantage') || lower.includes('unlike') ||
+        lower.includes('compete') || lower.includes('vs') ||
+        lower.includes('better than') || lower.includes('instead of') ||
+        lower.includes('stand out') || lower.includes('differentiate')) {
+      updates.competitive = { 
+        insight: message.substring(0, 200), 
+        fill: 100, 
+        state: 'confirmed' as TileState 
+      };
+    }
+    
+    // Goals triggers
+    if (lower.includes('goal') || lower.includes('want them to') ||
+        lower.includes('signup') || lower.includes('sign up') ||
+        lower.includes('waitlist') || lower.includes('demo') || 
+        lower.includes('book') || lower.includes('convert') || 
+        lower.includes('cta') || lower.includes('action') ||
+        lower.includes('leads') || lower.includes('sales')) {
+      updates.goals = { 
+        insight: message.substring(0, 200), 
+        fill: 100, 
+        state: 'confirmed' as TileState 
+      };
+    }
+    
+    // Swagger/tone triggers
+    if (lower.includes('tone') || lower.includes('voice') ||
+        lower.includes('confident') || lower.includes('friendly') ||
+        lower.includes('bold') || lower.includes('professional') ||
+        lower.includes('casual') || lower.includes('personality') ||
+        lower.includes('approachable') || lower.includes('formal') ||
+        lower.includes('playful') || lower.includes('serious')) {
+      updates.swagger = { 
+        insight: message.substring(0, 200), 
+        fill: 100, 
+        state: 'confirmed' as TileState 
+      };
+    }
+    
+    // Business name triggers
+    const businessNameMatch = message.match(/(?:called|named|name is|company is|we're|we are)\s+["']?([A-Z][A-Za-z0-9\s]+)["']?/i);
+    if (businessNameMatch) {
+      setCollectedInfo(prev => ({
+        ...prev,
+        businessName: businessNameMatch[1].trim()
+      }));
+    }
+    
+    // Apply updates to tiles
+    if (Object.keys(updates).length > 0) {
+      setTiles(prev => {
+        const newTiles = prev.map(tile => {
+          const update = updates[tile.id];
+          if (!update) return tile;
+          return { ...tile, ...update };
+        });
+        
+        // Recalculate readiness
+        const totalFill = newTiles.reduce((sum, t) => sum + t.fill, 0);
+        const newReadiness = Math.round(totalFill / newTiles.length);
+        setOverallReadiness(newReadiness);
+        
+        return newTiles;
+      });
+      
+      console.log('📊 [Wizard] Local intelligence extracted:', Object.keys(updates));
+    }
+  }, []);
+
   // Run research phase
   const runResearch = useCallback(async () => {
     setPhase("researching");
@@ -537,6 +663,9 @@ ${conversationText}` }
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+    
+    // Extract local intelligence from user message (for competitive, goals, swagger)
+    extractLocalIntelligence(input.trim());
 
     try {
       const headers = await getAuthHeaders();
@@ -782,7 +911,27 @@ Ready to build this? Or want to adjust the approach first?`,
     }
   };
 
-  const isResearchReady = overallReadiness >= 80;
+  // Check if all required fields are filled
+  const hasRequiredFields = () => {
+    const industryTile = tiles.find(t => t.id === 'industry');
+    const audienceTile = tiles.find(t => t.id === 'audience');
+    const valueTile = tiles.find(t => t.id === 'value');
+    const competitiveTile = tiles.find(t => t.id === 'competitive');
+    const goalsTile = tiles.find(t => t.id === 'goals');
+    const swaggerTile = tiles.find(t => t.id === 'swagger');
+    
+    return (
+      (industryTile?.fill ?? 0) >= 80 &&
+      (audienceTile?.fill ?? 0) >= 80 &&
+      (valueTile?.fill ?? 0) >= 80 &&
+      (competitiveTile?.fill ?? 0) >= 50 &&
+      (goalsTile?.fill ?? 0) >= 50 &&
+      (swaggerTile?.fill ?? 0) >= 50
+    );
+  };
+  
+  // Only enable research/generate at 90%+ with all required fields
+  const isResearchReady = overallReadiness >= 90 && hasRequiredFields();
 
   // Show loading state while fetching session from Supabase
   if (isLoadingSession) {
