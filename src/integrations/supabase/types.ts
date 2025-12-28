@@ -476,6 +476,7 @@ export type Database = {
       }
       demo_sessions: {
         Row: {
+          brief_viewed_at: string | null
           claimed_at: string | null
           claimed_by: string | null
           completed: boolean | null
@@ -491,6 +492,7 @@ export type Database = {
           session_id: string
         }
         Insert: {
+          brief_viewed_at?: string | null
           claimed_at?: string | null
           claimed_by?: string | null
           completed?: boolean | null
@@ -506,6 +508,7 @@ export type Database = {
           session_id: string
         }
         Update: {
+          brief_viewed_at?: string | null
           claimed_at?: string | null
           claimed_by?: string | null
           completed?: boolean | null
