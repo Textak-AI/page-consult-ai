@@ -13,7 +13,8 @@ serve(async (req) => {
   try {
     const { consultationData } = await req.json();
     
-    console.log('[generate-strategy-brief] Generating brief for:', consultationData.businessName);
+    console.log('[generate-strategy-brief] Received consultationData:', JSON.stringify(consultationData, null, 2));
+    console.log('[generate-strategy-brief] Generating brief for:', consultationData.businessName || 'Unknown business');
 
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!lovableApiKey) {

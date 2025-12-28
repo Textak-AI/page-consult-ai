@@ -887,6 +887,28 @@ function GenerateContent() {
     // 1. Pre-generated content from wizard (fastest, already done)
     // 2. Generate with intelligence context (best quality, uses market research + persona)
     // 3. Fallback to old generation without intelligence (backwards compatibility)
+    
+    console.log('🔧 [generateSections] Starting with:', {
+      fromStrategicConsultation,
+      hasStrategicData: !!strategicData,
+      hasStructuredBrief: !!strategicData?.structuredBrief,
+      structuredBriefValid: strategicData?.structuredBrief ? isStructuredBriefContent(strategicData.structuredBrief) : false,
+      hasStrategyBriefText: !!strategicData?.strategyBrief,
+      hasPreGeneratedContent: !!preGeneratedContent,
+      hasIntelligence: !!intelligence,
+      consultationDataKeys: consultationData ? Object.keys(consultationData).filter(k => consultationData[k]) : [],
+    });
+    
+    if (strategicData?.structuredBrief) {
+      console.log('📋 [generateSections] structuredBrief contents:', {
+        hasHeadlines: 'headlines' in strategicData.structuredBrief,
+        hasMessagingPillars: 'messagingPillars' in strategicData.structuredBrief,
+        hasProofPoints: 'proofPoints' in strategicData.structuredBrief,
+        hasPageStructure: 'pageStructure' in strategicData.structuredBrief,
+        allKeys: Object.keys(strategicData.structuredBrief),
+      });
+    }
+    
     try {
       // PRIORITY 0: Use structuredBrief directly from strategic consultation
       // BRIEF-FIRST: The brief already contains all strategic content - NO AI REGENERATION
