@@ -264,9 +264,15 @@ export default function Wizard() {
       async (event, session) => {
         console.log('🔐 [Wizard] Auth state changed:', event);
         
-        const sessionId = searchParams.get('session');
+        // Check URL first, then localStorage as fallback (survives auth redirect)
+        const sessionIdFromUrl = searchParams.get('session');
+        const sessionIdFromStorage = localStorage.getItem('pageconsult_session_id');
+        const sessionId = sessionIdFromUrl || sessionIdFromStorage;
+        
         console.log('🔐 [Wizard] Debug:', {
           event,
+          sessionIdFromUrl,
+          sessionIdFromStorage,
           sessionId,
           hasSessionDataRef: !!sessionDataRef.current,
           isSignedIn: event === 'SIGNED_IN',
@@ -298,6 +304,9 @@ export default function Wizard() {
                 if (data && !error) {
                   sessionDataRef.current = data;
                   applySessionData(data);
+                  // Clear localStorage after successful load
+                  localStorage.removeItem('pageconsult_session_id');
+                  console.log('🧹 [Wizard] Cleared session ID from localStorage');
                 }
               } catch (err) {
                 console.error('❌ [Wizard] Error fetching session:', err);
@@ -321,7 +330,13 @@ export default function Wizard() {
       // Already initialized
       if (initCompleteRef.current) return;
       
-      const sessionId = searchParams.get('session');
+      // Check URL first, then localStorage as fallback (survives auth redirect)
+      const sessionIdFromUrl = searchParams.get('session');
+      const sessionIdFromStorage = localStorage.getItem('pageconsult_session_id');
+      const sessionId = sessionIdFromUrl || sessionIdFromStorage;
+      
+      console.log('📂 [Wizard] Session ID sources:', { sessionIdFromUrl, sessionIdFromStorage, sessionId });
+      
       if (!sessionId) {
         // No session param - set default message
         if (!initCompleteRef.current) {
@@ -376,6 +391,10 @@ export default function Wizard() {
         
         // Apply the data to wizard state
         applySessionData(data);
+        
+        // Clear localStorage after successful load
+        localStorage.removeItem('pageconsult_session_id');
+        console.log('🧹 [Wizard] Cleared session ID from localStorage');
         
         console.log('✅ [Wizard] Session loaded successfully, readiness:', data.readiness);
         

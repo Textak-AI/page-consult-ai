@@ -258,7 +258,11 @@ export default function LiveDemoSection() {
       
       console.log('✅ [Demo→Wizard] Session saved successfully');
       
-      // Navigate with session ID (survives auth redirect)
+      // Store session ID in localStorage (survives auth redirect)
+      localStorage.setItem('pageconsult_session_id', sessionId);
+      console.log('💾 [Demo→Wizard] Stored session ID in localStorage:', sessionId);
+      
+      // Navigate with session ID
       navigate(`/wizard?session=${sessionId}`);
     } catch (err) {
       console.error('Error saving demo session:', err);
