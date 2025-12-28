@@ -299,8 +299,12 @@ export default function Wizard() {
         conversationHistory: data.conversation,
       });
       
-      // Clear prefill data after successful load
-      clearPrefillData();
+      // Clear prefill data after React's StrictMode double-render completes
+      // Using setTimeout to ensure state is committed before clearing
+      setTimeout(() => {
+        clearPrefillData();
+        console.log('🧹 [Wizard] Prefill data cleared from storage');
+      }, 500);
       
       console.log('✅ [Wizard] Prefill applied successfully, readiness:', readiness);
     } else {
