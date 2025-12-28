@@ -657,12 +657,27 @@ ${conversationText}` }
         businessName: collectedInfo?.businessName || null,
       };
       
-      // Build market research data for Brief page
+      // Helper to filter out user confirmation messages from research data
+      const isConfirmationMessage = (text: string): boolean => {
+        if (!text || text.length < 20) {
+          const confirmations = ['yes', 'go ahead', 'sure', 'ok', 'okay', 'yep', 'yeah', 'sounds good', 'do it', "let's go", 'ready', 'start'];
+          return confirmations.some(c => text.toLowerCase().trim() === c || text.toLowerCase().trim().startsWith(c + ' '));
+        }
+        return false;
+      };
+      
+      // Extract actual research insights from AI response (filter out confirmations)
+      const researchLines = (data.message || '')
+        .split('\n')
+        .map((line: string) => line.trim())
+        .filter((line: string) => line && !isConfirmationMessage(line));
+      
+      // Build market research data for Brief page - use actual research, not user messages
       const marketResearchData = {
-        positioning: data.message?.split('\n')[0] || null,
-        messagingDirection: data.message?.split('\n').slice(1, 3).join(' ') || null,
-        competitiveAngle: tiles.find(t => t.id === 'competitive')?.insight || null,
-        industryInsights: data.message?.split('\n').filter((line: string) => line.trim()).slice(0, 4) || [],
+        positioning: researchLines[0] || extractedIntel.competitive || null,
+        messagingDirection: researchLines.slice(1, 3).join(' ') || null,
+        competitiveAngle: extractedIntel.competitive || null,
+        industryInsights: researchLines.slice(0, 4).filter((line: string) => line.length > 20) || [],
       };
       
       // Determine session ID for saving and navigation
