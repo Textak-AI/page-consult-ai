@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { 
   FileText, 
   Building2, 
@@ -62,9 +63,17 @@ const BriefSkeleton = () => (
 const Brief = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [briefData, setBriefData] = useState<BriefData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Debug: Log sessionId on mount
+  useEffect(() => {
+    console.log('📋 [Brief] Component mounted');
+    console.log('📋 [Brief] sessionId from useParams:', sessionId);
+    console.log('📋 [Brief] URL pathname:', window.location.pathname);
+  }, [sessionId]);
 
   // Scroll to top on load
   useEffect(() => {
@@ -123,15 +132,24 @@ const Brief = () => {
 
   const handleContinueToBrandSetup = () => {
     console.log('📋 [Brief] Session ID from useParams:', sessionId);
-    console.log('📋 [Brief] Navigating to:', `/brand-intake?session=${sessionId}`);
+    console.log('📋 [Brief] Current URL:', window.location.href);
+    console.log('📋 [Brief] Current pathname:', window.location.pathname);
     
-    if (!sessionId) {
-      console.error('❌ [Brief] No session ID available!');
+    // Validate sessionId exists and is not 'undefined' string
+    if (!sessionId || sessionId === 'undefined') {
+      console.error('❌ [Brief] No valid session ID available! sessionId:', sessionId);
+      toast({
+        title: "Session not found",
+        description: "Please start a new consultation.",
+        variant: "destructive",
+      });
       navigate('/');
       return;
     }
     
-    navigate(`/brand-intake?session=${sessionId}`);
+    const targetUrl = `/brand-intake?session=${sessionId}`;
+    console.log('📋 [Brief] Navigating to:', targetUrl);
+    navigate(targetUrl);
   };
 
   const handleDownloadPDF = () => {
