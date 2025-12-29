@@ -215,7 +215,7 @@ export default function EnhancedBrandSetup() {
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-8 bg-slate-900/50 border-slate-600 font-mono text-sm uppercase"
+          className="h-8 bg-slate-900/50 border-slate-600 font-mono text-sm uppercase text-white placeholder:text-slate-500"
           maxLength={7}
         />
       </div>
@@ -257,7 +257,7 @@ export default function EnhancedBrandSetup() {
                   value={websiteUrl}
                   onChange={(e) => setWebsiteUrl(e.target.value)}
                   placeholder="yourcompany.com"
-                  className="flex-1 bg-slate-900/50 border-slate-600 rounded-xl focus:border-purple-500 focus:ring-purple-500/50"
+                  className="flex-1 bg-slate-900/50 border-slate-600 rounded-xl focus:border-purple-500 focus:ring-purple-500/50 text-white placeholder:text-slate-500"
                   onKeyDown={(e) => e.key === 'Enter' && handleAnalyzeWebsite()}
                 />
                 <Button
