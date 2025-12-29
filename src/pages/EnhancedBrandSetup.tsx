@@ -1,0 +1,697 @@
+import { useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Globe, Image, FileText, Palette, ArrowRight, 
+  Upload, Check, Loader2, Monitor, Smartphone,
+  ChevronDown, ChevronUp, X
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+const FONT_OPTIONS = [
+  'Inter',
+  'Plus Jakarta Sans', 
+  'DM Sans',
+  'Outfit',
+  'Space Grotesk',
+  'Sora',
+];
+
+const DEFAULT_COLORS = {
+  primary: '#7C3AED',
+  secondary: '#4F46E5',
+  accent: '#06B6D4',
+};
+
+interface ExtractionResults {
+  logoUrl: string | null;
+  colors: string[];
+  companyName: string | null;
+  tagline: string | null;
+}
+
+export default function EnhancedBrandSetup() {
+  const navigate = useNavigate();
+  
+  // State
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [extractionResults, setExtractionResults] = useState<ExtractionResults | null>(null);
+  const [logo, setLogo] = useState<string | null>(null);
+  const [colors, setColors] = useState(DEFAULT_COLORS);
+  const [fonts, setFonts] = useState({ heading: 'Inter', body: 'Inter' });
+  const [brandGuide, setBrandGuide] = useState<File | null>(null);
+  const [skipBrandGuide, setSkipBrandGuide] = useState(false);
+  const [isExtractingBrief, setIsExtractingBrief] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [logoBackground, setLogoBackground] = useState<'dark' | 'light'>('dark');
+  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(true);
+  const [companyName, setCompanyName] = useState('Your Company');
+
+  // Calculate brand completeness
+  const brandCompleteness = useMemo(() => {
+    let score = 0;
+    if (websiteUrl || extractionResults?.companyName) score += 20;
+    if (logo || extractionResults?.logoUrl) score += 25;
+    if (colors.primary !== DEFAULT_COLORS.primary) score += 15;
+    if (colors.secondary !== DEFAULT_COLORS.secondary) score += 10;
+    if (fonts.heading !== 'Inter' || fonts.body !== 'Inter') score += 15;
+    if (brandGuide || skipBrandGuide) score += 15;
+    return Math.min(score, 100);
+  }, [websiteUrl, extractionResults, logo, colors, fonts, brandGuide, skipBrandGuide]);
+
+  // Handle website analysis
+  const handleAnalyzeWebsite = async () => {
+    if (!websiteUrl.trim()) {
+      toast.error('Please enter a website URL');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      let formattedUrl = websiteUrl.trim();
+      if (!formattedUrl.startsWith('http')) {
+        formattedUrl = `https://${formattedUrl}`;
+      }
+
+      const { data, error } = await supabase.functions.invoke('extract-website-intelligence', {
+        body: { url: formattedUrl }
+      });
+
+      if (error) throw error;
+
+      const results: ExtractionResults = {
+        logoUrl: data?.logoUrl || null,
+        colors: data?.brandColors || [],
+        companyName: data?.title || null,
+        tagline: data?.tagline || data?.description || null,
+      };
+
+      setExtractionResults(results);
+      
+      if (results.logoUrl) {
+        setLogo(results.logoUrl);
+      }
+      if (results.companyName) {
+        setCompanyName(results.companyName);
+      }
+      if (results.colors?.length > 0) {
+        setColors(prev => ({
+          ...prev,
+          primary: results.colors[0] || prev.primary,
+          secondary: results.colors[1] || prev.secondary,
+        }));
+      }
+
+      toast.success('Website analyzed successfully!');
+    } catch (error) {
+      console.error('Analysis error:', error);
+      toast.error('Failed to analyze website. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Handle logo upload
+  const handleLogoUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setLogo(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
+
+  // Handle logo drop
+  const handleLogoDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setLogo(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
+
+  // Handle brand guide upload
+  const handleBrandGuideUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setBrandGuide(file);
+    setIsExtractingBrief(true);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64 = (event.target?.result as string).split(',')[1];
+        
+        const { data, error } = await supabase.functions.invoke('extract-brand-brief', {
+          body: { 
+            pdfBase64: base64,
+            fileName: file.name,
+          }
+        });
+
+        if (error) throw error;
+
+        if (data?.colors) {
+          setColors(prev => ({
+            primary: data.colors.primary || prev.primary,
+            secondary: data.colors.secondary || prev.secondary,
+            accent: data.colors.accent || prev.accent,
+          }));
+        }
+
+        toast.success('Brand guide extracted successfully!');
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Brand guide extraction error:', error);
+      toast.error('Failed to extract brand guide');
+    } finally {
+      setIsExtractingBrief(false);
+    }
+  };
+
+  // Handle continue
+  const handleContinue = () => {
+    navigate('/wizard-choice');
+  };
+
+  // Color picker component
+  const ColorPicker = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
+    <div className="flex items-center gap-3">
+      <label className="relative">
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        />
+        <div 
+          className="w-10 h-10 rounded-lg border-2 border-slate-600 cursor-pointer hover:border-slate-500 transition-colors"
+          style={{ backgroundColor: value }}
+        />
+      </label>
+      <div className="flex-1">
+        <p className="text-sm text-slate-400 mb-1">{label}</p>
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-8 bg-slate-900/50 border-slate-600 font-mono text-sm uppercase"
+          maxLength={7}
+        />
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-slate-900">
+      {/* Header */}
+      <div className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-white">
+            Let's capture your brand
+          </h1>
+          <p className="text-slate-400 mt-1">
+            We'll extract everything automatically
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* LEFT COLUMN - Extraction Panels */}
+          <div className="flex-1 space-y-6">
+            {/* 1. Website URL Section */}
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                  <Globe className="w-6 h-6 text-purple-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Your Website</h2>
+                  <p className="text-sm text-slate-400">We'll extract your logo, colors, and brand info</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Input
+                  value={websiteUrl}
+                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                  placeholder="yourcompany.com"
+                  className="flex-1 bg-slate-900/50 border-slate-600 rounded-xl focus:border-purple-500 focus:ring-purple-500/50"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAnalyzeWebsite()}
+                />
+                <Button
+                  onClick={handleAnalyzeWebsite}
+                  disabled={isAnalyzing}
+                  className="bg-purple-600 hover:bg-purple-700 rounded-xl px-6"
+                >
+                  {isAnalyzing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    'Analyze'
+                  )}
+                </Button>
+              </div>
+
+              {extractionResults && (
+                <div className="mt-4 p-4 bg-slate-900/50 rounded-xl border border-emerald-500/30">
+                  <div className="flex items-center gap-2 text-emerald-400 mb-3">
+                    <Check className="w-4 h-4" />
+                    <span className="text-sm font-medium">Extracted successfully</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {extractionResults.logoUrl && (
+                      <img 
+                        src={extractionResults.logoUrl} 
+                        alt="Logo" 
+                        className="w-12 h-12 object-contain bg-white rounded-lg p-1"
+                      />
+                    )}
+                    <div className="flex gap-2">
+                      {extractionResults.colors.slice(0, 4).map((color, i) => (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            if (i === 0) setColors(prev => ({ ...prev, primary: color }));
+                            else if (i === 1) setColors(prev => ({ ...prev, secondary: color }));
+                            else if (i === 2) setColors(prev => ({ ...prev, accent: color }));
+                          }}
+                          className="w-8 h-8 rounded-lg border-2 border-slate-600 hover:border-white transition-colors"
+                          style={{ backgroundColor: color }}
+                          title={`Use as color: ${color}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <button className="mt-3 text-sm text-slate-500 hover:text-slate-400 transition-colors">
+                No website yet? Continue manually →
+              </button>
+            </div>
+
+            {/* 2. Logo Upload Section */}
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
+                  <Image className="w-6 h-6 text-cyan-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Your Logo</h2>
+                  <p className="text-sm text-slate-400">PNG, SVG, JPG, or ZIP</p>
+                </div>
+              </div>
+
+              {!logo ? (
+                <label
+                  onDrop={handleLogoDrop}
+                  onDragOver={(e) => e.preventDefault()}
+                  className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-600 rounded-xl hover:border-cyan-500/50 transition-colors cursor-pointer"
+                >
+                  <Upload className="w-10 h-10 text-slate-500 mb-3" />
+                  <p className="text-slate-400 text-center">
+                    Drag and drop or <span className="text-cyan-400">browse</span>
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*,.zip"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                  />
+                </label>
+              ) : (
+                <div className="space-y-4">
+                  <div 
+                    className={`relative p-6 rounded-xl flex items-center justify-center ${
+                      logoBackground === 'dark' ? 'bg-slate-900' : 'bg-white'
+                    }`}
+                  >
+                    <img 
+                      src={logo} 
+                      alt="Logo preview" 
+                      className="max-h-24 object-contain"
+                    />
+                    <button
+                      onClick={() => setLogo(null)}
+                      className="absolute top-2 right-2 p-1 bg-slate-700/80 rounded-full hover:bg-slate-600"
+                    >
+                      <X className="w-4 h-4 text-slate-300" />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setLogoBackground('dark')}
+                      className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                        logoBackground === 'dark' 
+                          ? 'bg-slate-700 text-white' 
+                          : 'bg-slate-800/50 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Dark
+                    </button>
+                    <button
+                      onClick={() => setLogoBackground('light')}
+                      className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                        logoBackground === 'light' 
+                          ? 'bg-slate-700 text-white' 
+                          : 'bg-slate-800/50 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Light
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <p className="mt-3 text-xs text-slate-500">
+                Tip: Transparent PNGs work best for versatile placement
+              </p>
+            </div>
+
+            {/* 3. Brand Guide Section */}
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-6 h-6 text-amber-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white">
+                    Brand Guide <span className="text-slate-500 font-normal">(Optional)</span>
+                  </h2>
+                  <p className="text-sm text-slate-400">Upload your brand guidelines PDF</p>
+                </div>
+              </div>
+
+              {!skipBrandGuide && (
+                <>
+                  {!brandGuide ? (
+                    <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-600 rounded-xl hover:border-amber-500/50 transition-colors cursor-pointer">
+                      {isExtractingBrief ? (
+                        <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+                      ) : (
+                        <>
+                          <FileText className="w-8 h-8 text-slate-500 mb-2" />
+                          <p className="text-slate-400 text-sm">Drop PDF here</p>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={handleBrandGuideUpload}
+                        className="hidden"
+                        disabled={isExtractingBrief}
+                      />
+                    </label>
+                  ) : (
+                    <div className="flex items-center gap-3 p-4 bg-slate-900/50 rounded-xl border border-emerald-500/30">
+                      <Check className="w-5 h-5 text-emerald-400" />
+                      <span className="text-white flex-1 truncate">{brandGuide.name}</span>
+                      <button
+                        onClick={() => setBrandGuide(null)}
+                        className="text-slate-400 hover:text-white"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div className="flex items-center gap-2 mt-4">
+                <Checkbox
+                  id="skip-guide"
+                  checked={skipBrandGuide}
+                  onCheckedChange={(checked) => setSkipBrandGuide(checked as boolean)}
+                />
+                <Label htmlFor="skip-guide" className="text-slate-400 text-sm cursor-pointer">
+                  I don't have a brand guide
+                </Label>
+              </div>
+            </div>
+
+            {/* 4. Colors and Typography Section */}
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center flex-shrink-0">
+                  <Palette className="w-6 h-6 text-pink-400" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-lg font-semibold text-white">Colors & Typography</h2>
+                  <p className="text-sm text-slate-400">Customize your brand appearance</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setColors(DEFAULT_COLORS);
+                    setFonts({ heading: 'Inter', body: 'Inter' });
+                  }}
+                  className="text-slate-400 border-slate-600 hover:bg-slate-700"
+                >
+                  Use Defaults
+                </Button>
+              </div>
+
+              {/* Colors */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <ColorPicker 
+                  label="Primary" 
+                  value={colors.primary} 
+                  onChange={(v) => setColors(prev => ({ ...prev, primary: v }))} 
+                />
+                <ColorPicker 
+                  label="Secondary" 
+                  value={colors.secondary} 
+                  onChange={(v) => setColors(prev => ({ ...prev, secondary: v }))} 
+                />
+                <ColorPicker 
+                  label="Accent" 
+                  value={colors.accent} 
+                  onChange={(v) => setColors(prev => ({ ...prev, accent: v }))} 
+                />
+              </div>
+
+              {/* Extracted color suggestions */}
+              {extractionResults?.colors && extractionResults.colors.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-xs text-slate-500 mb-2">Extracted from your website:</p>
+                  <div className="flex gap-2">
+                    {extractionResults.colors.map((color, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          if (i === 0) setColors(prev => ({ ...prev, primary: color }));
+                          else if (i === 1) setColors(prev => ({ ...prev, secondary: color }));
+                          else setColors(prev => ({ ...prev, accent: color }));
+                        }}
+                        className="w-8 h-8 rounded-lg border-2 border-slate-600 hover:border-white transition-colors hover:scale-110"
+                        style={{ backgroundColor: color }}
+                        title={color}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Typography */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-slate-400 text-sm mb-2 block">Heading Font</Label>
+                  <Select value={fonts.heading} onValueChange={(v) => setFonts(prev => ({ ...prev, heading: v }))}>
+                    <SelectTrigger className="bg-slate-900/50 border-slate-600">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FONT_OPTIONS.map(font => (
+                        <SelectItem key={font} value={font}>{font}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-slate-400 text-sm mb-2 block">Body Font</Label>
+                  <Select value={fonts.body} onValueChange={(v) => setFonts(prev => ({ ...prev, body: v }))}>
+                    <SelectTrigger className="bg-slate-900/50 border-slate-600">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FONT_OPTIONS.map(font => (
+                        <SelectItem key={font} value={font}>{font}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN - Live Preview */}
+          <div className="lg:w-[400px] lg:flex-shrink-0">
+            <div className="lg:sticky lg:top-24">
+              {/* Mobile toggle */}
+              <button
+                onClick={() => setMobilePreviewOpen(!mobilePreviewOpen)}
+                className="lg:hidden w-full flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl mb-4"
+              >
+                <span className="text-white font-medium">Live Preview</span>
+                {mobilePreviewOpen ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+              </button>
+
+              <div className={`${mobilePreviewOpen ? 'block' : 'hidden'} lg:block`}>
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden">
+                  {/* Preview Header */}
+                  <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
+                    <span className="text-sm font-medium text-slate-300">Live Preview</span>
+                    <div className="flex items-center gap-1 bg-slate-900/50 rounded-lg p-1">
+                      <button
+                        onClick={() => setPreviewMode('desktop')}
+                        className={`p-1.5 rounded-md transition-colors ${
+                          previewMode === 'desktop' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <Monitor className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setPreviewMode('mobile')}
+                        className={`p-1.5 rounded-md transition-colors ${
+                          previewMode === 'mobile' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <Smartphone className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Preview Content */}
+                  <div 
+                    className={`p-6 transition-all ${previewMode === 'mobile' ? 'max-w-[280px] mx-auto' : ''}`}
+                    style={{ 
+                      fontFamily: fonts.body,
+                    }}
+                  >
+                    {/* Mini Hero Preview */}
+                    <div className="bg-slate-900 rounded-xl p-6 text-center">
+                      {/* Logo */}
+                      {(logo || extractionResults?.logoUrl) && (
+                        <img 
+                          src={logo || extractionResults?.logoUrl || ''} 
+                          alt="Logo" 
+                          className="h-10 object-contain mx-auto mb-4"
+                        />
+                      )}
+
+                      {/* Headline */}
+                      <h3 
+                        className="text-xl font-bold text-white mb-2"
+                        style={{ fontFamily: fonts.heading }}
+                      >
+                        {companyName}
+                      </h3>
+
+                      {/* Tagline */}
+                      <p 
+                        className="text-slate-400 text-sm mb-6"
+                        style={{ fontFamily: fonts.body }}
+                      >
+                        {extractionResults?.tagline || 'Your compelling tagline goes here'}
+                      </p>
+
+                      {/* CTA Buttons */}
+                      <div className="flex gap-3 justify-center mb-6">
+                        <button
+                          className="px-4 py-2 rounded-lg text-white text-sm font-medium transition-opacity hover:opacity-90"
+                          style={{ backgroundColor: colors.primary }}
+                        >
+                          Get Started
+                        </button>
+                        <button
+                          className="px-4 py-2 rounded-lg text-white text-sm font-medium transition-opacity hover:opacity-90"
+                          style={{ backgroundColor: colors.secondary }}
+                        >
+                          Learn More
+                        </button>
+                      </div>
+
+                      {/* Stats Row */}
+                      <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
+                        <span>500+ Clients</span>
+                        <span className="w-1 h-1 bg-slate-600 rounded-full" />
+                        <span>98% Satisfaction</span>
+                        <span className="w-1 h-1 bg-slate-600 rounded-full" />
+                        <span>24/7 Support</span>
+                      </div>
+                    </div>
+
+                    {/* Color Legend */}
+                    <div className="flex items-center justify-center gap-4 mt-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors.primary }} />
+                        <span className="text-xs text-slate-500">Primary</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors.secondary }} />
+                        <span className="text-xs text-slate-500">Secondary</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Brand Completeness */}
+                  <div className="p-4 border-t border-slate-700/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-slate-400">Brand Completeness</span>
+                      <span className="text-sm font-medium text-white">{brandCompleteness}%</span>
+                    </div>
+                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-purple-500 to-cyan-500"
+                        style={{ width: `${brandCompleteness}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between mt-12 pt-8 border-t border-slate-800">
+          <button 
+            onClick={() => navigate('/wizard-choice')}
+            className="text-slate-500 hover:text-slate-400 text-sm transition-colors"
+          >
+            Skip for now (use defaults)
+          </button>
+          <Button
+            onClick={handleContinue}
+            className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white px-8 py-6 rounded-xl font-medium"
+          >
+            Continue to Build Your Page
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
