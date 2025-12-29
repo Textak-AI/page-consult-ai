@@ -39,7 +39,7 @@ export async function generatePageContentWithAI(data: ConsultationData): Promise
 } | null> {
   try {
     // Use direct Claude API integration (bypasses edge functions)
-    const { generateIntelligentContent } = await import('./generateIntelligentContent');
+    // Using static import from top of file
     const result = await generateIntelligentContent(data);
     
     console.log('✅ AI-generated content via Claude API:', {
