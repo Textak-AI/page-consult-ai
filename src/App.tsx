@@ -97,7 +97,7 @@ const App = () => {
               
               {/* Wizard Paths */}
               <Route path="/wizard/chat" element={<Wizard />} />
-              <Route path="/wizard/form" element={<NewConsultation />} />
+              <Route path="/wizard/form" element={<NewConsultation key={Date.now()} />} />
               <Route path="/wizard/review" element={<WizardReview />} />
               
               {/* Backwards compatibility */}
