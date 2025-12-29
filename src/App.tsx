@@ -8,7 +8,7 @@ if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { SessionProvider } from "@/contexts/SessionContext";
 import { DevFloatingButton } from "@/components/dev";
@@ -85,10 +85,25 @@ const App = () => {
             <DevFloatingButton />
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/new" element={<NewConsultation />} />
-              <Route path="/consultation" element={<NewConsultation />} />
-              <Route path="/wizard" element={<Wizard />} />
+              <Route path="/new" element={<Navigate to="/wizard/form" replace />} />
+              
+              {/* Brand Setup - entry point */}
+              <Route path="/brand-setup" element={<EnhancedBrandSetup />} />
+              <Route path="/brand-setup-new" element={<EnhancedBrandSetup />} />
+              <Route path="/brand-setup-old" element={<BrandSetup />} />
+              
+              {/* Wizard Choice - decision point */}
+              <Route path="/wizard" element={<WizardChoice />} />
+              
+              {/* Wizard Paths */}
+              <Route path="/wizard/chat" element={<Wizard />} />
+              <Route path="/wizard/form" element={<NewConsultation />} />
               <Route path="/wizard/review" element={<WizardReview />} />
+              
+              {/* Backwards compatibility */}
+              <Route path="/consultation" element={<Navigate to="/wizard/form" replace />} />
+              <Route path="/wizard-choice" element={<Navigate to="/wizard" replace />} />
+              
               <Route path="/signup" element={<Signup />} />
               <Route path="/generate" element={<Generate />} />
               <Route path="/generate/:pageId" element={<Generate />} />
@@ -103,13 +118,10 @@ const App = () => {
               <Route path="/test-page" element={<TestPage />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/brand" element={<Settings />} />
-              <Route path="/brand-setup" element={<BrandSetup />} />
               <Route path="/review/:businessSlug" element={<TestimonialRequest />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/brief/:sessionId" element={<Brief />} />
               <Route path="/brand-intake" element={<BrandIntake />} />
-              <Route path="/wizard-choice" element={<WizardChoice />} />
-              <Route path="/brand-setup-new" element={<EnhancedBrandSetup />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
