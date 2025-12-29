@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Globe, Image, FileText, Palette, ArrowRight, 
@@ -136,6 +136,93 @@ export default function EnhancedBrandSetup() {
     heading: { name: string; url: string } | null;
     body: { name: string; url: string } | null;
   }>({ heading: null, body: null });
+
+  // Standard font options
+  const STANDARD_HEADING_FONTS = ['Inter', 'Plus Jakarta Sans', 'DM Sans', 'Outfit', 'Space Grotesk', 'Sora', 'Playfair Display', 'Montserrat', 'Nunito Sans'];
+  const STANDARD_BODY_FONTS = ['Inter', 'Plus Jakarta Sans', 'DM Sans', 'IBM Plex Sans', 'Source Sans Pro', 'Lato', 'Nunito Sans'];
+
+  // Dynamic font options that include detected/matched/custom fonts
+  const headingFontOptions = useMemo(() => {
+    const options: { value: string; label: string }[] = [];
+    
+    // Add custom uploaded font first
+    if (customFonts.heading) {
+      options.push({ value: customFonts.heading.name, label: `${customFonts.heading.name} (uploaded)` });
+    }
+    
+    // Add matched font
+    if (fontMatches.heading && !options.some(o => o.value === fontMatches.heading?.match)) {
+      options.push({ value: fontMatches.heading.match, label: `${fontMatches.heading.match} (matches ${fontMatches.heading.original})` });
+    }
+    
+    // Add detected font if not in standard list
+    if (detectedFonts.heading && !STANDARD_HEADING_FONTS.includes(detectedFonts.heading) && !options.some(o => o.value === detectedFonts.heading)) {
+      options.push({ value: detectedFonts.heading, label: `${detectedFonts.heading} (detected)` });
+    }
+    
+    // Add standard fonts
+    STANDARD_HEADING_FONTS.forEach(font => {
+      if (!options.some(o => o.value === font)) {
+        options.push({ value: font, label: font });
+      }
+    });
+    
+    return options;
+  }, [customFonts.heading, fontMatches.heading, detectedFonts.heading]);
+
+  const bodyFontOptions = useMemo(() => {
+    const options: { value: string; label: string }[] = [];
+    
+    // Add custom uploaded font first
+    if (customFonts.body) {
+      options.push({ value: customFonts.body.name, label: `${customFonts.body.name} (uploaded)` });
+    }
+    
+    // Add matched font
+    if (fontMatches.body && !options.some(o => o.value === fontMatches.body?.match)) {
+      options.push({ value: fontMatches.body.match, label: `${fontMatches.body.match} (matches ${fontMatches.body.original})` });
+    }
+    
+    // Add detected font if not in standard list
+    if (detectedFonts.body && !STANDARD_BODY_FONTS.includes(detectedFonts.body) && !options.some(o => o.value === detectedFonts.body)) {
+      options.push({ value: detectedFonts.body, label: `${detectedFonts.body} (detected)` });
+    }
+    
+    // Add standard fonts
+    STANDARD_BODY_FONTS.forEach(font => {
+      if (!options.some(o => o.value === font)) {
+        options.push({ value: font, label: font });
+      }
+    });
+    
+    return options;
+  }, [customFonts.body, fontMatches.body, detectedFonts.body]);
+
+  // Load detected fonts from Google Fonts
+  useEffect(() => {
+    const fontsToLoad: string[] = [];
+    
+    if (detectedFonts.heading && !customFonts.heading) {
+      fontsToLoad.push(detectedFonts.heading);
+    }
+    if (detectedFonts.body && detectedFonts.body !== detectedFonts.heading && !customFonts.body) {
+      fontsToLoad.push(detectedFonts.body);
+    }
+    
+    if (fontsToLoad.length > 0) {
+      const families = fontsToLoad.map(f => f.replace(/ /g, '+')).join('&family=');
+      const link = document.createElement('link');
+      link.href = `https://fonts.googleapis.com/css2?family=${families}:wght@400;500;600;700&display=swap`;
+      link.rel = 'stylesheet';
+      link.id = 'detected-fonts-loader';
+      
+      // Remove existing if present
+      const existing = document.getElementById('detected-fonts-loader');
+      if (existing) existing.remove();
+      
+      document.head.appendChild(link);
+    }
+  }, [detectedFonts, customFonts]);
 
   // Calculate brand completeness
   const brandCompleteness = useMemo(() => {
@@ -808,21 +895,9 @@ export default function EnhancedBrandSetup() {
                       onChange={(e) => setFontSettings({...fontSettings, h1: e.target.value})}
                       className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
                     >
-                      {customFonts.heading && (
-                        <option value={customFonts.heading.name}>{customFonts.heading.name} (uploaded)</option>
-                      )}
-                      {fontMatches.heading && (
-                        <option value={fontMatches.heading.match}>{fontMatches.heading.match} (matches {fontMatches.heading.original})</option>
-                      )}
-                      <option value="Inter">Inter</option>
-                      <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
-                      <option value="DM Sans">DM Sans</option>
-                      <option value="Outfit">Outfit</option>
-                      <option value="Space Grotesk">Space Grotesk</option>
-                      <option value="Sora">Sora</option>
-                      <option value="Playfair Display">Playfair Display</option>
-                      <option value="Montserrat">Montserrat</option>
-                      <option value="Nunito Sans">Nunito Sans</option>
+                      {headingFontOptions.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
                   
@@ -834,21 +909,9 @@ export default function EnhancedBrandSetup() {
                       onChange={(e) => setFontSettings({...fontSettings, h2: e.target.value})}
                       className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
                     >
-                      {customFonts.heading && (
-                        <option value={customFonts.heading.name}>{customFonts.heading.name} (uploaded)</option>
-                      )}
-                      {fontMatches.heading && (
-                        <option value={fontMatches.heading.match}>{fontMatches.heading.match} (matches {fontMatches.heading.original})</option>
-                      )}
-                      <option value="Inter">Inter</option>
-                      <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
-                      <option value="DM Sans">DM Sans</option>
-                      <option value="Outfit">Outfit</option>
-                      <option value="Space Grotesk">Space Grotesk</option>
-                      <option value="Sora">Sora</option>
-                      <option value="Playfair Display">Playfair Display</option>
-                      <option value="Montserrat">Montserrat</option>
-                      <option value="Nunito Sans">Nunito Sans</option>
+                      {headingFontOptions.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
                   
@@ -860,21 +923,9 @@ export default function EnhancedBrandSetup() {
                       onChange={(e) => setFontSettings({...fontSettings, h3: e.target.value})}
                       className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
                     >
-                      {customFonts.heading && (
-                        <option value={customFonts.heading.name}>{customFonts.heading.name} (uploaded)</option>
-                      )}
-                      {fontMatches.heading && (
-                        <option value={fontMatches.heading.match}>{fontMatches.heading.match} (matches {fontMatches.heading.original})</option>
-                      )}
-                      <option value="Inter">Inter</option>
-                      <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
-                      <option value="DM Sans">DM Sans</option>
-                      <option value="Outfit">Outfit</option>
-                      <option value="Space Grotesk">Space Grotesk</option>
-                      <option value="Sora">Sora</option>
-                      <option value="Playfair Display">Playfair Display</option>
-                      <option value="Montserrat">Montserrat</option>
-                      <option value="Nunito Sans">Nunito Sans</option>
+                      {headingFontOptions.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -913,19 +964,9 @@ export default function EnhancedBrandSetup() {
                       onChange={(e) => setFontSettings({...fontSettings, body: e.target.value})}
                       className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
                     >
-                      {customFonts.body && (
-                        <option value={customFonts.body.name}>{customFonts.body.name} (uploaded)</option>
-                      )}
-                      {fontMatches.body && (
-                        <option value={fontMatches.body.match}>{fontMatches.body.match} (matches {fontMatches.body.original})</option>
-                      )}
-                      <option value="Inter">Inter</option>
-                      <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
-                      <option value="DM Sans">DM Sans</option>
-                      <option value="IBM Plex Sans">IBM Plex Sans</option>
-                      <option value="Source Sans Pro">Source Sans Pro</option>
-                      <option value="Lato">Lato</option>
-                      <option value="Nunito Sans">Nunito Sans</option>
+                      {bodyFontOptions.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
                   
@@ -937,19 +978,9 @@ export default function EnhancedBrandSetup() {
                       onChange={(e) => setFontSettings({...fontSettings, small: e.target.value})}
                       className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
                     >
-                      {customFonts.body && (
-                        <option value={customFonts.body.name}>{customFonts.body.name} (uploaded)</option>
-                      )}
-                      {fontMatches.body && (
-                        <option value={fontMatches.body.match}>{fontMatches.body.match} (matches {fontMatches.body.original})</option>
-                      )}
-                      <option value="Inter">Inter</option>
-                      <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
-                      <option value="DM Sans">DM Sans</option>
-                      <option value="IBM Plex Sans">IBM Plex Sans</option>
-                      <option value="Source Sans Pro">Source Sans Pro</option>
-                      <option value="Lato">Lato</option>
-                      <option value="Nunito Sans">Nunito Sans</option>
+                      {bodyFontOptions.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
