@@ -495,7 +495,7 @@ export default function EnhancedBrandSetup() {
 
   // Handle continue
   const handleContinue = () => {
-    navigate('/wizard-choice');
+    navigate('/wizard');
   };
 
   // Color picker component
@@ -1159,7 +1159,7 @@ export default function EnhancedBrandSetup() {
         {/* Footer */}
         <div className="flex items-center justify-between mt-12 pt-8 border-t border-slate-800">
           <button 
-            onClick={() => navigate('/wizard-choice')}
+            onClick={() => navigate('/wizard')}
             className="text-slate-500 hover:text-slate-400 text-sm transition-colors"
           >
             Skip for now (use defaults)
