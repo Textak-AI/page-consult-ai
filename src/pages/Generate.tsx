@@ -17,6 +17,14 @@ import { StrategyBriefPanel } from "@/components/builder/StrategyBriefPanel";
 import { ConsultantPanel } from "@/components/editor/ConsultantPanel";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
 import { generateIntelligentContent, runIntelligencePipeline } from "@/services/intelligence";
+import { generateIntelligentContent as generateIntelligentContentLegacy } from "@/lib/generateIntelligentContent";
+import { 
+  generateHeadline, 
+  generateSubheadline, 
+  generateFeatures as genFeatures,
+  generateSocialProof as genSocialProof,
+  generateCTA 
+} from "@/lib/contentGenerator";
 import type { PersonaIntelligence, GeneratedContent, AISeoData } from "@/services/intelligence/types";
 import { cn } from "@/lib/utils";
 import logo from "/logo/whiteAsset_3combimark_darkmode.svg";
@@ -1172,10 +1180,10 @@ function GenerateContent() {
       }
 
       // PRIORITY 3: Use old intelligent content generation (no persona)
-      const { generateIntelligentContent: oldGenerate } = await import("@/lib/generateIntelligentContent");
+      // Using static import from top of file
 
       console.log("🚀 Starting fallback content generation...");
-      const generated = await oldGenerate({
+      const generated = await generateIntelligentContentLegacy({
         industry: consultationData.industry,
         service_type: consultationData.service_type,
         goal: consultationData.goal,
@@ -2239,15 +2247,8 @@ function GenerateContent() {
     
     console.log('🚀 [generateFallbackSections] pageType:', pageType, '| isBetaPage:', isBetaPage, '| industryVariant:', industryVariant);
     
-    const {
-      generateHeadline: genHeadline,
-      generateSubheadline,
-      generateFeatures: genFeatures,
-      generateSocialProof: genSocialProof,
-      generateCTA,
-    } = await import("@/lib/contentGenerator");
-
-    const headline = genHeadline(consultationData);
+    // Using static imports from top of file
+    const headline = generateHeadline(consultationData);
     const subheadline = generateSubheadline(consultationData);
     const features = genFeatures(consultationData);
     const cta = generateCTA(consultationData);
