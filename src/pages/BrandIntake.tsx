@@ -69,7 +69,12 @@ export default function BrandIntake() {
   
   const handleSubmit = async () => {
     if (!sessionId) {
-      toast({ title: "Session not found", variant: "destructive" });
+      toast({ 
+        title: "Session not found", 
+        description: "Please start from the beginning.",
+        variant: "destructive" 
+      });
+      navigate('/');
       return;
     }
     
@@ -128,6 +133,10 @@ export default function BrandIntake() {
   };
   
   const handleSkip = () => {
+    if (!sessionId) {
+      navigate('/');
+      return;
+    }
     navigate(`/generate?session=${sessionId}`);
   };
   
