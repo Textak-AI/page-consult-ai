@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +44,9 @@ interface ExistingDraft {
   updated_at: string;
 }
 
+// Module-level flag to track if brand data exists on initial load
+let brandDataExistsOnLoad = false;
+
 // Check localStorage synchronously to determine initial stage
 const getInitialStage = (): Stage => {
   if (typeof window !== 'undefined') {
@@ -53,11 +56,13 @@ const getInitialStage = (): Stage => {
         const brandData = JSON.parse(savedBrandData);
         if (brandData.websiteUrl || brandData.logo || brandData.companyName) {
           console.log('🚀 Initial stage set to consultation (brand data exists)');
+          brandDataExistsOnLoad = true; // Set module-level flag
           return 'consultation';
         }
       } catch (e) {}
     }
   }
+  brandDataExistsOnLoad = false;
   return 'loading';
 };
 
@@ -78,6 +83,9 @@ export default function NewConsultation() {
   const [skipDraftLoad, setSkipDraftLoad] = useState(false);
   const [websiteAnalysis, setWebsiteAnalysis] = useState<any>(null);
   const [isDevModeActive] = useDevMode();
+  
+  // Ref to track if brand data was loaded from EnhancedBrandSetup
+  const brandDataLoadedRef = useRef(brandDataExistsOnLoad);
   
   // Draft recovery state
   const [showDraftModal, setShowDraftModal] = useState(false);
@@ -119,6 +127,9 @@ export default function NewConsultation() {
         
         // Apply saved brand data to extracted brand state
         if (brandData.websiteUrl || brandData.logo || brandData.companyName) {
+          // Set the ref to prevent checkAuthAndDraft from overriding the stage
+          brandDataLoadedRef.current = true;
+          
           const brand: ExtractedBrand = {
             domain: brandData.websiteUrl || '',
             companyName: brandData.companyName || null,
@@ -147,6 +158,15 @@ export default function NewConsultation() {
   // Check auth and draft on mount
   useEffect(() => {
     const checkAuthAndDraft = async () => {
+      // If brand data was loaded from EnhancedBrandSetup, skip the normal flow
+      if (brandDataLoadedRef.current) {
+        console.log('🛡️ Brand data loaded - skipping checkAuthAndDraft stage changes');
+        // Still check auth but don't change stage
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) setUserId(user.id);
+        return;
+      }
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         // Preserve prefill data in redirect
@@ -201,6 +221,11 @@ export default function NewConsultation() {
 
   // Helper to proceed to the starting point
   const proceedToStart = () => {
+    if (brandDataLoadedRef.current) {
+      console.log('🛡️ Brand data loaded - skipping proceedToStart');
+      return;
+    }
+    
     if (!shouldShowIntro()) {
       console.log('🔄 setStage called:', 'brand-extractor', 'from: proceedToStart (no intro)');
       setStage('brand-extractor');
