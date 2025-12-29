@@ -821,13 +821,29 @@ function GenerateContent() {
       const searchParams = new URLSearchParams(window.location.search);
       const forceRegenerate = searchParams.get('regenerate') === 'true';
       
-      // Check if a page already exists for this consultation
-      const { data: existingPage } = await supabase
-        .from("landing_pages")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("consultation_id", consultationData.id)
-        .maybeSingle();
+      // Check if a page already exists for this consultation OR session
+      const isDemoSession = !!consultationData.session_id;
+      let existingPage = null;
+      
+      if (isDemoSession) {
+        // Check by session_id for demo flows
+        const { data } = await supabase
+          .from("landing_pages")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("session_id", consultationData.session_id)
+          .maybeSingle();
+        existingPage = data;
+      } else {
+        // Check by consultation_id for authenticated flows
+        const { data } = await supabase
+          .from("landing_pages")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("consultation_id", consultationData.id)
+          .maybeSingle();
+        existingPage = data;
+      }
 
       if (existingPage && !forceRegenerate) {
         console.log("✅ Found existing page for consultation, loading it:", existingPage.id);
@@ -908,9 +924,14 @@ function GenerateContent() {
       }
       
       // Prepare insert data with optional strategic fields
+      // Use session_id for demo flows (no foreign key constraint), consultation_id for authenticated flows
+      const isDemoSessionInsert = !!consultationData.session_id;
       const insertData: any = {
         user_id: userId,
-        consultation_id: consultationData.id,
+        // Only set consultation_id if we have a real consultation (not a demo session)
+        consultation_id: isDemoSessionInsert ? null : consultationData.id,
+        // Store session_id for demo flows (added via migration, no FK constraint)
+        session_id: isDemoSessionInsert ? consultationData.session_id : null,
         title: strategicData?.consultationData?.businessName 
           ? `${strategicData.consultationData.businessName} Landing Page`
           : `${consultationData.industry} Landing Page`,
