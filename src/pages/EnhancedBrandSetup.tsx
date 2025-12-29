@@ -66,6 +66,7 @@ export default function EnhancedBrandSetup() {
   const [logoBackground, setLogoBackground] = useState<'dark' | 'light'>('dark');
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(true);
   const [companyName, setCompanyName] = useState('Your Company');
+  const [tagline, setTagline] = useState('Your compelling tagline goes here');
 
   // Calculate brand completeness
   const brandCompleteness = useMemo(() => {
@@ -111,51 +112,65 @@ export default function EnhancedBrandSetup() {
 
       // Handle nested data structure: { success: true, data: { logoUrl, brandColors, ... } }
       if (response.data?.success && response.data?.data) {
-        const extractedData = response.data.data;
-        const { logoUrl, brandColors, companyName: extractedName, tagline, fonts } = extractedData;
+        const extracted = response.data.data;
+        console.log('Extracted data:', extracted);
 
-        console.log('Extracted data:', extractedData);
-
-        const results: ExtractionResults = {
-          logoUrl: logoUrl || null,
-          colors: brandColors || [],
-          companyName: extractedName || extractedData.title || null,
-          tagline: tagline || extractedData.description || null,
-        };
-
-        setExtractionResults(results);
-        setExtractionSuccess(true);
-        
-        // Apply logo if found
-        if (logoUrl) {
-          setLogo(logoUrl);
-          console.log('Logo set:', logoUrl);
+        // Set logo
+        if (extracted.logoUrl) {
+          setLogo(extracted.logoUrl);
+          console.log('Logo set:', extracted.logoUrl);
         }
-        
-        // Apply company name if found
-        if (results.companyName) {
-          setCompanyName(results.companyName);
-          console.log('Company name set:', results.companyName);
-        }
-        
-        // Apply colors if found - map to primary, secondary, accent
-        if (brandColors && brandColors.length > 0) {
+
+        // Set colors - skip white and very light colors, use the brand colors
+        if (extracted.brandColors && extracted.brandColors.length > 0) {
+          const filteredColors = extracted.brandColors.filter(
+            (c: string) => {
+              const lower = c.toLowerCase();
+              return lower !== '#ffffff' && lower !== '#fff' && lower !== '#eee' && lower !== '#eeeeee' && lower !== 'white';
+            }
+          );
+          
           setColors({
-            primary: brandColors[0] || DEFAULT_COLORS.primary,
-            secondary: brandColors[1] || DEFAULT_COLORS.secondary,
-            accent: brandColors[2] || DEFAULT_COLORS.accent,
+            primary: filteredColors[0] || extracted.brandColors[1] || DEFAULT_COLORS.primary,
+            secondary: filteredColors[1] || extracted.brandColors[2] || DEFAULT_COLORS.secondary,
+            accent: filteredColors[2] || extracted.brandColors[3] || DEFAULT_COLORS.accent,
           });
-          console.log('Colors set:', brandColors);
+          console.log('Colors set (filtered):', filteredColors);
+        }
+
+        // Set company name - try to extract from title "Home - Envita" → "Envita"
+        let name = extracted.companyName;
+        if (extracted.title && extracted.title.includes(' - ')) {
+          name = extracted.title.split(' - ').pop() || name;
+        }
+        if (name && name !== 'Home') {
+          setCompanyName(name);
+          console.log('Company name set:', name);
+        }
+
+        // Store tagline for use in preview
+        if (extracted.tagline) {
+          setTagline(extracted.tagline);
+          console.log('Tagline set:', extracted.tagline);
         }
 
         // Apply fonts if found
-        if (fonts) {
+        if (extracted.fonts) {
           setFontSettings(prev => ({
             ...prev,
-            ...(fonts.heading && { h1: fonts.heading, h2: fonts.heading, h3: fonts.heading }),
-            ...(fonts.body && { body: fonts.body, small: fonts.body })
+            ...(extracted.fonts.heading && { h1: extracted.fonts.heading, h2: extracted.fonts.heading, h3: extracted.fonts.heading }),
+            ...(extracted.fonts.body && { body: extracted.fonts.body, small: extracted.fonts.body })
           }));
         }
+
+        const results: ExtractionResults = {
+          logoUrl: extracted.logoUrl || null,
+          colors: extracted.brandColors || [],
+          companyName: name || null,
+          tagline: extracted.tagline || extracted.description || null,
+        };
+        setExtractionResults(results);
+        setExtractionSuccess(true);
 
         toast.success('Website analyzed successfully!');
       }
@@ -773,7 +788,7 @@ export default function EnhancedBrandSetup() {
                         className="text-slate-400 text-sm mb-6"
                         style={{ fontFamily: fontSettings.body }}
                       >
-                        {extractionResults?.tagline || 'Your compelling tagline goes here'}
+                        {tagline}
                       </p>
 
                       {/* CTA Buttons */}
