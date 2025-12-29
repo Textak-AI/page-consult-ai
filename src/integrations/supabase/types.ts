@@ -476,6 +476,9 @@ export type Database = {
       }
       demo_sessions: {
         Row: {
+          brand_assets: Json | null
+          brand_intake_at: string | null
+          brand_intake_completed: boolean | null
           brief_viewed_at: string | null
           claimed_at: string | null
           claimed_by: string | null
@@ -492,6 +495,9 @@ export type Database = {
           session_id: string
         }
         Insert: {
+          brand_assets?: Json | null
+          brand_intake_at?: string | null
+          brand_intake_completed?: boolean | null
           brief_viewed_at?: string | null
           claimed_at?: string | null
           claimed_by?: string | null
@@ -508,6 +514,9 @@ export type Database = {
           session_id: string
         }
         Update: {
+          brand_assets?: Json | null
+          brand_intake_at?: string | null
+          brand_intake_completed?: boolean | null
           brief_viewed_at?: string | null
           claimed_at?: string | null
           claimed_by?: string | null

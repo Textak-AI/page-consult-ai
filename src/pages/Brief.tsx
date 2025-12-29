@@ -123,9 +123,7 @@ const Brief = () => {
   }, [sessionId]);
 
   const handleContinueToBrandSetup = () => {
-    // Store session ID for the wizard to pick up
-    localStorage.setItem('pageconsult_session_id', sessionId || '');
-    navigate('/wizard?from=brief');
+    navigate(`/brand-intake?session=${sessionId}`);
   };
 
   const handleDownloadPDF = () => {
