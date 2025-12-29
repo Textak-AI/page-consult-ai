@@ -1033,8 +1033,8 @@ Ready to build this? Or want to adjust the approach first?`,
   // Only enable research/generate at 90%+ with all required fields
   const isResearchReady = overallReadiness >= 90 && hasRequiredFields();
   
-  // Collapse to single-column when ready for research or researching
-  const shouldCollapseLayout = overallReadiness >= 90 || phase === 'researching';
+  // Collapse to single-column only when ready AND transitioning to research/presenting phase
+  const shouldCollapseLayout = overallReadiness >= 90 && (phase === 'researching' || phase === 'presenting');
   
   // Determine consultation phase for right panel display
   const getConsultationPhase = (): ConsultationPhase => {
