@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare, ClipboardList, ArrowRight, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 export default function WizardChoice() {
   const navigate = useNavigate();
@@ -18,7 +17,6 @@ export default function WizardChoice() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Conversational Option */}
           <button
             onClick={() => navigate('/wizard/chat')}
             className="group p-8 bg-slate-800/50 border border-slate-700/50 rounded-2xl text-left hover:bg-slate-800 hover:border-purple-500/50 transition-all duration-200"
@@ -27,13 +25,8 @@ export default function WizardChoice() {
               <MessageSquare className="w-7 h-7 text-purple-400" />
             </div>
             
-            <h2 className="text-2xl font-semibold text-white mb-2">
-              Guided Conversation
-            </h2>
-            
-            <p className="text-slate-400 mb-6">
-              Tell me about your business and I'll ask smart follow-ups
-            </p>
+            <h2 className="text-2xl font-semibold text-white mb-2">Guided Conversation</h2>
+            <p className="text-slate-400 mb-6">Tell me about your business and I'll ask smart follow-ups</p>
             
             <div className="space-y-2 mb-6">
               <div className="flex items-center gap-2 text-sm text-slate-300">
@@ -50,9 +43,7 @@ export default function WizardChoice() {
               </div>
             </div>
             
-            <p className="text-xs text-slate-500 mb-4">
-              Best for: Quick start, discovery mode
-            </p>
+            <p className="text-xs text-slate-500 mb-4">Best for: Quick start, discovery mode</p>
             
             <div className="flex items-center gap-2 text-purple-400 font-medium group-hover:gap-3 transition-all">
               Start Conversation
@@ -60,7 +51,6 @@ export default function WizardChoice() {
             </div>
           </button>
 
-          {/* Structured Option */}
           <button
             onClick={() => navigate('/wizard/form')}
             className="group p-8 bg-slate-800/50 border border-slate-700/50 rounded-2xl text-left hover:bg-slate-800 hover:border-cyan-500/50 transition-all duration-200"
@@ -69,13 +59,8 @@ export default function WizardChoice() {
               <ClipboardList className="w-7 h-7 text-cyan-400" />
             </div>
             
-            <h2 className="text-2xl font-semibold text-white mb-2">
-              Step-by-Step Form
-            </h2>
-            
-            <p className="text-slate-400 mb-6">
-              Fill in each field with full control over every detail
-            </p>
+            <h2 className="text-2xl font-semibold text-white mb-2">Step-by-Step Form</h2>
+            <p className="text-slate-400 mb-6">Fill in each field with full control over every detail</p>
             
             <div className="space-y-2 mb-6">
               <div className="flex items-center gap-2 text-sm text-slate-300">
@@ -92,9 +77,7 @@ export default function WizardChoice() {
               </div>
             </div>
             
-            <p className="text-xs text-slate-500 mb-4">
-              Best for: Detailed control, completeness
-            </p>
+            <p className="text-xs text-slate-500 mb-4">Best for: Detailed control, completeness</p>
             
             <div className="flex items-center gap-2 text-cyan-400 font-medium group-hover:gap-3 transition-all">
               Start Form
