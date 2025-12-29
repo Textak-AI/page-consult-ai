@@ -635,6 +635,7 @@ export type Database = {
           published_at: string | null
           published_url: string | null
           sections: Json
+          session_id: string | null
           slug: string
           status: string
           strategy_brief: string | null
@@ -664,6 +665,7 @@ export type Database = {
           published_at?: string | null
           published_url?: string | null
           sections?: Json
+          session_id?: string | null
           slug: string
           status?: string
           strategy_brief?: string | null
@@ -693,6 +695,7 @@ export type Database = {
           published_at?: string | null
           published_url?: string | null
           sections?: Json
+          session_id?: string | null
           slug?: string
           status?: string
           strategy_brief?: string | null
