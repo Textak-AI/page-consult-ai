@@ -122,6 +122,15 @@ const Brief = () => {
   }, [sessionId]);
 
   const handleContinueToBrandSetup = () => {
+    console.log('📋 [Brief] Session ID from useParams:', sessionId);
+    console.log('📋 [Brief] Navigating to:', `/brand-intake?session=${sessionId}`);
+    
+    if (!sessionId) {
+      console.error('❌ [Brief] No session ID available!');
+      navigate('/');
+      return;
+    }
+    
     navigate(`/brand-intake?session=${sessionId}`);
   };
 
