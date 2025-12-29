@@ -26,11 +26,20 @@ export default function BrandIntake() {
   // Scroll to top on load and debug session
   useEffect(() => {
     window.scrollTo(0, 0);
-    console.log('🎨 [BrandIntake] Mounted with session:', sessionId);
+    console.log('🎨 [BrandIntake] Component mounted');
+    console.log('🎨 [BrandIntake] sessionId from searchParams:', sessionId);
     console.log('🎨 [BrandIntake] Full URL:', window.location.href);
-    console.log('🎨 [BrandIntake] Search params:', window.location.search);
-    if (!sessionId) {
-      console.error('❌ [BrandIntake] No session ID in URL!');
+    console.log('🎨 [BrandIntake] Search params string:', window.location.search);
+    
+    // Validate session ID
+    if (!sessionId || sessionId === 'undefined' || sessionId === 'null') {
+      console.error('❌ [BrandIntake] Invalid session ID:', sessionId);
+      toast({
+        title: "Session not found",
+        description: "Please start from the consultation.",
+        variant: "destructive"
+      });
+      // Don't redirect immediately - let user see the error
     }
   }, [sessionId]);
   
@@ -74,10 +83,12 @@ export default function BrandIntake() {
   };
   
   const handleSubmit = async () => {
-    console.log('🎨 [BrandIntake] Submit clicked, session:', sessionId);
+    console.log('🎨 [BrandIntake] Submit clicked');
+    console.log('🎨 [BrandIntake] sessionId:', sessionId);
     
-    if (!sessionId) {
-      console.error('❌ [BrandIntake] No session ID for submit!');
+    // Validate session ID
+    if (!sessionId || sessionId === 'undefined' || sessionId === 'null') {
+      console.error('❌ [BrandIntake] Invalid session ID for submit:', sessionId);
       toast({ 
         title: "Session not found", 
         description: "Please start from the beginning.",
@@ -87,7 +98,8 @@ export default function BrandIntake() {
       return;
     }
     
-    console.log('🎨 [BrandIntake] Will navigate to:', `/generate?session=${sessionId}`);
+    const targetUrl = `/generate?session=${sessionId}`;
+    console.log('🎨 [BrandIntake] Target navigation URL:', targetUrl);
     
     setIsSubmitting(true);
     
@@ -144,11 +156,17 @@ export default function BrandIntake() {
   };
   
   const handleSkip = () => {
-    if (!sessionId) {
+    console.log('🎨 [BrandIntake] Skip clicked, sessionId:', sessionId);
+    
+    if (!sessionId || sessionId === 'undefined' || sessionId === 'null') {
+      console.error('❌ [BrandIntake] Invalid session ID for skip');
       navigate('/');
       return;
     }
-    navigate(`/generate?session=${sessionId}`);
+    
+    const targetUrl = `/generate?session=${sessionId}`;
+    console.log('🎨 [BrandIntake] Skipping to:', targetUrl);
+    navigate(targetUrl);
   };
   
   return (
