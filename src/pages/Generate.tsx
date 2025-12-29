@@ -866,8 +866,13 @@ function GenerateContent() {
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
-      // Create NEW page in database
-      const slug = `${consultationData.industry?.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`;
+      // Create NEW page in database with guaranteed unique slug
+      const industrySlug = (consultationData.industry || 'page')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+      const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const slug = `${industrySlug}-${uniqueId}`;
       console.log("💾 Creating new page in database with slug:", slug);
       
       // Get aiSeoData for meta tags optimization
