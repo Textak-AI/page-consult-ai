@@ -44,11 +44,28 @@ interface ExistingDraft {
   updated_at: string;
 }
 
+// Check localStorage synchronously to determine initial stage
+const getInitialStage = (): Stage => {
+  if (typeof window !== 'undefined') {
+    const savedBrandData = localStorage.getItem('pageconsult_brand_data');
+    if (savedBrandData) {
+      try {
+        const brandData = JSON.parse(savedBrandData);
+        if (brandData.websiteUrl || brandData.logo || brandData.companyName) {
+          console.log('🚀 Initial stage set to consultation (brand data exists)');
+          return 'consultation';
+        }
+      } catch (e) {}
+    }
+  }
+  return 'loading';
+};
+
 export default function NewConsultation() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const [stage, setStage] = useState<Stage>('loading');
+  const [stage, setStage] = useState<Stage>(getInitialStage);
   const [userId, setUserId] = useState<string | null>(null);
   const [consultationData, setConsultationData] = useState<ConsultationData | null>(null);
   const [strategyBrief, setStrategyBrief] = useState<string>('');
@@ -92,7 +109,7 @@ export default function NewConsultation() {
     }
   }, [searchParams, toast, extractedBrand]);
 
-  // Check for saved brand data from EnhancedBrandSetup
+  // Check for saved brand data from EnhancedBrandSetup (populate state, stage already set synchronously)
   useEffect(() => {
     const savedBrandData = localStorage.getItem('pageconsult_brand_data');
     if (savedBrandData) {
@@ -116,9 +133,7 @@ export default function NewConsultation() {
           
           // Skip draft load since we have fresh brand data
           setSkipDraftLoad(true);
-          
-          // IMPORTANT: Skip directly to consultation stage, bypassing brand-extractor
-          setStage('consultation');
+          // Stage is already set to 'consultation' synchronously via getInitialStage
         }
         
         // Clear the stored data after loading
