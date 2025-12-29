@@ -32,9 +32,9 @@ export function ResearchProgressPanel({ steps }: ResearchProgressPanelProps) {
         </p>
       </div>
       
-      {/* Progress Steps */}
+      {/* Progress Steps - centered block with fixed width */}
       <div className="flex-1 flex flex-col items-center justify-center p-6">
-        <div className="w-full max-w-sm">
+        <div className="w-80">
           {steps.map((step, idx) => {
             const isActive = !step.done && steps.findIndex(s => !s.done) === idx;
             
@@ -44,10 +44,10 @@ export function ResearchProgressPanel({ steps }: ResearchProgressPanelProps) {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.15 }}
-                className="flex items-center gap-3 py-2"
+                className="flex items-center gap-4 py-3"
               >
                 <div className={cn(
-                  "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300",
+                  "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 shrink-0",
                   step.done 
                     ? "bg-green-500" 
                     : isActive 
