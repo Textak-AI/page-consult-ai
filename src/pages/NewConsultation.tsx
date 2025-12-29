@@ -161,6 +161,7 @@ export default function NewConsultation() {
       
       // Skip intro and brand extractor if coming from demo with prefill data
       if (prefillData?.source === 'landing_demo') {
+        console.log('🔄 setStage called:', 'consultation', 'from: prefill landing_demo check');
         setStage('consultation');
         return;
       }
@@ -174,6 +175,7 @@ export default function NewConsultation() {
       }
       
       // Check for existing draft
+      console.log('🔄 setStage called:', 'checking-draft', 'from: checkAuthAndDraft');
       setStage('checking-draft');
       const { data: draft } = await supabase
         .from('consultation_drafts')
@@ -187,6 +189,7 @@ export default function NewConsultation() {
         // Show draft recovery modal
         setExistingDraft(draft as ExistingDraft);
         setShowDraftModal(true);
+        console.log('🔄 setStage called:', 'loading', 'from: draft found, showing modal');
         setStage('loading'); // Keep loading until user makes a choice
       } else {
         // No draft, proceed normally
@@ -199,8 +202,10 @@ export default function NewConsultation() {
   // Helper to proceed to the starting point
   const proceedToStart = () => {
     if (!shouldShowIntro()) {
+      console.log('🔄 setStage called:', 'brand-extractor', 'from: proceedToStart (no intro)');
       setStage('brand-extractor');
     } else {
+      console.log('🔄 setStage called:', 'intro', 'from: proceedToStart (show intro)');
       setStage('intro');
     }
   };
@@ -241,6 +246,7 @@ export default function NewConsultation() {
       setSkipDraftLoad(false); // Allow StrategicConsultation to load the draft
     }
     setShowDraftModal(false);
+    console.log('🔄 setStage called:', 'consultation', 'from: handleContinueDraft');
     setStage('consultation');
   };
 
@@ -287,6 +293,7 @@ export default function NewConsultation() {
     });
     
     // Move to website analyzer step
+    console.log('🔄 setStage called:', 'website-analyzer', 'from: handleBrandExtracted');
     setStage('website-analyzer');
   };
 
@@ -294,16 +301,19 @@ export default function NewConsultation() {
   const handleAnalysisComplete = (analysis: any) => {
     console.log('📊 Website analysis complete:', analysis);
     setWebsiteAnalysis(analysis);
+    console.log('🔄 setStage called:', 'consultation', 'from: handleAnalysisComplete');
     setStage('consultation');
   };
 
   // Handle skip analysis
   const handleSkipAnalysis = () => {
+    console.log('🔄 setStage called:', 'consultation', 'from: handleSkipAnalysis');
     setStage('consultation');
   };
 
   // Handle skip brand extractor
   const handleSkipBrandExtractor = () => {
+    console.log('🔄 setStage called:', 'consultation', 'from: handleSkipBrandExtractor');
     setStage('consultation');
   };
 
@@ -320,6 +330,7 @@ export default function NewConsultation() {
     setStrategyBrief(brief);
     setStructuredBrief(structuredBriefData || null);
     setAiSeoData(seoData || null);
+    console.log('🔄 setStage called:', 'brief-review', 'from: handleConsultationComplete');
     setStage('brief-review');
   };
 
@@ -327,6 +338,7 @@ export default function NewConsultation() {
   const handleBriefApproved = async () => {
     if (!userId || !consultationData) return;
     
+    console.log('🔄 setStage called:', 'generating', 'from: handleBriefApproved');
     setStage('generating');
     
     try {
@@ -415,6 +427,7 @@ export default function NewConsultation() {
         description: "Failed to save consultation. Please try again.",
         variant: "destructive",
       });
+      console.log('🔄 setStage called:', 'brief-review', 'from: handleBriefApproved error');
       setStage('brief-review');
     }
   };
@@ -429,6 +442,7 @@ export default function NewConsultation() {
     setConsultationData(null);
     setStrategyBrief('');
     setStructuredBrief(null);
+    console.log('🔄 setStage called:', 'consultation', 'from: handleRestart');
     setStage('consultation');
   };
 
@@ -439,12 +453,14 @@ export default function NewConsultation() {
 
   // Dev mode handlers
   const handleDevJumpToLoading = () => {
+    console.log('🔄 setStage called:', 'dev-loading', 'from: handleDevJumpToLoading');
     setStage('dev-loading');
     // Auto-complete after 10 seconds
     setTimeout(() => {
       setConsultationData(mockConsultation as unknown as ConsultationData);
       setStrategyBrief(mockStrategyBrief);
       setStructuredBrief(mockStructuredBrief);
+      console.log('🔄 setStage called:', 'brief-review', 'from: handleDevJumpToLoading timeout');
       setStage('brief-review');
     }, 10000);
   };
@@ -454,6 +470,7 @@ export default function NewConsultation() {
     setStrategyBrief(mockStrategyBrief);
     setStructuredBrief(mockStructuredBrief);
     setAiSeoData(mockAiSeoData);
+    console.log('🔄 setStage called:', 'brief-review', 'from: handleDevJumpToBriefReview');
     setStage('brief-review');
   };
 
@@ -487,6 +504,7 @@ export default function NewConsultation() {
 
   const handleDevJumpToStep = (step: number) => {
     setConsultationStep(step);
+    console.log('🔄 setStage called:', 'consultation', 'from: handleDevJumpToStep');
     setStage('consultation');
   };
 
@@ -523,7 +541,10 @@ export default function NewConsultation() {
   // Intro state - after intro, show brand extractor
   if (stage === 'intro') {
     return (
-      <ConsultationIntro onComplete={() => setStage('brand-extractor')} />
+      <ConsultationIntro onComplete={() => {
+        console.log('🔄 setStage called:', 'brand-extractor', 'from: ConsultationIntro onComplete');
+        setStage('brand-extractor');
+      }} />
     );
   }
 
