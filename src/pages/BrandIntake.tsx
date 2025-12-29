@@ -24,8 +24,11 @@ interface ExtractedLogo {
 export default function BrandIntake() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const sessionId = searchParams.get('session');
   const { toast } = useToast();
+  
+  // Store session ID in ref to survive re-renders, and state for reactivity
+  const sessionIdRef = useRef<string | null>(searchParams.get('session'));
+  const [sessionId, setSessionId] = useState<string | null>(searchParams.get('session'));
   
   // Website & Auto-detect
   const [websiteUrl, setWebsiteUrl] = useState('');
@@ -58,21 +61,36 @@ export default function BrandIntake() {
   const zipInputRef = useRef<HTMLInputElement>(null);
   const brandGuideInputRef = useRef<HTMLInputElement>(null);
   
-  // Scroll to top on load and debug session
+  // Sync session ID from URL and store in ref
   useEffect(() => {
     window.scrollTo(0, 0);
-    console.log('🎨 [BrandIntake] Component mounted');
-    console.log('🎨 [BrandIntake] sessionId from searchParams:', sessionId);
+    const urlSessionId = searchParams.get('session');
     
-    if (!sessionId || sessionId === 'undefined' || sessionId === 'null') {
-      console.error('❌ [BrandIntake] Invalid session ID:', sessionId);
+    console.log('🎨 [BrandIntake] Component mounted/updated');
+    console.log('🎨 [BrandIntake] Session ID sources:', {
+      urlParam: urlSessionId,
+      ref: sessionIdRef.current,
+      state: sessionId
+    });
+    
+    // Update ref and state if we have a valid session ID from URL
+    if (urlSessionId && urlSessionId !== 'undefined' && urlSessionId !== 'null') {
+      sessionIdRef.current = urlSessionId;
+      setSessionId(urlSessionId);
+    }
+    
+    // Get the best available session ID
+    const sid = urlSessionId || sessionIdRef.current || sessionId;
+    
+    if (!sid || sid === 'undefined' || sid === 'null') {
+      console.error('❌ [BrandIntake] Invalid session ID:', sid);
       toast({
         title: "Session not found",
         description: "Please start from the consultation.",
         variant: "destructive"
       });
     }
-  }, [sessionId]);
+  }, [searchParams]);
   
   // Auto-detect from website
   const handleAutoDetect = async () => {
@@ -268,12 +286,21 @@ export default function BrandIntake() {
   
   // Submit handler
   const handleSubmit = async () => {
-    console.log('🎨 [BrandIntake] Submit clicked, sessionId:', sessionId);
+    // Try state first, fall back to ref, then URL
+    const sid = sessionId || sessionIdRef.current || searchParams.get('session');
     
-    if (!sessionId || sessionId === 'undefined' || sessionId === 'null') {
+    console.log('🎨 [BrandIntake] Submit - sessionId sources:', {
+      state: sessionId,
+      ref: sessionIdRef.current,
+      searchParams: searchParams.get('session'),
+      using: sid
+    });
+    
+    if (!sid || sid === 'undefined' || sid === 'null') {
+      console.error('❌ [BrandIntake] No session ID available!');
       toast({ 
-        title: "Session not found", 
-        description: "Please start from the beginning.",
+        title: "Session lost", 
+        description: "Please start over from the consultation.",
         variant: "destructive" 
       });
       navigate('/');
@@ -286,7 +313,7 @@ export default function BrandIntake() {
       // Upload logo if provided as file
       let logoUrl = logoPreview;
       if (logoFile) {
-        const fileName = `${sessionId}-logo-${Date.now()}`;
+        const fileName = `${sid}-logo-${Date.now()}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('brand-assets')
           .upload(fileName, logoFile);
@@ -317,11 +344,12 @@ export default function BrandIntake() {
           brand_intake_completed: true,
           brand_intake_at: new Date().toISOString()
         })
-        .eq('session_id', sessionId);
+        .eq('session_id', sid);
       
       if (updateError) throw updateError;
       
-      navigate(`/generate?session=${sessionId}`);
+      console.log('🎨 [BrandIntake] Navigating to generate with session:', sid);
+      navigate(`/generate?session=${sid}`);
       
     } catch (error) {
       console.error('Submit error:', error);
@@ -336,10 +364,15 @@ export default function BrandIntake() {
   };
   
   const handleSkip = () => {
-    if (!sessionId || sessionId === 'undefined' || sessionId === 'null') {
+    const sid = sessionId || sessionIdRef.current || searchParams.get('session');
+    
+    console.log('🎨 [BrandIntake] Skip - using session:', sid);
+    
+    if (!sid || sid === 'undefined' || sid === 'null') {
       navigate('/');
       return;
     }
+    navigate(`/generate?session=${sid}`);
     navigate(`/generate?session=${sessionId}`);
   };
   
