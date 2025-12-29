@@ -116,6 +116,9 @@ export default function NewConsultation() {
           
           // Skip draft load since we have fresh brand data
           setSkipDraftLoad(true);
+          
+          // IMPORTANT: Skip directly to consultation stage, bypassing brand-extractor
+          setStage('consultation');
         }
         
         // Clear the stored data after loading
