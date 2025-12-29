@@ -116,7 +116,7 @@ export default function EnhancedBrandSetup() {
   const [skipBrandGuide, setSkipBrandGuide] = useState(false);
   const [isExtractingBrief, setIsExtractingBrief] = useState(false);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-  const [logoBackground, setLogoBackground] = useState<'dark' | 'light'>('dark');
+  const [logoBackground, setLogoBackground] = useState<'dark' | 'light' | 'check'>('light');
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(true);
   const [companyName, setCompanyName] = useState('Your Company');
   const [tagline, setTagline] = useState('Your compelling tagline goes here');
@@ -676,46 +676,63 @@ export default function EnhancedBrandSetup() {
                   />
                 </label>
               ) : (
-                <div className="space-y-4">
+                <div className="relative">
+                  {/* Logo preview with background options */}
                   <div 
-                    className={`relative p-6 rounded-xl flex items-center justify-center ${
-                      logoBackground === 'dark' ? 'bg-slate-900' : 'bg-white'
-                    }`}
+                    className={`
+                      rounded-xl p-6 flex items-center justify-center min-h-[120px]
+                      ${logoBackground === 'dark' 
+                        ? 'bg-slate-900' 
+                        : logoBackground === 'light'
+                          ? 'bg-white'
+                          : 'bg-[url("data:image/svg+xml,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22%23f0f0f0%22%2F%3E%3Crect%20x%3D%2210%22%20y%3D%2210%22%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22%23f0f0f0%22%2F%3E%3Crect%20x%3D%2210%22%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22%23ffffff%22%2F%3E%3Crect%20y%3D%2210%22%20width%3D%2210%22%20height%3D%2210%22%20fill%3D%22%23ffffff%22%2F%3E%3C%2Fsvg%3E")]'
+                      }
+                    `}
                   >
-                    <img 
-                      src={logo} 
-                      alt="Logo preview" 
-                      className="max-h-24 object-contain"
-                    />
-                    <button
-                      onClick={() => setLogo(null)}
-                      className="absolute top-2 right-2 p-1 bg-slate-700/80 rounded-full hover:bg-slate-600"
-                    >
-                      <X className="w-4 h-4 text-slate-300" />
-                    </button>
+                    <img src={logo} alt="Logo" className="max-h-16 max-w-full object-contain" />
                   </div>
-                  <div className="flex items-center gap-2">
+                  
+                  {/* Background toggle */}
+                  <div className="flex gap-1 mt-3">
+                    <button
+                      onClick={() => setLogoBackground('light')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        logoBackground === 'light' 
+                          ? 'bg-white text-slate-900' 
+                          : 'bg-slate-800 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Light
+                    </button>
                     <button
                       onClick={() => setLogoBackground('dark')}
-                      className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                         logoBackground === 'dark' 
                           ? 'bg-slate-700 text-white' 
-                          : 'bg-slate-800/50 text-slate-400 hover:text-white'
+                          : 'bg-slate-800 text-slate-400 hover:text-white'
                       }`}
                     >
                       Dark
                     </button>
                     <button
-                      onClick={() => setLogoBackground('light')}
-                      className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                        logoBackground === 'light' 
+                      onClick={() => setLogoBackground('check')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        logoBackground === 'check' 
                           ? 'bg-slate-700 text-white' 
-                          : 'bg-slate-800/50 text-slate-400 hover:text-white'
+                          : 'bg-slate-800 text-slate-400 hover:text-white'
                       }`}
                     >
-                      Light
+                      Transparent
                     </button>
                   </div>
+                  
+                  {/* Remove button */}
+                  <button 
+                    onClick={() => setLogo(null)} 
+                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-slate-700/80 hover:bg-slate-600 flex items-center justify-center text-slate-300 hover:text-white text-sm"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
               )}
 
