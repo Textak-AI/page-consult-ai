@@ -493,8 +493,19 @@ export default function EnhancedBrandSetup() {
     toast.success(`Custom ${type} font loaded: ${fontName}`);
   }, []);
 
-  // Handle continue
+  // Handle continue - save brand data before navigating
   const handleContinue = () => {
+    const brandData = {
+      websiteUrl,
+      logo,
+      companyName,
+      tagline,
+      colors,
+      fontSettings,
+      extractionResults,
+    };
+    
+    localStorage.setItem('pageconsult_brand_data', JSON.stringify(brandData));
     navigate('/wizard');
   };
 
