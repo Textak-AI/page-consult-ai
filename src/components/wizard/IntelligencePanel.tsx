@@ -55,7 +55,7 @@ interface IntelligencePanelProps {
   tiles: IntelligenceTile[];
   overallReadiness: number;
   onBeginResearch: () => void;
-  isResearchReady: boolean;
+  isResearchReady?: boolean; // Optional - we determine internally now
 }
 
 function getTileStyles(state: TileState) {
@@ -186,8 +186,7 @@ function IntelligenceTileCard({ tile, index }: { tile: IntelligenceTile; index: 
 export function IntelligencePanel({ 
   tiles, 
   overallReadiness, 
-  onBeginResearch, 
-  isResearchReady 
+  onBeginResearch
 }: IntelligencePanelProps) {
   return (
     <div className="h-full flex flex-col bg-black/30 backdrop-blur-xl border-l border-white/10">
@@ -238,47 +237,40 @@ export function IntelligencePanel({
           </div>
         </div>
         
-        {/* Research button */}
-        <AnimatePresence>
-          {isResearchReady && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
+        {/* Research button - show at 70%+ */}
+        {overallReadiness >= 70 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Button
+              onClick={onBeginResearch}
+              className={cn(
+                "w-full py-6 text-base font-semibold gap-2",
+                "bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500"
+              )}
             >
-              <Button
-                onClick={onBeginResearch}
-                className={cn(
-                  "w-full py-6 text-base font-semibold gap-2",
-                  "bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500"
-                )}
+              <motion.div
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
               >
-                <motion.div
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Search className="w-5 h-5" />
-                </motion.div>
-                Begin Market Research
-                <Rocket className="w-5 h-5" />
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        {!isResearchReady && (
+                <Search className="w-5 h-5" />
+              </motion.div>
+              Begin Market Research
+              <Rocket className="w-5 h-5" />
+            </Button>
+            <p className="text-center text-white/40 text-xs mt-2">
+              We'll analyze your competitive landscape
+            </p>
+          </motion.div>
+        ) : (
           <div className="text-center space-y-2">
             <p className="text-xs text-white/40">
-              {overallReadiness >= 70 
-                ? "Almost there! Fill in missing details to unlock generation."
-                : "Keep chatting to build your intelligence profile"
-              }
+              Tell me more about your business to unlock research
             </p>
-            {overallReadiness >= 70 && (
-              <p className="text-[10px] text-white/30">
-                Need 90%+ readiness with all required fields
-              </p>
-            )}
+            <p className="text-[10px] text-white/30">
+              {tiles.filter(t => t.fill < 50).map(t => t.category).slice(0, 3).join(', ')} needed
+            </p>
           </div>
         )}
       </div>

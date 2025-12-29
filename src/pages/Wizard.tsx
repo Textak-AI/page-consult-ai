@@ -545,14 +545,25 @@ export default function Wizard() {
     const lower = message.toLowerCase();
     const updates: Record<string, { insight: string; fill: number; state: TileState }> = {};
     
-    // Competitive position triggers
-    if (lower.includes('different') || lower.includes('unique') || 
-        lower.includes('advantage') || lower.includes('unlike') ||
-        lower.includes('compete') || lower.includes('vs') ||
-        lower.includes('better than') || lower.includes('instead of') ||
-        lower.includes('stand out') || lower.includes('differentiate')) {
+    // Competitive position triggers - expanded keywords
+    const competitiveKeywords = [
+      'different', 'unique', 'advantage', 'unlike', 'compete', 'vs', 'versus',
+      'better than', 'instead of', 'stand out', 'differentiate', 'compared to',
+      'competitors', 'competition', 'alternatives', 'we force', "we don't",
+      'we make', 'our approach', 'template', 'agency', 'agencies', 'diy',
+      'before design', 'strategy first', 'baked in', 'bolted on', 'not just',
+      'more than', 'what sets us apart', 'why us', 'unlike others'
+    ];
+    
+    if (competitiveKeywords.some(kw => lower.includes(kw))) {
+      // Extract the most relevant sentence(s)
+      const sentences = message.split(/[.!?]+/).filter(s => 
+        competitiveKeywords.some(kw => s.toLowerCase().includes(kw))
+      );
+      const insight = sentences.slice(0, 2).join('. ').trim() || message.substring(0, 200);
+      
       updates.competitive = { 
-        insight: message.substring(0, 200), 
+        insight, 
         fill: 100, 
         state: 'confirmed' as TileState 
       };
@@ -769,13 +780,15 @@ ${conversationText}` }
     // Extract local intelligence from user message (for competitive, goals, swagger)
     extractLocalIntelligence(input.trim());
 
-    // Auto-trigger research if readiness is high and user confirms
-    if (overallReadiness >= 90 && isResearchConfirmation(input.trim()) && phase === "intake") {
+    // Auto-trigger research if readiness is 70%+ and user confirms
+    if (overallReadiness >= 70 && isResearchConfirmation(input.trim()) && phase === "intake") {
+      console.log('🚀 [Wizard] Research trigger detected at', overallReadiness, '% readiness');
+      
       // Add confirmation message
       const confirmMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "Starting market research now — I'll analyze your competitive landscape and find strategic insights. This takes about 60 seconds."
+        content: "🚀 Starting market research now — I'll analyze your competitive landscape and market positioning..."
       };
       setMessages(prev => [...prev, confirmMessage]);
       setIsLoading(false);
@@ -1050,8 +1063,8 @@ Ready to build this? Or want to adjust the approach first?`,
     );
   };
   
-  // Only enable research/generate at 90%+ with all required fields
-  const isResearchReady = overallReadiness >= 90 && hasRequiredFields();
+  // Enable research at 70%+ (lowered from 90% to unblock users)
+  const isResearchReady = overallReadiness >= 70;
   
   // Collapse to single-column only when ready AND transitioning to research/presenting phase
   const shouldCollapseLayout = overallReadiness >= 90 && (phase === 'researching' || phase === 'presenting');
