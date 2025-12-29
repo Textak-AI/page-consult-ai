@@ -92,6 +92,40 @@ export default function NewConsultation() {
     }
   }, [searchParams, toast, extractedBrand]);
 
+  // Check for saved brand data from EnhancedBrandSetup
+  useEffect(() => {
+    const savedBrandData = localStorage.getItem('pageconsult_brand_data');
+    if (savedBrandData) {
+      try {
+        const brandData = JSON.parse(savedBrandData);
+        console.log('📦 Loading brand data from EnhancedBrandSetup:', brandData);
+        
+        // Apply saved brand data to extracted brand state
+        if (brandData.websiteUrl || brandData.logo || brandData.companyName) {
+          const brand: ExtractedBrand = {
+            domain: brandData.websiteUrl || '',
+            companyName: brandData.companyName || null,
+            tagline: brandData.tagline || null,
+            description: brandData.tagline || null,
+            faviconUrl: null,
+            ogImage: brandData.logo || null,
+            themeColor: brandData.colors?.primary || null,
+          };
+          setExtractedBrand(brand);
+          setExtractedWebsiteUrl(brandData.websiteUrl || null);
+          
+          // Skip draft load since we have fresh brand data
+          setSkipDraftLoad(true);
+        }
+        
+        // Clear the stored data after loading
+        localStorage.removeItem('pageconsult_brand_data');
+      } catch (e) {
+        console.error('Error parsing brand data:', e);
+      }
+    }
+  }, []);
+
   // Check auth and draft on mount
   useEffect(() => {
     const checkAuthAndDraft = async () => {

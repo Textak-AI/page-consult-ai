@@ -51,8 +51,8 @@ export function BrandExtractor({ onExtracted, onSkip }: BrandExtractorProps) {
     <div className="w-full max-w-md mx-auto space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-xl font-semibold text-foreground">Have an existing website?</h2>
-        <p className="text-sm text-muted-foreground">
+        <h2 className="text-2xl font-semibold text-white">Have an existing website?</h2>
+        <p className="text-sm text-slate-300">
           We'll grab your company info to get started faster
         </p>
       </div>
@@ -140,17 +140,17 @@ export function BrandExtractor({ onExtracted, onSkip }: BrandExtractorProps) {
       {/* Divider */}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
+          <div className="w-full border-t border-slate-700" />
         </div>
         <div className="relative flex justify-center">
-          <span className="px-3 bg-background text-sm text-muted-foreground">
+          <span className="px-3 bg-slate-900 text-sm text-slate-400">
             or
           </span>
         </div>
       </div>
 
       {/* Skip Button */}
-      <Button variant="ghost" onClick={onSkip} className="w-full text-muted-foreground">
+      <Button variant="ghost" onClick={onSkip} className="w-full text-slate-300 hover:text-white hover:bg-slate-800">
         Start fresh
         <ArrowRight className="h-4 w-4 ml-2" />
       </Button>
