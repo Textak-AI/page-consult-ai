@@ -23,10 +23,16 @@ export default function BrandIntake() {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const brandGuideInputRef = useRef<HTMLInputElement>(null);
   
-  // Scroll to top on load
+  // Scroll to top on load and debug session
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+    console.log('🎨 [BrandIntake] Mounted with session:', sessionId);
+    console.log('🎨 [BrandIntake] Full URL:', window.location.href);
+    console.log('🎨 [BrandIntake] Search params:', window.location.search);
+    if (!sessionId) {
+      console.error('❌ [BrandIntake] No session ID in URL!');
+    }
+  }, [sessionId]);
   
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -68,7 +74,10 @@ export default function BrandIntake() {
   };
   
   const handleSubmit = async () => {
+    console.log('🎨 [BrandIntake] Submit clicked, session:', sessionId);
+    
     if (!sessionId) {
+      console.error('❌ [BrandIntake] No session ID for submit!');
       toast({ 
         title: "Session not found", 
         description: "Please start from the beginning.",
@@ -77,6 +86,8 @@ export default function BrandIntake() {
       navigate('/');
       return;
     }
+    
+    console.log('🎨 [BrandIntake] Will navigate to:', `/generate?session=${sessionId}`);
     
     setIsSubmitting(true);
     
