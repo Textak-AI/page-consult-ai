@@ -49,9 +49,16 @@ export default function EnhancedBrandSetup() {
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [extractionResults, setExtractionResults] = useState<ExtractionResults | null>(null);
+  const [extractionSuccess, setExtractionSuccess] = useState(false);
   const [logo, setLogo] = useState<string | null>(null);
   const [colors, setColors] = useState(DEFAULT_COLORS);
-  const [fonts, setFonts] = useState({ heading: 'Inter', body: 'Inter' });
+  const [fontSettings, setFontSettings] = useState({
+    h1: 'Inter',
+    h2: 'Inter',
+    h3: 'Inter',
+    body: 'Inter',
+    small: 'Inter'
+  });
   const [brandGuide, setBrandGuide] = useState<File | null>(null);
   const [skipBrandGuide, setSkipBrandGuide] = useState(false);
   const [isExtractingBrief, setIsExtractingBrief] = useState(false);
@@ -71,12 +78,13 @@ export default function EnhancedBrandSetup() {
     if (colors.primary !== DEFAULT_COLORS.primary || 
         colors.secondary !== DEFAULT_COLORS.secondary || 
         colors.accent !== DEFAULT_COLORS.accent) score += 20;
-    // Typography
-    if (fonts.heading !== 'Inter' || fonts.body !== 'Inter') score += 15;
+    // Typography (check if any font differs from default)
+    const hasCustomFonts = Object.values(fontSettings).some(f => f !== 'Inter');
+    if (hasCustomFonts) score += 15;
     // Brand guide
     if (brandGuide || skipBrandGuide) score += 20;
     return Math.min(score, 100);
-  }, [websiteUrl, extractionResults, logo, colors, fonts, brandGuide, skipBrandGuide, companyName]);
+  }, [websiteUrl, extractionResults, logo, colors, fontSettings, brandGuide, skipBrandGuide, companyName]);
 
   // Handle website analysis
   const handleAnalyzeWebsite = async () => {
@@ -92,41 +100,58 @@ export default function EnhancedBrandSetup() {
         formattedUrl = `https://${formattedUrl}`;
       }
 
-      const { data, error } = await supabase.functions.invoke('extract-website-intelligence', {
+      const response = await supabase.functions.invoke('extract-website-intelligence', {
         body: { url: formattedUrl }
       });
 
-      if (error) throw error;
+      console.log('Full response:', response);
+      console.log('Response data:', response.data);
 
-      const results: ExtractionResults = {
-        logoUrl: data?.logoUrl || null,
-        colors: data?.brandColors || [],
-        companyName: data?.companyName || data?.title || null,
-        tagline: data?.tagline || data?.description || null,
-      };
+      if (response.error) throw response.error;
 
-      setExtractionResults(results);
-      
-      // Apply logo if found
-      if (results.logoUrl) {
-        setLogo(results.logoUrl);
-      }
-      
-      // Apply company name if found
-      if (results.companyName) {
-        setCompanyName(results.companyName);
-      }
-      
-      // Apply colors if found - map to primary, secondary, accent
-      if (results.colors?.length > 0) {
-        setColors(prev => ({
-          primary: results.colors[0] || prev.primary,
-          secondary: results.colors[1] || prev.secondary,
-          accent: results.colors[2] || prev.accent,
-        }));
-      }
+      if (response.data) {
+        const { logoUrl, brandColors, companyName: extractedName, tagline, fonts } = response.data;
 
-      toast.success('Website analyzed successfully!');
+        const results: ExtractionResults = {
+          logoUrl: logoUrl || null,
+          colors: brandColors || [],
+          companyName: extractedName || response.data.title || null,
+          tagline: tagline || response.data.description || null,
+        };
+
+        setExtractionResults(results);
+        setExtractionSuccess(true);
+        
+        // Apply logo if found
+        if (logoUrl) {
+          setLogo(logoUrl);
+        }
+        
+        // Apply company name if found
+        if (results.companyName) {
+          setCompanyName(results.companyName);
+        }
+        
+        // Apply colors if found - map to primary, secondary, accent
+        if (brandColors && brandColors.length > 0) {
+          setColors({
+            primary: brandColors[0] || DEFAULT_COLORS.primary,
+            secondary: brandColors[1] || DEFAULT_COLORS.secondary,
+            accent: brandColors[2] || DEFAULT_COLORS.accent,
+          });
+        }
+
+        // Apply fonts if found
+        if (fonts) {
+          setFontSettings(prev => ({
+            ...prev,
+            ...(fonts.heading && { h1: fonts.heading, h2: fonts.heading, h3: fonts.heading }),
+            ...(fonts.body && { body: fonts.body, small: fonts.body })
+          }));
+        }
+
+        toast.success('Website analyzed successfully!');
+      }
     } catch (error) {
       console.error('Analysis error:', error);
       toast.error('Failed to analyze website. Please try again.');
@@ -508,7 +533,7 @@ export default function EnhancedBrandSetup() {
                   size="sm"
                   onClick={() => {
                     setColors(DEFAULT_COLORS);
-                    setFonts({ heading: 'Inter', body: 'Inter' });
+                    setFontSettings({ h1: 'Inter', h2: 'Inter', h3: 'Inter', body: 'Inter', small: 'Inter' });
                   }}
                   className="text-slate-400 border-slate-600 hover:bg-slate-700"
                 >
@@ -557,34 +582,118 @@ export default function EnhancedBrandSetup() {
                 </div>
               )}
 
-              {/* Typography */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-slate-400 text-sm mb-2 block">Heading Font</Label>
-                  <Select value={fonts.heading} onValueChange={(v) => setFonts(prev => ({ ...prev, heading: v }))}>
-                    <SelectTrigger className="bg-slate-900/50 border-slate-600">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FONT_OPTIONS.map(font => (
-                        <SelectItem key={font} value={font}>{font}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {/* Typography - Granular Controls */}
+              <div className="space-y-4">
+                <p className="text-sm text-slate-400 mb-2">Typography</p>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  {/* H1 */}
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">H1 / Hero</label>
+                    <select
+                      value={fontSettings.h1}
+                      onChange={(e) => setFontSettings({...fontSettings, h1: e.target.value})}
+                      className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
+                    >
+                      <option value="Inter">Inter</option>
+                      <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+                      <option value="DM Sans">DM Sans</option>
+                      <option value="Outfit">Outfit</option>
+                      <option value="Space Grotesk">Space Grotesk</option>
+                      <option value="Sora">Sora</option>
+                      <option value="Playfair Display">Playfair Display</option>
+                      <option value="Montserrat">Montserrat</option>
+                    </select>
+                  </div>
+                  
+                  {/* H2 */}
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">H2 / Section</label>
+                    <select
+                      value={fontSettings.h2}
+                      onChange={(e) => setFontSettings({...fontSettings, h2: e.target.value})}
+                      className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
+                    >
+                      <option value="Inter">Inter</option>
+                      <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+                      <option value="DM Sans">DM Sans</option>
+                      <option value="Outfit">Outfit</option>
+                      <option value="Space Grotesk">Space Grotesk</option>
+                      <option value="Sora">Sora</option>
+                      <option value="Playfair Display">Playfair Display</option>
+                      <option value="Montserrat">Montserrat</option>
+                    </select>
+                  </div>
+                  
+                  {/* H3 */}
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">H3 / Card</label>
+                    <select
+                      value={fontSettings.h3}
+                      onChange={(e) => setFontSettings({...fontSettings, h3: e.target.value})}
+                      className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
+                    >
+                      <option value="Inter">Inter</option>
+                      <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+                      <option value="DM Sans">DM Sans</option>
+                      <option value="Outfit">Outfit</option>
+                      <option value="Space Grotesk">Space Grotesk</option>
+                      <option value="Sora">Sora</option>
+                      <option value="Playfair Display">Playfair Display</option>
+                      <option value="Montserrat">Montserrat</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-slate-400 text-sm mb-2 block">Body Font</Label>
-                  <Select value={fonts.body} onValueChange={(v) => setFonts(prev => ({ ...prev, body: v }))}>
-                    <SelectTrigger className="bg-slate-900/50 border-slate-600">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FONT_OPTIONS.map(font => (
-                        <SelectItem key={font} value={font}>{font}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Body */}
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">Body Text</label>
+                    <select
+                      value={fontSettings.body}
+                      onChange={(e) => setFontSettings({...fontSettings, body: e.target.value})}
+                      className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
+                    >
+                      <option value="Inter">Inter</option>
+                      <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+                      <option value="DM Sans">DM Sans</option>
+                      <option value="IBM Plex Sans">IBM Plex Sans</option>
+                      <option value="Source Sans Pro">Source Sans Pro</option>
+                      <option value="Lato">Lato</option>
+                    </select>
+                  </div>
+                  
+                  {/* Small/Caption */}
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">Small / Caption</label>
+                    <select
+                      value={fontSettings.small}
+                      onChange={(e) => setFontSettings({...fontSettings, small: e.target.value})}
+                      className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
+                    >
+                      <option value="Inter">Inter</option>
+                      <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+                      <option value="DM Sans">DM Sans</option>
+                      <option value="IBM Plex Sans">IBM Plex Sans</option>
+                      <option value="Source Sans Pro">Source Sans Pro</option>
+                      <option value="Lato">Lato</option>
+                    </select>
+                  </div>
                 </div>
+                
+                {/* Quick action: Match all to H1 */}
+                <button 
+                  onClick={() => setFontSettings({
+                    h1: fontSettings.h1,
+                    h2: fontSettings.h1,
+                    h3: fontSettings.h1,
+                    body: fontSettings.body,
+                    small: fontSettings.body
+                  })}
+                  className="text-xs text-purple-400 hover:text-purple-300"
+                >
+                  Match all headings to H1
+                </button>
               </div>
             </div>
           </div>
@@ -630,15 +739,15 @@ export default function EnhancedBrandSetup() {
                   <div 
                     className={`p-6 transition-all ${previewMode === 'mobile' ? 'max-w-[280px] mx-auto' : ''}`}
                     style={{ 
-                      fontFamily: fonts.body,
+                      fontFamily: fontSettings.body,
                     }}
                   >
                     {/* Mini Hero Preview */}
                     <div className="bg-slate-900 rounded-xl p-6 text-center">
                       {/* Logo */}
-                      {(logo || extractionResults?.logoUrl) && (
+                      {logo && (
                         <img 
-                          src={logo || extractionResults?.logoUrl || ''} 
+                          src={logo} 
                           alt="Logo" 
                           className="h-10 object-contain mx-auto mb-4"
                         />
@@ -647,7 +756,7 @@ export default function EnhancedBrandSetup() {
                       {/* Headline */}
                       <h3 
                         className="text-xl font-bold text-white mb-2"
-                        style={{ fontFamily: fonts.heading }}
+                        style={{ fontFamily: fontSettings.h1 }}
                       >
                         {companyName}
                       </h3>
@@ -655,7 +764,7 @@ export default function EnhancedBrandSetup() {
                       {/* Tagline */}
                       <p 
                         className="text-slate-400 text-sm mb-6"
-                        style={{ fontFamily: fonts.body }}
+                        style={{ fontFamily: fontSettings.body }}
                       >
                         {extractionResults?.tagline || 'Your compelling tagline goes here'}
                       </p>
