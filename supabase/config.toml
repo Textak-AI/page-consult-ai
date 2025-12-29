@@ -134,3 +134,6 @@ verify_jwt = true
 
 [functions.admin-delete-consultation]
 verify_jwt = true
+
+[functions.extract-colors-from-image]
+verify_jwt = false

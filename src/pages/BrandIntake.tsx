@@ -36,6 +36,7 @@ export default function BrandIntake() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isExtractingZip, setIsExtractingZip] = useState(false);
+  const [isExtractingColors, setIsExtractingColors] = useState(false);
   const [extractionProgress, setExtractionProgress] = useState(0);
   const [extractedLogos, setExtractedLogos] = useState<ExtractedLogo[]>([]);
   const [selectedExtractedLogo, setSelectedExtractedLogo] = useState<ExtractedLogo | null>(null);
@@ -122,13 +123,64 @@ export default function BrandIntake() {
     }
   };
   
-  // Logo image upload
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove data:image/...;base64, prefix
+        resolve(result.split(',')[1]);
+      };
+      reader.onerror = reject;
+    });
+  };
+
+  // Logo image upload with color extraction
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setLogoFile(file);
-      setLogoPreview(URL.createObjectURL(file));
-      setSelectedExtractedLogo(null);
+    if (!file) return;
+    
+    // Show preview immediately
+    const previewUrl = URL.createObjectURL(file);
+    setLogoPreview(previewUrl);
+    setLogoFile(file);
+    setSelectedExtractedLogo(null);
+    
+    // If no website URL provided, extract colors from the logo
+    if (!websiteUrl && !colorsAutoDetected) {
+      setIsExtractingColors(true);
+      
+      try {
+        console.log('🎨 Extracting colors from logo...');
+        const base64 = await fileToBase64(file);
+        
+        const { data, error } = await supabase.functions.invoke('extract-colors-from-image', {
+          body: { image: base64, mimeType: file.type }
+        });
+        
+        if (error) throw error;
+        
+        if (data?.colors?.length > 0) {
+          console.log('🎨 Extracted colors:', data.colors);
+          
+          setPrimaryColor(data.colors[0]);
+          if (data.colors[1]) setSecondaryColor(data.colors[1]);
+          setDetectedColors(data.colors);
+          setColorsAutoDetected(true);
+          
+          toast({
+            title: "Colors extracted from logo",
+            description: `Found ${data.colors.length} brand colors`
+          });
+        }
+      } catch (error) {
+        console.error('Color extraction error:', error);
+        // Silent fail - user can still pick colors manually
+      } finally {
+        setIsExtractingColors(false);
+      }
     }
   };
   
@@ -393,26 +445,63 @@ export default function BrandIntake() {
           
           {/* Show detected/uploaded logo */}
           {(logoPreview || detectionResults?.logo) && (
-            <div className="mb-4 p-4 bg-slate-900 rounded-lg flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <img 
-                  src={logoPreview || detectionResults?.logo} 
-                  alt="Logo" 
-                  className="h-12 bg-white/10 rounded px-3 py-2 object-contain"
-                />
-                <div>
-                  <p className="text-white text-sm">
-                    {detectionResults?.logo && !logoFile ? 'Auto-detected from website' : 'Uploaded logo'}
-                  </p>
-                  <p className="text-slate-500 text-xs">Click below to replace</p>
+            <div className="mb-4 p-4 bg-slate-900 rounded-lg relative">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <img 
+                      src={logoPreview || detectionResults?.logo} 
+                      alt="Logo" 
+                      className="h-12 bg-white/10 rounded px-3 py-2 object-contain"
+                    />
+                    {isExtractingColors && (
+                      <div className="absolute inset-0 bg-slate-900/80 rounded flex items-center justify-center">
+                        <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-white text-sm">
+                      {detectionResults?.logo && !logoFile ? 'Auto-detected from website' : 'Uploaded logo'}
+                    </p>
+                    <p className="text-slate-500 text-xs">
+                      {isExtractingColors ? (
+                        <span className="text-cyan-400 flex items-center gap-1">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Extracting colors...
+                        </span>
+                      ) : (
+                        'Click below to replace'
+                      )}
+                    </p>
+                  </div>
                 </div>
+                <button
+                  onClick={clearLogo}
+                  className="text-slate-400 hover:text-white p-2 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <button
-                onClick={clearLogo}
-                className="text-slate-400 hover:text-white p-2 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              
+              {/* Color extraction success indicator */}
+              {colorsAutoDetected && !websiteUrl && logoFile && (
+                <div className="mt-3 pt-3 border-t border-slate-700/50">
+                  <div className="flex items-center gap-2 text-cyan-400 text-xs">
+                    <CheckCircle className="w-3 h-3" />
+                    Colors extracted from logo
+                    <div className="flex gap-1 ml-2">
+                      {detectedColors.slice(0, 4).map((color, i) => (
+                        <div 
+                          key={i}
+                          className="w-4 h-4 rounded border border-white/20"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
@@ -423,6 +512,9 @@ export default function BrandIntake() {
               <Upload className="w-8 h-8 text-slate-500 mx-auto mb-2 group-hover:text-cyan-400 transition-colors" />
               <p className="text-slate-400 text-sm mb-1">Upload image</p>
               <p className="text-slate-600 text-xs">PNG, SVG, JPG</p>
+              {!websiteUrl && (
+                <p className="text-cyan-400/70 text-xs mt-1">We'll extract colors automatically</p>
+              )}
               <input 
                 ref={logoInputRef}
                 type="file" 
