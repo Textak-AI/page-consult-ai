@@ -246,7 +246,7 @@ export default function Wizard() {
       
       // Build welcome message based on what we have and what's missing
       const buildWelcomeMessage = (): string => {
-        const readiness = data.readiness || 0;
+        const readiness = calculatedReadiness; // Use calculated readiness, not stale session data
         const businessName = extracted.businessName || '';
         
         let msg = `Welcome back! I've loaded your strategy session.\n\n`;
