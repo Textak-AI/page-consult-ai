@@ -121,21 +121,47 @@ export default function EnhancedBrandSetup() {
           console.log('Logo set:', extracted.logoUrl);
         }
 
-        // Set colors - skip white and very light colors, use the brand colors
+        // Set colors - skip whites, near-whites, grays, and near-blacks
         if (extracted.brandColors && extracted.brandColors.length > 0) {
-          const filteredColors = extracted.brandColors.filter(
-            (c: string) => {
-              const lower = c.toLowerCase();
-              return lower !== '#ffffff' && lower !== '#fff' && lower !== '#eee' && lower !== '#eeeeee' && lower !== 'white';
-            }
-          );
+          const isUsableColor = (hex: string) => {
+            const h = hex.toLowerCase().replace('#', '');
+            
+            // Handle 3-char hex
+            const fullHex = h.length === 3 
+              ? h[0] + h[0] + h[1] + h[1] + h[2] + h[2] 
+              : h;
+            
+            if (fullHex.length !== 6) return false;
+            
+            // Convert to RGB
+            const r = parseInt(fullHex.substring(0, 2), 16);
+            const g = parseInt(fullHex.substring(2, 4), 16);
+            const b = parseInt(fullHex.substring(4, 6), 16);
+            
+            if (isNaN(r) || isNaN(g) || isNaN(b)) return false;
+            
+            // Calculate luminance (0 = black, 255 = white)
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+            
+            // Skip if too light (> 240) or too dark (< 30)
+            if (luminance > 240 || luminance < 30) return false;
+            
+            // Skip grays (where R, G, B are very similar)
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            if (max - min < 30 && luminance > 100 && luminance < 200) return false;
+            
+            return true;
+          };
+          
+          const filteredColors = extracted.brandColors.filter(isUsableColor);
+          console.log('Filtered brand colors:', filteredColors);
           
           setColors({
-            primary: filteredColors[0] || extracted.brandColors[1] || DEFAULT_COLORS.primary,
-            secondary: filteredColors[1] || extracted.brandColors[2] || DEFAULT_COLORS.secondary,
-            accent: filteredColors[2] || extracted.brandColors[3] || DEFAULT_COLORS.accent,
+            primary: filteredColors[0] || DEFAULT_COLORS.primary,
+            secondary: filteredColors[1] || filteredColors[0] || DEFAULT_COLORS.secondary,
+            accent: filteredColors[2] || filteredColors[1] || DEFAULT_COLORS.accent,
           });
-          console.log('Colors set (filtered):', filteredColors);
         }
 
         // Set company name - try to extract from title "Home - Envita" → "Envita"
