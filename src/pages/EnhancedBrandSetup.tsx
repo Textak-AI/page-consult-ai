@@ -27,12 +27,65 @@ const FONT_OPTIONS = [
   'Outfit',
   'Space Grotesk',
   'Sora',
+  'Playfair Display',
+  'Montserrat',
+  'Nunito Sans',
+  'IBM Plex Mono',
+  'IBM Plex Sans',
+  'Source Sans Pro',
+  'Lato',
 ];
 
 const DEFAULT_COLORS = {
   primary: '#7C3AED',
   secondary: '#4F46E5',
   accent: '#06B6D4',
+};
+
+// Font matching map: proprietary fonts to Google Font equivalents
+const fontMatchMap: Record<string, { match: string; similarity: string }> = {
+  // Geometric Sans
+  'sohne': { match: 'Inter', similarity: 'Very close - clean geometric sans' },
+  'sohne-var': { match: 'Inter', similarity: 'Very close - clean geometric sans' },
+  'circular': { match: 'DM Sans', similarity: 'Similar rounded geometric' },
+  'product sans': { match: 'Plus Jakarta Sans', similarity: 'Similar Google-style geometric' },
+  'sf pro': { match: 'Inter', similarity: 'Similar system UI font' },
+  'sf pro display': { match: 'Plus Jakarta Sans', similarity: 'Similar display weight' },
+  
+  // Humanist Sans  
+  'proxima nova': { match: 'Montserrat', similarity: 'Similar humanist proportions' },
+  'avenir': { match: 'Nunito Sans', similarity: 'Similar geometric humanist' },
+  'gotham': { match: 'Montserrat', similarity: 'Similar geometric structure' },
+  'helvetica neue': { match: 'Inter', similarity: 'Similar neutral sans' },
+  'arial': { match: 'Inter', similarity: 'Similar neutral sans' },
+  
+  // Modern Sans
+  'futura': { match: 'Outfit', similarity: 'Similar geometric modern' },
+  'century gothic': { match: 'Outfit', similarity: 'Similar geometric style' },
+  'brandon grotesque': { match: 'DM Sans', similarity: 'Similar friendly geometric' },
+  
+  // Serif
+  'georgia': { match: 'Playfair Display', similarity: 'Similar traditional serif' },
+  'times new roman': { match: 'Playfair Display', similarity: 'Similar classic serif' },
+  
+  // Monospace
+  'source code pro': { match: 'IBM Plex Mono', similarity: 'Same category - code font' },
+  'sourcecodepro': { match: 'IBM Plex Mono', similarity: 'Same category - code font' },
+  'fira code': { match: 'IBM Plex Mono', similarity: 'Similar code font' },
+  'monaco': { match: 'IBM Plex Mono', similarity: 'Similar monospace' },
+};
+
+// Function to find best font match
+const findFontMatch = (detectedFont: string): { original: string; match: string; similarity: string } | null => {
+  const normalized = detectedFont.toLowerCase().replace(/-/g, ' ').trim();
+  
+  for (const [key, value] of Object.entries(fontMatchMap)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
+      return { original: detectedFont, ...value };
+    }
+  }
+  
+  return null;
 };
 
 interface ExtractionResults {
@@ -67,6 +120,22 @@ export default function EnhancedBrandSetup() {
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(true);
   const [companyName, setCompanyName] = useState('Your Company');
   const [tagline, setTagline] = useState('Your compelling tagline goes here');
+  
+  // Font matching states
+  const [fontMatches, setFontMatches] = useState<{
+    heading: { original: string; match: string; similarity: string } | null;
+    body: { original: string; match: string; similarity: string } | null;
+  }>({ heading: null, body: null });
+  
+  const [detectedFonts, setDetectedFonts] = useState<{
+    heading: string | null;
+    body: string | null;
+  }>({ heading: null, body: null });
+  
+  const [customFonts, setCustomFonts] = useState<{
+    heading: { name: string; url: string } | null;
+    body: { name: string; url: string } | null;
+  }>({ heading: null, body: null });
 
   // Calculate brand completeness
   const brandCompleteness = useMemo(() => {
@@ -180,13 +249,29 @@ export default function EnhancedBrandSetup() {
           console.log('Tagline set:', extracted.tagline);
         }
 
-        // Apply fonts if found
+        // Apply fonts if found - with intelligent matching
         if (extracted.fonts) {
+          const headingMatch = extracted.fonts.heading ? findFontMatch(extracted.fonts.heading) : null;
+          const bodyMatch = extracted.fonts.body ? findFontMatch(extracted.fonts.body) : null;
+          
+          setFontMatches({ heading: headingMatch, body: bodyMatch });
+          
+          setDetectedFonts({
+            heading: extracted.fonts.heading || null,
+            body: extracted.fonts.body || null
+          });
+          
+          // Use matched fonts (or detected if it's a known Google Font)
+          const headingFont = headingMatch?.match || (FONT_OPTIONS.includes(extracted.fonts.heading) ? extracted.fonts.heading : null);
+          const bodyFont = bodyMatch?.match || (FONT_OPTIONS.includes(extracted.fonts.body) ? extracted.fonts.body : null);
+          
           setFontSettings(prev => ({
             ...prev,
-            ...(extracted.fonts.heading && { h1: extracted.fonts.heading, h2: extracted.fonts.heading, h3: extracted.fonts.heading }),
-            ...(extracted.fonts.body && { body: extracted.fonts.body, small: extracted.fonts.body })
+            ...(headingFont && { h1: headingFont, h2: headingFont, h3: headingFont }),
+            ...(bodyFont && { body: bodyFont, small: bodyFont })
           }));
+          
+          console.log('Font matches:', { headingMatch, bodyMatch });
         }
 
         const results: ExtractionResults = {
@@ -273,6 +358,53 @@ export default function EnhancedBrandSetup() {
       setIsExtractingBrief(false);
     }
   };
+
+  // Handle custom font upload
+  const handleFontUpload = useCallback((file: File, type: 'heading' | 'body') => {
+    // Validate file type
+    const validTypes = ['.woff', '.woff2', '.ttf', '.otf'];
+    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    if (!validTypes.includes(ext)) {
+      toast.error('Please upload a .woff, .woff2, .ttf, or .otf file');
+      return;
+    }
+    
+    // Extract font name from filename
+    const fontName = file.name.replace(/\.(woff2?|ttf|otf)$/i, '').replace(/[-_]/g, ' ');
+    
+    // Create object URL for preview
+    const url = URL.createObjectURL(file);
+    
+    // Create @font-face rule
+    const formatMap: Record<string, string> = {
+      '.woff2': 'woff2',
+      '.woff': 'woff',
+      '.ttf': 'truetype',
+      '.otf': 'opentype'
+    };
+    
+    const style = document.createElement('style');
+    style.textContent = `
+      @font-face {
+        font-family: '${fontName}';
+        src: url('${url}') format('${formatMap[ext]}');
+        font-weight: normal;
+        font-style: normal;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    setCustomFonts(prev => ({ ...prev, [type]: { name: fontName, url } }));
+    
+    // Auto-apply to font settings
+    if (type === 'heading') {
+      setFontSettings(prev => ({ ...prev, h1: fontName, h2: fontName, h3: fontName }));
+    } else {
+      setFontSettings(prev => ({ ...prev, body: fontName, small: fontName }));
+    }
+    
+    toast.success(`Custom ${type} font loaded: ${fontName}`);
+  }, []);
 
   // Handle continue
   const handleContinue = () => {
@@ -634,6 +766,39 @@ export default function EnhancedBrandSetup() {
               <div className="space-y-4">
                 <p className="text-sm text-slate-400 mb-2">Typography</p>
                 
+                {/* Font matching info */}
+                {(fontMatches.heading || fontMatches.body) && (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                    <div className="flex items-center gap-2 text-emerald-400 mb-2">
+                      <Check className="w-4 h-4" />
+                      <span className="text-sm font-medium">Font matching applied</span>
+                    </div>
+                    {fontMatches.heading && (
+                      <div className="flex items-center gap-2 text-xs mb-1">
+                        <span className="text-slate-400">
+                          Detected: <span className="text-white">{fontMatches.heading.original}</span>
+                        </span>
+                        <span className="text-emerald-400">
+                          → Using: {fontMatches.heading.match}
+                        </span>
+                      </div>
+                    )}
+                    {fontMatches.body && fontMatches.body.original !== fontMatches.heading?.original && (
+                      <div className="flex items-center gap-2 text-xs mb-1">
+                        <span className="text-slate-400">
+                          Detected: <span className="text-white">{fontMatches.body.original}</span>
+                        </span>
+                        <span className="text-emerald-400">
+                          → Using: {fontMatches.body.match}
+                        </span>
+                      </div>
+                    )}
+                    <p className="text-xs text-slate-500 mt-2">
+                      {fontMatches.heading?.similarity || fontMatches.body?.similarity}
+                    </p>
+                  </div>
+                )}
+                
                 <div className="grid grid-cols-3 gap-4">
                   {/* H1 */}
                   <div>
@@ -643,6 +808,12 @@ export default function EnhancedBrandSetup() {
                       onChange={(e) => setFontSettings({...fontSettings, h1: e.target.value})}
                       className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
                     >
+                      {customFonts.heading && (
+                        <option value={customFonts.heading.name}>{customFonts.heading.name} (uploaded)</option>
+                      )}
+                      {fontMatches.heading && (
+                        <option value={fontMatches.heading.match}>{fontMatches.heading.match} (matches {fontMatches.heading.original})</option>
+                      )}
                       <option value="Inter">Inter</option>
                       <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
                       <option value="DM Sans">DM Sans</option>
@@ -651,6 +822,7 @@ export default function EnhancedBrandSetup() {
                       <option value="Sora">Sora</option>
                       <option value="Playfair Display">Playfair Display</option>
                       <option value="Montserrat">Montserrat</option>
+                      <option value="Nunito Sans">Nunito Sans</option>
                     </select>
                   </div>
                   
@@ -662,6 +834,12 @@ export default function EnhancedBrandSetup() {
                       onChange={(e) => setFontSettings({...fontSettings, h2: e.target.value})}
                       className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
                     >
+                      {customFonts.heading && (
+                        <option value={customFonts.heading.name}>{customFonts.heading.name} (uploaded)</option>
+                      )}
+                      {fontMatches.heading && (
+                        <option value={fontMatches.heading.match}>{fontMatches.heading.match} (matches {fontMatches.heading.original})</option>
+                      )}
                       <option value="Inter">Inter</option>
                       <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
                       <option value="DM Sans">DM Sans</option>
@@ -670,6 +848,7 @@ export default function EnhancedBrandSetup() {
                       <option value="Sora">Sora</option>
                       <option value="Playfair Display">Playfair Display</option>
                       <option value="Montserrat">Montserrat</option>
+                      <option value="Nunito Sans">Nunito Sans</option>
                     </select>
                   </div>
                   
@@ -681,6 +860,12 @@ export default function EnhancedBrandSetup() {
                       onChange={(e) => setFontSettings({...fontSettings, h3: e.target.value})}
                       className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
                     >
+                      {customFonts.heading && (
+                        <option value={customFonts.heading.name}>{customFonts.heading.name} (uploaded)</option>
+                      )}
+                      {fontMatches.heading && (
+                        <option value={fontMatches.heading.match}>{fontMatches.heading.match} (matches {fontMatches.heading.original})</option>
+                      )}
                       <option value="Inter">Inter</option>
                       <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
                       <option value="DM Sans">DM Sans</option>
@@ -689,8 +874,34 @@ export default function EnhancedBrandSetup() {
                       <option value="Sora">Sora</option>
                       <option value="Playfair Display">Playfair Display</option>
                       <option value="Montserrat">Montserrat</option>
+                      <option value="Nunito Sans">Nunito Sans</option>
                     </select>
                   </div>
+                </div>
+                
+                {/* Custom heading font upload */}
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 cursor-pointer">
+                    <Upload className="w-3.5 h-3.5" />
+                    Upload custom heading font
+                    <input
+                      type="file"
+                      accept=".woff,.woff2,.ttf,.otf"
+                      className="hidden"
+                      onChange={(e) => e.target.files?.[0] && handleFontUpload(e.target.files[0], 'heading')}
+                    />
+                  </label>
+                  {customFonts.heading && (
+                    <div className="flex items-center gap-2 px-2 py-1 bg-slate-900/50 rounded-lg">
+                      <span className="text-xs text-emerald-400">{customFonts.heading.name}</span>
+                      <button
+                        onClick={() => setCustomFonts(prev => ({ ...prev, heading: null }))}
+                        className="text-slate-500 hover:text-slate-300"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
@@ -702,12 +913,19 @@ export default function EnhancedBrandSetup() {
                       onChange={(e) => setFontSettings({...fontSettings, body: e.target.value})}
                       className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
                     >
+                      {customFonts.body && (
+                        <option value={customFonts.body.name}>{customFonts.body.name} (uploaded)</option>
+                      )}
+                      {fontMatches.body && (
+                        <option value={fontMatches.body.match}>{fontMatches.body.match} (matches {fontMatches.body.original})</option>
+                      )}
                       <option value="Inter">Inter</option>
                       <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
                       <option value="DM Sans">DM Sans</option>
                       <option value="IBM Plex Sans">IBM Plex Sans</option>
                       <option value="Source Sans Pro">Source Sans Pro</option>
                       <option value="Lato">Lato</option>
+                      <option value="Nunito Sans">Nunito Sans</option>
                     </select>
                   </div>
                   
@@ -719,14 +937,46 @@ export default function EnhancedBrandSetup() {
                       onChange={(e) => setFontSettings({...fontSettings, small: e.target.value})}
                       className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
                     >
+                      {customFonts.body && (
+                        <option value={customFonts.body.name}>{customFonts.body.name} (uploaded)</option>
+                      )}
+                      {fontMatches.body && (
+                        <option value={fontMatches.body.match}>{fontMatches.body.match} (matches {fontMatches.body.original})</option>
+                      )}
                       <option value="Inter">Inter</option>
                       <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
                       <option value="DM Sans">DM Sans</option>
                       <option value="IBM Plex Sans">IBM Plex Sans</option>
                       <option value="Source Sans Pro">Source Sans Pro</option>
                       <option value="Lato">Lato</option>
+                      <option value="Nunito Sans">Nunito Sans</option>
                     </select>
                   </div>
+                </div>
+                
+                {/* Custom body font upload */}
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 cursor-pointer">
+                    <Upload className="w-3.5 h-3.5" />
+                    Upload custom body font
+                    <input
+                      type="file"
+                      accept=".woff,.woff2,.ttf,.otf"
+                      className="hidden"
+                      onChange={(e) => e.target.files?.[0] && handleFontUpload(e.target.files[0], 'body')}
+                    />
+                  </label>
+                  {customFonts.body && (
+                    <div className="flex items-center gap-2 px-2 py-1 bg-slate-900/50 rounded-lg">
+                      <span className="text-xs text-emerald-400">{customFonts.body.name}</span>
+                      <button
+                        onClick={() => setCustomFonts(prev => ({ ...prev, body: null }))}
+                        className="text-slate-500 hover:text-slate-300"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Quick action: Match all to H1 */}
