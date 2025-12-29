@@ -25,6 +25,9 @@ export default function Signup() {
     setLoading(true);
 
     try {
+      // Check for pending session from Brand Intake flow
+      const pendingSessionId = sessionStorage.getItem('pendingSessionId');
+      
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -42,6 +45,14 @@ export default function Signup() {
           title: "Welcome back!",
           description: "Redirecting..."
         });
+        
+        // Check for pending session from Brand Intake flow first
+        if (pendingSessionId) {
+          console.log('🚀 Login: Found pending session, redirecting to /generate?session=', pendingSessionId);
+          sessionStorage.removeItem('pendingSessionId');
+          navigate(`/generate?session=${pendingSessionId}`, { replace: true });
+          return;
+        }
         
         // Check for existing completed consultation
         const { data: { user } } = await supabase.auth.getUser();
@@ -93,6 +104,14 @@ export default function Signup() {
           title: "Account created!",
           description: "Redirecting..."
         });
+        
+        // Check for pending session from Brand Intake flow first
+        if (pendingSessionId) {
+          console.log('🚀 Signup: Found pending session, redirecting to /generate?session=', pendingSessionId);
+          sessionStorage.removeItem('pendingSessionId');
+          navigate(`/generate?session=${pendingSessionId}`, { replace: true });
+          return;
+        }
         
         // If we have consultation data, save it and redirect to generate
         if (consultationData && data.user) {
