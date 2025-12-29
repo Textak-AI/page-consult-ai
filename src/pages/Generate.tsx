@@ -453,6 +453,7 @@ function GenerateContent() {
       // Check for force regenerate query param (for testing)
       const searchParams = new URLSearchParams(window.location.search);
       const forceRegenerate = searchParams.get('regenerate') === 'true';
+      const sessionParam = searchParams.get('session');
       
       // Support both route params (/generate/:pageId) and query params (?id=xxx)
       const effectivePageId = pageId || searchParams.get('id');
@@ -460,9 +461,78 @@ function GenerateContent() {
       console.log('[Generate] Loading with:', {
         routePageId: pageId,
         queryParamId: searchParams.get('id'),
+        sessionParam,
         effectivePageId,
         forceRegenerate,
       });
+
+      // ZERO: Check for session param from Brand Intake flow
+      if (sessionParam) {
+        console.log('🎨 [Generate] Loading from session:', sessionParam);
+        
+        const { data: demoSession, error: sessionError } = await supabase
+          .from('demo_sessions')
+          .select('*')
+          .eq('session_id', sessionParam)
+          .maybeSingle();
+        
+        if (sessionError || !demoSession) {
+          console.error('❌ Demo session not found:', sessionError);
+          toast({
+            title: "No Consultation Data Found",
+            description: "Please start a new consultation.",
+            variant: "destructive",
+          });
+          navigate("/");
+          return;
+        }
+        
+        console.log('✅ [Generate] Loaded demo session:', demoSession.session_id);
+        
+        // Transform demo session data to consultation format
+        const intel = demoSession.extracted_intelligence as any || {};
+        const brandAssets = demoSession.brand_assets as any || {};
+        
+        const transformedData = {
+          id: demoSession.id,
+          session_id: demoSession.session_id,
+          industry: intel.industry,
+          businessName: intel.businessName,
+          service_type: intel.specificService || intel.serviceType,
+          goal: intel.goals,
+          target_audience: intel.audience,
+          challenge: intel.challenge,
+          unique_value: intel.valueProp || intel.competitive,
+          offer: intel.offer,
+          swagger: intel.swagger,
+          // Brand assets from Brand Intake
+          primaryColor: brandAssets.primaryColor,
+          secondaryColor: brandAssets.secondaryColor,
+          logoUrl: brandAssets.logoUrl,
+          websiteUrl: brandAssets.websiteUrl,
+          // Market research
+          marketResearch: demoSession.market_research,
+          timestamp: demoSession.created_at,
+        };
+        
+        console.log('📦 [Generate] Transformed session data:', transformedData);
+        
+        // Use this data as the demo data and continue flow
+        setConsultation(transformedData);
+        
+        // Check if user is authenticated for page generation
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          // Store session for after signup
+          sessionStorage.setItem('pendingSessionId', sessionParam);
+          navigate("/signup");
+          return;
+        }
+        
+        // Generate new page with this data
+        await startGeneration(transformedData, user.id);
+        return;
+      }
 
       // FIRST: Check if we're loading an existing page by ID (unless force regenerating)
       if (effectivePageId && !forceRegenerate) {
