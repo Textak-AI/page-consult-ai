@@ -109,14 +109,18 @@ export default function EnhancedBrandSetup() {
 
       if (response.error) throw response.error;
 
-      if (response.data) {
-        const { logoUrl, brandColors, companyName: extractedName, tagline, fonts } = response.data;
+      // Handle nested data structure: { success: true, data: { logoUrl, brandColors, ... } }
+      if (response.data?.success && response.data?.data) {
+        const extractedData = response.data.data;
+        const { logoUrl, brandColors, companyName: extractedName, tagline, fonts } = extractedData;
+
+        console.log('Extracted data:', extractedData);
 
         const results: ExtractionResults = {
           logoUrl: logoUrl || null,
           colors: brandColors || [],
-          companyName: extractedName || response.data.title || null,
-          tagline: tagline || response.data.description || null,
+          companyName: extractedName || extractedData.title || null,
+          tagline: tagline || extractedData.description || null,
         };
 
         setExtractionResults(results);
@@ -125,11 +129,13 @@ export default function EnhancedBrandSetup() {
         // Apply logo if found
         if (logoUrl) {
           setLogo(logoUrl);
+          console.log('Logo set:', logoUrl);
         }
         
         // Apply company name if found
         if (results.companyName) {
           setCompanyName(results.companyName);
+          console.log('Company name set:', results.companyName);
         }
         
         // Apply colors if found - map to primary, secondary, accent
@@ -139,6 +145,7 @@ export default function EnhancedBrandSetup() {
             secondary: brandColors[1] || DEFAULT_COLORS.secondary,
             accent: brandColors[2] || DEFAULT_COLORS.accent,
           });
+          console.log('Colors set:', brandColors);
         }
 
         // Apply fonts if found
