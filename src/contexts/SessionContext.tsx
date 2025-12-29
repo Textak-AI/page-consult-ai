@@ -40,29 +40,32 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const initializeSession = async () => {
-    try {
-      // Try to get existing session from httpOnly cookie via edge function
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/get-session`, {
-        method: 'GET',
-        credentials: 'include', // Important: includes cookies
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+    // Try to get existing session from httpOnly cookie via edge function
+    // A 401/404 response is EXPECTED for first-time users (no cookie exists)
+    // This is not an error - we simply proceed to create a new session
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/get-session`, {
+      method: 'GET',
+      credentials: 'include', // Important: includes cookies
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }).catch(() => null); // Network errors result in null, proceed to create session
 
-      if (response.ok) {
+    if (response?.ok) {
+      try {
         const data = await response.json();
         setSessionToken(data.session_token);
         setSessionId(data.session_id);
         setUserEmailState(data.user_email);
-        setCurrentStep(data.current_step);
-        return;
-      }
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.log('No existing session found, creating new one');
+        setCurrentStep(data.current_step || 'consultation');
+        return; // Session found and restored, we're done
+      } catch {
+        // JSON parse error, proceed to create new session
       }
     }
+    
+    // No existing session (401/404 or network error) - this is normal for new users
+    // Proceed to create a new session
 
     // No existing session, create a new one
     const token = uuidv4();
