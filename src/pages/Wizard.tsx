@@ -89,9 +89,24 @@ export default function Wizard() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Scroll to bottom when messages change
+  // Track if this is initial load vs new messages
+  const isInitialLoadRef = useRef(true);
+  const previousMessageCount = useRef(0);
+
+  // Scroll to bottom only for NEW messages, not on initial load
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Skip scroll on initial render
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
+      previousMessageCount.current = messages.length;
+      return;
+    }
+    
+    // Only scroll if we have more messages than before (new message added)
+    if (messages.length > previousMessageCount.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    previousMessageCount.current = messages.length;
   }, [messages]);
 
   // Focus input on mount
@@ -167,10 +182,11 @@ export default function Wizard() {
           }
           break;
         case "competitive":
-          if (competitive || marketSize || industryInsights.length) {
-            insight = competitive || marketSize || industryInsights[0] || "Market research available";
-            fill = competitive ? 100 : 80;
-            tileState = competitive ? "confirmed" : "developing";
+          // ONLY use user's competitive differentiation, NOT market research data
+          if (competitive) {
+            insight = competitive;
+            fill = 100;
+            tileState = "confirmed";
           }
           break;
         case "goals":
@@ -205,7 +221,11 @@ export default function Wizard() {
       console.log('⏰ [Wizard] Delayed state update executing');
       
       setTiles(prefilledTiles);
-      setOverallReadiness(data.readiness || 0);
+      
+      // Calculate readiness from actual tile fills, not from stored data
+      const calculatedReadiness = Math.round(prefilledTiles.reduce((sum, t) => sum + t.fill, 0) / prefilledTiles.length);
+      setOverallReadiness(calculatedReadiness);
+      console.log('📊 [Wizard] Calculated readiness from tiles:', calculatedReadiness);
       setShowPrefillBanner(true);
       
       // Conversation history for AI context
