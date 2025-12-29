@@ -63,14 +63,20 @@ export default function EnhancedBrandSetup() {
   // Calculate brand completeness
   const brandCompleteness = useMemo(() => {
     let score = 0;
-    if (websiteUrl || extractionResults?.companyName) score += 20;
-    if (logo || extractionResults?.logoUrl) score += 25;
-    if (colors.primary !== DEFAULT_COLORS.primary) score += 15;
-    if (colors.secondary !== DEFAULT_COLORS.secondary) score += 10;
+    // Company/website info
+    if (websiteUrl || extractionResults?.companyName || companyName !== 'Your Company') score += 20;
+    // Logo
+    if (logo) score += 25;
+    // Colors (check if any color differs from defaults)
+    if (colors.primary !== DEFAULT_COLORS.primary || 
+        colors.secondary !== DEFAULT_COLORS.secondary || 
+        colors.accent !== DEFAULT_COLORS.accent) score += 20;
+    // Typography
     if (fonts.heading !== 'Inter' || fonts.body !== 'Inter') score += 15;
-    if (brandGuide || skipBrandGuide) score += 15;
+    // Brand guide
+    if (brandGuide || skipBrandGuide) score += 20;
     return Math.min(score, 100);
-  }, [websiteUrl, extractionResults, logo, colors, fonts, brandGuide, skipBrandGuide]);
+  }, [websiteUrl, extractionResults, logo, colors, fonts, brandGuide, skipBrandGuide, companyName]);
 
   // Handle website analysis
   const handleAnalyzeWebsite = async () => {
@@ -95,23 +101,28 @@ export default function EnhancedBrandSetup() {
       const results: ExtractionResults = {
         logoUrl: data?.logoUrl || null,
         colors: data?.brandColors || [],
-        companyName: data?.title || null,
+        companyName: data?.companyName || data?.title || null,
         tagline: data?.tagline || data?.description || null,
       };
 
       setExtractionResults(results);
       
+      // Apply logo if found
       if (results.logoUrl) {
         setLogo(results.logoUrl);
       }
+      
+      // Apply company name if found
       if (results.companyName) {
         setCompanyName(results.companyName);
       }
+      
+      // Apply colors if found - map to primary, secondary, accent
       if (results.colors?.length > 0) {
         setColors(prev => ({
-          ...prev,
           primary: results.colors[0] || prev.primary,
           secondary: results.colors[1] || prev.secondary,
+          accent: results.colors[2] || prev.accent,
         }));
       }
 
@@ -279,29 +290,61 @@ export default function EnhancedBrandSetup() {
                     <Check className="w-4 h-4" />
                     <span className="text-sm font-medium">Extracted successfully</span>
                   </div>
-                  <div className="flex items-center gap-4">
+                  
+                  {/* Summary of extracted items */}
+                  <div className="flex flex-wrap items-center gap-4">
+                    {/* Logo thumbnail */}
                     {extractionResults.logoUrl && (
-                      <img 
-                        src={extractionResults.logoUrl} 
-                        alt="Logo" 
-                        className="w-12 h-12 object-contain bg-white rounded-lg p-1"
-                      />
-                    )}
-                    <div className="flex gap-2">
-                      {extractionResults.colors.slice(0, 4).map((color, i) => (
-                        <button
-                          key={i}
-                          onClick={() => {
-                            if (i === 0) setColors(prev => ({ ...prev, primary: color }));
-                            else if (i === 1) setColors(prev => ({ ...prev, secondary: color }));
-                            else if (i === 2) setColors(prev => ({ ...prev, accent: color }));
-                          }}
-                          className="w-8 h-8 rounded-lg border-2 border-slate-600 hover:border-white transition-colors"
-                          style={{ backgroundColor: color }}
-                          title={`Use as color: ${color}`}
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src={extractionResults.logoUrl} 
+                          alt="Logo" 
+                          className="w-10 h-10 object-contain bg-white rounded-lg p-1"
                         />
-                      ))}
-                    </div>
+                        <span className="text-xs text-slate-400">Logo</span>
+                      </div>
+                    )}
+                    
+                    {/* Color swatches */}
+                    {extractionResults.colors.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          {extractionResults.colors.slice(0, 4).map((color, i) => (
+                            <button
+                              key={i}
+                              onClick={() => {
+                                if (i === 0) setColors(prev => ({ ...prev, primary: color }));
+                                else if (i === 1) setColors(prev => ({ ...prev, secondary: color }));
+                                else if (i === 2) setColors(prev => ({ ...prev, accent: color }));
+                              }}
+                              className="w-6 h-6 rounded-md border border-slate-600 hover:border-white transition-colors hover:scale-110"
+                              style={{ backgroundColor: color }}
+                              title={`Click to use: ${color}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-slate-400">Colors</span>
+                      </div>
+                    )}
+                    
+                    {/* Company name */}
+                    {extractionResults.companyName && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-white text-sm font-medium">{extractionResults.companyName}</span>
+                        <span className="text-xs text-slate-400">Name</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Show what was applied */}
+                  <div className="mt-3 pt-3 border-t border-slate-700/50">
+                    <p className="text-xs text-slate-500">
+                      Applied: {[
+                        extractionResults.logoUrl && 'logo',
+                        extractionResults.colors.length > 0 && `${Math.min(extractionResults.colors.length, 3)} colors`,
+                        extractionResults.companyName && 'company name'
+                      ].filter(Boolean).join(', ') || 'No data extracted'}
+                    </p>
                   </div>
                 </div>
               )}
