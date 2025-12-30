@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Zap, Check, ArrowRight, CreditCard, Sparkles, Loader2 } from 'lucide-react';
+import { X, Zap, Check, ArrowRight, Sparkles, Loader2, Crown, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { PLAN_DETAILS, ACTION_PACKS, STRIPE_PRICES } from '@/lib/stripe-config';
+import { STRIPE_PRICES } from '@/lib/stripe-config';
 
 interface UpgradeDrawerProps {
   open: boolean;
@@ -19,57 +19,55 @@ interface UpgradeDrawerProps {
 const plans = [
   {
     id: 'starter',
-    name: PLAN_DETAILS.starter.name,
-    price: PLAN_DETAILS.starter.price,
-    priceLabel: 'Free',
-    actions: PLAN_DETAILS.starter.actions,
-    actionsLabel: `${PLAN_DETAILS.starter.actions} actions/mo`,
-    priceId: PLAN_DETAILS.starter.priceId,
+    name: 'Starter',
+    price: 29,
+    priceLabel: '$29/mo',
+    actionsLabel: '3 pages/mo',
+    priceId: STRIPE_PRICES.starter,
+    icon: Zap,
     features: [
-      '1 landing page',
-      'Basic AI generation',
+      '3 landing pages per month',
+      'AI strategy consultation',
+      'Basic templates',
       'Email support',
     ],
   },
   {
-    id: 'pro',
-    name: PLAN_DETAILS.pro.name,
-    price: PLAN_DETAILS.pro.price,
-    priceLabel: `$${PLAN_DETAILS.pro.price}/mo`,
-    actions: PLAN_DETAILS.pro.actions,
-    actionsLabel: `${PLAN_DETAILS.pro.actions} actions/mo`,
-    priceId: PLAN_DETAILS.pro.priceId,
+    id: 'founding',
+    name: 'Founding Member',
+    price: 69,
+    originalPrice: 99,
+    priceLabel: '$69/mo',
+    actionsLabel: 'Unlimited pages',
+    priceId: STRIPE_PRICES.founding_member,
+    icon: Crown,
     features: [
-      'Unlimited pages',
-      'Advanced AI features',
+      'Unlimited landing pages',
+      'All premium templates',
+      'Priority AI generation',
       'Priority support',
-      'Rollover up to 50 unused',
-      'Free AI suggestions',
+      'Lock in price forever',
     ],
     recommended: true,
+    discountBadge: '30% off for life',
   },
   {
     id: 'agency',
-    name: PLAN_DETAILS.agency.name,
-    price: PLAN_DETAILS.agency.price,
-    priceLabel: `$${PLAN_DETAILS.agency.price}/mo`,
-    actions: PLAN_DETAILS.agency.actions,
-    actionsLabel: 'Unlimited',
-    priceId: PLAN_DETAILS.agency.priceId,
+    name: 'Agency',
+    price: 397,
+    priceLabel: '$397/mo',
+    actionsLabel: 'Team access',
+    priceId: STRIPE_PRICES.agency,
+    icon: Users,
     features: [
-      'Everything in Pro',
-      'Unlimited AI actions',
-      'White-label options',
-      'Team access',
+      'Everything in Founding Member',
+      'White-label exports',
+      '5 team seats',
+      'Client sub-accounts',
       'API access',
     ],
   },
 ];
-
-const actionPacks = ACTION_PACKS.map(pack => ({
-  ...pack,
-  savings: pack.amount === 10 ? 0 : pack.amount === 25 ? 17 : 28,
-}));
 
 export function UpgradeDrawer({
   open,
@@ -77,9 +75,7 @@ export function UpgradeDrawer({
   currentPlan = 'starter',
   currentUsage,
   onSelectPlan,
-  onPurchaseActions,
 }: UpgradeDrawerProps) {
-  const [selectedTab, setSelectedTab] = useState<'plans' | 'actions'>('plans');
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
   // Handle escape key to close
@@ -104,8 +100,8 @@ export function UpgradeDrawer({
     };
   }, [open, handleEscape]);
 
-  const handleCheckout = async (priceId: string, mode: 'subscription' | 'payment') => {
-    console.log('🛒 Starting checkout:', { priceId, mode });
+  const handleCheckout = async (priceId: string) => {
+    console.log('🛒 Starting checkout:', { priceId });
     setIsLoading(priceId);
     try {
       // Check if user is authenticated
@@ -118,13 +114,12 @@ export function UpgradeDrawer({
         return;
       }
 
-      console.log('📡 Calling stripe-checkout function...');
-      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+      console.log('📡 Calling create-checkout-session function...');
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: {
           priceId,
-          mode,
-          successUrl: `${window.location.origin}/generate?checkout=success`,
-          cancelUrl: `${window.location.origin}/generate?checkout=cancelled`,
+          successUrl: `${window.location.origin}/dashboard?checkout=success`,
+          cancelUrl: `${window.location.origin}/dashboard?checkout=cancelled`,
         },
       });
 
@@ -150,21 +145,10 @@ export function UpgradeDrawer({
     }
   };
 
-  const handlePlanSelect = async (planId: string, priceId: string | null) => {
+  const handlePlanSelect = async (planId: string, priceId: string) => {
     console.log('📋 Plan selected:', { planId, priceId });
-    if (!priceId) {
-      // Starter plan - no checkout needed
-      console.log('ℹ️ Starter plan - no checkout needed');
-      onSelectPlan?.(planId);
-      return;
-    }
-    await handleCheckout(priceId, 'subscription');
-  };
-
-  const handleActionPackPurchase = async (pack: typeof actionPacks[0]) => {
-    console.log('💰 Action pack purchase:', pack);
-    await handleCheckout(pack.priceId, 'payment');
-    onPurchaseActions?.(pack.amount);
+    onSelectPlan?.(planId);
+    await handleCheckout(priceId);
   };
 
   return (
@@ -205,11 +189,11 @@ export function UpgradeDrawer({
               <div>
               <h2 id="upgrade-drawer-title" className="text-xl font-bold text-white flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-cyan-400" />
-                  Get More AI Actions
+                  Upgrade Your Plan
                 </h2>
                 {currentUsage && (
                   <p className="text-sm text-slate-400 mt-1">
-                    Currently using {currentUsage.used} of {currentUsage.total} actions
+                    Currently using {currentUsage.used} of {currentUsage.total} pages
                   </p>
                 )}
               </div>
@@ -221,163 +205,106 @@ export function UpgradeDrawer({
               </button>
             </div>
             
-            {/* Tabs */}
-            <div className="px-6 pb-4">
-              <div className="flex gap-2 p-1 bg-white/5 rounded-lg">
-                <button
-                  onClick={() => setSelectedTab('plans')}
-                  className={cn(
-                    'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all',
-                    selectedTab === 'plans'
-                      ? 'bg-white/10 text-white'
-                      : 'text-slate-400 hover:text-white'
-                  )}
-                >
-                  Upgrade Plan
-                </button>
-                <button
-                  onClick={() => setSelectedTab('actions')}
-                  className={cn(
-                    'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all',
-                    selectedTab === 'actions'
-                      ? 'bg-white/10 text-white'
-                      : 'text-slate-400 hover:text-white'
-                  )}
-                >
-                  Buy Actions
-                </button>
-              </div>
-            </div>
-            
             {/* Content */}
-            <div className="px-6 pb-8 overflow-y-auto max-h-[60vh]">
-              {selectedTab === 'plans' ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {plans.map((plan) => {
-                    const isCurrent = plan.id === currentPlan;
-                    const isLoadingThis = isLoading === plan.priceId;
-                    return (
-                      <div
-                        key={plan.id}
-                        className={cn(
-                          'relative p-5 rounded-xl border transition-all',
-                          plan.recommended
-                            ? 'border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 to-purple-500/10'
-                            : 'border-white/10 bg-white/5',
-                          isCurrent && 'ring-2 ring-cyan-400'
-                        )}
-                      >
-                        {plan.recommended && (
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full text-xs font-semibold text-white">
-                            Recommended
+            <div className="px-6 pb-8 overflow-y-auto max-h-[70vh]">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {plans.map((plan) => {
+                  const isCurrent = plan.id === currentPlan;
+                  const isLoadingThis = isLoading === plan.priceId;
+                  const Icon = plan.icon;
+                  
+                  return (
+                    <div
+                      key={plan.id}
+                      className={cn(
+                        'relative p-5 rounded-xl border transition-all',
+                        plan.recommended
+                          ? 'border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 to-teal-500/10'
+                          : 'border-white/10 bg-white/5',
+                        isCurrent && 'ring-2 ring-cyan-400'
+                      )}
+                    >
+                      {plan.recommended && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-full text-xs font-semibold text-slate-900">
+                          BEST VALUE
+                        </div>
+                      )}
+                      
+                      <div className="mb-4">
+                        <div className={cn(
+                          "inline-flex p-2 rounded-lg mb-2",
+                          plan.recommended 
+                            ? "bg-cyan-500/20 text-cyan-400" 
+                            : "bg-slate-700/50 text-slate-400"
+                        )}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white">{plan.name}</h3>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          {plan.originalPrice && (
+                            <span className="text-sm text-slate-500 line-through mr-1">
+                              ${plan.originalPrice}
+                            </span>
+                          )}
+                          <span className={cn(
+                            "text-2xl font-bold",
+                            plan.recommended ? "text-cyan-400" : "text-white"
+                          )}>
+                            {plan.priceLabel}
+                          </span>
+                        </div>
+                        {plan.discountBadge && (
+                          <div className="mt-1 inline-block bg-cyan-500/20 text-cyan-300 text-xs font-medium px-2 py-0.5 rounded-full">
+                            🎉 {plan.discountBadge}
                           </div>
                         )}
-                        
-                        <div className="mb-4">
-                          <h3 className="text-lg font-bold text-white">{plan.name}</h3>
-                          <div className="flex items-baseline gap-1 mt-1">
-                            <span className="text-2xl font-bold text-white">{plan.priceLabel}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 mb-4 p-2 rounded-lg bg-white/5">
-                          <Zap className="w-4 h-4 text-cyan-400" />
-                          <span className="text-sm font-medium text-cyan-300">{plan.actionsLabel}</span>
-                        </div>
-                        
-                        <ul className="space-y-2 mb-4">
-                          {plan.features.map((feature, i) => (
-                            <li key={i} className="flex items-center gap-2 text-sm text-slate-300">
-                              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
-                        
-                        <Button
-                          className={cn(
-                            'w-full',
-                            isCurrent
-                              ? 'bg-slate-600 cursor-default'
-                              : plan.recommended
-                              ? 'bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600'
-                              : 'bg-white/10 hover:bg-white/20'
-                          )}
-                          disabled={isCurrent || isLoading !== null}
-                          onClick={() => handlePlanSelect(plan.id, plan.priceId)}
-                        >
-                          {isLoadingThis ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : isCurrent ? (
-                            'Current Plan'
-                          ) : (
-                            <>
-                              {plan.id === 'starter' ? 'Downgrade' : 'Upgrade'}
-                              <ArrowRight className="w-4 h-4 ml-2" />
-                            </>
-                          )}
-                        </Button>
                       </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <p className="text-sm text-slate-400 mb-4">
-                    Need a few more actions? Purchase an action pack and use them anytime.
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {actionPacks.map((pack) => {
-                      const isLoadingThis = isLoading === pack.priceId;
-                      return (
-                        <div
-                          key={pack.amount}
-                          className="p-5 rounded-xl border border-white/10 bg-white/5 hover:border-cyan-500/50 transition-all"
-                        >
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="p-2 rounded-lg bg-cyan-500/20">
-                              <Zap className="w-5 h-5 text-cyan-400" />
-                            </div>
-                            <div>
-                              <span className="text-2xl font-bold text-white">{pack.amount}</span>
-                              <span className="text-sm text-slate-400 ml-1">actions</span>
-                            </div>
-                          </div>
-                          
-                          <div className="mb-4">
-                            <span className="text-xl font-bold text-white">${pack.price}</span>
-                            {pack.savings > 0 && (
-                              <span className="ml-2 text-xs text-emerald-400 font-medium">
-                                Save {pack.savings}%
-                              </span>
-                            )}
-                          </div>
-                          
-                          <Button
-                            className="w-full bg-white/10 hover:bg-white/20"
-                            disabled={isLoading !== null}
-                            onClick={() => handleActionPackPurchase(pack)}
-                          >
-                            {isLoadingThis ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <>
-                                <CreditCard className="w-4 h-4 mr-2" />
-                                Purchase
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  
-                  <p className="text-xs text-slate-500 text-center mt-4">
-                    Action packs never expire. Use them across all your pages.
-                  </p>
-                </div>
-              )}
+                      
+                      <div className="flex items-center gap-2 mb-4 p-2 rounded-lg bg-white/5">
+                        <Zap className="w-4 h-4 text-cyan-400" />
+                        <span className="text-sm font-medium text-cyan-300">{plan.actionsLabel}</span>
+                      </div>
+                      
+                      <ul className="space-y-2 mb-4">
+                        {plan.features.map((feature, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm text-slate-300">
+                            <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                      
+                      <Button
+                        className={cn(
+                          'w-full',
+                          isCurrent
+                            ? 'bg-slate-600 cursor-default'
+                            : plan.recommended
+                            ? 'bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-900'
+                            : 'bg-white/10 hover:bg-white/20'
+                        )}
+                        disabled={isCurrent || isLoading !== null}
+                        onClick={() => handlePlanSelect(plan.id, plan.priceId)}
+                      >
+                        {isLoadingThis ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : isCurrent ? (
+                          'Current Plan'
+                        ) : (
+                          <>
+                            {plan.recommended ? 'Claim Founding Spot' : 'Upgrade'}
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <p className="text-xs text-slate-500 text-center mt-6">
+                14-day free trial • Cancel anytime • 30-day money-back guarantee
+              </p>
             </div>
           </motion.div>
         </>
