@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Star, ArrowRight, Loader2, Zap, Shield, Crown, Users } from "lucide-react";
+import { Check, ArrowRight, Loader2, Zap, Shield, Crown, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { STRIPE_PRICES, createCheckoutSession } from "@/lib/stripe";
+import { STRIPE_PRICES } from "@/lib/stripe-config";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -25,7 +25,7 @@ const plans = [
       "Standard generation speed",
     ],
     buttonText: "Start Free Trial",
-    priceId: STRIPE_PRICES.STARTER,
+    priceId: STRIPE_PRICES.starter,
   },
   {
     id: "founding",
@@ -36,6 +36,7 @@ const plans = [
     icon: Crown,
     popular: true,
     badge: "BEST VALUE",
+    discountBadge: "🎉 30% off for life",
     features: [
       "Unlimited landing pages",
       "All premium templates",
@@ -43,26 +44,11 @@ const plans = [
       "Priority support",
       "Lock in this price forever",
       "Early access to new features",
+      "Advanced analytics",
+      "Custom domains",
     ],
     buttonText: "Claim Founding Spot",
-    priceId: STRIPE_PRICES.FOUNDING,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: 99,
-    tagline: "For power users",
-    icon: Star,
-    popular: false,
-    features: [
-      "Unlimited landing pages",
-      "All premium templates",
-      "Priority AI generation",
-      "Priority support",
-      "Advanced analytics",
-    ],
-    buttonText: "Get Started",
-    priceId: STRIPE_PRICES.PRO,
+    priceId: STRIPE_PRICES.founding_member,
   },
   {
     id: "agency",
@@ -72,22 +58,23 @@ const plans = [
     icon: Users,
     popular: false,
     features: [
-      "Everything in Pro",
+      "Everything in Founding Member",
       "White-label exports",
       "5 team seats",
+      "Client sub-accounts",
       "API access",
       "Dedicated support",
       "Custom integrations",
     ],
-    buttonText: "Contact Sales",
-    priceId: STRIPE_PRICES.AGENCY,
+    buttonText: "Start Agency Trial",
+    priceId: STRIPE_PRICES.agency,
   },
 ];
 
 const faqs = [
   {
     question: "What's included in the free trial?",
-    answer: "All paid plans come with a 14-day free trial. You'll have full access to all features during the trial period. No credit card required to start.",
+    answer: "All paid plans come with a 14-day free trial. You'll have full access to all features during the trial period. Your card will only be charged after the trial ends.",
   },
   {
     question: "What makes Founding Members special?",
@@ -109,7 +96,7 @@ const faqs = [
 
 const PricingPage = () => {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const [foundingSpotsLeft] = useState(127); // Would come from API in production
+  const [foundingSpotsLeft] = useState(127);
   const navigate = useNavigate();
 
   const handlePlanSelect = async (plan: typeof plans[0]) => {
@@ -124,7 +111,21 @@ const PricingPage = () => {
         return;
       }
 
-      await createCheckoutSession(plan.priceId);
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: {
+          priceId: plan.priceId,
+          successUrl: `${window.location.origin}/dashboard?checkout=success`,
+          cancelUrl: `${window.location.origin}/pricing?checkout=canceled`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
     } catch (error) {
       console.error('Checkout error:', error);
       toast.error('Failed to start checkout. Please try again.');
@@ -148,18 +149,18 @@ const PricingPage = () => {
           </p>
           
           {/* Founding Member Banner */}
-          <div className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-full px-6 py-3">
-            <Crown className="w-5 h-5 text-amber-400" />
-            <span className="text-amber-200 font-medium">
-              🎉 Limited Time: Founding Member pricing - Lock in $69/mo forever 
-              <span className="text-amber-400 ml-1">({foundingSpotsLeft} spots left)</span>
+          <div className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 rounded-full px-6 py-3">
+            <Crown className="w-5 h-5 text-cyan-400" />
+            <span className="text-cyan-200 font-medium">
+              🎉 Limited Time: Lock in Founding Member pricing forever 
+              <span className="text-cyan-400 ml-1">({foundingSpotsLeft} spots left)</span>
             </span>
           </div>
         </div>
 
         {/* Pricing Cards */}
-        <div className="max-w-7xl mx-auto px-4 mb-20">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="max-w-6xl mx-auto px-4 mb-20">
+          <div className="grid md:grid-cols-3 gap-8">
             {plans.map((plan, index) => {
               const isLoading = loadingPlan === plan.id;
               const Icon = plan.icon;
@@ -169,26 +170,26 @@ const PricingPage = () => {
                   key={plan.id}
                   className={cn(
                     "relative group",
-                    plan.popular && "lg:scale-105 z-10"
+                    plan.popular && "md:scale-105 z-10"
                   )}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  {/* Glow effect for popular card */}
+                  {/* Glow effect for Founding Member card */}
                   {plan.popular && (
-                    <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
+                    <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-teal-500 to-cyan-500 rounded-2xl blur-lg opacity-50 group-hover:opacity-70 transition-opacity" />
                   )}
                   
                   <div
                     className={cn(
                       "relative rounded-2xl p-6 h-full flex flex-col",
                       plan.popular
-                        ? "bg-gradient-to-b from-slate-800/95 to-slate-900/95 border-2 border-amber-500/50"
+                        ? "bg-gradient-to-b from-slate-800/95 to-slate-900/95 border-2 border-cyan-500/50"
                         : "bg-slate-800/50 border border-slate-700/50 hover:border-slate-600"
                     )}
                   >
                     {/* Badge */}
                     {plan.badge && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 px-4 py-1 rounded-full text-xs font-bold tracking-wide">
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-900 px-4 py-1 rounded-full text-xs font-bold tracking-wide">
                         {plan.badge}
                       </div>
                     )}
@@ -198,7 +199,7 @@ const PricingPage = () => {
                       <div className={cn(
                         "inline-flex p-3 rounded-xl mb-4",
                         plan.popular 
-                          ? "bg-amber-500/20 text-amber-400" 
+                          ? "bg-cyan-500/20 text-cyan-400" 
                           : "bg-slate-700/50 text-slate-400"
                       )}>
                         <Icon className="w-6 h-6" />
@@ -210,7 +211,7 @@ const PricingPage = () => {
                     </div>
 
                     {/* Price */}
-                    <div className="text-center mb-6">
+                    <div className="text-center mb-4">
                       <div className="flex items-baseline justify-center gap-1">
                         {plan.originalPrice && (
                           <span className="text-lg text-slate-500 line-through mr-2">
@@ -219,13 +220,27 @@ const PricingPage = () => {
                         )}
                         <span className={cn(
                           "text-4xl font-bold",
-                          plan.popular ? "text-amber-400" : "text-white"
+                          plan.popular ? "text-cyan-400" : "text-white"
                         )}>
                           ${plan.price}
                         </span>
                         <span className="text-slate-400">/mo</span>
                       </div>
+                      {plan.discountBadge && (
+                        <div className="mt-2 inline-block bg-cyan-500/20 text-cyan-300 text-sm font-medium px-3 py-1 rounded-full">
+                          {plan.discountBadge}
+                        </div>
+                      )}
                     </div>
+
+                    {/* Scarcity counter for Founding Member */}
+                    {plan.popular && (
+                      <div className="flex items-center justify-center gap-2 mb-4 p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                        <span className="text-sm font-medium text-cyan-300">
+                          {foundingSpotsLeft} spots remaining
+                        </span>
+                      </div>
+                    )}
 
                     {/* Features */}
                     <ul className="space-y-3 mb-6 flex-grow">
@@ -233,7 +248,7 @@ const PricingPage = () => {
                         <li key={feature} className="flex items-start gap-2">
                           <Check className={cn(
                             "w-5 h-5 flex-shrink-0 mt-0.5",
-                            plan.popular ? "text-amber-400" : "text-cyan-400"
+                            plan.popular ? "text-cyan-400" : "text-cyan-400"
                           )} />
                           <span className="text-sm text-slate-300">{feature}</span>
                         </li>
@@ -248,7 +263,7 @@ const PricingPage = () => {
                       className={cn(
                         "w-full font-semibold transition-all",
                         plan.popular
-                          ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900"
+                          ? "bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-900 shadow-lg shadow-cyan-500/30"
                           : "bg-slate-700 hover:bg-slate-600 text-white"
                       )}
                     >
@@ -270,14 +285,14 @@ const PricingPage = () => {
 
         {/* Trust Indicators */}
         <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-6 text-slate-400 text-sm">
+          <div className="inline-flex items-center gap-6 text-slate-400 text-sm flex-wrap justify-center">
             <span className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-green-400" />
               14-day free trial
             </span>
-            <span className="w-1 h-1 bg-slate-600 rounded-full" />
+            <span className="w-1 h-1 bg-slate-600 rounded-full hidden sm:block" />
             <span>Cancel anytime</span>
-            <span className="w-1 h-1 bg-slate-600 rounded-full" />
+            <span className="w-1 h-1 bg-slate-600 rounded-full hidden sm:block" />
             <span>30-day money-back guarantee</span>
           </div>
         </div>

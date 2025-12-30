@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 export const STRIPE_PRICES = {
   STARTER: 'price_1SfXwOFqTTK3LcBFMXRpEVcS',
   FOUNDING: 'price_1SjuT7FqTTK3LcBFU2DXqMXN',
-  PRO: 'price_1SfXziFqTTK3LcBFhv0PykBc',
   AGENCY: 'price_1SjuTnFqTTK3LcBFXdNBr2Oh',
 } as const;
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Star, ArrowRight, Loader2, Zap } from "lucide-react";
+import { Check, ArrowRight, Loader2, Zap, Crown, Users } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -11,114 +11,94 @@ const plans = [
   {
     id: "starter",
     name: "Starter",
-    monthlyPrice: 0,
-    annualPrice: 0,
-    tagline: "Perfect for trying it out",
+    price: 29,
+    tagline: "Perfect for getting started",
+    icon: Zap,
     popular: false,
     features: [
-      "3 AI Actions/month",
-      "1 landing page",
+      "3 landing pages per month",
+      "AI strategy consultation",
       "Basic templates",
-      "Community support",
+      "Email support",
     ],
-    buttonText: "Get Started Free",
-    priceId: null,
-    annualPriceId: null,
+    buttonText: "Start Free Trial",
+    priceId: STRIPE_PRICES.starter,
   },
   {
-    id: "pro",
-    name: "Pro",
-    monthlyPrice: 29,
-    annualPrice: 290,
-    annualSavings: 58,
-    tagline: "For growing businesses",
+    id: "founding",
+    name: "Founding Member",
+    price: 69,
+    originalPrice: 99,
+    tagline: "Limited to 500 spots",
+    icon: Crown,
     popular: true,
+    badge: "BEST VALUE",
+    discountBadge: "🎉 30% off for life",
     features: [
-      "150 AI Actions/month",
-      "15 published pages",
-      "All calculator types",
-      "AI optimization suggestions",
-      "Custom domains",
+      "Unlimited landing pages",
+      "All premium templates",
+      "Priority AI generation",
       "Priority support",
+      "Lock in this price forever",
+      "Advanced analytics",
     ],
-    buttonText: "Start Pro Trial",
-    priceId: STRIPE_PRICES.pro_monthly,
-    annualPriceId: null, // Will be added when annual price is created
+    buttonText: "Claim Founding Spot",
+    priceId: STRIPE_PRICES.founding_member,
   },
   {
     id: "agency",
     name: "Agency",
-    monthlyPrice: 99,
-    annualPrice: 990,
-    annualSavings: 198,
-    tagline: "For agencies & teams",
+    price: 397,
+    tagline: "For teams & agencies",
+    icon: Users,
     popular: false,
     features: [
-      "Unlimited AI Actions",
-      "Unlimited pages",
-      "White-label option",
+      "Everything in Founding Member",
+      "White-label exports",
+      "5 team seats",
       "Client sub-accounts",
       "API access",
-      "Advanced analytics",
+      "Dedicated support",
     ],
     buttonText: "Start Agency Trial",
-    priceId: STRIPE_PRICES.agency_monthly,
-    annualPriceId: null, // Will be added when annual price is created
+    priceId: STRIPE_PRICES.agency,
   },
 ];
 
 const Pricing = () => {
-  const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [foundingSpotsLeft] = useState(127);
   const navigate = useNavigate();
 
   const handlePlanSelect = async (plan: typeof plans[0]) => {
-    console.log('📋 Plan selected:', plan.id, { isAnnual });
-    
-    // Free plan - just navigate to signup
-    if (!plan.priceId) {
-      navigate('/wizard');
-      return;
-    }
-
-    // Paid plan - check auth and start checkout
     setLoadingPlan(plan.id);
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('🔐 Auth session:', session ? 'Authenticated' : 'Not authenticated');
       
       if (!session) {
-        // Not logged in - go to signup first
         toast.info('Please sign up first to start your trial');
         navigate('/signup');
         return;
       }
 
-      const priceId = isAnnual && plan.annualPriceId ? plan.annualPriceId : plan.priceId;
-      console.log('📡 Calling stripe-checkout with priceId:', priceId);
-
-      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: {
-          priceId,
-          mode: 'subscription',
-          successUrl: `${window.location.origin}/generate?checkout=success`,
+          priceId: plan.priceId,
+          successUrl: `${window.location.origin}/dashboard?checkout=success`,
           cancelUrl: `${window.location.origin}/#pricing`,
         },
       });
 
-      console.log('📥 Stripe response:', { data, error });
-
       if (error) throw error;
 
       if (data?.url) {
-        console.log('✅ Redirecting to Stripe:', data.url);
         window.location.href = data.url;
       } else {
         throw new Error('No checkout URL returned');
       }
     } catch (error) {
-      console.error('❌ Checkout error:', error);
+      console.error('Checkout error:', error);
       toast.error('Failed to start checkout. Please try again.');
     } finally {
       setLoadingPlan(null);
@@ -137,54 +117,36 @@ const Pricing = () => {
             Simple, Transparent Pricing
           </h2>
           <p className="text-lg text-gray-400 mb-8">
-            No surprises. No hidden fees. Just results.
+            Start with a 14-day free trial. No credit card required.
           </p>
-
-          {/* Billing Toggle */}
-          <div className="inline-flex bg-slate-800/80 rounded-full p-1 border border-slate-700">
-            <button 
-              className={cn(
-                "px-5 py-2 rounded-full text-sm font-medium transition-all duration-200",
-                !isAnnual 
-                  ? "bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg" 
-                  : "text-slate-400 hover:text-white"
-              )}
-              onClick={() => setIsAnnual(false)}
-            >
-              Monthly
-            </button>
-            <button 
-              className={cn(
-                "px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center",
-                isAnnual 
-                  ? "bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg" 
-                  : "text-slate-400 hover:text-white"
-              )}
-              onClick={() => setIsAnnual(true)}
-            >
-              Annual
-              <span className="ml-2 text-xs text-cyan-300">Save 17%</span>
-            </button>
+          
+          {/* Founding Member Banner */}
+          <div className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 rounded-full px-6 py-3">
+            <Crown className="w-5 h-5 text-cyan-400" />
+            <span className="text-cyan-200 font-medium">
+              🎉 Limited Time: Lock in Founding Member pricing forever
+              <span className="text-cyan-400 ml-1">({foundingSpotsLeft} spots left)</span>
+            </span>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 items-stretch">
+        <div className="grid md:grid-cols-3 gap-8 items-stretch max-w-5xl mx-auto">
           {plans.map((plan, index) => {
             const isLoading = loadingPlan === plan.id;
-            const displayPrice = isAnnual ? plan.annualPrice : plan.monthlyPrice;
-            const period = isAnnual ? '/year' : '/mo';
+            const Icon = plan.icon;
             
             return (
               <div
-                key={plan.name}
-                className={`group relative animate-scale-in ${
-                  plan.popular ? "md:scale-105 z-10" : ""
-                }`}
+                key={plan.id}
+                className={cn(
+                  "group relative animate-scale-in",
+                  plan.popular && "md:scale-105 z-10"
+                )}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                {/* Glow effect for Pro card */}
+                {/* Glow effect for Founding Member card */}
                 {plan.popular && (
-                  <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-2xl blur-lg opacity-50 group-hover:opacity-70 transition-opacity" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-teal-500 to-cyan-500 rounded-2xl blur-lg opacity-50 group-hover:opacity-70 transition-opacity" />
                 )}
                 
                 <div
@@ -195,44 +157,62 @@ const Pricing = () => {
                       : "bg-slate-800/40 backdrop-blur-sm border border-white/10 hover:border-white/20 hover:-translate-y-1"
                   )}
                 >
-                  {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-cyan-500 to-cyan-400 text-slate-900 px-4 py-1.5 rounded-full text-sm font-semibold flex items-center gap-1.5 shadow-lg shadow-cyan-500/30">
-                      <Star className="w-3.5 h-3.5 fill-current" />
-                      Most Popular
+                  {/* Badge */}
+                  {plan.badge && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-900 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide shadow-lg shadow-cyan-500/30">
+                      {plan.badge}
                     </div>
                   )}
 
-                  <div className="text-center mb-6">
-                    <h3 className="text-2xl font-bold text-white mb-2">
+                  {/* Header */}
+                  <div className="text-center mb-6 pt-2">
+                    <div className={cn(
+                      "inline-flex p-3 rounded-xl mb-4",
+                      plan.popular 
+                        ? "bg-cyan-500/20 text-cyan-400" 
+                        : "bg-slate-700/50 text-slate-400"
+                    )}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-1">
                       {plan.name}
                     </h3>
-                    <p className="text-gray-400 mb-4">{plan.tagline}</p>
+                    <p className="text-sm text-slate-400">{plan.tagline}</p>
+                  </div>
+
+                  {/* Price */}
+                  <div className="text-center mb-4">
                     <div className="flex items-baseline justify-center gap-1">
+                      {plan.originalPrice && (
+                        <span className="text-lg text-slate-500 line-through mr-2">
+                          ${plan.originalPrice}
+                        </span>
+                      )}
                       <span className={cn(
                         "text-5xl font-bold",
                         plan.popular ? "text-cyan-400" : "text-white"
                       )}>
-                        ${displayPrice}
+                        ${plan.price}
                       </span>
-                      <span className="text-gray-400">{period}</span>
+                      <span className="text-slate-400">/mo</span>
                     </div>
-                    {isAnnual && plan.annualSavings && (
-                      <p className="mt-2 text-sm text-emerald-400">
-                        Save ${plan.annualSavings}/year
-                      </p>
+                    {plan.discountBadge && (
+                      <div className="mt-2 inline-block bg-cyan-500/20 text-cyan-300 text-sm font-medium px-3 py-1 rounded-full">
+                        {plan.discountBadge}
+                      </div>
                     )}
                   </div>
 
-                  {/* Actions highlight for paid plans */}
-                  {plan.id !== 'starter' && (
-                    <div className="flex items-center justify-center gap-2 mb-4 p-2 rounded-lg bg-white/5">
-                      <Zap className="w-4 h-4 text-cyan-400" />
+                  {/* Scarcity counter for Founding Member */}
+                  {plan.popular && (
+                    <div className="flex items-center justify-center gap-2 mb-4 p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
                       <span className="text-sm font-medium text-cyan-300">
-                        {plan.id === 'agency' ? 'Unlimited' : '150'} AI Actions/mo
+                        {foundingSpotsLeft} spots remaining
                       </span>
                     </div>
                   )}
 
+                  {/* Features */}
                   <ul className="space-y-3 mb-8 flex-grow">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-2">
@@ -245,15 +225,15 @@ const Pricing = () => {
                     ))}
                   </ul>
 
+                  {/* CTA Button */}
                   <Button
-                    variant={plan.popular ? "default" : "outline"}
                     size="lg"
                     disabled={isLoading || loadingPlan !== null}
                     onClick={() => handlePlanSelect(plan)}
                     className={cn(
-                      "w-full transition-all duration-300 group/btn",
+                      "w-full transition-all duration-300 group/btn font-semibold",
                       plan.popular 
-                        ? "bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105" 
+                        ? "bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-900 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105" 
                         : "bg-slate-700/50 hover:bg-slate-700 text-white border-white/20 hover:border-white/40 hover:scale-105"
                     )}
                   >
@@ -273,10 +253,17 @@ const Pricing = () => {
         </div>
 
         {/* Trust indicators */}
-        <div className="mt-16 text-center">
-          <p className="text-gray-500 text-sm">
-            14-day free trial on all paid plans • Cancel anytime • No credit card required to start
+        <div className="mt-12 text-center">
+          <p className="text-gray-500 text-sm mb-4">
+            14-day free trial • Cancel anytime
           </p>
+          <Link 
+            to="/pricing" 
+            className="text-cyan-400 hover:text-cyan-300 text-sm font-medium inline-flex items-center gap-1 transition-colors"
+          >
+            See full plan comparison
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </div>
     </section>
