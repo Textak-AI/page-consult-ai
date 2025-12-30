@@ -323,6 +323,7 @@ interface ExtractedBrandData {
   tagline: string | null;
   themeColor: string | null;
   secondaryColor?: string | null;
+  accentColor?: string | null;
   logoUrl?: string | null;
   ogImage: string | null;
   domain: string;
@@ -544,7 +545,55 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   }, []);
 
   // Check if brand colors already exist from Brand Setup (PDF extraction or website analysis)
-  const hasBrandColors = Boolean(brandBrief?.colors?.primary?.hex);
+  // Also check extractedBrand prop for colors from EnhancedBrandSetup flow
+  const hasBrandColors = Boolean(
+    brandBrief?.colors?.primary?.hex || 
+    extractedBrand?.themeColor || 
+    extractedBrand?.logoUrl
+  );
+  
+  console.log('🎨 Brand check:', { 
+    hasBrandColors, 
+    fromBrandBrief: brandBrief?.colors?.primary?.hex,
+    fromExtractedBrand: extractedBrand?.themeColor,
+    extractedLogo: extractedBrand?.logoUrl 
+  });
+  
+  // Sync extractedBrand to consultation data when available (from EnhancedBrandSetup flow)
+  useEffect(() => {
+    if (extractedBrand && (extractedBrand.themeColor || extractedBrand.logoUrl || extractedBrand.companyName)) {
+      console.log('🎨 Pre-filling consultation data from extractedBrand:', extractedBrand);
+      
+      setData(prev => ({
+        ...prev,
+        // Brand settings
+        brandSettings: {
+          primaryColor: extractedBrand.themeColor || prev.brandSettings?.primaryColor || '#7C3AED',
+          secondaryColor: extractedBrand.secondaryColor || prev.brandSettings?.secondaryColor || '#4F46E5',
+          logoUrl: extractedBrand.logoUrl || extractedBrand.ogImage || prev.brandSettings?.logoUrl || null,
+          headingFont: prev.brandSettings?.headingFont || 'Inter',
+          bodyFont: prev.brandSettings?.bodyFont || 'Inter',
+          modified: true,
+        },
+        // Website intelligence
+        websiteIntelligence: {
+          ...prev.websiteIntelligence,
+          logoUrl: extractedBrand.logoUrl || extractedBrand.ogImage || prev.websiteIntelligence?.logoUrl || null,
+          brandColors: [extractedBrand.themeColor, extractedBrand.secondaryColor, extractedBrand.accentColor].filter(Boolean) as string[],
+          primaryColor: extractedBrand.themeColor || null,
+          secondaryColor: extractedBrand.secondaryColor || null,
+          companyName: extractedBrand.companyName || prev.websiteIntelligence?.companyName || null,
+          tagline: extractedBrand.tagline || prev.websiteIntelligence?.tagline || null,
+          description: extractedBrand.description || prev.websiteIntelligence?.description || null,
+          title: extractedBrand.companyName || prev.websiteIntelligence?.title || null,
+          heroText: prev.websiteIntelligence?.heroText || null,
+          testimonials: prev.websiteIntelligence?.testimonials || [],
+        },
+        // Pre-fill identity fields if available
+        businessName: prev.businessName || extractedBrand.companyName || '',
+      }));
+    }
+  }, [extractedBrand]);
   
   // Sync brandBrief to brandSettings when brand is already loaded (skipping branding step)
   useEffect(() => {
