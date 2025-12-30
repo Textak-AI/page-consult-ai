@@ -49,9 +49,18 @@ import {
 } from "@/components/usage";
 import { CreditDisplay, UpgradeDrawer } from "@/components/credits";
 import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid, generateSEOHeadData, type SEOHeadData } from "@/lib/aiSeoIntegration";
-import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief } from "@/utils/sectionMapper";
+import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief, type MappedPage } from "@/utils/sectionMapper";
 import { generateDesignSystem, designSystemToCSSVariables } from "@/config/designSystem";
 import { detectIndustryVariant } from "@/config/designSystem/industryVariants";
+import {
+  detectIndustryVariant as detectIndustryVariantNew,
+  getIndustryTokens,
+  generateIndustryCSS,
+  generateIndustryCSSString,
+  getOptimalProofStack,
+  type IndustryVariant,
+  type IndustryTokens,
+} from "@/lib/industryDesignSystem";
 import type { DesignSystem } from "@/config/designSystem";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { applyBrandColors } from "@/lib/colorUtils";
@@ -294,6 +303,11 @@ function GenerateContent() {
   // Design system for dynamic theming
   const [designSystem, setDesignSystem] = useState<DesignSystem | null>(null);
   const [cssVariables, setCssVariables] = useState<string>('');
+  
+  // Industry tokens for the new industry-aware design system
+  const [industryTokens, setIndustryTokens] = useState<IndustryTokens | null>(null);
+  const [industryVariantState, setIndustryVariantState] = useState<IndustryVariant>('default');
+  const [proofStack, setProofStack] = useState<string[]>([]);
   
   // SEO data for SEOHead component
   const [seoData, setSeoData] = useState<SEOHeadData | null>(null);
@@ -1041,8 +1055,29 @@ function GenerateContent() {
           } : undefined,
         });
         setDesignSystem(ds);
-        setCssVariables(designSystemToCSSVariables(ds));
+        
+        // Generate combined CSS variables from both legacy design system and new industry tokens
+        const legacyCssVars = designSystemToCSSVariables(ds);
+        
+        // Detect industry variant early to generate industry-specific CSS
+        const earlyVariant = detectIndustryVariantNew(
+          consultationData.industry,
+          strategicData.consultationData?.industryCategory,
+          strategicData.consultationData?.industrySubcategory,
+          strategicData.consultationData?.pageType || undefined
+        );
+        const earlyTokens = getIndustryTokens(earlyVariant);
+        const industryCssVars = generateIndustryCSSString(earlyTokens, {
+          primaryColor: brandSettings?.primaryColor,
+          accentColor: brandSettings?.secondaryColor,
+        });
+        
+        // Merge both CSS variable sets (industry vars take precedence for new sections)
+        const mergedCssVars = `${legacyCssVars}\n  /* Industry-specific tokens */\n  ${industryCssVars}`;
+        setCssVariables(mergedCssVars);
+        
         console.log('🎨 Generated design system:', ds.id);
+        console.log('🏭 Early industry variant:', earlyVariant);
         
         // Use user-selected hero background from consultation OR fetch from Unsplash
         const businessName = strategicData.consultationData?.businessName || consultationData.industry || 'Our Company';
@@ -1087,18 +1122,53 @@ function GenerateContent() {
         });
         console.log('📋 Full structuredBrief object:', structuredBrief);
         
+        // Detect industry variant using new system with subcategory support
+        const detectedVariant = detectIndustryVariantNew(
+          consultationData.industry,
+          strategicData.consultationData?.industryCategory,
+          strategicData.consultationData?.industrySubcategory,
+          pageType || undefined
+        );
+        const tokens = getIndustryTokens(detectedVariant);
+        
+        // Set industry state for use in render
+        setIndustryVariantState(detectedVariant);
+        setIndustryTokens(tokens);
+        
+        // Determine available proof for optimal proof stack
+        const availableProof = {
+          hasMetrics: !!structuredBrief.proofPoints?.clientCount || !!structuredBrief.proofPoints?.yearsInBusiness,
+          hasTestimonials: !!structuredBrief.testimonials?.length,
+          hasCaseStudies: !!strategicData.consultationData?.caseStudyHighlight,
+          hasCertifications: !!strategicData.consultationData?.credentials,
+          hasSecurityBadges: !!strategicData.consultationData?.securityBadges,
+          hasGuarantee: !!strategicData.consultationData?.guaranteeOffer,
+        };
+        
+        const optimalProofStack = getOptimalProofStack(detectedVariant, availableProof);
+        setProofStack(optimalProofStack);
+        
+        console.log('🏭 Industry variant detected:', detectedVariant);
+        console.log('🎨 Industry tokens:', tokens);
+        console.log('📊 Optimal proof stack:', optimalProofStack);
+        
         // DIRECT MAPPING: Use the brief as-is, no AI regeneration
         const sections = mapBriefToSections(structuredBrief, {
           businessName,
           heroImageUrl,
           logoUrl,
           primaryColor,
+          accentColor: brandSettings?.secondaryColor,
           pageType,
           pageGoal,
           industry: consultationData.industry,
+          industryCategory: strategicData.consultationData?.industryCategory,
+          industrySubcategory: strategicData.consultationData?.industrySubcategory,
           serviceType: consultationData.service_type,
           // Check multiple paths for AI SEO data
           aiSearchOptimization: strategicData.aiSeoData || strategicData.consultationData?.ai_seo_data || strategicData.consultationData?.aiSeoData || null,
+          // Pass available proof for intelligent section building
+          availableProof,
         });
         
         console.log('📊 aiSearchOptimization passed to mapper:', strategicData.aiSeoData ? 'from strategicData.aiSeoData' : strategicData.consultationData?.ai_seo_data ? 'from consultationData.ai_seo_data' : 'null');
@@ -1139,7 +1209,15 @@ function GenerateContent() {
           } : undefined,
         });
         setDesignSystem(ds);
-        setCssVariables(designSystemToCSSVariables(ds));
+        
+        // Generate industry-aware CSS variables
+        const variant = detectIndustryVariantNew(consultationData.industry);
+        const tokens = getIndustryTokens(variant);
+        const industryCss = generateIndustryCSSString(tokens, {
+          primaryColor: brandSettings?.primaryColor,
+          accentColor: brandSettings?.secondaryColor,
+        });
+        setCssVariables(`${designSystemToCSSVariables(ds)}\n  ${industryCss}`);
         
         const { data: result, error } = await supabase.functions.invoke('generate-page-content', {
           body: {
@@ -1166,8 +1244,13 @@ function GenerateContent() {
           tone: 'professional',
         });
         setDesignSystem(ds);
-        setCssVariables(designSystemToCSSVariables(ds));
-        console.log('🎨 Generated fallback design system:', ds.id);
+        
+        // Generate industry-aware CSS variables for fallback
+        const fallbackVariant = detectIndustryVariantNew(consultationData.industry);
+        const fallbackTokens = getIndustryTokens(fallbackVariant);
+        const fallbackIndustryCss = generateIndustryCSSString(fallbackTokens);
+        setCssVariables(`${designSystemToCSSVariables(ds)}\n  ${fallbackIndustryCss}`);
+        console.log('🎨 Generated fallback design system:', ds.id, 'with industry:', fallbackVariant);
       }
 
       // PRIORITY 1: Use pre-generated content from wizard if available
