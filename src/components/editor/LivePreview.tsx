@@ -5,6 +5,7 @@ import { CalculatorSection } from "@/components/sections/CalculatorSection";
 import { FeaturesSection } from "@/components/sections/FeaturesSection";
 import { SocialProofSection } from "@/components/sections/SocialProofSection";
 import { FinalCTASection } from "@/components/sections/FinalCTASection";
+import { ThreeStageShowcase } from "@/components/sections/ThreeStageShowcase";
 import { PhotoGallerySection } from "@/components/sections/PhotoGallerySection";
 import { StatsBarSection } from "@/components/sections/StatsBarSection";
 import { FAQSection } from "@/components/sections/FAQSection";
@@ -354,7 +355,22 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
             isEditing={editingSection === index}
           />
         );
-      case "final-cta":
+      case "final-cta": {
+        // Check if this is PageConsult's own marketing/demo page
+        const isPageConsultDemo = section.content?.isPageConsultDemo === true || 
+                                  section.content?.businessName?.toLowerCase() === 'pageconsult' ||
+                                  section.content?.showInteractiveDemo === true;
+        
+        if (isPageConsultDemo) {
+          // PageConsult marketing pages get the interactive demo
+          return renderSectionWithToolbar(
+            section,
+            index,
+            <ThreeStageShowcase primaryColor={section.content?.primaryColor} />
+          );
+        }
+        
+        // Customer pages get their personalized CTA
         return renderSectionWithToolbar(
           section,
           index,
@@ -364,6 +380,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
             isEditing={editingSection === index}
           />
         );
+      }
       case "faq":
         return renderSectionWithToolbar(
           section,
