@@ -1,3 +1,10 @@
+/**
+ * ThreeStageShowcase - PageConsult Marketing Component
+ * 
+ * ⚠️ This component is ONLY for PageConsult's own marketing pages.
+ * DO NOT use this in customer-generated landing pages.
+ * Customer pages should use FinalCTASection instead.
+ */
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { 

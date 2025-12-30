@@ -23,9 +23,6 @@ interface FinalCTASectionProps {
 }
 
 export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectionProps) {
-  // Log what we receive for debugging
-  console.log('🎯 [FinalCTASection] Rendering with:', content);
-  
   const industryVariant = content.industryVariant || 'default';
   const tokens = getIndustryTokens(industryVariant);
   const isLightMode = tokens.mode === 'light';
