@@ -92,6 +92,10 @@ serve(async (req) => {
       cancel_url: cancelUrl || `${origin}/pricing?checkout=canceled`,
       allow_promotion_codes: true,
       billing_address_collection: "required",
+      automatic_tax: { enabled: true },
+      customer_update: {
+        address: "auto",
+      },
       subscription_data: {
         metadata: { supabase_user_id: user.id },
       },
