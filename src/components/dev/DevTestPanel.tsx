@@ -885,9 +885,9 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
                   <Switch
                     id="dev-mode-toggle"
                     checked={isDevModeEnabled}
-                    onCheckedChange={(checked) => {
-                      setIsDevModeEnabled(checked);
-                      if (!checked) {
+                    onCheckedChange={() => {
+                      setIsDevModeEnabled();
+                      if (isDevModeEnabled) {
                         onClose();
                         window.location.reload();
                       }

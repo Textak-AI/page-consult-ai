@@ -17,49 +17,70 @@ interface DevToolbarProps {
   totalSteps?: number;
 }
 
-export function useDevMode(): [boolean, (enabled: boolean) => void] {
+/**
+ * Check if we're in a dev environment
+ * SECURITY: Only uses build-time flags and domain checks.
+ * URL parameters and localStorage are NOT used as they can be manipulated.
+ */
+function isDevEnvironment(): boolean {
+  // Vite development mode (build-time constant, cannot be manipulated)
+  if (import.meta.env.DEV) {
+    return true;
+  }
+  
+  const hostname = window.location.hostname;
+  
+  // localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return true;
+  }
+  
+  // Preview URLs (Lovable development environments only)
+  if (hostname.includes('lovableproject.com')) {
+    return true;
+  }
+  
+  // Lovable staging domains
+  if (hostname.includes('lovable.app')) {
+    return true;
+  }
+  
+  return false;
+}
+
+export function useDevMode(): [boolean, () => void] {
   const [isDevMode, setIsDevMode] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check URL param
-    const urlParams = new URLSearchParams(window.location.search);
-    const devParam = urlParams.get('dev') === 'true';
-    
-    // Check localStorage
-    const storedDevMode = localStorage.getItem('pageconsult_dev_mode') === 'true';
-    
-    if (devParam || storedDevMode) {
-      setIsDevMode(true);
-    }
+    // SECURITY: Only check environment, not URL params or localStorage
+    const inDevEnv = isDevEnvironment();
+    setIsDevMode(inDevEnv);
 
-    // Keyboard shortcut: Ctrl/Cmd + Shift + D
+    // Keyboard shortcut: Ctrl/Cmd + Shift + D (only works in dev environments)
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
         e.preventDefault();
-        toggleDevMode(!isDevMode);
+        if (isDevEnvironment()) {
+          setIsDevMode(prev => {
+            const newValue = !prev;
+            toast({
+              title: newValue ? "🛠️ Dev tools shown" : "Dev tools hidden",
+              description: newValue ? "Development tools are now visible" : "Development tools hidden",
+            });
+            return newValue;
+          });
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toast, isDevMode]);
+  }, [toast]);
 
-  const toggleDevMode = (enabled: boolean) => {
-    setIsDevMode(enabled);
-    if (enabled) {
-      localStorage.setItem('pageconsult_dev_mode', 'true');
-      toast({
-        title: "🛠️ Dev mode enabled",
-        description: "Development tools are now visible",
-      });
-    } else {
-      localStorage.removeItem('pageconsult_dev_mode');
-      localStorage.removeItem('dev_test_panel_data');
-      toast({
-        title: "Dev mode disabled",
-        description: "Development tools hidden",
-      });
+  const toggleDevMode = () => {
+    if (isDevEnvironment()) {
+      setIsDevMode(prev => !prev);
     }
   };
 

@@ -1,18 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-// Hardcoded admin emails - update as needed
-const ADMIN_EMAILS = ['kyle@pageconsult.ai', 'kyle@textak.ai'];
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   try {
     const supabaseAdmin = createClient(
@@ -20,7 +14,6 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Verify the requesting user is an admin
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -39,8 +32,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if admin
-    if (!ADMIN_EMAILS.includes(user.email || '')) {
+    // Check admin role in database
+    const { data: adminRole } = await supabaseAdmin
+      .from('admin_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .or('expires_at.is.null,expires_at.gt.now()')
+      .in('role', ['super_admin', 'admin'])
+      .maybeSingle();
+
+    if (!adminRole) {
       return new Response(JSON.stringify({ error: 'Forbidden' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -48,7 +49,6 @@ Deno.serve(async (req) => {
     }
 
     const { consultationId } = await req.json();
-    
     if (!consultationId) {
       return new Response(JSON.stringify({ error: 'Consultation ID required' }), {
         status: 400,
@@ -56,29 +56,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log('Admin deleting consultation:', consultationId);
+    console.log('Admin deleting consultation:', consultationId, 'by:', user.email);
 
-    // Delete related landing pages first
-    await supabaseAdmin
-      .from('landing_pages')
-      .delete()
-      .eq('consultation_id', consultationId);
-
-    // Delete the consultation
-    const { error: deleteError } = await supabaseAdmin
-      .from('consultations')
-      .delete()
-      .eq('id', consultationId);
+    await supabaseAdmin.from('landing_pages').delete().eq('consultation_id', consultationId);
+    const { error: deleteError } = await supabaseAdmin.from('consultations').delete().eq('id', consultationId);
 
     if (deleteError) {
-      console.error('Error deleting consultation:', deleteError);
       return new Response(JSON.stringify({ error: 'Failed to delete consultation' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    console.log('Consultation deleted successfully:', consultationId);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
