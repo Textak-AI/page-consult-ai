@@ -16,8 +16,13 @@ import { DevTestPanel } from './DevTestPanel';
  * - lovable.app domains
  * - Vite DEV mode
  */
+/**
+ * Check if we're in a dev environment
+ * SECURITY: Only uses build-time flags and domain checks.
+ * localStorage overrides are NOT allowed as they can be manipulated.
+ */
 function isDevEnvironment(): boolean {
-  // Vite development mode
+  // Vite development mode (build-time constant, cannot be manipulated)
   if (import.meta.env.DEV) {
     return true;
   }
@@ -29,7 +34,7 @@ function isDevEnvironment(): boolean {
     return true;
   }
   
-  // Preview URLs
+  // Preview URLs (Lovable development environments only)
   if (hostname.includes('lovableproject.com')) {
     return true;
   }
@@ -39,10 +44,7 @@ function isDevEnvironment(): boolean {
     return true;
   }
   
-  // Check localStorage override (for testing on production)
-  if (localStorage.getItem('dev_mode_override') === 'true') {
-    return true;
-  }
+  // SECURITY: localStorage override removed - can be manipulated by users
   
   return false;
 }

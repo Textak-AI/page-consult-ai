@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_roles: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       beta_pages: {
         Row: {
           consultation_id: string | null
@@ -1021,6 +1051,14 @@ export type Database = {
     }
     Functions: {
       grant_grace_actions: { Args: { p_user_id: string }; Returns: Json }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       reset_api_calls: { Args: never; Returns: undefined }
       reset_monthly_usage: { Args: never; Returns: undefined }
       track_ai_action:
@@ -1059,6 +1097,7 @@ export type Database = {
         | "revision"
         | "calculator"
         | "copy_improve"
+      app_role: "super_admin" | "admin" | "support"
       plan_tier: "starter" | "pro" | "agency"
     }
     CompositeTypes: {
@@ -1200,6 +1239,7 @@ export const Constants = {
         "calculator",
         "copy_improve",
       ],
+      app_role: ["super_admin", "admin", "support"],
       plan_tier: ["starter", "pro", "agency"],
     },
   },

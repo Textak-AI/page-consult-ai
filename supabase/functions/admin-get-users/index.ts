@@ -1,18 +1,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-// Hardcoded admin emails - update as needed
-const ADMIN_EMAILS = ['kyle@pageconsult.ai', 'kyle@textak.ai'];
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   try {
     const supabaseAdmin = createClient(
@@ -20,7 +15,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Verify the requesting user is an admin
+    // Verify the requesting user is authenticated
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -40,8 +35,16 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if admin
-    if (!ADMIN_EMAILS.includes(user.email || '')) {
+    // Check if user has admin role in database
+    const { data: adminRole } = await supabaseAdmin
+      .from('admin_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .or('expires_at.is.null,expires_at.gt.now()')
+      .in('role', ['super_admin', 'admin'])
+      .maybeSingle();
+
+    if (!adminRole) {
       console.log('User not admin:', user.email);
       return new Response(JSON.stringify({ error: 'Forbidden' }), {
         status: 403,
@@ -50,7 +53,7 @@ Deno.serve(async (req) => {
     }
 
     const { search } = await req.json().catch(() => ({ search: '' }));
-    console.log('Admin fetching users, search:', search);
+    console.log('Admin fetching users, search:', search, 'user:', user.email);
 
     // Get all users
     const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
