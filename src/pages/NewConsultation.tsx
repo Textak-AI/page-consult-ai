@@ -135,12 +135,15 @@ export default function NewConsultation() {
             companyName: brandData.companyName || null,
             tagline: brandData.tagline || null,
             description: brandData.tagline || null,
-            faviconUrl: brandData.logo || null,
-            logoUrl: brandData.logo || null,
+            faviconUrl: null,
             ogImage: brandData.logo || null,
+            logoUrl: brandData.logo || null,
             themeColor: brandData.colors?.primary || null,
             secondaryColor: brandData.colors?.secondary || null,
+            accentColor: brandData.colors?.accent || null,
+            websiteUrl: brandData.websiteUrl || null,
           };
+          console.log('🎨 Brand colors being set:', brandData.colors);
           setExtractedBrand(brand);
           setExtractedWebsiteUrl(brandData.websiteUrl || null);
           

@@ -1,15 +1,17 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ExtractedBrand {
-  companyName: string | null;
-  faviconUrl: string | null;
-  description: string | null;
-  tagline: string | null;
-  themeColor: string | null;
-  secondaryColor?: string | null;
-  logoUrl?: string | null;
-  ogImage: string | null;
   domain: string;
+  companyName: string | null;
+  tagline: string | null;
+  description: string | null;
+  faviconUrl: string | null;
+  ogImage: string | null;
+  logoUrl: string | null;
+  themeColor: string | null;
+  secondaryColor: string | null;
+  accentColor: string | null;
+  websiteUrl?: string | null;
 }
 
 export async function extractBrandFromUrl(url: string): Promise<{
