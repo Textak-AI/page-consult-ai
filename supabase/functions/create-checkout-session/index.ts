@@ -95,6 +95,7 @@ serve(async (req) => {
       automatic_tax: { enabled: true },
       customer_update: {
         address: "auto",
+        name: "auto",
       },
       subscription_data: {
         metadata: { supabase_user_id: user.id },
