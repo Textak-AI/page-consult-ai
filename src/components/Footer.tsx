@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const Footer = () => {
   return (
     <footer className="bg-slate-950 border-t border-white/10 py-12">
@@ -24,12 +26,12 @@ const Footer = () => {
                 </a>
               </li>
               <li>
-                <a
-                  href="#pricing"
+                <Link
+                  to="/pricing"
                   className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
                 >
                   Pricing
-                </a>
+                </Link>
               </li>
               <li>
                 <a
@@ -63,7 +65,7 @@ const Footer = () => {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="mailto:support@pageconsult.ai"
                   className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
                 >
                   Support
@@ -73,40 +75,38 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold text-white mb-3">Company</h4>
+            <h4 className="font-semibold text-white mb-3">Legal</h4>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/terms"
                   className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
                 >
-                  About
-                </a>
+                  Terms of Service
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/privacy"
                   className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
                 >
-                  Careers
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-400 hover:text-cyan-400 transition-colors text-sm"
-                >
-                  Contact
-                </a>
+                  Privacy Policy
+                </Link>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-500">
-            © 2025 PageConsult AI. All rights reserved.
-          </p>
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-1 text-sm text-gray-500">
+            <span>© 2026 Hyperbrand Creative, Ltd</span>
+            <span className="hidden sm:inline mx-2">•</span>
+            <Link to="/terms" className="hover:text-cyan-400 transition-colors">Terms</Link>
+            <span className="mx-2">•</span>
+            <Link to="/privacy" className="hover:text-cyan-400 transition-colors">Privacy</Link>
+            <span className="mx-2">•</span>
+            <a href="mailto:support@pageconsult.ai" className="hover:text-cyan-400 transition-colors">Support</a>
+          </div>
           <div className="flex gap-4">
             <a
               href="#"
@@ -123,7 +123,7 @@ const Footer = () => {
             </a>
             <a
               href="#"
-              className="text-muted-foreground hover:text-primary transition-colors"
+              className="text-gray-400 hover:text-cyan-400 transition-colors"
               aria-label="LinkedIn"
             >
               <svg
