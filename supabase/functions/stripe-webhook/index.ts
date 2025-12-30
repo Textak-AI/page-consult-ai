@@ -2,20 +2,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const STRIPE_PRICES = {
-  pro_monthly: 'price_1SfXwOFqTTK3LcBFMXRpEVcS',
-  agency_monthly: 'price_1SfXziFqTTK3LcBFhv0PykBc',
-  actions_10: 'price_1SfXziFqTTK3LcBFAuEAkGCN',
-  actions_25: 'price_1SfXziFqTTK3LcBFS8DPaQoe',
-  actions_50: 'price_1SfXziFqTTK3LcBFw64XlRyF',
-};
-
-const ACTION_PACK_AMOUNTS: Record<string, number> = {
-  [STRIPE_PRICES.actions_10]: 10,
-  [STRIPE_PRICES.actions_25]: 25,
-  [STRIPE_PRICES.actions_50]: 50,
-};
-
 serve(async (req) => {
   const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
   const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
@@ -32,7 +18,7 @@ serve(async (req) => {
 
   let event: Stripe.Event;
 
-  // SECURITY: Always require signature verification - no development bypass
+  // SECURITY: Always require signature verification
   if (!webhookSecret) {
     console.error('STRIPE_WEBHOOK_SECRET not configured');
     return new Response('Webhook secret required', { status: 500 });
@@ -57,128 +43,142 @@ serve(async (req) => {
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+  // Map price IDs to plan names using environment variables
+  const priceToplan: Record<string, string> = {
+    [Deno.env.get('STRIPE_PRICE_STARTER') || '']: 'starter',
+    [Deno.env.get('STRIPE_PRICE_FOUNDING') || '']: 'founding',
+    [Deno.env.get('STRIPE_PRICE_PRO') || '']: 'pro',
+    [Deno.env.get('STRIPE_PRICE_AGENCY') || '']: 'agency',
+  };
+
+  // Legacy price IDs for backwards compatibility
+  const legacyPrices: Record<string, string> = {
+    'price_1SfXwOFqTTK3LcBFMXRpEVcS': 'starter',
+    'price_1SfXziFqTTK3LcBFhv0PykBc': 'pro',
+  };
+
+  const getPlanFromPriceId = (priceId: string): string => {
+    return priceToplan[priceId] || legacyPrices[priceId] || 'pro';
+  };
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        const userId = session.metadata?.user_id;
-        const priceId = session.metadata?.price_id;
-
-        console.log('Checkout completed:', { userId, priceId, mode: session.mode });
-
-        if (!userId) {
-          console.error('No user_id in session metadata');
-          break;
-        }
-
-        if (session.mode === 'subscription') {
-          // Handle subscription purchase
-          let planTier: 'pro' | 'agency' = 'pro';
-          let actionsLimit = 150;
-
-          if (priceId === STRIPE_PRICES.agency_monthly) {
-            planTier = 'agency';
-            actionsLimit = 999999; // Unlimited
-          }
-
-          const { error } = await supabase
-            .from('user_usage')
-            .update({
-              plan_tier: planTier,
-              ai_actions_limit: actionsLimit,
-              stripe_subscription_id: session.subscription as string,
-              billing_period_start: new Date().toISOString(),
-              billing_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('user_id', userId);
-
-          if (error) {
-            console.error('Failed to update user plan:', error);
-          } else {
-            console.log(`Updated user ${userId} to ${planTier} plan`);
-          }
-        } else if (session.mode === 'payment') {
-          // Handle action pack purchase
-          const actionAmount = ACTION_PACK_AMOUNTS[priceId!];
+        
+        if (session.mode === 'subscription' && session.subscription) {
+          const subscription = await stripe.subscriptions.retrieve(
+            session.subscription as string
+          );
           
-          if (actionAmount) {
-            const { data: currentUsage } = await supabase
-              .from('user_usage')
-              .select('actions_purchased')
-              .eq('user_id', userId)
-              .single();
+          const userId = subscription.metadata.supabase_user_id;
+          const priceId = subscription.items.data[0].price.id;
+          const plan = getPlanFromPriceId(priceId);
 
-            const newTotal = (currentUsage?.actions_purchased || 0) + actionAmount;
-
-            const { error } = await supabase
-              .from('user_usage')
-              .update({
-                actions_purchased: newTotal,
-                updated_at: new Date().toISOString(),
-              })
-              .eq('user_id', userId);
-
-            if (error) {
-              console.error('Failed to add purchased actions:', error);
-            } else {
-              console.log(`Added ${actionAmount} actions to user ${userId}, new total: ${newTotal}`);
-            }
+          if (!userId) {
+            console.error('No user_id in subscription metadata');
+            break;
           }
-        }
-        break;
-      }
 
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription;
-        const customerId = subscription.customer as string;
+          // Upsert into subscriptions table
+          const { error: subError } = await supabase.from('subscriptions').upsert({
+            user_id: userId,
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id: subscription.id,
+            stripe_price_id: priceId,
+            status: subscription.status,
+            plan,
+            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            cancel_at_period_end: subscription.cancel_at_period_end,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
 
-        // Find user by Stripe customer ID
-        const { data: usage } = await supabase
-          .from('user_usage')
-          .select('user_id')
-          .eq('stripe_customer_id', customerId)
-          .single();
-
-        if (usage) {
-          const priceId = subscription.items.data[0]?.price.id;
-          let planTier: 'starter' | 'pro' | 'agency' = 'starter';
-          let actionsLimit = 30;
-
-          if (priceId === STRIPE_PRICES.pro_monthly) {
-            planTier = 'pro';
-            actionsLimit = 150;
-          } else if (priceId === STRIPE_PRICES.agency_monthly) {
-            planTier = 'agency';
-            actionsLimit = 999999;
+          if (subError) {
+            console.error('Failed to upsert subscription:', subError);
           }
+
+          // Also update user_usage table for backwards compatibility
+          const actionsLimit = plan === 'agency' ? 999999 : plan === 'founding' ? 999999 : plan === 'pro' ? 150 : 30;
+          const planTier = plan === 'agency' ? 'agency' : plan === 'founding' || plan === 'pro' ? 'pro' : 'starter';
 
           await supabase
             .from('user_usage')
             .update({
               plan_tier: planTier,
               ai_actions_limit: actionsLimit,
+              stripe_customer_id: session.customer as string,
               stripe_subscription_id: subscription.id,
               updated_at: new Date().toISOString(),
             })
-            .eq('user_id', usage.user_id);
+            .eq('user_id', userId);
 
-          console.log(`Updated subscription for user ${usage.user_id} to ${planTier}`);
+          console.log(`✅ Subscription created for user ${userId}: ${plan}`);
+        }
+        break;
+      }
+
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const priceId = subscription.items.data[0].price.id;
+        const plan = getPlanFromPriceId(priceId);
+
+        // Update subscriptions table
+        const { data: existingSub } = await supabase
+          .from('subscriptions')
+          .select('user_id')
+          .eq('stripe_subscription_id', subscription.id)
+          .maybeSingle();
+
+        if (existingSub) {
+          await supabase.from('subscriptions')
+            .update({
+              status: subscription.status,
+              stripe_price_id: priceId,
+              plan,
+              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              cancel_at_period_end: subscription.cancel_at_period_end,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('stripe_subscription_id', subscription.id);
+
+          // Update user_usage for backwards compatibility
+          const actionsLimit = plan === 'agency' ? 999999 : plan === 'founding' ? 999999 : plan === 'pro' ? 150 : 30;
+          const planTier = plan === 'agency' ? 'agency' : plan === 'founding' || plan === 'pro' ? 'pro' : 'starter';
+
+          await supabase
+            .from('user_usage')
+            .update({
+              plan_tier: subscription.status === 'active' ? planTier : 'starter',
+              ai_actions_limit: subscription.status === 'active' ? actionsLimit : 30,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('user_id', existingSub.user_id);
+
+          console.log(`✅ Subscription updated: ${subscription.id} to ${plan}`);
         }
         break;
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
-        const customerId = subscription.customer as string;
 
-        const { data: usage } = await supabase
-          .from('user_usage')
+        const { data: existingSub } = await supabase
+          .from('subscriptions')
           .select('user_id')
-          .eq('stripe_customer_id', customerId)
-          .single();
+          .eq('stripe_subscription_id', subscription.id)
+          .maybeSingle();
 
-        if (usage) {
+        // Update subscription status
+        await supabase.from('subscriptions')
+          .update({ 
+            status: 'canceled', 
+            updated_at: new Date().toISOString() 
+          })
+          .eq('stripe_subscription_id', subscription.id);
+
+        // Revert user to free tier
+        if (existingSub) {
           await supabase
             .from('user_usage')
             .update({
@@ -187,23 +187,41 @@ serve(async (req) => {
               stripe_subscription_id: null,
               updated_at: new Date().toISOString(),
             })
-            .eq('user_id', usage.user_id);
-
-          console.log(`Cancelled subscription for user ${usage.user_id}, reverted to starter`);
+            .eq('user_id', existingSub.user_id);
         }
+
+        console.log(`✅ Subscription canceled: ${subscription.id}`);
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+        
+        if (invoice.subscription) {
+          await supabase.from('subscriptions')
+            .update({ 
+              status: 'past_due', 
+              updated_at: new Date().toISOString() 
+            })
+            .eq('stripe_subscription_id', invoice.subscription as string);
+        }
+
+        console.log(`⚠️ Payment failed for invoice: ${invoice.id}`);
         break;
       }
 
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
-  } catch (error: unknown) {
-    console.error('Error processing webhook:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(`Webhook processing error: ${message}`, { status: 500 });
-  }
 
-  return new Response(JSON.stringify({ received: true }), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error: unknown) {
+    console.error('Webhook processing error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+    });
+  }
 });
