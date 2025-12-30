@@ -11,11 +11,23 @@
  */
 
 import { 
-  detectIndustryVariant, 
-  getIndustryTokens, 
-  type IndustryVariant,
+  detectIndustryVariant as detectIndustryVariantLegacy, 
+  getIndustryTokens as getIndustryTokensLegacy, 
+  type IndustryVariant as IndustryVariantLegacy,
   type IndustryDesignTokens 
 } from '@/config/designSystem/industryVariants';
+import {
+  detectIndustryVariant as detectIndustryVariantNew,
+  getIndustryTokens as getIndustryTokensNew,
+  generateIndustryCSS,
+  getOptimalProofStack,
+  type IndustryVariant,
+  type IndustryTokens,
+} from '@/lib/industryDesignSystem';
+import {
+  generateSchemaOrg,
+  generateAISEOMetaTags,
+} from '@/lib/aiSeoGenerator';
 import type { AuthoritySignal } from '@/lib/briefExtractor';
 import {
   selectBestHeadline,
@@ -79,9 +91,12 @@ export interface MapBriefOptions {
   businessName: string;
   logoUrl?: string | null;
   primaryColor?: string;
+  accentColor?: string;
   pageType?: string | null;
   pageGoal?: string;
   industry?: string;
+  industryCategory?: string;
+  industrySubcategory?: string;
   serviceType?: string;
   // Support both string[] (legacy) and AISeoData.authoritySignals structure
   aiSearchOptimization?: {
@@ -99,6 +114,36 @@ export interface MapBriefOptions {
     clientCount?: string;
     ctaLink?: string;
   };
+  // Available proof for optimal proof stack
+  availableProof?: {
+    hasLogos?: boolean;
+    hasMetrics?: boolean;
+    hasCaseStudies?: boolean;
+    hasTestimonials?: boolean;
+    hasVideoTestimonials?: boolean;
+    hasCertifications?: boolean;
+    hasSecurityBadges?: boolean;
+    hasGuarantee?: boolean;
+    hasYearsInBusiness?: boolean;
+    hasTeamCredentials?: boolean;
+    hasMediaMentions?: boolean;
+  };
+}
+
+// Enhanced return type for full page mapping
+export interface MappedPage {
+  sections: Section[];
+  industryVariant: IndustryVariant;
+  industryTokens: IndustryTokens;
+  cssVariables: Record<string, string>;
+  schemaOrg: {
+    organization: object;
+    faqPage?: object;
+    service?: object;
+    combined: string;
+  };
+  metaTags: { title: string; description: string; keywords: string };
+  proofStack: string[];
 }
 
 /**
@@ -172,9 +217,9 @@ export function mapBriefToSections(
   
   const isBetaPage = pageType === 'beta-prelaunch';
   
-  // Detect industry variant for styling and headers
-  const industryVariant = detectIndustryVariant(industry, serviceType, pageType);
-  const industryTokens = getIndustryTokens(industryVariant);
+  // Detect industry variant for styling and headers (use new system with subcategory support)
+  const industryVariant = detectIndustryVariantNew(industry, options.industryCategory, options.industrySubcategory, pageType || undefined);
+  const industryTokens = getIndustryTokensNew(industryVariant);
   const isConsulting = industryVariant === 'consulting';
   
   // Extract authority signals once (used by multiple sections)
@@ -228,7 +273,7 @@ export function mapBriefToSections(
           content: {
             headline: headlineSelection.primary,
             subheadline: brief.subheadline,
-            ctaText: isConsulting ? industryTokens.sectionHeaders.cta.ctaText : brief.ctaText,
+            ctaText: isConsulting ? industryTokens.ctaDefaults.primary : brief.ctaText,
             ctaLink: '#contact',
             backgroundImage: heroImageUrl || null,
             trustBadges: trustBadges.length > 0 ? trustBadges : undefined,
@@ -301,7 +346,7 @@ export function mapBriefToSections(
               subtitle: isBetaPage 
                 ? 'What you get by joining early' 
                 : (intelligentHeaders.features?.subtitle || industryTokens.sectionHeaders.features.subtitle),
-              eyebrow: industryTokens.sectionHeaders.features.eyebrow,
+              eyebrow: undefined,
               features: enhancedPillars.map(pillar => ({
                 title: pillar.title,
                 description: pillar.description,
@@ -403,7 +448,7 @@ export function mapBriefToSections(
             visible: true,
             content: {
               headline: intelligentHeaders.faq?.title || industryTokens.sectionHeaders.faq.title,
-              eyebrow: industryTokens.sectionHeaders.faq.eyebrow,
+              eyebrow: undefined,
               items: optimizedFAQs.map(faq => ({
                 question: faq.question,
                 answer: faq.answer,
@@ -438,7 +483,7 @@ export function mapBriefToSections(
         // CTA Text - check multiple sources
         const ctaButtonText = consultation.primaryCTA || 
                               brief.ctaText || 
-                              industryTokens.sectionHeaders.cta.ctaText || 
+                              industryTokens.ctaDefaults.primary || 
                               'Get Started';
         
         // Secondary CTA
@@ -473,7 +518,7 @@ export function mapBriefToSections(
           ? '' 
           : (consultation.uniqueValue?.slice(0, 150) || 
              intelligentHeaders.cta?.subtitle || 
-             industryTokens.sectionHeaders.cta.subtext);
+             intelligentHeaders.cta?.subtitle || '');
 
         // Build trust signal from top authority signal
         const trustSignal = consultation.clientCount 
