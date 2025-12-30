@@ -39,17 +39,25 @@ export async function generateBrandScene(
   });
 
   if (error) {
-    console.error('❌ [brandSceneGeneration] Error:', error);
-    throw new Error(error.message || 'Failed to generate brand scene');
+    console.warn('⚠️ [brandSceneGeneration] Error (non-blocking):', error);
+    // Return empty result instead of throwing - don't block the flow
+    return {
+      images: [],
+      prompt: '',
+      type: 'brand-scene',
+      fromCache: false
+    };
   }
 
-  // Handle rate limiting errors
+  // Handle rate limiting errors - log but don't throw
   if (data?.error) {
-    if (data.limitType) {
-      console.warn('⚠️ [brandSceneGeneration] Rate limited:', data.limitType);
-      throw new Error(data.error);
-    }
-    throw new Error(data.error);
+    console.warn('⚠️ [brandSceneGeneration] API error (non-blocking):', data.error, data.limitType || '');
+    return {
+      images: [],
+      prompt: '',
+      type: 'brand-scene',
+      fromCache: false
+    };
   }
 
   const fromCache = data.fromCache || false;
