@@ -320,6 +320,8 @@ interface ExtractedBrandData {
   description: string | null;
   tagline: string | null;
   themeColor: string | null;
+  secondaryColor?: string | null;
+  logoUrl?: string | null;
   ogImage: string | null;
   domain: string;
   websiteUrl?: string;
@@ -372,11 +374,11 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       initial.testimonialText = websiteAnalysis.testimonials?.[0]?.quote || '';
       
       // Apply brand settings from extracted brand
-      if (extractedBrand?.themeColor) {
+      if (extractedBrand?.themeColor || extractedBrand?.logoUrl) {
         initial.brandSettings = {
-          logoUrl: extractedBrand.faviconUrl || null,
-          primaryColor: extractedBrand.themeColor,
-          secondaryColor: '',
+          logoUrl: extractedBrand.logoUrl || extractedBrand.faviconUrl || null,
+          primaryColor: extractedBrand.themeColor || '',
+          secondaryColor: extractedBrand.secondaryColor || '',
           headingFont: 'Inter',
           bodyFont: 'Inter',
           modified: true,
@@ -387,8 +389,8 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       }
       // Build website intelligence
       initial.websiteIntelligence = {
-        logoUrl: extractedBrand?.faviconUrl || null,
-        brandColors: extractedBrand?.themeColor ? [extractedBrand.themeColor] : [],
+        logoUrl: extractedBrand?.logoUrl || extractedBrand?.faviconUrl || null,
+        brandColors: [extractedBrand?.themeColor, extractedBrand?.secondaryColor].filter(Boolean) as string[],
         title: websiteAnalysis.companyName || extractedBrand?.companyName || null,
         tagline: extractedBrand?.tagline || null,
         description: extractedBrand?.description || null,
@@ -412,11 +414,11 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       if (extractedBrand.tagline || extractedBrand.description) {
         initial.uniqueStrength = extractedBrand.tagline || extractedBrand.description || '';
       }
-      if (extractedBrand.themeColor) {
+      if (extractedBrand.themeColor || extractedBrand.logoUrl) {
         initial.brandSettings = {
-          logoUrl: extractedBrand.faviconUrl || null,
-          primaryColor: extractedBrand.themeColor,
-          secondaryColor: '',
+          logoUrl: extractedBrand.logoUrl || extractedBrand.faviconUrl || null,
+          primaryColor: extractedBrand.themeColor || '',
+          secondaryColor: extractedBrand.secondaryColor || '',
           headingFont: 'Inter',
           bodyFont: 'Inter',
           modified: true,
@@ -428,8 +430,8 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       }
       // Build website intelligence from extracted brand
       initial.websiteIntelligence = {
-        logoUrl: extractedBrand.faviconUrl,
-        brandColors: extractedBrand.themeColor ? [extractedBrand.themeColor] : [],
+        logoUrl: extractedBrand.logoUrl || extractedBrand.faviconUrl || null,
+        brandColors: [extractedBrand.themeColor, extractedBrand.secondaryColor].filter(Boolean) as string[],
         title: extractedBrand.companyName,
         tagline: extractedBrand.tagline,
         description: extractedBrand.description,

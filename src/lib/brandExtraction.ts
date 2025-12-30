@@ -6,6 +6,8 @@ export interface ExtractedBrand {
   description: string | null;
   tagline: string | null;
   themeColor: string | null;
+  secondaryColor?: string | null;
+  logoUrl?: string | null;
   ogImage: string | null;
   domain: string;
 }

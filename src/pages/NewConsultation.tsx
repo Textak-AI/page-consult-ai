@@ -135,9 +135,11 @@ export default function NewConsultation() {
             companyName: brandData.companyName || null,
             tagline: brandData.tagline || null,
             description: brandData.tagline || null,
-            faviconUrl: null,
+            faviconUrl: brandData.logo || null,
+            logoUrl: brandData.logo || null,
             ogImage: brandData.logo || null,
             themeColor: brandData.colors?.primary || null,
+            secondaryColor: brandData.colors?.secondary || null,
           };
           setExtractedBrand(brand);
           setExtractedWebsiteUrl(brandData.websiteUrl || null);
