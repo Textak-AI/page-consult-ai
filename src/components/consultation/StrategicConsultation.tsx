@@ -48,6 +48,8 @@ export interface ConsultationData {
   websiteIntelligence?: {
     logoUrl: string | null;
     brandColors: string[];
+    primaryColor?: string | null;
+    secondaryColor?: string | null;
     title: string | null;
     tagline: string | null;
     description: string | null;
@@ -387,10 +389,13 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       if (extractedBrand?.ogImage) {
         initial.heroBackgroundUrl = extractedBrand.ogImage;
       }
-      // Build website intelligence
+      // Build website intelligence with explicit primary/secondary for BrandCustomization
+      const brandColors = [extractedBrand?.themeColor, extractedBrand?.secondaryColor].filter(Boolean) as string[];
       initial.websiteIntelligence = {
         logoUrl: extractedBrand?.logoUrl || extractedBrand?.faviconUrl || null,
-        brandColors: [extractedBrand?.themeColor, extractedBrand?.secondaryColor].filter(Boolean) as string[],
+        brandColors,
+        primaryColor: extractedBrand?.themeColor || brandColors[0] || null,
+        secondaryColor: extractedBrand?.secondaryColor || brandColors[1] || null,
         title: websiteAnalysis.companyName || extractedBrand?.companyName || null,
         tagline: extractedBrand?.tagline || null,
         description: extractedBrand?.description || null,
@@ -428,10 +433,13 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       if (extractedBrand.ogImage) {
         initial.heroBackgroundUrl = extractedBrand.ogImage;
       }
-      // Build website intelligence from extracted brand
+      // Build website intelligence from extracted brand with explicit primary/secondary for BrandCustomization
+      const brandColors = [extractedBrand.themeColor, extractedBrand.secondaryColor].filter(Boolean) as string[];
       initial.websiteIntelligence = {
         logoUrl: extractedBrand.logoUrl || extractedBrand.faviconUrl || null,
-        brandColors: [extractedBrand.themeColor, extractedBrand.secondaryColor].filter(Boolean) as string[],
+        brandColors,
+        primaryColor: extractedBrand.themeColor || brandColors[0] || null,
+        secondaryColor: extractedBrand.secondaryColor || brandColors[1] || null,
         title: extractedBrand.companyName,
         tagline: extractedBrand.tagline,
         description: extractedBrand.description,
