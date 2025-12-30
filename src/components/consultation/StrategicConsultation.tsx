@@ -552,13 +552,6 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     extractedBrand?.logoUrl
   );
   
-  console.log('🎨 Brand check:', { 
-    hasBrandColors, 
-    fromBrandBrief: brandBrief?.colors?.primary?.hex,
-    fromExtractedBrand: extractedBrand?.themeColor,
-    extractedLogo: extractedBrand?.logoUrl 
-  });
-  
   // Sync extractedBrand to consultation data when available (from EnhancedBrandSetup flow)
   useEffect(() => {
     if (extractedBrand && (extractedBrand.themeColor || extractedBrand.logoUrl || extractedBrand.companyName)) {
