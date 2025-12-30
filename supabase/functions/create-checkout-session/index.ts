@@ -93,12 +93,18 @@ serve(async (req) => {
       allow_promotion_codes: true,
       billing_address_collection: "required",
       automatic_tax: { enabled: true },
-      customer_update: {
-        address: "auto",
-        name: "auto",
-      },
+      payment_method_collection: "always",
       subscription_data: {
+        trial_period_days: 14,
         metadata: { supabase_user_id: user.id },
+      },
+      consent_collection: {
+        terms_of_service: "required",
+      },
+      custom_text: {
+        terms_of_service_acceptance: {
+          message: "I agree to the [Terms of Service](https://pageconsult.ai/terms) and [Privacy Policy](https://pageconsult.ai/privacy)",
+        },
       },
     });
 
