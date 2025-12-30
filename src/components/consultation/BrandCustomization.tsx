@@ -118,6 +118,11 @@ export function BrandCustomization({
   onBack,
   onUseDefaults 
 }: Props) {
+  // Debug logging to trace brand data flow
+  console.log('🎨 BrandCustomization received websiteIntelligence:', websiteIntelligence);
+  console.log('🎨 Primary:', websiteIntelligence?.primaryColor);
+  console.log('🎨 Secondary:', websiteIntelligence?.secondaryColor);
+  console.log('🎨 Colors array:', websiteIntelligence?.colors);
   // Helper to find first "colorful" color (not near-white or near-black)
   const getFirstColorfulColor = (colors: string[]): string => {
     const validColors = colors.filter(c => c && c.length > 0);

@@ -1715,12 +1715,23 @@ ${d.ctaText}
 
   // Brand customization step renders as full-page component
   if (STEPS[currentStep]?.id === 'branding') {
+    // Use explicit primaryColor/secondaryColor if available, fallback to brandColors array
+    const primaryColor = data.websiteIntelligence?.primaryColor || data.websiteIntelligence?.brandColors?.[0];
+    const secondaryColor = data.websiteIntelligence?.secondaryColor || data.websiteIntelligence?.brandColors?.[1];
+    
+    console.log('🎨 Building brandingIntelligence for BrandCustomization:', {
+      primaryColor,
+      secondaryColor,
+      brandColors: data.websiteIntelligence?.brandColors,
+      websiteIntelligence: data.websiteIntelligence
+    });
+    
     const brandingIntelligence: WebsiteIntelligence = {
       url: data.websiteUrl || '',
       logoUrl: data.websiteIntelligence?.logoUrl,
       colors: data.websiteIntelligence?.brandColors || [],
-      primaryColor: data.websiteIntelligence?.brandColors?.[0],
-      secondaryColor: data.websiteIntelligence?.brandColors?.[1],
+      primaryColor: primaryColor || undefined,
+      secondaryColor: secondaryColor || undefined,
       companyName: data.websiteIntelligence?.companyName,
       tagline: data.websiteIntelligence?.tagline,
     };
