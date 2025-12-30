@@ -47,11 +47,16 @@ export async function generateHeroImages(
   
   if (error) {
     console.error('Error generating hero images:', error);
-    throw new Error('Failed to generate hero images');
+    // Return empty result instead of throwing - don't block the flow
+    return {
+      images: [],
+      fromCache: false,
+      cacheKey,
+    };
   }
   
   return {
-    images: data.images.map((img: { url: string; prompt: string }) => ({
+    images: (data?.images || []).map((img: { url: string; prompt: string }) => ({
       ...img,
       type: 'industry' as const
     })),
