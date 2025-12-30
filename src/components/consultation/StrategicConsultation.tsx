@@ -820,16 +820,19 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     }
   }, [extractedBrand, skipDraftLoad, STEPS, findFirstIncompleteStep]);
 
-  // Save progress whenever data or step changes
+  // Save progress whenever data or step changes (debounced)
   useEffect(() => {
-    if (Object.keys(data).length > 0) {
+    if (Object.keys(data).length === 0) return;
+    
+    const timeoutId = setTimeout(() => {
       localStorage.setItem('pageconsult_consultation_draft', JSON.stringify({
         currentStep,
         data,
         timestamp: Date.now()
       }));
-      console.log('💾 Consultation progress saved');
-    }
+    }, 500);
+    
+    return () => clearTimeout(timeoutId);
   }, [currentStep, data]);
 
   // Manual save handler
