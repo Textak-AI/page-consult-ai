@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
 const MAX_MESSAGE_LENGTH = 5000;
 const MAX_MESSAGES_COUNT = 100;
@@ -100,9 +96,11 @@ Return ONLY valid JSON in this exact format:
 Be generous with fill percentages when real information is shared. If someone says "I help manufacturing companies reduce waste", that's at least 60% for industry and 40% for value.`;
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   console.log('🚀 intake-chat function called');
 

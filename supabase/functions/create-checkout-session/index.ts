@@ -1,21 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
   apiVersion: "2023-10-16",
 });
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
 serve(async (req) => {
   // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get('Origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   try {
     const supabase = createClient(
@@ -81,15 +79,15 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    const origin = req.headers.get("origin") || "https://pageconsult.ai";
+    const requestOrigin = origin || "https://pageconsult.ai";
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
-      success_url: successUrl || `${origin}/dashboard?checkout=success`,
-      cancel_url: cancelUrl || `${origin}/pricing?checkout=canceled`,
+      success_url: successUrl || `${requestOrigin}/dashboard?checkout=success`,
+      cancel_url: cancelUrl || `${requestOrigin}/pricing?checkout=canceled`,
       allow_promotion_codes: true,
       billing_address_collection: "required",
       automatic_tax: { enabled: true },
