@@ -4,7 +4,7 @@ import { ProblemSolutionSection } from "@/components/sections/ProblemSolutionSec
 import { CalculatorSection } from "@/components/sections/CalculatorSection";
 import { FeaturesSection } from "@/components/sections/FeaturesSection";
 import { SocialProofSection } from "@/components/sections/SocialProofSection";
-import { ThreeStageShowcase } from "@/components/sections/ThreeStageShowcase";
+import { FinalCTASection } from "@/components/sections/FinalCTASection";
 import { PhotoGallerySection } from "@/components/sections/PhotoGallerySection";
 import { StatsBarSection } from "@/components/sections/StatsBarSection";
 import { FAQSection } from "@/components/sections/FAQSection";
@@ -355,12 +355,13 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           />
         );
       case "final-cta":
-        console.log('🎯 [FinalCTA] Rendering ThreeStageShowcase');
         return renderSectionWithToolbar(
           section,
           index,
-          <ThreeStageShowcase 
-            primaryColor={section.content?.primaryColor}
+          <FinalCTASection
+            content={section.content}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
           />
         );
       case "faq":
