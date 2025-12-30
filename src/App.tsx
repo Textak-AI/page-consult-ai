@@ -36,7 +36,7 @@ import Brief from "./pages/Brief";
 import BrandIntake from "./pages/BrandIntake";
 import WizardChoice from "./pages/WizardChoice";
 import EnhancedBrandSetup from "./pages/EnhancedBrandSetup";
-
+import PricingPage from "./pages/PricingPage";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -122,6 +122,7 @@ const App = () => {
               <Route path="/admin" element={<Admin />} />
               <Route path="/brief/:sessionId" element={<Brief />} />
               <Route path="/brand-intake" element={<BrandIntake />} />
+              <Route path="/pricing" element={<PricingPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
