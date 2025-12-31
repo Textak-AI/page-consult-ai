@@ -11,12 +11,16 @@ import {
   Sparkles,
   Users,
   Lightbulb,
-  CheckCircle
+  CheckCircle,
+  UserPlus
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { ExportBriefButton, StrategyBriefData } from "@/components/export";
+import { CreateProspectPageModal } from "@/components/prospect";
 
 interface BriefData {
+  id: string;
   session_id: string;
   extracted_intelligence: {
     industry?: string;
@@ -70,6 +74,7 @@ const Brief = () => {
   const [briefData, setBriefData] = useState<BriefData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showProspectModal, setShowProspectModal] = useState(false);
   
   // Debug: Log sessionId on mount
   useEffect(() => {
@@ -94,7 +99,7 @@ const Brief = () => {
       try {
         const { data, error: fetchError } = await supabase
           .from('demo_sessions')
-          .select('session_id, extracted_intelligence, market_research, brand_assets, readiness, created_at')
+          .select('id, session_id, extracted_intelligence, market_research, brand_assets, readiness, created_at')
           .eq('session_id', sessionId)
           .maybeSingle();
 
@@ -390,16 +395,26 @@ const Brief = () => {
             Next, we'll collect your brand assets — logo, colors, and any 
             brand guidelines — to ensure your page looks and feels like you.
           </p>
-          <button
-            onClick={handleContinueToBrandSetup}
-            className="px-10 py-4 bg-gradient-to-r from-cyan-500 to-purple-500 
-                       text-white font-semibold rounded-xl text-lg
-                       hover:from-cyan-400 hover:to-purple-400 transition-all
-                       shadow-lg shadow-cyan-500/25 inline-flex items-center gap-3"
-          >
-            Continue to Brand Setup
-            <ArrowRight className="w-5 h-5" />
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              onClick={handleContinueToBrandSetup}
+              className="px-10 py-4 bg-gradient-to-r from-cyan-500 to-purple-500 
+                         text-white font-semibold rounded-xl text-lg
+                         hover:from-cyan-400 hover:to-purple-400 transition-all
+                         shadow-lg shadow-cyan-500/25 inline-flex items-center gap-3"
+            >
+              Continue to Brand Setup
+              <ArrowRight className="w-5 h-5" />
+            </button>
+            <Button
+              variant="outline"
+              onClick={() => setShowProspectModal(true)}
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Create Prospect Page
+            </Button>
+          </div>
           <p className="text-slate-500 text-sm mt-4">
             Takes about 2 minutes
           </p>
@@ -418,6 +433,13 @@ const Brief = () => {
           />
         </div>
       </footer>
+
+      {/* Prospect Page Modal */}
+      <CreateProspectPageModal
+        isOpen={showProspectModal}
+        onClose={() => setShowProspectModal(false)}
+        sourceDemoSessionId={briefData?.id}
+      />
     </div>
   );
 };

@@ -140,3 +140,9 @@ verify_jwt = true
 
 [functions.extract-colors-from-image]
 verify_jwt = false
+
+[functions.generate-prospect-page]
+verify_jwt = true
+
+[functions.track-prospect-page-view]
+verify_jwt = false

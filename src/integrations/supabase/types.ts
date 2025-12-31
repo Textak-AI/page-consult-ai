@@ -815,6 +815,155 @@ export type Database = {
           },
         ]
       }
+      prospect_page_views: {
+        Row: {
+          city: string | null
+          country: string | null
+          id: string
+          ip_address: unknown
+          prospect_page_id: string
+          referrer: string | null
+          user_agent: string | null
+          viewed_at: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          id?: string
+          ip_address?: unknown
+          prospect_page_id: string
+          referrer?: string | null
+          user_agent?: string | null
+          viewed_at?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          id?: string
+          ip_address?: unknown
+          prospect_page_id?: string
+          referrer?: string | null
+          user_agent?: string | null
+          viewed_at?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_page_views_prospect_page_id_fkey"
+            columns: ["prospect_page_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospect_pages: {
+        Row: {
+          competitive_situation: string | null
+          created_at: string | null
+          custom_instructions: string | null
+          deal_stage: string
+          expires_at: string | null
+          id: string
+          known_pain_points: string[] | null
+          last_viewed_at: string | null
+          personalized_brief: Json | null
+          personalized_headline: string | null
+          personalized_sections: Json | null
+          personalized_subheadline: string | null
+          prospect_company: string
+          prospect_company_size: string | null
+          prospect_email: string | null
+          prospect_industry: string | null
+          prospect_name: string
+          prospect_title: string | null
+          published_at: string | null
+          source_demo_session_id: string | null
+          source_landing_page_id: string | null
+          specific_use_case: string | null
+          status: string | null
+          unique_slug: string
+          updated_at: string | null
+          user_id: string
+          view_count: number | null
+        }
+        Insert: {
+          competitive_situation?: string | null
+          created_at?: string | null
+          custom_instructions?: string | null
+          deal_stage?: string
+          expires_at?: string | null
+          id?: string
+          known_pain_points?: string[] | null
+          last_viewed_at?: string | null
+          personalized_brief?: Json | null
+          personalized_headline?: string | null
+          personalized_sections?: Json | null
+          personalized_subheadline?: string | null
+          prospect_company: string
+          prospect_company_size?: string | null
+          prospect_email?: string | null
+          prospect_industry?: string | null
+          prospect_name: string
+          prospect_title?: string | null
+          published_at?: string | null
+          source_demo_session_id?: string | null
+          source_landing_page_id?: string | null
+          specific_use_case?: string | null
+          status?: string | null
+          unique_slug: string
+          updated_at?: string | null
+          user_id: string
+          view_count?: number | null
+        }
+        Update: {
+          competitive_situation?: string | null
+          created_at?: string | null
+          custom_instructions?: string | null
+          deal_stage?: string
+          expires_at?: string | null
+          id?: string
+          known_pain_points?: string[] | null
+          last_viewed_at?: string | null
+          personalized_brief?: Json | null
+          personalized_headline?: string | null
+          personalized_sections?: Json | null
+          personalized_subheadline?: string | null
+          prospect_company?: string
+          prospect_company_size?: string | null
+          prospect_email?: string | null
+          prospect_industry?: string | null
+          prospect_name?: string
+          prospect_title?: string | null
+          published_at?: string | null
+          source_demo_session_id?: string | null
+          source_landing_page_id?: string | null
+          specific_use_case?: string | null
+          status?: string | null
+          unique_slug?: string
+          updated_at?: string | null
+          user_id?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_pages_source_demo_session_id_fkey"
+            columns: ["source_demo_session_id"]
+            isOneToOne: false
+            referencedRelation: "demo_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospect_pages_source_landing_page_id_fkey"
+            columns: ["source_landing_page_id"]
+            isOneToOne: false
+            referencedRelation: "landing_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean | null
@@ -1057,6 +1206,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_prospect_page_views: {
+        Args: { page_id: string }
+        Returns: undefined
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       reset_api_calls: { Args: never; Returns: undefined }
