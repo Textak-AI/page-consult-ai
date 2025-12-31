@@ -7,7 +7,6 @@ import {
   Building2, 
   Search, 
   Target, 
-  Download, 
   ArrowRight,
   Sparkles,
   Users,
@@ -15,6 +14,7 @@ import {
   CheckCircle
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ExportBriefButton, StrategyBriefData } from "@/components/export";
 
 interface BriefData {
   session_id: string;
@@ -152,9 +152,32 @@ const Brief = () => {
     navigate(targetUrl);
   };
 
-  const handleDownloadPDF = () => {
-    // TODO: Implement PDF download
-    console.log('Download PDF clicked');
+  // Transform brief data to StrategyBriefData format for PDF export
+  const getStrategyBriefData = (): StrategyBriefData => {
+    const intel = briefData?.extracted_intelligence || {};
+    const research = briefData?.market_research || {};
+    
+    return {
+      businessName: intel.businessName || 'Company',
+      industry: intel.industry,
+      idealClient: intel.audience,
+      clientFrustration: research.audiencePainPoints?.[0],
+      desiredOutcome: intel.goals,
+      problemStatement: research.positioning,
+      solutionStatement: intel.valueProp,
+      headlines: {
+        optionA: research.messagingDirection,
+        optionB: research.competitiveAngle,
+      },
+      subheadline: intel.competitive,
+      messagingPillars: research.keyDifferentiators?.map((diff, i) => ({
+        title: `Differentiator ${i + 1}`,
+        description: diff,
+      })) || [],
+      proofPoints: {
+        achievements: research.industryInsights?.join('. '),
+      },
+    };
   };
 
   if (loading) return <BriefSkeleton />;
@@ -384,13 +407,11 @@ const Brief = () => {
       <footer className="border-t border-white/10 p-6 mt-12">
         <div className="max-w-4xl mx-auto flex justify-between items-center text-sm text-slate-500">
           <span>PageConsult AI</span>
-          <button 
-            onClick={handleDownloadPDF}
-            className="hover:text-white transition-colors flex items-center gap-2"
-          >
-            <Download className="w-4 h-4" />
-            Download Brief as PDF
-          </button>
+          <ExportBriefButton 
+            brief={getStrategyBriefData()}
+            variant="ghost"
+            className="text-slate-400 hover:text-white"
+          />
         </div>
       </footer>
     </div>
