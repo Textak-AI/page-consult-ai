@@ -35,6 +35,9 @@ interface BriefData {
     audiencePainPoints?: string[];
     keyDifferentiators?: string[];
   } | null;
+  brand_assets: {
+    logoUrl?: string;
+  } | null;
   readiness: number | null;
   created_at: string | null;
 }
@@ -91,7 +94,7 @@ const Brief = () => {
       try {
         const { data, error: fetchError } = await supabase
           .from('demo_sessions')
-          .select('session_id, extracted_intelligence, market_research, readiness, created_at')
+          .select('session_id, extracted_intelligence, market_research, brand_assets, readiness, created_at')
           .eq('session_id', sessionId)
           .maybeSingle();
 
@@ -409,6 +412,7 @@ const Brief = () => {
           <span>PageConsult AI</span>
           <ExportBriefButton 
             brief={getStrategyBriefData()}
+            clientLogoUrl={briefData?.brand_assets?.logoUrl}
             variant="ghost"
             className="text-slate-400 hover:text-white"
           />
