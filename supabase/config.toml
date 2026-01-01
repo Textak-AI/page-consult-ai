@@ -146,3 +146,6 @@ verify_jwt = true
 
 [functions.track-prospect-page-view]
 verify_jwt = false
+
+[functions.delete-user]
+verify_jwt = true
