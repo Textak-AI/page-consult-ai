@@ -1,4 +1,5 @@
 import { ResetAccountData } from '@/components/dev/ResetAccountData';
+import { DeleteAccount } from '@/components/dev/DeleteAccount';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,8 +63,7 @@ export default function DevPage() {
 
         <div className="space-y-6">
           <ResetAccountData />
-          
-          {/* Add more dev tools here as needed */}
+          <DeleteAccount />
         </div>
       </div>
     </div>
