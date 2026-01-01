@@ -3,7 +3,9 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check, Sparkles, Wand2, Undo2, Redo2, Brain, Rocket, Zap } from "lucide-react";
+import { Loader2, Check, Sparkles, Wand2, Undo2, Redo2, Brain, Rocket, Zap, AlertTriangle } from "lucide-react";
+import { calculateReadiness, MINIMUM_SCORE_FOR_GENERATION } from "@/lib/readinessScoring";
+import type { ExtractedIntelligence, ConsultationStatus } from "@/types/consultationReadiness";
 import { PersonaInsightsPanel } from "@/components/editor/PersonaInsightsPanel";
 import { SectionManager } from "@/components/editor/SectionManager";
 import { LivePreview } from "@/components/editor/LivePreview";
@@ -511,8 +513,29 @@ function GenerateContent() {
         
         console.log('✅ [Generate] Loaded demo session:', demoSession.session_id);
         
+        // GATE: Check readiness before allowing generation
+        const intel = demoSession.extracted_intelligence as Partial<ExtractedIntelligence> || {};
+        const readinessResult = calculateReadiness(intel);
+        
+        console.log('🔒 [Generate] Readiness check:', {
+          score: readinessResult.score,
+          canGenerate: readinessResult.canGenerate,
+          missingRequired: readinessResult.missingRequired,
+          sessionCompleted: demoSession.completed,
+        });
+        
+        // If readiness is too low, redirect to wizard to continue consultation
+        if (!readinessResult.canGenerate && !demoSession.completed) {
+          console.warn('⚠️ [Generate] Readiness too low, redirecting to wizard');
+          toast({
+            title: "More Information Needed",
+            description: `Your strategy session is ${readinessResult.score}% complete. Let's finish gathering the information needed for a great landing page.`,
+          });
+          navigate(`/wizard?session=${sessionParam}`);
+          return;
+        }
+        
         // Transform demo session data to consultation format
-        const intel = demoSession.extracted_intelligence as any || {};
         const brandAssets = demoSession.brand_assets as any || {};
         
         const transformedData = {
@@ -520,13 +543,13 @@ function GenerateContent() {
           session_id: demoSession.session_id,
           industry: intel.industry,
           businessName: intel.businessName,
-          service_type: intel.specificService || intel.serviceType,
+          service_type: (intel as any).specificService || (intel as any).serviceType,
           goal: intel.goals,
           target_audience: intel.audience,
-          challenge: intel.challenge,
-          unique_value: intel.valueProp || intel.competitive,
-          offer: intel.offer,
-          swagger: intel.swagger,
+          challenge: (intel as any).challenge,
+          unique_value: intel.valueProp || intel.competitorDifferentiation,
+          offer: (intel as any).offer,
+          swagger: intel.toneDirection,
           // Brand assets from Brand Intake
           primaryColor: brandAssets.primaryColor,
           secondaryColor: brandAssets.secondaryColor,
@@ -535,6 +558,8 @@ function GenerateContent() {
           // Market research
           marketResearch: demoSession.market_research,
           timestamp: demoSession.created_at,
+          // Readiness info
+          readinessScore: readinessResult.score,
         };
         
         console.log('📦 [Generate] Transformed session data:', transformedData);
