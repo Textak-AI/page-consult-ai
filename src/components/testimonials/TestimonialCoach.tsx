@@ -1,4 +1,17 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+
+// Safe markdown rendering without dangerouslySetInnerHTML
+function renderMarkdownLine(text: string): React.ReactNode {
+  // Split by bold markers **text**
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      // Remove ** markers and wrap in strong
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+}
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { MessageSquare, Send, X, Minimize2, Maximize2 } from 'lucide-react';
@@ -139,14 +152,14 @@ export function TestimonialCoach({
                         : 'bg-slate-700 text-slate-200 rounded-bl-md'
                     }`}
                   >
-                    <div 
-                      className="text-sm prose prose-sm prose-invert max-w-none"
-                      dangerouslySetInnerHTML={{ 
-                        __html: message.content
-                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                          .replace(/\n/g, '<br />')
-                      }}
-                    />
+                    <div className="text-sm prose prose-sm prose-invert max-w-none">
+                      {message.content.split('\n').map((line, lineIndex) => (
+                        <React.Fragment key={lineIndex}>
+                          {lineIndex > 0 && <br />}
+                          {renderMarkdownLine(line)}
+                        </React.Fragment>
+                      ))}
+                    </div>
                   </div>
                 </motion.div>
               ))}
