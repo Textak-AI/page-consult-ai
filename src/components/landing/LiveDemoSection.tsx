@@ -167,14 +167,14 @@ export default function LiveDemoSection() {
     }
   }, [state.readiness, state.emailCaptured, dismissedCTA]);
 
-  // Scroll to bottom on new messages - only within chat container
+  // Scroll to bottom on new messages or when typing preview appears
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     if (messagesEndRef.current && chatContainerRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-  }, [state.conversation]);
+  }, [state.conversation, inputValue]);
 
   // Get market insights to display (limit to 2 for layout balance)
   const marketInsights = [
@@ -345,10 +345,11 @@ export default function LiveDemoSection() {
               <AnimatePresence mode="popLayout">
                 {displayConversation.map((message, index) => (
                   <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    key={`msg-${index}`}
+                    initial={{ opacity: 0.6, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.15 }}
                     className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
@@ -362,6 +363,31 @@ export default function LiveDemoSection() {
                     </div>
                   </motion.div>
                 ))}
+              </AnimatePresence>
+              
+              {/* Live typing preview */}
+              <AnimatePresence>
+                {inputValue.trim().length > 0 && !state.isProcessing && (
+                  <motion.div
+                    key="typing-preview"
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="flex justify-end"
+                  >
+                    <div className="max-w-[80%] rounded-2xl px-4 py-3 border border-dashed border-slate-600 bg-slate-800/30">
+                      <p className="text-sm leading-relaxed text-slate-400 italic">
+                        {inputValue}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-xs text-slate-500">composing...</span>
+                        <span className="w-1 h-1 bg-slate-500 rounded-full animate-pulse" />
+                        <span className="text-xs text-slate-600 ml-auto">{inputValue.length}/500</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
               </AnimatePresence>
               
               {/* Typing indicator */}
