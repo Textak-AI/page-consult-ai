@@ -48,8 +48,6 @@ import {
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-// Admin emails - must match edge function
-const ADMIN_EMAILS = ['kyle@pageconsult.ai', 'kyle@textak.ai'];
 
 interface AdminStats {
   userCount: number;
@@ -651,19 +649,32 @@ export default function Admin() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (!authLoading) {
+    const checkAdminStatus = async () => {
       if (!user) {
         navigate('/');
         return;
       }
-      
-      if (!ADMIN_EMAILS.includes(user.email || '')) {
+
+      // Query admin_roles table to validate admin access from database
+      const { data: adminRole, error } = await supabase
+        .from('admin_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .or('expires_at.is.null,expires_at.gt.now()')
+        .in('role', ['super_admin', 'admin'])
+        .maybeSingle();
+
+      if (error || !adminRole) {
         toast.error('Access denied');
         navigate('/');
         return;
       }
-      
+
       setIsAdmin(true);
+    };
+
+    if (!authLoading) {
+      checkAdminStatus();
     }
   }, [user, authLoading, navigate]);
 
