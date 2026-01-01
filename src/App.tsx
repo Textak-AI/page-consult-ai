@@ -39,6 +39,8 @@ import EnhancedBrandSetup from "./pages/EnhancedBrandSetup";
 import PricingPage from "./pages/PricingPage";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import Dev from "./pages/Dev";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -127,6 +129,7 @@ const App = () => {
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/dev" element={<Dev />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
