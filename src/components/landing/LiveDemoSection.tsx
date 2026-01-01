@@ -9,7 +9,8 @@ import EmailGateModal from './EmailGateModal';
 import ConversionCTAPanel from './ConversionCTAPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-
+import { calculateReadiness } from '@/lib/readinessScoring';
+import type { ExtractedIntelligence, ConsultationStatus } from '@/types/consultationReadiness';
 // Typing indicator component
 const TypingIndicator = () => (
   <div className="flex items-center gap-1 px-4 py-3">
@@ -213,18 +214,65 @@ export default function LiveDemoSection() {
     
     console.log('🚀 [Demo→Wizard] Saving session to Supabase:', sessionId);
     
-    const sessionData = {
-      session_id: sessionId,
-      extracted_intelligence: {
-        industry: state.extracted.industry || null,
-        audience: state.extracted.audience || null,
-        valueProp: state.extracted.valueProp || null,
-        businessType: state.extracted.businessType || null,
-        competitive: null,
-        goals: null,
-        swagger: null,
-        primaryCTA: null,
+    // Build structured intelligence from demo state
+    const demoIntelligence: Partial<ExtractedIntelligence> = {
+      source: 'demo',
+      capturedAt: new Date().toISOString(),
+      industry: state.extracted.industry || null,
+      subIndustry: null,
+      audience: state.extracted.audience || null,
+      audienceRole: null,
+      valueProp: state.extracted.valueProp || null,
+      businessName: null,
+      painPoints: [], // Demo doesn't typically capture these
+      buyerObjections: [],
+      competitorDifferentiation: null,
+      proofElements: [],
+      toneDirection: null,
+      goals: null,
+      marketResearch: {
+        marketSize: state.market.marketSize || null,
+        buyerPersona: state.market.buyerPersona || null,
+        commonObjections: state.market.commonObjections || [],
+        industryInsights: state.market.industryInsights || [],
+        researchedAt: state.market.industryInsights?.length ? new Date().toISOString() : null,
       },
+      conversationHistory: state.conversation.map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+        timestamp: msg.timestamp?.toISOString() || new Date().toISOString(),
+        source: 'demo' as const,
+      })),
+      readinessScore: 0,
+      readinessBreakdown: [],
+    };
+    
+    // Calculate readiness score (will be low from demo alone)
+    const readiness = calculateReadiness(demoIntelligence);
+    demoIntelligence.readinessScore = readiness.score;
+    demoIntelligence.readinessBreakdown = readiness.breakdown;
+    
+    console.log('📊 [Demo→Wizard] Readiness calculated:', {
+      score: readiness.score,
+      canGenerate: readiness.canGenerate,
+      missingRequired: readiness.missingRequired,
+    });
+    
+    // Determine consultation status - demo_complete means they need wizard
+    const consultationStatus: ConsultationStatus = 'demo_complete';
+    
+    // Save to demo_sessions table (for session continuity)
+    const sessionData: {
+      session_id: string;
+      extracted_intelligence: any;
+      market_research: any;
+      messages: any;
+      readiness: number;
+      completed: boolean;
+      continued_to_consultation: boolean;
+    } = {
+      session_id: sessionId,
+      extracted_intelligence: demoIntelligence,
       market_research: {
         industryInsights: state.market.industryInsights || [],
         commonObjections: state.market.commonObjections || [],
@@ -235,15 +283,15 @@ export default function LiveDemoSection() {
         role: msg.role,
         content: msg.content,
       })),
-      readiness: state.readiness || 0,
-      completed: state.readiness >= 70,
+      readiness: readiness.score,
+      completed: false, // Demo is NOT complete for page generation
       continued_to_consultation: true,
     };
     
     try {
       const { error } = await supabase
         .from('demo_sessions')
-        .insert(sessionData);
+        .insert([sessionData]);
       
       if (error) {
         console.error('Failed to save demo session:', error);
@@ -256,13 +304,16 @@ export default function LiveDemoSection() {
         return;
       }
       
-      console.log('✅ [Demo→Wizard] Session saved successfully');
+      console.log('✅ [Demo→Wizard] Session saved with status:', consultationStatus);
+      console.log('📊 [Demo→Wizard] Readiness score:', readiness.score, '(needs 70+ for generation)');
       
       // Store session ID in localStorage (survives auth redirect)
       localStorage.setItem('pageconsult_session_id', sessionId);
+      localStorage.setItem('pageconsult_consultation_status', consultationStatus);
       console.log('💾 [Demo→Wizard] Stored session ID in localStorage:', sessionId);
       
-      // Navigate with session ID
+      // CRITICAL: Navigate to WIZARD, not generate
+      // The wizard will continue the consultation to reach generation readiness
       navigate(`/wizard?session=${sessionId}`);
     } catch (err) {
       console.error('Error saving demo session:', err);

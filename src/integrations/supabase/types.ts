@@ -360,8 +360,10 @@ export type Database = {
           challenge: string | null
           client_count: string | null
           competitor_differentiator: string | null
+          consultation_status: string | null
           created_at: string
           credentials: string | null
+          extracted_intelligence: Json | null
           goal: string | null
           guarantee_offer: string | null
           id: string
@@ -369,6 +371,7 @@ export type Database = {
           key_benefits: string[] | null
           offer: string | null
           primary_cta: string | null
+          readiness_score: number | null
           risk_reversals: string[] | null
           secondary_cta: string | null
           service_type: string | null
@@ -392,8 +395,10 @@ export type Database = {
           challenge?: string | null
           client_count?: string | null
           competitor_differentiator?: string | null
+          consultation_status?: string | null
           created_at?: string
           credentials?: string | null
+          extracted_intelligence?: Json | null
           goal?: string | null
           guarantee_offer?: string | null
           id?: string
@@ -401,6 +406,7 @@ export type Database = {
           key_benefits?: string[] | null
           offer?: string | null
           primary_cta?: string | null
+          readiness_score?: number | null
           risk_reversals?: string[] | null
           secondary_cta?: string | null
           service_type?: string | null
@@ -424,8 +430,10 @@ export type Database = {
           challenge?: string | null
           client_count?: string | null
           competitor_differentiator?: string | null
+          consultation_status?: string | null
           created_at?: string
           credentials?: string | null
+          extracted_intelligence?: Json | null
           goal?: string | null
           guarantee_offer?: string | null
           id?: string
@@ -433,6 +441,7 @@ export type Database = {
           key_benefits?: string[] | null
           offer?: string | null
           primary_cta?: string | null
+          readiness_score?: number | null
           risk_reversals?: string[] | null
           secondary_cta?: string | null
           service_type?: string | null
