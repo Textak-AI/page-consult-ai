@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ChevronRight, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Subcategory {
@@ -37,25 +37,25 @@ export function IntelligenceProfile({
 }: IntelligenceProfileProps) {
   return (
     <div className="bg-slate-900/95 backdrop-blur-xl border border-cyan-500/20 rounded-xl overflow-hidden">
-      {/* Header */}
-      <div className="p-4 border-b border-cyan-500/10">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-sm font-semibold text-white">
+      {/* Header - Compact */}
+      <div className="p-3 border-b border-cyan-500/10">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <h3 className="text-xs font-semibold text-white">
               Intelligence Profile
             </h3>
           </div>
           <span className={cn(
-            "text-lg font-bold tabular-nums transition-colors",
+            "text-sm font-bold tabular-nums transition-colors",
             totalReadiness >= 71 ? 'text-cyan-400' : 'text-slate-400'
           )}>
-            {totalReadiness}% Ready
+            {totalReadiness}%
           </span>
         </div>
         
         {/* Total Progress Bar */}
-        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
           <div 
             className={cn(
               "h-full transition-all duration-500 ease-out rounded-full",
@@ -67,35 +67,35 @@ export function IntelligenceProfile({
           />
         </div>
         
-        {/* Readiness Level Badge */}
-        <div className="flex items-center gap-2 mt-3">
-          <span className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-cyan-500/20 text-cyan-400 uppercase">
+        {/* Readiness Level Badge - Inline */}
+        <div className="flex items-center gap-2 mt-2">
+          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider bg-cyan-500/20 text-cyan-400 uppercase">
             {readinessLevel}
           </span>
           
           {showDemoImportBadge && (
-            <span className="text-[10px] text-emerald-400 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              Demo progress loaded
+            <span className="text-[9px] text-emerald-400 flex items-center gap-1">
+              <span className="w-1 h-1 rounded-full bg-emerald-400" />
+              Demo loaded
             </span>
           )}
         </div>
       </div>
 
-      {/* Categories */}
-      <div className="p-4 space-y-4">
+      {/* Categories - Compact spacing */}
+      <div className="p-3 space-y-1">
         {categories.map((category, index) => (
-          <CategorySection key={category.id} category={category} animationDelay={index * 100} />
+          <CategorySection key={category.id} category={category} animationDelay={index * 50} />
         ))}
       </div>
       
-      {/* Next Question Hint */}
+      {/* Next Question Hint - Compact */}
       {nextQuestion && totalReadiness < 71 && (
-        <div className="px-4 pb-4">
-          <div className="p-3 rounded-lg bg-slate-800/50 border border-cyan-500/10">
-            <div className="flex items-start gap-2">
-              <span className="text-cyan-400">🎯</span>
-              <p className="text-xs text-slate-300">
+        <div className="px-3 pb-3">
+          <div className="p-2 rounded-lg bg-slate-800/50 border border-cyan-500/10">
+            <div className="flex items-start gap-1.5">
+              <span className="text-cyan-400 text-[10px]">🎯</span>
+              <p className="text-[10px] text-slate-300 leading-tight">
                 <span className="text-cyan-400 font-medium">Next:</span>{' '}
                 {nextQuestion}
               </p>
@@ -104,14 +104,14 @@ export function IntelligenceProfile({
         </div>
       )}
       
-      {/* Ready to Generate */}
+      {/* Ready to Generate - Compact */}
       {totalReadiness >= 71 && (
-        <div className="px-4 pb-4">
-          <div className="p-3 rounded-lg bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/20">
-            <div className="flex items-center gap-2">
-              <span className="animate-pulse">✨</span>
-              <p className="text-sm text-cyan-300 font-medium">
-                Ready to generate your landing page!
+        <div className="px-3 pb-3">
+          <div className="p-2 rounded-lg bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/20">
+            <div className="flex items-center gap-1.5">
+              <span className="animate-pulse text-xs">✨</span>
+              <p className="text-[11px] text-cyan-300 font-medium">
+                Ready to generate!
               </p>
             </div>
           </div>
@@ -129,12 +129,45 @@ function CategorySection({
   animationDelay?: number;
 }) {
   const [animate, setAnimate] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(category.score > 0);
   const isComplete = category.score === 100;
   
   useEffect(() => {
     const timer = setTimeout(() => setAnimate(true), animationDelay);
     return () => clearTimeout(timer);
   }, [animationDelay]);
+
+  // Auto-expand when score increases from 0
+  useEffect(() => {
+    if (category.score > 0 && !isExpanded) {
+      setIsExpanded(true);
+    }
+  }, [category.score]);
+
+  const filledSubs = category.subcategories.filter(s => s.confidence >= 70);
+  const emptySubsLabels = category.subcategories
+    .filter(s => s.confidence < 70)
+    .map(s => s.shortLabel);
+
+  // Collapsed state for 0% categories
+  if (category.score === 0 && !isExpanded) {
+    return (
+      <button 
+        onClick={() => setIsExpanded(true)}
+        className={cn(
+          "w-full flex items-center gap-1.5 py-1 px-1 hover:bg-slate-800/30 rounded transition-all duration-300",
+          animate ? "opacity-100" : "opacity-0"
+        )}
+      >
+        <ChevronRight className="w-2.5 h-2.5 text-slate-600 flex-shrink-0" />
+        <div className="h-1 w-8 bg-slate-700/30 rounded-full flex-shrink-0" />
+        <span className="text-[9px] text-slate-500 uppercase tracking-wider flex-1 text-left truncate">
+          {category.name}
+        </span>
+        <span className="text-[9px] text-slate-600 font-mono flex-shrink-0">0%</span>
+      </button>
+    );
+  }
   
   return (
     <div 
@@ -143,25 +176,35 @@ function CategorySection({
         animate ? "opacity-100" : "opacity-0"
       )}
     >
-      {/* Category Header */}
-      <div className="flex items-center gap-2 mb-2">
-        {/* Progressive bar */}
-        <div className="relative w-1 h-4 bg-slate-700 rounded-full overflow-hidden">
-          <div 
-            className={cn(
-              "absolute bottom-0 left-0 w-full transition-all duration-500 rounded-full",
-              isComplete ? 'bg-cyan-400' : 'bg-cyan-600'
+      {/* Category Header - Clickable to collapse */}
+      <button 
+        onClick={() => category.score === 0 && setIsExpanded(!isExpanded)}
+        className={cn(
+          "w-full flex items-center gap-1.5 py-0.5",
+          category.score === 0 && "cursor-pointer hover:bg-slate-800/20 rounded"
+        )}
+      >
+        {category.score === 0 ? (
+          <ChevronDown className="w-2.5 h-2.5 text-slate-600 flex-shrink-0" />
+        ) : (
+          /* Progressive bar */
+          <div className="relative w-0.5 h-3 bg-slate-700 rounded-full overflow-hidden flex-shrink-0">
+            <div 
+              className={cn(
+                "absolute bottom-0 left-0 w-full transition-all duration-500 rounded-full",
+                isComplete ? 'bg-cyan-400' : 'bg-cyan-600'
+              )}
+              style={{ height: `${category.score}%` }}
+            />
+            {isComplete && (
+              <div className="absolute inset-0 bg-cyan-400 animate-[header-complete-glow_2s_ease-in-out_infinite]" />
             )}
-            style={{ height: `${category.score}%` }}
-          />
-          {isComplete && (
-            <div className="absolute inset-0 bg-cyan-400 animate-[header-complete-glow_2s_ease-in-out_infinite]" />
-          )}
-        </div>
+          </div>
+        )}
         
         {/* Category name */}
         <span className={cn(
-          "text-xs font-medium transition-colors",
+          "text-[10px] font-medium transition-colors flex-1 text-left",
           isComplete ? 'text-cyan-400' : 'text-slate-400'
         )}>
           {category.name}
@@ -169,90 +212,44 @@ function CategorySection({
         
         {/* Percentage */}
         <span className={cn(
-          "text-[10px] tabular-nums ml-auto",
+          "text-[9px] tabular-nums flex-shrink-0",
           isComplete ? 'text-cyan-400' : 'text-slate-500'
         )}>
           {category.score}%
         </span>
-      </div>
+      </button>
       
-      {/* Subcategories Grid */}
-      <div className="grid grid-cols-2 gap-1.5 pl-3">
-        {category.subcategories.map((sub, subIndex) => (
-          <SubcategoryItem 
-            key={sub.id} 
-            subcategory={sub} 
-            animationDelay={animationDelay + (subIndex * 50)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SubcategoryItem({ 
-  subcategory,
-  animationDelay = 0
-}: { 
-  subcategory: Subcategory;
-  animationDelay?: number;
-}) {
-  const [showGlow, setShowGlow] = useState(false);
-  const [animate, setAnimate] = useState(false);
-  const isFilled = subcategory.value && subcategory.confidence >= 70;
-  
-  useEffect(() => {
-    const timer = setTimeout(() => setAnimate(true), animationDelay);
-    return () => clearTimeout(timer);
-  }, [animationDelay]);
-  
-  // Trigger glow animation when justFilled changes
-  useEffect(() => {
-    if (subcategory.justFilled) {
-      setShowGlow(true);
-      const timer = setTimeout(() => setShowGlow(false), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [subcategory.justFilled]);
-  
-  return (
-    <div 
-      className={cn(
-        "flex items-start gap-1.5 p-1.5 rounded-md transition-all duration-300",
-        animate ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1",
-        showGlow && "animate-[bar-glow_0.6s_ease-out]"
+      {/* Filled subcategories - Inline format */}
+      {filledSubs.length > 0 && (
+        <div className="pl-3 space-y-0.5 mt-0.5">
+          {filledSubs.map((sub) => (
+            <div key={sub.id} className="flex items-center gap-1">
+              <div className="w-0.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_4px_rgba(0,255,255,0.3)] flex-shrink-0" />
+              <span className="text-[9px] text-slate-400 flex-shrink-0">
+                {sub.shortLabel}:
+              </span>
+              {sub.source === 'demo' && (
+                <span className="text-cyan-400 text-[7px]">•</span>
+              )}
+              <span className="text-[10px] text-cyan-400 truncate">
+                {sub.value}
+              </span>
+            </div>
+          ))}
+        </div>
       )}
-    >
-      {/* Vertical bar indicator */}
-      <div 
-        className={cn(
-          "w-0.5 h-full min-h-[24px] rounded-full transition-all duration-300",
-          isFilled 
-            ? 'bg-cyan-400 shadow-[0_0_8px_rgba(0,255,255,0.4)]' 
-            : 'bg-slate-700'
-        )}
-      />
-      
-      {/* Label and value */}
-      <div className="flex-1 min-w-0">
-        <span className="flex items-center gap-1">
-          <span className={cn(
-            "text-[10px] transition-colors",
-            isFilled ? 'text-slate-300' : 'text-slate-500'
-          )}>
-            {subcategory.shortLabel}
-          </span>
-          {subcategory.source === 'demo' && isFilled && (
-            <span className="text-cyan-400 text-[8px]">•</span>
-          )}
-        </span>
-        <span className={cn(
-          "text-xs truncate block transition-colors",
-          isFilled ? 'text-cyan-400' : 'text-slate-600'
-        )}>
-          {subcategory.value || '—'}
-        </span>
-      </div>
+
+      {/* Empty subcategories - Compact single row */}
+      {emptySubsLabels.length > 0 && (
+        <div className="pl-3 mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
+          {emptySubsLabels.map((label) => (
+            <span key={label} className="flex items-center gap-0.5">
+              <span className="w-0.5 h-2 rounded-full bg-slate-700 flex-shrink-0" />
+              <span className="text-[8px] text-slate-600">{label}</span>
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
