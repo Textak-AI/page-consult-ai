@@ -60,6 +60,9 @@ export interface IntelligenceState {
   emailOffered: boolean;      // Track if modal was shown
   emailDismissed: boolean;    // Track if user dismissed without entering email
   showEmailGate: boolean;
+  
+  // Thin input tracking for PROBE → GUIDE flow
+  consecutiveThinInputs: number;  // Reset to 0 on adequate/rich input
 }
 
 export interface IntelligenceContextValue {
@@ -111,6 +114,7 @@ const initialState: IntelligenceState = {
   emailOffered: false,
   emailDismissed: false,
   showEmailGate: false,
+  consecutiveThinInputs: 0,
 };
 
 // ============================================
@@ -362,9 +366,17 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         }));
       }
 
-      // Step 2: Generate AI response - pass inputQuality for smarter responses
+      // Step 2: Generate AI response - pass inputQuality and thin count for PROBE→GUIDE flow
       const inputQuality = extractedData?.inputQuality || 'adequate';
       console.log('📊 Input quality from extraction:', inputQuality);
+      
+      // Calculate new thin input count based on current input quality
+      // If thin: increment count. If adequate/rich: reset to 0
+      const newThinCount = inputQuality === 'thin' 
+        ? state.consecutiveThinInputs + 1 
+        : 0;
+      
+      console.log('🔄 Consecutive thin inputs:', state.consecutiveThinInputs, '→', newThinCount);
       
       const { data: responseData, error: responseError } = await supabase.functions.invoke('demo-generate-response', {
         body: {
@@ -374,6 +386,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           conversationHistory: [...state.conversation, userMessage].map(m => ({ role: m.role, content: m.content })),
           messageCount: newMessageCount,
           inputQuality, // Pass the input quality for smarter response handling
+          consecutiveThinInputs: newThinCount, // Pass the explicit count for PROBE→GUIDE logic
         },
       });
 
@@ -381,6 +394,12 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       if (!responseError && responseData?.response) {
         aiResponseContent = responseData.response;
       }
+      
+      // Update thin count in state
+      setState(prev => ({
+        ...prev,
+        consecutiveThinInputs: newThinCount,
+      }));
 
       // Step 3: Check if we should show email gate
       // Show gate after message 2 if we have industry detected

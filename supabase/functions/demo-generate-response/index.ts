@@ -47,28 +47,6 @@ function determineExtractionTarget(extractedIntelligence: any): 'industry' | 'au
   return 'proof';
 }
 
-// Count how many consecutive thin inputs we've had
-function countConsecutiveThinInputs(conversationHistory: Array<{ role: string; content: string }>): number {
-  let thinCount = 0;
-  
-  // Look at user messages from most recent backwards
-  const userMessages = conversationHistory.filter(m => m.role === 'user').reverse();
-  
-  for (const msg of userMessages) {
-    const words = msg.content.trim().split(/\s+/).length;
-    // Messages with 6 or fewer words that don't contain specifics are likely thin
-    const hasSpecifics = /\b(founder|ceo|cfo|owner|manager|saas|b2b|b2c|restaurant|healthcare|fintech|ecommerce|reduce|increase|save|\d+%|\$\d+)\b/i.test(msg.content);
-    
-    if (words <= 8 && !hasSpecifics) {
-      thinCount++;
-    } else {
-      break; // Stop counting if we hit a non-thin message
-    }
-  }
-  
-  return thinCount;
-}
-
 // Get GUIDE options based on what we're trying to extract
 function getGuideOptions(target: 'industry' | 'audience' | 'valueProp' | 'proof'): string {
   if (target === 'industry') {
@@ -359,9 +337,12 @@ serve(async (req) => {
 
     // Calculate conversation state
     const validHistory = Array.isArray(conversationHistory) ? conversationHistory : [];
-    const consecutiveThinInputs = inputQuality === 'thin' 
-      ? countConsecutiveThinInputs([...validHistory, { role: 'user', content: userMessage }])
-      : 0;
+    
+    // Use the explicit thin count passed from the frontend (more reliable than inferring)
+    // The frontend tracks this properly: increments on thin input, resets on adequate/rich
+    const thinCount = typeof body.consecutiveThinInputs === 'number' 
+      ? body.consecutiveThinInputs 
+      : (inputQuality === 'thin' ? 1 : 0);
     
     // Determine what field we're trying to extract
     const extractionTarget = determineExtractionTarget(extractedIntelligence);
@@ -375,7 +356,7 @@ serve(async (req) => {
 
     console.log('🎯 Extraction target:', extractionTarget);
     console.log('📊 Input quality:', inputQuality);
-    console.log('🔄 Consecutive thin inputs:', consecutiveThinInputs);
+    console.log('🔄 Consecutive thin inputs (from frontend):', thinCount);
     console.log('📈 Has any intelligence:', hasAnyIntelligence);
 
     // Build context with sanitized data (only if we have real intelligence)
@@ -405,7 +386,7 @@ serve(async (req) => {
     const systemPrompt = buildSystemPrompt(
       messageCount || 1, 
       currentInputQuality, 
-      consecutiveThinInputs,
+      thinCount,
       extractionTarget,
       hasAnyIntelligence
     );
@@ -460,7 +441,7 @@ serve(async (req) => {
       JSON.stringify({ 
         response: aiResponse,
         extractionTarget, // Return for frontend tracking if needed
-        consecutiveThinInputs,
+        consecutiveThinInputs: thinCount,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
