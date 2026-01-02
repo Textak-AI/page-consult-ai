@@ -6,12 +6,12 @@ import { MessageSquare, Sparkles, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import EmailGateModal from './EmailGateModal';
-import ConversionCTAPanel from './ConversionCTAPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { calculateStrategicLevel } from '@/lib/strategicLevelCalculator';
 import { StrategicLevelIndicator } from '@/components/consultation/StrategicLevelIndicator';
 import type { ExtractedIntelligence, ConsultationStatus } from '@/types/consultationReadiness';
+
 // Typing indicator component
 const TypingIndicator = () => (
   <div className="flex items-center gap-1 px-4 py-3">
@@ -32,31 +32,13 @@ const TypingIndicator = () => (
   </div>
 );
 
-// Market insight tile
-const InsightTile = ({ insight, delay }: { insight: string; delay: number }) => (
-  <motion.div
-    initial={{ opacity: 0, x: 20 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ delay, duration: 0.4 }}
-    className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-lg p-3"
-  >
-    <div className="flex items-start gap-2">
-      <Sparkles className="w-4 h-4 text-cyan-400 mt-0.5 flex-shrink-0" />
-      <p className="text-sm text-slate-300 leading-relaxed">{insight}</p>
-    </div>
-  </motion.div>
-);
-
 export default function LiveDemoSection() {
   const navigate = useNavigate();
   const { state, processUserMessage, resetIntelligence, submitEmail, dismissEmailGate } = useIntelligence();
   const [inputValue, setInputValue] = useState('');
-  const [showConversionCTA, setShowConversionCTA] = useState(false);
-  const [dismissedCTA, setDismissedCTA] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasInitialized = useRef(false);
-  const continueRef = useRef<HTMLDivElement>(null);
 
   // Send initial AI message on mount
   useEffect(() => {
@@ -74,17 +56,6 @@ export default function LiveDemoSection() {
     }
   }, [state.conversation.length]);
 
-  // Show conversion CTA when readiness hits 70%+ OR email is captured
-  useEffect(() => {
-    if (!dismissedCTA && (state.readiness >= 70 || state.emailCaptured)) {
-      // Small delay so user sees the latest message first
-      const timer = setTimeout(() => {
-        setShowConversionCTA(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [state.readiness, state.emailCaptured, dismissedCTA]);
-
   // Scroll to bottom on new messages or when typing preview appears
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
@@ -93,25 +64,6 @@ export default function LiveDemoSection() {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [state.conversation, inputValue]);
-
-  // Get market insights to display (limit to 2 for layout balance)
-  const marketInsights = [
-    ...(state.market.industryInsights || []),
-    ...(state.market.commonObjections?.slice(0, 1) || []),
-  ].slice(0, 2);
-
-  // Auto-scroll to Continue button after market insights load
-  useEffect(() => {
-    if (marketInsights.length > 0 && !state.market.isLoading) {
-      const timer = setTimeout(() => {
-        continueRef.current?.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'nearest' 
-        });
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [marketInsights.length, state.market.isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,10 +193,6 @@ export default function LiveDemoSection() {
     }
   };
 
-  const handleKeepChatting = () => {
-    setShowConversionCTA(false);
-    setDismissedCTA(true);
-  };
 
   // Build display conversation (with initial AI message if needed)
   const displayConversation = state.conversation.length === 0 
@@ -416,63 +364,15 @@ export default function LiveDemoSection() {
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="lg:col-span-1 relative flex flex-col h-[500px]"
+            className="lg:col-span-1 flex flex-col h-[500px]"
           >
-            {/* Scrollable content area */}
-            <div className="flex-1 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-              {/* Strategic Level Indicator with sidebar styling */}
-              <StrategicLevelIndicator 
-                result={calculateStrategicLevel(state.extracted)}
-                onContinue={handleContinueToWizard}
-                className="h-full border-l-2 border-slate-700/50 shadow-[-4px_0_12px_rgba(0,0,0,0.2)]"
-              />
-
-              {/* Market Insights (appears when loaded) */}
-              <AnimatePresence>
-                {marketInsights.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6"
-                  >
-                    <h4 className="text-sm font-medium text-slate-300 mb-4">Market Insights</h4>
-                    <div className="space-y-3">
-                      {marketInsights.map((insight, i) => (
-                        <InsightTile key={i} insight={insight} delay={i * 0.15} />
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Loading state for market research */}
-              {state.market.isLoading && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6"
-                >
-                  <div className="flex items-center gap-3 text-slate-400">
-                    <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
-                    <span className="text-sm">Researching your market...</span>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-
-            {/* Fixed CTA at bottom - always visible when ready */}
-            <AnimatePresence>
-              {showConversionCTA && (
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900 via-slate-900 to-transparent pt-8 pb-2 px-1">
-                  <ConversionCTAPanel
-                    readiness={state.readiness}
-                    onContinue={handleContinueToWizard}
-                    onKeepChatting={handleKeepChatting}
-                  />
-                </div>
-              )}
-            </AnimatePresence>
+            {/* Strategic Level Indicator - ALWAYS VISIBLE, fills the panel */}
+            <StrategicLevelIndicator 
+              result={calculateStrategicLevel(state.extracted)}
+              onContinue={handleContinueToWizard}
+              isThinking={state.isProcessing}
+              className="h-full border-l-2 border-slate-700/50 shadow-[-4px_0_12px_rgba(0,0,0,0.2)]"
+            />
           </motion.div>
         </div>
       </div>

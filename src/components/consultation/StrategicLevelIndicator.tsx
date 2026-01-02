@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { StrategicLevel } from '@/types/strategicLevels';
 import type { LevelCheckResult } from '@/types/strategicLevels';
@@ -60,17 +61,51 @@ const LEVEL_STYLES: Record<StrategicLevel, {
 interface Props {
   result: LevelCheckResult;
   onContinue?: () => void;
+  isThinking?: boolean;
   className?: string;
 }
 
-export function StrategicLevelIndicator({ result, onContinue, className }: Props) {
+export function StrategicLevelIndicator({ result, onContinue, isThinking = false, className }: Props) {
   const { currentLevel, capturedFields } = result;
   const styles = LEVEL_STYLES[currentLevel];
+  
+  // Track previous captured fields to detect new captures
+  const prevCapturedRef = useRef<Set<string>>(new Set());
+  const [newlyCapturewdFields, setNewlyCapturedFields] = useState<Set<string>>(new Set());
+  const [displayLevel, setDisplayLevel] = useState<StrategicLevel>(currentLevel);
   
   // Create a map of captured field keys to their values
   const capturedMap = new Map(
     capturedFields.map(({ field, value }) => [field, value])
   );
+  
+  // Detect newly captured fields and animate them
+  useEffect(() => {
+    const currentCaptured = new Set(capturedFields.map(f => f.field));
+    const newCaptures = new Set<string>();
+    
+    currentCaptured.forEach(field => {
+      if (!prevCapturedRef.current.has(field)) {
+        newCaptures.add(field);
+      }
+    });
+    
+    if (newCaptures.size > 0) {
+      setNewlyCapturedFields(newCaptures);
+      
+      // Update level AFTER the bar animation completes (400ms delay)
+      setTimeout(() => {
+        setDisplayLevel(currentLevel);
+        setNewlyCapturedFields(new Set());
+      }, 400);
+    } else {
+      setDisplayLevel(currentLevel);
+    }
+    
+    prevCapturedRef.current = currentCaptured;
+  }, [capturedFields, currentLevel]);
+  
+  const displayStyles = LEVEL_STYLES[displayLevel];
   
   return (
     <motion.div
@@ -80,7 +115,7 @@ export function StrategicLevelIndicator({ result, onContinue, className }: Props
       className={cn(
         "rounded-xl border overflow-hidden",
         "bg-slate-900/40 backdrop-blur-xl",
-        styles.border,
+        displayStyles.border,
         className
       )}
     >
@@ -91,17 +126,38 @@ export function StrategicLevelIndicator({ result, onContinue, className }: Props
           <h2 className="text-base font-light tracking-wide text-white">
             Intelligence Profile
           </h2>
-          <p className={cn("text-xs mt-0.5", styles.text)}>
-            {styles.label}
-            {styles.sublabel && ` — ${styles.sublabel}`}
-          </p>
+          <motion.p 
+            key={displayLevel}
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className={cn("text-xs mt-0.5", displayStyles.text)}
+          >
+            {displayStyles.label}
+            {displayStyles.sublabel && ` — ${displayStyles.sublabel}`}
+          </motion.p>
         </div>
         
-        {/* Stacked Categories - balanced spacing */}
+        {/* Thinking shimmer overlay */}
+        <AnimatePresence>
+          {isThinking && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 pointer-events-none z-10"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/5 to-transparent animate-pulse" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {/* Stacked Categories - ALWAYS VISIBLE */}
         <div className="flex-1 flex flex-col justify-center space-y-5">
           {CATEGORIES.map((category, index) => {
             const value = capturedMap.get(category.key);
             const isCaptured = !!value;
+            const isNewlyCaputred = newlyCapturewdFields.has(category.key);
             
             return (
               <motion.div
@@ -111,78 +167,104 @@ export function StrategicLevelIndicator({ result, onContinue, className }: Props
                 transition={{ delay: index * 0.03 }}
                 className="flex items-center gap-3"
               >
-                {/* Color band */}
-                <div 
+                {/* Color band - animates from grey to colored */}
+                <motion.div 
                   className={cn(
-                    "w-1 h-10 rounded-full transition-all duration-300 flex-shrink-0",
+                    "w-1 h-10 rounded-full flex-shrink-0",
                     isCaptured 
                       ? `bg-gradient-to-b ${styles.gradient}` 
                       : "bg-slate-700"
                   )}
+                  initial={isNewlyCaputred ? { scale: 1, opacity: 0.5 } : false}
+                  animate={isNewlyCaputred ? { 
+                    scale: [1, 1.5, 1],
+                    opacity: 1,
+                  } : { opacity: 1 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
                 />
                 
                 {/* Label */}
-                <span className={cn(
-                  "text-xs transition-colors duration-300 truncate",
-                  isCaptured ? "text-slate-300" : "text-slate-600"
-                )}>
+                <motion.span 
+                  className={cn(
+                    "text-sm truncate",
+                    isCaptured ? "text-slate-300" : "text-slate-600"
+                  )}
+                  animate={{ 
+                    color: isCaptured ? "rgb(203, 213, 225)" : "rgb(71, 85, 105)" 
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
                   {category.label}
-                </span>
+                </motion.span>
                 
-                {/* Value (if captured) */}
-                {isCaptured && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className={cn("text-xs ml-auto truncate max-w-[80px]", styles.text)}
-                  >
-                    {truncateValue(value, 12)}
-                  </motion.span>
-                )}
+                {/* Value (if captured) - slides in */}
+                <AnimatePresence mode="wait">
+                  {isCaptured && value && (
+                    <motion.span
+                      key={`${category.key}-${value}`}
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.3, delay: isNewlyCaputred ? 0.15 : 0 }}
+                      className={cn("text-sm ml-auto truncate max-w-[100px]", styles.text)}
+                    >
+                      {truncateValue(value, 14)}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </motion.div>
             );
           })}
         </div>
         
-        {/* CTAs based on level */}
-        {result.canUnlock('trial_signup') && !result.canUnlock('page_generation') && onContinue && (
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            onClick={onContinue}
-            className="w-full py-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm font-medium hover:bg-green-500/15 transition-all mt-4"
-          >
-            Start Free Trial →
-          </motion.button>
-        )}
-        
-        {result.canUnlock('page_generation') && !result.canUnlock('premium_generation') && onContinue && (
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            onClick={onContinue}
-            className="w-full py-3 rounded-lg bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm font-medium hover:bg-purple-500/15 transition-all mt-4"
-          >
-            Generate Page →
-          </motion.button>
-        )}
-        
-        {result.canUnlock('premium_generation') && onContinue && (
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            onClick={onContinue}
-            className="w-full py-3.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400 font-medium hover:from-amber-500/30 hover:to-orange-500/30 transition-all mt-4"
-          >
-            ⭐ Generate Premium Page
-          </motion.button>
-        )}
+        {/* CTA at bottom - below the bars, never covers them */}
+        <div className="mt-4 pt-4 border-t border-slate-800/30">
+          {result.canUnlock('trial_signup') && !result.canUnlock('page_generation') && onContinue && (
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              onClick={onContinue}
+              className="w-full py-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm font-medium hover:bg-green-500/15 transition-all"
+            >
+              Continue to Full Consultation →
+            </motion.button>
+          )}
+          
+          {result.canUnlock('page_generation') && !result.canUnlock('premium_generation') && onContinue && (
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              onClick={onContinue}
+              className="w-full py-3 rounded-lg bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm font-medium hover:bg-purple-500/15 transition-all"
+            >
+              Generate Page →
+            </motion.button>
+          )}
+          
+          {result.canUnlock('premium_generation') && onContinue && (
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              onClick={onContinue}
+              className="w-full py-3.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400 font-medium hover:from-amber-500/30 hover:to-orange-500/30 transition-all"
+            >
+              ⭐ Generate Premium Page
+            </motion.button>
+          )}
+          
+          {/* Show subtle hint when no CTA is unlocked yet */}
+          {!result.canUnlock('trial_signup') && (
+            <p className="text-xs text-slate-600 text-center">
+              Share more to unlock your page
+            </p>
+          )}
+        </div>
         
       </div>
     </motion.div>
