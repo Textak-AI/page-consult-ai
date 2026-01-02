@@ -29,6 +29,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showBrief, setShowBrief] = useState(false);
+  const [selectedConsultation, setSelectedConsultation] = useState<any>(null);
   
   // Fetch user's landing pages
   const { data: landingPages, isLoading, refetch } = useQuery({
@@ -502,10 +504,64 @@ export default function Dashboard() {
             ) : null}
           </div>
 
+          {/* Completed Consultations with Strategy Briefs */}
+          {consultations && consultations.filter(c => 
+            c.consultation_status === 'proven' || c.status === 'completed'
+          ).length > 0 && (
+            <div className="mt-10 space-y-4">
+              <h2 className="text-xl font-semibold text-foreground">Strategy Briefs</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Download your AI-generated strategy briefs from completed consultations
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {consultations
+                  .filter(c => c.consultation_status === 'proven' || c.status === 'completed')
+                  .map(consultation => (
+                    <div 
+                      key={consultation.id}
+                      className="p-4 bg-card border border-border rounded-xl flex items-center justify-between gap-4"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-foreground truncate">
+                          {consultation.business_name || consultation.industry || 'Strategy Brief'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {consultation.target_audience ? `For ${consultation.target_audience}` : 'Completed consultation'}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          setSelectedConsultation(consultation);
+                          setShowBrief(true);
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 shrink-0"
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        View Brief
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
         </div>
       </main>
       
       <Footer />
+
+      {/* Strategy Brief Modal */}
+      {showBrief && selectedConsultation && (
+        <StrategyBrief
+          consultation={selectedConsultation}
+          onClose={() => {
+            setShowBrief(false);
+            setSelectedConsultation(null);
+          }}
+        />
+      )}
     </div>
   );
 }
