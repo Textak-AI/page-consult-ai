@@ -11,12 +11,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Category definitions matching the strategic level calculator fields
+// Category definitions matching the ExtractedIntelligence type fields
 const CATEGORIES = [
   { key: 'industry', summaryKey: 'industrySummary', label: 'Industry' },
   { key: 'audience', summaryKey: 'audienceSummary', label: 'Audience' },
   { key: 'valueProp', summaryKey: 'valuePropSummary', label: 'Value Proposition' },
-  { key: 'competitorDifferentiator', summaryKey: 'edgeSummary', label: 'Competitive Edge' },
+  { key: 'competitorDifferentiation', summaryKey: 'edgeSummary', label: 'Competitive Edge' },
   { key: 'painPoints', summaryKey: 'painSummary', label: 'Pain Points' },
   { key: 'buyerObjections', summaryKey: 'objectionsSummary', label: 'Buyer Objections' },
   { key: 'proofElements', summaryKey: 'proofSummary', label: 'Proof Elements' },
