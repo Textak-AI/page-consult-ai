@@ -84,21 +84,21 @@ export function StrategicLevelIndicator({ result, onContinue, className }: Props
         className
       )}
     >
-      <div className="h-full flex flex-col p-5">
+      <div className="h-full flex flex-col p-4">
         
         {/* Header */}
-        <div className="mb-6">
-          <h2 className="text-lg font-light tracking-wide text-white">
+        <div className="mb-4">
+          <h2 className="text-base font-light tracking-wide text-white">
             Intelligence Profile
           </h2>
-          <p className={cn("text-xs mt-1", styles.text)}>
+          <p className={cn("text-xs mt-0.5", styles.text)}>
             {styles.label}
             {styles.sublabel && ` — ${styles.sublabel}`}
           </p>
         </div>
         
-        {/* Stacked Categories */}
-        <div className="flex-1 flex flex-col justify-center space-y-3">
+        {/* Stacked Categories - tighter spacing for sidebar */}
+        <div className="flex-1 flex flex-col justify-center space-y-2">
           {CATEGORIES.map((category, index) => {
             const value = capturedMap.get(category.key);
             const isCaptured = !!value;
@@ -108,13 +108,13 @@ export function StrategicLevelIndicator({ result, onContinue, className }: Props
                 key={category.key}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="flex items-center gap-4"
+                transition={{ delay: index * 0.03 }}
+                className="flex items-center gap-3"
               >
                 {/* Color band */}
                 <div 
                   className={cn(
-                    "w-1 h-8 rounded-full transition-all duration-300",
+                    "w-1 h-6 rounded-full transition-all duration-300 flex-shrink-0",
                     isCaptured 
                       ? `bg-gradient-to-b ${styles.gradient}` 
                       : "bg-slate-700"
@@ -123,7 +123,7 @@ export function StrategicLevelIndicator({ result, onContinue, className }: Props
                 
                 {/* Label */}
                 <span className={cn(
-                  "text-sm transition-colors duration-300",
+                  "text-xs transition-colors duration-300 truncate",
                   isCaptured ? "text-slate-300" : "text-slate-600"
                 )}>
                   {category.label}
@@ -134,9 +134,9 @@ export function StrategicLevelIndicator({ result, onContinue, className }: Props
                   <motion.span
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className={cn("text-sm ml-auto", styles.text)}
+                    className={cn("text-xs ml-auto truncate max-w-[80px]", styles.text)}
                   >
-                    {truncateValue(value)}
+                    {truncateValue(value, 12)}
                   </motion.span>
                 )}
               </motion.div>
@@ -190,9 +190,9 @@ export function StrategicLevelIndicator({ result, onContinue, className }: Props
 }
 
 // Helper to truncate long values
-function truncateValue(value: string): string {
-  if (value.length > 20) {
-    return value.slice(0, 18) + '…';
+function truncateValue(value: string, maxLength: number = 20): string {
+  if (value.length > maxLength) {
+    return value.slice(0, maxLength - 2) + '…';
   }
   return value;
 }
