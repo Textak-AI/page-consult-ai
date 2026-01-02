@@ -108,7 +108,7 @@ function createResult(level: StrategicLevel, intel: Partial<ExtractedIntelligenc
   const capturedFields: { field: string; value: string; summary?: string }[] = [];
   if (intel) {
     // Include both naming conventions for competitorDifferentiator
-    const allFields = ['industry', 'audience', 'valueProp', 'competitorDifferentiation', 'competitorDifferentiator', 'painPoints', 'buyerObjections', 'audienceRole', 'proofElements', 'toneDirection'];
+    const allFields = ['industry', 'audience', 'valueProp', 'competitorDifferentiation', 'painPoints', 'buyerObjections', 'proofElements'];
     const seenFields = new Set<string>();
     
     for (const field of allFields) {
