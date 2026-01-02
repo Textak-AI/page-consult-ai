@@ -39,22 +39,22 @@ async function hashIP(ip: string): Promise<string> {
 const systemPrompt = `You are an extraction system. Analyze the user message and extract ONLY explicitly stated information.
 Use the user's ACTUAL words — do not infer or paraphrase.
 
-Return JSON with short values (max 4-5 words for display) and summaries (1-2 sentences):
+Return JSON with SHORT values (max 15 characters, no truncation needed) and summaries (1-2 sentences):
 
 {
-  "industry": "SaaS/Strategy tools",
-  "industrySummary": "AI-powered strategy systems for go-to-market execution",
+  "industry": "SaaS/Strategy",
+  "industrySummary": "Strategy and landing page tools for SaaS companies",
   
-  "audience": "B2B SaaS founders", 
+  "audience": "B2B Founders", 
   "audienceSummary": "Founders, agency owners, and marketing directors",
   
-  "valueProp": "Strategy before design",
+  "valueProp": "Strategy first",
   "valuePropSummary": "Same questions a $15K agency would ask",
   
   "competitiveEdge": "Not templates",
   "edgeSummary": "Unlike Unbounce/Leadpages which assume you know what to say",
   
-  "painPoints": "Pages don't convert",
+  "painPoints": "Low conversion",
   "painSummary": "Landing pages look good but don't convert because templates skip strategy",
   
   "buyerObjections": null,
@@ -64,12 +64,14 @@ Return JSON with short values (max 4-5 words for display) and summaries (1-2 sen
   "proofSummary": null
 }
 
-Rules:
-- Short values: MAX 4-5 words, fits on one line
-- Use their actual words when possible
+CRITICAL RULES:
+- Short values: MAX 15 characters, must fit on one line
+- Shorten phrases: "B2B SaaS founders" → "B2B Founders", "Strategic consultation" → "Strategy first"
+- Industry = WHAT they do/sell (SaaS, Coaching, Real estate), NOT their approach (AI-powered is an approach, not an industry)
+- Pain Points = the problem (e.g. "Low conversion", "No leads"), NOT a description
+- Use their actual words when possible, but condense
 - Return null for fields not explicitly mentioned
-- Summaries should synthesize what they said (1-2 sentences)
-- Do NOT add words like "AI-powered" unless they said it
+- Summaries synthesize what they said (1-2 sentences)
 - Do NOT infer or guess - only extract explicit statements
 
 Return ONLY valid JSON.`;
@@ -230,8 +232,8 @@ Extract only what they explicitly stated. Return JSON with null for unmentioned 
         // Validate and format extracted fields
         const formatShort = (val: any) => {
           if (typeof val !== 'string' || !val.trim()) return null;
-          // Limit to ~5 words / 30 chars for display
-          return val.trim().slice(0, 30);
+          // Limit to 15 chars for display - no ellipsis needed
+          return val.trim().slice(0, 15);
         };
         
         const formatSummary = (val: any) => {
