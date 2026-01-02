@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, User, Sparkles, ArrowRight, Send, TrendingUp, Users, Target, Loader2 } from 'lucide-react';
+import { MessageSquare, Sparkles, ArrowRight, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import EmailGateModal from './EmailGateModal';
@@ -31,37 +31,48 @@ const TypingIndicator = () => (
   </div>
 );
 
-// Progress bar component
+// Progress bar component for intelligence fields
 const IntelligenceBar = ({ 
   label, 
   value, 
-  icon: Icon, 
-  filled 
+  weight,
+  filled,
+  compact = false
 }: { 
   label: string; 
-  value: string | null; 
-  icon: React.ElementType; 
+  value?: string | null; 
+  weight: number;
   filled: boolean;
+  compact?: boolean;
 }) => (
-  <div className="space-y-2">
-    <div className="flex items-center justify-between text-sm">
-      <div className="flex items-center gap-2 text-slate-300">
-        <Icon className="w-4 h-4" />
-        <span>{label}</span>
+  <div className={compact ? "space-y-1" : "space-y-1.5"}>
+    <div className="flex items-center justify-between text-xs">
+      <div className="flex items-center gap-1.5">
+        <span className={filled ? "text-slate-300" : "text-slate-500"}>{label}</span>
+        <span className="text-slate-600">({weight}pts)</span>
       </div>
-      {value && (
+      {filled && value && (
         <motion.span
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
-          className="text-cyan-400 text-xs font-medium truncate max-w-[150px]"
+          className="text-cyan-400 text-xs font-medium truncate max-w-[100px]"
         >
           {value}
         </motion.span>
       )}
+      {filled && !value && (
+        <motion.span
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-cyan-400 text-xs"
+        >
+          +{weight}
+        </motion.span>
+      )}
     </div>
-    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+    <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
       <motion.div
-        className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 rounded-full"
+        className={`h-full rounded-full ${filled ? 'bg-gradient-to-r from-cyan-500 to-cyan-400' : 'bg-slate-700'}`}
         initial={{ width: 0 }}
         animate={{ width: filled ? '100%' : '0%' }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -505,32 +516,76 @@ export default function LiveDemoSection() {
           >
             {/* Scrollable content area */}
             <div className="flex-1 overflow-y-auto pb-32 space-y-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-              {/* Intelligence Profile Card */}
-              <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-cyan-400" />
+            {/* Intelligence Profile Card - All 9 readiness fields */}
+              <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-5">
+                <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
                   Intelligence Profile
                 </h3>
 
-                <div className="space-y-5">
+                <div className="space-y-3">
+                  {/* Required fields (55 pts total) */}
                   <IntelligenceBar
                     label="Industry"
                     value={state.extracted.industry}
-                    icon={TrendingUp}
-                    filled={!!state.extracted.industry}
+                    weight={10}
+                    filled={!!state.extracted.industry && state.extracted.industry.length > 2}
                   />
                   <IntelligenceBar
-                    label="Audience"
+                    label="Target Audience"
                     value={state.extracted.audience}
-                    icon={Users}
-                    filled={!!state.extracted.audience}
+                    weight={15}
+                    filled={!!state.extracted.audience && state.extracted.audience.length > 5}
                   />
                   <IntelligenceBar
                     label="Value Proposition"
                     value={state.extracted.valueProp}
-                    icon={Target}
-                    filled={!!state.extracted.valueProp}
+                    weight={15}
+                    filled={!!state.extracted.valueProp && state.extracted.valueProp.length > 10}
                   />
+                  <IntelligenceBar
+                    label="Pain Points"
+                    weight={15}
+                    filled={false} // Demo doesn't capture pain points
+                  />
+                  
+                  {/* Important fields (40 pts total) */}
+                  <IntelligenceBar
+                    label="Audience Role"
+                    weight={10}
+                    filled={false} // Demo doesn't capture this
+                  />
+                  <IntelligenceBar
+                    label="Buyer Objections"
+                    weight={10}
+                    filled={false} // Demo doesn't capture this
+                  />
+                  <IntelligenceBar
+                    label="Competitive Edge"
+                    weight={10}
+                    filled={false} // Demo doesn't capture this
+                  />
+                  <IntelligenceBar
+                    label="Proof Elements"
+                    weight={10}
+                    filled={false} // Demo doesn't capture this
+                  />
+                  
+                  {/* Nice to have (5 pts) */}
+                  <IntelligenceBar
+                    label="Brand Tone"
+                    weight={5}
+                    filled={false} // Demo doesn't capture this
+                  />
+                </div>
+                
+                {/* Total score display */}
+                <div className="mt-4 pt-3 border-t border-slate-700/50">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-400">Total Score</span>
+                    <span className="text-cyan-400 font-semibold">{state.readiness}/100 pts</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">Need 70+ to generate page</p>
                 </div>
               </div>
 
