@@ -32,7 +32,7 @@ export const STRATEGIC_LEVELS: Record<StrategicLevel, LevelDefinition> = {
   positioned: {
     name: 'POSITIONED',
     tagline: 'I know why you matter',
-    requiredFields: ['industry', 'audience', 'valueProp', 'competitorDifferentiation'],
+    requiredFields: ['industry', 'audience', 'valueProp', 'competitorDifferentiator'],
     unlocks: ['trial_signup'],
     color: 'green',
     icon: 'Target',
@@ -41,7 +41,7 @@ export const STRATEGIC_LEVELS: Record<StrategicLevel, LevelDefinition> = {
   armed: {
     name: 'ARMED',
     tagline: 'I can sell you',
-    requiredFields: ['industry', 'audience', 'valueProp', 'competitorDifferentiation', 'painPoints', 'buyerObjections', 'audienceRole'],
+    requiredFields: ['industry', 'audience', 'valueProp', 'competitorDifferentiator', 'painPoints', 'buyerObjections'],
     unlocks: ['page_generation'],
     color: 'purple',
     icon: 'Zap',
@@ -50,7 +50,7 @@ export const STRATEGIC_LEVELS: Record<StrategicLevel, LevelDefinition> = {
   proven: {
     name: 'PROVEN',
     tagline: 'I can make it credible',
-    requiredFields: ['industry', 'audience', 'valueProp', 'competitorDifferentiation', 'painPoints', 'buyerObjections', 'audienceRole', 'proofElements', 'toneDirection'],
+    requiredFields: ['industry', 'audience', 'valueProp', 'competitorDifferentiator', 'painPoints', 'buyerObjections', 'proofElements'],
     unlocks: ['premium_generation', 'export_brief'],
     color: 'amber',
     icon: 'Star',
