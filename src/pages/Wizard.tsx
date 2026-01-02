@@ -12,6 +12,7 @@ import { IntelligencePanel, IntelligenceTile, TileState, getDefaultTiles } from 
 import { ResearchReadyPanel } from "@/components/wizard/ResearchReadyPanel";
 import { ResearchProgressPanel } from "@/components/wizard/ResearchProgressPanel";
 import { ReadyToGeneratePanel } from "@/components/wizard/ReadyToGeneratePanel";
+import { WizardIntelligenceProfile, tilesToIntelligence, mapDemoToConsultation, ExtractedIntelligence } from "@/components/wizard/WizardIntelligenceProfile";
 import PrefillBanner from "@/components/wizard/PrefillBanner";
 import { cn } from "@/lib/utils";
 
@@ -86,6 +87,12 @@ export default function Wizard() {
   const [showPrefillBanner, setShowPrefillBanner] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   
+  // New Intelligence Profile state
+  const [extractedIntelligence, setExtractedIntelligence] = useState<ExtractedIntelligence>({});
+  const [recentlyFilled, setRecentlyFilled] = useState<string[]>([]);
+  const [showDemoImportBadge, setShowDemoImportBadge] = useState(false);
+  const [useNewProfileView, setUseNewProfileView] = useState(true); // Toggle for new vs old panel
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -131,6 +138,32 @@ export default function Wizard() {
 
   // State for conversation history from demo
   const [conversationHistory, setConversationHistory] = useState<Array<{role: string; content: string}>>([]);
+
+  // Check for demo intelligence from sessionStorage on mount
+  useEffect(() => {
+    const demoData = sessionStorage.getItem('demoIntelligence');
+    if (demoData) {
+      try {
+        const parsed = JSON.parse(demoData);
+        console.log('📦 [Wizard] Found demo intelligence in sessionStorage:', parsed);
+        const mapped = mapDemoToConsultation(parsed);
+        setExtractedIntelligence(mapped);
+        setShowDemoImportBadge(true);
+        // Don't clear sessionStorage yet - let the applySessionData handle proper state
+      } catch (err) {
+        console.error('Failed to parse demo intelligence:', err);
+      }
+    }
+  }, []);
+
+  // Sync extractedIntelligence when tiles or collectedInfo changes
+  useEffect(() => {
+    const newIntelligence = tilesToIntelligence(tiles, collectedInfo);
+    setExtractedIntelligence(prev => ({
+      ...prev,
+      ...newIntelligence,
+    }));
+  }, [tiles, collectedInfo]);
 
   // Function to apply session data to wizard state
   const applySessionData = useCallback((data: any) => {
@@ -1352,14 +1385,22 @@ Ready to build this? Or want to adjust the approach first?`,
               transition={{ duration: 0.3 }}
               className="flex-shrink-0 overflow-hidden"
             >
-              {/* Phase 1: Gathering - Show Intelligence Profile tiles */}
+              {/* Phase 1: Gathering - Show Intelligence Profile */}
               {consultationPhase === "gathering" && (
-                <IntelligencePanel
-                  tiles={tiles}
-                  overallReadiness={overallReadiness}
-                  onBeginResearch={runResearch}
-                  isResearchReady={isResearchReady}
-                />
+                useNewProfileView ? (
+                  <WizardIntelligenceProfile
+                    extractedIntelligence={extractedIntelligence}
+                    recentlyFilled={recentlyFilled}
+                    showDemoImportBadge={showDemoImportBadge}
+                  />
+                ) : (
+                  <IntelligencePanel
+                    tiles={tiles}
+                    overallReadiness={overallReadiness}
+                    onBeginResearch={runResearch}
+                    isResearchReady={isResearchReady}
+                  />
+                )
               )}
               
               {/* Phase 2: Research Ready - Show summary + CTA */}
