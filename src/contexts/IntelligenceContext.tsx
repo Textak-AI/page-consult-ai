@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 // ============================================
 
 export interface ExtractedIntelligence {
+  // Short values (for display)
   industry: string | null;
   audience: string | null;
   valueProp: string | null;
@@ -14,6 +15,14 @@ export interface ExtractedIntelligence {
   painPoints: string | null;
   buyerObjections: string | null;
   proofElements: string | null;
+  // Summaries (for hover tooltips)
+  industrySummary: string | null;
+  audienceSummary: string | null;
+  valuePropSummary: string | null;
+  edgeSummary: string | null;
+  painSummary: string | null;
+  objectionsSummary: string | null;
+  proofSummary: string | null;
 }
 
 export interface MarketResearch {
@@ -73,6 +82,13 @@ const initialState: IntelligenceState = {
     painPoints: null,
     buyerObjections: null,
     proofElements: null,
+    industrySummary: null,
+    audienceSummary: null,
+    valuePropSummary: null,
+    edgeSummary: null,
+    painSummary: null,
+    objectionsSummary: null,
+    proofSummary: null,
   },
   market: {
     marketSize: null,
@@ -280,10 +296,10 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     }));
 
     try {
-      // Step 1: Extract intelligence - now extracts ALL 7 fields
+      // Step 1: Extract intelligence - now extracts ALL 7 fields with summaries
       console.log('=== CALLING EXTRACTION ===');
-      console.log('Message:', message);
-      console.log('Existing intelligence:', state.extracted);
+      console.log('📝 Message:', message);
+      console.log('📊 Existing intelligence:', state.extracted);
       
       const { data: extractedData, error: extractError } = await supabase.functions.invoke('demo-extract-intelligence', {
         body: {
@@ -295,23 +311,13 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
 
       console.log('=== EXTRACTION RESPONSE ===');
       console.log('Error:', extractError);
-      console.log('Raw extractedData:', extractedData);
-      console.log('extractedData type:', typeof extractedData);
-      
-      if (extractedData) {
-        console.log('extractedData.industry:', extractedData.industry);
-        console.log('extractedData.audience:', extractedData.audience);
-        console.log('extractedData.valueProp:', extractedData.valueProp);
-        console.log('extractedData.competitorDifferentiator:', extractedData.competitorDifferentiator);
-        console.log('extractedData.painPoints:', extractedData.painPoints);
-        console.log('extractedData.buyerObjections:', extractedData.buyerObjections);
-        console.log('extractedData.proofElements:', extractedData.proofElements);
-      }
+      console.log('🎯 Raw extractedData:', extractedData);
 
       let newExtracted = state.extracted;
       if (!extractError && extractedData) {
         // Merge new extractions (don't overwrite with nulls)
         newExtracted = {
+          // Short values
           industry: extractedData.industry || state.extracted.industry,
           audience: extractedData.audience || state.extracted.audience,
           valueProp: extractedData.valueProp || state.extracted.valueProp,
@@ -319,10 +325,18 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           painPoints: extractedData.painPoints || state.extracted.painPoints,
           buyerObjections: extractedData.buyerObjections || state.extracted.buyerObjections,
           proofElements: extractedData.proofElements || state.extracted.proofElements,
+          // Summaries
+          industrySummary: extractedData.industrySummary || state.extracted.industrySummary,
+          audienceSummary: extractedData.audienceSummary || state.extracted.audienceSummary,
+          valuePropSummary: extractedData.valuePropSummary || state.extracted.valuePropSummary,
+          edgeSummary: extractedData.edgeSummary || state.extracted.edgeSummary,
+          painSummary: extractedData.painSummary || state.extracted.painSummary,
+          objectionsSummary: extractedData.objectionsSummary || state.extracted.objectionsSummary,
+          proofSummary: extractedData.proofSummary || state.extracted.proofSummary,
         };
 
         console.log('=== MERGED INTELLIGENCE ===');
-        console.log('newExtracted:', newExtracted);
+        console.log('✅ newExtracted:', newExtracted);
 
         setState(prev => ({
           ...prev,

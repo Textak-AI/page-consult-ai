@@ -36,30 +36,43 @@ async function hashIP(ip: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 }
 
-const systemPrompt = `You are an extraction system. Analyze the user message and extract ONLY explicitly stated information. Return JSON.
+const systemPrompt = `You are an extraction system. Analyze the user message and extract ONLY explicitly stated information.
+Use the user's ACTUAL words — do not infer or paraphrase.
 
-Extract these fields (use null if not explicitly stated):
+Return JSON with short values (max 4-5 words for display) and summaries (1-2 sentences):
+
 {
-  industry: string | null,           // What business/industry are they in?
-  target_audience: string | null,    // Who do they serve?
-  unique_value: string | null,       // What's their core value/offer?
-  competitor_differentiator: string | null, // How are they different?
-  audience_pain_points: string | null,      // What problems do customers face?
-  buyer_objections: string | null,   // What makes buyers hesitate?
-  proof_elements: string | null      // What proof/results/credentials?
+  "industry": "SaaS/Strategy tools",
+  "industrySummary": "AI-powered strategy systems for go-to-market execution",
+  
+  "audience": "B2B SaaS founders", 
+  "audienceSummary": "Founders, agency owners, and marketing directors",
+  
+  "valueProp": "Strategy before design",
+  "valuePropSummary": "Same questions a $15K agency would ask",
+  
+  "competitiveEdge": "Not templates",
+  "edgeSummary": "Unlike Unbounce/Leadpages which assume you know what to say",
+  
+  "painPoints": "Pages don't convert",
+  "painSummary": "Landing pages look good but don't convert because templates skip strategy",
+  
+  "buyerObjections": null,
+  "objectionsSummary": null,
+  
+  "proofElements": null,
+  "proofSummary": null
 }
 
 Rules:
-- Extract their ACTUAL words, not inferences
-- Keep values under 25 characters
-- If they said "B2B SaaS founders" → target_audience: "B2B SaaS founders"
-- If they said "not templates like Unbounce" → competitor_differentiator: "Not templates"
-- If they said "strategic consultation first" → unique_value: "Strategic consultation"
-- If they didn't mention it, return null
+- Short values: MAX 4-5 words, fits on one line
+- Use their actual words when possible
+- Return null for fields not explicitly mentioned
+- Summaries should synthesize what they said (1-2 sentences)
 - Do NOT add words like "AI-powered" unless they said it
 - Do NOT infer or guess - only extract explicit statements
 
-Return ONLY valid JSON with the field names exactly as shown above.`;
+Return ONLY valid JSON.`;
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -156,7 +169,7 @@ serve(async (req) => {
           ...contextMessages,
           { role: 'user', content: `User message: "${sanitizedMessage}"
 
-Extract only what they explicitly stated. Return JSON with null for unmentioned fields. Keep values under 25 characters.` },
+Extract only what they explicitly stated. Return JSON with null for unmentioned fields.` },
         ],
       }),
     });
@@ -177,29 +190,71 @@ Extract only what they explicitly stated. Return JSON with null for unmentioned 
     const content = data.choices?.[0]?.message?.content || '';
 
     // Parse JSON from response with validation
-    let extracted = { 
+    let extracted: {
+      industry: string | null;
+      industrySummary: string | null;
+      audience: string | null;
+      audienceSummary: string | null;
+      valueProp: string | null;
+      valuePropSummary: string | null;
+      competitorDifferentiator: string | null;
+      edgeSummary: string | null;
+      painPoints: string | null;
+      painSummary: string | null;
+      buyerObjections: string | null;
+      objectionsSummary: string | null;
+      proofElements: string | null;
+      proofSummary: string | null;
+    } = { 
       industry: null, 
+      industrySummary: null,
       audience: null, 
+      audienceSummary: null,
       valueProp: null, 
+      valuePropSummary: null,
       competitorDifferentiator: null,
+      edgeSummary: null,
       painPoints: null,
+      painSummary: null,
       buyerObjections: null,
-      proofElements: null
+      objectionsSummary: null,
+      proofElements: null,
+      proofSummary: null,
     };
     
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
-        // Validate and sanitize extracted fields - map from snake_case to camelCase
+        
+        // Validate and format extracted fields
+        const formatShort = (val: any) => {
+          if (typeof val !== 'string' || !val.trim()) return null;
+          // Limit to ~5 words / 30 chars for display
+          return val.trim().slice(0, 30);
+        };
+        
+        const formatSummary = (val: any) => {
+          if (typeof val !== 'string' || !val.trim()) return null;
+          // Limit summary to 150 chars
+          return val.trim().slice(0, 150);
+        };
+        
         extracted = {
-          industry: typeof parsed.industry === 'string' && parsed.industry.trim() ? parsed.industry.slice(0, 25) : null,
-          audience: typeof parsed.target_audience === 'string' && parsed.target_audience.trim() ? parsed.target_audience.slice(0, 25) : null,
-          valueProp: typeof parsed.unique_value === 'string' && parsed.unique_value.trim() ? parsed.unique_value.slice(0, 25) : null,
-          competitorDifferentiator: typeof parsed.competitor_differentiator === 'string' && parsed.competitor_differentiator.trim() ? parsed.competitor_differentiator.slice(0, 25) : null,
-          painPoints: typeof parsed.audience_pain_points === 'string' && parsed.audience_pain_points.trim() ? parsed.audience_pain_points.slice(0, 25) : null,
-          buyerObjections: typeof parsed.buyer_objections === 'string' && parsed.buyer_objections.trim() ? parsed.buyer_objections.slice(0, 25) : null,
-          proofElements: typeof parsed.proof_elements === 'string' && parsed.proof_elements.trim() ? parsed.proof_elements.slice(0, 25) : null,
+          industry: formatShort(parsed.industry),
+          industrySummary: formatSummary(parsed.industrySummary),
+          audience: formatShort(parsed.audience),
+          audienceSummary: formatSummary(parsed.audienceSummary),
+          valueProp: formatShort(parsed.valueProp),
+          valuePropSummary: formatSummary(parsed.valuePropSummary),
+          competitorDifferentiator: formatShort(parsed.competitiveEdge),
+          edgeSummary: formatSummary(parsed.edgeSummary),
+          painPoints: formatShort(parsed.painPoints),
+          painSummary: formatSummary(parsed.painSummary),
+          buyerObjections: formatShort(parsed.buyerObjections),
+          objectionsSummary: formatSummary(parsed.objectionsSummary),
+          proofElements: formatShort(parsed.proofElements),
+          proofSummary: formatSummary(parsed.proofSummary),
         };
       }
     } catch (parseError) {
@@ -207,7 +262,9 @@ Extract only what they explicitly stated. Return JSON with null for unmentioned 
     }
 
     // Enhanced logging for debugging
-    const capturedFields = Object.entries(extracted).filter(([_, v]) => v !== null).map(([k]) => k);
+    const capturedFields = Object.entries(extracted)
+      .filter(([k, v]) => v !== null && !k.includes('Summary'))
+      .map(([k]) => k);
     console.log('📝 User message:', sanitizedMessage);
     console.log('🧠 Raw AI response:', content);
     console.log('🎯 Parsed extraction:', JSON.stringify(extracted, null, 2));
@@ -224,12 +281,19 @@ Extract only what they explicitly stated. Return JSON with null for unmentioned 
       JSON.stringify({ 
         error: 'Processing error',
         industry: null,
+        industrySummary: null,
         audience: null,
+        audienceSummary: null,
         valueProp: null,
+        valuePropSummary: null,
         competitorDifferentiator: null,
+        edgeSummary: null,
         painPoints: null,
+        painSummary: null,
         buyerObjections: null,
+        objectionsSummary: null,
         proofElements: null,
+        proofSummary: null,
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

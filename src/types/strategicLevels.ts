@@ -64,6 +64,6 @@ export interface LevelCheckResult {
   nextLevel: StrategicLevel | null;
   nextLevelDef: LevelDefinition | null;
   missingForNext: string[];
-  capturedFields: { field: string; value: string }[];
+  capturedFields: { field: string; value: string; summary?: string }[];
   canUnlock: (feature: string) => boolean;
 }

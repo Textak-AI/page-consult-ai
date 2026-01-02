@@ -42,6 +42,29 @@ function getFieldDisplayValue(intel: Partial<ExtractedIntelligence>, field: stri
 }
 
 /**
+ * Get the summary for a field (for hover tooltip)
+ */
+function getFieldSummary(intel: Partial<ExtractedIntelligence>, field: string): string | undefined {
+  // Map field names to their summary field names
+  const summaryMap: Record<string, string> = {
+    industry: 'industrySummary',
+    audience: 'audienceSummary',
+    valueProp: 'valuePropSummary',
+    competitorDifferentiation: 'edgeSummary',
+    competitorDifferentiator: 'edgeSummary',
+    painPoints: 'painSummary',
+    buyerObjections: 'objectionsSummary',
+    proofElements: 'proofSummary',
+  };
+  
+  const summaryField = summaryMap[field];
+  if (!summaryField) return undefined;
+  
+  const summary = (intel as any)[summaryField];
+  return typeof summary === 'string' && summary.trim() ? summary : undefined;
+}
+
+/**
  * Calculate current strategic level based on captured intelligence
  * STRICT: All fields must be captured to reach a level
  */
@@ -82,15 +105,25 @@ function createResult(level: StrategicLevel, intel: Partial<ExtractedIntelligenc
     }
   }
   
-  // Get captured fields with values
-  const capturedFields: { field: string; value: string }[] = [];
+  // Get captured fields with values and summaries
+  const capturedFields: { field: string; value: string; summary?: string }[] = [];
   if (intel) {
-    const allFields = ['industry', 'audience', 'valueProp', 'competitorDifferentiation', 'painPoints', 'buyerObjections', 'audienceRole', 'proofElements', 'toneDirection'];
+    // Include both naming conventions for competitorDifferentiator
+    const allFields = ['industry', 'audience', 'valueProp', 'competitorDifferentiation', 'competitorDifferentiator', 'painPoints', 'buyerObjections', 'audienceRole', 'proofElements', 'toneDirection'];
+    const seenFields = new Set<string>();
+    
     for (const field of allFields) {
+      // Normalize field name for deduplication (competitorDifferentiator = competitorDifferentiation)
+      const normalizedField = field === 'competitorDifferentiator' ? 'competitorDifferentiator' : field;
+      
+      if (seenFields.has(normalizedField)) continue;
+      
       if (isFieldCaptured(intel, field)) {
+        seenFields.add(normalizedField);
         capturedFields.push({
-          field,
+          field: normalizedField,
           value: getFieldDisplayValue(intel, field),
+          summary: getFieldSummary(intel, field),
         });
       }
     }
