@@ -36,57 +36,30 @@ async function hashIP(ip: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 }
 
-const systemPrompt = `You are an intelligence extraction system. Your job is to extract ONLY what the user explicitly stated. Use their ACTUAL WORDS or very close paraphrases.
+const systemPrompt = `You are an extraction system. Analyze the user message and extract ONLY explicitly stated information. Return JSON.
 
-CRITICAL RULES:
-- Extract ONLY what the user explicitly stated - do NOT infer, guess, or add information
-- Use the user's actual words whenever possible
-- Keep values concise (under 30 characters for clean display)
-- If a field isn't clearly mentioned, return null for that field
-- Extract MULTIPLE fields from a single message when present
-- Do NOT add "AI-powered" or other embellishments unless the user said it
-
-FIELD DEFINITIONS:
-
-1. industry: What business/industry are they in?
-   - "I build landing pages" → "Landing pages"
-   - "We're a SaaS company" → "SaaS"
-   - "I run a consulting firm" → "Consulting"
-
-2. target_audience: Who do they serve/sell to?
-   - "We help B2B SaaS founders" → "B2B SaaS founders"
-   - "I work with restaurants" → "Restaurants"
-
-3. unique_value: What value do they provide? Use their words.
-   - "strategic consultation first" → "Strategic consultation first"
-   - "we ask the same questions a $15K agency would" → "$15K agency questions"
-
-4. competitor_differentiator: How are they different from competitors? Use their words.
-   - "Unlike Unbounce, we don't give templates" → "Not templates like Unbounce"
-   - "Leadpages gives you placeholders" → "No placeholder text"
-
-5. audience_pain_points: What problems do their customers face?
-   - "They don't know what to write" → "Don't know what to write"
-   - "Templates assume you have messaging" → "Templates assume messaging exists"
-
-6. buyer_objections: What objections or hesitations do buyers have?
-   - "People think it's too expensive" → "Price concerns"
-   - Only extract if explicitly mentioned
-
-7. proof_elements: What proof, results, or credentials did they mention?
-   - "We've worked with 50 companies" → "50 companies served"
-   - Only extract if explicitly mentioned
-
-Return ONLY valid JSON:
+Extract these fields (use null if not explicitly stated):
 {
-  "industry": "string or null",
-  "target_audience": "string or null", 
-  "unique_value": "string or null",
-  "competitor_differentiator": "string or null",
-  "audience_pain_points": "string or null",
-  "buyer_objections": "string or null",
-  "proof_elements": "string or null"
-}`;
+  industry: string | null,           // What business/industry are they in?
+  target_audience: string | null,    // Who do they serve?
+  unique_value: string | null,       // What's their core value/offer?
+  competitor_differentiator: string | null, // How are they different?
+  audience_pain_points: string | null,      // What problems do customers face?
+  buyer_objections: string | null,   // What makes buyers hesitate?
+  proof_elements: string | null      // What proof/results/credentials?
+}
+
+Rules:
+- Extract their ACTUAL words, not inferences
+- Keep values under 25 characters
+- If they said "B2B SaaS founders" → target_audience: "B2B SaaS founders"
+- If they said "not templates like Unbounce" → competitor_differentiator: "Not templates"
+- If they said "strategic consultation first" → unique_value: "Strategic consultation"
+- If they didn't mention it, return null
+- Do NOT add words like "AI-powered" unless they said it
+- Do NOT infer or guess - only extract explicit statements
+
+Return ONLY valid JSON with the field names exactly as shown above.`;
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -181,20 +154,9 @@ serve(async (req) => {
         messages: [
           { role: 'system', content: systemPrompt + existingContext },
           ...contextMessages,
-          { role: 'user', content: `Extract business intelligence from this user message. Use their ACTUAL WORDS - do not infer or add information they didn't say.
+          { role: 'user', content: `User message: "${sanitizedMessage}"
 
-User message: "${sanitizedMessage}"
-
-Extract any of these fields that are explicitly mentioned:
-- industry: What business/industry?
-- target_audience: Who do they serve?
-- unique_value: What's their core value/approach?
-- competitor_differentiator: How are they different?
-- audience_pain_points: What problems do their customers face?
-- buyer_objections: Any objections mentioned?
-- proof_elements: Any proof/results/credentials?
-
-Return JSON with extracted values (use null for fields not mentioned). Keep values under 30 characters.` },
+Extract only what they explicitly stated. Return JSON with null for unmentioned fields. Keep values under 25 characters.` },
         ],
       }),
     });
@@ -231,13 +193,13 @@ Return JSON with extracted values (use null for fields not mentioned). Keep valu
         const parsed = JSON.parse(jsonMatch[0]);
         // Validate and sanitize extracted fields - map from snake_case to camelCase
         extracted = {
-          industry: typeof parsed.industry === 'string' && parsed.industry.trim() ? parsed.industry.slice(0, 100) : null,
-          audience: typeof parsed.target_audience === 'string' && parsed.target_audience.trim() ? parsed.target_audience.slice(0, 200) : null,
-          valueProp: typeof parsed.unique_value === 'string' && parsed.unique_value.trim() ? parsed.unique_value.slice(0, 200) : null,
-          competitorDifferentiator: typeof parsed.competitor_differentiator === 'string' && parsed.competitor_differentiator.trim() ? parsed.competitor_differentiator.slice(0, 200) : null,
-          painPoints: typeof parsed.audience_pain_points === 'string' && parsed.audience_pain_points.trim() ? parsed.audience_pain_points.slice(0, 200) : null,
-          buyerObjections: typeof parsed.buyer_objections === 'string' && parsed.buyer_objections.trim() ? parsed.buyer_objections.slice(0, 200) : null,
-          proofElements: typeof parsed.proof_elements === 'string' && parsed.proof_elements.trim() ? parsed.proof_elements.slice(0, 200) : null,
+          industry: typeof parsed.industry === 'string' && parsed.industry.trim() ? parsed.industry.slice(0, 25) : null,
+          audience: typeof parsed.target_audience === 'string' && parsed.target_audience.trim() ? parsed.target_audience.slice(0, 25) : null,
+          valueProp: typeof parsed.unique_value === 'string' && parsed.unique_value.trim() ? parsed.unique_value.slice(0, 25) : null,
+          competitorDifferentiator: typeof parsed.competitor_differentiator === 'string' && parsed.competitor_differentiator.trim() ? parsed.competitor_differentiator.slice(0, 25) : null,
+          painPoints: typeof parsed.audience_pain_points === 'string' && parsed.audience_pain_points.trim() ? parsed.audience_pain_points.slice(0, 25) : null,
+          buyerObjections: typeof parsed.buyer_objections === 'string' && parsed.buyer_objections.trim() ? parsed.buyer_objections.slice(0, 25) : null,
+          proofElements: typeof parsed.proof_elements === 'string' && parsed.proof_elements.trim() ? parsed.proof_elements.slice(0, 25) : null,
         };
       }
     } catch (parseError) {
