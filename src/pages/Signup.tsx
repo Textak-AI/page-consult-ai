@@ -1,12 +1,45 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check, Sparkles, FileText, Calculator, Clock } from "lucide-react";
 import { useSession } from "@/contexts/SessionContext";
+
+interface DemoIntelligence {
+  sessionId: string;
+  source: string;
+  capturedAt: string;
+  industry: string | null;
+  industrySummary: string | null;
+  audience: string | null;
+  audienceSummary: string | null;
+  valueProp: string | null;
+  valuePropSummary: string | null;
+  competitorDifferentiator: string | null;
+  edgeSummary: string | null;
+  painPoints: string | null;
+  painSummary: string | null;
+  buyerObjections: string | null;
+  objectionsSummary: string | null;
+  proofElements: string | null;
+  proofSummary: string | null;
+  marketResearch: {
+    marketSize: string | null;
+    buyerPersona: string | null;
+    commonObjections: string[];
+    industryInsights: string[];
+  };
+  conversationHistory: Array<{
+    role: string;
+    content: string;
+    timestamp: string;
+  }>;
+  readinessScore: number;
+  selectedPath: string;
+}
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -19,6 +52,31 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
+  // Demo origin detection
+  const isFromDemo = searchParams.get('from') === 'demo';
+  const [demoIntelligence, setDemoIntelligence] = useState<DemoIntelligence | null>(null);
+  
+  // Load demo data on mount
+  useEffect(() => {
+    if (isFromDemo) {
+      const storedIntelligence = sessionStorage.getItem('demoIntelligence');
+      if (storedIntelligence) {
+        try {
+          setDemoIntelligence(JSON.parse(storedIntelligence));
+          console.log('📋 [Signup] Loaded demo intelligence from sessionStorage');
+        } catch (e) {
+          console.error('Failed to parse demo intelligence:', e);
+        }
+      }
+      
+      // Pre-fill email if available
+      const storedEmail = sessionStorage.getItem('demoEmail');
+      if (storedEmail) {
+        setEmail(storedEmail);
+      }
+    }
+  }, [isFromDemo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +103,15 @@ export default function Signup() {
           title: "Welcome back!",
           description: "Redirecting..."
         });
+        
+        // Handle demo intelligence transfer for login
+        if (isFromDemo && demoIntelligence) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await createConsultationFromDemo(user.id);
+            return;
+          }
+        }
         
         // Check for pending session from Brand Intake flow first
         if (pendingSessionId) {
@@ -89,7 +156,7 @@ export default function Signup() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}${redirectTo}`
+            emailRedirectTo: `${window.location.origin}/wizard`
           }
         });
 
@@ -101,9 +168,15 @@ export default function Signup() {
         }
 
         toast({
-          title: "Account created!",
-          description: "Redirecting..."
+          title: isFromDemo ? "Trial started!" : "Account created!",
+          description: isFromDemo ? "Your strategy profile is ready." : "Redirecting..."
         });
+        
+        // Handle demo intelligence transfer for signup
+        if (isFromDemo && demoIntelligence && data.user) {
+          await createConsultationFromDemo(data.user.id);
+          return;
+        }
         
         // Check for pending session from Brand Intake flow first
         if (pendingSessionId) {
@@ -130,6 +203,73 @@ export default function Signup() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createConsultationFromDemo = async (userId: string) => {
+    if (!demoIntelligence) return;
+    
+    console.log('🚀 [Signup] Creating consultation from demo intelligence');
+    
+    try {
+      // Create consultation with demo intelligence pre-filled
+      const { data: consultation, error } = await supabase
+        .from("consultations")
+        .insert({
+          user_id: userId,
+          industry: demoIntelligence.industry,
+          target_audience: demoIntelligence.audience,
+          unique_value: demoIntelligence.valueProp,
+          competitor_differentiator: demoIntelligence.competitorDifferentiator,
+          audience_pain_points: demoIntelligence.painPoints ? [demoIntelligence.painPoints] : [],
+          authority_markers: demoIntelligence.proofElements ? [demoIntelligence.proofElements] : [],
+          extracted_intelligence: {
+            ...demoIntelligence,
+            source: 'demo',
+            transferredAt: new Date().toISOString(),
+          },
+          consultation_status: demoIntelligence.industry && demoIntelligence.audience ? 'identified' : 'not_started',
+          status: "in_progress",
+          readiness_score: demoIntelligence.readinessScore,
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Failed to create consultation:', error);
+        // Fallback to wizard without pre-fill
+        navigate('/wizard', { replace: true });
+        return;
+      }
+      
+      console.log('✅ [Signup] Consultation created:', consultation.id);
+      
+      // Update demo_sessions to link to user
+      if (demoIntelligence.sessionId) {
+        await supabase
+          .from('demo_sessions')
+          .update({ 
+            claimed_by: userId,
+            claimed_at: new Date().toISOString(),
+          })
+          .eq('session_id', demoIntelligence.sessionId);
+      }
+      
+      // Clean up sessionStorage
+      sessionStorage.removeItem('demoIntelligence');
+      sessionStorage.removeItem('demoEmail');
+      
+      // Redirect to wizard with consultation context
+      const targetPath = demoIntelligence.selectedPath === 'conversation' 
+        ? `/consultation/${consultation.id}`
+        : `/wizard?session=${demoIntelligence.sessionId}`;
+      
+      console.log('🚀 [Signup] Redirecting to:', targetPath);
+      navigate(targetPath, { replace: true });
+      
+    } catch (err) {
+      console.error('Error creating consultation from demo:', err);
+      navigate('/wizard', { replace: true });
     }
   };
 
@@ -178,6 +318,180 @@ export default function Signup() {
     }
   };
 
+  // Contextual signup UI for demo users
+  if (isFromDemo) {
+    return (
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden p-4">
+        {/* Premium dark gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0f0a1f] via-[#1a1332] to-[#0f0a1f]" />
+        
+        {/* Ambient orbs - more celebratory */}
+        <div className="absolute top-20 left-10 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-3xl" />
+        
+        <div className="w-full max-w-md relative z-10">
+          {/* Header - Trial focused */}
+          <div className="text-center mb-6">
+            <div className="flex items-center justify-center mb-4">
+              <img 
+                src="/logo/whiteAsset_3combimark_darkmode.svg" 
+                alt="PageConsult AI" 
+                className="h-12 w-auto"
+              />
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-400 text-sm font-medium mb-3">
+              <Sparkles className="w-4 h-4" />
+              Your strategy profile is ready
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+              🚀 Start Your 14-Day Free Trial
+            </h1>
+            <p className="text-gray-300 text-base">
+              Create your account to build your first landing page — no credit card required.
+            </p>
+          </div>
+
+          {/* Value bullets */}
+          <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-4 mb-6">
+            <ul className="space-y-3">
+              <li className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="w-3 h-3 text-green-400" />
+                </div>
+                <span className="text-gray-200 text-sm">
+                  <span className="text-white font-medium">Complete AI Strategy Brief</span>
+                  <span className="text-gray-400"> (exportable PDF)</span>
+                </span>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="w-3 h-3 text-green-400" />
+                </div>
+                <span className="text-gray-200 text-sm">
+                  <span className="text-white font-medium">Full AI consultation</span>
+                  <span className="text-gray-400"> (you're already halfway there)</span>
+                </span>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="w-3 h-3 text-green-400" />
+                </div>
+                <span className="text-gray-200 text-sm">
+                  <span className="text-white font-medium">1 premium landing page</span>
+                  <span className="text-gray-400"> generation</span>
+                </span>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="w-3 h-3 text-green-400" />
+                </div>
+                <span className="text-gray-200 text-sm">
+                  <span className="text-white font-medium">ROI calculator</span>
+                  <span className="text-gray-400"> built for your offer</span>
+                </span>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Clock className="w-3 h-3 text-green-400" />
+                </div>
+                <span className="text-gray-200 text-sm">
+                  <span className="text-white font-medium">14 days</span>
+                  <span className="text-gray-400"> to test everything</span>
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Premium glassmorphism card */}
+          <div className="relative group">
+            {/* Enhanced glow effect */}
+            <div className="absolute inset-0 -m-2 bg-gradient-to-br from-amber-500/30 via-cyan-500/20 to-purple-500/30 rounded-2xl blur-2xl opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+            
+            <div className="relative bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-amber-500/20 p-6 shadow-[0_0_40px_rgba(251,191,36,0.1)]">
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-gray-200 font-medium">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                    className="bg-slate-800/60 border-white/10 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 transition-all"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-gray-200 font-medium">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                    minLength={6}
+                    className="bg-slate-800/60 border-white/10 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 transition-all"
+                  />
+                  {!isLogin && (
+                    <p className="text-xs text-gray-400">
+                      Must be at least 6 characters
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-500 hover:via-amber-400 hover:to-amber-500 text-white font-semibold py-6 rounded-xl shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all duration-300 border-0"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      {isLogin ? "Signing in..." : "Starting trial..."}
+                    </>
+                  ) : (
+                    <>{isLogin ? "Sign In" : "Start Free Trial →"}</>
+                  )}
+                </Button>
+              </form>
+
+              <p className="text-center text-xs text-gray-500 mt-4">
+                No credit card required • Cancel anytime
+              </p>
+
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="text-sm text-gray-400 hover:text-amber-400 transition-colors font-medium"
+                  disabled={loading}
+                >
+                  {isLogin ? "Don't have an account? Start trial" : "Already have an account? Sign in"}
+                </button>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <button
+                  onClick={() => navigate("/")}
+                  className="text-sm text-gray-400 hover:text-amber-400 transition-colors w-full font-medium flex items-center justify-center gap-2"
+                  disabled={loading}
+                >
+                  <span>←</span>
+                  <span>Back to demo</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Standard signup UI (non-demo)
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden p-4">
       {/* Premium dark gradient background */}
