@@ -18,7 +18,8 @@ function convertToFullIntelligence(simple: ContextExtractedIntelligence): Partia
     industry: simple.industry,
     audience: simple.audience,
     valueProp: simple.valueProp,
-    competitorDifferentiation: simple.competitorDifferentiator,
+    // Use competitorDifferentiator (matching UI CATEGORIES key)
+    competitorDifferentiator: simple.competitorDifferentiator,
     // Convert single strings to arrays for painPoints, buyerObjections, proofElements
     painPoints: simple.painPoints ? [simple.painPoints] : [],
     buyerObjections: simple.buyerObjections ? [simple.buyerObjections] : [],
