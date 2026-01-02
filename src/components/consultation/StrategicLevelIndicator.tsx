@@ -208,13 +208,13 @@ export function StrategicLevelIndicator({
               const rowContent = (
                 <div
                   className={cn(
-                    "flex items-center gap-2 py-1 rounded-md transition-colors",
+                    "flex items-start gap-2 py-1 rounded-md transition-colors",
                     isCaptured && fieldData?.summary && "cursor-help"
                   )}
                 >
                   <motion.div 
                     className={cn(
-                      "w-1 h-8 rounded-full flex-shrink-0 transition-all duration-500",
+                      "w-1 h-8 rounded-full flex-shrink-0 transition-all duration-500 mt-0.5",
                       isCaptured 
                         ? `bg-gradient-to-b ${currentStyles.gradient}` 
                         : isThinking ? "bg-slate-600" : "bg-slate-700"
@@ -231,7 +231,7 @@ export function StrategicLevelIndicator({
                   
                   <span 
                     className={cn(
-                      "text-xs truncate transition-colors duration-500 min-w-[80px]",
+                      "text-xs transition-colors duration-500 min-w-[80px] flex-shrink-0",
                       isCaptured ? "text-slate-300" : "text-slate-600"
                     )}
                   >
@@ -247,7 +247,7 @@ export function StrategicLevelIndicator({
                         exit={{ opacity: 0, x: -5 }}
                         transition={{ duration: 0.3 }}
                         className={cn(
-                          "text-xs ml-auto text-right line-clamp-2 max-w-[140px]",
+                          "text-xs leading-tight ml-auto text-right line-clamp-2 max-w-[140px] break-words",
                           currentStyles.text
                         )}
                       >
@@ -364,10 +364,10 @@ export function StrategicLevelIndicator({
               return (
                 <Tooltip key={category.key}>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center gap-2 cursor-help">
-                      <div className={cn("w-1 h-6 rounded-full bg-gradient-to-b", currentStyles.gradient)} />
-                      <span className="text-slate-400 text-xs">{category.label}:</span>
-                      <span className={cn("text-xs line-clamp-2", currentStyles.text)}>{fieldData.value}</span>
+                    <div className="flex items-start gap-2 cursor-help">
+                      <div className={cn("w-1 h-6 rounded-full bg-gradient-to-b flex-shrink-0 mt-0.5", currentStyles.gradient)} />
+                      <span className="text-slate-400 text-xs flex-shrink-0">{category.label}:</span>
+                      <span className={cn("text-xs leading-tight line-clamp-2 max-w-[140px] break-words", currentStyles.text)}>{fieldData.value}</span>
                     </div>
                   </TooltipTrigger>
                   {fieldData.summary && (
@@ -434,10 +434,10 @@ export function StrategicLevelIndicator({
                   const isCaptured = !!fieldData?.value;
                   
                   return (
-                    <div key={category.key} className="flex items-center gap-2">
+                    <div key={category.key} className="flex items-start gap-2">
                       <div 
                         className={cn(
-                          "w-1 h-6 rounded-full flex-shrink-0 transition-all duration-500",
+                          "w-1 h-6 rounded-full flex-shrink-0 transition-all duration-500 mt-0.5",
                           isCaptured 
                             ? `bg-gradient-to-b ${currentStyles.gradient}` 
                             : "bg-slate-700"
@@ -445,14 +445,14 @@ export function StrategicLevelIndicator({
                       />
                       <span 
                         className={cn(
-                          "text-xs transition-colors duration-500 min-w-[90px]",
+                          "text-xs transition-colors duration-500 min-w-[90px] flex-shrink-0",
                           isCaptured ? "text-slate-300" : "text-slate-600"
                         )}
                       >
                         {category.label}
                       </span>
                       {isCaptured && fieldData?.value && fieldData.value !== 'null' && (
-                        <span className={cn("text-xs ml-auto text-right line-clamp-2 max-w-[120px]", currentStyles.text)}>
+                        <span className={cn("text-xs leading-tight ml-auto text-right line-clamp-2 max-w-[120px] break-words", currentStyles.text)}>
                           {fieldData.value}
                         </span>
                       )}
