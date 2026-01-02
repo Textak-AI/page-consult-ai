@@ -65,11 +65,15 @@ Return JSON with SHORT values (max 15 characters, no truncation needed) and summ
 }
 
 CRITICAL RULES:
-- Short values: MAX 15 characters, must fit on one line
-- Shorten phrases: "B2B SaaS founders" → "B2B Founders", "Strategic consultation" → "Strategy first"
+- Short values: MAX 14 characters, must fit on one line
+- Abbreviate phrases:
+  • "B2B SaaS founders" → "B2B Founders"
+  • "Strategic consultation" → "Strategy first"
+  • "Landing page builder" → "Page builder"
+  • "AI-powered strategy" → "SaaS/Strategy"
 - Industry = WHAT they do/sell (SaaS, Coaching, Real estate), NOT their approach (AI-powered is an approach, not an industry)
 - Pain Points = the problem (e.g. "Low conversion", "No leads"), NOT a description
-- Use their actual words when possible, but condense
+- Use their actual words when possible, but condense to fit 14 chars
 - Return null for fields not explicitly mentioned
 - Summaries synthesize what they said (1-2 sentences)
 - Do NOT infer or guess - only extract explicit statements
@@ -232,8 +236,8 @@ Extract only what they explicitly stated. Return JSON with null for unmentioned 
         // Validate and format extracted fields
         const formatShort = (val: any) => {
           if (typeof val !== 'string' || !val.trim()) return null;
-          // Limit to 15 chars for display - no ellipsis needed
-          return val.trim().slice(0, 15);
+          // Limit to 14 chars for display - no ellipsis needed
+          return val.trim().slice(0, 14);
         };
         
         const formatSummary = (val: any) => {
