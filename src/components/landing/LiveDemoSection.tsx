@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useIntelligence, ExtractedIntelligence as ContextExtractedIntelligence } from '@/contexts/IntelligenceContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Sparkles, Send, Loader2 } from 'lucide-react';
+import { MessageSquare, Sparkles, Send, Loader2, Unlock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import EmailGateModal from './EmailGateModal';
@@ -57,7 +57,7 @@ const TypingIndicator = () => (
 
 export default function LiveDemoSection() {
   const navigate = useNavigate();
-  const { state, processUserMessage, resetIntelligence, submitEmail, dismissEmailGate } = useIntelligence();
+  const { state, processUserMessage, resetIntelligence, submitEmail, dismissEmailGate, reopenEmailGate } = useIntelligence();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -395,6 +395,23 @@ export default function LiveDemoSection() {
               isThinking={state.isProcessing}
               className="lg:h-[500px] lg:border-l-2 lg:border-slate-700/50 lg:shadow-[-4px_0_12px_rgba(0,0,0,0.2)]"
             />
+            
+            {/* Unlock Market Research button - shown when email modal was dismissed */}
+            {state.emailDismissed && !state.emailCaptured && state.extracted.industry && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3"
+              >
+                <button
+                  onClick={reopenEmailGate}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-cyan-500/40 text-cyan-400 rounded-lg hover:bg-cyan-500/10 hover:border-cyan-400/60 transition-all text-sm font-medium"
+                >
+                  <Unlock className="w-4 h-4" />
+                  Unlock Market Research
+                </button>
+              </motion.div>
+            )}
           </motion.div>
         </div>
       </div>
