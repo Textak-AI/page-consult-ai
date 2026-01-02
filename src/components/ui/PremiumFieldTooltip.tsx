@@ -8,10 +8,10 @@ interface PremiumFieldTooltipProps {
 }
 
 export function PremiumFieldTooltip({ value, className }: PremiumFieldTooltipProps) {
-  const shouldShowTooltip = value && value.length > 20;
+  const shouldShowTooltip = value && value.length > 15;
   
   return (
-    <div className="group relative">
+    <div className="group/tooltip relative">
       {/* Truncated display value */}
       <span className={cn(
         "block text-xs truncate max-w-[140px] cursor-pointer",
@@ -24,10 +24,10 @@ export function PremiumFieldTooltip({ value, className }: PremiumFieldTooltipPro
       {shouldShowTooltip && (
         <div className="
           absolute right-0 top-full mt-1 z-50
-          opacity-0 invisible group-hover:opacity-100 group-hover:visible
+          opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible
           transition-all duration-200 ease-out
-          transform scale-95 translate-y-1 group-hover:scale-100 group-hover:translate-y-0
-          pointer-events-none group-hover:pointer-events-auto
+          transform scale-95 group-hover/tooltip:scale-100
+          pointer-events-none group-hover/tooltip:pointer-events-auto
         ">
           {/* Glow effect */}
           <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-lg blur-md" />
@@ -46,7 +46,7 @@ export function PremiumFieldTooltip({ value, className }: PremiumFieldTooltipPro
             <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent rounded-lg pointer-events-none" />
             
             {/* Content */}
-            <p className="text-sm text-cyan-300 font-medium relative z-10 break-words">
+            <p className="text-sm text-cyan-300 font-medium relative z-10 whitespace-normal break-words">
               {value}
             </p>
             
