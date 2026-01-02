@@ -334,10 +334,10 @@ export function StrategicLevelIndicator({
   );
 }
 
-// Helper to truncate long values
-function truncateValue(value: string, maxLength: number = 20): string {
+// Helper to truncate long values (shouldn't be needed with 15 char extraction limit)
+function truncateValue(value: string, maxLength: number = 15): string {
   if (value.length > maxLength) {
-    return value.slice(0, maxLength - 1) + '…';
+    return value.slice(0, maxLength);
   }
   return value;
 }
