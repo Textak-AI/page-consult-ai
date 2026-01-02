@@ -23,7 +23,15 @@ function convertToFullIntelligence(simple: ContextExtractedIntelligence): Partia
     painPoints: simple.painPoints ? [simple.painPoints] : [],
     buyerObjections: simple.buyerObjections ? [simple.buyerObjections] : [],
     proofElements: simple.proofElements ? [simple.proofElements] : [],
-  };
+    // Include summaries for tooltips (cast to any since these aren't in the strict type)
+    ...(simple.industrySummary && { industrySummary: simple.industrySummary }),
+    ...(simple.audienceSummary && { audienceSummary: simple.audienceSummary }),
+    ...(simple.valuePropSummary && { valuePropSummary: simple.valuePropSummary }),
+    ...(simple.edgeSummary && { edgeSummary: simple.edgeSummary }),
+    ...(simple.painSummary && { painSummary: simple.painSummary }),
+    ...(simple.objectionsSummary && { objectionsSummary: simple.objectionsSummary }),
+    ...(simple.proofSummary && { proofSummary: simple.proofSummary }),
+  } as Partial<ExtractedIntelligence>;
 }
 
 // Typing indicator component
