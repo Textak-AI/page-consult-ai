@@ -97,8 +97,8 @@ export function StrategicLevelIndicator({ result, onContinue, className }: Props
           </p>
         </div>
         
-        {/* Stacked Categories - tighter spacing for sidebar */}
-        <div className="flex-1 flex flex-col justify-center space-y-2">
+        {/* Stacked Categories - balanced spacing */}
+        <div className="flex-1 flex flex-col justify-center space-y-5">
           {CATEGORIES.map((category, index) => {
             const value = capturedMap.get(category.key);
             const isCaptured = !!value;
@@ -114,7 +114,7 @@ export function StrategicLevelIndicator({ result, onContinue, className }: Props
                 {/* Color band */}
                 <div 
                   className={cn(
-                    "w-1 h-6 rounded-full transition-all duration-300 flex-shrink-0",
+                    "w-1 h-10 rounded-full transition-all duration-300 flex-shrink-0",
                     isCaptured 
                       ? `bg-gradient-to-b ${styles.gradient}` 
                       : "bg-slate-700"
