@@ -36,69 +36,67 @@ async function hashIP(ip: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 }
 
-const systemPrompt = `You are a precise extraction system. Analyze this message carefully and extract ALL explicitly stated information.
-A single message can contain MULTIPLE fields — extract ALL of them.
+const systemPrompt = `You are a precise extraction system. Extract ALL explicitly stated business information.
 
-Look for these specific signals:
+CRITICAL DISTINCTION:
+- VALUE PROPOSITION = What you DO for customers (your offer, your service, what they get)
+- COMPETITIVE EDGE = How you're DIFFERENT from competitors (what you DON'T do, contrast with others)
 
-INDUSTRY: What do they build/sell? What space are they in?
-→ "we build AI-powered strategy systems" = SaaS/Strategy
-→ "I'm a real estate agent" = Real estate
-→ "we're a coaching business" = Coaching
+FIELD DEFINITIONS:
 
-AUDIENCE: Who do they serve? Who are their customers?
-→ "B2B SaaS founders, agency owners" = B2B Founders
-→ "small business owners" = SMB owners
-→ "marketing teams" = Marketing teams
+INDUSTRY: What business/space are they in?
+→ "we build AI landing pages" = "Page builder"
+→ "real estate coaching" = "Real estate"
 
-VALUE PROPOSITION: What's their core offer? What do they do for customers?
-→ "strategic consultation — same questions a $15K agency would ask" = Strategy first
-→ "we help companies grow revenue" = Revenue growth
+AUDIENCE: Who are their customers?
+→ "B2B SaaS founders and agencies" = "B2B Founders"
+→ "small business owners" = "SMB owners"
 
-COMPETITIVE EDGE: How are they different? Who are competitors? What do they NOT do?
-→ "problem with Unbounce and Leadpages is templates" = Not templates
-→ "unlike other tools that..." = extract the difference
-→ "we don't just give you..." = extract the contrast
+VALUE PROPOSITION: What do they DO for customers? Their core offer.
+→ "strategic consultation before building" = "Strategy first"
+→ "we grow their revenue" = "Revenue growth"
+→ "same questions a $15K agency asks" = "Agency-level"
 
-PAIN POINTS: What problems do customers have? What frustrates them?
-→ "tired of landing pages that look good but don't convert" = Low conversion
-→ "assume you already know what to say" = Unclear messaging
-→ "frustrated with..." = extract the frustration
+COMPETITIVE EDGE: How are they DIFFERENT? What do competitors do wrong?
+→ "problem with Unbounce is templates" = "Not templates"
+→ "unlike tools that give placeholder text" = "Not templates"
+→ "we don't just give you a builder" = "Not just tools"
+→ Look for: "unlike", "not like", "problem with", "different from", "we don't just"
+
+PAIN POINTS: What frustrates customers?
+→ "pages that look good but don't convert" = "Low conversion"
+→ "don't know what to say" = "Bad messaging"
+→ Look for: "tired of", "frustrated", "problem is"
 
 BUYER OBJECTIONS: What makes buyers hesitate?
-→ "they think it's too expensive" = Price concern
-→ "worry about..." = extract the concern
+→ "they think it's expensive" = "Price concern"
 
-PROOF ELEMENTS: Results, testimonials, credentials?
-→ "helped 500+ companies" = 500+ clients
-→ "10 years experience" = 10 yrs experience
+PROOF ELEMENTS: Results, credentials?
+→ "500+ companies helped" = "500+ clients"
 
-Return JSON with short values (MAX 14 characters) and summaries:
+OUTPUT FORMAT - JSON with MAX 14 CHARACTER short values:
 {
-  "industry": "short value or null",
-  "industrySummary": "1-2 sentence synthesis or null",
-  "audience": "short value or null",
-  "audienceSummary": "1-2 sentence synthesis or null",
-  "valueProp": "short value or null",
-  "valuePropSummary": "1-2 sentence synthesis or null",
-  "competitiveEdge": "short value or null",
-  "edgeSummary": "1-2 sentence synthesis or null",
-  "painPoints": "short value or null",
-  "painSummary": "1-2 sentence synthesis or null",
-  "buyerObjections": "short value or null",
-  "objectionsSummary": "1-2 sentence synthesis or null",
-  "proofElements": "short value or null",
-  "proofSummary": "1-2 sentence synthesis or null"
+  "industry": "max 14 chars",
+  "industrySummary": "1-2 sentences",
+  "audience": "max 14 chars",
+  "audienceSummary": "1-2 sentences",
+  "valueProp": "max 14 chars",
+  "valuePropSummary": "1-2 sentences",
+  "competitiveEdge": "max 14 chars",
+  "edgeSummary": "1-2 sentences",
+  "painPoints": "max 14 chars",
+  "painSummary": "1-2 sentences",
+  "buyerObjections": "max 14 chars or null",
+  "objectionsSummary": "1-2 sentences or null",
+  "proofElements": "max 14 chars or null",
+  "proofSummary": "1-2 sentences or null"
 }
 
-CRITICAL RULES:
-- Extract from ACTUAL words in the message
-- A single message can contain MULTIPLE fields — extract ALL of them
-- Short values: MAX 14 characters, abbreviate if needed
-- If clearly stated, extract it. Don't leave fields empty when evidence exists
-- Competitive Edge often comes from contrast: 'unlike X', 'not like Y', 'problem with Z'
-- Pain Points often come from: 'tired of', 'frustrated', 'problem is', 'don't convert'
-- Return null ONLY if the field is truly not mentioned
+ABBREVIATION EXAMPLES (must be ≤14 chars):
+- "Strategic consultation" → "Strategy first"
+- "B2B SaaS founders" → "B2B Founders"
+- "Not templates like Unbounce" → "Not templates"
+- "Low converting pages" → "Low conversion"
 
 Return ONLY valid JSON.`;
 
