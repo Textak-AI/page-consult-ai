@@ -36,53 +36,51 @@ async function hashIP(ip: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 }
 
-const systemPrompt = `You are an intelligence extraction system. Extract ALL relevant business intelligence from each user message.
+const systemPrompt = `You are an intelligence extraction system. Your job is to extract ONLY what the user explicitly stated. Use their ACTUAL WORDS or very close paraphrases.
 
-IMPORTANT: Extract MULTIPLE fields from a single message when present. A comprehensive message may contain industry, audience, value proposition, competitive edge, pain points, and more.
+CRITICAL RULES:
+- Extract ONLY what the user explicitly stated - do NOT infer, guess, or add information
+- Use the user's actual words whenever possible
+- Keep values concise (under 30 characters for clean display)
+- If a field isn't clearly mentioned, return null for that field
+- Extract MULTIPLE fields from a single message when present
+- Do NOT add "AI-powered" or other embellishments unless the user said it
 
 FIELD DEFINITIONS:
 
-1. industry: What type of business they ARE (their category/sector)
-   - "I'm a manufacturer" → "Manufacturing"
-   - "We're a SaaS company" → "Software/SaaS"
-   - "I help manufacturers" → "Consulting" or "Services" (NOT Manufacturing - that's their audience)
+1. industry: What business/industry are they in?
+   - "I build landing pages" → "Landing pages"
+   - "We're a SaaS company" → "SaaS"
+   - "I run a consulting firm" → "Consulting"
 
-2. target_audience: Who they SELL TO or SERVE (their customers/clients)
+2. target_audience: Who do they serve/sell to?
    - "We help B2B SaaS founders" → "B2B SaaS founders"
-   - "I sell to restaurants" → "Restaurant owners"
-   - "Our clients are enterprise companies" → "Enterprise companies"
+   - "I work with restaurants" → "Restaurants"
 
-3. unique_value: Their main value proposition - what outcome/transformation they provide
-   - "We help them build landing pages that convert" → "High-converting landing pages"
-   - "Strategic consultation first" → "Strategy-first approach"
+3. unique_value: What value do they provide? Use their words.
+   - "strategic consultation first" → "Strategic consultation first"
+   - "we ask the same questions a $15K agency would" → "$15K agency questions"
 
-4. competitor_differentiator: What makes them different from competitors
-   - "Unlike Unbounce, we don't just give templates" → "No templates - strategic approach"
-   - "Other agencies just do execution" → "Strategic consultation, not just execution"
+4. competitor_differentiator: How are they different from competitors? Use their words.
+   - "Unlike Unbounce, we don't give templates" → "Not templates like Unbounce"
+   - "Leadpages gives you placeholders" → "No placeholder text"
 
-5. audience_pain_points: Problems their audience faces that they solve
-   - "They struggle with placeholder text" → "Don't know what to write"
-   - "Templates assume you know your messaging" → "Templates require existing copy strategy"
+5. audience_pain_points: What problems do their customers face?
+   - "They don't know what to write" → "Don't know what to write"
+   - "Templates assume you have messaging" → "Templates assume messaging exists"
 
-6. buyer_objections: Common objections or hesitations buyers have
-   - "People think AI is just a wrapper" → "Skeptical of AI-only solutions"
-   - "They worry it won't match their brand" → "Brand consistency concerns"
+6. buyer_objections: What objections or hesitations do buyers have?
+   - "People think it's too expensive" → "Price concerns"
+   - Only extract if explicitly mentioned
 
-7. proof_elements: Social proof, results, credibility markers
-   - "We've helped 50+ SaaS companies" → "50+ SaaS clients"
-   - "127% conversion increase" → "127% conversion lift"
-
-RULES:
-- Extract ALL fields that are present in the message, not just one
-- If a field is unclear or not mentioned, return null for that field
-- Be specific and concise in extracted values (under 50 chars each)
-- Do not make assumptions - only extract what's explicitly stated
-- A single comprehensive message can contain 3-5+ fields
+7. proof_elements: What proof, results, or credentials did they mention?
+   - "We've worked with 50 companies" → "50 companies served"
+   - Only extract if explicitly mentioned
 
 Return ONLY valid JSON:
 {
   "industry": "string or null",
-  "target_audience": "string or null",
+  "target_audience": "string or null", 
   "unique_value": "string or null",
   "competitor_differentiator": "string or null",
   "audience_pain_points": "string or null",
@@ -183,7 +181,20 @@ serve(async (req) => {
         messages: [
           { role: 'system', content: systemPrompt + existingContext },
           ...contextMessages,
-          { role: 'user', content: `Extract ALL business intelligence from this message. Look for industry, audience, value prop, competitive edge, pain points, objections, and proof elements:\n\n"${sanitizedMessage}"` },
+          { role: 'user', content: `Extract business intelligence from this user message. Use their ACTUAL WORDS - do not infer or add information they didn't say.
+
+User message: "${sanitizedMessage}"
+
+Extract any of these fields that are explicitly mentioned:
+- industry: What business/industry?
+- target_audience: Who do they serve?
+- unique_value: What's their core value/approach?
+- competitor_differentiator: How are they different?
+- audience_pain_points: What problems do their customers face?
+- buyer_objections: Any objections mentioned?
+- proof_elements: Any proof/results/credentials?
+
+Return JSON with extracted values (use null for fields not mentioned). Keep values under 30 characters.` },
         ],
       }),
     });
@@ -233,12 +244,13 @@ serve(async (req) => {
       console.error('Failed to parse extraction:', parseError);
     }
 
-    // Count how many fields were extracted and log them
-    const extractedCount = Object.values(extracted).filter(v => v !== null).length;
-    console.log('=== EXTRACTION RESULT ===');
-    console.log('Raw AI response:', content);
-    console.log('Parsed extracted object:', JSON.stringify(extracted, null, 2));
-    console.log(`Extracted ${extractedCount} fields for IP hash:`, ipHash);
+    // Enhanced logging for debugging
+    const capturedFields = Object.entries(extracted).filter(([_, v]) => v !== null).map(([k]) => k);
+    console.log('📝 User message:', sanitizedMessage);
+    console.log('🧠 Raw AI response:', content);
+    console.log('🎯 Parsed extraction:', JSON.stringify(extracted, null, 2));
+    console.log('✅ Fields captured:', capturedFields);
+    console.log(`📊 Total: ${capturedFields.length} fields extracted for IP hash:`, ipHash);
 
     return new Response(
       JSON.stringify(extracted),
