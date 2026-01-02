@@ -4,15 +4,15 @@ import { cn } from '@/lib/utils';
 import { StrategicLevel } from '@/types/strategicLevels';
 import type { LevelCheckResult } from '@/types/strategicLevels';
 
-// Category definitions for the stacked display
+// Category definitions matching the strategic level calculator fields
 const CATEGORIES = [
   { key: 'industry', label: 'Industry' },
-  { key: 'target_audience', label: 'Audience' },
-  { key: 'unique_value', label: 'Value Proposition' },
-  { key: 'competitor_differentiator', label: 'Competitive Edge' },
-  { key: 'audience_pain_points', label: 'Pain Points' },
-  { key: 'buyer_objections', label: 'Buyer Objections' },
-  { key: 'proof_elements', label: 'Proof Elements' },
+  { key: 'audience', label: 'Audience' },
+  { key: 'valueProp', label: 'Value Proposition' },
+  { key: 'competitorDifferentiator', label: 'Competitive Edge' },
+  { key: 'painPoints', label: 'Pain Points' },
+  { key: 'buyerObjections', label: 'Buyer Objections' },
+  { key: 'proofElements', label: 'Proof Elements' },
 ];
 
 // Level-based styling
@@ -58,6 +58,9 @@ const LEVEL_STYLES: Record<StrategicLevel, {
   },
 };
 
+// Stagger delay between each bar animation (ms)
+const STAGGER_DELAY_MS = 150;
+
 interface Props {
   result: LevelCheckResult;
   onContinue?: () => void;
@@ -75,56 +78,63 @@ export function StrategicLevelIndicator({
 }: Props) {
   const { currentLevel, capturedFields } = result;
   
-  // Track previous captured fields to detect new captures
+  // Track displayed state with staggered updates
   const prevCapturedRef = useRef<Set<string>>(new Set());
-  const [pendingFields, setPendingFields] = useState<Map<string, string>>(new Map());
   const [displayedFields, setDisplayedFields] = useState<Map<string, string>>(new Map());
+  const [animatingFields, setAnimatingFields] = useState<Map<string, number>>(new Map()); // field -> stagger index
   const [displayLevel, setDisplayLevel] = useState<StrategicLevel>(currentLevel);
-  const [animatingFields, setAnimatingFields] = useState<Set<string>>(new Set());
   
-  // Detect newly captured fields and animate them with delay
+  // Detect newly captured fields and animate them with stagger
   useEffect(() => {
     const currentCapturedMap = new Map(
       capturedFields.map(({ field, value }) => [field, value])
     );
     
-    const newCaptures = new Map<string, string>();
+    const newCaptures: Array<{ field: string; value: string }> = [];
     
     currentCapturedMap.forEach((value, field) => {
       if (!prevCapturedRef.current.has(field)) {
-        newCaptures.set(field, value);
+        newCaptures.push({ field, value });
       }
     });
     
-    if (newCaptures.size > 0) {
-      // Store pending fields
-      setPendingFields(newCaptures);
+    if (newCaptures.length > 0) {
+      // Set up staggered animations
+      const staggerMap = new Map<string, number>();
+      newCaptures.forEach((capture, index) => {
+        staggerMap.set(capture.field, index);
+      });
+      setAnimatingFields(staggerMap);
       
-      // After 300ms "thinking" delay, animate the bars
-      const thinkingTimer = setTimeout(() => {
-        setAnimatingFields(new Set(newCaptures.keys()));
-        
-        // Update displayed fields (triggers color transition)
-        setDisplayedFields(prev => {
-          const updated = new Map(prev);
-          newCaptures.forEach((value, field) => {
-            updated.set(field, value);
-          });
-          return updated;
-        });
-        
-        // After bar animation (500ms), update the level badge
+      // Apply each field with staggered timing
+      newCaptures.forEach((capture, index) => {
         setTimeout(() => {
-          setDisplayLevel(currentLevel);
-          setAnimatingFields(new Set());
-          setPendingFields(new Map());
-        }, 500);
-        
-      }, 300);
+          setDisplayedFields(prev => {
+            const updated = new Map(prev);
+            updated.set(capture.field, capture.value);
+            return updated;
+          });
+          
+          // Remove from animating after transition completes
+          setTimeout(() => {
+            setAnimatingFields(prev => {
+              const updated = new Map(prev);
+              updated.delete(capture.field);
+              return updated;
+            });
+          }, 500);
+          
+        }, 300 + (index * STAGGER_DELAY_MS)); // 300ms thinking delay + stagger
+      });
       
-      return () => clearTimeout(thinkingTimer);
+      // Update level AFTER all bars have animated
+      const totalAnimationTime = 300 + (newCaptures.length * STAGGER_DELAY_MS) + 500;
+      setTimeout(() => {
+        setDisplayLevel(currentLevel);
+      }, totalAnimationTime);
+      
     } else {
-      // No new captures, just sync the state
+      // No new captures, sync state
       setDisplayedFields(currentCapturedMap);
       setDisplayLevel(currentLevel);
     }
@@ -176,8 +186,8 @@ export function StrategicLevelIndicator({
           {CATEGORIES.map((category) => {
             const value = displayedFields.get(category.key);
             const isCaptured = !!value;
-            const isAnimating = animatingFields.has(category.key);
-            const isPending = pendingFields.has(category.key);
+            const staggerIndex = animatingFields.get(category.key);
+            const isAnimating = staggerIndex !== undefined;
             
             return (
               <div
@@ -185,18 +195,27 @@ export function StrategicLevelIndicator({
                 className="flex items-center gap-3"
               >
                 {/* Color band - transitions from grey to colored */}
-                <div 
+                <motion.div 
                   className={cn(
-                    "w-1 h-10 rounded-full flex-shrink-0 transition-all duration-500",
+                    "w-1 h-10 rounded-full flex-shrink-0",
                     isCaptured 
                       ? `bg-gradient-to-b ${currentStyles.gradient}` 
-                      : isPending
-                        ? "bg-slate-600 animate-pulse"
+                      : isThinking
+                        ? "bg-slate-600"
                         : "bg-slate-700"
                   )}
+                  initial={false}
+                  animate={{
+                    scaleY: isAnimating ? [1, 1.2, 1] : 1,
+                    opacity: isThinking && !isCaptured ? [0.5, 0.8, 0.5] : 1,
+                  }}
+                  transition={{
+                    scaleY: { duration: 0.4, ease: "easeOut" },
+                    opacity: { duration: 1.5, repeat: Infinity, ease: "easeInOut" },
+                    backgroundColor: { duration: 0.5 },
+                  }}
                   style={{
-                    transform: isAnimating ? 'scaleY(1.1)' : 'scaleY(1)',
-                    transition: 'transform 0.3s ease-out, background 0.5s ease-out'
+                    transition: 'background 0.5s ease-out',
                   }}
                 />
                 
@@ -210,15 +229,15 @@ export function StrategicLevelIndicator({
                   {category.label}
                 </span>
                 
-                {/* Value - fades in */}
+                {/* Value - slides in with fade */}
                 <AnimatePresence mode="wait">
                   {isCaptured && value && (
                     <motion.span
                       key={`${category.key}-${value}`}
-                      initial={{ opacity: 0, x: 10 }}
+                      initial={{ opacity: 0, x: 15 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.4 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
                       className={cn("text-sm ml-auto truncate max-w-[100px]", currentStyles.text)}
                     >
                       {truncateValue(value, 14)}
