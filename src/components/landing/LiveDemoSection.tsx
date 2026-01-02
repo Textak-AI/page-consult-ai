@@ -104,77 +104,66 @@ export default function LiveDemoSection() {
     
     const sessionId = crypto.randomUUID();
     
-    console.log('🚀 [Demo→Wizard] Saving session to Supabase:', sessionId);
+    console.log('🚀 [Demo→Signup] Preparing demo intelligence for signup');
     
     // Build structured intelligence from demo state
-    const demoIntelligence: Partial<ExtractedIntelligence> = {
+    const demoIntelligence = {
+      sessionId,
       source: 'demo',
       capturedAt: new Date().toISOString(),
       industry: state.extracted.industry || null,
-      subIndustry: null,
+      industrySummary: state.extracted.industrySummary || null,
       audience: state.extracted.audience || null,
-      audienceRole: null,
+      audienceSummary: state.extracted.audienceSummary || null,
       valueProp: state.extracted.valueProp || null,
-      businessName: null,
-      painPoints: [], // Demo doesn't typically capture these
-      buyerObjections: [],
-      competitorDifferentiation: null,
-      proofElements: [],
-      toneDirection: null,
-      goals: null,
+      valuePropSummary: state.extracted.valuePropSummary || null,
+      competitorDifferentiator: state.extracted.competitorDifferentiator || null,
+      edgeSummary: state.extracted.edgeSummary || null,
+      painPoints: state.extracted.painPoints || null,
+      painSummary: state.extracted.painSummary || null,
+      buyerObjections: state.extracted.buyerObjections || null,
+      objectionsSummary: state.extracted.objectionsSummary || null,
+      proofElements: state.extracted.proofElements || null,
+      proofSummary: state.extracted.proofSummary || null,
       marketResearch: {
         marketSize: state.market.marketSize || null,
         buyerPersona: state.market.buyerPersona || null,
         commonObjections: state.market.commonObjections || [],
         industryInsights: state.market.industryInsights || [],
-        researchedAt: state.market.industryInsights?.length ? new Date().toISOString() : null,
       },
       conversationHistory: state.conversation.map(msg => ({
-        role: msg.role as 'user' | 'assistant',
+        role: msg.role,
         content: msg.content,
         timestamp: msg.timestamp?.toISOString() || new Date().toISOString(),
-        source: 'demo' as const,
       })),
-      readinessScore: 0,
-      readinessBreakdown: [],
+      readinessScore: state.readiness,
+      selectedPath: 'wizard', // Default path
     };
     
-    // Calculate strategic level (will be low from demo alone)
-    const levelResult = calculateStrategicLevel(demoIntelligence);
+    // Calculate strategic level
+    const levelResult = calculateStrategicLevel(convertToFullIntelligence(state.extracted));
     
-    console.log('📊 [Demo→Wizard] Strategic level calculated:', {
-      level: levelResult.currentLevel,
-      canGenerate: levelResult.canUnlock('page_generation'),
-      missingForNext: levelResult.missingForNext,
-    });
+    console.log('📊 [Demo→Signup] Strategic level:', levelResult.currentLevel);
     
-    // Determine consultation status - demo_complete means they need wizard
-    const consultationStatus: ConsultationStatus = 'demo_complete';
+    // Store demo intelligence in sessionStorage (survives redirect)
+    sessionStorage.setItem('demoIntelligence', JSON.stringify(demoIntelligence));
     
-    // Save to demo_sessions table (for session continuity)
-    const sessionData: {
-      session_id: string;
-      extracted_intelligence: any;
-      market_research: any;
-      messages: any;
-      readiness: number;
-      completed: boolean;
-      continued_to_consultation: boolean;
-    } = {
+    // Pre-fill email if captured
+    if (state.email) {
+      sessionStorage.setItem('demoEmail', state.email);
+    }
+    
+    // Also save to demo_sessions for persistence
+    const sessionData = {
       session_id: sessionId,
       extracted_intelligence: demoIntelligence,
-      market_research: {
-        industryInsights: state.market.industryInsights || [],
-        commonObjections: state.market.commonObjections || [],
-        buyerPersona: state.market.buyerPersona || null,
-        marketSize: state.market.marketSize || null,
-      },
+      market_research: demoIntelligence.marketResearch,
       messages: state.conversation.map(msg => ({
         role: msg.role,
         content: msg.content,
       })),
-      readiness: state.readiness, // Use state readiness for DB storage
-      completed: false, // Demo is NOT complete for page generation
+      readiness: state.readiness,
+      completed: false,
       continued_to_consultation: true,
     };
     
@@ -185,33 +174,23 @@ export default function LiveDemoSection() {
       
       if (error) {
         console.error('Failed to save demo session:', error);
-        toast({
-          title: "Error saving session",
-          description: "Couldn't save your progress. Please try again.",
-          variant: "destructive"
-        });
-        setIsSavingSession(false);
-        return;
+        // Continue anyway - sessionStorage has the data
+      } else {
+        console.log('✅ [Demo→Signup] Session saved to DB');
       }
       
-      console.log('✅ [Demo→Wizard] Session saved with status:', consultationStatus);
-      console.log('📊 [Demo→Wizard] Strategic level:', levelResult.currentLevel);
-      
-      // Store session ID in localStorage (survives auth redirect)
+      // Store session ID in localStorage (backup)
       localStorage.setItem('pageconsult_session_id', sessionId);
-      localStorage.setItem('pageconsult_consultation_status', consultationStatus);
-      console.log('💾 [Demo→Wizard] Stored session ID in localStorage:', sessionId);
       
-      // CRITICAL: Navigate to WIZARD, not generate
-      // The wizard will continue the consultation to reach generation readiness
-      navigate(`/wizard?session=${sessionId}`);
+      console.log('🚀 [Demo→Signup] Redirecting to signup with demo context');
+      
+      // Navigate to signup with demo origin flag
+      navigate('/signup?from=demo');
     } catch (err) {
       console.error('Error saving demo session:', err);
-      toast({
-        title: "Error saving session",
-        description: "Couldn't save your progress. Please try again.",
-        variant: "destructive"
-      });
+      // Continue anyway - sessionStorage has the data
+      navigate('/signup?from=demo');
+    } finally {
       setIsSavingSession(false);
     }
   };

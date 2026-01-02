@@ -1166,6 +1166,9 @@ export type Database = {
           plan_tier: Database["public"]["Enums"]["plan_tier"]
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          subscription_status: string | null
+          trial_end: string | null
+          trial_start: string | null
           updated_at: string
           user_id: string
         }
@@ -1182,6 +1185,9 @@ export type Database = {
           plan_tier?: Database["public"]["Enums"]["plan_tier"]
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          subscription_status?: string | null
+          trial_end?: string | null
+          trial_start?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1198,6 +1204,9 @@ export type Database = {
           plan_tier?: Database["public"]["Enums"]["plan_tier"]
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          subscription_status?: string | null
+          trial_end?: string | null
+          trial_start?: string | null
           updated_at?: string
           user_id?: string
         }
