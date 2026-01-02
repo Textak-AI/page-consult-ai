@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useIntelligence } from '@/contexts/IntelligenceContext';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useIntelligence, ExtractedIntelligence as ContextExtractedIntelligence } from '@/contexts/IntelligenceContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Sparkles, Send, Loader2 } from 'lucide-react';
@@ -11,6 +11,20 @@ import { toast } from '@/hooks/use-toast';
 import { calculateStrategicLevel } from '@/lib/strategicLevelCalculator';
 import { StrategicLevelIndicator } from '@/components/consultation/StrategicLevelIndicator';
 import type { ExtractedIntelligence, ConsultationStatus } from '@/types/consultationReadiness';
+
+// Convert context's simple extracted intelligence to the full format expected by the calculator
+function convertToFullIntelligence(simple: ContextExtractedIntelligence): Partial<ExtractedIntelligence> {
+  return {
+    industry: simple.industry,
+    audience: simple.audience,
+    valueProp: simple.valueProp,
+    competitorDifferentiation: simple.competitorDifferentiator,
+    // Convert single strings to arrays for painPoints, buyerObjections, proofElements
+    painPoints: simple.painPoints ? [simple.painPoints] : [],
+    buyerObjections: simple.buyerObjections ? [simple.buyerObjections] : [],
+    proofElements: simple.proofElements ? [simple.proofElements] : [],
+  };
+}
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -368,7 +382,7 @@ export default function LiveDemoSection() {
           >
             {/* Strategic Level Indicator - ALWAYS VISIBLE, fills the panel */}
             <StrategicLevelIndicator 
-              result={calculateStrategicLevel(state.extracted)}
+              result={calculateStrategicLevel(convertToFullIntelligence(state.extracted))}
               onContinue={handleContinueToWizard}
               isThinking={state.isProcessing}
               className="h-full border-l-2 border-slate-700/50 shadow-[-4px_0_12px_rgba(0,0,0,0.2)]"

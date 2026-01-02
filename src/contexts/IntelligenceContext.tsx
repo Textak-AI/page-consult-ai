@@ -10,7 +10,10 @@ export interface ExtractedIntelligence {
   industry: string | null;
   audience: string | null;
   valueProp: string | null;
-  businessType: 'B2B' | 'B2C' | 'Both' | null;
+  competitorDifferentiator: string | null;
+  painPoints: string | null;
+  buyerObjections: string | null;
+  proofElements: string | null;
 }
 
 export interface MarketResearch {
@@ -66,7 +69,10 @@ const initialState: IntelligenceState = {
     industry: null,
     audience: null,
     valueProp: null,
-    businessType: null,
+    competitorDifferentiator: null,
+    painPoints: null,
+    buyerObjections: null,
+    proofElements: null,
   },
   market: {
     marketSize: null,
@@ -115,11 +121,15 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     emailCaptured: boolean
   ): number => {
     let score = 0;
-    if (extracted.industry) score += 25;
-    if (extracted.audience) score += 25;
-    if (extracted.valueProp) score += 20;
-    if (emailCaptured) score += 10;
-    if (marketLoaded) score += 20;
+    if (extracted.industry) score += 15;
+    if (extracted.audience) score += 15;
+    if (extracted.valueProp) score += 15;
+    if (extracted.competitorDifferentiator) score += 10;
+    if (extracted.painPoints) score += 10;
+    if (extracted.buyerObjections) score += 10;
+    if (extracted.proofElements) score += 10;
+    if (emailCaptured) score += 5;
+    if (marketLoaded) score += 10;
     return score;
   }, []);
 
@@ -132,16 +142,21 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     // Message count (up to 40 points)
     score += Math.min(currentState.messageCount * 10, 40);
     
-    // Intelligence extracted (up to 30 points)
-    if (currentState.extracted.industry) score += 10;
-    if (currentState.extracted.audience) score += 10;
-    if (currentState.extracted.valueProp) score += 10;
+    // Intelligence extracted (up to 35 points - 5 per field)
+    const extracted = currentState.extracted;
+    if (extracted.industry) score += 5;
+    if (extracted.audience) score += 5;
+    if (extracted.valueProp) score += 5;
+    if (extracted.competitorDifferentiator) score += 5;
+    if (extracted.painPoints) score += 5;
+    if (extracted.buyerObjections) score += 5;
+    if (extracted.proofElements) score += 5;
     
-    // Message quality - average length (up to 30 points)
+    // Message quality - average length (up to 25 points)
     const userMessages = currentState.conversation.filter(m => m.role === 'user');
     if (userMessages.length > 0) {
       const avgLength = userMessages.reduce((sum, m) => sum + m.content.length, 0) / userMessages.length;
-      score += Math.min(Math.round(avgLength / 5), 30);
+      score += Math.min(Math.round(avgLength / 8), 25);
     }
     
     return Math.min(Math.round(score), 100);
@@ -265,7 +280,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     }));
 
     try {
-      // Step 1: Extract intelligence
+      // Step 1: Extract intelligence - now extracts ALL 7 fields
       const { data: extractedData, error: extractError } = await supabase.functions.invoke('demo-extract-intelligence', {
         body: {
           message,
@@ -281,7 +296,10 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           industry: extractedData.industry || state.extracted.industry,
           audience: extractedData.audience || state.extracted.audience,
           valueProp: extractedData.valueProp || state.extracted.valueProp,
-          businessType: extractedData.businessType || state.extracted.businessType,
+          competitorDifferentiator: extractedData.competitorDifferentiator || state.extracted.competitorDifferentiator,
+          painPoints: extractedData.painPoints || state.extracted.painPoints,
+          buyerObjections: extractedData.buyerObjections || state.extracted.buyerObjections,
+          proofElements: extractedData.proofElements || state.extracted.proofElements,
         };
 
         setState(prev => ({
