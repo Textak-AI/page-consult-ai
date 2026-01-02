@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Check, Sparkles, Wand2, Undo2, Redo2, Brain, Rocket, Zap, AlertTriangle } from "lucide-react";
-import { calculateReadiness, MINIMUM_SCORE_FOR_GENERATION } from "@/lib/readinessScoring";
+import { calculateStrategicLevel } from "@/lib/strategicLevelCalculator";
 import type { ExtractedIntelligence, ConsultationStatus } from "@/types/consultationReadiness";
 import { PersonaInsightsPanel } from "@/components/editor/PersonaInsightsPanel";
 import { SectionManager } from "@/components/editor/SectionManager";
@@ -513,23 +513,23 @@ function GenerateContent() {
         
         console.log('✅ [Generate] Loaded demo session:', demoSession.session_id);
         
-        // GATE: Check readiness before allowing generation
+        // GATE: Check strategic level before allowing generation
         const intel = demoSession.extracted_intelligence as Partial<ExtractedIntelligence> || {};
-        const readinessResult = calculateReadiness(intel);
+        const levelResult = calculateStrategicLevel(intel);
         
-        console.log('🔒 [Generate] Readiness check:', {
-          score: readinessResult.score,
-          canGenerate: readinessResult.canGenerate,
-          missingRequired: readinessResult.missingRequired,
+        console.log('🔒 [Generate] Strategic level check:', {
+          level: levelResult.currentLevel,
+          canGenerate: levelResult.canUnlock('page_generation'),
+          missingForNext: levelResult.missingForNext,
           sessionCompleted: demoSession.completed,
         });
         
-        // If readiness is too low, redirect to wizard to continue consultation
-        if (!readinessResult.canGenerate && !demoSession.completed) {
-          console.warn('⚠️ [Generate] Readiness too low, redirecting to wizard');
+        // If not at ARMED level, redirect to wizard to continue consultation
+        if (!levelResult.canUnlock('page_generation') && !demoSession.completed) {
+          console.warn('⚠️ [Generate] Not at ARMED level, redirecting to wizard');
           toast({
             title: "More Information Needed",
-            description: `Your strategy session is ${readinessResult.score}% complete. Let's finish gathering the information needed for a great landing page.`,
+            description: `You're at ${levelResult.levelDef.name}. Complete the consultation to reach ARMED and unlock page generation.`,
           });
           navigate(`/wizard?session=${sessionParam}`);
           return;
@@ -558,8 +558,8 @@ function GenerateContent() {
           // Market research
           marketResearch: demoSession.market_research,
           timestamp: demoSession.created_at,
-          // Readiness info
-          readinessScore: readinessResult.score,
+          // Level info
+          strategicLevel: levelResult.currentLevel,
         };
         
         console.log('📦 [Generate] Transformed session data:', transformedData);

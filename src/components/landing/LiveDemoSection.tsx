@@ -2,14 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Sparkles, ArrowRight, Send, Loader2 } from 'lucide-react';
+import { MessageSquare, Sparkles, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import EmailGateModal from './EmailGateModal';
 import ConversionCTAPanel from './ConversionCTAPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { calculateReadiness } from '@/lib/readinessScoring';
+import { calculateStrategicLevel } from '@/lib/strategicLevelCalculator';
+import { StrategicLevelIndicator } from '@/components/consultation/StrategicLevelIndicator';
 import type { ExtractedIntelligence, ConsultationStatus } from '@/types/consultationReadiness';
 // Typing indicator component
 const TypingIndicator = () => (
@@ -30,101 +31,6 @@ const TypingIndicator = () => (
     </div>
   </div>
 );
-
-// Progress bar component for intelligence fields
-const IntelligenceBar = ({ 
-  label, 
-  value, 
-  weight,
-  filled,
-  compact = false
-}: { 
-  label: string; 
-  value?: string | null; 
-  weight: number;
-  filled: boolean;
-  compact?: boolean;
-}) => (
-  <div className={compact ? "space-y-1" : "space-y-1.5"}>
-    <div className="flex items-center justify-between text-xs">
-      <div className="flex items-center gap-1.5">
-        <span className={filled ? "text-slate-300" : "text-slate-500"}>{label}</span>
-        <span className="text-slate-600">({weight}pts)</span>
-      </div>
-      {filled && value && (
-        <motion.span
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="text-cyan-400 text-xs font-medium truncate max-w-[100px]"
-        >
-          {value}
-        </motion.span>
-      )}
-      {filled && !value && (
-        <motion.span
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-cyan-400 text-xs"
-        >
-          +{weight}
-        </motion.span>
-      )}
-    </div>
-    <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-      <motion.div
-        className={`h-full rounded-full ${filled ? 'bg-gradient-to-r from-cyan-500 to-cyan-400' : 'bg-slate-700'}`}
-        initial={{ width: 0 }}
-        animate={{ width: filled ? '100%' : '0%' }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-      />
-    </div>
-  </div>
-);
-
-// Readiness ring component
-const ReadinessRing = ({ percentage }: { percentage: number }) => {
-  const circumference = 2 * Math.PI * 45;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-
-  return (
-    <div className="relative w-28 h-28 mx-auto">
-      <svg className="w-28 h-28 transform -rotate-90">
-        <circle
-          cx="56"
-          cy="56"
-          r="45"
-          stroke="currentColor"
-          strokeWidth="8"
-          fill="none"
-          className="text-slate-700"
-        />
-        <motion.circle
-          cx="56"
-          cy="56"
-          r="45"
-          stroke="url(#gradient)"
-          strokeWidth="8"
-          fill="none"
-          strokeLinecap="round"
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          style={{ strokeDasharray: circumference }}
-        />
-        <defs>
-          <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#06b6d4" />
-            <stop offset="100%" stopColor="#8b5cf6" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold text-white">{percentage}%</span>
-        <span className="text-xs text-slate-400">Ready</span>
-      </div>
-    </div>
-  );
-};
 
 // Market insight tile
 const InsightTile = ({ insight, delay }: { insight: string; delay: number }) => (
@@ -258,15 +164,13 @@ export default function LiveDemoSection() {
       readinessBreakdown: [],
     };
     
-    // Calculate readiness score (will be low from demo alone)
-    const readiness = calculateReadiness(demoIntelligence);
-    demoIntelligence.readinessScore = readiness.score;
-    demoIntelligence.readinessBreakdown = readiness.breakdown;
+    // Calculate strategic level (will be low from demo alone)
+    const levelResult = calculateStrategicLevel(demoIntelligence);
     
-    console.log('📊 [Demo→Wizard] Readiness calculated:', {
-      score: readiness.score,
-      canGenerate: readiness.canGenerate,
-      missingRequired: readiness.missingRequired,
+    console.log('📊 [Demo→Wizard] Strategic level calculated:', {
+      level: levelResult.currentLevel,
+      canGenerate: levelResult.canUnlock('page_generation'),
+      missingForNext: levelResult.missingForNext,
     });
     
     // Determine consultation status - demo_complete means they need wizard
@@ -294,7 +198,7 @@ export default function LiveDemoSection() {
         role: msg.role,
         content: msg.content,
       })),
-      readiness: readiness.score,
+      readiness: state.readiness, // Use state readiness for DB storage
       completed: false, // Demo is NOT complete for page generation
       continued_to_consultation: true,
     };
@@ -316,7 +220,7 @@ export default function LiveDemoSection() {
       }
       
       console.log('✅ [Demo→Wizard] Session saved with status:', consultationStatus);
-      console.log('📊 [Demo→Wizard] Readiness score:', readiness.score, '(needs 70+ for generation)');
+      console.log('📊 [Demo→Wizard] Strategic level:', levelResult.currentLevel);
       
       // Store session ID in localStorage (survives auth redirect)
       localStorage.setItem('pageconsult_session_id', sessionId);
@@ -516,78 +420,11 @@ export default function LiveDemoSection() {
           >
             {/* Scrollable content area */}
             <div className="flex-1 overflow-y-auto pb-32 space-y-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-            {/* Intelligence Profile Card - All 9 readiness fields */}
-              <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-5">
-                <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-cyan-400" />
-                  Intelligence Profile
-                </h3>
-
-                <div className="space-y-3">
-                  {/* Required fields (55 pts total) */}
-                  <IntelligenceBar
-                    label="Industry"
-                    value={state.extracted.industry}
-                    weight={10}
-                    filled={!!state.extracted.industry && state.extracted.industry.length > 2}
-                  />
-                  <IntelligenceBar
-                    label="Target Audience"
-                    value={state.extracted.audience}
-                    weight={15}
-                    filled={!!state.extracted.audience && state.extracted.audience.length > 5}
-                  />
-                  <IntelligenceBar
-                    label="Value Proposition"
-                    value={state.extracted.valueProp}
-                    weight={15}
-                    filled={!!state.extracted.valueProp && state.extracted.valueProp.length > 10}
-                  />
-                  <IntelligenceBar
-                    label="Pain Points"
-                    weight={15}
-                    filled={false} // Demo doesn't capture pain points
-                  />
-                  
-                  {/* Important fields (40 pts total) */}
-                  <IntelligenceBar
-                    label="Audience Role"
-                    weight={10}
-                    filled={false} // Demo doesn't capture this
-                  />
-                  <IntelligenceBar
-                    label="Buyer Objections"
-                    weight={10}
-                    filled={false} // Demo doesn't capture this
-                  />
-                  <IntelligenceBar
-                    label="Competitive Edge"
-                    weight={10}
-                    filled={false} // Demo doesn't capture this
-                  />
-                  <IntelligenceBar
-                    label="Proof Elements"
-                    weight={10}
-                    filled={false} // Demo doesn't capture this
-                  />
-                  
-                  {/* Nice to have (5 pts) */}
-                  <IntelligenceBar
-                    label="Brand Tone"
-                    weight={5}
-                    filled={false} // Demo doesn't capture this
-                  />
-                </div>
-                
-                {/* Total score display */}
-                <div className="mt-4 pt-3 border-t border-slate-700/50">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-400">Total Score</span>
-                    <span className="text-cyan-400 font-semibold">{state.readiness}/100 pts</span>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">Need 70+ to generate page</p>
-                </div>
-              </div>
+              {/* Strategic Level Indicator - replaces old readiness bars */}
+              <StrategicLevelIndicator 
+                result={calculateStrategicLevel(state.extracted)}
+                onContinue={handleContinueToWizard}
+              />
 
               {/* Market Insights (appears when loaded) */}
               <AnimatePresence>
@@ -620,24 +457,6 @@ export default function LiveDemoSection() {
                     <span className="text-sm">Researching your market...</span>
                   </div>
                 </motion.div>
-              )}
-
-              {/* Readiness Ring - Only show if CTA not visible */}
-              {!showConversionCTA && (
-                <div ref={continueRef} className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
-                  <h4 className="text-sm font-medium text-slate-300 mb-4 text-center">Strategy Readiness</h4>
-                  <ReadinessRing percentage={state.readiness} />
-                  
-                  {state.readiness >= 50 && !state.emailCaptured && (
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="mt-4 text-center text-sm text-slate-400"
-                    >
-                      Enter your email to unlock market insights...
-                    </motion.p>
-                  )}
-                </div>
               )}
             </div>
 
