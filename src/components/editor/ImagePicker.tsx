@@ -94,13 +94,17 @@ export function ImagePicker({ open, onClose, onSelect, defaultQuery }: ImagePick
     handleSearch(searchQuery, page + 1);
   };
 
-  const handleImageSelect = (image: UnsplashImage) => {
-    // Track download for Unsplash attribution
-    fetch(image.links.download_location, {
-      headers: {
-        'Authorization': 'Client-ID ' + import.meta.env.VITE_UNSPLASH_ACCESS_KEY,
-      },
-    }).catch(err => console.error('Failed to track download:', err));
+  const handleImageSelect = async (image: UnsplashImage) => {
+    // Track download for Unsplash attribution via Edge Function (keeps API key server-side)
+    try {
+      const headers = await getAuthHeaders();
+      await supabase.functions.invoke('unsplash-track-download', {
+        body: { downloadLocation: image.links.download_location },
+        headers,
+      });
+    } catch (err) {
+      console.error('Failed to track download:', err);
+    }
 
     onSelect(image);
     onClose();

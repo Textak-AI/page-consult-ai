@@ -149,3 +149,6 @@ verify_jwt = false
 
 [functions.delete-user]
 verify_jwt = true
+
+[functions.unsplash-track-download]
+verify_jwt = true
