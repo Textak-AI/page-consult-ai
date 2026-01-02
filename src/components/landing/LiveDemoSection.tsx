@@ -248,14 +248,14 @@ export default function LiveDemoSection() {
           </motion.p>
         </div>
 
-        {/* Two-column layout: 2/3 chat, 1/3 intelligence */}
-        <div className="grid lg:grid-cols-3 gap-5">
-          {/* Left Column - Chat Interface (2 columns) */}
+        {/* Responsive layout: Desktop side-by-side, Tablet/Mobile stacked */}
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-5">
+          {/* Chat Interface */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="lg:col-span-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden flex flex-col h-[500px]"
+            className="lg:col-span-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden flex flex-col h-[400px] md:h-[450px] lg:h-[500px]"
           >
             {/* Chat header */}
             <div className="px-4 py-3 border-b border-slate-700/50 flex items-center gap-3">
@@ -281,7 +281,7 @@ export default function LiveDemoSection() {
                     className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                      className={`max-w-[85%] md:max-w-[80%] rounded-2xl px-4 py-3 ${
                         message.role === 'user'
                           ? 'bg-cyan-600/20 border border-cyan-500/30 text-white'
                           : 'bg-slate-700/50 border border-slate-600/30 text-slate-200'
@@ -304,7 +304,7 @@ export default function LiveDemoSection() {
                     transition={{ duration: 0.15, ease: 'easeOut' }}
                     className="flex justify-end"
                   >
-                    <div className="max-w-[80%] rounded-2xl px-4 py-3 border border-dashed border-slate-600 bg-slate-800/30">
+                    <div className="max-w-[85%] md:max-w-[80%] rounded-2xl px-4 py-3 border border-dashed border-slate-600 bg-slate-800/30">
                       <p className="text-sm leading-relaxed text-slate-400 italic">
                         {inputValue}
                       </p>
@@ -373,19 +373,18 @@ export default function LiveDemoSection() {
             </form>
           </motion.div>
 
-          {/* Right Column - Intelligence Profile (1 column) */}
+          {/* Intelligence Profile - responsive layouts handled inside component */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="lg:col-span-1 flex flex-col h-[500px]"
+            className="lg:col-span-1"
           >
-            {/* Strategic Level Indicator - ALWAYS VISIBLE, fills the panel */}
             <StrategicLevelIndicator 
               result={calculateStrategicLevel(convertToFullIntelligence(state.extracted))}
               onContinue={handleContinueToWizard}
               isThinking={state.isProcessing}
-              className="h-full border-l-2 border-slate-700/50 shadow-[-4px_0_12px_rgba(0,0,0,0.2)]"
+              className="lg:h-[500px] lg:border-l-2 lg:border-slate-700/50 lg:shadow-[-4px_0_12px_rgba(0,0,0,0.2)]"
             />
           </motion.div>
         </div>
