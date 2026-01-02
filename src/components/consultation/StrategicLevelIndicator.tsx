@@ -239,7 +239,7 @@ export function StrategicLevelIndicator({
                   </span>
                   
                   <AnimatePresence mode="wait">
-                    {isCaptured && fieldData?.value && (
+                    {isCaptured && fieldData?.value && fieldData.value !== 'null' && (
                       <motion.span
                         key={`${category.key}-${fieldData.value}`}
                         initial={{ opacity: 0, x: 10 }}
@@ -247,7 +247,7 @@ export function StrategicLevelIndicator({
                         exit={{ opacity: 0, x: -5 }}
                         transition={{ duration: 0.3 }}
                         className={cn(
-                          "text-xs ml-auto text-right whitespace-nowrap",
+                          "text-xs ml-auto text-right line-clamp-2 max-w-[140px]",
                           currentStyles.text
                         )}
                       >
@@ -359,7 +359,7 @@ export function StrategicLevelIndicator({
           {capturedFieldsList.length > 0 ? (
             capturedFieldsList.map((category) => {
               const fieldData = displayedFields.get(category.key);
-              if (!fieldData?.value) return null;
+              if (!fieldData?.value || fieldData.value === 'null') return null;
               
               return (
                 <Tooltip key={category.key}>
@@ -367,7 +367,7 @@ export function StrategicLevelIndicator({
                     <div className="flex items-center gap-2 cursor-help">
                       <div className={cn("w-1 h-6 rounded-full bg-gradient-to-b", currentStyles.gradient)} />
                       <span className="text-slate-400 text-xs">{category.label}:</span>
-                      <span className={cn("text-xs", currentStyles.text)}>{fieldData.value}</span>
+                      <span className={cn("text-xs line-clamp-2", currentStyles.text)}>{fieldData.value}</span>
                     </div>
                   </TooltipTrigger>
                   {fieldData.summary && (
@@ -451,8 +451,8 @@ export function StrategicLevelIndicator({
                       >
                         {category.label}
                       </span>
-                      {isCaptured && fieldData?.value && (
-                        <span className={cn("text-xs ml-auto", currentStyles.text)}>
+                      {isCaptured && fieldData?.value && fieldData.value !== 'null' && (
+                        <span className={cn("text-xs ml-auto text-right line-clamp-2 max-w-[120px]", currentStyles.text)}>
                           {fieldData.value}
                         </span>
                       )}
