@@ -9,10 +9,9 @@ const LEVEL_ORDER: StrategicLevel[] = ['unqualified', 'identified', 'positioned'
 function isFieldCaptured(intel: Partial<ExtractedIntelligence>, field: string): boolean {
   const value = (intel as any)[field];
   
-  // Arrays need at least 1 item (painPoints needs 2)
+  // Arrays need at least 1 item (relaxed from requiring 2 for painPoints)
   if (Array.isArray(value)) {
-    if (field === 'painPoints') return value.length >= 2;
-    return value.length >= 1;
+    return value.length >= 1 && value[0]?.trim?.()?.length > 0;
   }
   
   // Strings need meaningful content (more than 3 chars)

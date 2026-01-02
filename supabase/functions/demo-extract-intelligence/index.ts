@@ -36,47 +36,69 @@ async function hashIP(ip: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 }
 
-const systemPrompt = `You are an extraction system. Analyze the user message and extract ONLY explicitly stated information.
-Use the user's ACTUAL words — do not infer or paraphrase.
+const systemPrompt = `You are a precise extraction system. Analyze this message carefully and extract ALL explicitly stated information.
+A single message can contain MULTIPLE fields — extract ALL of them.
 
-Return JSON with SHORT values (max 15 characters, no truncation needed) and summaries (1-2 sentences):
+Look for these specific signals:
 
+INDUSTRY: What do they build/sell? What space are they in?
+→ "we build AI-powered strategy systems" = SaaS/Strategy
+→ "I'm a real estate agent" = Real estate
+→ "we're a coaching business" = Coaching
+
+AUDIENCE: Who do they serve? Who are their customers?
+→ "B2B SaaS founders, agency owners" = B2B Founders
+→ "small business owners" = SMB owners
+→ "marketing teams" = Marketing teams
+
+VALUE PROPOSITION: What's their core offer? What do they do for customers?
+→ "strategic consultation — same questions a $15K agency would ask" = Strategy first
+→ "we help companies grow revenue" = Revenue growth
+
+COMPETITIVE EDGE: How are they different? Who are competitors? What do they NOT do?
+→ "problem with Unbounce and Leadpages is templates" = Not templates
+→ "unlike other tools that..." = extract the difference
+→ "we don't just give you..." = extract the contrast
+
+PAIN POINTS: What problems do customers have? What frustrates them?
+→ "tired of landing pages that look good but don't convert" = Low conversion
+→ "assume you already know what to say" = Unclear messaging
+→ "frustrated with..." = extract the frustration
+
+BUYER OBJECTIONS: What makes buyers hesitate?
+→ "they think it's too expensive" = Price concern
+→ "worry about..." = extract the concern
+
+PROOF ELEMENTS: Results, testimonials, credentials?
+→ "helped 500+ companies" = 500+ clients
+→ "10 years experience" = 10 yrs experience
+
+Return JSON with short values (MAX 14 characters) and summaries:
 {
-  "industry": "SaaS/Strategy",
-  "industrySummary": "Strategy and landing page tools for SaaS companies",
-  
-  "audience": "B2B Founders", 
-  "audienceSummary": "Founders, agency owners, and marketing directors",
-  
-  "valueProp": "Strategy first",
-  "valuePropSummary": "Same questions a $15K agency would ask",
-  
-  "competitiveEdge": "Not templates",
-  "edgeSummary": "Unlike Unbounce/Leadpages which assume you know what to say",
-  
-  "painPoints": "Low conversion",
-  "painSummary": "Landing pages look good but don't convert because templates skip strategy",
-  
-  "buyerObjections": null,
-  "objectionsSummary": null,
-  
-  "proofElements": null,
-  "proofSummary": null
+  "industry": "short value or null",
+  "industrySummary": "1-2 sentence synthesis or null",
+  "audience": "short value or null",
+  "audienceSummary": "1-2 sentence synthesis or null",
+  "valueProp": "short value or null",
+  "valuePropSummary": "1-2 sentence synthesis or null",
+  "competitiveEdge": "short value or null",
+  "edgeSummary": "1-2 sentence synthesis or null",
+  "painPoints": "short value or null",
+  "painSummary": "1-2 sentence synthesis or null",
+  "buyerObjections": "short value or null",
+  "objectionsSummary": "1-2 sentence synthesis or null",
+  "proofElements": "short value or null",
+  "proofSummary": "1-2 sentence synthesis or null"
 }
 
 CRITICAL RULES:
-- Short values: MAX 14 characters, must fit on one line
-- Abbreviate phrases:
-  • "B2B SaaS founders" → "B2B Founders"
-  • "Strategic consultation" → "Strategy first"
-  • "Landing page builder" → "Page builder"
-  • "AI-powered strategy" → "SaaS/Strategy"
-- Industry = WHAT they do/sell (SaaS, Coaching, Real estate), NOT their approach (AI-powered is an approach, not an industry)
-- Pain Points = the problem (e.g. "Low conversion", "No leads"), NOT a description
-- Use their actual words when possible, but condense to fit 14 chars
-- Return null for fields not explicitly mentioned
-- Summaries synthesize what they said (1-2 sentences)
-- Do NOT infer or guess - only extract explicit statements
+- Extract from ACTUAL words in the message
+- A single message can contain MULTIPLE fields — extract ALL of them
+- Short values: MAX 14 characters, abbreviate if needed
+- If clearly stated, extract it. Don't leave fields empty when evidence exists
+- Competitive Edge often comes from contrast: 'unlike X', 'not like Y', 'problem with Z'
+- Pain Points often come from: 'tired of', 'frustrated', 'problem is', 'don't convert'
+- Return null ONLY if the field is truly not mentioned
 
 Return ONLY valid JSON.`;
 
