@@ -57,6 +57,8 @@ export interface IntelligenceState {
   // Email gate
   email: string | null;
   emailCaptured: boolean;
+  emailOffered: boolean;      // Track if modal was shown
+  emailDismissed: boolean;    // Track if user dismissed without entering email
   showEmailGate: boolean;
 }
 
@@ -67,6 +69,7 @@ export interface IntelligenceContextValue {
   getPrefillData: () => object;
   submitEmail: (email: string) => Promise<void>;
   dismissEmailGate: () => void;
+  reopenEmailGate: () => void;
 }
 
 // ============================================
@@ -105,6 +108,8 @@ const initialState: IntelligenceState = {
   rateLimited: false,
   email: null,
   emailCaptured: false,
+  emailOffered: false,
+  emailDismissed: false,
   showEmailGate: false,
 };
 
@@ -257,12 +262,24 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   }, [state, calculateReadiness, calculateEngagementScore, fetchMarketResearch]);
 
   // ----------------------------------------
-  // Dismiss email gate (user clicks outside - but we make it hard to do)
+  // Dismiss email gate (user clicks outside, X, ESC, or "Skip for now")
   // ----------------------------------------
   const dismissEmailGate = useCallback(() => {
-    // We don't actually let them dismiss easily
-    // But this is here if we want to allow it later
-    // setState(prev => ({ ...prev, showEmailGate: false }));
+    setState(prev => ({ 
+      ...prev, 
+      showEmailGate: false,
+      emailDismissed: true, // Mark as dismissed so we don't show again automatically
+    }));
+  }, []);
+
+  // ----------------------------------------
+  // Reopen email gate (user clicks "Unlock Market Research" button)
+  // ----------------------------------------
+  const reopenEmailGate = useCallback(() => {
+    setState(prev => ({ 
+      ...prev, 
+      showEmailGate: true,
+    }));
   }, []);
 
   // ----------------------------------------
@@ -363,9 +380,12 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
 
       // Step 3: Check if we should show email gate
       // Show gate after message 2 if we have industry detected
+      // Only show if: industry detected, not captured yet, and not already dismissed
       const shouldShowGate = newMessageCount >= 2 && 
                              newExtracted.industry && 
-                             !state.emailCaptured;
+                             !state.emailCaptured &&
+                             !state.emailDismissed &&
+                             !state.emailOffered;
 
       const aiMessage: ConversationMessage = {
         role: 'assistant',
@@ -382,7 +402,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       // Show email gate with 2-second delay so user can read the response first
       if (shouldShowGate) {
         setTimeout(() => {
-          setState(prev => ({ ...prev, showEmailGate: true }));
+          setState(prev => ({ ...prev, showEmailGate: true, emailOffered: true }));
         }, 2000);
       }
 
@@ -453,6 +473,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     getPrefillData,
     submitEmail,
     dismissEmailGate,
+    reopenEmailGate,
   };
 
   return (

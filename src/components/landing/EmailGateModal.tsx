@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, TrendingUp, Users, Target, ArrowRight, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,23 @@ export default function EmailGateModal({
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen && onDismiss) {
+        onDismiss();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onDismiss]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +103,8 @@ export default function EmailGateModal({
                   {onDismiss && (
                     <button 
                       onClick={onDismiss}
-                      className="text-slate-400 hover:text-white transition-colors"
+                      className="text-slate-400 hover:text-white transition-colors p-1"
+                      aria-label="Close modal"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -169,6 +187,17 @@ export default function EmailGateModal({
                     </>
                   )}
                 </Button>
+
+                {/* Skip for now link */}
+                {onDismiss && (
+                  <button
+                    type="button"
+                    onClick={onDismiss}
+                    className="w-full text-sm text-slate-400 hover:text-slate-300 hover:underline transition-colors py-1"
+                  >
+                    Skip for now
+                  </button>
+                )}
 
                 <p className="text-xs text-slate-500 text-center">
                   No spam. Just strategy insights for your business.
