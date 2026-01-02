@@ -280,12 +280,12 @@ export default function Signup() {
       sessionStorage.removeItem('demoIntelligence');
       sessionStorage.removeItem('demoEmail');
       
-      // Redirect to wizard with consultation context
+      // Redirect directly to selected path - skip path selection screen
       const targetPath = demoIntelligence.selectedPath === 'conversation' 
-        ? `/consultation/${consultation.id}`
-        : `/wizard?session=${demoIntelligence.sessionId}`;
+        ? `/wizard/chat?consultationId=${consultation.id}`
+        : `/wizard/form?consultationId=${consultation.id}`;
       
-      console.log('🚀 [Signup] Redirecting to:', targetPath);
+      console.log('🚀 [Signup] Redirecting directly to:', targetPath, '(skipping path selection)');
       navigate(targetPath, { replace: true });
       
     } catch (err) {
