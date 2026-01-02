@@ -255,6 +255,27 @@ export default function Signup() {
           .eq('session_id', demoIntelligence.sessionId);
       }
       
+      // Trigger trial welcome email via Loops.so
+      try {
+        await supabase.functions.invoke('loops-sync', {
+          body: {
+            event: 'trial_started',
+            email: email,
+            userId: userId,
+            properties: {
+              trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+              days_remaining: 14,
+              industry: demoIntelligence.industry,
+              from_demo: true,
+            },
+          },
+        });
+        console.log('📧 [Signup] Trial welcome email triggered');
+      } catch (emailErr) {
+        console.error('Failed to trigger trial email:', emailErr);
+        // Don't block signup on email failure
+      }
+      
       // Clean up sessionStorage
       sessionStorage.removeItem('demoIntelligence');
       sessionStorage.removeItem('demoEmail');
