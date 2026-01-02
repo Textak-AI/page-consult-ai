@@ -11,6 +11,100 @@ const MAX_MESSAGE_LENGTH = 2000;
 const MAX_CONVERSATION_HISTORY = 20;
 const RATE_LIMIT_PER_HOUR = 30;
 
+// Generic/vague terms that should NOT be extracted (low confidence)
+const GENERIC_AUDIENCE_TERMS = [
+  'businesses', 'business', 'companies', 'company', 'people', 'clients', 
+  'customers', 'organizations', 'everyone', 'anyone', 'users', 'folks',
+  'teams', 'individuals', 'professionals', 'entrepreneurs'
+];
+
+const GENERIC_INDUSTRY_TERMS = [
+  'services', 'consulting', 'marketing', 'sales', 'business', 'tech',
+  'technology', 'software', 'digital', 'online', 'professional services'
+];
+
+const GENERIC_VALUE_TERMS = [
+  'grow', 'help', 'improve', 'solutions', 'growth', 'success', 'better',
+  'more', 'results', 'value', 'quality', 'service', 'support', 'assist'
+];
+
+// Check if a term is too generic
+function isGenericTerm(value: string | null, genericList: string[]): boolean {
+  if (!value) return true;
+  const normalized = value.toLowerCase().trim();
+  
+  // Check if it's a single generic word
+  const words = normalized.split(/\s+/);
+  if (words.length === 1 && genericList.includes(normalized)) {
+    return true;
+  }
+  
+  // Check if the entire phrase is too short and generic
+  if (normalized.length < 8 && genericList.some(term => normalized.includes(term))) {
+    return true;
+  }
+  
+  return false;
+}
+
+// Calculate confidence score for extraction
+function calculateConfidence(value: string | null, field: string, originalMessage: string): number {
+  if (!value) return 0;
+  
+  const normalized = value.toLowerCase().trim();
+  const messageLower = originalMessage.toLowerCase();
+  
+  // Base confidence starts at 50
+  let confidence = 50;
+  
+  // Check if the extracted value appears verbatim in the message
+  if (messageLower.includes(normalized) || normalized.split(' ').some(w => w.length > 4 && messageLower.includes(w))) {
+    confidence += 20;
+  }
+  
+  // Length bonus - longer, more specific answers get higher confidence
+  if (normalized.length > 15) confidence += 10;
+  if (normalized.length > 25) confidence += 10;
+  
+  // Penalize generic terms based on field type
+  if (field === 'audience' && isGenericTerm(value, GENERIC_AUDIENCE_TERMS)) {
+    confidence -= 40;
+  }
+  if (field === 'industry' && isGenericTerm(value, GENERIC_INDUSTRY_TERMS)) {
+    confidence -= 40;
+  }
+  if (field === 'valueProp' && isGenericTerm(value, GENERIC_VALUE_TERMS)) {
+    confidence -= 40;
+  }
+  
+  // Bonus for specific patterns
+  // Audience: contains role, title, or specific descriptor
+  if (field === 'audience') {
+    if (/\b(founder|ceo|cfo|cto|owner|manager|director|vp|head of)\b/i.test(value)) {
+      confidence += 15;
+    }
+    if (/\b(at|in|for|who)\b/i.test(value)) {
+      confidence += 10; // e.g., "CFOs at mid-market companies"
+    }
+  }
+  
+  // Industry: contains specific qualifier
+  if (field === 'industry') {
+    if (/\b(b2b|b2c|saas|ecommerce|healthcare|fintech|real estate|manufacturing)\b/i.test(value)) {
+      confidence += 15;
+    }
+  }
+  
+  // Value prop: contains measurable outcome
+  if (field === 'valueProp') {
+    if (/\d+%|\$\d+|reduce|increase|save|eliminate|transform/i.test(value)) {
+      confidence += 20;
+    }
+  }
+  
+  return Math.max(0, Math.min(100, confidence));
+}
+
 // Sanitize AI input to prevent prompt injection
 function sanitizeAIInput(content: string): string {
   if (typeof content !== 'string') return '';
@@ -36,67 +130,71 @@ async function hashIP(ip: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 }
 
-const systemPrompt = `You are a precise extraction system. Extract ALL explicitly stated business information.
+const systemPrompt = `You are a STRICT extraction system. Only extract SPECIFIC, CONCRETE business information.
 
-CRITICAL DISTINCTION:
-- VALUE PROPOSITION = What you DO for customers (your offer, your service, what they get)
-- COMPETITIVE EDGE = How you're DIFFERENT from competitors (what you DON'T do, contrast with others)
+CRITICAL: DO NOT EXTRACT VAGUE OR GENERIC TERMS!
 
-FIELD DEFINITIONS:
+REJECTION RULES - Return null for these:
 
-INDUSTRY: What business/space are they in?
-→ "we build AI landing pages" = "Page builder"
-→ "real estate coaching" = "Real estate"
+AUDIENCE - REJECT if too vague:
+❌ REJECT: "businesses", "companies", "people", "clients", "customers", "organizations", "entrepreneurs"
+✅ ACCEPT: "restaurant owners", "CFOs at mid-market companies", "first-time SaaS founders", "e-commerce store owners doing $1M+"
 
-AUDIENCE: Who are their customers?
-→ "B2B SaaS founders and agencies" = "B2B Founders"
-→ "small business owners" = "SMB owners"
+INDUSTRY - REJECT if too vague:
+❌ REJECT: "services", "consulting", "marketing", "tech", "business"
+✅ ACCEPT: "B2B SaaS", "manufacturing consulting", "healthcare IT", "luxury real estate"
 
-VALUE PROPOSITION: What do they DO for customers? Their core offer.
-→ "strategic consultation before building" = "Strategy first"
-→ "we grow their revenue" = "Revenue growth"
-→ "same questions a $15K agency asks" = "Agency-level"
+VALUE PROPOSITION - REJECT if too vague:
+❌ REJECT: Single words like "grow", "help", "improve", "solutions", "success"
+✅ ACCEPT: "reduce employee turnover by 30%", "find hidden production capacity", "close deals 2x faster"
 
-COMPETITIVE EDGE: How are they DIFFERENT? What do competitors do wrong?
-→ "problem with Unbounce is templates" = "Not templates"
-→ "unlike tools that give placeholder text" = "Not templates"
-→ "we don't just give you a builder" = "Not just tools"
-→ Look for: "unlike", "not like", "problem with", "different from", "we don't just"
+If the input is vague like "we help businesses grow", return ALL NULLS. We need specifics.
 
-PAIN POINTS: What frustrates customers?
-→ "pages that look good but don't convert" = "Low conversion"
-→ "don't know what to say" = "Bad messaging"
-→ Look for: "tired of", "frustrated", "problem is"
+FIELD DEFINITIONS (only extract if SPECIFIC):
 
-BUYER OBJECTIONS: What makes buyers hesitate?
-→ "they think it's expensive" = "Price concern"
+INDUSTRY: The specific business sector or niche.
+AUDIENCE: WHO specifically they help (role + context).
+VALUE PROPOSITION: What SPECIFIC outcome they deliver.
+COMPETITIVE EDGE: How they're DIFFERENT (look for "unlike", "not like", "problem with").
+PAIN POINTS: Specific frustrations their buyers experience.
+BUYER OBJECTIONS: What makes buyers hesitate.
+PROOF ELEMENTS: Specific results, credentials, numbers.
 
-PROOF ELEMENTS: Results, credentials?
-→ "500+ companies helped" = "500+ clients"
+For each field, also provide a confidence score (0-100):
+- Below 50 = too vague, should not display
+- 50-75 = somewhat specific, display with caution
+- Above 75 = specific enough, display confidently
 
 OUTPUT FORMAT - JSON with MAX 14 CHARACTER short values:
 {
-  "industry": "max 14 chars",
-  "industrySummary": "1-2 sentences",
-  "audience": "max 14 chars",
-  "audienceSummary": "1-2 sentences",
-  "valueProp": "max 14 chars",
-  "valuePropSummary": "1-2 sentences",
-  "competitiveEdge": "max 14 chars",
-  "edgeSummary": "1-2 sentences",
-  "painPoints": "max 14 chars",
-  "painSummary": "1-2 sentences",
+  "industry": "max 14 chars or null",
+  "industryConfidence": 0-100,
+  "industrySummary": "1-2 sentences or null",
+  "audience": "max 14 chars or null",
+  "audienceConfidence": 0-100,
+  "audienceSummary": "1-2 sentences or null",
+  "valueProp": "max 14 chars or null",
+  "valuePropConfidence": 0-100,
+  "valuePropSummary": "1-2 sentences or null",
+  "competitiveEdge": "max 14 chars or null",
+  "edgeConfidence": 0-100,
+  "edgeSummary": "1-2 sentences or null",
+  "painPoints": "max 14 chars or null",
+  "painConfidence": 0-100,
+  "painSummary": "1-2 sentences or null",
   "buyerObjections": "max 14 chars or null",
+  "objectionsConfidence": 0-100,
   "objectionsSummary": "1-2 sentences or null",
   "proofElements": "max 14 chars or null",
-  "proofSummary": "1-2 sentences or null"
+  "proofConfidence": 0-100,
+  "proofSummary": "1-2 sentences or null",
+  "inputQuality": "thin" | "adequate" | "rich"
 }
 
-ABBREVIATION EXAMPLES (must be ≤14 chars):
-- "Strategic consultation" → "Strategy first"
-- "B2B SaaS founders" → "B2B Founders"
-- "Not templates like Unbounce" → "Not templates"
-- "Low converting pages" → "Low conversion"
+INPUT QUALITY ASSESSMENT:
+- "thin": Vague, generic, needs clarification (e.g., "we help businesses grow")
+- "adequate": Some specifics but could use more detail
+- "rich": Clear, specific, actionable information
 
 Return ONLY valid JSON.`;
 
@@ -195,7 +293,7 @@ serve(async (req) => {
           ...contextMessages,
           { role: 'user', content: `User message: "${sanitizedMessage}"
 
-Extract only what they explicitly stated. Return JSON with null for unmentioned fields.` },
+Extract only SPECIFIC information. If the input is vague, return null for those fields and set inputQuality to "thin".` },
         ],
       }),
     });
@@ -216,36 +314,54 @@ Extract only what they explicitly stated. Return JSON with null for unmentioned 
     const content = data.choices?.[0]?.message?.content || '';
 
     // Parse JSON from response with validation
-    let extracted: {
+    interface ExtractedResult {
       industry: string | null;
+      industryConfidence: number;
       industrySummary: string | null;
       audience: string | null;
+      audienceConfidence: number;
       audienceSummary: string | null;
       valueProp: string | null;
+      valuePropConfidence: number;
       valuePropSummary: string | null;
       competitorDifferentiator: string | null;
+      edgeConfidence: number;
       edgeSummary: string | null;
       painPoints: string | null;
+      painConfidence: number;
       painSummary: string | null;
       buyerObjections: string | null;
+      objectionsConfidence: number;
       objectionsSummary: string | null;
       proofElements: string | null;
+      proofConfidence: number;
       proofSummary: string | null;
-    } = { 
+      inputQuality: 'thin' | 'adequate' | 'rich';
+    }
+
+    let extracted: ExtractedResult = { 
       industry: null, 
+      industryConfidence: 0,
       industrySummary: null,
       audience: null, 
+      audienceConfidence: 0,
       audienceSummary: null,
       valueProp: null, 
+      valuePropConfidence: 0,
       valuePropSummary: null,
       competitorDifferentiator: null,
+      edgeConfidence: 0,
       edgeSummary: null,
       painPoints: null,
+      painConfidence: 0,
       painSummary: null,
       buyerObjections: null,
+      objectionsConfidence: 0,
       objectionsSummary: null,
       proofElements: null,
+      proofConfidence: 0,
       proofSummary: null,
+      inputQuality: 'thin',
     };
     
     try {
@@ -256,7 +372,7 @@ Extract only what they explicitly stated. Return JSON with null for unmentioned 
         // Validate and format extracted fields
         const formatShort = (val: any) => {
           if (typeof val !== 'string' || !val.trim()) return null;
-          // Limit to 14 chars for display - no ellipsis needed
+          // Limit to 14 chars for display
           return val.trim().slice(0, 14);
         };
         
@@ -265,22 +381,77 @@ Extract only what they explicitly stated. Return JSON with null for unmentioned 
           // Limit summary to 150 chars
           return val.trim().slice(0, 150);
         };
+
+        const getConfidence = (val: any, fallback: number = 0) => {
+          if (typeof val === 'number') return Math.max(0, Math.min(100, val));
+          return fallback;
+        };
+        
+        // Extract values
+        let industry = formatShort(parsed.industry);
+        let audience = formatShort(parsed.audience);
+        let valueProp = formatShort(parsed.valueProp);
+        let competitiveEdge = formatShort(parsed.competitiveEdge);
+        let painPoints = formatShort(parsed.painPoints);
+        
+        // Calculate confidence scores (combine AI's score with our validation)
+        let industryConfidence = getConfidence(parsed.industryConfidence, 60);
+        let audienceConfidence = getConfidence(parsed.audienceConfidence, 60);
+        let valuePropConfidence = getConfidence(parsed.valuePropConfidence, 60);
+        let edgeConfidence = getConfidence(parsed.edgeConfidence, 60);
+        let painConfidence = getConfidence(parsed.painConfidence, 60);
+        
+        // Apply our own confidence adjustments based on generic term detection
+        if (industry && isGenericTerm(industry, GENERIC_INDUSTRY_TERMS)) {
+          industryConfidence = Math.min(industryConfidence, 30);
+          industry = null; // Don't display generic terms
+        }
+        if (audience && isGenericTerm(audience, GENERIC_AUDIENCE_TERMS)) {
+          audienceConfidence = Math.min(audienceConfidence, 30);
+          audience = null;
+        }
+        if (valueProp && isGenericTerm(valueProp, GENERIC_VALUE_TERMS)) {
+          valuePropConfidence = Math.min(valuePropConfidence, 30);
+          valueProp = null;
+        }
+        
+        // Additional confidence calculation based on original message
+        if (industry) {
+          industryConfidence = Math.round((industryConfidence + calculateConfidence(industry, 'industry', sanitizedMessage)) / 2);
+        }
+        if (audience) {
+          audienceConfidence = Math.round((audienceConfidence + calculateConfidence(audience, 'audience', sanitizedMessage)) / 2);
+        }
+        if (valueProp) {
+          valuePropConfidence = Math.round((valuePropConfidence + calculateConfidence(valueProp, 'valueProp', sanitizedMessage)) / 2);
+        }
+        
+        // Only keep values with confidence >= 50
+        const CONFIDENCE_THRESHOLD = 50;
         
         extracted = {
-          industry: formatShort(parsed.industry),
-          industrySummary: formatSummary(parsed.industrySummary),
-          audience: formatShort(parsed.audience),
-          audienceSummary: formatSummary(parsed.audienceSummary),
-          valueProp: formatShort(parsed.valueProp),
-          valuePropSummary: formatSummary(parsed.valuePropSummary),
-          competitorDifferentiator: formatShort(parsed.competitiveEdge),
-          edgeSummary: formatSummary(parsed.edgeSummary),
-          painPoints: formatShort(parsed.painPoints),
-          painSummary: formatSummary(parsed.painSummary),
+          industry: industryConfidence >= CONFIDENCE_THRESHOLD ? industry : null,
+          industryConfidence,
+          industrySummary: industryConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.industrySummary) : null,
+          audience: audienceConfidence >= CONFIDENCE_THRESHOLD ? audience : null,
+          audienceConfidence,
+          audienceSummary: audienceConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.audienceSummary) : null,
+          valueProp: valuePropConfidence >= CONFIDENCE_THRESHOLD ? valueProp : null,
+          valuePropConfidence,
+          valuePropSummary: valuePropConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.valuePropSummary) : null,
+          competitorDifferentiator: edgeConfidence >= CONFIDENCE_THRESHOLD ? competitiveEdge : null,
+          edgeConfidence,
+          edgeSummary: edgeConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.edgeSummary) : null,
+          painPoints: painConfidence >= CONFIDENCE_THRESHOLD ? painPoints : null,
+          painConfidence,
+          painSummary: painConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.painSummary) : null,
           buyerObjections: formatShort(parsed.buyerObjections),
+          objectionsConfidence: getConfidence(parsed.objectionsConfidence, 60),
           objectionsSummary: formatSummary(parsed.objectionsSummary),
           proofElements: formatShort(parsed.proofElements),
+          proofConfidence: getConfidence(parsed.proofConfidence, 60),
           proofSummary: formatSummary(parsed.proofSummary),
+          inputQuality: parsed.inputQuality === 'rich' ? 'rich' : parsed.inputQuality === 'adequate' ? 'adequate' : 'thin',
         };
       }
     } catch (parseError) {
@@ -289,12 +460,13 @@ Extract only what they explicitly stated. Return JSON with null for unmentioned 
 
     // Enhanced logging for debugging
     const capturedFields = Object.entries(extracted)
-      .filter(([k, v]) => v !== null && !k.includes('Summary'))
+      .filter(([k, v]) => v !== null && !k.includes('Summary') && !k.includes('Confidence') && k !== 'inputQuality')
       .map(([k]) => k);
     console.log('📝 User message:', sanitizedMessage);
+    console.log('📊 Input quality:', extracted.inputQuality);
     console.log('🧠 Raw AI response:', content);
-    console.log('🎯 Parsed extraction:', JSON.stringify(extracted, null, 2));
-    console.log('✅ Fields captured:', capturedFields);
+    console.log('🎯 Parsed extraction with confidence:', JSON.stringify(extracted, null, 2));
+    console.log('✅ Fields captured (conf >= 50):', capturedFields);
     console.log(`📊 Total: ${capturedFields.length} fields extracted for IP hash:`, ipHash);
 
     return new Response(
@@ -307,19 +479,27 @@ Extract only what they explicitly stated. Return JSON with null for unmentioned 
       JSON.stringify({ 
         error: 'Processing error',
         industry: null,
+        industryConfidence: 0,
         industrySummary: null,
         audience: null,
+        audienceConfidence: 0,
         audienceSummary: null,
         valueProp: null,
+        valuePropConfidence: 0,
         valuePropSummary: null,
         competitorDifferentiator: null,
+        edgeConfidence: 0,
         edgeSummary: null,
         painPoints: null,
+        painConfidence: 0,
         painSummary: null,
         buyerObjections: null,
+        objectionsConfidence: 0,
         objectionsSummary: null,
         proofElements: null,
+        proofConfidence: 0,
         proofSummary: null,
+        inputQuality: 'thin',
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
