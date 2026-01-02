@@ -281,6 +281,10 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
 
     try {
       // Step 1: Extract intelligence - now extracts ALL 7 fields
+      console.log('=== CALLING EXTRACTION ===');
+      console.log('Message:', message);
+      console.log('Existing intelligence:', state.extracted);
+      
       const { data: extractedData, error: extractError } = await supabase.functions.invoke('demo-extract-intelligence', {
         body: {
           message,
@@ -288,6 +292,21 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           existingIntelligence: state.extracted,
         },
       });
+
+      console.log('=== EXTRACTION RESPONSE ===');
+      console.log('Error:', extractError);
+      console.log('Raw extractedData:', extractedData);
+      console.log('extractedData type:', typeof extractedData);
+      
+      if (extractedData) {
+        console.log('extractedData.industry:', extractedData.industry);
+        console.log('extractedData.audience:', extractedData.audience);
+        console.log('extractedData.valueProp:', extractedData.valueProp);
+        console.log('extractedData.competitorDifferentiator:', extractedData.competitorDifferentiator);
+        console.log('extractedData.painPoints:', extractedData.painPoints);
+        console.log('extractedData.buyerObjections:', extractedData.buyerObjections);
+        console.log('extractedData.proofElements:', extractedData.proofElements);
+      }
 
       let newExtracted = state.extracted;
       if (!extractError && extractedData) {
@@ -301,6 +320,9 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           buyerObjections: extractedData.buyerObjections || state.extracted.buyerObjections,
           proofElements: extractedData.proofElements || state.extracted.proofElements,
         };
+
+        console.log('=== MERGED INTELLIGENCE ===');
+        console.log('newExtracted:', newExtracted);
 
         setState(prev => ({
           ...prev,

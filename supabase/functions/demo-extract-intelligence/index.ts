@@ -233,9 +233,12 @@ serve(async (req) => {
       console.error('Failed to parse extraction:', parseError);
     }
 
-    // Count how many fields were extracted
+    // Count how many fields were extracted and log them
     const extractedCount = Object.values(extracted).filter(v => v !== null).length;
-    console.log(`Extracted ${extractedCount} fields for IP hash:`, ipHash, extracted);
+    console.log('=== EXTRACTION RESULT ===');
+    console.log('Raw AI response:', content);
+    console.log('Parsed extracted object:', JSON.stringify(extracted, null, 2));
+    console.log(`Extracted ${extractedCount} fields for IP hash:`, ipHash);
 
     return new Response(
       JSON.stringify(extracted),

@@ -5,11 +5,12 @@ import { StrategicLevel } from '@/types/strategicLevels';
 import type { LevelCheckResult } from '@/types/strategicLevels';
 
 // Category definitions matching the strategic level calculator fields
+// IMPORTANT: These keys must match what calculateStrategicLevel returns in capturedFields
 const CATEGORIES = [
   { key: 'industry', label: 'Industry' },
   { key: 'audience', label: 'Audience' },
   { key: 'valueProp', label: 'Value Proposition' },
-  { key: 'competitorDifferentiator', label: 'Competitive Edge' },
+  { key: 'competitorDifferentiation', label: 'Competitive Edge' },
   { key: 'painPoints', label: 'Pain Points' },
   { key: 'buyerObjections', label: 'Buyer Objections' },
   { key: 'proofElements', label: 'Proof Elements' },
