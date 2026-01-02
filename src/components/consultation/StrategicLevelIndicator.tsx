@@ -10,7 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
+import { PremiumFieldTooltip } from "@/components/ui/PremiumFieldTooltip";
 // Category definitions matching the ExtractedIntelligence type fields
 const CATEGORIES = [
   { key: 'industry', summaryKey: 'industrySummary', label: 'Industry' },
@@ -240,19 +240,19 @@ export function StrategicLevelIndicator({
                   
                   <AnimatePresence mode="wait">
                     {isCaptured && fieldData?.value && fieldData.value !== 'null' && (
-                      <motion.span
+                      <motion.div
                         key={`${category.key}-${fieldData.value}`}
                         initial={{ opacity: 0, x: 10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -5 }}
                         transition={{ duration: 0.3 }}
-                        className={cn(
-                          "text-xs leading-tight ml-auto text-right line-clamp-2 max-w-[140px] break-words",
-                          currentStyles.text
-                        )}
+                        className="ml-auto"
                       >
-                        {fieldData.value}
-                      </motion.span>
+                        <PremiumFieldTooltip 
+                          value={fieldData.value}
+                          className={cn("text-right", currentStyles.text)}
+                        />
+                      </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
@@ -367,7 +367,10 @@ export function StrategicLevelIndicator({
                     <div className="flex items-start gap-2 cursor-help">
                       <div className={cn("w-1 h-6 rounded-full bg-gradient-to-b flex-shrink-0 mt-0.5", currentStyles.gradient)} />
                       <span className="text-slate-400 text-xs flex-shrink-0">{category.label}:</span>
-                      <span className={cn("text-xs leading-tight line-clamp-2 max-w-[140px] break-words", currentStyles.text)}>{fieldData.value}</span>
+                      <PremiumFieldTooltip 
+                        value={fieldData.value}
+                        className={currentStyles.text}
+                      />
                     </div>
                   </TooltipTrigger>
                   {fieldData.summary && (
@@ -452,9 +455,12 @@ export function StrategicLevelIndicator({
                         {category.label}
                       </span>
                       {isCaptured && fieldData?.value && fieldData.value !== 'null' && (
-                        <span className={cn("text-xs leading-tight ml-auto text-right line-clamp-2 max-w-[120px] break-words", currentStyles.text)}>
-                          {fieldData.value}
-                        </span>
+                        <div className="ml-auto">
+                          <PremiumFieldTooltip 
+                            value={fieldData.value}
+                            className={cn("text-right max-w-[120px]", currentStyles.text)}
+                          />
+                        </div>
                       )}
                     </div>
                   );
