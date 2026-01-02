@@ -286,14 +286,14 @@ export default function LiveDemoSection() {
           </motion.p>
         </div>
 
-        {/* Two-column layout */}
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Left Column - Chat Interface */}
+        {/* Two-column layout: 2/3 chat, 1/3 intelligence */}
+        <div className="grid lg:grid-cols-3 gap-5">
+          {/* Left Column - Chat Interface (2 columns) */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden flex flex-col h-[500px]"
+            className="lg:col-span-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden flex flex-col h-[500px]"
           >
             {/* Chat header */}
             <div className="px-4 py-3 border-b border-slate-700/50 flex items-center gap-3">
@@ -411,19 +411,20 @@ export default function LiveDemoSection() {
             </form>
           </motion.div>
 
-          {/* Right Column - Intelligence Profile */}
+          {/* Right Column - Intelligence Profile (1 column) */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="relative flex flex-col h-[500px]"
+            className="lg:col-span-1 relative flex flex-col h-[500px]"
           >
             {/* Scrollable content area */}
-            <div className="flex-1 overflow-y-auto pb-32 space-y-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-              {/* Strategic Level Indicator - replaces old readiness bars */}
+            <div className="flex-1 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+              {/* Strategic Level Indicator with sidebar styling */}
               <StrategicLevelIndicator 
                 result={calculateStrategicLevel(state.extracted)}
                 onContinue={handleContinueToWizard}
+                className="h-full border-l-2 border-slate-700/50 shadow-[-4px_0_12px_rgba(0,0,0,0.2)]"
               />
 
               {/* Market Insights (appears when loaded) */}
