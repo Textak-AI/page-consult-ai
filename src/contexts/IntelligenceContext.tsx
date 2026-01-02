@@ -362,7 +362,10 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         }));
       }
 
-      // Step 2: Generate AI response
+      // Step 2: Generate AI response - pass inputQuality for smarter responses
+      const inputQuality = extractedData?.inputQuality || 'adequate';
+      console.log('📊 Input quality from extraction:', inputQuality);
+      
       const { data: responseData, error: responseError } = await supabase.functions.invoke('demo-generate-response', {
         body: {
           userMessage: message,
@@ -370,6 +373,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           marketResearch: state.emailCaptured ? state.market : null, // Only include if email captured
           conversationHistory: [...state.conversation, userMessage].map(m => ({ role: m.role, content: m.content })),
           messageCount: newMessageCount,
+          inputQuality, // Pass the input quality for smarter response handling
         },
       });
 
