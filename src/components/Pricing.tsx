@@ -21,19 +21,18 @@ const plans = [
       "Basic templates",
       "Email support",
     ],
-    buttonText: "Start Free Trial",
+    buttonText: "Get Started",
     priceId: STRIPE_PRICES.starter,
   },
   {
     id: "founding",
     name: "Founding Member",
     price: 69,
-    originalPrice: 99,
+    originalPrice: 149,
     tagline: "Limited to 500 spots",
     icon: Crown,
     popular: true,
-    badge: "BEST VALUE",
-    discountBadge: "🎉 30% off for life",
+    badge: "Most Popular",
     features: [
       "Unlimited landing pages",
       "All premium templates",
@@ -42,7 +41,7 @@ const plans = [
       "Lock in this price forever",
       "Advanced analytics",
     ],
-    buttonText: "Claim Founding Spot",
+    buttonText: "Lock In Founding Price",
     priceId: STRIPE_PRICES.founding_member,
   },
   {
@@ -60,14 +59,13 @@ const plans = [
       "API access",
       "Dedicated support",
     ],
-    buttonText: "Start Agency Trial",
+    buttonText: "Contact Sales",
     priceId: STRIPE_PRICES.agency,
   },
 ];
 
 const Pricing = () => {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const [foundingSpotsLeft] = useState(127);
   const navigate = useNavigate();
 
   const handlePlanSelect = async (plan: typeof plans[0]) => {
@@ -106,31 +104,24 @@ const Pricing = () => {
   };
 
   return (
-    <section id="pricing" className="py-24 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden">
-      {/* Decorative glow effects */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+    <section id="pricing" className="py-24 bg-slate-900 relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-purple-500/10 to-transparent blur-[100px]" />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center mb-12 animate-fade-in">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="text-center mb-16 animate-fade-in">
+          <p className="text-cyan-400 text-sm font-semibold tracking-wide uppercase mb-3">
+            Pricing
+          </p>
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-lg text-gray-400 mb-8">
-            Start with a 14-day free trial. No credit card required.
+          <p className="text-white/50 text-lg">
+            Start free. Scale when you're ready.
           </p>
-          
-          {/* Founding Member Banner */}
-          <div className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 rounded-full px-6 py-3">
-            <Crown className="w-5 h-5 text-cyan-400" />
-            <span className="text-cyan-200 font-medium">
-              🎉 Limited Time: Lock in Founding Member pricing forever
-              <span className="text-cyan-400 ml-1">({foundingSpotsLeft} spots left)</span>
-            </span>
-          </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 items-stretch max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 items-start max-w-5xl mx-auto">
           {plans.map((plan, index) => {
             const isLoading = loadingPlan === plan.id;
             const Icon = plan.icon;
@@ -139,113 +130,109 @@ const Pricing = () => {
               <div
                 key={plan.id}
                 className={cn(
-                  "group relative animate-scale-in",
-                  plan.popular && "md:scale-105 z-10"
+                  "relative animate-scale-in",
+                  plan.popular && "z-10"
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                {/* Glow effect for Founding Member card */}
+                {/* Glow for featured plan */}
                 {plan.popular && (
-                  <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-teal-500 to-cyan-500 rounded-2xl blur-lg opacity-50 group-hover:opacity-70 transition-opacity" />
+                  <div className="absolute -inset-[1px] bg-gradient-to-b from-purple-500 via-cyan-500 to-purple-500 rounded-3xl blur-sm opacity-50" />
                 )}
                 
-                <div
-                  className={cn(
-                    "relative rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 h-full flex flex-col",
-                    plan.popular
-                      ? "bg-gradient-to-b from-slate-800/90 to-slate-900/90 backdrop-blur-sm border-2 border-cyan-400/50 hover:border-cyan-400"
-                      : "bg-slate-800/40 backdrop-blur-sm border border-white/10 hover:border-white/20 hover:-translate-y-1"
-                  )}
-                >
-                  {/* Badge */}
-                  {plan.badge && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-900 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide shadow-lg shadow-cyan-500/30">
+                {/* Badge */}
+                {plan.badge && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
+                    <span className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full text-white text-xs font-semibold shadow-lg">
                       {plan.badge}
-                    </div>
-                  )}
-
-                  {/* Header */}
-                  <div className="text-center mb-6 pt-2">
-                    <div className={cn(
-                      "inline-flex p-3 rounded-xl mb-4",
-                      plan.popular 
-                        ? "bg-cyan-500/20 text-cyan-400" 
-                        : "bg-slate-700/50 text-slate-400"
-                    )}>
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-1">
-                      {plan.name}
-                    </h3>
-                    <p className="text-sm text-slate-400">{plan.tagline}</p>
+                    </span>
                   </div>
-
-                  {/* Price */}
-                  <div className="text-center mb-4">
-                    <div className="flex items-baseline justify-center gap-1">
+                )}
+                
+                <div className={cn(
+                  "relative rounded-3xl p-8 h-full flex flex-col",
+                  plan.popular
+                    ? "bg-slate-900 border border-white/10"
+                    : "bg-slate-800/50 backdrop-blur-sm border border-white/5 hover:border-white/10 transition-all duration-300"
+                )}>
+                  {/* Inner gradient for featured */}
+                  {plan.popular && (
+                    <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 via-transparent to-cyan-500/10 rounded-3xl" />
+                  )}
+                  
+                  <div className="relative z-10 flex flex-col h-full">
+                    {/* Header */}
+                    <p className={cn(
+                      "text-sm font-medium uppercase tracking-wide mb-2",
+                      plan.popular ? "text-purple-400" : "text-white/60"
+                    )}>
+                      {plan.name}
+                    </p>
+                    
+                    {/* Price */}
+                    <div className="flex items-baseline gap-1 mb-1">
                       {plan.originalPrice && (
-                        <span className="text-lg text-slate-500 line-through mr-2">
+                        <span className="text-lg text-white/30 line-through mr-2">
                           ${plan.originalPrice}
                         </span>
                       )}
                       <span className={cn(
-                        "text-5xl font-bold",
-                        plan.popular ? "text-cyan-400" : "text-white"
+                        "font-bold",
+                        plan.popular ? "text-5xl text-white" : "text-4xl text-white"
                       )}>
                         ${plan.price}
                       </span>
-                      <span className="text-slate-400">/mo</span>
+                      <span className="text-white/40">/month</span>
                     </div>
-                    {plan.discountBadge && (
-                      <div className="mt-2 inline-block bg-cyan-500/20 text-cyan-300 text-sm font-medium px-3 py-1 rounded-full">
-                        {plan.discountBadge}
-                      </div>
+                    
+                    {plan.originalPrice && (
+                      <p className="text-white/40 text-sm mb-6">
+                        ${plan.originalPrice}/month after beta
+                      </p>
                     )}
+                    {!plan.originalPrice && (
+                      <p className="text-white/40 text-sm mb-6">{plan.tagline}</p>
+                    )}
+                    
+                    {/* Features */}
+                    <ul className="space-y-4 mb-8 flex-grow">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-3">
+                          <Check className={cn(
+                            "w-5 h-5 flex-shrink-0 mt-0.5",
+                            plan.popular ? "text-cyan-400" : "text-emerald-400"
+                          )} />
+                          <span className={cn(
+                            plan.popular ? "text-white" : "text-white/70"
+                          )}>
+                            {feature}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    {/* CTA Button */}
+                    <Button
+                      size="lg"
+                      disabled={isLoading || loadingPlan !== null}
+                      onClick={() => handlePlanSelect(plan)}
+                      className={cn(
+                        "w-full font-semibold transition-all",
+                        plan.popular 
+                          ? "bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-400 hover:to-cyan-400 text-white shadow-lg shadow-purple-500/25 border-0" 
+                          : "bg-transparent border border-white/10 text-white hover:bg-white/5"
+                      )}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          {plan.buttonText}
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
                   </div>
-
-                  {/* Scarcity counter for Founding Member */}
-                  {plan.popular && (
-                    <div className="flex items-center justify-center gap-2 mb-4 p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-                      <span className="text-sm font-medium text-cyan-300">
-                        {foundingSpotsLeft} spots remaining
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Features */}
-                  <ul className="space-y-3 mb-8 flex-grow">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2">
-                        <Check className={cn(
-                          "w-5 h-5 flex-shrink-0 mt-0.5",
-                          plan.popular ? "text-cyan-400" : "text-cyan-400/70"
-                        )} />
-                        <span className="text-gray-300">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* CTA Button */}
-                  <Button
-                    size="lg"
-                    disabled={isLoading || loadingPlan !== null}
-                    onClick={() => handlePlanSelect(plan)}
-                    className={cn(
-                      "w-full transition-all duration-300 group/btn font-semibold",
-                      plan.popular 
-                        ? "bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-900 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105" 
-                        : "bg-slate-700/50 hover:bg-slate-700 text-white border-white/20 hover:border-white/40 hover:scale-105"
-                    )}
-                  >
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        {plan.buttonText}
-                        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
-                      </>
-                    )}
-                  </Button>
                 </div>
               </div>
             );
@@ -254,7 +241,7 @@ const Pricing = () => {
 
         {/* Trust indicators */}
         <div className="mt-12 text-center">
-          <p className="text-gray-500 text-sm mb-4">
+          <p className="text-white/30 text-sm mb-4">
             14-day free trial • Cancel anytime
           </p>
           <Link 

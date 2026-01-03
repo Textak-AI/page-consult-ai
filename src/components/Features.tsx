@@ -4,63 +4,104 @@ const features = [
   {
     icon: Bot,
     title: "AI-Powered Strategy",
-    description: "AI asks about your business, audience, and goals — then crafts copy that converts",
+    description: "Not just page building — real strategic consultation. Our AI extracts positioning, identifies your competitive edge, and structures messaging that converts.",
+    gradient: "from-purple-500 to-purple-600",
+    borderColor: "border-purple-500/20",
+    bgColor: "from-purple-500/10 to-purple-500/5",
+    accentColor: "from-purple-500 via-cyan-500 to-purple-500",
+    size: "large",
   },
   {
     icon: Calculator,
     title: "Built-in Calculators",
-    description: "Add ROI, pricing, or savings calculators that boost engagement by 40%",
+    description: "ROI calculators, savings estimators — interactive tools that qualify leads.",
+    gradient: "from-cyan-500 to-cyan-600",
+    borderColor: "border-cyan-500/20",
+    bgColor: "from-cyan-500/10 to-cyan-500/5",
+    accentColor: "from-cyan-500 to-cyan-400",
+    size: "small",
   },
   {
     icon: TrendingUp,
     title: "Conversion Optimized",
-    description: "Every element positioned and written using proven conversion principles",
+    description: "Every section structured around proven conversion principles.",
+    gradient: "from-emerald-500 to-emerald-600",
+    borderColor: "border-emerald-500/20",
+    bgColor: "from-emerald-500/10 to-emerald-500/5",
+    accentColor: "from-emerald-500 to-emerald-400",
+    size: "small",
   },
   {
     icon: Zap,
     title: "Lightning Fast",
-    description: "From strategy session to published page in under 10 minutes",
+    description: "From first question to published page in under 10 minutes. Make changes with AI assistance instantly — no waiting for designers or developers.",
+    gradient: "from-amber-500 to-orange-500",
+    borderColor: "border-amber-500/20",
+    bgColor: "from-amber-500/10 to-amber-500/5",
+    accentColor: "from-amber-500 via-orange-500 to-amber-500",
+    size: "large",
   },
 ];
 
 const Features = () => {
   return (
-    <section id="features" className="py-24 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjAyIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40"></div>
+    <section id="features" className="py-24 bg-slate-100 relative overflow-hidden">
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
       
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            What Makes PageConsult Different
-          </h2>
-          <p className="text-lg text-gray-400">
-            Professional name. Powerful features. Beautiful design.
+          <p className="text-purple-600 text-sm font-semibold tracking-wide uppercase mb-3">
+            Why PageConsult
           </p>
+          <h2 className="text-4xl md:text-5xl font-bold text-slate-900">
+            What Makes Us Different
+          </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        {/* Bento Grid */}
+        <div className="grid md:grid-cols-3 gap-4">
           {features.map((feature, index) => {
             const Icon = feature.icon;
+            const isLarge = feature.size === "large";
+            
             return (
               <div
                 key={feature.title}
-                className="group relative bg-slate-800/40 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-cyan-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10 animate-scale-in"
+                className={`group animate-scale-in ${isLarge ? "md:col-span-2" : ""}`}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                {/* Hover glow effect */}
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-2xl opacity-0 group-hover:opacity-20 blur transition-all duration-300" />
-                
-                <div className="relative">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center mb-5 group-hover:from-cyan-500/30 group-hover:to-purple-500/30 transition-all duration-300">
-                    <Icon className="w-7 h-7 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-cyan-400 transition-colors duration-300">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-400 leading-relaxed text-lg group-hover:text-gray-300 transition-colors">
-                    {feature.description}
-                  </p>
+                <div className={`h-full bg-white rounded-3xl ${isLarge ? "p-8" : "p-6"} border border-slate-200/80 shadow-lg shadow-slate-200/50 hover:shadow-xl transition-all duration-500 relative overflow-hidden`}>
+                  {/* Gradient accent on hover */}
+                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${feature.accentColor} opacity-0 group-hover:opacity-100 transition-opacity`} />
+                  
+                  {isLarge ? (
+                    <div className="flex items-start gap-6">
+                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.bgColor} border ${feature.borderColor} flex items-center justify-center flex-shrink-0`}>
+                        <Icon className={`w-7 h-7 bg-gradient-to-br ${feature.gradient} bg-clip-text`} style={{ color: feature.gradient.includes('purple') ? '#a855f7' : feature.gradient.includes('amber') ? '#f59e0b' : '#06b6d4' }} />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-semibold text-slate-900 mb-3">
+                          {feature.title}
+                        </h3>
+                        <p className="text-slate-600 leading-relaxed text-lg">
+                          {feature.description}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.bgColor} border ${feature.borderColor} flex items-center justify-center mb-4`}>
+                        <Icon className="w-6 h-6" style={{ color: feature.gradient.includes('cyan') ? '#06b6d4' : '#10b981' }} />
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                        {feature.title}
+                      </h3>
+                      <p className="text-slate-600 text-sm leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             );
