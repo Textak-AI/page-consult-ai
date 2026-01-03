@@ -39,6 +39,19 @@ export interface ConversationMessage {
   timestamp: Date;
 }
 
+// Track each user message with its corresponding extraction
+export interface ConversationTurn {
+  userMessage: string;
+  extraction: {
+    fields: Array<{
+      label: string;
+      value: string;
+      color: 'purple' | 'cyan' | 'emerald' | 'amber';
+    }>;
+  };
+  timestamp: Date;
+}
+
 export interface IntelligenceState {
   // Core intelligence
   extracted: ExtractedIntelligence;
@@ -47,6 +60,7 @@ export interface IntelligenceState {
   
   // Conversation
   conversation: ConversationMessage[];
+  conversationHistory: ConversationTurn[]; // Track user messages with extractions
   isProcessing: boolean;
   messageCount: number;
   
@@ -105,6 +119,7 @@ const initialState: IntelligenceState = {
   },
   readiness: 0,
   conversation: [],
+  conversationHistory: [],
   isProcessing: false,
   messageCount: 0,
   sessionId: '',
@@ -335,6 +350,8 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       console.log('🎯 Raw extractedData:', extractedData);
 
       let newExtracted = state.extracted;
+      let extractionFields: Array<{ label: string; value: string; color: 'purple' | 'cyan' | 'emerald' | 'amber' }> = [];
+      
       if (!extractError && extractedData) {
         // Merge new extractions (don't overwrite with nulls)
         newExtracted = {
@@ -359,10 +376,44 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         console.log('=== MERGED INTELLIGENCE ===');
         console.log('✅ newExtracted:', newExtracted);
 
+        // Build extraction fields for this message (what was newly extracted)
+        const colorCycle: Array<'purple' | 'cyan' | 'emerald' | 'amber'> = ['purple', 'cyan', 'emerald', 'amber'];
+        let colorIndex = 0;
+        
+        if (extractedData.industry && extractedData.industry !== state.extracted.industry) {
+          extractionFields.push({ label: 'Industry', value: extractedData.industry, color: colorCycle[colorIndex++ % 4] });
+        }
+        if (extractedData.audience && extractedData.audience !== state.extracted.audience) {
+          extractionFields.push({ label: 'Audience', value: extractedData.audience, color: colorCycle[colorIndex++ % 4] });
+        }
+        if (extractedData.valueProp && extractedData.valueProp !== state.extracted.valueProp) {
+          extractionFields.push({ label: 'Value Prop', value: extractedData.valueProp, color: colorCycle[colorIndex++ % 4] });
+        }
+        if (extractedData.competitorDifferentiator && extractedData.competitorDifferentiator !== state.extracted.competitorDifferentiator) {
+          extractionFields.push({ label: 'Your Edge', value: extractedData.competitorDifferentiator, color: colorCycle[colorIndex++ % 4] });
+        }
+        if (extractedData.painPoints && extractedData.painPoints !== state.extracted.painPoints) {
+          extractionFields.push({ label: 'Pain Point', value: extractedData.painPoints, color: colorCycle[colorIndex++ % 4] });
+        }
+        if (extractedData.buyerObjections && extractedData.buyerObjections !== state.extracted.buyerObjections) {
+          extractionFields.push({ label: 'Buyer Objection', value: extractedData.buyerObjections, color: colorCycle[colorIndex++ % 4] });
+        }
+        if (extractedData.proofElements && extractedData.proofElements !== state.extracted.proofElements) {
+          extractionFields.push({ label: 'Proof Point', value: extractedData.proofElements, color: colorCycle[colorIndex++ % 4] });
+        }
+
+        // Build the conversation turn if we extracted meaningful fields
+        const newTurn: ConversationTurn | null = extractionFields.length >= 2 ? {
+          userMessage: message,
+          extraction: { fields: extractionFields },
+          timestamp: new Date(),
+        } : null;
+
         setState(prev => ({
           ...prev,
           extracted: newExtracted,
           readiness: calculateReadiness(newExtracted, prev.market.marketSize !== null, prev.emailCaptured),
+          conversationHistory: newTurn ? [...prev.conversationHistory, newTurn] : prev.conversationHistory,
         }));
       }
 
