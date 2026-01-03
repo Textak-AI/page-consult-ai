@@ -1,41 +1,43 @@
 import { useMemo } from 'react';
-import { IntelligenceProfile } from '@/components/intelligence/IntelligenceProfile';
-import { 
-  useIntelligenceProfile, 
-  mapDemoToConsultation, 
-  ExtractedIntelligence 
-} from '@/hooks/useIntelligenceProfile';
+import { IntelligenceProfileWizard } from '@/components/consultation/IntelligenceProfileWizard';
+import { calculateIntelligenceScore, getNextPrompt, type GenericIntelligence } from '@/lib/intelligenceScoreCalculator';
+
+// Re-export the GenericIntelligence type as ExtractedIntelligence for backwards compatibility
+export type ExtractedIntelligence = GenericIntelligence;
 
 interface WizardIntelligenceProfileProps {
   extractedIntelligence: ExtractedIntelligence;
   recentlyFilled?: string[];
   showDemoImportBadge?: boolean;
+  isThinking?: boolean;
 }
 
 /**
- * Wrapper component that uses the new Intelligence Profile in the Wizard context
+ * Wrapper component that uses the new unified scoring Intelligence Profile in the Wizard context
  */
 export function WizardIntelligenceProfile({
   extractedIntelligence,
   recentlyFilled,
   showDemoImportBadge = false,
+  isThinking = false,
 }: WizardIntelligenceProfileProps) {
-  const {
-    categories,
-    totalReadiness,
-    readinessLevel,
-    hasDataFromDemo,
-    nextQuestion,
-  } = useIntelligenceProfile(extractedIntelligence, recentlyFilled);
+  const score = useMemo(
+    () => calculateIntelligenceScore(extractedIntelligence),
+    [extractedIntelligence]
+  );
+  
+  const nextPrompt = useMemo(
+    () => getNextPrompt(score),
+    [score]
+  );
 
   return (
-    <div className="h-full overflow-auto p-4 bg-gradient-to-b from-[#0f0a1f] to-[#1a1332]">
-      <IntelligenceProfile
-        categories={categories}
-        totalReadiness={totalReadiness}
-        readinessLevel={readinessLevel}
-        nextQuestion={nextQuestion}
-        showDemoImportBadge={showDemoImportBadge || hasDataFromDemo}
+    <div className="h-full overflow-auto p-3 bg-gradient-to-b from-[#0f0a1f] to-[#1a1332]">
+      <IntelligenceProfileWizard
+        score={score}
+        nextPrompt={nextPrompt}
+        showDemoImportBadge={showDemoImportBadge}
+        isThinking={isThinking}
       />
     </div>
   );
@@ -43,6 +45,7 @@ export function WizardIntelligenceProfile({
 
 /**
  * Helper to convert wizard tiles to ExtractedIntelligence format
+ * Maps the old tile-based system to the new unified scoring fields
  */
 export function tilesToIntelligence(tiles: any[], collectedInfo: Record<string, any>): ExtractedIntelligence {
   const getValue = (tileId: string) => {
@@ -53,32 +56,66 @@ export function tilesToIntelligence(tiles: any[], collectedInfo: Record<string, 
   };
 
   return {
-    // Industry & Market
-    industryVertical: getValue('industry') || collectedInfo?.industry,
-    industryVerticalSource: collectedInfo?.fromDemo ? 'demo' : 'consultation',
+    // WHO YOU ARE
+    industry: getValue('industry') || collectedInfo?.industry || null,
+    industrySummary: collectedInfo?.industrySummary || null,
+    audience: getValue('audience') || collectedInfo?.targetAudience || null,
+    audienceSummary: collectedInfo?.audienceSummary || null,
+    geography: collectedInfo?.geography || null,
     
-    // Target Audience  
-    buyerRole: getValue('audience') || collectedInfo?.targetAudience,
-    buyerRoleSource: collectedInfo?.fromDemo ? 'demo' : 'consultation',
+    // WHAT YOU OFFER
+    valueProp: getValue('value') || collectedInfo?.valueProposition || null,
+    valuePropSummary: collectedInfo?.valuePropSummary || null,
+    competitorDifferentiator: getValue('competitive') || collectedInfo?.competitivePosition || null,
+    edgeSummary: collectedInfo?.edgeSummary || null,
+    method: collectedInfo?.method || null,
     
-    // Value Proposition
-    coreOffer: getValue('value') || collectedInfo?.valueProposition,
-    coreOfferSource: collectedInfo?.fromDemo ? 'demo' : 'consultation',
+    // BUYER REALITY
+    painPoints: collectedInfo?.painPoints || null,
+    painSummary: collectedInfo?.painSummary || null,
+    buyerObjections: collectedInfo?.buyerObjections || null,
+    objectionsSummary: collectedInfo?.objectionsSummary || null,
+    triggers: collectedInfo?.triggers || null,
     
-    // Competitive Position
-    keyDifferentiator: getValue('competitive') || collectedInfo?.competitivePosition,
-    keyDifferentiatorSource: collectedInfo?.fromDemo ? 'demo' : 'consultation',
-    
-    // Goals
-    pageGoal: getValue('goals') || collectedInfo?.goals?.[0],
-    
-    // Additional from collectedInfo
-    primaryPainPoint: collectedInfo?.painPoints,
-    primaryPainPointSource: collectedInfo?.fromDemo ? 'demo' : 'consultation',
-    commonObjections: collectedInfo?.buyerObjections,
-    commonObjectionsSource: collectedInfo?.fromDemo ? 'demo' : 'consultation',
+    // PROOF & CREDIBILITY
+    proofElements: collectedInfo?.proofElements || null,
+    proofSummary: collectedInfo?.proofSummary || null,
+    socialProof: collectedInfo?.socialProof || null,
+    credentials: collectedInfo?.credentials || null,
   };
 }
 
-export { mapDemoToConsultation };
-export type { ExtractedIntelligence };
+/**
+ * Maps demo session data to the ExtractedIntelligence format
+ * Used when loading demo data into the wizard
+ */
+export function mapDemoToConsultation(demoData: any): ExtractedIntelligence {
+  return {
+    // WHO YOU ARE
+    industry: demoData.industry || null,
+    industrySummary: demoData.industrySummary || null,
+    audience: demoData.audience || null,
+    audienceSummary: demoData.audienceSummary || null,
+    geography: demoData.geography || null,
+    
+    // WHAT YOU OFFER
+    valueProp: demoData.valueProp || null,
+    valuePropSummary: demoData.valuePropSummary || null,
+    competitorDifferentiator: demoData.competitorDifferentiator || demoData.competitive || null,
+    edgeSummary: demoData.edgeSummary || null,
+    method: demoData.method || null,
+    
+    // BUYER REALITY
+    painPoints: demoData.painPoints || null,
+    painSummary: demoData.painSummary || null,
+    buyerObjections: demoData.buyerObjections || null,
+    objectionsSummary: demoData.objectionsSummary || null,
+    triggers: demoData.triggers || null,
+    
+    // PROOF & CREDIBILITY
+    proofElements: demoData.proofElements || null,
+    proofSummary: demoData.proofSummary || null,
+    socialProof: demoData.socialProof || null,
+    credentials: demoData.credentials || null,
+  };
+}
