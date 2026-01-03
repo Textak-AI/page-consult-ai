@@ -6,7 +6,7 @@ const SocialProof = () => {
           Why We Built This
         </p>
         <p className="text-white/70 text-xl md:text-2xl leading-relaxed">
-          "After 10 years in executive-level corporate marketing strategy, one thing has always been clear: great engagement systems are communication systems build on informed strategy. I built PageConsult AI to bring that philosophy to market."
+          "Templates don't create engagement. Strategy does. After 10 years building corporate communication systems, I built PageConsult AI to put strategy first — where it belongs."
         </p>
         <p className="text-white/40 text-sm mt-6">
           — Kyle, Founder
