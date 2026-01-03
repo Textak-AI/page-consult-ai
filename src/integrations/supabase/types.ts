@@ -1217,6 +1217,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_landing_page: { Args: { page_slug: string }; Returns: Json }
       grant_grace_actions: { Args: { p_user_id: string }; Returns: Json }
       has_role: {
         Args: {
