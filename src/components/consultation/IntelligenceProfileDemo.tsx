@@ -119,201 +119,200 @@ export function IntelligenceProfileDemo({
       {/* Desktop Layout (lg+) */}
       <div
         className={cn(
-          "hidden lg:flex rounded-xl border overflow-hidden",
+          "hidden lg:flex flex-col rounded-xl border overflow-hidden",
           "bg-slate-900/40 backdrop-blur-xl",
+          "h-full max-h-[calc(100vh-120px)]",
           levelColors.border,
           className
         )}
       >
-        <div className="h-full flex flex-col p-4 w-full">
-          {/* Header */}
-          <div className="flex-shrink-0 mb-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-light tracking-wide text-white">
-                Intelligence Profile
-              </h2>
-              <motion.span
-                key={score.totalScore}
-                initial={{ scale: 1.2, color: 'rgb(34, 211, 238)' }}
-                animate={{ scale: 1, color: 'rgb(148, 163, 184)' }}
-                className="text-sm font-mono"
-              >
-                {score.totalScore}/100
-              </motion.span>
-            </div>
-            
-            {/* Total Progress Bar */}
-            <div className="mt-2 h-1.5 bg-slate-700/50 rounded-full overflow-hidden">
-              <motion.div
-                className={cn("h-full rounded-full bg-gradient-to-r", levelColors.gradient)}
-                initial={{ width: 0 }}
-                animate={{ width: `${score.totalPercentage}%` }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-              />
-            </div>
-            
-            {/* Level Badge */}
-            <motion.p
-              key={score.level}
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className={cn("text-xs mt-2 font-medium tracking-wider", levelColors.text)}
+        {/* Header - Fixed at top */}
+        <div className="flex-shrink-0 p-4 border-b border-slate-800/50">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-light tracking-wide text-white">
+              Intelligence Profile
+            </h2>
+            <motion.span
+              key={score.totalScore}
+              initial={{ scale: 1.2, color: 'rgb(34, 211, 238)' }}
+              animate={{ scale: 1, color: 'rgb(148, 163, 184)' }}
+              className="text-sm font-mono"
             >
-              {levelConfig.label}
-              {levelConfig.sublabel && (
-                <span className="font-normal opacity-80"> — {levelConfig.sublabel}</span>
-              )}
-            </motion.p>
+              {score.totalScore}/100
+            </motion.span>
           </div>
           
-          {/* Categories */}
-          <div className="flex-1 flex flex-col justify-evenly min-h-0 space-y-3">
-            {DEMO_CATEGORIES.map((cat) => {
-              const category = score[cat.key];
-              const catColors = CATEGORY_COLORS[cat.key];
-              
-              return (
-                <div key={cat.key} className="space-y-1">
-                  {/* Category Header */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-slate-500 uppercase tracking-wider">
-                      {cat.label}
-                    </span>
-                    <span className="text-[10px] text-slate-600 font-mono">
-                      {category.total}/{category.maxPoints}
-                    </span>
-                  </div>
-                  
-                  {/* Category Progress */}
-                  <div className="h-1 bg-slate-700/30 rounded-full overflow-hidden">
-                    <motion.div
-                      className={cn("h-full rounded-full bg-gradient-to-r", catColors.gradient)}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${category.percentage}%` }}
-                      transition={{ duration: 0.4, ease: 'easeOut' }}
-                    />
-                  </div>
-                  
-                  {/* Fields */}
-                  <div className="space-y-0.5">
-                    {cat.fields.map((field) => {
-                      const fieldData = category[field.key] as FieldScore;
-                      const hasValue = !!fieldData.value;
-                      const isAnimating = animatingFields.has(`${cat.key}-${field.key}`);
-                      
-                      const fieldContent = (
-                        <div className="flex items-center gap-2 py-0.5 group">
-                          {/* Vertical bar indicator */}
-                          <motion.div
-                            className={cn(
-                              "w-1 h-5 rounded-full flex-shrink-0 transition-all duration-300",
-                              hasValue
-                                ? `bg-gradient-to-b ${catColors.gradient}`
-                                : isThinking ? "bg-slate-600" : "bg-slate-700"
-                            )}
-                            animate={{
-                              scaleY: isAnimating ? [1, 1.3, 1] : 1,
-                              opacity: isThinking && !hasValue ? [0.5, 0.8, 0.5] : 1,
-                            }}
-                            transition={{
-                              scaleY: { duration: 0.4, ease: 'easeOut' },
-                              opacity: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' },
-                            }}
-                          />
-                          
-                          {/* Label */}
-                          <span className={cn(
-                            "text-xs min-w-[70px] flex-shrink-0 transition-colors",
-                            hasValue ? "text-slate-300" : "text-slate-600"
-                          )}>
-                            {field.label}
-                          </span>
-                          
-                          {/* Value */}
-                          <AnimatePresence mode="wait">
-                            {hasValue && (
-                              <motion.span
-                                initial={{ opacity: 0, x: 10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -5 }}
-                                className={cn(
-                                  "text-xs truncate max-w-[120px] ml-auto",
-                                  catColors.text
-                                )}
-                              >
-                                {fieldData.value}
-                              </motion.span>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      );
-                      
-                      // Wrap with tooltip if has summary
-                      if (hasValue && fieldData.summary) {
-                        return (
-                          <Tooltip key={field.key}>
-                            <TooltipTrigger asChild>
-                              <div className="cursor-help">{fieldContent}</div>
-                            </TooltipTrigger>
-                            <TooltipContent
-                              side="left"
-                              className="max-w-[250px] bg-slate-900 border-slate-700 text-slate-200 p-3"
-                            >
-                              <p className="text-xs leading-relaxed">{fieldData.summary}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        );
-                      }
-                      
-                      return <div key={field.key}>{fieldContent}</div>;
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+          {/* Total Progress Bar */}
+          <div className="mt-2 h-1.5 bg-slate-700/50 rounded-full overflow-hidden">
+            <motion.div
+              className={cn("h-full rounded-full bg-gradient-to-r", levelColors.gradient)}
+              initial={{ width: 0 }}
+              animate={{ width: `${score.totalPercentage}%` }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            />
           </div>
           
-          {/* CTA Section */}
-          <div className="flex-shrink-0 pt-4 mt-4 border-t border-slate-800/30">
-            {showCTA && onContinue ? (
-              <div className="space-y-2">
-                <motion.button
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  onClick={onContinue}
-                  className={cn(
-                    "w-full py-2.5 rounded-lg text-xs font-medium transition-all",
-                    score.level === 'proven'
-                      ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400"
-                      : score.level === 'armed'
-                        ? "bg-purple-500/10 border border-purple-500/30 text-purple-400"
-                        : "bg-green-500/10 border border-green-500/30 text-green-400"
-                  )}
-                >
-                  {score.level === 'proven' && '⭐ Generate Premium Page'}
-                  {score.level === 'armed' && 'Generate Page →'}
-                  {score.level === 'positioned' && 'Start Free Trial →'}
-                  {score.level === 'identified' && 'Continue →'}
-                </motion.button>
-                
-                {onKeepChatting && (
-                  <button
-                    onClick={onKeepChatting}
-                    className="w-full py-1.5 text-xs text-slate-500 hover:text-slate-400 transition-colors"
-                  >
-                    Keep Chatting
-                  </button>
-                )}
-              </div>
-            ) : (
-              <p className="text-xs text-slate-600 text-center">
-                Share more to unlock
-              </p>
+          {/* Level Badge */}
+          <motion.p
+            key={score.level}
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className={cn("text-xs mt-2 font-medium tracking-wider", levelColors.text)}
+          >
+            {levelConfig.label}
+            {levelConfig.sublabel && (
+              <span className="font-normal opacity-80"> — {levelConfig.sublabel}</span>
             )}
-          </div>
+          </motion.p>
+        </div>
+        
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {DEMO_CATEGORIES.map((cat) => {
+            const category = score[cat.key];
+            const catColors = CATEGORY_COLORS[cat.key];
+            
+            return (
+              <div key={cat.key} className="space-y-1">
+                {/* Category Header */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                    {cat.label}
+                  </span>
+                  <span className="text-[10px] text-slate-600 font-mono">
+                    {category.total}/{category.maxPoints}
+                  </span>
+                </div>
+                
+                {/* Category Progress */}
+                <div className="h-1 bg-slate-700/30 rounded-full overflow-hidden">
+                  <motion.div
+                    className={cn("h-full rounded-full bg-gradient-to-r", catColors.gradient)}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${category.percentage}%` }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                  />
+                </div>
+                
+                {/* Fields */}
+                <div className="space-y-0.5">
+                  {cat.fields.map((field) => {
+                    const fieldData = category[field.key] as FieldScore;
+                    const hasValue = !!fieldData.value;
+                    const isAnimating = animatingFields.has(`${cat.key}-${field.key}`);
+                    
+                    const fieldContent = (
+                      <div className="flex items-center gap-2 py-0.5 group">
+                        {/* Vertical bar indicator */}
+                        <motion.div
+                          className={cn(
+                            "w-1 h-5 rounded-full flex-shrink-0 transition-all duration-300",
+                            hasValue
+                              ? `bg-gradient-to-b ${catColors.gradient}`
+                              : isThinking ? "bg-slate-600" : "bg-slate-700"
+                          )}
+                          animate={{
+                            scaleY: isAnimating ? [1, 1.3, 1] : 1,
+                            opacity: isThinking && !hasValue ? [0.5, 0.8, 0.5] : 1,
+                          }}
+                          transition={{
+                            scaleY: { duration: 0.4, ease: 'easeOut' },
+                            opacity: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' },
+                          }}
+                        />
+                        
+                        {/* Label */}
+                        <span className={cn(
+                          "text-xs min-w-[70px] flex-shrink-0 transition-colors",
+                          hasValue ? "text-slate-300" : "text-slate-600"
+                        )}>
+                          {field.label}
+                        </span>
+                        
+                        {/* Value */}
+                        <AnimatePresence mode="wait">
+                          {hasValue && (
+                            <motion.span
+                              initial={{ opacity: 0, x: 10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: -5 }}
+                              className={cn(
+                                "text-xs truncate max-w-[120px] ml-auto",
+                                catColors.text
+                              )}
+                            >
+                              {fieldData.value}
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                    
+                    // Wrap with tooltip if has summary
+                    if (hasValue && fieldData.summary) {
+                      return (
+                        <Tooltip key={field.key}>
+                          <TooltipTrigger asChild>
+                            <div className="cursor-help">{fieldContent}</div>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="left"
+                            className="max-w-[250px] bg-slate-900 border-slate-700 text-slate-200 p-3"
+                          >
+                            <p className="text-xs leading-relaxed">{fieldData.summary}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    }
+                    
+                    return <div key={field.key}>{fieldContent}</div>;
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Footer - Fixed at bottom */}
+        <div className="flex-shrink-0 p-4 border-t border-slate-800/50">
+          {showCTA && onContinue ? (
+            <div className="space-y-2">
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={onContinue}
+                className={cn(
+                  "w-full py-2.5 rounded-lg text-xs font-medium transition-all",
+                  score.level === 'proven'
+                    ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400"
+                    : score.level === 'armed'
+                      ? "bg-purple-500/10 border border-purple-500/30 text-purple-400"
+                      : "bg-green-500/10 border border-green-500/30 text-green-400"
+                )}
+              >
+                {score.level === 'proven' && '⭐ Generate Premium Page'}
+                {score.level === 'armed' && 'Generate Page →'}
+                {score.level === 'positioned' && 'Start Free Trial →'}
+                {score.level === 'identified' && 'Continue →'}
+              </motion.button>
+              
+              {onKeepChatting && (
+                <button
+                  onClick={onKeepChatting}
+                  className="w-full py-1.5 text-xs text-slate-500 hover:text-slate-400 transition-colors"
+                >
+                  Keep Chatting
+                </button>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-600 text-center">
+              Share more to unlock
+            </p>
+          )}
         </div>
       </div>
 
