@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 // ============================================
 
 export interface ExtractedIntelligence {
-  // Short values (for display)
+  // Short values (for sidebar display - max 14 chars)
   industry: string | null;
   audience: string | null;
   valueProp: string | null;
@@ -15,6 +15,14 @@ export interface ExtractedIntelligence {
   painPoints: string | null;
   buyerObjections: string | null;
   proofElements: string | null;
+  // Full values (for Hero/CTA generation - max 50 chars)
+  industryFull: string | null;
+  audienceFull: string | null;
+  valuePropFull: string | null;
+  competitorDifferentiatorFull: string | null;
+  painPointsFull: string | null;
+  buyerObjectionsFull: string | null;
+  proofElementsFull: string | null;
   // Summaries (for hover tooltips)
   industrySummary: string | null;
   audienceSummary: string | null;
@@ -95,6 +103,7 @@ export interface IntelligenceContextValue {
 
 const initialState: IntelligenceState = {
   extracted: {
+    // Short values (for sidebar display)
     industry: null,
     audience: null,
     valueProp: null,
@@ -102,6 +111,15 @@ const initialState: IntelligenceState = {
     painPoints: null,
     buyerObjections: null,
     proofElements: null,
+    // Full values (for Hero/CTA generation)
+    industryFull: null,
+    audienceFull: null,
+    valuePropFull: null,
+    competitorDifferentiatorFull: null,
+    painPointsFull: null,
+    buyerObjectionsFull: null,
+    proofElementsFull: null,
+    // Summaries
     industrySummary: null,
     audienceSummary: null,
     valuePropSummary: null,
@@ -355,7 +373,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       if (!extractError && extractedData) {
         // Merge new extractions (don't overwrite with nulls)
         newExtracted = {
-          // Short values
+          // Short values (for sidebar display)
           industry: extractedData.industry || state.extracted.industry,
           audience: extractedData.audience || state.extracted.audience,
           valueProp: extractedData.valueProp || state.extracted.valueProp,
@@ -363,6 +381,14 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           painPoints: extractedData.painPoints || state.extracted.painPoints,
           buyerObjections: extractedData.buyerObjections || state.extracted.buyerObjections,
           proofElements: extractedData.proofElements || state.extracted.proofElements,
+          // Full values (for Hero/CTA generation)
+          industryFull: extractedData.industryFull || state.extracted.industryFull,
+          audienceFull: extractedData.audienceFull || state.extracted.audienceFull,
+          valuePropFull: extractedData.valuePropFull || state.extracted.valuePropFull,
+          competitorDifferentiatorFull: extractedData.competitorDifferentiatorFull || state.extracted.competitorDifferentiatorFull,
+          painPointsFull: extractedData.painPointsFull || state.extracted.painPointsFull,
+          buyerObjectionsFull: extractedData.buyerObjectionsFull || state.extracted.buyerObjectionsFull,
+          proofElementsFull: extractedData.proofElementsFull || state.extracted.proofElementsFull,
           // Summaries
           industrySummary: extractedData.industrySummary || state.extracted.industrySummary,
           audienceSummary: extractedData.audienceSummary || state.extracted.audienceSummary,

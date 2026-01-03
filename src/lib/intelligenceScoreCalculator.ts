@@ -13,17 +13,21 @@ import { FIELD_POINTS } from '@/types/intelligenceScore';
 export interface GenericIntelligence {
   // WHO YOU ARE
   industry?: string | null;
+  industryFull?: string | null; // Full value for Hero/CTA (max 50 chars)
   industrySummary?: string | null;
   audience?: string | null;
+  audienceFull?: string | null;
   audienceSummary?: string | null;
   geography?: string | null;
   geographySummary?: string | null;
   
   // WHAT YOU OFFER
   valueProp?: string | null;
+  valuePropFull?: string | null;
   valuePropSummary?: string | null;
   competitiveEdge?: string | null;
   competitorDifferentiator?: string | null;
+  competitorDifferentiatorFull?: string | null;
   competitorDifferentiation?: string | null;
   edgeSummary?: string | null;
   method?: string | null;
@@ -31,14 +35,17 @@ export interface GenericIntelligence {
   
   // BUYER REALITY
   painPoints?: string | string[] | null;
+  painPointsFull?: string | null;
   painSummary?: string | null;
   buyerObjections?: string | string[] | null;
+  buyerObjectionsFull?: string | null;
   objectionsSummary?: string | null;
   triggers?: string | null;
   triggersSummary?: string | null;
   
   // PROOF & CREDIBILITY
   proofElements?: string | string[] | null;
+  proofElementsFull?: string | null;
   results?: string | null;
   resultsSummary?: string | null;
   proofSummary?: string | null;
