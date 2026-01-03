@@ -1392,6 +1392,7 @@ Ready to build this? Or want to adjust the approach first?`,
                     extractedIntelligence={extractedIntelligence}
                     recentlyFilled={recentlyFilled}
                     showDemoImportBadge={showDemoImportBadge}
+                    isThinking={isLoading}
                   />
                 ) : (
                   <IntelligencePanel

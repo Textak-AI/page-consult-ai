@@ -8,32 +8,8 @@ import { Input } from '@/components/ui/input';
 import EmailGateModal from './EmailGateModal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { calculateStrategicLevel } from '@/lib/strategicLevelCalculator';
-import { StrategicLevelIndicator } from '@/components/consultation/StrategicLevelIndicator';
-import type { ExtractedIntelligence, ConsultationStatus } from '@/types/consultationReadiness';
-
-// Convert context's simple extracted intelligence to the full format expected by the calculator
-function convertToFullIntelligence(simple: ContextExtractedIntelligence): Partial<ExtractedIntelligence> {
-  return {
-    industry: simple.industry,
-    audience: simple.audience,
-    valueProp: simple.valueProp,
-    // Use competitorDifferentiation (matching ExtractedIntelligence type)
-    competitorDifferentiation: simple.competitorDifferentiator,
-    // Convert single strings to arrays for painPoints, buyerObjections, proofElements
-    painPoints: simple.painPoints ? [simple.painPoints] : [],
-    buyerObjections: simple.buyerObjections ? [simple.buyerObjections] : [],
-    proofElements: simple.proofElements ? [simple.proofElements] : [],
-    // Include summaries for tooltips (cast to any since these aren't in the strict type)
-    ...(simple.industrySummary && { industrySummary: simple.industrySummary }),
-    ...(simple.audienceSummary && { audienceSummary: simple.audienceSummary }),
-    ...(simple.valuePropSummary && { valuePropSummary: simple.valuePropSummary }),
-    ...(simple.edgeSummary && { edgeSummary: simple.edgeSummary }),
-    ...(simple.painSummary && { painSummary: simple.painSummary }),
-    ...(simple.objectionsSummary && { objectionsSummary: simple.objectionsSummary }),
-    ...(simple.proofSummary && { proofSummary: simple.proofSummary }),
-  } as Partial<ExtractedIntelligence>;
-}
+import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
+import { IntelligenceProfileDemo } from '@/components/consultation/IntelligenceProfileDemo';
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -149,10 +125,10 @@ export default function LiveDemoSection() {
       selectedPath: selectedPath, // Use the selected path from modal
     };
     
-    // Calculate strategic level
-    const levelResult = calculateStrategicLevel(convertToFullIntelligence(state.extracted));
+    // Calculate score for logging
+    const scoreResult = calculateIntelligenceScore(state.extracted);
     
-    console.log('📊 [Demo→Signup] Strategic level:', levelResult.currentLevel);
+    console.log('📊 [Demo→Signup] Strategic level:', scoreResult.level);
     
     // Store demo intelligence in sessionStorage (survives redirect)
     sessionStorage.setItem('demoIntelligence', JSON.stringify(demoIntelligence));
@@ -377,8 +353,8 @@ export default function LiveDemoSection() {
             viewport={{ once: true }}
             className="lg:col-span-1"
           >
-            <StrategicLevelIndicator 
-              result={calculateStrategicLevel(convertToFullIntelligence(state.extracted))}
+            <IntelligenceProfileDemo 
+              score={calculateIntelligenceScore(state.extracted)}
               onContinue={handleGenerateClick}
               isThinking={state.isProcessing}
               className="lg:h-[500px] lg:border-l-2 lg:border-slate-700/50 lg:shadow-[-4px_0_12px_rgba(0,0,0,0.2)]"
