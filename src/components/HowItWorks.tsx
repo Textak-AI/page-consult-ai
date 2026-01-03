@@ -50,7 +50,7 @@ const HowItWorks = () => {
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-8 items-stretch">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const glowClasses = {
@@ -72,15 +72,15 @@ const HowItWorks = () => {
             return (
               <div
                 key={step.number}
-                className="group relative animate-scale-in"
+                className="group relative animate-scale-in h-full"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {/* Hover glow */}
                 <div className={`absolute -inset-px bg-gradient-to-b ${glowClasses[step.glowColor as keyof typeof glowClasses]} to-transparent rounded-3xl opacity-0 transition-opacity duration-500 blur-xl`} />
                 
-                <div className={`relative bg-white rounded-3xl p-8 border border-slate-200 shadow-xl shadow-slate-200/50 hover:shadow-2xl ${shadowClasses[step.glowColor as keyof typeof shadowClasses]} transition-all duration-500 hover:-translate-y-1`}>
+                <div className={`relative h-full flex flex-col bg-white rounded-3xl p-8 border border-slate-200 shadow-xl shadow-slate-200/50 hover:shadow-2xl ${shadowClasses[step.glowColor as keyof typeof shadowClasses]} transition-all duration-500 hover:-translate-y-1`}>
                   {/* Step number with gradient ring */}
-                  <div className="w-16 h-16 mb-6 relative">
+                  <div className="w-16 h-16 mb-6 relative flex-shrink-0">
                     <div className={`absolute inset-0 bg-gradient-to-br ${step.gradient} rounded-2xl opacity-10`} />
                     <div className="absolute inset-[2px] bg-white rounded-2xl flex items-center justify-center">
                       <span className={`text-2xl font-bold bg-gradient-to-br ${step.gradient} bg-clip-text text-transparent`}>
@@ -92,7 +92,7 @@ const HowItWorks = () => {
                   <h3 className="text-xl font-semibold text-slate-900 mb-3">
                     {step.title}
                   </h3>
-                  <p className="text-slate-600 leading-relaxed">
+                  <p className="text-slate-600 leading-relaxed flex-grow">
                     {step.description}
                   </p>
                   
