@@ -1,4 +1,3 @@
-import { ChevronDown } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -51,13 +50,10 @@ const faqs = [
 
 const FAQ = () => {
   return (
-    <section className="py-20 bg-slate-900 relative overflow-hidden">
-      {/* Subtle ambient glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-purple-500/10 rounded-full blur-[120px]" />
-
-      <div className="max-w-3xl mx-auto px-6 relative z-10">
+    <section className="py-16 bg-slate-950">
+      <div className="max-w-3xl mx-auto px-6">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <p className="text-cyan-400 text-sm font-semibold tracking-wide uppercase mb-3">
             FAQ
           </p>
@@ -67,20 +63,19 @@ const FAQ = () => {
         </div>
 
         {/* Accordion */}
-        <Accordion type="single" collapsible className="space-y-3">
+        <Accordion type="single" collapsible className="space-y-2">
           {faqs.map((faq, index) => (
             <AccordionItem
               key={index}
               value={`item-${index}`}
-              className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-white/5 overflow-hidden data-[state=open]:bg-slate-800/70"
+              className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-white/5 overflow-hidden data-[state=open]:bg-slate-800/70"
             >
-              <AccordionTrigger className="w-full px-6 py-5 text-left flex items-center justify-between gap-4 hover:bg-white/5 transition-colors hover:no-underline [&[data-state=open]>svg]:rotate-180 [&[data-state=open]>svg]:text-cyan-400">
-                <span className="font-medium text-white text-left">
+              <AccordionTrigger className="w-full px-5 py-4 text-left gap-4 hover:bg-white/5 transition-colors hover:no-underline [&>svg]:text-white/40 [&[data-state=open]>svg]:text-cyan-400">
+                <span className="font-medium text-white text-[15px] text-left">
                   {faq.question}
                 </span>
-                <ChevronDown className="w-5 h-5 text-white/40 flex-shrink-0 transition-transform duration-200" />
               </AccordionTrigger>
-              <AccordionContent className="px-6 pb-5 text-white/60 leading-relaxed">
+              <AccordionContent className="px-5 pb-4 text-white/60 text-[15px] leading-relaxed">
                 {faq.answer}
               </AccordionContent>
             </AccordionItem>
