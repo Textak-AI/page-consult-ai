@@ -1,5 +1,6 @@
 import { X, Check, ArrowRight } from 'lucide-react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
+import { formatForHeadline } from '@/utils/formatForDisplay';
 
 const WhyThisMattersSection = () => {
   const { state } = useIntelligence();
@@ -10,7 +11,7 @@ const WhyThisMattersSection = () => {
   
   // Dynamic personalized example based on user's demo interaction
   const personalizedExample = hasInteracted
-    ? `"Landing pages for ${industryFull} professionals who need results"`
+    ? `"Landing pages for ${formatForHeadline(industryFull)} professionals who need results"`
     : `"Landing pages for Digital Marketing agencies struggling with attribution"`;
 
   return (

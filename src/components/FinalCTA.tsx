@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useContext } from "react";
 import IntelligenceContext from "@/contexts/IntelligenceContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatForHeadline } from "@/utils/formatForDisplay";
 
 const FinalCTA = () => {
   // Try to get intelligence context (may be null if not in provider)
@@ -12,7 +13,7 @@ const FinalCTA = () => {
 
   // Dynamic headline and button based on extracted intelligence
   const ctaHeadline = extractedIndustry
-    ? `Ready to Build Your ${extractedIndustry} Page?`
+    ? `Ready to Build Your ${formatForHeadline(extractedIndustry)} Page?`
     : "Ready to Build Pages That Convert?";
 
   const buttonText = readiness >= 60
