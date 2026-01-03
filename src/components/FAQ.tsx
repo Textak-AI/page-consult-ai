@@ -50,14 +50,17 @@ const faqs = [
 
 const FAQ = () => {
   return (
-    <section className="py-16 bg-slate-950">
-      <div className="max-w-3xl mx-auto px-6">
+    <section className="py-16 bg-gradient-to-b from-slate-50 to-slate-100 relative overflow-hidden">
+      {/* Subtle gradient orb */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-purple-500/[0.03] rounded-full blur-[100px]" />
+
+      <div className="max-w-3xl mx-auto px-6 relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <p className="text-cyan-400 text-sm font-semibold tracking-wide uppercase mb-3">
+          <p className="text-purple-600 text-sm font-semibold tracking-wide uppercase mb-3">
             FAQ
           </p>
-          <h2 className="text-3xl md:text-4xl font-bold text-white">
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
             Questions Before You Start
           </h2>
         </div>
@@ -68,14 +71,14 @@ const FAQ = () => {
             <AccordionItem
               key={index}
               value={`item-${index}`}
-              className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-white/5 overflow-hidden data-[state=open]:bg-slate-800/70"
+              className="bg-white rounded-xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow overflow-hidden data-[state=open]:shadow-md"
             >
-              <AccordionTrigger className="w-full px-5 py-4 text-left gap-4 hover:bg-white/5 transition-colors hover:no-underline [&>svg]:text-white/40 [&[data-state=open]>svg]:text-cyan-400">
-                <span className="font-medium text-white text-[15px] text-left">
+              <AccordionTrigger className="w-full px-5 py-4 text-left gap-4 hover:bg-slate-50 transition-colors hover:no-underline [&>svg]:text-slate-400 [&[data-state=open]>svg]:text-purple-600">
+                <span className="font-medium text-slate-900 text-[15px] text-left">
                   {faq.question}
                 </span>
               </AccordionTrigger>
-              <AccordionContent className="px-5 pb-4 text-white/60 text-[15px] leading-relaxed">
+              <AccordionContent className="px-5 pb-4 text-slate-600 text-[15px] leading-relaxed">
                 {faq.answer}
               </AccordionContent>
             </AccordionItem>
