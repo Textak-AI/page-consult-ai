@@ -91,29 +91,36 @@ export function tilesToIntelligence(tiles: any[], collectedInfo: Record<string, 
  */
 export function mapDemoToConsultation(demoData: any): ExtractedIntelligence {
   return {
-    // WHO YOU ARE
+    // WHO YOU ARE - use Full values for content generation, short for display
     industry: demoData.industry || null,
+    industryFull: demoData.industryFull || demoData.industry || null,
     industrySummary: demoData.industrySummary || null,
     audience: demoData.audience || null,
+    audienceFull: demoData.audienceFull || demoData.audience || null,
     audienceSummary: demoData.audienceSummary || null,
     geography: demoData.geography || null,
     
     // WHAT YOU OFFER
     valueProp: demoData.valueProp || null,
+    valuePropFull: demoData.valuePropFull || demoData.valueProp || null,
     valuePropSummary: demoData.valuePropSummary || null,
     competitorDifferentiator: demoData.competitorDifferentiator || demoData.competitive || null,
+    competitorDifferentiatorFull: demoData.competitorDifferentiatorFull || demoData.competitorDifferentiator || null,
     edgeSummary: demoData.edgeSummary || null,
     method: demoData.method || null,
     
     // BUYER REALITY
     painPoints: demoData.painPoints || null,
+    painPointsFull: demoData.painPointsFull || demoData.painPoints || null,
     painSummary: demoData.painSummary || null,
     buyerObjections: demoData.buyerObjections || null,
+    buyerObjectionsFull: demoData.buyerObjectionsFull || demoData.buyerObjections || null,
     objectionsSummary: demoData.objectionsSummary || null,
     triggers: demoData.triggers || null,
     
     // PROOF & CREDIBILITY
     proofElements: demoData.proofElements || null,
+    proofElementsFull: demoData.proofElementsFull || demoData.proofElements || null,
     proofSummary: demoData.proofSummary || null,
     socialProof: demoData.socialProof || null,
     credentials: demoData.credentials || null,

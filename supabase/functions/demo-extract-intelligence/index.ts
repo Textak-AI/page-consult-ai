@@ -347,26 +347,34 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
 
     // Parse JSON from response with validation
     interface ExtractedResult {
+      // Short display values (max 14 chars for sidebar)
       industry: string | null;
       industryConfidence: number;
+      industryFull: string | null; // Full value for Hero/CTA (max 50 chars)
       industrySummary: string | null;
       audience: string | null;
       audienceConfidence: number;
+      audienceFull: string | null;
       audienceSummary: string | null;
       valueProp: string | null;
       valuePropConfidence: number;
+      valuePropFull: string | null;
       valuePropSummary: string | null;
       competitorDifferentiator: string | null;
       edgeConfidence: number;
+      competitorDifferentiatorFull: string | null;
       edgeSummary: string | null;
       painPoints: string | null;
       painConfidence: number;
+      painPointsFull: string | null;
       painSummary: string | null;
       buyerObjections: string | null;
       objectionsConfidence: number;
+      buyerObjectionsFull: string | null;
       objectionsSummary: string | null;
       proofElements: string | null;
       proofConfidence: number;
+      proofElementsFull: string | null;
       proofSummary: string | null;
       inputQuality: 'thin' | 'adequate' | 'rich';
     }
@@ -374,24 +382,31 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
     let extracted: ExtractedResult = { 
       industry: null, 
       industryConfidence: 0,
+      industryFull: null,
       industrySummary: null,
       audience: null, 
       audienceConfidence: 0,
+      audienceFull: null,
       audienceSummary: null,
       valueProp: null, 
       valuePropConfidence: 0,
+      valuePropFull: null,
       valuePropSummary: null,
       competitorDifferentiator: null,
       edgeConfidence: 0,
+      competitorDifferentiatorFull: null,
       edgeSummary: null,
       painPoints: null,
       painConfidence: 0,
+      painPointsFull: null,
       painSummary: null,
       buyerObjections: null,
       objectionsConfidence: 0,
+      buyerObjectionsFull: null,
       objectionsSummary: null,
       proofElements: null,
       proofConfidence: 0,
+      proofElementsFull: null,
       proofSummary: null,
       inputQuality: 'thin',
     };
@@ -404,8 +419,14 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
         // Validate and format extracted fields
         const formatShort = (val: any) => {
           if (typeof val !== 'string' || !val.trim()) return null;
-          // Limit to 14 chars for display
+          // Limit to 14 chars for sidebar display
           return val.trim().slice(0, 14);
+        };
+        
+        // Full value for Hero/CTA generation (up to 50 chars)
+        const formatFull = (val: any) => {
+          if (typeof val !== 'string' || !val.trim()) return null;
+          return val.trim().slice(0, 50);
         };
         
         const formatSummary = (val: any) => {
@@ -419,12 +440,17 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
           return fallback;
         };
         
-        // Extract values
+        // Extract values - short for display, full for content generation
         let industry = formatShort(parsed.industry);
+        let industryFull = formatFull(parsed.industry);
         let audience = formatShort(parsed.audience);
+        let audienceFull = formatFull(parsed.audience);
         let valueProp = formatShort(parsed.valueProp);
+        let valuePropFull = formatFull(parsed.valueProp);
         let competitiveEdge = formatShort(parsed.competitiveEdge);
+        let competitiveEdgeFull = formatFull(parsed.competitiveEdge);
         let painPoints = formatShort(parsed.painPoints);
+        let painPointsFull = formatFull(parsed.painPoints);
         
         // Calculate confidence scores (combine AI's score with our validation)
         let industryConfidence = getConfidence(parsed.industryConfidence, 60);
@@ -437,14 +463,17 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
         if (industry && isGenericTerm(industry, GENERIC_INDUSTRY_TERMS)) {
           industryConfidence = Math.min(industryConfidence, 30);
           industry = null; // Don't display generic terms
+          industryFull = null;
         }
         if (audience && isGenericTerm(audience, GENERIC_AUDIENCE_TERMS)) {
           audienceConfidence = Math.min(audienceConfidence, 30);
           audience = null;
+          audienceFull = null;
         }
         if (valueProp && isGenericTerm(valueProp, GENERIC_VALUE_TERMS)) {
           valuePropConfidence = Math.min(valuePropConfidence, 30);
           valueProp = null;
+          valuePropFull = null;
         }
         
         // Additional confidence calculation based on original message
@@ -462,27 +491,43 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
         const CONFIDENCE_THRESHOLD = 50;
         
         extracted = {
+          // Short values for sidebar display (max 14 chars)
           industry: industryConfidence >= CONFIDENCE_THRESHOLD ? industry : null,
           industryConfidence,
+          // Full values for Hero/CTA generation (max 50 chars)
+          industryFull: industryConfidence >= CONFIDENCE_THRESHOLD ? industryFull : null,
           industrySummary: industryConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.industrySummary) : null,
+          
           audience: audienceConfidence >= CONFIDENCE_THRESHOLD ? audience : null,
           audienceConfidence,
+          audienceFull: audienceConfidence >= CONFIDENCE_THRESHOLD ? audienceFull : null,
           audienceSummary: audienceConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.audienceSummary) : null,
+          
           valueProp: valuePropConfidence >= CONFIDENCE_THRESHOLD ? valueProp : null,
           valuePropConfidence,
+          valuePropFull: valuePropConfidence >= CONFIDENCE_THRESHOLD ? valuePropFull : null,
           valuePropSummary: valuePropConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.valuePropSummary) : null,
+          
           competitorDifferentiator: edgeConfidence >= CONFIDENCE_THRESHOLD ? competitiveEdge : null,
           edgeConfidence,
+          competitorDifferentiatorFull: edgeConfidence >= CONFIDENCE_THRESHOLD ? competitiveEdgeFull : null,
           edgeSummary: edgeConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.edgeSummary) : null,
+          
           painPoints: painConfidence >= CONFIDENCE_THRESHOLD ? painPoints : null,
           painConfidence,
+          painPointsFull: painConfidence >= CONFIDENCE_THRESHOLD ? painPointsFull : null,
           painSummary: painConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.painSummary) : null,
+          
           buyerObjections: formatShort(parsed.buyerObjections),
           objectionsConfidence: getConfidence(parsed.objectionsConfidence, 60),
+          buyerObjectionsFull: formatFull(parsed.buyerObjections),
           objectionsSummary: formatSummary(parsed.objectionsSummary),
+          
           proofElements: formatShort(parsed.proofElements),
           proofConfidence: getConfidence(parsed.proofConfidence, 60),
+          proofElementsFull: formatFull(parsed.proofElements),
           proofSummary: formatSummary(parsed.proofSummary),
+          
           inputQuality: parsed.inputQuality === 'rich' ? 'rich' : parsed.inputQuality === 'adequate' ? 'adequate' : 'thin',
         };
       }
@@ -512,24 +557,31 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
         error: 'Processing error',
         industry: null,
         industryConfidence: 0,
+        industryFull: null,
         industrySummary: null,
         audience: null,
         audienceConfidence: 0,
+        audienceFull: null,
         audienceSummary: null,
         valueProp: null,
         valuePropConfidence: 0,
+        valuePropFull: null,
         valuePropSummary: null,
         competitorDifferentiator: null,
         edgeConfidence: 0,
+        competitorDifferentiatorFull: null,
         edgeSummary: null,
         painPoints: null,
         painConfidence: 0,
+        painPointsFull: null,
         painSummary: null,
         buyerObjections: null,
         objectionsConfidence: 0,
+        buyerObjectionsFull: null,
         objectionsSummary: null,
         proofElements: null,
         proofConfidence: 0,
+        proofElementsFull: null,
         proofSummary: null,
         inputQuality: 'thin',
       }),
