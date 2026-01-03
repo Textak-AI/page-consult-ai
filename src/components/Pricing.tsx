@@ -121,7 +121,7 @@ const Pricing = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 items-start max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 items-stretch max-w-5xl mx-auto">
           {plans.map((plan, index) => {
             const isLoading = loadingPlan === plan.id;
             const Icon = plan.icon;
@@ -130,7 +130,7 @@ const Pricing = () => {
               <div
                 key={plan.id}
                 className={cn(
-                  "relative animate-scale-in",
+                  "relative animate-scale-in h-full",
                   plan.popular && "z-10"
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}
