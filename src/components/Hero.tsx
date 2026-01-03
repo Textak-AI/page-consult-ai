@@ -6,6 +6,7 @@ import { useContext, useState } from "react";
 import IntelligenceContext from "@/contexts/IntelligenceContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { formatForHeadline } from "@/utils/formatForDisplay";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -103,7 +104,7 @@ const Hero = () => {
                         backgroundSize: '200% auto',
                         textShadow: '0 0 40px rgba(6, 182, 212, 0.3)'
                       }}>
-                        {extractedIndustry}
+                        {formatForHeadline(extractedIndustry)}
                       </span>
                     </span>
                   </>

@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { formatForHeadline } from '@/utils/formatForDisplay';
 
 interface ExtractionField {
   label: string;
@@ -110,7 +111,7 @@ const ExtractionCard = ({
                 <div className={`w-1.5 h-1.5 rounded-full ${colorToBgClass[extraction.color] || 'bg-purple-400'} mt-2 flex-shrink-0`} />
                 <div>
                   <span className="text-white/50 text-sm">{extraction.label}:</span>
-                  <span className="text-white ml-2">{extraction.value}</span>
+                  <span className="text-white ml-2">{formatForHeadline(extraction.value)}</span>
                 </div>
               </motion.div>
             ))}
