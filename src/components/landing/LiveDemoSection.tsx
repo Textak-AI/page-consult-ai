@@ -150,10 +150,50 @@ export default function LiveDemoSection() {
   const score = calculateIntelligenceScore(state.extracted);
 
   return (
-    <section id="demo" className="min-h-screen bg-slate-950 relative flex flex-col">
+    <section id="demo" className="min-h-screen bg-slate-950 relative flex flex-col overflow-hidden">
+      {/* === LASER BEAM EFFECTS === */}
+      
+      {/* Horizontal beam - slow drift across */}
+      <div className="absolute top-1/4 left-0 w-full h-px overflow-hidden pointer-events-none">
+        <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent blur-sm animate-beam-horizontal" />
+      </div>
+      
+      {/* Diagonal beam - top left to bottom right */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-1/2 left-1/4 w-px h-[200%] bg-gradient-to-b from-transparent via-purple-500/20 to-transparent blur-sm animate-beam-diagonal" />
+      </div>
+      
+      {/* Diagonal beam - top right to bottom left */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div 
+          className="absolute -top-1/2 right-1/3 w-px h-[200%] bg-gradient-to-b from-transparent via-cyan-500/15 to-transparent blur-sm animate-beam-diagonal-reverse"
+          style={{ animationDelay: '3s' }}
+        />
+      </div>
+      
+      {/* Subtle glow orbs that pulse */}
+      <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px] animate-glow-pulse pointer-events-none" />
+      <div 
+        className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-cyan-500/10 rounded-full blur-[80px] animate-glow-pulse pointer-events-none"
+        style={{ animationDelay: '3s' }}
+      />
+      
+      {/* Grid pattern overlay - very subtle */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-[0.02]"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px'
+        }}
+      />
+      
+      {/* === END LASER EFFECTS === */}
+      
       {/* Subtle background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 via-transparent to-transparent pointer-events-none" />
-      
       {/* Header breadcrumb */}
       <div className="relative z-10 max-w-6xl mx-auto w-full px-6 pt-8 pb-4">
         <nav className="flex items-center gap-2 text-sm text-white/40">
