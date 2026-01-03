@@ -7,6 +7,7 @@ import HowItWorks from "@/components/HowItWorks";
 import TimelineComparison from "@/components/TimelineComparison";
 import Features from "@/components/Features";
 import SocialProof from "@/components/SocialProof";
+import FAQ from "@/components/FAQ";
 import Pricing from "@/components/Pricing";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
@@ -30,6 +31,7 @@ const Index = () => {
           <TimelineComparison />
           <Features />
           <SocialProof />
+          <FAQ />
           <Pricing />
           <FinalCTA />
         </main>
