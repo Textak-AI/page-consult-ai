@@ -59,14 +59,44 @@ When the user confirms (says "yes", "go ahead", "do it", etc.), research will st
 
 const EXTRACTION_SYSTEM_PROMPT = `You are an intelligence extraction system. Analyze the conversation and extract business intelligence into structured categories.
 
+## CRITICAL: INDUSTRY vs AUDIENCE DISTINCTION
+
+### INDUSTRY = What YOU do / What business YOU'RE in
+Trigger phrases indicating INDUSTRY:
+- "we do [X]" → X is industry
+- "we're a [X] company/agency/firm" → X is industry
+- "we provide [X]" → X is industry
+- "we specialize in [X]" → X is industry
+- "I run a [X]" → X is industry
+
+### AUDIENCE = WHO you serve / WHO you help  
+Trigger phrases indicating AUDIENCE:
+- "we help [X]" → X is audience
+- "we work with [X]" → X is audience
+- "we serve [X]" → X is audience
+- "for [X] companies/businesses/brands" → X is audience
+- "we mostly help [X]" → X is audience
+
+### KEY RULE: The VERB determines the field
+- "do/provide/specialize/run" → INDUSTRY
+- "help/serve/work with/target/for" → AUDIENCE
+
+Example: "We do digital marketing for e-commerce brands"
+- Industry: "digital marketing" (what they DO)
+- Audience: "e-commerce brands" (who they serve)
+
+Example: "We mostly help CBD companies reach their audience"  
+- Industry: null (no industry signal)
+- Audience: "CBD companies" (who they HELP)
+
 For each category, provide:
 - fill: number 0-100 (how confident/complete the information is)
 - insight: string (the extracted insight, or "Not yet known" if empty)
 - state: "empty" | "emerging" | "developing" | "confirmed"
 
 Categories to extract:
-1. industry - Industry & Market (what industry, market segment)
-2. audience - Target Audience (who they serve, job titles, demographics)
+1. industry - Industry & Market (what THEY do, their business type)
+2. audience - Target Audience (WHO they serve, not what they do)
 3. value - Value Proposition (what value they provide, results they deliver)
 4. competitive - Competitive Position (how they differ from competitors)
 5. goals - Goals & Objectives (what they want from the landing page)
@@ -93,7 +123,7 @@ Return ONLY valid JSON in this exact format:
   "extractedName": ""
 }
 
-Be generous with fill percentages when real information is shared. If someone says "I help manufacturing companies reduce waste", that's at least 60% for industry and 40% for value.`;
+Be generous with fill percentages when real information is shared. Extract INDUSTRY and AUDIENCE SEPARATELY based on the verb patterns above.`;
 
 serve(async (req) => {
   const corsResponse = handleCorsPreflightRequest(req);
