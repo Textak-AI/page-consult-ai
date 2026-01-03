@@ -665,14 +665,17 @@ export type Database = {
           created_at: string
           hero_thumbnail_url: string | null
           id: string
+          industry: string | null
           is_current_version: boolean | null
           is_published: boolean | null
           last_change_summary: string | null
+          last_viewed_at: string | null
           meta_description: string | null
           meta_title: string | null
           parent_page_id: string | null
           published_at: string | null
           published_url: string | null
+          quick_pivot_enabled: boolean | null
           sections: Json
           session_id: string | null
           slug: string
@@ -683,6 +686,7 @@ export type Database = {
           updated_at: string
           user_id: string
           version_number: number | null
+          view_count: number | null
           website_intelligence: Json | null
         }
         Insert: {
@@ -695,14 +699,17 @@ export type Database = {
           created_at?: string
           hero_thumbnail_url?: string | null
           id?: string
+          industry?: string | null
           is_current_version?: boolean | null
           is_published?: boolean | null
           last_change_summary?: string | null
+          last_viewed_at?: string | null
           meta_description?: string | null
           meta_title?: string | null
           parent_page_id?: string | null
           published_at?: string | null
           published_url?: string | null
+          quick_pivot_enabled?: boolean | null
           sections?: Json
           session_id?: string | null
           slug: string
@@ -713,6 +720,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           version_number?: number | null
+          view_count?: number | null
           website_intelligence?: Json | null
         }
         Update: {
@@ -725,14 +733,17 @@ export type Database = {
           created_at?: string
           hero_thumbnail_url?: string | null
           id?: string
+          industry?: string | null
           is_current_version?: boolean | null
           is_published?: boolean | null
           last_change_summary?: string | null
+          last_viewed_at?: string | null
           meta_description?: string | null
           meta_title?: string | null
           parent_page_id?: string | null
           published_at?: string | null
           published_url?: string | null
+          quick_pivot_enabled?: boolean | null
           sections?: Json
           session_id?: string | null
           slug?: string
@@ -743,6 +754,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           version_number?: number | null
+          view_count?: number | null
           website_intelligence?: Json | null
         }
         Relationships: [
@@ -1226,6 +1238,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_page_view: { Args: { page_id: string }; Returns: undefined }
       increment_prospect_page_views: {
         Args: { page_id: string }
         Returns: undefined
