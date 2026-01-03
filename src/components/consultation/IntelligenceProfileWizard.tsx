@@ -145,25 +145,25 @@ export function IntelligenceProfileWizard({
           className
         )}
       >
-        <div className="flex flex-col p-3 w-full">
+        <div className="flex flex-col p-4 w-full">
           {/* Header */}
-          <div className="flex-shrink-0 mb-3">
+          <div className="flex-shrink-0 mb-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-light tracking-wide text-white">
+              <h2 className="text-base font-medium tracking-wide text-white">
                 Intelligence Profile
               </h2>
               <motion.span
                 key={score.totalScore}
                 initial={{ scale: 1.2, color: 'rgb(34, 211, 238)' }}
                 animate={{ scale: 1, color: 'rgb(148, 163, 184)' }}
-                className="text-sm font-mono"
+                className="text-base font-mono"
               >
                 {score.totalScore}/100
               </motion.span>
             </div>
             
             {/* Total Progress Bar */}
-            <div className="mt-2 h-1.5 bg-slate-700/50 rounded-full overflow-hidden">
+            <div className="mt-3 h-2 bg-slate-700/50 rounded-full overflow-hidden">
               <motion.div
                 className={cn("h-full rounded-full bg-gradient-to-r", levelColors.gradient)}
                 initial={{ width: 0 }}
@@ -173,15 +173,15 @@ export function IntelligenceProfileWizard({
             </div>
             
             {/* Level Badge */}
-            <div className="flex items-center gap-2 mt-2">
-              <span className={cn("text-[10px] font-medium tracking-wider", levelColors.text)}>
+            <div className="flex items-center gap-2 mt-3">
+              <span className={cn("text-xs font-medium tracking-wider", levelColors.text)}>
                 {levelConfig.label}
               </span>
               {levelConfig.sublabel && (
-                <span className="text-[10px] text-slate-500">— {levelConfig.sublabel}</span>
+                <span className="text-xs text-slate-500">— {levelConfig.sublabel}</span>
               )}
               {showDemoImportBadge && (
-                <span className="text-[9px] text-cyan-400/70 bg-cyan-500/10 px-1.5 py-0.5 rounded-full ml-auto">
+                <span className="text-[10px] text-cyan-400/70 bg-cyan-500/10 px-2 py-0.5 rounded-full ml-auto">
                   Demo imported
                 </span>
               )}
@@ -189,7 +189,7 @@ export function IntelligenceProfileWizard({
           </div>
           
           {/* Categories */}
-          <div className="flex-1 space-y-1">
+          <div className="flex-1 space-y-3">
             {WIZARD_CATEGORIES.map((cat) => {
               const category = score[cat.key];
               const catColors = CATEGORY_COLORS[cat.key];
@@ -201,7 +201,7 @@ export function IntelligenceProfileWizard({
                   {/* Category Header */}
                   <button
                     onClick={() => toggleCategory(cat.key)}
-                    className="w-full flex items-center justify-between py-1.5 hover:bg-slate-800/30 rounded transition-colors"
+                    className="w-full flex items-center justify-between py-2 hover:bg-slate-800/30 rounded transition-colors"
                   >
                     <div className="flex items-center gap-2">
                       <motion.div
@@ -209,20 +209,20 @@ export function IntelligenceProfileWizard({
                         transition={{ duration: 0.2 }}
                       >
                         <ChevronDown className={cn(
-                          "w-3 h-3 -rotate-90",
+                          "w-4 h-4 -rotate-90",
                           hasContent ? "text-slate-400" : "text-slate-600"
                         )} />
                       </motion.div>
                       <span className={cn(
-                        "text-[10px] uppercase tracking-wider",
-                        hasContent ? "text-slate-400" : "text-slate-600"
+                        "text-sm uppercase tracking-wider font-medium",
+                        hasContent ? "text-slate-300" : "text-slate-600"
                       )}>
                         {cat.label}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={cn(
-                        "text-[10px] font-mono",
+                        "text-sm font-mono",
                         hasContent ? catColors.text : "text-slate-600"
                       )}>
                         {category.total}/{category.maxPoints}
@@ -231,7 +231,7 @@ export function IntelligenceProfileWizard({
                   </button>
                   
                   {/* Progress Bar */}
-                  <div className="h-0.5 bg-slate-700/30 rounded-full overflow-hidden mb-1">
+                  <div className="h-1 bg-slate-700/30 rounded-full overflow-hidden mb-2">
                     <motion.div
                       className={cn("h-full rounded-full bg-gradient-to-r", catColors.gradient)}
                       initial={{ width: 0 }}
@@ -248,80 +248,67 @@ export function IntelligenceProfileWizard({
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="overflow-hidden pl-5 space-y-0.5"
+                        className="overflow-hidden pl-6 space-y-3"
                       >
                         {cat.fields.map(({ key: fieldKey, label, maxPoints }) => {
                           const fieldData = category[fieldKey] as FieldScore;
                           const hasValue = !!fieldData.value;
                           const isAnimating = animatingFields.has(`${cat.key}-${fieldKey}`);
                           
-                          const fieldContent = (
-                            <div className="flex items-start gap-2 py-0.5 group">
-                              {/* Vertical bar indicator */}
-                              <motion.div
-                                className={cn(
-                                  "w-0.5 h-4 rounded-full flex-shrink-0 mt-0.5 transition-all duration-300",
-                                  hasValue
-                                    ? `bg-gradient-to-b ${catColors.gradient}`
-                                    : isThinking ? "bg-slate-600" : "bg-slate-700"
-                                )}
-                                animate={{
-                                  scaleY: isAnimating ? [1, 1.3, 1] : 1,
-                                  opacity: isThinking && !hasValue ? [0.5, 0.8, 0.5] : 1,
-                                }}
-                                transition={{
-                                  scaleY: { duration: 0.4 },
-                                  opacity: { duration: 1.5, repeat: Infinity },
-                                }}
-                              />
+                          return (
+                            <div key={fieldKey} className="py-1">
+                              {/* Field header row */}
+                              <div className="flex items-center gap-3">
+                                {/* Vertical bar indicator */}
+                                <motion.div
+                                  className={cn(
+                                    "w-1 h-5 rounded-full flex-shrink-0 transition-all duration-300",
+                                    hasValue
+                                      ? `bg-gradient-to-b ${catColors.gradient}`
+                                      : isThinking ? "bg-slate-600" : "bg-slate-700"
+                                  )}
+                                  animate={{
+                                    scaleY: isAnimating ? [1, 1.3, 1] : 1,
+                                    opacity: isThinking && !hasValue ? [0.5, 0.8, 0.5] : 1,
+                                  }}
+                                  transition={{
+                                    scaleY: { duration: 0.4 },
+                                    opacity: { duration: 1.5, repeat: Infinity },
+                                  }}
+                                />
+                                
+                                {/* Label */}
+                                <span className={cn(
+                                  "text-sm font-medium",
+                                  hasValue ? "text-slate-300" : "text-slate-500"
+                                )}>
+                                  {label}
+                                </span>
+                                
+                                {/* Points */}
+                                <span className="text-xs text-slate-600 ml-auto flex-shrink-0">
+                                  {hasValue ? `${fieldData.points} pts` : `0/${maxPoints} pts`}
+                                </span>
+                              </div>
                               
-                              {/* Label */}
-                              <span className={cn(
-                                "text-[10px] min-w-[60px] flex-shrink-0",
-                                hasValue ? "text-slate-400" : "text-slate-600"
-                              )}>
-                                {label}
-                              </span>
-                              
-                              {/* Value or points */}
-                              {hasValue ? (
-                                <div className="flex-1 flex items-center gap-1 min-w-0">
-                                  <span className={cn(
-                                    "text-[10px] truncate",
+                              {/* Value and Summary - full width, wrapping */}
+                              {hasValue && (
+                                <div className="mt-1.5 pl-4">
+                                  <p className={cn(
+                                    "text-sm leading-relaxed",
                                     catColors.text
                                   )}>
                                     {fieldData.value}
-                                  </span>
-                                  <span className="text-[9px] text-slate-600 flex-shrink-0 ml-auto">
-                                    {fieldData.points} pts
-                                  </span>
+                                  </p>
+                                  {fieldData.summary && (
+                                    <p className="text-sm text-slate-400 mt-1 leading-relaxed">
+                                      {fieldData.summary}
+                                    </p>
+                                  )}
                                 </div>
-                              ) : (
-                                <span className="text-[9px] text-slate-600 ml-auto">
-                                  0/{maxPoints} pts
-                                </span>
                               )}
                             </div>
                           );
-                          
-                          // Wrap with tooltip if has summary
-                          if (hasValue && fieldData.summary) {
-                            return (
-                              <Tooltip key={fieldKey}>
-                                <TooltipTrigger asChild>
-                                  <div className="cursor-help">{fieldContent}</div>
-                                </TooltipTrigger>
-                                <TooltipContent
-                                  side="left"
-                                  className="max-w-[220px] bg-slate-900 border-slate-700 text-slate-200 p-2"
-                                >
-                                  <p className="text-[10px] leading-relaxed">{fieldData.summary}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            );
-                          }
-                          
-                          return <div key={fieldKey}>{fieldContent}</div>;
                         })}
                       </motion.div>
                     )}
@@ -333,11 +320,11 @@ export function IntelligenceProfileWizard({
           
           {/* Next Prompt */}
           {nextPrompt && score.level !== 'proven' && (
-            <div className="flex-shrink-0 pt-2 mt-2 border-t border-slate-800/30">
-              <div className="flex items-start gap-2 text-[10px]">
-                <span className="text-cyan-400 flex-shrink-0">🎯</span>
-                <span className="text-slate-500">
-                  Next: <span className="text-slate-400">{nextPrompt}</span>
+            <div className="flex-shrink-0 pt-3 mt-3 border-t border-slate-800/30">
+              <div className="flex items-start gap-2">
+                <span className="text-cyan-400 flex-shrink-0 text-base">🎯</span>
+                <span className="text-sm text-slate-500">
+                  Next: <span className="text-slate-300">{nextPrompt}</span>
                 </span>
               </div>
             </div>
@@ -345,19 +332,19 @@ export function IntelligenceProfileWizard({
           
           {/* Ready indicator */}
           {score.level === 'proven' && (
-            <div className="flex-shrink-0 pt-2 mt-2 border-t border-slate-800/30">
-              <div className="flex items-center gap-2 text-[10px]">
-                <span className="text-amber-400">✨</span>
-                <span className="text-amber-400/80">Ready to generate premium page!</span>
+            <div className="flex-shrink-0 pt-3 mt-3 border-t border-slate-800/30">
+              <div className="flex items-center gap-2">
+                <span className="text-amber-400 text-base">✨</span>
+                <span className="text-sm text-amber-400/80">Ready to generate premium page!</span>
               </div>
             </div>
           )}
           
           {score.level === 'armed' && (
-            <div className="flex-shrink-0 pt-2 mt-2 border-t border-slate-800/30">
-              <div className="flex items-center gap-2 text-[10px]">
-                <span className="text-purple-400">⚡</span>
-                <span className="text-purple-400/80">Ready to generate page!</span>
+            <div className="flex-shrink-0 pt-3 mt-3 border-t border-slate-800/30">
+              <div className="flex items-center gap-2">
+                <span className="text-purple-400 text-base">⚡</span>
+                <span className="text-sm text-purple-400/80">Ready to generate page!</span>
               </div>
             </div>
           )}
