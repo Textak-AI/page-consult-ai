@@ -1,13 +1,12 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { useIntelligence, ExtractedIntelligence as ContextExtractedIntelligence } from '@/contexts/IntelligenceContext';
+import { useState, useEffect, useRef } from 'react';
+import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Sparkles, Send, Loader2, Unlock } from 'lucide-react';
+import { MessageSquare, Sparkles, Send, Loader2, Unlock, ChevronRight, BarChart3, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import EmailGateModal from './EmailGateModal';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { IntelligenceProfileDemo } from '@/components/consultation/IntelligenceProfileDemo';
 
@@ -33,34 +32,28 @@ const TypingIndicator = () => (
 
 export default function LiveDemoSection() {
   const navigate = useNavigate();
-  const { state, processUserMessage, resetIntelligence, submitEmail, dismissEmailGate, reopenEmailGate } = useIntelligence();
+  const { state, processUserMessage, submitEmail, dismissEmailGate, reopenEmailGate } = useIntelligence();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasInitialized = useRef(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Mobile intelligence drawer state
+  const [showMobileIntelligence, setShowMobileIntelligence] = useState(false);
   
   // Path selector modal state
   const [showPathSelector, setShowPathSelector] = useState(false);
+  const [isSavingSession, setIsSavingSession] = useState(false);
 
   // Send initial AI message on mount
   useEffect(() => {
     if (!hasInitialized.current && state.conversation.length === 0) {
       hasInitialized.current = true;
-      // Add initial AI message
-      const initialMessage = {
-        role: 'assistant' as const,
-        content: "Tell me about your business — who do you help and what do you do for them?",
-        timestamp: new Date(),
-      };
-      // We need to set this directly since processUserMessage expects user input
-      // Using a simple state update through the context would be cleaner
-      // For now, we'll simulate this by not calling processUserMessage
     }
   }, [state.conversation.length]);
 
-  // Scroll to bottom on new messages or when typing preview appears
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-  
+  // Scroll to bottom on new messages
   useEffect(() => {
     if (messagesEndRef.current && chatContainerRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -76,9 +69,6 @@ export default function LiveDemoSection() {
     await processUserMessage(message);
   };
 
-  const [isSavingSession, setIsSavingSession] = useState(false);
-
-  // Handle opening path selector when CTA is clicked
   const handleGenerateClick = () => {
     setShowPathSelector(true);
   };
@@ -89,9 +79,6 @@ export default function LiveDemoSection() {
     
     const sessionId = crypto.randomUUID();
     
-    console.log('🚀 [Demo→Signup] Preparing demo intelligence for signup');
-    
-    // Build structured intelligence from demo state
     const demoIntelligence = {
       sessionId,
       source: 'demo',
@@ -122,23 +109,15 @@ export default function LiveDemoSection() {
         timestamp: msg.timestamp?.toISOString() || new Date().toISOString(),
       })),
       readinessScore: state.readiness,
-      selectedPath: selectedPath, // Use the selected path from modal
+      selectedPath,
     };
     
-    // Calculate score for logging
-    const scoreResult = calculateIntelligenceScore(state.extracted);
-    
-    console.log('📊 [Demo→Signup] Strategic level:', scoreResult.level);
-    
-    // Store demo intelligence in sessionStorage (survives redirect)
     sessionStorage.setItem('demoIntelligence', JSON.stringify(demoIntelligence));
     
-    // Pre-fill email if captured
     if (state.email) {
       sessionStorage.setItem('demoEmail', state.email);
     }
     
-    // Also save to demo_sessions for persistence
     const sessionData = {
       session_id: sessionId,
       extracted_intelligence: demoIntelligence,
@@ -153,45 +132,38 @@ export default function LiveDemoSection() {
     };
     
     try {
-      const { error } = await supabase
-        .from('demo_sessions')
-        .insert([sessionData]);
-      
-      if (error) {
-        console.error('Failed to save demo session:', error);
-        // Continue anyway - sessionStorage has the data
-      } else {
-        console.log('✅ [Demo→Signup] Session saved to DB');
-      }
-      
-      // Store session ID in localStorage (backup)
+      await supabase.from('demo_sessions').insert([sessionData]);
       localStorage.setItem('pageconsult_session_id', sessionId);
-      
-      console.log('🚀 [Demo→Signup] Redirecting to signup with demo context');
-      
-      // Navigate to signup with demo origin flag
       navigate('/signup?from=demo');
     } catch (err) {
       console.error('Error saving demo session:', err);
-      // Continue anyway - sessionStorage has the data
       navigate('/signup?from=demo');
     } finally {
       setIsSavingSession(false);
     }
   };
 
-
-  // Build display conversation (with initial AI message if needed)
   const displayConversation = state.conversation.length === 0 
     ? [{ role: 'assistant' as const, content: "Tell me about your business — who do you help and what do you do for them?", timestamp: new Date() }]
     : state.conversation;
 
+  const score = calculateIntelligenceScore(state.extracted);
 
   return (
-    <section id="demo" className="py-20 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="demo" className="min-h-screen bg-slate-950 relative flex flex-col">
+      {/* Subtle background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 via-transparent to-transparent pointer-events-none" />
+      
+      {/* Header breadcrumb */}
+      <div className="relative z-10 max-w-6xl mx-auto w-full px-6 pt-8 pb-4">
+        <nav className="flex items-center gap-2 text-sm text-white/40">
+          <span>PageConsult</span>
+          <ChevronRight className="w-4 h-4" />
+          <span className="text-white/70">Strategy Session</span>
+        </nav>
+        
         {/* Section header */}
-        <div className="text-center mb-12">
+        <div className="mt-6 mb-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -206,179 +178,266 @@ export default function LiveDemoSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-3xl md:text-4xl font-bold text-white mb-4"
+            className="text-2xl md:text-3xl font-bold text-white"
           >
             Experience the Strategy Session
           </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="text-lg text-slate-400 max-w-2xl mx-auto"
-          >
-            Type a message about your business. Watch as we analyze your market in real-time.
-          </motion.p>
-        </div>
-
-        {/* Responsive layout: Desktop side-by-side, Tablet/Mobile stacked */}
-        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-5">
-          {/* Chat Interface */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="lg:col-span-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden flex flex-col h-[400px] md:h-[450px] lg:h-[500px]"
-          >
-            {/* Chat header */}
-            <div className="px-4 py-3 border-b border-slate-700/50 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
-                <MessageSquare className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-white">PageConsult AI</h3>
-                <p className="text-xs text-slate-400">Strategy Consultant</p>
-              </div>
-            </div>
-
-            {/* Messages area */}
-            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
-              <AnimatePresence mode="popLayout">
-                {displayConversation.map((message, index) => (
-                  <motion.div
-                    key={`msg-${index}`}
-                    initial={{ opacity: 0.6, y: 10, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.15 }}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[85%] md:max-w-[80%] rounded-2xl px-4 py-3 ${
-                        message.role === 'user'
-                          ? 'bg-cyan-600/20 border border-cyan-500/30 text-white'
-                          : 'bg-slate-700/50 border border-slate-600/30 text-slate-200'
-                      }`}
-                    >
-                      <p className="text-sm leading-relaxed">{message.content}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-              
-              {/* Live typing preview */}
-              <AnimatePresence>
-                {inputValue.trim().length > 0 && !state.isProcessing && (
-                  <motion.div
-                    key="typing-preview"
-                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }}
-                    transition={{ duration: 0.15, ease: 'easeOut' }}
-                    className="flex justify-end"
-                  >
-                    <div className="max-w-[85%] md:max-w-[80%] rounded-2xl px-4 py-3 border border-dashed border-slate-600 bg-slate-800/30">
-                      <p className="text-sm leading-relaxed text-slate-400 italic">
-                        {inputValue}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <span className="text-xs text-slate-500">composing...</span>
-                        <span className="w-1 h-1 bg-slate-500 rounded-full animate-pulse" />
-                        <span className="text-xs text-slate-600 ml-auto">{inputValue.length}/500</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              
-              {/* Typing indicator */}
-              {state.isProcessing && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex justify-start"
-                >
-                  <div className="bg-slate-700/50 border border-slate-600/30 rounded-2xl">
-                    <TypingIndicator />
-                  </div>
-                </motion.div>
-              )}
-              
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input area */}
-            <form onSubmit={handleSubmit} className="p-4 border-t border-slate-700/50">
-              {state.rateLimited ? (
-                <div className="text-center py-3">
-                  <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
-                  <Button
-                    onClick={() => navigate('/new')}
-                    className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
-                  >
-                    Start Full Strategy Session
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <Input
-                    ref={inputRef}
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Tell me about your business..."
-                    disabled={state.isProcessing}
-                    className="flex-1 bg-slate-800 border-slate-600 focus:border-cyan-500 text-white placeholder:text-slate-500"
-                  />
-                  <Button
-                    type="submit"
-                    disabled={!inputValue.trim() || state.isProcessing}
-                    className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white px-4"
-                  >
-                    {state.isProcessing ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-              )}
-            </form>
-          </motion.div>
-
-          {/* Intelligence Profile - responsive layouts handled inside component */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="lg:col-span-1"
-          >
-            <IntelligenceProfileDemo 
-              score={calculateIntelligenceScore(state.extracted)}
-              onContinue={handleGenerateClick}
-              isThinking={state.isProcessing}
-              className="lg:h-[500px] lg:border-l-2 lg:border-slate-700/50 lg:shadow-[-4px_0_12px_rgba(0,0,0,0.2)]"
-            />
-            
-            {/* Unlock Market Research button - shown when email modal was dismissed */}
-            {state.emailDismissed && !state.emailCaptured && state.extracted.industry && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-3"
-              >
-                <button
-                  onClick={reopenEmailGate}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-cyan-500/40 text-cyan-400 rounded-lg hover:bg-cyan-500/10 hover:border-cyan-400/60 transition-all text-sm font-medium"
-                >
-                  <Unlock className="w-4 h-4" />
-                  Unlock Market Research
-                </button>
-              </motion.div>
-            )}
-          </motion.div>
         </div>
       </div>
+
+      {/* Centered consultation container */}
+      <div className="relative z-10 flex-1 flex items-start justify-center px-4 sm:px-6 pb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+          className="w-full max-w-6xl h-[65vh] min-h-[500px] max-h-[700px]"
+        >
+          <div className="h-full bg-slate-900/80 backdrop-blur-sm rounded-3xl border border-white/10 shadow-2xl shadow-black/20 overflow-hidden">
+            
+            {/* Single row: Chat + Intelligence Profile */}
+            <div className="h-full flex flex-col lg:flex-row">
+              
+              {/* Left: Chat Interface */}
+              <div className="flex-1 flex flex-col lg:border-r border-white/5 min-w-0">
+                {/* Header */}
+                <div className="px-4 sm:px-6 py-4 border-b border-white/5 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+                        <MessageSquare className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-semibold">PageConsult AI</h3>
+                        <p className="text-white/50 text-sm">Strategy Consultant</p>
+                      </div>
+                    </div>
+                    
+                    {/* Mobile: Show Progress button */}
+                    <button
+                      onClick={() => setShowMobileIntelligence(true)}
+                      className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:border-slate-600 transition-all text-sm"
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                      <span className="hidden sm:inline">Progress</span>
+                      <span className="text-xs text-cyan-400">{score.totalScore}/100</span>
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Messages - scrollable */}
+                <div 
+                  ref={chatContainerRef} 
+                  className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 space-y-4 scroll-smooth"
+                >
+                  <AnimatePresence mode="popLayout">
+                    {displayConversation.map((message, index) => (
+                      <motion.div
+                        key={`msg-${index}`}
+                        initial={{ opacity: 0.6, y: 10, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.15 }}
+                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[85%] md:max-w-[80%] rounded-2xl px-4 py-3 ${
+                            message.role === 'user'
+                              ? 'bg-cyan-600/20 border border-cyan-500/30 text-white'
+                              : 'bg-slate-700/50 border border-slate-600/30 text-slate-200'
+                          }`}
+                        >
+                          <p className="text-sm leading-relaxed">{message.content}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  
+                  {/* Live typing preview */}
+                  <AnimatePresence>
+                    {inputValue.trim().length > 0 && !state.isProcessing && (
+                      <motion.div
+                        key="typing-preview"
+                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }}
+                        transition={{ duration: 0.15, ease: 'easeOut' }}
+                        className="flex justify-end"
+                      >
+                        <div className="max-w-[85%] md:max-w-[80%] rounded-2xl px-4 py-3 border border-dashed border-slate-600 bg-slate-800/30">
+                          <p className="text-sm leading-relaxed text-slate-400 italic">
+                            {inputValue}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span className="text-xs text-slate-500">composing...</span>
+                            <span className="w-1 h-1 bg-slate-500 rounded-full animate-pulse" />
+                            <span className="text-xs text-slate-600 ml-auto">{inputValue.length}/500</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
+                  {/* Typing indicator */}
+                  {state.isProcessing && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex justify-start"
+                    >
+                      <div className="bg-slate-700/50 border border-slate-600/30 rounded-2xl">
+                        <TypingIndicator />
+                      </div>
+                    </motion.div>
+                  )}
+                  
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input - fixed at bottom */}
+                <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-4 border-t border-white/5 flex-shrink-0">
+                  {state.rateLimited ? (
+                    <div className="text-center py-3">
+                      <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
+                      <Button
+                        onClick={() => navigate('/new')}
+                        className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
+                      >
+                        Start Full Strategy Session
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        ref={inputRef}
+                        type="text"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        placeholder="Tell me about your business..."
+                        disabled={state.isProcessing}
+                        className="flex-1 bg-slate-800 border-slate-600 focus:border-cyan-500 text-white placeholder:text-slate-500"
+                      />
+                      <Button
+                        type="submit"
+                        disabled={!inputValue.trim() || state.isProcessing}
+                        className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white px-4"
+                      >
+                        {state.isProcessing ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Send className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </form>
+              </div>
+              
+              {/* Right: Intelligence Profile - Desktop only */}
+              <div className="hidden lg:flex w-[360px] flex-shrink-0 bg-slate-900/50 flex-col overflow-hidden">
+                <IntelligenceProfileDemo 
+                  score={score}
+                  onContinue={handleGenerateClick}
+                  isThinking={state.isProcessing}
+                  className="h-full border-0 rounded-none"
+                />
+                
+                {/* Unlock Market Research button */}
+                {state.emailDismissed && !state.emailCaptured && state.extracted.industry && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 border-t border-white/5"
+                  >
+                    <button
+                      onClick={reopenEmailGate}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-cyan-500/40 text-cyan-400 rounded-lg hover:bg-cyan-500/10 hover:border-cyan-400/60 transition-all text-sm font-medium"
+                    >
+                      <Unlock className="w-4 h-4" />
+                      Unlock Market Research
+                    </button>
+                  </motion.div>
+                )}
+              </div>
+              
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Mobile Intelligence Drawer */}
+      <AnimatePresence>
+        {showMobileIntelligence && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 lg:hidden"
+          >
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowMobileIntelligence(false)}
+            />
+            
+            {/* Drawer */}
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="absolute bottom-0 left-0 right-0 bg-slate-900 border-t border-white/10 rounded-t-3xl max-h-[80vh] flex flex-col"
+            >
+              {/* Drawer header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 flex-shrink-0">
+                <h3 className="text-white font-semibold">Intelligence Profile</h3>
+                <button
+                  onClick={() => setShowMobileIntelligence(false)}
+                  className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              {/* Drawer content */}
+              <div className="flex-1 overflow-y-auto p-4">
+                <IntelligenceProfileDemo 
+                  score={score}
+                  onContinue={() => {
+                    setShowMobileIntelligence(false);
+                    handleGenerateClick();
+                  }}
+                  isThinking={state.isProcessing}
+                  className="border-0 rounded-none bg-transparent"
+                />
+                
+                {state.emailDismissed && !state.emailCaptured && state.extracted.industry && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4"
+                  >
+                    <button
+                      onClick={() => {
+                        setShowMobileIntelligence(false);
+                        reopenEmailGate();
+                      }}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-cyan-500/40 text-cyan-400 rounded-lg hover:bg-cyan-500/10 hover:border-cyan-400/60 transition-all text-sm font-medium"
+                    >
+                      <Unlock className="w-4 h-4" />
+                      Unlock Market Research
+                    </button>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Email Gate Modal */}
       <EmailGateModal
