@@ -6,7 +6,7 @@ const SocialProof = () => {
           Why We Built This
         </p>
         <p className="text-white/70 text-xl md:text-2xl leading-relaxed">
-          "I got tired of paying agencies $10k for landing pages that started with a template instead of a strategy. So I built what I wished existed."
+          "After 10 years in executive-level corporate marketing strategy, one thing has always been clear: great engagement systems are communication systems build on informed strategy. I built PageConsult AI to bring that philosophy to market."
         </p>
         <p className="text-white/40 text-sm mt-6">
           — Kyle, Founder
