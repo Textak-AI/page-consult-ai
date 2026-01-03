@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import LiveDemoSection from "@/components/landing/LiveDemoSection";
 import AIQuestionsShowcase from "@/components/landing/AIQuestionsShowcase";
+import WhyThisMattersSection from "@/components/landing/WhyThisMattersSection";
 import HowItWorks from "@/components/HowItWorks";
 import TimelineComparison from "@/components/TimelineComparison";
 import Features from "@/components/Features";
@@ -27,6 +28,7 @@ const Index = () => {
           <Hero />
           <LiveDemoSection />
           <AIQuestionsShowcase />
+          <WhyThisMattersSection />
           <HowItWorks />
           <TimelineComparison />
           <Features />
