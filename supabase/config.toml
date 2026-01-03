@@ -152,3 +152,9 @@ verify_jwt = true
 
 [functions.unsplash-track-download]
 verify_jwt = true
+
+[functions.render-public-page]
+verify_jwt = false
+
+[functions.track-page-view]
+verify_jwt = false
