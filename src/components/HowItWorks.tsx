@@ -32,7 +32,7 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-24 bg-slate-950 relative overflow-hidden">
+    <section id="how-it-works" className="section-spacing bg-slate-950 relative overflow-hidden scroll-mt-16">
       {/* Ambient background effects */}
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
       <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px]" />
