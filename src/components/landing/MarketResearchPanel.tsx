@@ -11,6 +11,55 @@ interface MarketResearchPanelProps {
   onLoad?: () => void;
 }
 
+// Clean markdown syntax and extract key content
+const cleanMarkdown = (text: string): string => {
+  if (!text) return '';
+  
+  return text
+    // Remove markdown headers (### 1. Title, ## Title, etc.)
+    .replace(/^#{1,6}\s*\d*\.?\s*/gm, '')
+    // Remove bold/italic markers
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+    // Remove bullet points at start
+    .replace(/^[-*•]\s*/gm, '')
+    // Remove numbered lists
+    .replace(/^\d+\.\s*/gm, '')
+    // Clean up extra whitespace
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
+
+// Extract the most important sentence/phrase from longer text
+const extractKeyInsight = (text: string, maxLength: number = 100): string => {
+  const cleaned = cleanMarkdown(text);
+  
+  // If short enough, return as-is
+  if (cleaned.length <= maxLength) return cleaned;
+  
+  // Try to find first complete sentence
+  const firstSentence = cleaned.match(/^[^.!?]+[.!?]/);
+  if (firstSentence && firstSentence[0].length <= maxLength) {
+    return firstSentence[0].trim();
+  }
+  
+  // Otherwise truncate at word boundary
+  const truncated = cleaned.slice(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+  return (lastSpace > 0 ? truncated.slice(0, lastSpace) : truncated) + '…';
+};
+
+// Parse objections/insights into clean bullet points
+const parseListItems = (items: string[]): string[] => {
+  return items
+    .map(item => cleanMarkdown(item))
+    .map(item => extractKeyInsight(item, 60))
+    .filter(item => item.length > 0)
+    .slice(0, 3); // Max 3 items
+};
+
 const MarketResearchPanel = forwardRef<HTMLDivElement, MarketResearchPanelProps>(
   ({ market, industry, className = '', onLoad }, ref) => {
     const { toast } = useToast();
@@ -35,7 +84,7 @@ const MarketResearchPanel = forwardRef<HTMLDivElement, MarketResearchPanelProps>
                     market.commonObjections.length > 0 || 
                     market.industryInsights.length > 0;
 
-    // Trigger animations and scroll when data loads
+    // Trigger animations when data loads
     useEffect(() => {
       if (hasData && !market.isLoading && !hasNotified.current) {
         hasNotified.current = true;
@@ -66,6 +115,12 @@ const MarketResearchPanel = forwardRef<HTMLDivElement, MarketResearchPanelProps>
         onLoad?.();
       }
     }, [hasData, market.isLoading, toast, onLoad]);
+
+    // Clean and prepare display content
+    const displayMarketSize = market.marketSize ? extractKeyInsight(market.marketSize, 120) : null;
+    const displayBuyerPersona = market.buyerPersona ? extractKeyInsight(market.buyerPersona, 80) : null;
+    const displayObjections = parseListItems(market.commonObjections);
+    const displayInsights = parseListItems(market.industryInsights);
 
     // Loading state
     if (market.isLoading) {
@@ -112,12 +167,12 @@ const MarketResearchPanel = forwardRef<HTMLDivElement, MarketResearchPanelProps>
         transition={{ 
           boxShadow: { duration: 0.5, ease: 'easeOut' }
         }}
-        className={`p-4 space-y-3 relative ${className} ${
+        className={`p-4 space-y-4 relative ${className} ${
           highlightActive ? 'ring-2 ring-secondary/50 rounded-lg' : ''
         }`}
       >
         {/* Header with animated badge */}
-        <div className="flex items-center gap-2 text-sm font-medium text-secondary mb-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-secondary">
           <TrendingUp className="w-4 h-4" />
           <span>Market Research</span>
           
@@ -168,88 +223,92 @@ const MarketResearchPanel = forwardRef<HTMLDivElement, MarketResearchPanelProps>
           )}
         </AnimatePresence>
 
-        {/* Market Size */}
-        {market.marketSize && (
+        {/* Market Size Card */}
+        {displayMarketSize && (
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
             className="p-3 rounded-lg bg-gradient-to-r from-primary/10 to-transparent border border-primary/20"
           >
-            <div className="flex items-start gap-2">
-              <TrendingUp className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-primary font-medium">Market Size</p>
-                <p className="text-sm text-foreground/90 mt-0.5">{market.marketSize}</p>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-primary">
+                <TrendingUp className="w-4 h-4 flex-shrink-0" />
+                <span className="text-xs font-medium">Market Size</span>
               </div>
+              <p className="text-sm text-foreground/90 leading-relaxed pl-6">
+                {displayMarketSize}
+              </p>
             </div>
           </motion.div>
         )}
 
-        {/* Buyer Persona */}
-        {market.buyerPersona && (
+        {/* Buyer Persona Card */}
+        {displayBuyerPersona && (
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
             className="p-3 rounded-lg bg-gradient-to-r from-secondary/10 to-transparent border border-secondary/20"
           >
-            <div className="flex items-start gap-2">
-              <Users className="w-4 h-4 text-secondary mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-secondary font-medium">Buyer Persona</p>
-                <p className="text-sm text-foreground/90 mt-0.5">{market.buyerPersona}</p>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-secondary">
+                <Users className="w-4 h-4 flex-shrink-0" />
+                <span className="text-xs font-medium">Your Buyer</span>
               </div>
+              <p className="text-sm text-foreground/90 leading-relaxed pl-6">
+                {displayBuyerPersona}
+              </p>
             </div>
           </motion.div>
         )}
 
-        {/* Common Objections */}
-        {market.commonObjections.length > 0 && (
+        {/* Common Objections Card */}
+        {displayObjections.length > 0 && (
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
             className="p-3 rounded-lg bg-gradient-to-r from-warning/10 to-transparent border border-warning/20"
           >
-            <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-warning font-medium">Common Objections</p>
-                <ul className="text-sm text-foreground/90 mt-1 space-y-1">
-                  {market.commonObjections.slice(0, 3).map((objection, i) => (
-                    <li key={i} className="flex items-start gap-1.5">
-                      <span className="text-warning/60">•</span>
-                      <span>{objection}</span>
-                    </li>
-                  ))}
-                </ul>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-warning">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span className="text-xs font-medium">Key Objections</span>
               </div>
+              <ul className="text-sm text-foreground/90 space-y-1 pl-6">
+                {displayObjections.map((objection, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-warning/60 mt-1">•</span>
+                    <span className="leading-relaxed">{objection}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </motion.div>
         )}
 
-        {/* Industry Insights */}
-        {market.industryInsights.length > 0 && (
+        {/* Industry Insights Card */}
+        {displayInsights.length > 0 && (
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
             className="p-3 rounded-lg bg-gradient-to-r from-success/10 to-transparent border border-success/20"
           >
-            <div className="flex items-start gap-2">
-              <Lightbulb className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-success font-medium">Industry Insights</p>
-                <ul className="text-sm text-foreground/90 mt-1 space-y-1">
-                  {market.industryInsights.slice(0, 3).map((insight, i) => (
-                    <li key={i} className="flex items-start gap-1.5">
-                      <span className="text-success/60">•</span>
-                      <span>{insight}</span>
-                    </li>
-                  ))}
-                </ul>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-success">
+                <Lightbulb className="w-4 h-4 flex-shrink-0" />
+                <span className="text-xs font-medium">Positioning Insight</span>
               </div>
+              <ul className="text-sm text-foreground/90 space-y-1 pl-6">
+                {displayInsights.slice(0, 2).map((insight, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-success/60 mt-1">•</span>
+                    <span className="leading-relaxed">{insight}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </motion.div>
         )}
