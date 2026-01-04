@@ -753,7 +753,7 @@ function GenerateContent() {
         .from("consultations")
         .select("*")
         .eq("user_id", user.id)
-        .eq("status", "completed")
+        .in("status", ["completed", "imported_from_demo"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();

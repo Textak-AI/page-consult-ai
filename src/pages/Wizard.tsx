@@ -139,10 +139,23 @@ export default function Wizard() {
   // State for conversation history from demo
   const [conversationHistory, setConversationHistory] = useState<Array<{role: string; content: string}>>([]);
 
-  // Check for demo intelligence from sessionStorage on mount
+  // Ref to track if demo import has been processed
+  const demoImportProcessedRef = useRef(false);
+  
+  // State to hold pending consultation ID after saving to Supabase
+  const [savedConsultationId, setSavedConsultationId] = useState<string | null>(null);
+
+  // Check for demo intelligence from sessionStorage - runs AFTER auth is confirmed
   useEffect(() => {
+    // Only process once, and only after userId is available
+    if (demoImportProcessedRef.current || !userId) return;
+    
     const demoData = sessionStorage.getItem('demoIntelligence');
-    if (demoData) {
+    if (!demoData) return;
+    
+    const importDemoData = async () => {
+      demoImportProcessedRef.current = true;
+      
       try {
         const parsed = JSON.parse(demoData);
         console.log('📦 [Wizard] Found demo intelligence in sessionStorage:', parsed);
@@ -201,14 +214,48 @@ export default function Wizard() {
         setMessages([{ id: "1", role: "assistant", content: welcomeMessage }]);
         initCompleteRef.current = true;
         
-        // Clear sessionStorage after applying
+        // CRITICAL: Save demo data to Supabase consultations table
+        console.log('💾 [Wizard] Saving demo data to Supabase for user:', userId);
+        
+        // Build payload matching the consultations table schema
+        const consultationPayload = {
+          user_id: userId,
+          industry: mapped.industry || null,
+          target_audience: mapped.audience || null,
+          unique_value: mapped.valueProp || null,
+          challenge: typeof mapped.painPoints === 'string' ? mapped.painPoints : (Array.isArray(mapped.painPoints) ? mapped.painPoints[0] : null) || null,
+          offer: mapped.valueProp || null,
+          goal: mapped.competitorDifferentiator || 'Generate leads',
+          extracted_intelligence: JSON.parse(JSON.stringify(mapped)), // Ensure it's valid JSON
+          readiness_score: readiness,
+          status: 'imported_from_demo' as const,
+          consultation_status: 'in_progress' as const,
+        };
+        
+        const { data: savedConsultation, error: saveError } = await supabase
+          .from('consultations')
+          .insert([consultationPayload])
+          .select()
+          .single();
+        
+        if (saveError) {
+          console.error('❌ [Wizard] Failed to save demo data to Supabase:', saveError);
+          // Still continue - data is in React state and will be passed via navigation
+        } else if (savedConsultation) {
+          console.log('✅ [Wizard] Demo data saved to Supabase:', savedConsultation.id);
+          setSavedConsultationId(savedConsultation.id);
+        }
+        
+        // Clear sessionStorage AFTER successful save
         sessionStorage.removeItem('demoIntelligence');
         console.log('✅ [Wizard] Demo intelligence applied with contextual greeting, readiness:', readiness);
       } catch (err) {
-        console.error('Failed to parse demo intelligence:', err);
+        console.error('Failed to parse/save demo intelligence:', err);
       }
-    }
-  }, []);
+    };
+    
+    importDemoData();
+  }, [userId]);
 
   // Sync extractedIntelligence when tiles or collectedInfo changes
   // IMPORTANT: Only update fields that have actual values - don't overwrite demo data with empty values
@@ -1080,13 +1127,66 @@ Ready to build this? Or want to adjust the approach first?`,
         console.warn('⚠️ [Wizard] Strategy brief request failed:', briefResponse.status);
       }
       
-      // STEP 3: Navigate to generate with complete data
+      // STEP 3: Save/update consultation to Supabase (ensures persistence even if nav state is lost)
+      let consultationId = savedConsultationId;
+      
+      if (userId) {
+        const consultationPayload = {
+          user_id: userId,
+          industry: extractedData.industry || null,
+          target_audience: extractedData.targetAudience || null,
+          unique_value: extractedData.uniqueValue || null,
+          challenge: extractedData.challenge || null,
+          offer: extractedData.offer || null,
+          goal: extractedData.goal || null,
+          extracted_intelligence: JSON.parse(JSON.stringify(extractedIntelligence || extractedData)),
+          readiness_score: overallReadiness,
+          status: 'completed' as const,
+          consultation_status: 'completed' as const,
+          strategy_brief: strategyBrief || null,
+          business_name: extractedData.businessName || null,
+        };
+        
+        if (consultationId) {
+          // Update existing consultation
+          console.log('💾 [Wizard] Updating consultation:', consultationId);
+          const { error: updateError } = await supabase
+            .from('consultations')
+            .update(consultationPayload)
+            .eq('id', consultationId);
+            
+          if (updateError) {
+            console.warn('⚠️ [Wizard] Failed to update consultation:', updateError);
+          } else {
+            console.log('✅ [Wizard] Consultation updated with strategy brief');
+          }
+        } else {
+          // Insert new consultation
+          console.log('💾 [Wizard] Inserting new consultation');
+          const { data: newConsultation, error: insertError } = await supabase
+            .from('consultations')
+            .insert([consultationPayload])
+            .select()
+            .single();
+            
+          if (insertError) {
+            console.warn('⚠️ [Wizard] Failed to insert consultation:', insertError);
+          } else if (newConsultation) {
+            consultationId = newConsultation.id;
+            console.log('✅ [Wizard] Consultation saved:', consultationId);
+          }
+        }
+      }
+      
+      // STEP 4: Navigate to generate with complete data
       navigate("/generate", {
         state: {
           // New strategic consultation format
           fromStrategicConsultation: true,
+          consultationId: consultationId,
           strategicData: {
             consultationData: {
+              id: consultationId,
               businessName: extractedData.businessName,
               industry: extractedData.industry,
               targetAudience: extractedData.targetAudience,
@@ -1103,6 +1203,7 @@ Ready to build this? Or want to adjust the approach first?`,
           },
           // Legacy format for fallback
           consultationData: {
+            id: consultationId,
             ...extractedData,
             industry: extractedData.industry,
             target_audience: extractedData.targetAudience,
