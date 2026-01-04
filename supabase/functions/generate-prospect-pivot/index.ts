@@ -155,6 +155,12 @@ Generate personalized messaging that:
 3. Maintains the core value proposition
 4. Feels personal but professional
 
+IMPORTANT EMAIL BODY RULES:
+- Include the page link naturally in the email (use {{page_link}} placeholder)
+- End with just "Best," or "Best regards," with NO name after it
+- Do NOT include "[Your Name]" or any name placeholder - the sender name is added by the email template
+- Keep the email brief (3-5 sentences max)
+
 You must respond with ONLY valid JSON, no other text:
 {
   "headline": "personalized headline (max 12 words)",
@@ -162,7 +168,7 @@ You must respond with ONLY valid JSON, no other text:
   "cta_text": "personalized CTA (max 5 words)",
   "context_summary": "one sentence summary for email",
   "email_subject": "email subject line",
-  "email_body": "brief email with {{page_link}} placeholder"
+  "email_body": "brief email with {{page_link}} placeholder, ending with just 'Best,' - NO name"
 }`;
 
     console.log("[generate-prospect-pivot] Calling Lovable AI...");
