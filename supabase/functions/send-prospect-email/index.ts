@@ -168,7 +168,24 @@ serve(async (req) => {
       });
     }
 
-    // Step 5: Prepare and send email via Loops
+    // Step 5: Fetch user profile for sender_name
+    console.log("[send-prospect-email] Fetching user profile for sender_name...");
+    let senderName = "Kyle Moyer"; // Fallback default
+    
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .single();
+    
+    if (profileError) {
+      console.log("[send-prospect-email] No profile found, using fallback sender_name");
+    } else if (profile?.full_name) {
+      senderName = profile.full_name;
+      console.log("[send-prospect-email] Using sender_name from profile:", senderName);
+    }
+
+    // Step 6: Prepare and send email via Loops
     const emailBody = prospect.email_body?.replace(/\{\{page_link\}\}/g, pageLink) || "";
     
     const loopsPayload = {
@@ -178,8 +195,7 @@ serve(async (req) => {
         subject: prospect.email_subject || "A personalized page just for you",
         prospect_name: prospect.first_name || prospect.full_name?.split(" ")[0] || "there",
         body: emailBody,
-        sender_name: "Kyle Moyer", // TODO: Get from user profile later
-        pageLink: pageLink,
+        sender_name: senderName,
       },
     };
 
@@ -217,7 +233,7 @@ serve(async (req) => {
       loopsResult = { raw: loopsResponseText };
     }
 
-    // Step 6: Update prospect with email sent status
+    // Step 7: Update prospect with email sent status
     console.log("[send-prospect-email] Updating prospect email status...");
     
     const { error: updateError } = await supabase
