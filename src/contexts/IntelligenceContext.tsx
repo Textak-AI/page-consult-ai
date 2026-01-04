@@ -509,12 +509,14 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         console.error('Extraction error:', extractError);
       }
 
-      let newExtracted = state.extracted;
-      let extractionFields: Array<{ label: string; value: string; color: 'purple' | 'cyan' | 'emerald' | 'amber' }> = [];
+      // Compute merged extracted data for use in API calls
+      // We merge with current state.extracted here, and will re-merge in setState with prev.extracted
+      // to handle any race conditions
+      let mergedExtractedForApi = state.extracted;
       
       if (!extractError && extractedData) {
-        // Merge new extractions (don't overwrite with nulls)
-        newExtracted = {
+        // Merge new extractions with current state (for API calls)
+        mergedExtractedForApi = {
           // Short values (for sidebar display)
           industry: extractedData.industry || state.extracted.industry,
           audience: extractedData.audience || state.extracted.audience,
@@ -544,39 +546,6 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           socialProofSummary: extractedData.socialProofSummary || state.extracted.socialProofSummary,
         };
 
-        // Build extraction fields for this message (what was newly extracted)
-        const colorCycle: Array<'purple' | 'cyan' | 'emerald' | 'amber'> = ['purple', 'cyan', 'emerald', 'amber'];
-        let colorIndex = 0;
-        
-        if (extractedData.industry && extractedData.industry !== state.extracted.industry) {
-          extractionFields.push({ label: 'Industry', value: extractedData.industry, color: colorCycle[colorIndex++ % 4] });
-        }
-        if (extractedData.audience && extractedData.audience !== state.extracted.audience) {
-          extractionFields.push({ label: 'Audience', value: extractedData.audience, color: colorCycle[colorIndex++ % 4] });
-        }
-        if (extractedData.valueProp && extractedData.valueProp !== state.extracted.valueProp) {
-          extractionFields.push({ label: 'Value Prop', value: extractedData.valueProp, color: colorCycle[colorIndex++ % 4] });
-        }
-        if (extractedData.competitorDifferentiator && extractedData.competitorDifferentiator !== state.extracted.competitorDifferentiator) {
-          extractionFields.push({ label: 'Your Edge', value: extractedData.competitorDifferentiator, color: colorCycle[colorIndex++ % 4] });
-        }
-        if (extractedData.painPoints && extractedData.painPoints !== state.extracted.painPoints) {
-          extractionFields.push({ label: 'Pain Point', value: extractedData.painPoints, color: colorCycle[colorIndex++ % 4] });
-        }
-        if (extractedData.buyerObjections && extractedData.buyerObjections !== state.extracted.buyerObjections) {
-          extractionFields.push({ label: 'Buyer Objection', value: extractedData.buyerObjections, color: colorCycle[colorIndex++ % 4] });
-        }
-        if (extractedData.proofElements && extractedData.proofElements !== state.extracted.proofElements) {
-          extractionFields.push({ label: 'Proof Point', value: extractedData.proofElements, color: colorCycle[colorIndex++ % 4] });
-        }
-
-        // Build the conversation turn if we extracted meaningful fields
-        const newTurn: ConversationTurn | null = extractionFields.length >= 2 ? {
-          userMessage: message,
-          extraction: { fields: extractionFields },
-          timestamp: new Date(),
-        } : null;
-
         // Re-run industry detection with all conversation messages
         const allUserMessages = [...state.conversation, userMessage]
           .filter(m => m.role === 'user')
@@ -586,13 +555,82 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           state.industryDetection
         );
 
-        setState(prev => ({
-          ...prev,
-          extracted: newExtracted,
-          readiness: calculateReadiness(newExtracted, prev.market.marketSize !== null, prev.emailCaptured),
-          conversationHistory: newTurn ? [...prev.conversationHistory, newTurn] : prev.conversationHistory,
-          industryDetection: updatedIndustryDetection,
-        }));
+        // Use functional setState to ensure we merge with the LATEST state
+        // This handles race conditions where state might have changed since we started
+        setState(prev => {
+          // Re-merge with prev.extracted to handle any concurrent updates
+          const mergedExtracted = {
+            // Short values (for sidebar display)
+            industry: extractedData.industry || prev.extracted.industry,
+            audience: extractedData.audience || prev.extracted.audience,
+            valueProp: extractedData.valueProp || prev.extracted.valueProp,
+            competitorDifferentiator: extractedData.competitorDifferentiator || prev.extracted.competitorDifferentiator,
+            painPoints: extractedData.painPoints || prev.extracted.painPoints,
+            buyerObjections: extractedData.buyerObjections || prev.extracted.buyerObjections,
+            proofElements: extractedData.proofElements || prev.extracted.proofElements,
+            socialProof: extractedData.socialProof || prev.extracted.socialProof,
+            // Full values (for Hero/CTA generation)
+            industryFull: extractedData.industryFull || prev.extracted.industryFull,
+            audienceFull: extractedData.audienceFull || prev.extracted.audienceFull,
+            valuePropFull: extractedData.valuePropFull || prev.extracted.valuePropFull,
+            competitorDifferentiatorFull: extractedData.competitorDifferentiatorFull || prev.extracted.competitorDifferentiatorFull,
+            painPointsFull: extractedData.painPointsFull || prev.extracted.painPointsFull,
+            buyerObjectionsFull: extractedData.buyerObjectionsFull || prev.extracted.buyerObjectionsFull,
+            proofElementsFull: extractedData.proofElementsFull || prev.extracted.proofElementsFull,
+            socialProofFull: extractedData.socialProofFull || prev.extracted.socialProofFull,
+            // Summaries
+            industrySummary: extractedData.industrySummary || prev.extracted.industrySummary,
+            audienceSummary: extractedData.audienceSummary || prev.extracted.audienceSummary,
+            valuePropSummary: extractedData.valuePropSummary || prev.extracted.valuePropSummary,
+            edgeSummary: extractedData.edgeSummary || prev.extracted.edgeSummary,
+            painSummary: extractedData.painSummary || prev.extracted.painSummary,
+            objectionsSummary: extractedData.objectionsSummary || prev.extracted.objectionsSummary,
+            proofSummary: extractedData.proofSummary || prev.extracted.proofSummary,
+            socialProofSummary: extractedData.socialProofSummary || prev.extracted.socialProofSummary,
+          };
+
+          // Build extraction fields for this message (what was newly extracted)
+          const colorCycle: Array<'purple' | 'cyan' | 'emerald' | 'amber'> = ['purple', 'cyan', 'emerald', 'amber'];
+          let colorIndex = 0;
+          const extractionFields: Array<{ label: string; value: string; color: 'purple' | 'cyan' | 'emerald' | 'amber' }> = [];
+          
+          if (extractedData.industry && extractedData.industry !== prev.extracted.industry) {
+            extractionFields.push({ label: 'Industry', value: extractedData.industry, color: colorCycle[colorIndex++ % 4] });
+          }
+          if (extractedData.audience && extractedData.audience !== prev.extracted.audience) {
+            extractionFields.push({ label: 'Audience', value: extractedData.audience, color: colorCycle[colorIndex++ % 4] });
+          }
+          if (extractedData.valueProp && extractedData.valueProp !== prev.extracted.valueProp) {
+            extractionFields.push({ label: 'Value Prop', value: extractedData.valueProp, color: colorCycle[colorIndex++ % 4] });
+          }
+          if (extractedData.competitorDifferentiator && extractedData.competitorDifferentiator !== prev.extracted.competitorDifferentiator) {
+            extractionFields.push({ label: 'Your Edge', value: extractedData.competitorDifferentiator, color: colorCycle[colorIndex++ % 4] });
+          }
+          if (extractedData.painPoints && extractedData.painPoints !== prev.extracted.painPoints) {
+            extractionFields.push({ label: 'Pain Point', value: extractedData.painPoints, color: colorCycle[colorIndex++ % 4] });
+          }
+          if (extractedData.buyerObjections && extractedData.buyerObjections !== prev.extracted.buyerObjections) {
+            extractionFields.push({ label: 'Buyer Objection', value: extractedData.buyerObjections, color: colorCycle[colorIndex++ % 4] });
+          }
+          if (extractedData.proofElements && extractedData.proofElements !== prev.extracted.proofElements) {
+            extractionFields.push({ label: 'Proof Point', value: extractedData.proofElements, color: colorCycle[colorIndex++ % 4] });
+          }
+
+          // Build the conversation turn if we extracted meaningful fields
+          const newTurn: ConversationTurn | null = extractionFields.length >= 2 ? {
+            userMessage: message,
+            extraction: { fields: extractionFields },
+            timestamp: new Date(),
+          } : null;
+
+          return {
+            ...prev,
+            extracted: mergedExtracted,
+            readiness: calculateReadiness(mergedExtracted, prev.market.marketSize !== null, prev.emailCaptured),
+            conversationHistory: newTurn ? [...prev.conversationHistory, newTurn] : prev.conversationHistory,
+            industryDetection: updatedIndustryDetection,
+          };
+        });
       }
 
       // Step 2: Generate AI response - pass inputQuality and thin count for PROBE→GUIDE flow
@@ -610,7 +648,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       const { data: responseData, error: responseError } = await supabase.functions.invoke('demo-generate-response', {
         body: {
           userMessage: message,
-          extractedIntelligence: newExtracted,
+          extractedIntelligence: mergedExtractedForApi,
           marketResearch: state.emailCaptured ? state.market : null, // Only include if email captured
           conversationHistory: [...state.conversation, userMessage].map(m => ({ role: m.role, content: m.content })),
           messageCount: newMessageCount,
@@ -634,7 +672,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       // Show gate after message 2 if we have industry detected
       // Only show if: industry detected, not captured yet, and not already dismissed
       const shouldShowGate = newMessageCount >= 2 && 
-                             newExtracted.industry && 
+                             mergedExtractedForApi.industry && 
                              !state.emailCaptured &&
                              !state.emailDismissed &&
                              !state.emailOffered;
@@ -667,7 +705,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
             content: m.content,
             timestamp: m.timestamp.toISOString(),
           })),
-          extractedIntelligence: newExtracted,
+          extractedIntelligence: mergedExtractedForApi,
           marketResearch: state.market,
           messageCount: newMessageCount,
         },
