@@ -22,9 +22,6 @@ export async function generateIntelligentContent(
   consultationData: ConsultationData,
   intelligence: PersonaIntelligence | null
 ): Promise<ContentGenerationResponse> {
-  console.log('🚀 Starting intelligent content generation');
-  console.log('📊 Consultation data:', consultationData);
-  console.log('🧠 Intelligence available:', !!intelligence);
 
   try {
     // If we have intelligence, extract key insights

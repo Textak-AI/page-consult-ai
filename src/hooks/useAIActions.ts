@@ -143,7 +143,6 @@ export function useAIActions(userId: string | null, userEmail?: string | null) {
   const checkAction = useCallback((actionType: AIActionType, isFirstPageGeneration = false): { allowed: boolean; cost: number; remaining: number } => {
     // DEV MODE: Always allow actions
     if (devMode || isUnlimited) {
-      console.log('[DEV MODE] Bypassing credit check for action:', actionType);
       return { allowed: true, cost: 0, remaining: DEV_MODE_CREDITS };
     }
 
@@ -170,7 +169,6 @@ export function useAIActions(userId: string | null, userEmail?: string | null) {
   ): Promise<ActionResult> => {
     // DEV MODE: Skip actual tracking, just allow
     if (devMode) {
-      console.log(`[DEV MODE] Bypassing credit deduction for action: ${actionType} (would cost ${ACTION_COSTS[actionType]})`);
       return { allowed: true, remaining: DEV_MODE_CREDITS, unlimited: true };
     }
 

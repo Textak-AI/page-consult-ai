@@ -89,10 +89,7 @@ export async function runIntelligencePipeline(
   aiSeoData?: AISeoData;
   error?: string;
 }> {
-  console.log('🚀 Starting full intelligence pipeline');
-  
   // Step 0: Extract AI SEO Data (runs first, before strategy brief)
-  console.log('🔍 Step 0: AI SEO Data Extraction');
   let aiSeoData: AISeoData | undefined;
   
   const seoResult = await extractAISeoData(consultationId, consultationData);
@@ -138,7 +135,6 @@ export async function runIntelligencePipeline(
   }
 
   // Step 1: Market Research
-  console.log('📊 Step 1: Market Research');
   const researchInputs: ResearchInputs = {
     industry: consultationData.industry || '',
     targetAudience: consultationData.targetAudience || '',

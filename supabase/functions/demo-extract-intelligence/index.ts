@@ -582,16 +582,6 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
       console.error('Failed to parse extraction:', parseError);
     }
 
-    // Enhanced logging for debugging
-    const capturedFields = Object.entries(extracted)
-      .filter(([k, v]) => v !== null && !k.includes('Summary') && !k.includes('Confidence') && k !== 'inputQuality')
-      .map(([k]) => k);
-    console.log('📝 User message:', sanitizedMessage);
-    console.log('📊 Input quality:', extracted.inputQuality);
-    console.log('🧠 Raw AI response:', content);
-    console.log('🎯 Parsed extraction with confidence:', JSON.stringify(extracted, null, 2));
-    console.log('✅ Fields captured (conf >= 50):', capturedFields);
-    console.log(`📊 Total: ${capturedFields.length} fields extracted for IP hash:`, ipHash);
 
     return new Response(
       JSON.stringify(extracted),

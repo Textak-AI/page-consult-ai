@@ -18,35 +18,12 @@ import { DevTestPanel } from './DevTestPanel';
  */
 /**
  * Check if we're in a dev environment
- * SECURITY: Only uses build-time flags and domain checks.
- * localStorage overrides are NOT allowed as they can be manipulated.
+ * SECURITY: Only uses build-time flags. Production domains are excluded.
  */
 function isDevEnvironment(): boolean {
-  // Vite development mode (build-time constant, cannot be manipulated)
-  if (import.meta.env.DEV) {
-    return true;
-  }
-  
-  const hostname = window.location.hostname;
-  
-  // localhost
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return true;
-  }
-  
-  // Preview URLs (Lovable development environments only)
-  if (hostname.includes('lovableproject.com')) {
-    return true;
-  }
-  
-  // Lovable staging domains
-  if (hostname.includes('lovable.app')) {
-    return true;
-  }
-  
-  // SECURITY: localStorage override removed - can be manipulated by users
-  
-  return false;
+  // Only show in Vite development mode (build-time constant)
+  // This ensures the dev panel never appears in production builds
+  return import.meta.env.DEV === true;
 }
 
 export function DevFloatingButton() {
