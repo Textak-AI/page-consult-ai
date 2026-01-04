@@ -24,15 +24,23 @@ const Hero = () => {
   const readiness = intelligenceContext?.state?.readiness || 0;
 
   // Watch for demo completion based on intelligence extraction
+  // CRITICAL: Only complete demo if intelligence was gathered in THIS session (not from localStorage)
   useEffect(() => {
     if (!extracted) return;
+    
+    // Don't auto-complete if already completed (prevents re-triggering from stale localStorage)
+    if (demoState === 'completed') return;
     
     const hasSubstantialContent = 
       extracted.industry && 
       (extracted.audience || extracted.valueProp) &&
       readiness >= 40;
     
-    if (hasSubstantialContent && demoState === 'idle') {
+    // Only complete if we have FRESH intelligence from current session
+    // Check that conversation exists in context (proves this is a real session, not cold start)
+    const hasActiveConversation = intelligenceContext?.state?.conversation?.length > 0;
+    
+    if (hasSubstantialContent && demoState === 'idle' && hasActiveConversation) {
       // Generate personalized content from extracted intelligence
       const content: PersonalizedContent = {
         company_name: extracted.industryFull || extracted.industry || '',
@@ -42,9 +50,12 @@ const Hero = () => {
         cta_text: 'Build My Full Landing Page',
       };
       
-      completeDemo(content);
+      // Final validation before completing
+      if (content.headline.length >= 15 && content.subhead.length >= 30) {
+        completeDemo(content);
+      }
     }
-  }, [extracted, readiness, demoState, completeDemo]);
+  }, [extracted, readiness, demoState, completeDemo, intelligenceContext?.state?.conversation?.length]);
 
   // Generate personalized headline from extracted data
   function generateHeadline(data: typeof extracted): string {
@@ -64,10 +75,15 @@ const Hero = () => {
       // Capitalize first letter
       const headline = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
       
-      // Truncate if too long but keep it meaningful
+      // Truncate if too long but keep it meaningful - preserve word boundaries
       if (headline.length > 70) {
-        const truncated = headline.slice(0, 67).replace(/\s+\S*$/, '');
-        return truncated + '...';
+        // Find last space before character 67 to preserve word boundaries
+        const truncatePoint = headline.lastIndexOf(' ', 67);
+        if (truncatePoint > 40) { // Only truncate if we can preserve a meaningful portion
+          return headline.slice(0, truncatePoint).replace(/[,\s]+$/, '') + '...';
+        }
+        // If no good break point, use the whole headline up to 80 chars
+        return headline.slice(0, 80);
       }
       return headline;
     }
