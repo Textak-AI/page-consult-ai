@@ -152,7 +152,7 @@ export default function LiveDemoSection() {
   const score = calculateIntelligenceScore(state.extracted);
 
   return (
-    <section id="demo" className="min-h-screen bg-slate-950 relative flex flex-col overflow-hidden scroll-mt-16">
+    <section id="demo" className="min-h-screen bg-slate-950 relative flex flex-col overflow-hidden scroll-mt-24">
       {/* === LASER BEAM EFFECTS === */}
       
       {/* Horizontal beam - slow drift across */}
@@ -197,7 +197,7 @@ export default function LiveDemoSection() {
       {/* Subtle background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 via-transparent to-transparent pointer-events-none" />
       {/* Header breadcrumb */}
-      <div className="relative z-10 max-w-6xl mx-auto w-full px-6 pt-8 pb-4">
+      <div className="relative z-10 max-w-6xl mx-auto w-full px-6 pt-16 md:pt-20 lg:pt-24 pb-4">
         <nav className="flex items-center gap-2 text-sm text-white/40">
           <span>PageConsult</span>
           <ChevronRight className="w-4 h-4" />
@@ -205,7 +205,7 @@ export default function LiveDemoSection() {
         </nav>
         
         {/* Section header */}
-        <div className="mt-6 mb-4">
+        <div className="mt-6 mb-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

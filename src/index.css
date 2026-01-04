@@ -133,7 +133,7 @@ All colors MUST be HSL.
 
   html {
     scroll-behavior: smooth;
-    scroll-padding-top: 4rem;
+    scroll-padding-top: 6rem;
   }
 
   body {
@@ -180,7 +180,11 @@ All colors MUST be HSL.
   
   /* Scroll margin for all sections */
   section[id] {
-    scroll-margin-top: 4rem;
+    scroll-margin-top: 5rem;
+  }
+  
+  #demo {
+    scroll-margin-top: 6rem;
   }
   
   .text-gradient {
