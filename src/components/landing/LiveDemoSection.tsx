@@ -197,7 +197,7 @@ export default function LiveDemoSection() {
       {/* Subtle background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 via-transparent to-transparent pointer-events-none" />
       {/* Header breadcrumb */}
-      <div className="relative z-10 max-w-6xl mx-auto w-full px-6 pt-16 md:pt-20 lg:pt-24 pb-4">
+      <div className="relative z-10 max-w-6xl mx-auto w-full px-6 pt-20 md:pt-24 lg:pt-28 pb-4">
         <nav className="flex items-center gap-2 text-sm text-white/40">
           <span>PageConsult</span>
           <ChevronRight className="w-4 h-4" />
