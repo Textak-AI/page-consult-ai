@@ -6,6 +6,7 @@ import { MessageSquare, Sparkles, Send, Loader2, Unlock, ChevronRight, BarChart3
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import EmailGateModal from './EmailGateModal';
+import MarketResearchPanel from './MarketResearchPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { IntelligenceProfileDemo } from '@/components/consultation/IntelligenceProfileDemo';
@@ -376,29 +377,52 @@ export default function LiveDemoSection() {
               
               {/* Right: Intelligence Profile - Desktop only */}
               <div className="hidden lg:flex w-[360px] flex-shrink-0 bg-slate-900/50 flex-col overflow-hidden">
-                <IntelligenceProfileDemo 
-                  score={score}
-                  onContinue={handleGenerateClick}
-                  isThinking={state.isProcessing}
-                  className="h-full border-0 rounded-none"
-                />
-                
-                {/* Unlock Market Research button */}
-                {state.emailDismissed && !state.emailCaptured && state.extracted.industry && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-4 border-t border-white/5"
-                  >
-                    <button
-                      onClick={reopenEmailGate}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-cyan-500/40 text-cyan-400 rounded-lg hover:bg-cyan-500/10 hover:border-cyan-400/60 transition-all text-sm font-medium"
-                    >
-                      <Unlock className="w-4 h-4" />
-                      Unlock Market Research
-                    </button>
-                  </motion.div>
-                )}
+                <div className="flex-1 overflow-y-auto">
+                  <IntelligenceProfileDemo 
+                    score={score}
+                    onContinue={handleGenerateClick}
+                    isThinking={state.isProcessing}
+                    className="h-auto border-0 rounded-none"
+                  />
+                  
+                  {/* Market Research Section */}
+                  <AnimatePresence mode="wait">
+                    {/* Show unlock button if: dismissed without email AND industry exists AND not loading/loaded */}
+                    {state.emailDismissed && !state.emailCaptured && !state.market.isLoading && state.extracted.industry && (
+                      <motion.div
+                        key="unlock-button"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="p-4 border-t border-white/5"
+                      >
+                        <button
+                          onClick={reopenEmailGate}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-cyan-500/40 text-cyan-400 rounded-lg hover:bg-cyan-500/10 hover:border-cyan-400/60 transition-all text-sm font-medium"
+                        >
+                          <Unlock className="w-4 h-4" />
+                          Unlock Market Research
+                        </button>
+                      </motion.div>
+                    )}
+                    
+                    {/* Show loading or results if email captured */}
+                    {state.emailCaptured && (state.market.isLoading || state.market.marketSize || state.market.industryInsights.length > 0) && (
+                      <motion.div
+                        key="market-research"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="border-t border-white/5"
+                      >
+                        <MarketResearchPanel 
+                          market={state.market}
+                          industry={state.extracted.industry}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
               
             </div>
@@ -455,24 +479,47 @@ export default function LiveDemoSection() {
                   className="border-0 rounded-none bg-transparent"
                 />
                 
-                {state.emailDismissed && !state.emailCaptured && state.extracted.industry && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-4"
-                  >
-                    <button
-                      onClick={() => {
-                        setShowMobileIntelligence(false);
-                        reopenEmailGate();
-                      }}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-cyan-500/40 text-cyan-400 rounded-lg hover:bg-cyan-500/10 hover:border-cyan-400/60 transition-all text-sm font-medium"
+                {/* Market Research Section - Mobile */}
+                <AnimatePresence mode="wait">
+                  {/* Show unlock button if: dismissed without email AND industry exists AND not loading/loaded */}
+                  {state.emailDismissed && !state.emailCaptured && !state.market.isLoading && state.extracted.industry && (
+                    <motion.div
+                      key="unlock-button-mobile"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="mt-4"
                     >
-                      <Unlock className="w-4 h-4" />
-                      Unlock Market Research
-                    </button>
-                  </motion.div>
-                )}
+                      <button
+                        onClick={() => {
+                          setShowMobileIntelligence(false);
+                          reopenEmailGate();
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-cyan-500/40 text-cyan-400 rounded-lg hover:bg-cyan-500/10 hover:border-cyan-400/60 transition-all text-sm font-medium"
+                      >
+                        <Unlock className="w-4 h-4" />
+                        Unlock Market Research
+                      </button>
+                    </motion.div>
+                  )}
+                  
+                  {/* Show loading or results if email captured */}
+                  {state.emailCaptured && (state.market.isLoading || state.market.marketSize || state.market.industryInsights.length > 0) && (
+                    <motion.div
+                      key="market-research-mobile"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="mt-4"
+                    >
+                      <MarketResearchPanel 
+                        market={state.market}
+                        industry={state.extracted.industry}
+                        className="p-0"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           </motion.div>
