@@ -19,6 +19,31 @@ const STORAGE_KEYS = {
   timestamp: 'pageconsult_demo_timestamp',
 };
 const DEMO_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const FRESH_LOAD_KEY = 'pageconsult_fresh_load_cleared';
+
+// Clear demo state on fresh page load (before React hydrates)
+// This ensures logged-out/anonymous users always see the default state
+function clearDemoStateOnFreshLoad(): void {
+  if (typeof window === 'undefined') return;
+  
+  // Check if we've already cleared on this page load
+  if (sessionStorage.getItem(FRESH_LOAD_KEY)) return;
+  
+  // Mark that we've cleared for this page load (done by useDemoState, but backup here)
+  sessionStorage.setItem(FRESH_LOAD_KEY, 'true');
+  
+  // Clear ALL demo-related localStorage
+  Object.values(STORAGE_KEYS).forEach(key => {
+    try {
+      localStorage.removeItem(key);
+    } catch {}
+  });
+  
+  console.log('🧹 [IntelligenceContext] Demo state cleared on fresh page load');
+}
+
+// Execute immediately when module loads
+clearDemoStateOnFreshLoad();
 // ============================================
 // TYPES
 // ============================================
