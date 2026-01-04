@@ -1,7 +1,11 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-
+import { 
+  detectIndustryFromConversation, 
+  confirmIndustry, 
+  type IndustryDetection 
+} from '@/lib/industryDetection';
 // ============================================
 // TYPES
 // ============================================
@@ -66,6 +70,9 @@ export interface IntelligenceState {
   market: MarketResearch;
   readiness: number;
   
+  // Dynamic industry detection
+  industryDetection: IndustryDetection | null;
+  
   // Conversation
   conversation: ConversationMessage[];
   conversationHistory: ConversationTurn[]; // Track user messages with extractions
@@ -95,6 +102,7 @@ export interface IntelligenceContextValue {
   submitEmail: (email: string) => Promise<void>;
   dismissEmailGate: () => void;
   reopenEmailGate: () => void;
+  confirmIndustrySelection: (variant: string) => void;
 }
 
 // ============================================
@@ -136,6 +144,7 @@ const initialState: IntelligenceState = {
     isLoading: false,
   },
   readiness: 0,
+  industryDetection: null,
   conversation: [],
   conversationHistory: [],
   isProcessing: false,
@@ -435,11 +444,21 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           timestamp: new Date(),
         } : null;
 
+        // Re-run industry detection with all conversation messages
+        const allUserMessages = [...state.conversation, userMessage]
+          .filter(m => m.role === 'user')
+          .map(m => m.content);
+        const updatedIndustryDetection = detectIndustryFromConversation(
+          allUserMessages,
+          state.industryDetection
+        );
+
         setState(prev => ({
           ...prev,
           extracted: newExtracted,
           readiness: calculateReadiness(newExtracted, prev.market.marketSize !== null, prev.emailCaptured),
           conversationHistory: newTurn ? [...prev.conversationHistory, newTurn] : prev.conversationHistory,
+          industryDetection: updatedIndustryDetection,
         }));
       }
 
@@ -564,6 +583,17 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   }, [state]);
 
   // ----------------------------------------
+  // Manual industry selection (user correction)
+  // ----------------------------------------
+  const confirmIndustrySelection = useCallback((variant: string) => {
+    const confirmed = confirmIndustry(variant as any);
+    setState(prev => ({
+      ...prev,
+      industryDetection: confirmed,
+    }));
+  }, []);
+
+  // ----------------------------------------
   // Context value
   // ----------------------------------------
   const contextValue: IntelligenceContextValue = {
@@ -574,6 +604,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     submitEmail,
     dismissEmailGate,
     reopenEmailGate,
+    confirmIndustrySelection,
   };
 
   return (
