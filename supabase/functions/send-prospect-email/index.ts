@@ -175,10 +175,11 @@ serve(async (req) => {
       transactionalId: QUICK_PIVOT_EMAIL_ID,
       email: prospect.email,
       dataVariables: {
+        subject: prospect.email_subject || "A personalized page just for you",
         prospect_name: prospect.first_name || prospect.full_name?.split(" ")[0] || "there",
         body: emailBody,
         sender_name: "Kyle Moyer", // TODO: Get from user profile later
-        subject: prospect.email_subject || "A personalized page just for you",
+        pageLink: pageLink,
       },
     };
 
