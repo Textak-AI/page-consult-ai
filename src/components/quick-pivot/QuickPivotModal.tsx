@@ -70,6 +70,8 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
   const [sendEmail, setSendEmail] = useState(true);
   const [isListening, setIsListening] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const { toast } = useToast();
 
   // Voice input
@@ -151,6 +153,44 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
     toast({ title: 'Page is live!', description: 'Your personalized page is ready to share.' });
   };
 
+  const handleSendEmail = async () => {
+    if (!formData.email || !generatedContent) {
+      toast({ title: 'No email address', description: 'Please provide an email address.', variant: 'destructive' });
+      return;
+    }
+
+    setIsSendingEmail(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-prospect-email', {
+        body: {
+          prospect_email: formData.email,
+          prospect_name: formData.first_name,
+          prospect_company: formData.company,
+          personalized_headline: generatedContent.personalized_headline,
+          personalized_subhead: generatedContent.personalized_subhead,
+          personalized_cta_text: generatedContent.personalized_cta_text,
+          page_url: generatedContent.page_url,
+          meeting_context: formData.meeting_context,
+        },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      setEmailSent(true);
+      toast({ title: 'Email sent!', description: `Email sent to ${formData.email}` });
+    } catch (err: any) {
+      console.error('Email send error:', err);
+      toast({
+        title: 'Failed to send email',
+        description: err.message || 'Please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   const copyLink = () => {
     if (generatedContent?.page_url) {
       navigator.clipboard.writeText(generatedContent.page_url);
@@ -172,6 +212,7 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
       job_title: '', industry: '', context: '', meeting_context: '', custom_slug: '',
     });
     setGeneratedContent(null);
+    setEmailSent(false);
     onClose();
   };
 
@@ -366,9 +407,25 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
                   <p className="text-sm text-green-800 dark:text-green-200 font-mono break-all">{generatedContent.page_url}</p>
                 </div>
 
-                <Button onClick={handleGoLive} className="w-full">
-                  Go Live <Send className="w-4 h-4 ml-2" />
-                </Button>
+                <div className="flex gap-3">
+                  <Button onClick={handleGoLive} className="flex-1">
+                    Go Live <Send className="w-4 h-4 ml-2" />
+                  </Button>
+                  {formData.email && sendEmail && (
+                    <Button 
+                      variant="outline" 
+                      onClick={handleSendEmail} 
+                      disabled={isSendingEmail}
+                      className="flex-1"
+                    >
+                      {isSendingEmail ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</>
+                      ) : (
+                        <><Send className="w-4 h-4 mr-2" /> Send Email</>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
 
@@ -393,7 +450,29 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
                   </Button>
                 </div>
 
-                <Button onClick={handleClose} className="w-full mt-3">Done</Button>
+                {formData.email && !emailSent && (
+                  <Button 
+                    onClick={handleSendEmail} 
+                    disabled={isSendingEmail}
+                    className="w-full mt-3"
+                  >
+                    {isSendingEmail ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending Email...</>
+                    ) : (
+                      <><Send className="w-4 h-4 mr-2" /> Send Email to {formData.first_name}</>
+                    )}
+                  </Button>
+                )}
+
+                {emailSent && (
+                  <div className="w-full mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-center">
+                    <p className="text-sm text-green-800 dark:text-green-200 flex items-center justify-center gap-2">
+                      <Check className="w-4 h-4" /> Email sent to {formData.email}
+                    </p>
+                  </div>
+                )}
+
+                <Button onClick={handleClose} variant="outline" className="w-full mt-3">Done</Button>
               </div>
             )}
           </div>
