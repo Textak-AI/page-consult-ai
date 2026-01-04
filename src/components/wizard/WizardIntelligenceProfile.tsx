@@ -90,6 +90,10 @@ export function tilesToIntelligence(tiles: any[], collectedInfo: Record<string, 
  * Used when loading demo data into the wizard
  */
 export function mapDemoToConsultation(demoData: any): ExtractedIntelligence {
+  // Extract social proof from proofElements if not explicitly set
+  // Demo often captures "worked with 89 businesses" in proofElements
+  const socialProof = demoData.socialProof || demoData.proofElements || null;
+  
   return {
     // WHO YOU ARE - use Full values for content generation, short for display
     industry: demoData.industry || null,
@@ -122,7 +126,20 @@ export function mapDemoToConsultation(demoData: any): ExtractedIntelligence {
     proofElements: demoData.proofElements || null,
     proofElementsFull: demoData.proofElementsFull || demoData.proofElements || null,
     proofSummary: demoData.proofSummary || null,
-    socialProof: demoData.socialProof || null,
+    socialProof: socialProof,
+    socialProofSummary: demoData.proofSummary || null, // Use proofSummary for socialProof too
     credentials: demoData.credentials || null,
   };
+}
+
+// Interface for demo data with market research
+export interface DemoDataWithMarket {
+  extracted: ExtractedIntelligence;
+  marketResearch?: {
+    marketSize?: string | null;
+    buyerPersona?: string | null;
+    commonObjections?: string[];
+    industryInsights?: string[];
+  } | null;
+  readinessScore?: number;
 }

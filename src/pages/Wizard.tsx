@@ -150,19 +150,39 @@ export default function Wizard() {
         setExtractedIntelligence(mapped);
         setShowDemoImportBadge(true);
         
+        // Import market research data if available
+        if (parsed.marketResearch) {
+          const mr = parsed.marketResearch;
+          if (mr.marketSize || mr.industryInsights?.length > 0) {
+            setResearchData({
+              industryInsights: mr.industryInsights || [],
+              commonObjections: mr.commonObjections || [],
+              marketSize: mr.marketSize,
+              buyerPersona: mr.buyerPersona,
+            });
+            setResearchSteps(prev => prev.map(step => ({ ...step, done: true })));
+            console.log('📦 [Wizard] Imported market research from demo:', mr);
+          }
+        }
+        
         // Build contextual welcome message based on imported demo data
         const industry = mapped.industry || '';
         const audience = mapped.audience || '';
         const valueProp = mapped.valueProp || '';
-        const readiness = parsed.readiness || parsed.score || 0;
+        const socialProof = mapped.socialProof || mapped.proofElements || '';
+        // Use readinessScore (how it's saved in LiveDemoSection) or fallback to other names
+        const readiness = parsed.readinessScore || parsed.readiness || parsed.score || 0;
+        const hasMarketResearch = !!(parsed.marketResearch?.marketSize);
         
         let welcomeMessage = `Welcome back! I've imported your strategy session.\n\n`;
         
-        if (industry || audience || valueProp) {
+        if (industry || audience || valueProp || socialProof) {
           welcomeMessage += `**What I captured:**\n`;
           if (industry) welcomeMessage += `✓ Industry: ${industry}\n`;
           if (audience) welcomeMessage += `✓ Audience: ${audience}\n`;
           if (valueProp) welcomeMessage += `✓ Value Prop: ${valueProp.substring(0, 80)}${valueProp.length > 80 ? '...' : ''}\n`;
+          if (socialProof) welcomeMessage += `✓ Social Proof: ${typeof socialProof === 'string' ? socialProof.substring(0, 60) : 'Yes'}${typeof socialProof === 'string' && socialProof.length > 60 ? '...' : ''}\n`;
+          if (hasMarketResearch) welcomeMessage += `✓ Market Research: Complete\n`;
           welcomeMessage += `\n`;
         }
         
@@ -174,13 +194,16 @@ export default function Wizard() {
           welcomeMessage += `Let's fill in a few more details to make your page convert better. What else can you tell me about your business?`;
         }
         
+        // Set the overall readiness to match demo score
+        setOverallReadiness(readiness);
+        
         // Set the contextual welcome message
         setMessages([{ id: "1", role: "assistant", content: welcomeMessage }]);
         initCompleteRef.current = true;
         
         // Clear sessionStorage after applying
         sessionStorage.removeItem('demoIntelligence');
-        console.log('✅ [Wizard] Demo intelligence applied with contextual greeting');
+        console.log('✅ [Wizard] Demo intelligence applied with contextual greeting, readiness:', readiness);
       } catch (err) {
         console.error('Failed to parse demo intelligence:', err);
       }
