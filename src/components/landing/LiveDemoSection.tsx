@@ -148,6 +148,7 @@ export default function LiveDemoSection() {
     ? [{ role: 'assistant' as const, content: "Tell me about your business — who do you help and what do you do for them?", timestamp: new Date() }]
     : state.conversation;
 
+  // Calculate score - this will recalculate on every render when state.extracted changes
   const score = calculateIntelligenceScore(state.extracted);
 
   return (
