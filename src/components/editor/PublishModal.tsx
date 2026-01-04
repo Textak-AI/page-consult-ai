@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Rocket } from "lucide-react";
+import { Loader2, Rocket, Zap } from "lucide-react";
 
 interface PublishModalProps {
   open: boolean;
@@ -24,6 +25,7 @@ export function PublishModal({
   const [published, setPublished] = useState(false);
   const [slug, setSlug] = useState(pageData?.slug || "");
   const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
+  const [quickPivotEnabled, setQuickPivotEnabled] = useState(pageData?.quick_pivot_enabled ?? true);
 
   const handlePublish = async () => {
     if (!pageData) return;
@@ -39,6 +41,7 @@ export function PublishModal({
           published_url: `/p/${slug}`,
           slug,
           analytics_enabled: analyticsEnabled,
+          quick_pivot_enabled: quickPivotEnabled,
         })
         .eq("id", pageData.id);
 
@@ -135,7 +138,7 @@ export function PublishModal({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label>Options</Label>
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -151,6 +154,20 @@ export function PublishModal({
               >
                 Enable analytics
               </label>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-purple-500" />
+                <div>
+                  <p className="text-sm font-medium">Quick Pivot</p>
+                  <p className="text-xs text-muted-foreground">Allow personalized prospect pages</p>
+                </div>
+              </div>
+              <Switch
+                checked={quickPivotEnabled}
+                onCheckedChange={setQuickPivotEnabled}
+              />
             </div>
           </div>
 
