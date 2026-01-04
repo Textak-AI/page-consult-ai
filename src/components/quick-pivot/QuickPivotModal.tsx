@@ -192,26 +192,27 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
         },
       });
 
-      console.log('[QuickPivotModal] Edge function response:', { data, error });
+      console.log('[QuickPivotModal] Send email response:', { data, error });
 
+      // Handle error - prioritize data.error since that contains our detailed message
       if (error) {
-        // Try to extract error from response body
-        const errorMsg = error.message || 'Edge function error';
-        throw new Error(errorMsg);
+        console.error('[QuickPivotModal] Supabase function error:', error);
+        // data may contain the actual error message from our edge function
+        const detailedError = data?.error || error.message || 'Failed to send email';
+        throw new Error(detailedError);
       }
-      
+
       if (!data?.success) {
-        throw new Error(data?.error || 'Unknown error from send-prospect-email');
+        throw new Error(data?.error || 'Email sending failed');
       }
 
       setEmailSent(true);
       toast({ title: 'Email sent!', description: `Email sent to ${formData.email}` });
     } catch (err: any) {
       console.error('[QuickPivotModal] Email send error:', err);
-      const errorMessage = err?.message || err?.error || 'Please try again';
       toast({
         title: 'Failed to send email',
-        description: errorMessage,
+        description: err.message || 'Please try again',
         variant: 'destructive',
       });
     } finally {
