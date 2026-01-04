@@ -146,17 +146,41 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
-  /* Section spacing utilities */
+  /* Section spacing utilities - use plain CSS for reliability */
   .section-spacing {
-    @apply py-16 md:py-20 lg:py-24;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+  
+  @media (min-width: 768px) {
+    .section-spacing {
+      padding-top: 5rem;
+      padding-bottom: 5rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .section-spacing {
+      padding-top: 6rem;
+      padding-bottom: 6rem;
+    }
   }
   
   .section-spacing-sm {
-    @apply py-12 md:py-16;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
   }
   
-  .section-spacing-lg {
-    @apply py-20 md:py-24 lg:py-32;
+  @media (min-width: 768px) {
+    .section-spacing-sm {
+      padding-top: 4rem;
+      padding-bottom: 4rem;
+    }
+  }
+  
+  /* Scroll margin for all sections */
+  section[id] {
+    scroll-margin-top: 4rem;
   }
   
   .text-gradient {
