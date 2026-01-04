@@ -187,8 +187,9 @@ All colors MUST be HSL.
     scroll-margin-top: 6rem;
   }
   
-  .text-gradient {
-    @apply text-secondary;
+  /* Prevent scrollbar layout shift */
+  .scrollbar-gutter-stable {
+    scrollbar-gutter: stable;
   }
   
   /* Brand color utilities - dynamically themed */

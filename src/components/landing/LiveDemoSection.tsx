@@ -242,7 +242,7 @@ export default function LiveDemoSection() {
             <div className="h-full flex flex-col lg:flex-row">
               
               {/* Left: Chat Interface */}
-              <div className="flex-1 flex flex-col lg:border-r border-white/5 min-w-0">
+              <div className="flex-1 flex flex-col lg:border-r border-white/5 min-w-0 lg:min-w-[400px]">
                 {/* Header */}
                 <div className="px-4 sm:px-6 py-4 border-b border-white/5 flex-shrink-0">
                   <div className="flex items-center justify-between">
@@ -271,16 +271,16 @@ export default function LiveDemoSection() {
                 {/* Messages - scrollable */}
                 <div 
                   ref={chatContainerRef} 
-                  className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 space-y-4 scroll-smooth"
+                  className="flex-1 overflow-y-scroll px-4 sm:px-6 py-5 space-y-4 scroll-smooth scrollbar-gutter-stable"
                 >
                   <AnimatePresence mode="popLayout">
                     {displayConversation.map((message, index) => (
                       <motion.div
                         key={`msg-${index}`}
-                        initial={{ opacity: 0.6, y: 10, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.15 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
                         className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
@@ -301,9 +301,9 @@ export default function LiveDemoSection() {
                     {inputValue.trim().length > 0 && !state.isProcessing && (
                       <motion.div
                         key="typing-preview"
-                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0, transition: { duration: 0.1 } }}
                         transition={{ duration: 0.15, ease: 'easeOut' }}
                         className="flex justify-end"
                       >
