@@ -136,22 +136,33 @@ serve(async (req) => {
     console.log("[generate-prospect-pivot] Fetching user signature settings...");
     const { data: profile } = await supabase
       .from("profiles")
-      .select("signature_name, signature_title, signature_email, signature_phone, signature_website, signature_enabled")
+      .select("signature_name, signature_title, signature_email, signature_phone, signature_website, signature_enabled, signature_type, signature_html")
       .eq("id", user.id)
       .single();
 
     const signatureEnabled = profile?.signature_enabled ?? true;
+    const signatureType = profile?.signature_type || "simple";
     let signatureBlock = "";
+    let isHtmlSignature = false;
     
-    if (signatureEnabled && profile?.signature_name) {
-      signatureBlock = "\n\nBest regards,\n\n" + profile.signature_name;
-      if (profile.signature_title) signatureBlock += "\n" + profile.signature_title;
-      if (profile.signature_email) signatureBlock += "\n" + profile.signature_email;
-      if (profile.signature_phone) signatureBlock += "\n" + profile.signature_phone;
-      if (profile.signature_website) signatureBlock += "\n" + profile.signature_website;
+    if (signatureEnabled) {
+      if (signatureType === "html" && profile?.signature_html) {
+        // Use custom HTML signature
+        signatureBlock = "\n\n" + profile.signature_html;
+        isHtmlSignature = true;
+        console.log("[generate-prospect-pivot] Using HTML signature");
+      } else if (profile?.signature_name) {
+        // Build simple text signature
+        signatureBlock = "\n\nBest regards,\n\n" + profile.signature_name;
+        if (profile.signature_title) signatureBlock += "\n" + profile.signature_title;
+        if (profile.signature_email) signatureBlock += "\n" + profile.signature_email;
+        if (profile.signature_phone) signatureBlock += "\n" + profile.signature_phone;
+        if (profile.signature_website) signatureBlock += "\n" + profile.signature_website;
+        console.log("[generate-prospect-pivot] Using simple signature");
+      }
     }
 
-    console.log("[generate-prospect-pivot] Signature enabled:", signatureEnabled, "Has signature:", !!signatureBlock);
+    console.log("[generate-prospect-pivot] Signature enabled:", signatureEnabled, "Type:", signatureType, "Has signature:", !!signatureBlock);
 
     const prompt = `You are an expert conversion copywriter. Personalize this landing page for a specific prospect.
 
