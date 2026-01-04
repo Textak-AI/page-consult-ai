@@ -1,4 +1,5 @@
 import { BrandSettings } from '@/components/BrandSettings';
+import { EmailSignatureSettings } from '@/components/settings/EmailSignatureSettings';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -23,7 +24,10 @@ export default function Settings() {
           Manage your brand and preferences
         </p>
 
-        <BrandSettings />
+        <div className="space-y-8">
+          <EmailSignatureSettings />
+          <BrandSettings />
+        </div>
       </div>
     </div>
   );

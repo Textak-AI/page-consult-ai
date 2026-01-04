@@ -857,6 +857,48 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          signature_email: string | null
+          signature_enabled: boolean | null
+          signature_name: string | null
+          signature_phone: string | null
+          signature_title: string | null
+          signature_website: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          signature_email?: string | null
+          signature_enabled?: boolean | null
+          signature_name?: string | null
+          signature_phone?: string | null
+          signature_title?: string | null
+          signature_website?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          signature_email?: string | null
+          signature_enabled?: boolean | null
+          signature_name?: string | null
+          signature_phone?: string | null
+          signature_title?: string | null
+          signature_website?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       prospect_page_views: {
         Row: {
           city: string | null
