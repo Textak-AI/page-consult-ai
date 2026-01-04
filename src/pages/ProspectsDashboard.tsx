@@ -56,13 +56,13 @@ interface Prospect {
   base_page_title?: string;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' }> = {
   new: { label: 'New', variant: 'secondary' },
   contacted: { label: 'Contacted', variant: 'outline' },
   engaged: { label: 'Engaged', variant: 'default' },
-  hot: { label: 'Hot', variant: 'destructive' },
-  converted: { label: 'Converted', variant: 'default' },
-  cold: { label: 'Cold', variant: 'secondary' },
+  hot: { label: 'Hot', variant: 'warning' },
+  converted: { label: 'Converted', variant: 'success' },
+  cold: { label: 'Cold', variant: 'outline' },
 };
 
 const INDUSTRY_LABELS: Record<string, string> = {
@@ -226,7 +226,7 @@ export default function ProspectsDashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b bg-card">
+      <div className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -235,7 +235,7 @@ export default function ProspectsDashboard() {
                 Track engagement across all your personalized pages
               </p>
             </div>
-            <Button onClick={() => setQuickPivotOpen(true)} className="gap-2">
+            <Button onClick={() => setQuickPivotOpen(true)} variant="premium" className="gap-2">
               <Zap className="w-4 h-4" />
               Quick Pivot
             </Button>
@@ -243,7 +243,7 @@ export default function ProspectsDashboard() {
 
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
-            <Card>
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <Users className="w-4 h-4" />
@@ -252,28 +252,28 @@ export default function ProspectsDashboard() {
                 <p className="text-2xl font-bold text-foreground mt-1">{stats.total}</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Flame className="w-4 h-4 text-orange-500" />
+                  <Flame className="w-4 h-4 text-warning" />
                   Hot
                 </div>
                 <p className="text-2xl font-bold text-foreground mt-1">{stats.hot}</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <TrendingUp className="w-4 h-4 text-purple-500" />
+                  <TrendingUp className="w-4 h-4 text-primary" />
                   Engaged
                 </div>
                 <p className="text-2xl font-bold text-foreground mt-1">{stats.engaged}</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Clock className="w-4 h-4 text-blue-500" />
+                  <Clock className="w-4 h-4 text-secondary" />
                   Viewed Today
                 </div>
                 <p className="text-2xl font-bold text-foreground mt-1">{stats.viewedToday}</p>
@@ -284,7 +284,7 @@ export default function ProspectsDashboard() {
       </div>
 
       {/* Filters */}
-      <div className="border-b bg-card/50">
+      <div className="border-b border-border bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
@@ -422,13 +422,13 @@ export default function ProspectsDashboard() {
                       <TableCell className="hidden sm:table-cell">
                         <div className="flex items-center gap-1">
                           {(prospect.engagement_score || 0) >= 100 && (
-                            <Flame className="w-4 h-4 text-orange-500" />
+                            <Flame className="w-4 h-4 text-warning" />
                           )}
                           <span className={`font-medium ${
                             (prospect.engagement_score || 0) >= 100
-                              ? 'text-orange-600'
+                              ? 'text-warning'
                               : (prospect.engagement_score || 0) >= 50
-                              ? 'text-purple-600'
+                              ? 'text-primary'
                               : 'text-muted-foreground'
                           }`}>
                             {prospect.engagement_score || 0}
