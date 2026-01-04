@@ -168,25 +168,40 @@ serve(async (req) => {
       });
     }
 
-    // Step 5: Fetch user profile for sender_name
-    console.log("[send-prospect-email] Fetching user profile for sender_name...");
+    // Step 5: Fetch user profile for sender_name and signature settings
+    console.log("[send-prospect-email] Fetching user profile for sender_name and signature...");
     let senderName = "Kyle Moyer"; // Fallback default
+    let signatureType = "simple";
+    let signatureHtml = "";
     
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("full_name")
+      .select("full_name, signature_type, signature_html, signature_name, signature_title, signature_email, signature_phone, signature_website, signature_enabled")
       .eq("id", user.id)
       .single();
     
     if (profileError) {
       console.log("[send-prospect-email] No profile found, using fallback sender_name");
-    } else if (profile?.full_name) {
-      senderName = profile.full_name;
-      console.log("[send-prospect-email] Using sender_name from profile:", senderName);
+    } else if (profile) {
+      if (profile.full_name) {
+        senderName = profile.full_name;
+      }
+      signatureType = profile.signature_type || "simple";
+      signatureHtml = profile.signature_html || "";
+      console.log("[send-prospect-email] Using sender_name from profile:", senderName, "Signature type:", signatureType);
     }
 
-    // Step 6: Prepare and send email via Loops
-    const emailBody = prospect.email_body?.replace(/\{\{page_link\}\}/g, pageLink) || "";
+    // Step 6: Prepare email body with proper formatting
+    let emailBody = prospect.email_body?.replace(/\{\{page_link\}\}/g, pageLink) || "";
+    
+    // Convert to HTML format for better email rendering
+    // Replace line breaks with <br> tags
+    let htmlEmailBody = emailBody.replace(/\n/g, "<br>");
+    
+    // Add HTML signature if using HTML type
+    if (signatureType === "html" && signatureHtml && profile?.signature_enabled !== false) {
+      htmlEmailBody += "<br><br>" + signatureHtml;
+    }
     
     const loopsPayload = {
       transactionalId: QUICK_PIVOT_EMAIL_ID,
@@ -194,7 +209,7 @@ serve(async (req) => {
       dataVariables: {
         subject: prospect.email_subject || "A personalized page just for you",
         prospect_name: prospect.first_name || prospect.full_name?.split(" ")[0] || "there",
-        body: emailBody,
+        body: htmlEmailBody,
         sender_name: senderName,
       },
     };

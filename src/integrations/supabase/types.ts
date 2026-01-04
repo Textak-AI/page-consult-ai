@@ -863,7 +863,6 @@ export type Database = {
           bio: string | null
           company_name: string | null
           created_at: string | null
-          custom_signature_html: string | null
           email_notifications: boolean | null
           full_name: string | null
           id: string
@@ -874,9 +873,11 @@ export type Database = {
           signature_email: string | null
           signature_enabled: boolean | null
           signature_headshot_url: string | null
+          signature_html: string | null
           signature_name: string | null
           signature_phone: string | null
           signature_title: string | null
+          signature_type: string | null
           signature_website: string | null
           timezone: string | null
           updated_at: string | null
@@ -888,7 +889,6 @@ export type Database = {
           bio?: string | null
           company_name?: string | null
           created_at?: string | null
-          custom_signature_html?: string | null
           email_notifications?: boolean | null
           full_name?: string | null
           id: string
@@ -899,9 +899,11 @@ export type Database = {
           signature_email?: string | null
           signature_enabled?: boolean | null
           signature_headshot_url?: string | null
+          signature_html?: string | null
           signature_name?: string | null
           signature_phone?: string | null
           signature_title?: string | null
+          signature_type?: string | null
           signature_website?: string | null
           timezone?: string | null
           updated_at?: string | null
@@ -913,7 +915,6 @@ export type Database = {
           bio?: string | null
           company_name?: string | null
           created_at?: string | null
-          custom_signature_html?: string | null
           email_notifications?: boolean | null
           full_name?: string | null
           id?: string
@@ -924,9 +925,11 @@ export type Database = {
           signature_email?: string | null
           signature_enabled?: boolean | null
           signature_headshot_url?: string | null
+          signature_html?: string | null
           signature_name?: string | null
           signature_phone?: string | null
           signature_title?: string | null
+          signature_type?: string | null
           signature_website?: string | null
           timezone?: string | null
           updated_at?: string | null

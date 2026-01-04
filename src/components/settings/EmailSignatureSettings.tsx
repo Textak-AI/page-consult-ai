@@ -20,14 +20,14 @@ interface SignatureData {
   signature_website: string;
   signature_headshot_url: string;
   signature_enabled: boolean;
-  custom_signature_html: string;
+  signature_type: "simple" | "html";
+  signature_html: string;
 }
 
 export function EmailSignatureSettings() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState("simple");
   const [signature, setSignature] = useState<SignatureData>({
     signature_name: "",
     signature_title: "",
@@ -36,7 +36,8 @@ export function EmailSignatureSettings() {
     signature_website: "",
     signature_headshot_url: "",
     signature_enabled: true,
-    custom_signature_html: "",
+    signature_type: "simple",
+    signature_html: "",
   });
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export function EmailSignatureSettings() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("signature_name, signature_title, signature_email, signature_phone, signature_website, signature_headshot_url, signature_enabled, custom_signature_html")
+        .select("signature_name, signature_title, signature_email, signature_phone, signature_website, signature_headshot_url, signature_enabled, signature_type, signature_html")
         .eq("id", user.id)
         .single();
 
@@ -70,12 +71,9 @@ export function EmailSignatureSettings() {
           signature_website: data.signature_website || "",
           signature_headshot_url: data.signature_headshot_url || "",
           signature_enabled: data.signature_enabled ?? true,
-          custom_signature_html: data.custom_signature_html || "",
+          signature_type: (data.signature_type as "simple" | "html") || "simple",
+          signature_html: data.signature_html || "",
         });
-        // If custom HTML exists, default to that tab
-        if (data.custom_signature_html) {
-          setActiveTab("custom");
-        }
       } else {
         setSignature(prev => ({
           ...prev,
@@ -115,6 +113,10 @@ export function EmailSignatureSettings() {
 
   const updateField = (field: keyof SignatureData, value: string | boolean) => {
     setSignature(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleTabChange = (tab: string) => {
+    updateField("signature_type", tab as "simple" | "html");
   };
 
   const renderSimplePreview = () => {
@@ -183,13 +185,13 @@ export function EmailSignatureSettings() {
 
         <Separator />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={signature.signature_type} onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="simple" className="gap-2">
               <User className="h-4 w-4" />
               Simple
             </TabsTrigger>
-            <TabsTrigger value="custom" className="gap-2">
+            <TabsTrigger value="html" className="gap-2">
               <Code className="h-4 w-4" />
               Custom HTML
             </TabsTrigger>
@@ -280,18 +282,18 @@ export function EmailSignatureSettings() {
             </div>
           </TabsContent>
 
-          <TabsContent value="custom" className="space-y-4 mt-4">
+          <TabsContent value="html" className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="custom-html">Custom HTML Signature</Label>
+              <Label htmlFor="signature-html">Custom HTML Signature</Label>
               <p className="text-sm text-muted-foreground">
-                Paste HTML from signature generators like WiseStamp, HubSpot, or MySignature
+                Paste your HTML signature from generators like SignatureHound, WiseStamp, HubSpot, or MySignature
               </p>
               <Textarea
-                id="custom-html"
+                id="signature-html"
                 placeholder="<table>..."
-                value={signature.custom_signature_html}
-                onChange={(e) => updateField("custom_signature_html", e.target.value)}
-                rows={10}
+                value={signature.signature_html}
+                onChange={(e) => updateField("signature_html", e.target.value)}
+                rows={12}
                 className="font-mono text-sm"
               />
             </div>
@@ -303,9 +305,11 @@ export function EmailSignatureSettings() {
         {/* Live Preview */}
         <div className="space-y-2">
           <Label>Preview</Label>
-          <div className="p-4 rounded-lg bg-muted/50 border text-sm overflow-auto">
-            {activeTab === "custom" && signature.custom_signature_html ? (
-              <div dangerouslySetInnerHTML={{ __html: signature.custom_signature_html }} />
+          <div className="p-4 rounded-lg bg-muted/50 border text-sm overflow-auto max-h-64">
+            {!signature.signature_enabled ? (
+              <span className="text-muted-foreground italic">Signature disabled</span>
+            ) : signature.signature_type === "html" && signature.signature_html ? (
+              <div dangerouslySetInnerHTML={{ __html: signature.signature_html }} />
             ) : (
               renderSimplePreview()
             )}
