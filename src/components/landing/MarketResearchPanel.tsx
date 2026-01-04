@@ -59,13 +59,8 @@ const MarketResearchPanel = forwardRef<HTMLDivElement, MarketResearchPanelProps>
         setShowScrollHint(true);
         setTimeout(() => setShowScrollHint(false), 4000);
         
-        // Auto-scroll to the section
-        setTimeout(() => {
-          internalRef.current?.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-          });
-        }, 300);
+        // NOTE: Removed auto-scroll - it was scrolling the whole page, not just the sidebar.
+        // The visual indicators (toast, highlight, points badge, scroll hint) are enough to draw attention.
         
         // Notify parent
         onLoad?.();
