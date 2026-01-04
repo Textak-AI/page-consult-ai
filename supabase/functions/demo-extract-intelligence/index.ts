@@ -194,30 +194,37 @@ VALUE PROP ACCEPT: "reduce downtime by 30%", "find hidden capacity", "close deal
 - Below 50 = too vague, should not display
 - 50-75 = somewhat specific, display with caution
 - Above 75 = specific enough, display confidently
+- BONUS: Add +10 confidence for specific numbers ($X, X%, Xx results)
+- BONUS: Add +10 confidence for detailed phrases (>30 chars)
 
-## OUTPUT FORMAT - JSON with MAX 14 CHARACTER short values:
+## OUTPUT FORMAT - JSON with COMPLETE phrases (up to 60 chars):
+IMPORTANT: Capture the FULL meaningful phrase, not just keywords. 
+For example: "leadership pipeline insurance" NOT "pipeline insur"
+For example: "succession gaps costing millions" NOT "succession gap"
+For example: "doubt coaching delivers measurable ROI" NOT "doubt ROI"
+
 {
-  "industry": "max 14 chars or null",
+  "industry": "full phrase up to 60 chars or null",
   "industryConfidence": 0-100,
-  "industrySummary": "1-2 sentences or null",
-  "audience": "max 14 chars or null",
+  "industrySummary": "2-3 sentences with full context",
+  "audience": "full phrase up to 60 chars or null",
   "audienceConfidence": 0-100,
-  "audienceSummary": "1-2 sentences or null",
-  "valueProp": "max 14 chars or null",
+  "audienceSummary": "2-3 sentences with full context",
+  "valueProp": "full phrase up to 60 chars or null",
   "valuePropConfidence": 0-100,
-  "valuePropSummary": "1-2 sentences or null",
-  "competitiveEdge": "max 14 chars or null",
+  "valuePropSummary": "2-3 sentences with specific outcomes/numbers",
+  "competitiveEdge": "full phrase up to 60 chars or null",
   "edgeConfidence": 0-100,
-  "edgeSummary": "1-2 sentences or null",
-  "painPoints": "max 14 chars or null",
+  "edgeSummary": "2-3 sentences explaining differentiation",
+  "painPoints": "full phrase up to 60 chars or null",
   "painConfidence": 0-100,
-  "painSummary": "1-2 sentences or null",
-  "buyerObjections": "max 14 chars or null",
+  "painSummary": "2-3 sentences with specific costs/impacts",
+  "buyerObjections": "full phrase up to 60 chars or null",
   "objectionsConfidence": 0-100,
-  "objectionsSummary": "1-2 sentences or null",
-  "proofElements": "max 14 chars or null",
+  "objectionsSummary": "2-3 sentences detailing hesitations",
+  "proofElements": "full phrase up to 60 chars or null",
   "proofConfidence": 0-100,
-  "proofSummary": "1-2 sentences or null",
+  "proofSummary": "2-3 sentences with specific metrics/results",
   "inputQuality": "thin" | "adequate" | "rich"
 }
 
@@ -438,22 +445,22 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
         const parsed = JSON.parse(jsonMatch[0]);
         
         // Validate and format extracted fields
+        // Short value for sidebar display (up to 40 chars - enough for meaningful phrases)
         const formatShort = (val: any) => {
           if (typeof val !== 'string' || !val.trim()) return null;
-          // Limit to 14 chars for sidebar display
-          return val.trim().slice(0, 14);
+          return val.trim().slice(0, 40);
         };
         
-        // Full value for Hero/CTA generation (up to 50 chars)
+        // Full value for Hero/CTA generation (up to 150 chars for complete context)
         const formatFull = (val: any) => {
           if (typeof val !== 'string' || !val.trim()) return null;
-          return val.trim().slice(0, 50);
+          return val.trim().slice(0, 150);
         };
         
         const formatSummary = (val: any) => {
           if (typeof val !== 'string' || !val.trim()) return null;
-          // Limit summary to 150 chars
-          return val.trim().slice(0, 150);
+          // Limit summary to 300 chars for rich context
+          return val.trim().slice(0, 300);
         };
 
         const getConfidence = (val: any, fallback: number = 0) => {

@@ -74,7 +74,7 @@ function getStringValue(val: unknown): string | null {
   return null;
 }
 
-// Create a field score
+// Create a field score with bonus for specificity
 function createFieldScore(
   value: unknown,
   summary: unknown,
@@ -82,7 +82,29 @@ function createFieldScore(
 ): FieldScore {
   const strValue = getStringValue(value);
   const strSummary = typeof summary === 'string' && summary.trim() ? summary.trim() : null;
-  const points = strValue ? maxPoints : 0;
+  
+  // Calculate points with specificity bonus
+  let points = 0;
+  if (strValue) {
+    // Base points for having a value (60% of max)
+    points = Math.round(maxPoints * 0.6);
+    
+    // Combine value and summary for specificity check
+    const fullText = `${strValue} ${strSummary || ''}`;
+    
+    // Bonus for specific numbers/metrics (+20% of max)
+    if (/\$\d+|\d+%|\d+x|\d+\s*(years?|months?|days?|clients?|customers?)/i.test(fullText)) {
+      points += Math.round(maxPoints * 0.2);
+    }
+    
+    // Bonus for detailed content (+20% of max)
+    if (strValue.length > 20 || (strSummary && strSummary.length > 50)) {
+      points += Math.round(maxPoints * 0.2);
+    }
+    
+    // Cap at maxPoints
+    points = Math.min(points, maxPoints);
+  }
   
   return {
     value: strValue,
