@@ -456,9 +456,9 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     
     // Only apply prefill data if:
     // 1. No extracted brand (real user data takes priority)
-    // 2. Dev mode is active OR source is landing_demo
+    // 2. Dev mode is active OR source is from demo flow
     const shouldApplyPrefill = prefillData?.extracted && 
-      (isDevModeActive || prefillData.source === 'landing_demo');
+      (isDevModeActive || prefillData.source === 'landing_demo' || prefillData.source === 'demo_consultation');
     
     if (shouldApplyPrefill && prefillData?.extracted) {
       // Map industry from demo extraction

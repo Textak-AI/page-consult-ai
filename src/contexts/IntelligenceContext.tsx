@@ -23,11 +23,25 @@ const FRESH_LOAD_KEY = 'pageconsult_fresh_load_cleared';
 
 // Clear demo state on fresh page load (before React hydrates)
 // This ensures logged-out/anonymous users always see the default state
+// BUT: Don't clear if we're in the middle of an auth flow (coming from signup)
 function clearDemoStateOnFreshLoad(): void {
   if (typeof window === 'undefined') return;
   
   // Check if we've already cleared on this page load
   if (sessionStorage.getItem(FRESH_LOAD_KEY)) return;
+  
+  // DON'T clear if we're in an auth flow (has session data or consultationId in URL)
+  const url = new URL(window.location.href);
+  const hasConsultationId = url.searchParams.has('consultationId');
+  const hasFromDemo = url.searchParams.get('from') === 'demo';
+  const hasDemoIntelligence = sessionStorage.getItem('demoIntelligence');
+  const hasSessionId = localStorage.getItem('pageconsult_session_id');
+  
+  if (hasConsultationId || hasFromDemo || hasDemoIntelligence || hasSessionId) {
+    console.log('🛡️ [IntelligenceContext] Skipping demo state clear - auth flow detected');
+    sessionStorage.setItem(FRESH_LOAD_KEY, 'true');
+    return;
+  }
   
   // Mark that we've cleared for this page load (done by useDemoState, but backup here)
   sessionStorage.setItem(FRESH_LOAD_KEY, 'true');
