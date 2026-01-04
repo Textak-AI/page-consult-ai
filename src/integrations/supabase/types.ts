@@ -654,6 +654,27 @@ export type Database = {
         }
         Relationships: []
       }
+      industries: {
+        Row: {
+          display_order: number | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          display_order?: number | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          display_order?: number | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       landing_pages: {
         Row: {
           ai_seo_breakdown: Json | null
@@ -979,6 +1000,145 @@ export type Database = {
           {
             foreignKeyName: "prospect_pages_source_landing_page_id_fkey"
             columns: ["source_landing_page_id"]
+            isOneToOne: false
+            referencedRelation: "landing_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospect_views: {
+        Row: {
+          device_type: string | null
+          id: string
+          prospect_id: string
+          referrer_source: string | null
+          scroll_depth: number | null
+          time_on_page: number | null
+          viewed_at: string | null
+        }
+        Insert: {
+          device_type?: string | null
+          id?: string
+          prospect_id: string
+          referrer_source?: string | null
+          scroll_depth?: number | null
+          time_on_page?: number | null
+          viewed_at?: string | null
+        }
+        Update: {
+          device_type?: string | null
+          id?: string
+          prospect_id?: string
+          referrer_source?: string | null
+          scroll_depth?: number | null
+          time_on_page?: number | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_views_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospects: {
+        Row: {
+          base_page_id: string | null
+          company: string | null
+          context_raw: string | null
+          context_summary: string | null
+          created_at: string | null
+          email: string | null
+          email_body: string | null
+          email_sent_at: string | null
+          email_status: string | null
+          email_subject: string | null
+          engagement_score: number | null
+          first_name: string
+          first_viewed_at: string | null
+          full_name: string | null
+          id: string
+          industry: string | null
+          job_title: string | null
+          last_name: string | null
+          last_viewed_at: string | null
+          meeting_context: string | null
+          personalized_cta_text: string | null
+          personalized_headline: string | null
+          personalized_subhead: string | null
+          slug: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+          view_count: number | null
+        }
+        Insert: {
+          base_page_id?: string | null
+          company?: string | null
+          context_raw?: string | null
+          context_summary?: string | null
+          created_at?: string | null
+          email?: string | null
+          email_body?: string | null
+          email_sent_at?: string | null
+          email_status?: string | null
+          email_subject?: string | null
+          engagement_score?: number | null
+          first_name: string
+          first_viewed_at?: string | null
+          full_name?: string | null
+          id?: string
+          industry?: string | null
+          job_title?: string | null
+          last_name?: string | null
+          last_viewed_at?: string | null
+          meeting_context?: string | null
+          personalized_cta_text?: string | null
+          personalized_headline?: string | null
+          personalized_subhead?: string | null
+          slug: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+          view_count?: number | null
+        }
+        Update: {
+          base_page_id?: string | null
+          company?: string | null
+          context_raw?: string | null
+          context_summary?: string | null
+          created_at?: string | null
+          email?: string | null
+          email_body?: string | null
+          email_sent_at?: string | null
+          email_status?: string | null
+          email_subject?: string | null
+          engagement_score?: number | null
+          first_name?: string
+          first_viewed_at?: string | null
+          full_name?: string | null
+          id?: string
+          industry?: string | null
+          job_title?: string | null
+          last_name?: string | null
+          last_viewed_at?: string | null
+          meeting_context?: string | null
+          personalized_cta_text?: string | null
+          personalized_headline?: string | null
+          personalized_subhead?: string | null
+          slug?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospects_base_page_id_fkey"
+            columns: ["base_page_id"]
             isOneToOne: false
             referencedRelation: "landing_pages"
             referencedColumns: ["id"]

@@ -158,3 +158,12 @@ verify_jwt = false
 
 [functions.track-page-view]
 verify_jwt = false
+
+[functions.generate-prospect-pivot]
+verify_jwt = true
+
+[functions.track-prospect-view]
+verify_jwt = false
+
+[functions.render-prospect-page]
+verify_jwt = false
