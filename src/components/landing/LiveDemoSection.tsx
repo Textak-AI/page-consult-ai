@@ -43,8 +43,7 @@ export default function LiveDemoSection() {
   // Mobile intelligence drawer state
   const [showMobileIntelligence, setShowMobileIntelligence] = useState(false);
   
-  // Path selector modal state
-  const [showPathSelector, setShowPathSelector] = useState(false);
+  // Session saving state
   const [isSavingSession, setIsSavingSession] = useState(false);
 
   // Send initial AI message on mount
@@ -70,12 +69,13 @@ export default function LiveDemoSection() {
     await processUserMessage(message);
   };
 
+  // Skip mode selection - go directly to signup
+  // User already experienced conversational mode in demo, will continue with structured form after signup
   const handleGenerateClick = () => {
-    setShowPathSelector(true);
+    handleContinueToWizard('wizard'); // Default to structured form
   };
 
   const handleContinueToWizard = async (selectedPath: 'conversation' | 'wizard' = 'wizard') => {
-    setShowPathSelector(false);
     setIsSavingSession(true);
     
     const sessionId = crypto.randomUUID();
@@ -538,67 +538,27 @@ export default function LiveDemoSection() {
         audience={state.extracted.audience}
       />
 
-      {/* Path Selector Modal */}
+      {/* Saving session loader - shown when transitioning to signup */}
       <AnimatePresence>
-        {showPathSelector && (
+        {isSavingSession && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
-            onClick={() => setShowPathSelector(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center"
             >
-              <h3 className="text-xl font-semibold text-white mb-2">Choose Your Path</h3>
-              <p className="text-slate-400 text-sm mb-6">
-                How would you like to continue building your strategy?
-              </p>
-              
-              <div className="space-y-3">
-                <button
-                  onClick={() => handleContinueToWizard('conversation')}
-                  disabled={isSavingSession}
-                  className="w-full p-4 rounded-xl border border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/10 text-left transition-all disabled:opacity-50"
-                >
-                  <p className="text-lg font-medium text-white mb-1">💬 Conversation Mode</p>
-                  <p className="text-sm text-slate-400">
-                    Continue chatting naturally. AI guides you through remaining questions.
-                  </p>
-                </button>
-                
-                <button
-                  onClick={() => handleContinueToWizard('wizard')}
-                  disabled={isSavingSession}
-                  className="w-full p-4 rounded-xl border border-white/10 hover:border-purple-500/50 hover:bg-purple-500/10 text-left transition-all disabled:opacity-50"
-                >
-                  <p className="text-lg font-medium text-white mb-1">📋 Structured Wizard</p>
-                  <p className="text-sm text-slate-400">
-                    Step-by-step form with clear progress. Faster if you know what you want.
-                  </p>
-                </button>
+              <div className="flex items-center justify-center gap-2 text-cyan-400">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="font-medium">Preparing your session...</span>
               </div>
-              
-              {isSavingSession && (
-                <div className="mt-4 flex items-center justify-center gap-2 text-sm text-cyan-400">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Preparing your session...
-                </div>
-              )}
-              
-              <button
-                onClick={() => setShowPathSelector(false)}
-                disabled={isSavingSession}
-                className="mt-4 text-sm text-slate-500 hover:text-slate-400 w-full text-center"
-              >
-                Cancel
-              </button>
+              <p className="text-sm text-slate-400 mt-2">
+                Saving your strategy progress
+              </p>
             </motion.div>
           </motion.div>
         )}
