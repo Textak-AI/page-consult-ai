@@ -152,7 +152,7 @@ export default function LiveDemoSection() {
   const score = calculateIntelligenceScore(state.extracted);
 
   return (
-    <section id="demo" className="min-h-screen bg-slate-950 relative flex flex-col overflow-hidden">
+    <section id="demo" className="min-h-screen bg-slate-950 relative flex flex-col overflow-hidden scroll-mt-16">
       {/* === LASER BEAM EFFECTS === */}
       
       {/* Horizontal beam - slow drift across */}
