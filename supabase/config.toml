@@ -167,3 +167,6 @@ verify_jwt = false
 
 [functions.render-prospect-page]
 verify_jwt = false
+
+[functions.send-prospect-email]
+verify_jwt = true
