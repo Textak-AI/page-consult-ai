@@ -48,29 +48,73 @@ const Hero = () => {
 
   // Generate personalized headline from extracted data
   function generateHeadline(data: typeof extracted): string {
-    if (data?.valueProp) {
-      return data.valueProp.length > 60 
-        ? data.valueProp.slice(0, 57) + '...'
-        : data.valueProp;
+    const industry = data?.industry ? formatForHeadline(data.industry) : null;
+    const audience = data?.audience || null;
+    const valueProp = data?.valueProp || null;
+    
+    // Best case: We have value prop - craft a benefit-driven headline
+    if (valueProp && valueProp.length > 10) {
+      // Clean up and make it punchy
+      const cleaned = valueProp
+        .replace(/^we\s+/i, '')
+        .replace(/^i\s+/i, '')
+        .replace(/^help\s+/i, 'Help ')
+        .replace(/^provide\s+/i, '');
+      
+      // Capitalize first letter
+      const headline = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+      
+      // Truncate if too long but keep it meaningful
+      if (headline.length > 70) {
+        const truncated = headline.slice(0, 67).replace(/\s+\S*$/, '');
+        return truncated + '...';
+      }
+      return headline;
     }
-    if (data?.industry) {
-      return `Landing Pages for ${formatForHeadline(data.industry)}`;
+    
+    // Good case: Industry + audience combo
+    if (industry && audience) {
+      return `${industry} That Converts ${audience} Into Customers`;
     }
-    return 'Your Custom Landing Page';
+    
+    // Okay case: Just industry
+    if (industry) {
+      return `High-Converting ${industry} Landing Pages`;
+    }
+    
+    // Fallback
+    return 'Your Custom Landing Page Is Ready';
   }
 
   // Generate personalized subhead from extracted data
   function generateSubhead(data: typeof extracted): string {
-    if (data?.audience && data?.valueProp) {
-      return `Help ${data.audience} achieve ${data.valueProp.toLowerCase().includes('help') ? 'their goals' : data.valueProp.toLowerCase()}`;
+    const industry = data?.industry ? formatForHeadline(data.industry) : null;
+    const audience = data?.audience || null;
+    const painPoints = data?.painPoints || null;
+    const edge = data?.competitorDifferentiator || null;
+    
+    // Best case: Audience + pain point
+    if (audience && painPoints) {
+      return `Built specifically to help ${audience} overcome ${painPoints.toLowerCase()} with a page that actually converts.`;
     }
-    if (data?.audience) {
-      return `Built specifically to convert ${data.audience} into customers`;
+    
+    // Good case: Audience + edge
+    if (audience && edge) {
+      return `Show ${audience} why you're different — ${edge.toLowerCase()}.`;
     }
-    if (data?.painPoints?.length) {
-      return `Solving ${data.painPoints[0]} with strategic, conversion-focused design`;
+    
+    // Okay case: Just audience
+    if (audience) {
+      return `Strategic messaging designed to resonate with ${audience} and drive action.`;
     }
-    return 'AI-powered landing pages built around your unique strategy';
+    
+    // Industry fallback
+    if (industry) {
+      return `AI-crafted messaging tailored to what ${industry.toLowerCase()} buyers actually care about.`;
+    }
+    
+    // Generic fallback
+    return 'AI-powered landing pages built around your unique strategy and market positioning.';
   }
 
   // Handle CTA click - check for brand first
