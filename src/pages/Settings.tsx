@@ -69,16 +69,16 @@ export default function Settings() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Navigation */}
           <aside className="lg:w-64 shrink-0">
-            <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
+            <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 bg-card border border-border rounded-lg p-2">
               {sections.map((section) => (
                 <Button
                   key={section.id}
                   variant="ghost"
                   className={cn(
-                    "justify-start gap-3 whitespace-nowrap",
+                    "justify-start gap-3 whitespace-nowrap w-full",
                     activeSection === section.id
-                      ? "bg-muted text-foreground font-medium"
-                      : "text-muted-foreground"
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                   onClick={() => setActiveSection(section.id)}
                 >
@@ -91,9 +91,11 @@ export default function Settings() {
 
           {/* Content Area */}
           <main className="flex-1 min-w-0">
-            <ScrollArea className="h-full">
-              {renderContent()}
-            </ScrollArea>
+            <div className="bg-card border border-border rounded-lg p-6">
+              <ScrollArea className="h-full">
+                {renderContent()}
+              </ScrollArea>
+            </div>
           </main>
         </div>
       </div>

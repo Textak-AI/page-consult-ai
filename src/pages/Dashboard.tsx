@@ -346,12 +346,12 @@ export default function Dashboard() {
           {/* In Progress Alert */}
           {inProgressConsultation && (
             <div className="mb-8">
-              <div className={`bg-gradient-to-r ${hasExistingPage ? 'from-emerald-500/10 to-cyan-500/10 border-emerald-500/30' : 'from-primary/10 to-secondary/10 border-primary/30'} border rounded-xl p-5`}>
+              <div className={`bg-card border border-border rounded-lg p-5 ${hasExistingPage ? 'border-l-4 border-l-success' : 'border-l-4 border-l-primary'}`}>
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-4">
-                    <div className={`p-3 ${hasExistingPage ? 'bg-emerald-500/20' : 'bg-primary/20'} rounded-lg`}>
+                    <div className={`p-3 rounded-lg ${hasExistingPage ? 'bg-success/10' : 'bg-primary/10'}`}>
                       {hasExistingPage ? (
-                        <Edit3 className="w-6 h-6 text-emerald-400" />
+                        <Edit3 className={`w-6 h-6 text-success`} />
                       ) : (
                         <Clock className="w-6 h-6 text-primary" />
                       )}
@@ -370,7 +370,7 @@ export default function Dashboard() {
                   </div>
                   <Button 
                     onClick={() => handleContinueConsultation(inProgressConsultation.id)}
-                    className={hasExistingPage ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-primary hover:bg-primary/90'}
+                    variant={hasExistingPage ? 'secondary' : 'default'}
                   >
                     {hasExistingPage ? 'Edit Page' : 'Continue'}
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -384,10 +384,10 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
             <button
               onClick={() => navigate('/new')}
-              className="p-6 bg-card border border-border rounded-xl 
-                         hover:border-primary/50 transition text-left group"
+              className="p-6 bg-card border border-border rounded-lg 
+                         hover:border-primary/50 hover:bg-muted/30 transition-all duration-200 text-left group"
             >
-              <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/30 transition">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                 <Plus className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-foreground font-semibold mb-1">
@@ -400,11 +400,11 @@ export default function Dashboard() {
 
             <button
               onClick={() => setQuickPivotOpen(true)}
-              className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/30 rounded-xl 
-                         hover:border-purple-500/60 hover:from-purple-500/15 hover:to-purple-600/10 transition text-left group"
+              className="p-6 bg-card border border-primary/30 rounded-lg 
+                         hover:border-primary/60 hover:bg-primary/5 transition-all duration-200 text-left group"
             >
-              <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-500/30 transition">
-                <Zap className="w-6 h-6 text-purple-400" />
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                <Zap className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-foreground font-semibold mb-1">
                 Quick Pivot
@@ -416,11 +416,11 @@ export default function Dashboard() {
             
             <button
               onClick={() => navigate('/brand-setup')}
-              className="p-6 bg-card border border-border rounded-xl 
-                         hover:border-secondary/50 transition text-left group"
+              className="p-6 bg-card border border-border rounded-lg 
+                         hover:border-secondary/50 hover:bg-muted/30 transition-all duration-200 text-left group"
             >
-              <div className="w-12 h-12 bg-secondary/20 rounded-lg flex items-center justify-center mb-4 group-hover:bg-secondary/30 transition">
-                <Sparkles className="w-6 h-6 text-secondary-foreground" />
+              <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors">
+                <Sparkles className="w-6 h-6 text-secondary" />
               </div>
               <h3 className="text-foreground font-semibold mb-1">
                 Brand Setup
@@ -432,11 +432,11 @@ export default function Dashboard() {
             
             <button
               onClick={() => navigate('/settings')}
-              className="p-6 bg-card border border-border rounded-xl 
-                         hover:border-accent/50 transition text-left group"
+              className="p-6 bg-card border border-border rounded-lg 
+                         hover:border-muted-foreground/30 hover:bg-muted/30 transition-all duration-200 text-left group"
             >
-              <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center mb-4 group-hover:bg-accent/30 transition">
-                <Zap className="w-6 h-6 text-accent-foreground" />
+              <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center mb-4 group-hover:bg-muted/80 transition-colors">
+                <Zap className="w-6 h-6 text-muted-foreground" />
               </div>
               <h3 className="text-foreground font-semibold mb-1">
                 Account Settings
@@ -458,7 +458,7 @@ export default function Dashboard() {
               </div>
               <Button 
                 onClick={() => navigate('/new')}
-                className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+                variant="premium"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New Page
@@ -472,7 +472,7 @@ export default function Dashboard() {
                 placeholder="Search pages..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-card border-border"
               />
             </div>
 

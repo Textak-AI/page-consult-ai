@@ -62,10 +62,10 @@ const Header = () => {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 min-h-[72px]",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-200 min-h-[72px]",
         isScrolled 
-          ? "bg-slate-900/95 backdrop-blur-sm shadow-lg shadow-black/20" 
-          : "bg-slate-900/80 backdrop-blur-sm shadow-sm"
+          ? "bg-background/95 backdrop-blur-sm border-b border-border" 
+          : "bg-background/80 backdrop-blur-sm"
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -91,24 +91,24 @@ const Header = () => {
           {/* Navigation - centered column */}
           {user ? (
             // Logged-in navigation
-            <nav className="hidden md:flex items-center gap-4">
+            <nav className="hidden md:flex items-center gap-1">
               <Link
                 to="/dashboard"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-slate-400 hover:text-white transition-all duration-300 rounded-md hover:bg-slate-800/50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 rounded-lg hover:bg-muted"
               >
                 <LayoutDashboard className="w-4 h-4" />
                 <span className="text-sm">Dashboard</span>
               </Link>
               <Link
                 to="/prospects"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-slate-400 hover:text-white transition-all duration-300 rounded-md hover:bg-slate-800/50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 rounded-lg hover:bg-muted"
               >
                 <Users className="w-4 h-4" />
                 <span className="text-sm">Prospects</span>
               </Link>
               <Link
                 to="/brand-setup"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-slate-400 hover:text-white transition-all duration-300 rounded-md hover:bg-slate-800/50"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 rounded-lg hover:bg-muted"
               >
                 <span className="text-sm">Brand Setup</span>
               </Link>
@@ -118,31 +118,31 @@ const Header = () => {
             <nav className="hidden md:flex items-center gap-8">
               <a
                 href="#features"
-                className="text-gray-300 hover:text-white transition-all duration-300 relative group"
+                className="text-muted-foreground hover:text-foreground transition-all duration-200 relative group"
               >
                 Features
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full" />
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-secondary transition-all duration-200 group-hover:w-full" />
               </a>
               <a
                 href="#pricing"
-                className="text-gray-300 hover:text-white transition-all duration-300 relative group"
+                className="text-muted-foreground hover:text-foreground transition-all duration-200 relative group"
               >
                 Pricing
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full" />
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-secondary transition-all duration-200 group-hover:w-full" />
               </a>
               <a
                 href="#demo"
-                className="text-gray-300 hover:text-white transition-all duration-300 relative group"
+                className="text-muted-foreground hover:text-foreground transition-all duration-200 relative group"
               >
                 Demo
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full" />
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-secondary transition-all duration-200 group-hover:w-full" />
               </a>
               <Link
                 to="/brand-setup"
-                className="text-gray-300 hover:text-white transition-all duration-300 relative group"
+                className="text-muted-foreground hover:text-foreground transition-all duration-200 relative group"
               >
                 Brand Setup
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full" />
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-secondary transition-all duration-200 group-hover:w-full" />
               </Link>
             </nav>
           )}
@@ -150,19 +150,20 @@ const Header = () => {
           {/* Right side - auth-aware */}
           <div className="flex items-center justify-end gap-4">
             {isLoading ? (
-              <div className="w-8 h-8 rounded-full bg-slate-700 animate-pulse" />
+              <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
             ) : user ? (
               // Logged-in actions
               <>
                 {/* Credits display - understated */}
-                <div className="hidden sm:flex items-center gap-1.5 text-sm text-slate-500">
+                <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground">
                   <Zap className="w-3.5 h-3.5" />
                   <span>{credits.isUnlimited ? '∞' : credits.available} credits</span>
                 </div>
                 
                 <Button 
                   onClick={() => navigate('/new')}
-                  className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-medium hidden sm:flex"
+                  variant="premium"
+                  className="hidden sm:flex"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   New Page
@@ -170,29 +171,29 @@ const Header = () => {
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center text-white font-medium text-sm">
+                    <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-primary-foreground font-medium text-sm">
                         {getUserInitials()}
                       </div>
                       <ChevronDown className="w-4 h-4 hidden sm:block" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 bg-slate-800 border-slate-700">
-                    <div className="px-3 py-2 border-b border-slate-700">
-                      <p className="text-sm font-medium text-white truncate">{getUserDisplayName()}</p>
-                      <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                  <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+                    <div className="px-3 py-2 border-b border-border">
+                      <p className="text-sm font-medium text-foreground truncate">{getUserDisplayName()}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
                     <DropdownMenuItem 
                       onClick={() => navigate('/settings')}
-                      className="text-slate-300 focus:text-white focus:bg-slate-700 cursor-pointer"
+                      className="text-muted-foreground focus:text-foreground focus:bg-muted cursor-pointer"
                     >
                       <Settings className="w-4 h-4 mr-2" />
                       Settings
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-slate-700" />
+                    <DropdownMenuSeparator className="bg-border" />
                     <DropdownMenuItem 
                       onClick={handleSignOut}
-                      className="text-slate-300 focus:text-white focus:bg-slate-700 cursor-pointer"
+                      className="text-muted-foreground focus:text-foreground focus:bg-muted cursor-pointer"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign Out
@@ -205,16 +206,12 @@ const Header = () => {
               <>
                 <Link 
                   to="/signup?mode=login"
-                  className="text-gray-300 hover:text-white transition-colors font-medium"
+                  className="text-muted-foreground hover:text-foreground transition-colors font-medium"
                 >
                   Login
                 </Link>
                 <Link to="/new">
-                  <Button 
-                    variant="default" 
-                    size="default" 
-                    className="bg-white text-slate-900 font-semibold px-6 py-2.5 rounded-xl shadow-xl shadow-white/20 hover:shadow-2xl hover:shadow-white/30 hover:scale-105 transition-all duration-300"
-                  >
+                  <Button variant="premium">
                     Get Started
                   </Button>
                 </Link>
