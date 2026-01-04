@@ -5,6 +5,18 @@ export type DemoState = 'idle' | 'generating' | 'completed';
 
 const STORAGE_KEY = 'pageconsult_demo_state';
 const CONTENT_KEY = 'pageconsult_personalized_content';
+const SESSION_KEY = 'pageconsult_demo_session';
+const COMPLETED_SESSION_KEY = 'pageconsult_demo_completed_session';
+
+// Get or create session ID for this browser session
+function getSessionId(): string {
+  if (typeof window === 'undefined') return '';
+  const existing = sessionStorage.getItem(SESSION_KEY);
+  if (existing) return existing;
+  const newId = crypto.randomUUID();
+  sessionStorage.setItem(SESSION_KEY, newId);
+  return newId;
+}
 
 // Validate that a value is a valid DemoState
 function isValidDemoState(value: unknown): value is DemoState {
@@ -51,8 +63,17 @@ function isValidPersonalizedContent(content: unknown): content is PersonalizedCo
 function getSavedDemoState(): DemoState {
   if (typeof window === 'undefined') return 'idle';
   try {
+    // Only restore 'completed' state if it was completed in THIS session
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved && isValidDemoState(saved)) {
+      if (saved === 'completed') {
+        const completedSession = localStorage.getItem(COMPLETED_SESSION_KEY);
+        const currentSession = getSessionId();
+        if (completedSession !== currentSession) {
+          // Demo was completed in a different session - reset
+          return 'idle';
+        }
+      }
       return saved;
     }
   } catch (e) {
@@ -176,6 +197,10 @@ export function useDemoState(): UseDemoStateReturn {
     if (isValidPersonalizedContent(content)) {
       setPersonalizedContentInternal(content);
       setDemoStateInternal('completed');
+      // Mark which session completed the demo
+      try {
+        localStorage.setItem(COMPLETED_SESSION_KEY, getSessionId());
+      } catch {}
     } else {
       console.warn('Attempted to complete demo with invalid content');
     }
@@ -187,6 +212,7 @@ export function useDemoState(): UseDemoStateReturn {
     try {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(CONTENT_KEY);
+      localStorage.removeItem(COMPLETED_SESSION_KEY);
     } catch (e) {
       console.warn('Failed to clear demo state from localStorage:', e);
     }
