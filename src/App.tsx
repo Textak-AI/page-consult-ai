@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useResetDemoShortcut } from "@/hooks/useResetDemoShortcut";
 
 // Disable automatic scroll restoration to prevent flash on refresh
 if ('scrollRestoration' in history) {
@@ -53,6 +54,9 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  // Global keyboard shortcut to reset demo state (Alt+R)
+  useResetDemoShortcut();
+  
   // Handle hydration and scroll restoration
   useEffect(() => {
     // Get saved scroll position
