@@ -267,65 +267,16 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   const hasRestoredState = useRef(false);
 
   // ----------------------------------------
-  // Restore state from localStorage on mount
+  // DISABLED: Don't restore demo state on page load
+  // Fresh visits should always start with a clean slate
   // ----------------------------------------
   useEffect(() => {
     if (hasRestoredState.current) return;
     hasRestoredState.current = true;
 
-    try {
-      const timestamp = safeGetItem(STORAGE_KEYS.timestamp);
-      
-      // Check if expired
-      if (timestamp && Date.now() - parseInt(timestamp) > DEMO_TTL) {
-        console.log('[IntelligenceContext] Demo state expired, clearing');
-        safeClearDemoState();
-        return;
-      }
-
-      const savedConversation = safeGetItem(STORAGE_KEYS.conversation);
-      const savedExtracted = safeGetItem(STORAGE_KEYS.extracted);
-      const savedSessionId = safeGetItem(STORAGE_KEYS.sessionId);
-      const savedIndustry = safeGetItem(STORAGE_KEYS.industryDetection);
-      const savedMarket = safeGetItem(STORAGE_KEYS.market);
-
-      // Only restore if we have conversation AND extracted intelligence (complete state)
-      if (savedConversation && savedExtracted && savedSessionId) {
-        const conversation = JSON.parse(savedConversation);
-        const extracted = JSON.parse(savedExtracted);
-        const industryDetection = savedIndustry ? JSON.parse(savedIndustry) : null;
-        const market = savedMarket ? JSON.parse(savedMarket) : initialState.market;
-
-        // Convert timestamp strings back to Date objects
-        const restoredConversation = conversation.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp),
-        }));
-
-        console.log('[IntelligenceContext] Restored demo state:', {
-          messages: restoredConversation.length,
-          hasExtracted: !!extracted,
-          hasIndustry: !!industryDetection,
-        });
-
-        setState(prev => ({
-          ...prev,
-          sessionId: savedSessionId,
-          conversation: restoredConversation,
-          extracted,
-          industryDetection,
-          market: { ...market, isLoading: false },
-          messageCount: restoredConversation.filter((m: any) => m.role === 'user').length,
-        }));
-      } else if (savedConversation || savedExtracted) {
-        // Incomplete state - clear everything
-        console.log('[IntelligenceContext] Incomplete state found, clearing');
-        safeClearDemoState();
-      }
-    } catch (e) {
-      console.warn('[IntelligenceContext] Failed to restore state:', e);
-      safeClearDemoState();
-    }
+    // Always clear old demo state on mount - fresh start every time
+    safeClearDemoState();
+    console.log('[IntelligenceContext] Starting fresh - cleared old demo state');
   }, []);
 
   // ----------------------------------------
