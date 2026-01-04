@@ -149,7 +149,38 @@ export default function Wizard() {
         const mapped = mapDemoToConsultation(parsed);
         setExtractedIntelligence(mapped);
         setShowDemoImportBadge(true);
-        // Don't clear sessionStorage yet - let the applySessionData handle proper state
+        
+        // Build contextual welcome message based on imported demo data
+        const industry = mapped.industry || '';
+        const audience = mapped.audience || '';
+        const valueProp = mapped.valueProp || '';
+        const readiness = parsed.readiness || parsed.score || 0;
+        
+        let welcomeMessage = `Welcome back! I've imported your strategy session.\n\n`;
+        
+        if (industry || audience || valueProp) {
+          welcomeMessage += `**What I captured:**\n`;
+          if (industry) welcomeMessage += `✓ Industry: ${industry}\n`;
+          if (audience) welcomeMessage += `✓ Audience: ${audience}\n`;
+          if (valueProp) welcomeMessage += `✓ Value Prop: ${valueProp.substring(0, 80)}${valueProp.length > 80 ? '...' : ''}\n`;
+          welcomeMessage += `\n`;
+        }
+        
+        if (readiness >= 70) {
+          welcomeMessage += `**You're at ${readiness}% readiness** — great foundation!\n\n`;
+          welcomeMessage += `You can generate your page now, or continue refining your strategy. What would you like to do?`;
+        } else {
+          welcomeMessage += `**You're at ${readiness}% readiness.**\n\n`;
+          welcomeMessage += `Let's fill in a few more details to make your page convert better. What else can you tell me about your business?`;
+        }
+        
+        // Set the contextual welcome message
+        setMessages([{ id: "1", role: "assistant", content: welcomeMessage }]);
+        initCompleteRef.current = true;
+        
+        // Clear sessionStorage after applying
+        sessionStorage.removeItem('demoIntelligence');
+        console.log('✅ [Wizard] Demo intelligence applied with contextual greeting');
       } catch (err) {
         console.error('Failed to parse demo intelligence:', err);
       }
