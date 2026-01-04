@@ -5,10 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Mail, Phone, Globe, User, Briefcase, Loader2 } from "lucide-react";
+import { Mail, Phone, Globe, User, Briefcase, Loader2, Image, Code } from "lucide-react";
 
 interface SignatureData {
   signature_name: string;
@@ -16,20 +18,25 @@ interface SignatureData {
   signature_email: string;
   signature_phone: string;
   signature_website: string;
+  signature_headshot_url: string;
   signature_enabled: boolean;
+  custom_signature_html: string;
 }
 
 export function EmailSignatureSettings() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("simple");
   const [signature, setSignature] = useState<SignatureData>({
     signature_name: "",
     signature_title: "",
     signature_email: "",
     signature_phone: "",
     signature_website: "",
+    signature_headshot_url: "",
     signature_enabled: true,
+    custom_signature_html: "",
   });
 
   useEffect(() => {
@@ -45,7 +52,7 @@ export function EmailSignatureSettings() {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("signature_name, signature_title, signature_email, signature_phone, signature_website, signature_enabled")
+        .select("signature_name, signature_title, signature_email, signature_phone, signature_website, signature_headshot_url, signature_enabled, custom_signature_html")
         .eq("id", user.id)
         .single();
 
@@ -61,10 +68,15 @@ export function EmailSignatureSettings() {
           signature_email: data.signature_email || user.email || "",
           signature_phone: data.signature_phone || "",
           signature_website: data.signature_website || "",
+          signature_headshot_url: data.signature_headshot_url || "",
           signature_enabled: data.signature_enabled ?? true,
+          custom_signature_html: data.custom_signature_html || "",
         });
+        // If custom HTML exists, default to that tab
+        if (data.custom_signature_html) {
+          setActiveTab("custom");
+        }
       } else {
-        // Profile doesn't exist, set defaults
         setSignature(prev => ({
           ...prev,
           signature_email: user.email || "",
@@ -103,6 +115,33 @@ export function EmailSignatureSettings() {
 
   const updateField = (field: keyof SignatureData, value: string | boolean) => {
     setSignature(prev => ({ ...prev, [field]: value }));
+  };
+
+  const renderSimplePreview = () => {
+    if (!signature.signature_enabled) {
+      return <span className="text-muted-foreground italic">Signature disabled</span>;
+    }
+
+    return (
+      <div className="flex items-start gap-4">
+        {signature.signature_headshot_url && (
+          <img 
+            src={signature.signature_headshot_url} 
+            alt="Headshot" 
+            className="w-16 h-16 rounded-full object-cover"
+          />
+        )}
+        <div className="whitespace-pre-line">
+          Best regards,
+          {"\n\n"}
+          <strong>{signature.signature_name || "[Your Name]"}</strong>
+          {signature.signature_title && `\n${signature.signature_title}`}
+          {signature.signature_email && `\n${signature.signature_email}`}
+          {signature.signature_phone && `\n${signature.signature_phone}`}
+          {signature.signature_website && `\n${signature.signature_website}`}
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -144,94 +183,131 @@ export function EmailSignatureSettings() {
 
         <Separator />
 
-        {/* Form Fields */}
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="signature-name" className="flex items-center gap-2">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="simple" className="gap-2">
               <User className="h-4 w-4" />
-              Name
-            </Label>
-            <Input
-              id="signature-name"
-              placeholder="Kyle Moyer"
-              value={signature.signature_name}
-              onChange={(e) => updateField("signature_name", e.target.value)}
-            />
-          </div>
+              Simple
+            </TabsTrigger>
+            <TabsTrigger value="custom" className="gap-2">
+              <Code className="h-4 w-4" />
+              Custom HTML
+            </TabsTrigger>
+          </TabsList>
 
-          <div className="grid gap-2">
-            <Label htmlFor="signature-title" className="flex items-center gap-2">
-              <Briefcase className="h-4 w-4" />
-              Title
-            </Label>
-            <Input
-              id="signature-title"
-              placeholder="Founder, PageConsult AI"
-              value={signature.signature_title}
-              onChange={(e) => updateField("signature_title", e.target.value)}
-            />
-          </div>
+          <TabsContent value="simple" className="space-y-4 mt-4">
+            {/* Form Fields */}
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="signature-name" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Name
+                </Label>
+                <Input
+                  id="signature-name"
+                  placeholder="Kyle Moyer"
+                  value={signature.signature_name}
+                  onChange={(e) => updateField("signature_name", e.target.value)}
+                />
+              </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="signature-email" className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              Email
-            </Label>
-            <Input
-              id="signature-email"
-              type="email"
-              placeholder="kyle@pageconsult.ai"
-              value={signature.signature_email}
-              onChange={(e) => updateField("signature_email", e.target.value)}
-            />
-          </div>
+              <div className="grid gap-2">
+                <Label htmlFor="signature-title" className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4" />
+                  Title
+                </Label>
+                <Input
+                  id="signature-title"
+                  placeholder="Founder, PageConsult AI"
+                  value={signature.signature_title}
+                  onChange={(e) => updateField("signature_title", e.target.value)}
+                />
+              </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="signature-phone" className="flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              Phone (optional)
-            </Label>
-            <Input
-              id="signature-phone"
-              type="tel"
-              placeholder="+1 (555) 123-4567"
-              value={signature.signature_phone}
-              onChange={(e) => updateField("signature_phone", e.target.value)}
-            />
-          </div>
+              <div className="grid gap-2">
+                <Label htmlFor="signature-email" className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email
+                </Label>
+                <Input
+                  id="signature-email"
+                  type="email"
+                  placeholder="kyle@pageconsult.ai"
+                  value={signature.signature_email}
+                  onChange={(e) => updateField("signature_email", e.target.value)}
+                />
+              </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="signature-website" className="flex items-center gap-2">
-              <Globe className="h-4 w-4" />
-              Website (optional)
-            </Label>
-            <Input
-              id="signature-website"
-              placeholder="pageconsult.ai"
-              value={signature.signature_website}
-              onChange={(e) => updateField("signature_website", e.target.value)}
-            />
-          </div>
-        </div>
+              <div className="grid gap-2">
+                <Label htmlFor="signature-phone" className="flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  Phone (optional)
+                </Label>
+                <Input
+                  id="signature-phone"
+                  type="tel"
+                  placeholder="+1 (555) 123-4567"
+                  value={signature.signature_phone}
+                  onChange={(e) => updateField("signature_phone", e.target.value)}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="signature-website" className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  Website (optional)
+                </Label>
+                <Input
+                  id="signature-website"
+                  placeholder="pageconsult.ai"
+                  value={signature.signature_website}
+                  onChange={(e) => updateField("signature_website", e.target.value)}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="signature-headshot" className="flex items-center gap-2">
+                  <Image className="h-4 w-4" />
+                  Headshot URL (optional)
+                </Label>
+                <Input
+                  id="signature-headshot"
+                  placeholder="https://example.com/headshot.jpg"
+                  value={signature.signature_headshot_url}
+                  onChange={(e) => updateField("signature_headshot_url", e.target.value)}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="custom" className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="custom-html">Custom HTML Signature</Label>
+              <p className="text-sm text-muted-foreground">
+                Paste HTML from signature generators like WiseStamp, HubSpot, or MySignature
+              </p>
+              <Textarea
+                id="custom-html"
+                placeholder="<table>..."
+                value={signature.custom_signature_html}
+                onChange={(e) => updateField("custom_signature_html", e.target.value)}
+                rows={10}
+                className="font-mono text-sm"
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
 
         <Separator />
 
         {/* Live Preview */}
         <div className="space-y-2">
           <Label>Preview</Label>
-          <div className="p-4 rounded-lg bg-muted/50 border font-mono text-sm whitespace-pre-line">
-            {signature.signature_enabled ? (
-              <>
-                Best regards,
-                {"\n\n"}
-                {signature.signature_name || "[Your Name]"}
-                {signature.signature_title && `\n${signature.signature_title}`}
-                {signature.signature_email && `\n${signature.signature_email}`}
-                {signature.signature_phone && `\n${signature.signature_phone}`}
-                {signature.signature_website && `\n${signature.signature_website}`}
-              </>
+          <div className="p-4 rounded-lg bg-muted/50 border text-sm overflow-auto">
+            {activeTab === "custom" && signature.custom_signature_html ? (
+              <div dangerouslySetInnerHTML={{ __html: signature.custom_signature_html }} />
             ) : (
-              <span className="text-muted-foreground italic">Signature disabled</span>
+              renderSimplePreview()
             )}
           </div>
         </div>
