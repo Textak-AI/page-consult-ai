@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, LogOut, User, Settings, ChevronDown, Zap } from "lucide-react";
+import { Plus, LogOut, User, Settings, ChevronDown, Zap, LayoutDashboard, Users } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -91,20 +91,26 @@ const Header = () => {
           {/* Navigation - centered column */}
           {user ? (
             // Logged-in navigation
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-4">
               <Link
-                to="/"
-                className="text-gray-300 hover:text-white transition-all duration-300 relative group font-medium"
+                to="/dashboard"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-slate-400 hover:text-white transition-all duration-300 rounded-md hover:bg-slate-800/50"
               >
-                Dashboard
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full" />
+                <LayoutDashboard className="w-4 h-4" />
+                <span className="text-sm">Dashboard</span>
+              </Link>
+              <Link
+                to="/prospects"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-slate-400 hover:text-white transition-all duration-300 rounded-md hover:bg-slate-800/50"
+              >
+                <Users className="w-4 h-4" />
+                <span className="text-sm">Prospects</span>
               </Link>
               <Link
                 to="/brand-setup"
-                className="text-gray-300 hover:text-white transition-all duration-300 relative group"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-slate-400 hover:text-white transition-all duration-300 rounded-md hover:bg-slate-800/50"
               >
-                Brand Setup
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-cyan-400 transition-all duration-300 group-hover:w-full" />
+                <span className="text-sm">Brand Setup</span>
               </Link>
             </nav>
           ) : (
