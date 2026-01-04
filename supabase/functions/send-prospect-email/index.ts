@@ -182,7 +182,7 @@ serve(async (req) => {
         subhead: prospect.personalized_subhead || "",
         ctaText: prospect.personalized_cta_text || "View Your Page",
         pageLink: pageLink,
-        emailSubject: prospect.email_subject || "A personalized page just for you",
+        subject: prospect.email_subject || "A personalized page just for you",
         emailBody: emailBody,
         contextSummary: prospect.context_summary || "",
       },
