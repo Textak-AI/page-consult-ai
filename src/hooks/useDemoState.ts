@@ -7,6 +7,44 @@ const STORAGE_KEY = 'pageconsult_demo_state';
 const CONTENT_KEY = 'pageconsult_personalized_content';
 const SESSION_KEY = 'pageconsult_demo_session';
 const COMPLETED_SESSION_KEY = 'pageconsult_demo_completed_session';
+const FRESH_LOAD_KEY = 'pageconsult_fresh_load_cleared';
+
+// Clear ALL demo state on fresh page load (before any state initialization)
+// This ensures logged-out users always see the default state
+function clearDemoStateOnFreshLoad(): void {
+  if (typeof window === 'undefined') return;
+  
+  // Check if we've already cleared on this page load
+  if (sessionStorage.getItem(FRESH_LOAD_KEY)) return;
+  
+  // Mark that we've cleared for this page load
+  sessionStorage.setItem(FRESH_LOAD_KEY, 'true');
+  
+  // Clear ALL demo-related localStorage
+  const keysToRemove = [
+    'pageconsult_demo_state',
+    'pageconsult_demo_content',
+    'pageconsult_personalized_content',
+    'pageconsult_demo_completed_session',
+    'pageconsult_demo_session_id',
+    'pageconsult_demo_conversation',
+    'pageconsult_demo_extracted',
+    'pageconsult_demo_market',
+    'pageconsult_demo_industry',
+    'pageconsult_demo_timestamp',
+  ];
+  
+  keysToRemove.forEach(key => {
+    try {
+      localStorage.removeItem(key);
+    } catch {}
+  });
+  
+  console.log('🧹 Demo state cleared on fresh page load');
+}
+
+// Execute immediately when module loads (before React hydrates)
+clearDemoStateOnFreshLoad();
 
 // Get or create session ID for this browser session
 function getSessionId(): string {
