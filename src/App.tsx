@@ -42,6 +42,7 @@ import Privacy from "./pages/Privacy";
 import Dev from "./pages/Dev";
 import PublicPage from "./pages/PublicPage";
 import ProspectPage from "./pages/ProspectPage";
+import ProspectsDashboard from "./pages/ProspectsDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -131,6 +132,8 @@ const App = () => {
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/dev" element={<Dev />} />
+              <Route path="/prospects" element={<ProspectsDashboard />} />
               <Route path="/dev" element={<Dev />} />
               
               {/* Public page routes - accessible without authentication */}
