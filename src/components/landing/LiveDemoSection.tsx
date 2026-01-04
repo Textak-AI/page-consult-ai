@@ -33,7 +33,7 @@ const TypingIndicator = () => (
 
 export default function LiveDemoSection() {
   const navigate = useNavigate();
-  const { state, processUserMessage, submitEmail, dismissEmailGate, reopenEmailGate } = useIntelligence();
+  const { state, processUserMessage, submitEmail, dismissEmailGate, reopenEmailGate, confirmIndustrySelection } = useIntelligence();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -380,7 +380,9 @@ export default function LiveDemoSection() {
                 <div className="flex-1 overflow-y-auto">
                   <IntelligenceProfileDemo 
                     score={score}
+                    industryDetection={state.industryDetection}
                     onContinue={handleGenerateClick}
+                    onIndustryCorrection={confirmIndustrySelection}
                     isThinking={state.isProcessing}
                     className="h-auto border-0 rounded-none"
                   />
