@@ -132,6 +132,27 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY not configured");
     }
 
+    // Fetch user's signature settings
+    console.log("[generate-prospect-pivot] Fetching user signature settings...");
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("signature_name, signature_title, signature_email, signature_phone, signature_website, signature_enabled")
+      .eq("id", user.id)
+      .single();
+
+    const signatureEnabled = profile?.signature_enabled ?? true;
+    let signatureBlock = "";
+    
+    if (signatureEnabled && profile?.signature_name) {
+      signatureBlock = "\n\nBest regards,\n\n" + profile.signature_name;
+      if (profile.signature_title) signatureBlock += "\n" + profile.signature_title;
+      if (profile.signature_email) signatureBlock += "\n" + profile.signature_email;
+      if (profile.signature_phone) signatureBlock += "\n" + profile.signature_phone;
+      if (profile.signature_website) signatureBlock += "\n" + profile.signature_website;
+    }
+
+    console.log("[generate-prospect-pivot] Signature enabled:", signatureEnabled, "Has signature:", !!signatureBlock);
+
     const prompt = `You are an expert conversion copywriter. Personalize this landing page for a specific prospect.
 
 CURRENT PAGE:
@@ -155,11 +176,13 @@ Generate personalized messaging that:
 3. Maintains the core value proposition
 4. Feels personal but professional
 
-IMPORTANT EMAIL BODY RULES:
+CRITICAL EMAIL BODY RULES:
 - Include the page link naturally in the email (use {{page_link}} placeholder)
-- End with just "Best," or "Best regards," with NO name after it
-- Do NOT include "[Your Name]" or any name placeholder - the sender name is added by the email template
+- Do NOT include any sign-off like "Best," or "Best regards," or any closing
+- Do NOT include "[Your Name]" or any name placeholder
+- The email body should end with the last sentence of your message content
 - Keep the email brief (3-5 sentences max)
+- The signature will be appended separately by the system
 
 You must respond with ONLY valid JSON, no other text:
 {
@@ -168,7 +191,7 @@ You must respond with ONLY valid JSON, no other text:
   "cta_text": "personalized CTA (max 5 words)",
   "context_summary": "one sentence summary for email",
   "email_subject": "email subject line",
-  "email_body": "brief email with {{page_link}} placeholder, ending with just 'Best,' - NO name"
+  "email_body": "brief email with {{page_link}} placeholder - NO sign-off, NO name, NO 'Best regards'"
 }`;
 
     console.log("[generate-prospect-pivot] Calling Lovable AI...");
@@ -238,6 +261,10 @@ You must respond with ONLY valid JSON, no other text:
 
     console.log("[generate-prospect-pivot] Creating prospect with slug:", slug);
 
+    // Build the complete email body with signature
+    const baseEmailBody = generated.email_body?.replace("{{page_link}}", publicUrl) || "";
+    const completeEmailBody = baseEmailBody + signatureBlock;
+
     // Create prospect record
     const { data: prospect, error: insertError } = await supabase
       .from("prospects")
@@ -258,7 +285,7 @@ You must respond with ONLY valid JSON, no other text:
         personalized_cta_text: generated.cta_text,
         slug,
         email_subject: generated.email_subject,
-        email_body: generated.email_body?.replace("{{page_link}}", publicUrl),
+        email_body: completeEmailBody,
         status: "new",
       })
       .select()
@@ -279,7 +306,7 @@ You must respond with ONLY valid JSON, no other text:
         personalized_subhead: generated.subhead,
         personalized_cta_text: generated.cta_text,
         email_subject: generated.email_subject,
-        email_body: generated.email_body?.replace("{{page_link}}", publicUrl),
+        email_body: completeEmailBody,
         page_url: publicUrl,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
