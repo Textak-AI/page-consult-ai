@@ -6,7 +6,7 @@ const TimelineComparison = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-24 bg-slate-950 relative overflow-hidden">
+    <section id="timeline" className="section-spacing bg-slate-950 relative overflow-hidden scroll-mt-16">
       {/* Ambient background effects */}
       <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
       <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px]" />
