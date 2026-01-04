@@ -192,16 +192,26 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
         },
       });
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error);
+      console.log('[QuickPivotModal] Edge function response:', { data, error });
+
+      if (error) {
+        // Try to extract error from response body
+        const errorMsg = error.message || 'Edge function error';
+        throw new Error(errorMsg);
+      }
+      
+      if (!data?.success) {
+        throw new Error(data?.error || 'Unknown error from send-prospect-email');
+      }
 
       setEmailSent(true);
       toast({ title: 'Email sent!', description: `Email sent to ${formData.email}` });
     } catch (err: any) {
-      console.error('Email send error:', err);
+      console.error('[QuickPivotModal] Email send error:', err);
+      const errorMessage = err?.message || err?.error || 'Please try again';
       toast({
         title: 'Failed to send email',
-        description: err.message || 'Please try again',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
