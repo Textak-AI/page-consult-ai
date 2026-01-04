@@ -12,7 +12,50 @@ import FAQ from "@/components/FAQ";
 import Pricing from "@/components/Pricing";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
-import { IntelligenceProvider } from "@/contexts/IntelligenceContext";
+import { IntelligenceProvider, useIntelligence } from "@/contexts/IntelligenceContext";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Inner component that can access IntelligenceContext
+const IndexContent = () => {
+  const { state } = useIntelligence();
+  
+  // Show WhyThisMatters only after user has interacted with demo
+  const showWhyThisMatters = state.extracted.industry || state.readiness >= 30;
+
+  return (
+    <div className="min-h-screen">
+      <Header />
+      <main>
+        <Hero />
+        <LiveDemoSection />
+        <AIQuestionsShowcase />
+        
+        {/* Conditionally show WhyThisMatters with fade-in animation */}
+        <AnimatePresence>
+          {showWhyThisMatters && (
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            >
+              <WhyThisMattersSection />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        <HowItWorks />
+        <TimelineComparison />
+        <Features />
+        <SocialProof />
+        <FAQ />
+        <Pricing />
+        <FinalCTA />
+      </main>
+      <Footer />
+    </div>
+  );
+};
 
 const Index = () => {
   // Scroll to top on mount
@@ -22,23 +65,7 @@ const Index = () => {
 
   return (
     <IntelligenceProvider>
-      <div className="min-h-screen">
-        <Header />
-        <main>
-          <Hero />
-          <LiveDemoSection />
-          <AIQuestionsShowcase />
-          <WhyThisMattersSection />
-          <HowItWorks />
-          <TimelineComparison />
-          <Features />
-          <SocialProof />
-          <FAQ />
-          <Pricing />
-          <FinalCTA />
-        </main>
-        <Footer />
-      </div>
+      <IndexContent />
     </IntelligenceProvider>
   );
 };
