@@ -344,6 +344,10 @@ export const industryVariants: Record<IndustryVariant, IndustryDesignTokens> = {
 
 /**
  * Detect the industry variant from consultation data
+ * 
+ * IMPORTANT: Order matters! More specific patterns should be checked first.
+ * Consulting/professional services should be checked BEFORE SaaS to avoid
+ * misclassifying "HR consulting" as "tech" due to partial matches.
  */
 export function detectIndustryVariant(
   industry?: string,
@@ -352,79 +356,110 @@ export function detectIndustryVariant(
 ): IndustryVariant {
   const industryLower = (industry || '').toLowerCase();
   const serviceTypeLower = (serviceType || '').toLowerCase();
+  const combined = `${industryLower} ${serviceTypeLower}`;
   
-  // Consulting detection
+  // Consulting detection (MUST come before SaaS - more specific)
+  // Includes: HR consulting, management consulting, professional services, etc.
   if (
-    industryLower.includes('consulting') ||
-    industryLower.includes('professional services') ||
-    industryLower.includes('advisor') ||
-    industryLower.includes('coach') ||
-    industryLower.includes('strategy') ||
-    serviceTypeLower.includes('consulting') ||
-    serviceTypeLower.includes('advisory')
+    combined.includes('consulting') ||
+    combined.includes('professional services') ||
+    combined.includes('advisor') ||
+    combined.includes('advisory') ||
+    combined.includes('coach') ||
+    combined.includes('coaching') ||
+    combined.includes('strategy') ||
+    combined.includes('consultant') ||
+    // HR-specific terms
+    combined.includes('human resources') ||
+    combined.includes('hr ') ||
+    combined.includes(' hr') ||
+    combined.includes('talent') ||
+    combined.includes('recruitment') ||
+    combined.includes('staffing') ||
+    combined.includes('workforce') ||
+    // Management consulting terms
+    combined.includes('management') ||
+    combined.includes('operations') ||
+    combined.includes('training') ||
+    combined.includes('development') ||
+    // B2B services
+    combined.includes('agency') ||
+    combined.includes('services')
   ) {
     return 'consulting';
   }
   
-  // SaaS detection
+  // Legal detection (before general professional services)
   if (
-    industryLower.includes('saas') ||
-    industryLower.includes('software') ||
-    industryLower.includes('tech') ||
-    industryLower.includes('app') ||
-    industryLower.includes('platform') ||
-    industryLower.includes('startup') ||
-    industryLower.includes('cloud') ||
-    industryLower.includes('digital')
-  ) {
-    return 'saas';
-  }
-  
-  // Healthcare detection
-  if (
-    industryLower.includes('health') ||
-    industryLower.includes('medical') ||
-    industryLower.includes('dental') ||
-    industryLower.includes('wellness')
-  ) {
-    return 'healthcare';
-  }
-  
-  // Finance detection
-  if (
-    industryLower.includes('finance') ||
-    industryLower.includes('banking') ||
-    industryLower.includes('investment') ||
-    industryLower.includes('accounting')
-  ) {
-    return 'finance';
-  }
-  
-  // Manufacturing detection
-  if (
-    industryLower.includes('manufacturing') ||
-    industryLower.includes('industrial') ||
-    industryLower.includes('factory')
-  ) {
-    return 'manufacturing';
-  }
-  
-  // Legal detection
-  if (
-    industryLower.includes('legal') ||
-    industryLower.includes('law') ||
-    industryLower.includes('attorney')
+    combined.includes('legal') ||
+    combined.includes('law firm') ||
+    combined.includes('law ') ||
+    combined.includes('attorney') ||
+    combined.includes('lawyer')
   ) {
     return 'legal';
   }
   
+  // Finance detection
+  if (
+    combined.includes('finance') ||
+    combined.includes('financial') ||
+    combined.includes('banking') ||
+    combined.includes('investment') ||
+    combined.includes('accounting') ||
+    combined.includes('cpa') ||
+    combined.includes('wealth') ||
+    combined.includes('insurance')
+  ) {
+    return 'finance';
+  }
+  
+  // Healthcare detection
+  if (
+    combined.includes('health') ||
+    combined.includes('medical') ||
+    combined.includes('dental') ||
+    combined.includes('wellness') ||
+    combined.includes('clinic') ||
+    combined.includes('therapy') ||
+    combined.includes('healthcare')
+  ) {
+    return 'healthcare';
+  }
+  
+  // Manufacturing detection
+  if (
+    combined.includes('manufacturing') ||
+    combined.includes('industrial') ||
+    combined.includes('factory') ||
+    combined.includes('production')
+  ) {
+    return 'manufacturing';
+  }
+  
   // Ecommerce detection
   if (
-    industryLower.includes('ecommerce') ||
-    industryLower.includes('retail') ||
-    industryLower.includes('shop')
+    combined.includes('ecommerce') ||
+    combined.includes('e-commerce') ||
+    combined.includes('retail') ||
+    combined.includes('shop') ||
+    combined.includes('store')
   ) {
     return 'ecommerce';
+  }
+  
+  // SaaS detection (LAST among business types - most generic tech terms)
+  if (
+    combined.includes('saas') ||
+    combined.includes('software') ||
+    combined.includes('tech') ||
+    combined.includes('app') ||
+    combined.includes('platform') ||
+    combined.includes('startup') ||
+    combined.includes('cloud') ||
+    combined.includes('digital product')
+  ) {
+    return 'saas';
   }
   
   return 'default';

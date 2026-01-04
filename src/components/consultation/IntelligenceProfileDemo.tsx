@@ -276,7 +276,8 @@ export function IntelligenceProfileDemo({
         
         {/* Footer - Fixed at bottom */}
         <div className="flex-shrink-0 p-4 border-t border-slate-800/50">
-          {showCTA && onContinue ? (
+          {/* Gate generation behind score >= 70 (armed level) */}
+          {score.totalScore >= 70 && onContinue ? (
             <div className="space-y-2">
               <motion.button
                 initial={{ opacity: 0, y: 10 }}
@@ -288,15 +289,10 @@ export function IntelligenceProfileDemo({
                   "w-full py-2.5 rounded-lg text-xs font-medium transition-all",
                   score.level === 'proven'
                     ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400"
-                    : score.level === 'armed'
-                      ? "bg-purple-500/10 border border-purple-500/30 text-purple-400"
-                      : "bg-green-500/10 border border-green-500/30 text-green-400"
+                    : "bg-purple-500/10 border border-purple-500/30 text-purple-400"
                 )}
               >
-                {score.level === 'proven' && '⭐ Generate Premium Page'}
-                {score.level === 'armed' && 'Generate Page →'}
-                {score.level === 'positioned' && 'Start Free Trial →'}
-                {score.level === 'identified' && 'Continue →'}
+                {score.level === 'proven' ? '⭐ Generate Premium Page' : 'Generate Page →'}
               </motion.button>
               
               {onKeepChatting && (
@@ -307,6 +303,25 @@ export function IntelligenceProfileDemo({
                   Keep Chatting
                 </button>
               )}
+            </div>
+          ) : showCTA ? (
+            <div className="space-y-2">
+              {/* Show progress toward generation */}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500">Generation unlocks at 70</span>
+                <span className="text-cyan-400 font-mono">{score.totalScore}/70</span>
+              </div>
+              <div className="h-1.5 bg-slate-700/50 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-purple-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, (score.totalScore / 70) * 100)}%` }}
+                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                />
+              </div>
+              <p className="text-xs text-slate-500 text-center">
+                Share more to unlock page generation
+              </p>
             </div>
           ) : (
             <p className="text-xs text-slate-600 text-center">
@@ -336,20 +351,22 @@ export function IntelligenceProfileDemo({
               <span className="text-xs text-slate-500">• {score.totalScore}/100</span>
             </div>
           </div>
-          {showCTA && onContinue && (
+          {score.totalScore >= 70 && onContinue ? (
             <button
               onClick={onContinue}
               className={cn(
                 "px-4 py-2 rounded-lg text-xs font-medium transition-all",
                 score.level === 'proven'
                   ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400"
-                  : score.level === 'armed'
-                    ? "bg-purple-500/10 border border-purple-500/30 text-purple-400"
-                    : "bg-green-500/10 border border-green-500/30 text-green-400"
+                  : "bg-purple-500/10 border border-purple-500/30 text-purple-400"
               )}
             >
-              Continue →
+              Generate Page →
             </button>
+          ) : showCTA && (
+            <span className="text-xs text-slate-500">
+              {score.totalScore}/70 to unlock
+            </span>
           )}
         </div>
         
