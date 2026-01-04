@@ -258,7 +258,7 @@ export default function Wizard() {
       // Calculate readiness from actual tile fills, not from stored data
       const calculatedReadiness = Math.round(prefilledTiles.reduce((sum, t) => sum + t.fill, 0) / prefilledTiles.length);
       setOverallReadiness(calculatedReadiness);
-      console.log('📊 [Wizard] Calculated readiness from tiles:', calculatedReadiness);
+      
       setShowPrefillBanner(true);
       
       // Conversation history for AI context
@@ -656,7 +656,7 @@ export default function Wizard() {
         return newTiles;
       });
       
-      console.log('📊 [Wizard] Local intelligence extracted:', Object.keys(updates));
+      
     }
   }, []);
 

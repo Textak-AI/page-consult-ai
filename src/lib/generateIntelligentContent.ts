@@ -114,20 +114,9 @@ export async function generateIntelligentContent(
     throw new Error('User prompt validation failed. Check buildUserPrompt function.');
   }
   
-  console.log('✅ PASSED: Both prompts are valid and ready');
-
-  console.log('📤 Calling anthropic-proxy edge function...');
-  console.log('📊 Request payload:', {
-    hasSystemPrompt: !!systemPrompt,
-    hasUserPrompt: !!userPrompt,
-    systemLength: systemPrompt.length,
-    userLength: userPrompt.length
-  });
-  console.time('⏱️ Claude API call');
 
   try {
     // Call edge function - it securely proxies to Claude API
-    console.log('📤 Invoking anthropic-proxy edge function...');
     const { data, error } = await supabase.functions.invoke('anthropic-proxy', {
       body: {
         systemPrompt,

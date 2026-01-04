@@ -496,11 +496,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     }));
 
     try {
-      // Step 1: Extract intelligence - now extracts ALL 7 fields with summaries
-      console.log('=== CALLING EXTRACTION ===');
-      console.log('📝 Message:', message);
-      console.log('📊 Existing intelligence:', state.extracted);
-      
+      // Step 1: Extract intelligence
       const { data: extractedData, error: extractError } = await supabase.functions.invoke('demo-extract-intelligence', {
         body: {
           message,
@@ -509,9 +505,9 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         },
       });
 
-      console.log('=== EXTRACTION RESPONSE ===');
-      console.log('Error:', extractError);
-      console.log('🎯 Raw extractedData:', extractedData);
+      if (extractError) {
+        console.error('Extraction error:', extractError);
+      }
 
       let newExtracted = state.extracted;
       let extractionFields: Array<{ label: string; value: string; color: 'purple' | 'cyan' | 'emerald' | 'amber' }> = [];
@@ -547,9 +543,6 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           proofSummary: extractedData.proofSummary || state.extracted.proofSummary,
           socialProofSummary: extractedData.socialProofSummary || state.extracted.socialProofSummary,
         };
-
-        console.log('=== MERGED INTELLIGENCE ===');
-        console.log('✅ newExtracted:', newExtracted);
 
         // Build extraction fields for this message (what was newly extracted)
         const colorCycle: Array<'purple' | 'cyan' | 'emerald' | 'amber'> = ['purple', 'cyan', 'emerald', 'amber'];

@@ -286,8 +286,6 @@ function GenerateContent() {
   })();
   const fromStrategicConsultation = effectiveNavState?.fromStrategicConsultation === true;
   
-  // Log dev mode status
-  console.log('🔧 [Generate] devMode:', isDevMode, '(URL param:', new URLSearchParams(window.location.search).get('dev'), ', navState:', effectiveNavState?.devMode, ')');
   const strategicData = effectiveNavState?.strategicData || null;
   
   const [intelligence, setIntelligence] = useState<PersonaIntelligence | null>(

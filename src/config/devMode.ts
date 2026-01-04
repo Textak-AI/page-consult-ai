@@ -42,12 +42,3 @@ export const isDevUser = (email: string | null | undefined): boolean => {
 
 // Virtual credits for dev mode (effectively unlimited)
 export const DEV_MODE_CREDITS = 9999;
-
-// Log dev mode status for debugging
-export const logDevMode = (userEmail?: string | null) => {
-  const devMode = isDevMode(userEmail);
-  if (devMode) {
-    console.log('[DEV MODE] 🛠️ Development mode active - credit/subscription checks bypassed');
-  }
-  return devMode;
-};

@@ -94,7 +94,7 @@ export function SocialProofSection({ content, onUpdate, isEditing }: SocialProof
   const isSaas = content.industryVariant === 'saas';
   const header = getSocialProofHeader(content.industry, isConsulting);
   
-  console.log('🎨 [SocialProofSection] industryVariant:', content.industryVariant, 'isConsulting:', isConsulting, 'isSaas:', isSaas, 'isEditing:', isEditing);
+  
   
   const testimonial = content.testimonial || {
     quote: header.placeholderQuote,

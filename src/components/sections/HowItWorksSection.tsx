@@ -24,7 +24,7 @@ export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSe
   const isSaas = content.industryVariant === 'saas';
   const typography = getTypography(content.industryVariant);
   
-  console.log('🎨 [HowItWorksSection] industryVariant:', content.industryVariant, 'isConsulting:', isConsulting, 'isSaas:', isSaas, 'isEditing:', isEditing);
+  
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     if (!onUpdate) return;

@@ -555,7 +555,6 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   // Sync extractedBrand to consultation data when available (from EnhancedBrandSetup flow)
   useEffect(() => {
     if (extractedBrand && (extractedBrand.themeColor || extractedBrand.logoUrl || extractedBrand.companyName)) {
-      console.log('🎨 Pre-filling consultation data from extractedBrand:', extractedBrand);
       
       setData(prev => ({
         ...prev,
@@ -591,10 +590,6 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   // Sync brandBrief to brandSettings when brand is already loaded (skipping branding step)
   useEffect(() => {
     if (hasBrandColors && brandBrief && !data.brandSettings) {
-      console.log('🎨 Syncing brandBrief to brandSettings:', {
-        logoUrl: brandBrief.logo_url,
-        primaryColor: brandBrief.colors?.primary?.hex,
-      });
       setData(prev => ({
         ...prev,
         brandSettings: {
@@ -1050,15 +1045,8 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       const strategyBriefText = briefResult.data.strategyBrief;
       const structuredBrief = briefResult.data.structuredBrief;
       
-      console.log('📋 Strategy brief generated');
-      console.log('📊 structuredBrief present:', !!structuredBrief);
-      if (structuredBrief) {
-        console.log('📊 structuredBrief keys:', Object.keys(structuredBrief));
-      }
-      
       // Clear the draft since consultation is complete
       localStorage.removeItem('pageconsult_consultation_draft');
-      console.log('🗑️ Cleared consultation draft');
       
       // Pass BOTH the text brief AND the structured JSON brief
       onComplete(data as ConsultationData, strategyBriefText, aiSeoData, structuredBrief);
@@ -1763,13 +1751,6 @@ ${d.ctaText}
     // Use explicit primaryColor/secondaryColor if available, fallback to brandColors array
     const primaryColor = data.websiteIntelligence?.primaryColor || data.websiteIntelligence?.brandColors?.[0];
     const secondaryColor = data.websiteIntelligence?.secondaryColor || data.websiteIntelligence?.brandColors?.[1];
-    
-    console.log('🎨 Building brandingIntelligence for BrandCustomization:', {
-      primaryColor,
-      secondaryColor,
-      brandColors: data.websiteIntelligence?.brandColors,
-      websiteIntelligence: data.websiteIntelligence
-    });
     
     const brandingIntelligence: WebsiteIntelligence = {
       url: data.websiteUrl || '',

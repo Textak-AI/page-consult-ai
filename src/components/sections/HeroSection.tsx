@@ -88,7 +88,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   // Logo size with default
   const logoSize = content.logoSize || 'medium';
   
-  console.log('🎨 [HeroSection] industryVariant:', industryVariant, 'hasBackgroundImage:', hasBackgroundImage, 'useLightText:', useLightText);
+  
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({

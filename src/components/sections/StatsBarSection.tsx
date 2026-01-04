@@ -25,8 +25,6 @@ export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditi
   const isConsulting = industryVariant === 'consulting';
   const isSaas = industryVariant === 'saas';
   
-  console.log('🎨 [StatsBarSection] Props received - industryVariant:', industryVariant, 'isConsulting:', isConsulting, 'isSaas:', isSaas, 'isEditing:', isEditing);
-  console.log('🎨 [StatsBarSection] statistics count:', statistics?.length);
 
   const handleStatBlur = (index: number, field: 'value' | 'label', e: React.FocusEvent<HTMLElement>) => {
     if (!onUpdate) return;
