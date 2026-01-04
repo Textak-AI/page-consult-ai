@@ -338,13 +338,17 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
 
                 <div>
                   <Label className="text-sm font-medium">Custom URL (optional)</Label>
-                  <div className="flex items-center border rounded-lg overflow-hidden">
+                  <div 
+                    className="flex items-center border rounded-lg overflow-hidden"
+                    onMouseDown={e => e.stopPropagation()}
+                  >
                     <span className="px-3 py-2 bg-muted text-muted-foreground text-sm">/p/</span>
                     <Input
                       value={formData.custom_slug}
                       onChange={e => setFormData(p => ({ ...p, custom_slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') }))}
                       placeholder="acme-proposal"
                       className="border-0 focus-visible:ring-0"
+                      onMouseDown={e => e.stopPropagation()}
                     />
                   </div>
                 </div>
