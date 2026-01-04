@@ -1,25 +1,77 @@
-import { Button } from "@/components/ui/button";
-import { Play, ArrowRight, TrendingUp, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { HeroFlowAnimation } from "@/components/landing/HeroFlowAnimation";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import IntelligenceContext from "@/contexts/IntelligenceContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { TrendingUp, Clock } from "lucide-react";
+import { DefaultHero } from "@/components/landing/DefaultHero";
+import { PersonalizedHero, type PersonalizedContent } from "@/components/landing/PersonalizedHero";
+import { GeneratingHero } from "@/components/landing/GeneratingHero";
+import { useDemoState, type DemoState } from "@/hooks/useDemoState";
 import { formatForHeadline } from "@/utils/formatForDisplay";
 
 const Hero = () => {
   const navigate = useNavigate();
   const [isNavigating, setIsNavigating] = useState(false);
   
+  // Demo state management
+  const { demoState, personalizedContent, completeDemo, resetDemo } = useDemoState();
+  
   // Try to get intelligence context (may be null if not in provider)
   const intelligenceContext = useContext(IntelligenceContext);
-  const extractedIndustry = intelligenceContext?.state?.extracted?.industry;
+  const extracted = intelligenceContext?.state?.extracted;
+  const readiness = intelligenceContext?.state?.readiness || 0;
 
-  // Dynamic headline based on detected industry
-  const headline = extractedIndustry
-    ? `Landing Pages for ${extractedIndustry}`
-    : "Landing Pages That Start With Strategy";
+  // Watch for demo completion based on intelligence extraction
+  useEffect(() => {
+    if (!extracted) return;
+    
+    const hasSubstantialContent = 
+      extracted.industry && 
+      (extracted.audience || extracted.valueProp) &&
+      readiness >= 40;
+    
+    if (hasSubstantialContent && demoState === 'idle') {
+      // Generate personalized content from extracted intelligence
+      const content: PersonalizedContent = {
+        company_name: extracted.industryFull || extracted.industry || '',
+        industry: formatForHeadline(extracted.industry || ''),
+        headline: generateHeadline(extracted),
+        subhead: generateSubhead(extracted),
+        cta_text: 'Build My Full Landing Page',
+      };
+      
+      completeDemo(content);
+    }
+  }, [extracted, readiness, demoState, completeDemo]);
+
+  // Generate personalized headline from extracted data
+  function generateHeadline(data: typeof extracted): string {
+    if (data?.valueProp) {
+      return data.valueProp.length > 60 
+        ? data.valueProp.slice(0, 57) + '...'
+        : data.valueProp;
+    }
+    if (data?.industry) {
+      return `Landing Pages for ${formatForHeadline(data.industry)}`;
+    }
+    return 'Your Custom Landing Page';
+  }
+
+  // Generate personalized subhead from extracted data
+  function generateSubhead(data: typeof extracted): string {
+    if (data?.audience && data?.valueProp) {
+      return `Help ${data.audience} achieve ${data.valueProp.toLowerCase().includes('help') ? 'their goals' : data.valueProp.toLowerCase()}`;
+    }
+    if (data?.audience) {
+      return `Built specifically to convert ${data.audience} into customers`;
+    }
+    if (data?.painPoints?.length) {
+      return `Solving ${data.painPoints[0]} with strategic, conversion-focused design`;
+    }
+    return 'AI-powered landing pages built around your unique strategy';
+  }
 
   // Handle CTA click - check for brand first
   const handleStartConsultation = async () => {
@@ -55,6 +107,11 @@ const Hero = () => {
     }
   };
 
+  const handleReset = () => {
+    resetDemo();
+    intelligenceContext?.resetIntelligence?.();
+  };
+
   return (
     <section className="relative min-h-[90vh] flex items-center py-20 overflow-x-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]">
       {/* Background layer - BEHIND everything */}
@@ -77,97 +134,54 @@ const Hero = () => {
         {/* Main hero grid - centered with max-width */}
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center max-w-6xl mx-auto">
           
-          {/* Left content */}
-          <div style={{
-            animation: 'slide-up 800ms ease-out 200ms forwards',
-            animationFillMode: 'forwards',
-            opacity: 0
-          }}>
-            {/* Headline with animation on change */}
+          {/* Left content - Animated transitions between states */}
+          <div>
             <AnimatePresence mode="wait">
-              <motion.h1 
-                key={headline}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight antialiased mb-6 leading-[0.95]" 
-                style={{
-                  textRendering: 'optimizeLegibility'
-                }}
-              >
-                {extractedIndustry ? (
-                  <>
-                    <span className="block">Landing Pages for</span>
-                    <span className="block mt-2">
-                      <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient-x" style={{
-                        backgroundSize: '200% auto',
-                        textShadow: '0 0 40px rgba(6, 182, 212, 0.3)'
-                      }}>
-                        {formatForHeadline(extractedIndustry)}
-                      </span>
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="block">Landing Pages</span>
-                    <span className="block mt-2">
-                      That Start With{' '}
-                      <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient-x" style={{
-                        backgroundSize: '200% auto',
-                        textShadow: '0 0 40px rgba(6, 182, 212, 0.3)'
-                      }}>
-                        Strategy
-                      </span>
-                    </span>
-                  </>
-                )}
-              </motion.h1>
+              {demoState === 'generating' ? (
+                <motion.div
+                  key="generating"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <GeneratingHero industry={extracted?.industry} />
+                </motion.div>
+              ) : demoState === 'completed' && personalizedContent ? (
+                <motion.div
+                  key="personalized"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                >
+                  <PersonalizedHero
+                    content={personalizedContent}
+                    onReset={handleReset}
+                    onStartConsultation={handleStartConsultation}
+                    isNavigating={isNavigating}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="default"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  style={{
+                    animation: 'slide-up 800ms ease-out 200ms forwards',
+                    animationFillMode: 'forwards',
+                    opacity: 0
+                  }}
+                >
+                  <DefaultHero
+                    onStartConsultation={handleStartConsultation}
+                    isNavigating={isNavigating}
+                  />
+                </motion.div>
+              )}
             </AnimatePresence>
-            
-            {/* Subheadline */}
-            <p className="text-lg md:text-xl text-gray-300 leading-relaxed mb-8" style={{
-              textRendering: 'optimizeLegibility',
-              animation: 'fade-in 800ms ease-out 400ms forwards',
-              animationFillMode: 'forwards',
-              opacity: 0
-            }}>
-              AI consultant asks intelligent questions, then builds professional
-              pages proven to convert. No templates. No guesswork.
-            </p>
-            
-            {/* CTA buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6" style={{
-              animation: 'fade-in 800ms ease-out 600ms forwards',
-              animationFillMode: 'forwards',
-              opacity: 0
-            }}>
-              <Button 
-                onClick={handleStartConsultation}
-                disabled={isNavigating}
-                size="lg" 
-                className="group/btn text-lg px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white border-0 animate-pulse-glow hover:scale-105 rounded-xl font-semibold transition-all duration-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900" 
-                aria-label="Start free AI consultation demo"
-              >
-                <span className="relative z-10">Start Strategic Consultation</span>
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover/btn:translate-x-1" />
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-4 bg-transparent border-2 border-white/30 text-white hover:border-cyan-400 hover:text-cyan-400 hover:bg-cyan-400/5 hover:shadow-lg hover:shadow-cyan-400/30 rounded-xl font-semibold transition-all duration-300 cursor-pointer focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 group" aria-label="Watch product demo video">
-                <a href="#demo" className="flex items-center">
-                  <Play className="w-4 h-4 mr-2 text-cyan-400 group-hover:translate-x-0.5 transition-transform duration-300" />
-                  Watch How It Works
-                </a>
-              </Button>
-            </div>
-            
-            {/* Credit card disclaimer */}
-            <p className="text-gray-500 text-sm text-center sm:text-left" style={{
-              animation: 'fade-in 800ms ease-out 700ms forwards',
-              animationFillMode: 'forwards',
-              opacity: 0
-            }}>
-              No credit card required • See results in 2 minutes
-            </p>
           </div>
 
           {/* Right - Animated Flow Demo - aligned to right edge */}
