@@ -11,15 +11,40 @@ function isValidDemoState(value: unknown): value is DemoState {
   return value === 'idle' || value === 'generating' || value === 'completed';
 }
 
-// Validate that content has all required fields
+// Validate that content has all required fields AND is not corrupted/truncated
 function isValidPersonalizedContent(content: unknown): content is PersonalizedContent {
   if (!content || typeof content !== 'object') return false;
   const c = content as Record<string, unknown>;
-  return (
-    typeof c.headline === 'string' && c.headline.length > 0 &&
-    typeof c.subhead === 'string' && c.subhead.length > 0 &&
-    typeof c.cta_text === 'string' && c.cta_text.length > 0
-  );
+  
+  // Basic type checks
+  if (typeof c.headline !== 'string' || typeof c.subhead !== 'string' || typeof c.cta_text !== 'string') {
+    return false;
+  }
+  
+  // Minimum length requirements to prevent corrupted/partial content
+  if (c.headline.length < 15 || c.subhead.length < 30 || c.cta_text.length < 5) {
+    console.warn('[useDemoState] Content rejected - too short:', { 
+      headline: c.headline.length, 
+      subhead: c.subhead.length 
+    });
+    return false;
+  }
+  
+  // Check for truncation indicators (words cut off mid-word)
+  const truncationPatterns = [
+    /\b\w{2,}$/,    // ends with partial word (no punctuation or space)
+    /turnove$/i,    // specific known truncation
+    /\.\.\.$/, // ends with ellipsis (explicit truncation)
+  ];
+  
+  // Check headline doesn't appear truncated (unless it ends with proper punctuation or complete words)
+  const headlineEndsClean = /[.!?"]$/.test(c.headline) || /\w{3,}$/.test(c.headline);
+  if (!headlineEndsClean) {
+    console.warn('[useDemoState] Headline may be truncated:', c.headline);
+    // Don't reject, but log for debugging
+  }
+  
+  return true;
 }
 
 // Safe localStorage getters with validation
@@ -75,16 +100,37 @@ export function useDemoState(): UseDemoStateReturn {
 
   // Validate state consistency on mount - if completed but no valid content, reset
   useEffect(() => {
-    if (demoState === 'completed' && !personalizedContent) {
-      console.warn('Demo state is completed but no valid content, resetting to idle');
-      setDemoStateInternal('idle');
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch {}
+    // Check if content passes stricter validation
+    if (demoState === 'completed') {
+      if (!personalizedContent) {
+        console.warn('[useDemoState] Demo completed but no content, resetting');
+        setDemoStateInternal('idle');
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(CONTENT_KEY);
+        } catch {}
+      } else {
+        // Additional validation: check for truncation issues
+        const hasIssues = 
+          personalizedContent.headline.includes('turnove') || // Known truncation
+          personalizedContent.headline.length < 15 ||
+          personalizedContent.subhead.length < 30;
+        
+        if (hasIssues) {
+          console.warn('[useDemoState] Content has quality issues, resetting:', personalizedContent);
+          setDemoStateInternal('idle');
+          setPersonalizedContentInternal(null);
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(CONTENT_KEY);
+          } catch {}
+        }
+      }
     }
+    
     // Reset generating state on page load (shouldn't persist)
     if (demoState === 'generating') {
-      console.warn('Demo was in generating state on load, resetting to idle');
+      console.warn('[useDemoState] Demo was in generating state on load, resetting to idle');
       setDemoStateInternal('idle');
       try {
         localStorage.removeItem(STORAGE_KEY);
