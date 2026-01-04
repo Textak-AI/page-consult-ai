@@ -295,20 +295,41 @@ serve(async (req) => {
         content: sanitizeAIInput(m.content),
       }));
 
-    // Build existing intelligence context
+    // Build existing intelligence context - only list what's already captured, but ENCOURAGE extraction of missing fields
     let existingContext = '';
     if (existingIntelligence && typeof existingIntelligence === 'object') {
-      const fields = [];
-      if (existingIntelligence.industry) fields.push(`Industry: ${existingIntelligence.industry}`);
-      if (existingIntelligence.audience) fields.push(`Audience: ${existingIntelligence.audience}`);
-      if (existingIntelligence.valueProp) fields.push(`Value Prop: ${existingIntelligence.valueProp}`);
-      if (existingIntelligence.competitorDifferentiator) fields.push(`Competitive Edge: ${existingIntelligence.competitorDifferentiator}`);
-      if (existingIntelligence.painPoints) fields.push(`Pain Points: ${existingIntelligence.painPoints}`);
-      if (existingIntelligence.buyerObjections) fields.push(`Objections: ${existingIntelligence.buyerObjections}`);
-      if (existingIntelligence.proofElements) fields.push(`Proof: ${existingIntelligence.proofElements}`);
+      const capturedFields = [];
+      const missingFields = [];
       
-      if (fields.length > 0) {
-        existingContext = `\n\nALREADY EXTRACTED (do not re-extract, focus on NEW information):\n${fields.map(f => `- ${f}`).join('\n')}`;
+      if (existingIntelligence.industry) capturedFields.push(`Industry: ${existingIntelligence.industry}`);
+      else missingFields.push('industry');
+      
+      if (existingIntelligence.audience) capturedFields.push(`Audience: ${existingIntelligence.audience}`);
+      else missingFields.push('audience');
+      
+      if (existingIntelligence.valueProp) capturedFields.push(`Value Prop: ${existingIntelligence.valueProp}`);
+      else missingFields.push('valueProp');
+      
+      if (existingIntelligence.competitorDifferentiator) capturedFields.push(`Competitive Edge: ${existingIntelligence.competitorDifferentiator}`);
+      else missingFields.push('competitiveEdge');
+      
+      if (existingIntelligence.painPoints) capturedFields.push(`Pain Points: ${existingIntelligence.painPoints}`);
+      else missingFields.push('painPoints');
+      
+      if (existingIntelligence.buyerObjections) capturedFields.push(`Objections: ${existingIntelligence.buyerObjections}`);
+      else missingFields.push('buyerObjections');
+      
+      if (existingIntelligence.proofElements) capturedFields.push(`Proof: ${existingIntelligence.proofElements}`);
+      else missingFields.push('proofElements');
+      
+      // Build context that encourages finding MISSING fields
+      existingContext = '\n\n';
+      if (capturedFields.length > 0) {
+        existingContext += `ALREADY CAPTURED (skip unless new message has MORE SPECIFIC info):\n${capturedFields.map(f => `- ${f}`).join('\n')}\n\n`;
+      }
+      if (missingFields.length > 0) {
+        existingContext += `STILL NEEDED (prioritize extracting these from the new message):\n${missingFields.map(f => `- ${f}`).join('\n')}\n`;
+        existingContext += `\nIMPORTANT: The user may provide info about MULTIPLE fields in one message. Extract ALL relevant fields, especially those marked as "STILL NEEDED" above.`;
       }
     }
 
