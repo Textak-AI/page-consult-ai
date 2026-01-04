@@ -168,8 +168,10 @@ interface UseDemoStateReturn {
 }
 
 export function useDemoState(): UseDemoStateReturn {
-  const [demoState, setDemoStateInternal] = useState<DemoState>(getSavedDemoState);
-  const [personalizedContent, setPersonalizedContentInternal] = useState<PersonalizedContent | null>(getSavedContent);
+  // ALWAYS start fresh - never restore from localStorage
+  // This ensures logged-out users see the default Hero
+  const [demoState, setDemoStateInternal] = useState<DemoState>('idle');
+  const [personalizedContent, setPersonalizedContentInternal] = useState<PersonalizedContent | null>(null);
 
   // Validate state consistency on mount - if completed but no valid content, reset
   useEffect(() => {
