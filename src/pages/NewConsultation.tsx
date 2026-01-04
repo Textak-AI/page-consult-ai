@@ -184,6 +184,50 @@ export default function NewConsultation() {
       }
       setUserId(user.id);
       
+      // ========= NEW: Check for consultationId from demo signup =========
+      const consultationId = searchParams.get('consultationId');
+      if (consultationId) {
+        console.log('📦 [NewConsultation] Loading consultation from demo signup:', consultationId);
+        try {
+          const { data: consultation, error } = await supabase
+            .from('consultations')
+            .select('*')
+            .eq('id', consultationId)
+            .eq('user_id', user.id)
+            .single();
+          
+          if (consultation && !error) {
+            const extracted = consultation.extracted_intelligence as any;
+            console.log('✅ [NewConsultation] Loaded consultation with extracted_intelligence:', extracted);
+            
+            // Build prefill data from the consultation
+            if (extracted) {
+              setPrefillData({
+                extracted: {
+                  industry: extracted.industry || consultation.industry,
+                  audience: extracted.audience || consultation.target_audience,
+                  valueProp: extracted.valueProp || consultation.unique_value,
+                },
+                market: extracted.marketResearch || {},
+                source: 'demo_consultation',
+                sessionId: extracted.sessionId,
+              });
+            }
+            
+            // Skip intro and brand extractor - go directly to consultation
+            setSkipDraftLoad(true);
+            console.log('🔄 setStage called:', 'consultation', 'from: consultationId loaded');
+            setStage('consultation');
+            return;
+          } else {
+            console.warn('⚠️ [NewConsultation] Could not load consultation:', error?.message);
+          }
+        } catch (err) {
+          console.error('❌ [NewConsultation] Error loading consultation:', err);
+        }
+      }
+      // ========= END NEW SECTION =========
+      
       // Skip intro and brand extractor if coming from demo with prefill data
       if (prefillData?.source === 'landing_demo') {
         console.log('🔄 setStage called:', 'consultation', 'from: prefill landing_demo check');

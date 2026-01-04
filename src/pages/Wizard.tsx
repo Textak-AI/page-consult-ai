@@ -157,12 +157,19 @@ export default function Wizard() {
   }, []);
 
   // Sync extractedIntelligence when tiles or collectedInfo changes
+  // IMPORTANT: Only update fields that have actual values - don't overwrite demo data with empty values
   useEffect(() => {
     const newIntelligence = tilesToIntelligence(tiles, collectedInfo);
-    setExtractedIntelligence(prev => ({
-      ...prev,
-      ...newIntelligence,
-    }));
+    setExtractedIntelligence(prev => {
+      // Only merge fields that have non-null, non-empty values
+      const merged = { ...prev };
+      Object.entries(newIntelligence).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          (merged as any)[key] = value;
+        }
+      });
+      return merged;
+    });
   }, [tiles, collectedInfo]);
 
   // Function to apply session data to wizard state
