@@ -31,6 +31,7 @@ interface FormData {
 }
 
 interface GeneratedContent {
+  prospect_id: string;
   personalized_headline: string;
   personalized_subhead: string;
   personalized_cta_text: string;
@@ -145,6 +146,7 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
       if (!data.success) throw new Error(data.error);
 
       setGeneratedContent({
+        prospect_id: data.prospect.id,
         personalized_headline: data.personalized_headline,
         personalized_subhead: data.personalized_subhead,
         personalized_cta_text: data.personalized_cta_text,
@@ -178,16 +180,15 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
 
     setIsSendingEmail(true);
     try {
+      console.log('[QuickPivotModal] Sending email with:', {
+        prospectId: generatedContent.prospect_id,
+        pageLink: generatedContent.page_url,
+      });
+
       const { data, error } = await supabase.functions.invoke('send-prospect-email', {
         body: {
-          prospect_email: formData.email,
-          prospect_name: formData.first_name,
-          prospect_company: formData.company,
-          personalized_headline: generatedContent.personalized_headline,
-          personalized_subhead: generatedContent.personalized_subhead,
-          personalized_cta_text: generatedContent.personalized_cta_text,
-          page_url: generatedContent.page_url,
-          meeting_context: formData.meeting_context,
+          prospectId: generatedContent.prospect_id,
+          pageLink: generatedContent.page_url,
         },
       });
 
