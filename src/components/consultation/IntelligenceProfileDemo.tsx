@@ -359,7 +359,7 @@ export function IntelligenceProfileDemo({
                           {field.label}
                         </span>
                         
-                        {/* Value */}
+                        {/* Value - show full text or smart truncation with tooltip */}
                         <AnimatePresence mode="wait">
                           {hasValue && (
                             <motion.span
@@ -367,11 +367,16 @@ export function IntelligenceProfileDemo({
                               animate={{ opacity: 1, x: 0 }}
                               exit={{ opacity: 0, x: -5 }}
                               className={cn(
-                                "text-xs truncate max-w-[120px] ml-auto",
+                                "text-xs ml-auto text-right",
                                 catColors.text
                               )}
+                              style={{ maxWidth: '150px', wordBreak: 'break-word' }}
+                              title={fieldData.value || undefined}
                             >
-                              {fieldData.value}
+                              {/* Smart truncation: show full text if short, word-boundary truncate if long */}
+                              {fieldData.value && fieldData.value.length > 25
+                                ? fieldData.value.slice(0, 25).replace(/\s+\S*$/, '') + '...'
+                                : fieldData.value}
                             </motion.span>
                           )}
                         </AnimatePresence>

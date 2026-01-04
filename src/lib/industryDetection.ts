@@ -21,12 +21,15 @@ const INDUSTRY_PATTERNS: Record<IndustryVariant, { keywords: string[]; weight: n
     { keywords: ['consulting', 'consultant', 'consultancy'], weight: 10 },
     { keywords: ['advisory', 'advisor', 'advisors'], weight: 10 },
     { keywords: ['professional services', 'b2b services'], weight: 9 },
-    { keywords: ['hr ', ' hr', 'human resources', 'talent', 'recruitment', 'staffing'], weight: 8 },
+    { keywords: ['coaching', 'coach', 'executive coach', 'leadership coach'], weight: 10 }, // Boost coaching
+    { keywords: ['hr ', ' hr', 'human resources', 'talent', 'recruitment', 'staffing'], weight: 9 }, // Boost HR
+    { keywords: ['leadership development', 'executive development', 'leadership training'], weight: 10 },
     { keywords: ['management', 'operations consulting', 'strategy'], weight: 7 },
-    { keywords: ['coaching', 'coach', 'training', 'development'], weight: 7 },
+    { keywords: ['training', 'facilitation', 'facilitator', 'workshop'], weight: 8 },
     { keywords: ['agency', 'agencies'], weight: 6 },
-    { keywords: ['workforce', 'organizational'], weight: 6 },
-    { keywords: ['executive', 'leadership'], weight: 5 },
+    { keywords: ['workforce', 'organizational', 'organizational development'], weight: 7 },
+    { keywords: ['executive', 'leadership', 'c-suite', 'cfo', 'ceo', 'chro'], weight: 7 },
+    { keywords: ['succession', 'retention', 'turnover', 'engagement'], weight: 7 },
     { keywords: ['services', 'service provider'], weight: 3 },
   ],
   legal: [

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { 
@@ -6,12 +6,25 @@ import {
   confirmIndustry, 
   type IndustryDetection 
 } from '@/lib/industryDetection';
+
+// ============================================
+// PERSISTENCE KEYS & CONFIG
+// ============================================
+const STORAGE_KEYS = {
+  sessionId: 'pageconsult_demo_session_id',
+  conversation: 'pageconsult_demo_conversation',
+  extracted: 'pageconsult_demo_extracted',
+  market: 'pageconsult_demo_market',
+  industryDetection: 'pageconsult_demo_industry',
+  timestamp: 'pageconsult_demo_timestamp',
+};
+const DEMO_TTL = 24 * 60 * 60 * 1000; // 24 hours
 // ============================================
 // TYPES
 // ============================================
 
 export interface ExtractedIntelligence {
-  // Short values (for sidebar display - max 14 chars)
+  // Short values (for sidebar display - max 40 chars)
   industry: string | null;
   audience: string | null;
   valueProp: string | null;
@@ -19,7 +32,8 @@ export interface ExtractedIntelligence {
   painPoints: string | null;
   buyerObjections: string | null;
   proofElements: string | null;
-  // Full values (for Hero/CTA generation - max 50 chars)
+  socialProof: string | null; // NEW: client names, testimonials, case studies
+  // Full values (for Hero/CTA generation - max 150 chars)
   industryFull: string | null;
   audienceFull: string | null;
   valuePropFull: string | null;
@@ -27,7 +41,8 @@ export interface ExtractedIntelligence {
   painPointsFull: string | null;
   buyerObjectionsFull: string | null;
   proofElementsFull: string | null;
-  // Summaries (for hover tooltips)
+  socialProofFull: string | null;
+  // Summaries (for hover tooltips - max 300 chars)
   industrySummary: string | null;
   audienceSummary: string | null;
   valuePropSummary: string | null;
@@ -35,6 +50,7 @@ export interface ExtractedIntelligence {
   painSummary: string | null;
   objectionsSummary: string | null;
   proofSummary: string | null;
+  socialProofSummary: string | null;
 }
 
 export interface MarketResearch {
@@ -119,6 +135,7 @@ const initialState: IntelligenceState = {
     painPoints: null,
     buyerObjections: null,
     proofElements: null,
+    socialProof: null,
     // Full values (for Hero/CTA generation)
     industryFull: null,
     audienceFull: null,
@@ -127,6 +144,7 @@ const initialState: IntelligenceState = {
     painPointsFull: null,
     buyerObjectionsFull: null,
     proofElementsFull: null,
+    socialProofFull: null,
     // Summaries
     industrySummary: null,
     audienceSummary: null,
@@ -135,6 +153,7 @@ const initialState: IntelligenceState = {
     painSummary: null,
     objectionsSummary: null,
     proofSummary: null,
+    socialProofSummary: null,
   },
   market: {
     marketSize: null,
@@ -171,6 +190,34 @@ export { IntelligenceContext };
 // PROVIDER
 // ============================================
 
+// Safe localStorage helpers
+function safeGetItem(key: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSetItem(key: string, value: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.warn('Failed to save to localStorage:', key, e);
+  }
+}
+
+function safeClearDemoState(): void {
+  if (typeof window === 'undefined') return;
+  Object.values(STORAGE_KEYS).forEach(key => {
+    try {
+      localStorage.removeItem(key);
+    } catch {}
+  });
+}
+
 export function IntelligenceProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<IntelligenceState>(() => ({
     ...initialState,
@@ -178,6 +225,96 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   }));
   
   const marketResearchFetched = useRef(false);
+  const hasRestoredState = useRef(false);
+
+  // ----------------------------------------
+  // Restore state from localStorage on mount
+  // ----------------------------------------
+  useEffect(() => {
+    if (hasRestoredState.current) return;
+    hasRestoredState.current = true;
+
+    try {
+      const timestamp = safeGetItem(STORAGE_KEYS.timestamp);
+      
+      // Check if expired
+      if (timestamp && Date.now() - parseInt(timestamp) > DEMO_TTL) {
+        console.log('[IntelligenceContext] Demo state expired, clearing');
+        safeClearDemoState();
+        return;
+      }
+
+      const savedConversation = safeGetItem(STORAGE_KEYS.conversation);
+      const savedExtracted = safeGetItem(STORAGE_KEYS.extracted);
+      const savedSessionId = safeGetItem(STORAGE_KEYS.sessionId);
+      const savedIndustry = safeGetItem(STORAGE_KEYS.industryDetection);
+      const savedMarket = safeGetItem(STORAGE_KEYS.market);
+
+      // Only restore if we have conversation AND extracted intelligence (complete state)
+      if (savedConversation && savedExtracted && savedSessionId) {
+        const conversation = JSON.parse(savedConversation);
+        const extracted = JSON.parse(savedExtracted);
+        const industryDetection = savedIndustry ? JSON.parse(savedIndustry) : null;
+        const market = savedMarket ? JSON.parse(savedMarket) : initialState.market;
+
+        // Convert timestamp strings back to Date objects
+        const restoredConversation = conversation.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp),
+        }));
+
+        console.log('[IntelligenceContext] Restored demo state:', {
+          messages: restoredConversation.length,
+          hasExtracted: !!extracted,
+          hasIndustry: !!industryDetection,
+        });
+
+        setState(prev => ({
+          ...prev,
+          sessionId: savedSessionId,
+          conversation: restoredConversation,
+          extracted,
+          industryDetection,
+          market: { ...market, isLoading: false },
+          messageCount: restoredConversation.filter((m: any) => m.role === 'user').length,
+        }));
+      } else if (savedConversation || savedExtracted) {
+        // Incomplete state - clear everything
+        console.log('[IntelligenceContext] Incomplete state found, clearing');
+        safeClearDemoState();
+      }
+    } catch (e) {
+      console.warn('[IntelligenceContext] Failed to restore state:', e);
+      safeClearDemoState();
+    }
+  }, []);
+
+  // ----------------------------------------
+  // Persist state to localStorage when it changes
+  // ----------------------------------------
+  useEffect(() => {
+    // Only persist if we have meaningful state
+    if (state.conversation.length > 0) {
+      const conversationToSave = state.conversation.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp.toISOString(),
+      }));
+
+      safeSetItem(STORAGE_KEYS.sessionId, state.sessionId);
+      safeSetItem(STORAGE_KEYS.conversation, JSON.stringify(conversationToSave));
+      safeSetItem(STORAGE_KEYS.extracted, JSON.stringify(state.extracted));
+      safeSetItem(STORAGE_KEYS.timestamp, Date.now().toString());
+
+      if (state.industryDetection) {
+        safeSetItem(STORAGE_KEYS.industryDetection, JSON.stringify(state.industryDetection));
+      }
+
+      if (state.market.marketSize || state.market.buyerPersona) {
+        safeSetItem(STORAGE_KEYS.market, JSON.stringify(state.market));
+      }
+    }
+  }, [state.conversation, state.extracted, state.industryDetection, state.market, state.sessionId]);
 
   // ----------------------------------------
   // Calculate readiness score
@@ -390,6 +527,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           painPoints: extractedData.painPoints || state.extracted.painPoints,
           buyerObjections: extractedData.buyerObjections || state.extracted.buyerObjections,
           proofElements: extractedData.proofElements || state.extracted.proofElements,
+          socialProof: extractedData.socialProof || state.extracted.socialProof,
           // Full values (for Hero/CTA generation)
           industryFull: extractedData.industryFull || state.extracted.industryFull,
           audienceFull: extractedData.audienceFull || state.extracted.audienceFull,
@@ -398,6 +536,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           painPointsFull: extractedData.painPointsFull || state.extracted.painPointsFull,
           buyerObjectionsFull: extractedData.buyerObjectionsFull || state.extracted.buyerObjectionsFull,
           proofElementsFull: extractedData.proofElementsFull || state.extracted.proofElementsFull,
+          socialProofFull: extractedData.socialProofFull || state.extracted.socialProofFull,
           // Summaries
           industrySummary: extractedData.industrySummary || state.extracted.industrySummary,
           audienceSummary: extractedData.audienceSummary || state.extracted.audienceSummary,
@@ -406,6 +545,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           painSummary: extractedData.painSummary || state.extracted.painSummary,
           objectionsSummary: extractedData.objectionsSummary || state.extracted.objectionsSummary,
           proofSummary: extractedData.proofSummary || state.extracted.proofSummary,
+          socialProofSummary: extractedData.socialProofSummary || state.extracted.socialProofSummary,
         };
 
         console.log('=== MERGED INTELLIGENCE ===');
@@ -563,6 +703,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // ----------------------------------------
   const resetIntelligence = useCallback(() => {
     marketResearchFetched.current = false;
+    safeClearDemoState(); // Clear localStorage when resetting
     setState({
       ...initialState,
       sessionId: uuidv4(),
