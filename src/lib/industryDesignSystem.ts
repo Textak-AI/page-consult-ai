@@ -585,15 +585,45 @@ export function detectIndustryVariant(
     return 'saas-enterprise';
   }
   
-  // Primary industry detection
+  // Primary industry detection - ORDER MATTERS!
+  // Check consulting/professional services FIRST (before SaaS) to avoid misclassification
+  // e.g., "HR consulting" should NOT match "software" or generic tech terms
   
-  if (searchString.includes('saas') || 
-      searchString.includes('software as a service') ||
-      searchString.includes('tech startup') ||
-      searchString.includes('platform')) {
-    return 'saas';
+  // Consulting detection - MUST come before SaaS
+  if (searchString.includes('consult') || 
+      searchString.includes('agency') ||
+      searchString.includes('professional service') ||
+      searchString.includes('advisory') ||
+      searchString.includes('accounting') ||
+      searchString.includes('legal') ||
+      // HR-specific terms
+      searchString.includes('human resource') ||
+      searchString.includes('hr ') ||
+      searchString.includes(' hr') ||
+      searchString.includes('talent') ||
+      searchString.includes('recruitment') ||
+      searchString.includes('staffing') ||
+      searchString.includes('workforce') ||
+      searchString.includes('retention') ||
+      searchString.includes('turnover') ||
+      // Management consulting
+      searchString.includes('management') ||
+      searchString.includes('strategy') ||
+      searchString.includes('operations')) {
+    return 'consulting';
   }
   
+  // Coaching detection
+  if (searchString.includes('coach') || 
+      searchString.includes('course') ||
+      searchString.includes('training') ||
+      searchString.includes('mentor') ||
+      searchString.includes('speaker') ||
+      searchString.includes('author')) {
+    return 'coaching';
+  }
+  
+  // Manufacturing detection
   if (searchString.includes('manufactur') || 
       searchString.includes('industrial') ||
       searchString.includes('aerospace') ||
@@ -604,22 +634,12 @@ export function detectIndustryVariant(
     return 'manufacturing';
   }
   
-  if (searchString.includes('coach') || 
-      searchString.includes('course') ||
-      searchString.includes('training') ||
-      searchString.includes('mentor') ||
-      searchString.includes('speaker') ||
-      searchString.includes('author')) {
-    return 'coaching';
-  }
-  
-  if (searchString.includes('consult') || 
-      searchString.includes('agency') ||
-      searchString.includes('professional service') ||
-      searchString.includes('advisory') ||
-      searchString.includes('accounting') ||
-      searchString.includes('legal')) {
-    return 'consulting';
+  // SaaS detection - AFTER consulting and coaching to avoid false positives
+  if (searchString.includes('saas') || 
+      searchString.includes('software as a service') ||
+      searchString.includes('tech startup') ||
+      searchString.includes('platform')) {
+    return 'saas';
   }
   
   if (searchString.includes('ecommerce') || 

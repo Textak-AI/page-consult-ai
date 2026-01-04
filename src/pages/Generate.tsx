@@ -53,7 +53,7 @@ import { CreditDisplay, UpgradeDrawer } from "@/components/credits";
 import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid, generateSEOHeadData, type SEOHeadData } from "@/lib/aiSeoIntegration";
 import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief, type MappedPage } from "@/utils/sectionMapper";
 import { generateDesignSystem, designSystemToCSSVariables } from "@/config/designSystem";
-import { detectIndustryVariant } from "@/config/designSystem/industryVariants";
+// Removed old detectIndustryVariant import - using detectIndustryVariantNew from industryDesignSystem
 import {
   detectIndustryVariant as detectIndustryVariantNew,
   getIndustryTokens,
@@ -887,27 +887,101 @@ function GenerateContent() {
       if (existingPage && !forceRegenerate) {
         console.log("✅ Found existing page for consultation, loading it:", existingPage.id);
         
-        // CRITICAL: Inject industryVariant into loaded sections (may be missing from old saves)
-        const industryVariant = detectIndustryVariant(
-          consultationData.industry,
-          consultationData.serviceType || consultationData.service_type,
-          consultationData.pageType || consultationData.page_type
-        );
-        console.log('🎨 [LoadExisting] Injecting industryVariant:', industryVariant);
+        // Get consultation data from the page OR the current consultation
+        const pageConsultationData = existingPage.consultation_data as any || {};
+        const effectiveIndustry = consultationData.industry || pageConsultationData.industry || pageConsultationData.businessName;
+        const effectiveServiceType = consultationData.serviceType || consultationData.service_type || 
+                                      pageConsultationData.serviceType || pageConsultationData.service_type;
+        const effectivePageType = consultationData.pageType || consultationData.page_type || 
+                                   pageConsultationData.pageType || pageConsultationData.page_type;
         
+        // CHECK FOR STALE/GENERIC CONTENT
+        // If the page has generic placeholders but we have specific consultation data, regenerate
         const existingSections = (existingPage.sections as Section[]) || [];
-        const sectionsWithVariant = existingSections.map(section => ({
-          ...section,
-          content: {
-            ...section.content,
-            industryVariant: industryVariant,
-          }
-        }));
+        const heroSection = existingSections.find(s => s.type === 'hero');
+        const heroHeadline = heroSection?.content?.headline || '';
         
-        setPageData(existingPage);
-        setSections(sectionsWithVariant);
-        setPhase("editor");
-        return;
+        // List of known generic placeholders that indicate stale content
+        const genericPhrases = [
+          'smart solution for your business',
+          'professional solutions tailored',
+          'get payment processing',
+          'streamline your workflow',
+          'transform your business',
+          'the smart way to',
+        ];
+        
+        const hasGenericContent = genericPhrases.some(phrase => 
+          heroHeadline.toLowerCase().includes(phrase.toLowerCase())
+        );
+        
+        // Check if current consultation has specific data that should be used
+        const hasSpecificConsultationData = !!(
+          consultationData.challenge || 
+          consultationData.unique_value || 
+          consultationData.valueProp ||
+          pageConsultationData.uniqueStrength ||
+          pageConsultationData.clientFrustration
+        );
+        
+        if (hasGenericContent && hasSpecificConsultationData) {
+          console.warn('⚠️ [LoadExisting] Detected STALE generic content with specific consultation data available');
+          console.log('⚠️ Generic headline:', heroHeadline);
+          console.log('⚠️ Consultation data available:', {
+            challenge: consultationData.challenge?.substring?.(0, 50),
+            unique_value: consultationData.unique_value?.substring?.(0, 50),
+            valueProp: consultationData.valueProp?.substring?.(0, 50),
+            uniqueStrength: pageConsultationData.uniqueStrength?.substring?.(0, 50),
+          });
+          
+          // Force regeneration for stale pages
+          toast({
+            title: "Refreshing your page",
+            description: "We detected outdated content. Regenerating with your latest info...",
+          });
+          
+          // Delete the stale page and regenerate fresh
+          await supabase.from("landing_pages").delete().eq("id", existingPage.id);
+          console.log('🗑️ Deleted stale page:', existingPage.id);
+          // Continue to generation below (don't return)
+        } else {
+          // CRITICAL: Use the NEW industry detection (more accurate, checks consulting first)
+          const industryVariant = detectIndustryVariantNew(
+            effectiveIndustry,
+            pageConsultationData.industryCategory,
+            pageConsultationData.industrySubcategory,
+            effectivePageType
+          );
+          console.log('🎨 [LoadExisting] Re-detected industryVariant:', industryVariant, 'from:', {
+            industry: effectiveIndustry,
+            serviceType: effectiveServiceType,
+            pageType: effectivePageType,
+          });
+          
+          // Also update industry tokens and state for consistent styling
+          const tokens = getIndustryTokens(industryVariant);
+          setIndustryVariantState(industryVariant);
+          setIndustryTokens(tokens);
+          
+          const sectionsWithVariant = existingSections.map(section => ({
+            ...section,
+            content: {
+              ...section.content,
+              industryVariant: industryVariant,
+            }
+          }));
+          
+          // Store consultation data for potential regeneration
+          setConsultation({
+            ...consultationData,
+            ...pageConsultationData,
+          });
+          
+          setPageData(existingPage);
+          setSections(sectionsWithVariant);
+          setPhase("editor");
+          return;
+        }
       } else if (forceRegenerate && existingPage) {
         console.log('🔄 Force regenerate - skipping existing page for consultation:', existingPage.id);
       }
@@ -1585,10 +1659,11 @@ function GenerateContent() {
     const isBetaPage = pageType === 'beta-prelaunch';
     console.log('🏗️ [mapLegacyStrategyContent] pageType:', pageType, '| isBetaPage:', isBetaPage);
     
-    // CRITICAL: Detect industry variant for styling
-    const industryVariant = detectIndustryVariant(
+    // CRITICAL: Detect industry variant for styling (use NEW detection for better accuracy)
+    const industryVariant = detectIndustryVariantNew(
       consultationData?.industry || strategicConsultation?.industry,
-      consultationData?.service_type || strategicConsultation?.serviceType,
+      strategicConsultation?.industryCategory,
+      strategicConsultation?.industrySubcategory,
       pageType
     );
     console.log('🏗️ [mapLegacyStrategyContent] industryVariant:', industryVariant);
@@ -2002,10 +2077,11 @@ function GenerateContent() {
     const isBetaPage = pageType === 'beta-prelaunch';
     console.log('🔧 [mapOldGeneratedContent] pageType:', pageType, '| isBetaPage:', isBetaPage);
     
-    // CRITICAL: Detect industry variant for styling
-    const industryVariant = detectIndustryVariant(
+    // CRITICAL: Detect industry variant for styling (use NEW detection for better accuracy)
+    const industryVariant = detectIndustryVariantNew(
       consultationData.industry, 
-      consultationData.serviceType || consultationData.service_type, 
+      consultationData.industryCategory,
+      consultationData.industrySubcategory,
       pageType
     );
     console.log('🎨 [mapOldGeneratedContent] industryVariant:', industryVariant);
@@ -2367,10 +2443,11 @@ function GenerateContent() {
     const isBetaPage = pageType === 'beta-prelaunch';
     
     // CRITICAL: Detect industry variant for proper styling (consulting = light mode)
-    const { detectIndustryVariant } = await import("@/config/designSystem/industryVariants");
-    const industryVariant = detectIndustryVariant(
+    // Use the already-imported detectIndustryVariantNew for consistency
+    const industryVariant = detectIndustryVariantNew(
       consultationData.industry,
-      consultationData.service_type || consultationData.serviceType,
+      consultationData.industryCategory,
+      consultationData.industrySubcategory,
       pageType
     );
     
