@@ -860,42 +860,78 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
+          company_name: string | null
           created_at: string | null
+          custom_signature_html: string | null
+          email_notifications: boolean | null
           full_name: string | null
           id: string
+          job_title: string | null
+          marketing_emails: boolean | null
+          phone_number: string | null
+          prospect_view_alerts: boolean | null
           signature_email: string | null
           signature_enabled: boolean | null
+          signature_headshot_url: string | null
           signature_name: string | null
           signature_phone: string | null
           signature_title: string | null
           signature_website: string | null
+          timezone: string | null
           updated_at: string | null
+          website: string | null
+          weekly_summary_emails: boolean | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
+          company_name?: string | null
           created_at?: string | null
+          custom_signature_html?: string | null
+          email_notifications?: boolean | null
           full_name?: string | null
           id: string
+          job_title?: string | null
+          marketing_emails?: boolean | null
+          phone_number?: string | null
+          prospect_view_alerts?: boolean | null
           signature_email?: string | null
           signature_enabled?: boolean | null
+          signature_headshot_url?: string | null
           signature_name?: string | null
           signature_phone?: string | null
           signature_title?: string | null
           signature_website?: string | null
+          timezone?: string | null
           updated_at?: string | null
+          website?: string | null
+          weekly_summary_emails?: boolean | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
+          company_name?: string | null
           created_at?: string | null
+          custom_signature_html?: string | null
+          email_notifications?: boolean | null
           full_name?: string | null
           id?: string
+          job_title?: string | null
+          marketing_emails?: boolean | null
+          phone_number?: string | null
+          prospect_view_alerts?: boolean | null
           signature_email?: string | null
           signature_enabled?: boolean | null
+          signature_headshot_url?: string | null
           signature_name?: string | null
           signature_phone?: string | null
           signature_title?: string | null
           signature_website?: string | null
+          timezone?: string | null
           updated_at?: string | null
+          website?: string | null
+          weekly_summary_emails?: boolean | null
         }
         Relationships: []
       }
