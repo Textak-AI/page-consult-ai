@@ -135,7 +135,7 @@ const Hero = () => {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center max-w-6xl mx-auto">
           
           {/* Left content - Animated transitions between states */}
-          <div>
+          <div className="min-h-[400px]">
             <AnimatePresence mode="wait">
               {demoState === 'generating' ? (
                 <motion.div
@@ -168,12 +168,7 @@ const Hero = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  style={{
-                    animation: 'slide-up 800ms ease-out 200ms forwards',
-                    animationFillMode: 'forwards',
-                    opacity: 0
-                  }}
+                  transition={{ duration: 0.5 }}
                 >
                   <DefaultHero
                     onStartConsultation={handleStartConsultation}
@@ -185,45 +180,44 @@ const Hero = () => {
           </div>
 
           {/* Right - Animated Flow Demo - aligned to right edge */}
-          <div className="flex items-center justify-end" style={{
-            animation: 'scale-in 1000ms ease-out 800ms forwards',
-            animationFillMode: 'forwards',
-            opacity: 0
-          }}>
+          <motion.div 
+            className="flex items-center justify-end"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
             <HeroFlowAnimation />
-          </div>
+          </motion.div>
           
         </div>
 
         {/* Stats row - BELOW grid, CENTERED */}
-        <div 
+        <motion.div 
           className="flex flex-wrap justify-center gap-6 mt-16 max-w-2xl mx-auto"
-          style={{
-            animation: 'fade-in 800ms ease-out 1000ms forwards',
-            animationFillMode: 'forwards',
-            opacity: 0
-          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
         >
-          <div className="flex items-center gap-3 bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl px-5 py-3">
-            <div className="w-10 h-10 rounded-xl bg-green-400/10 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-green-400" />
+          <div className="flex items-center gap-3 bg-card/40 backdrop-blur-xl border border-border rounded-lg px-5 py-3">
+            <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-success" />
             </div>
             <div>
-              <div className="text-lg font-bold text-green-400">3.4x more conversions</div>
-              <div className="text-xs text-gray-400">with interactive tools</div>
+              <div className="text-lg font-bold text-success">3.4x more conversions</div>
+              <div className="text-xs text-muted-foreground">with interactive tools</div>
             </div>
           </div>
           
-          <div className="flex items-center gap-3 bg-slate-800/40 backdrop-blur-xl border border-white/5 rounded-2xl px-5 py-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-400/10 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-cyan-400" />
+          <div className="flex items-center gap-3 bg-card/40 backdrop-blur-xl border border-border rounded-lg px-5 py-3">
+            <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-secondary" />
             </div>
             <div>
-              <div className="text-lg font-bold text-cyan-400">10 min average</div>
-              <div className="text-xs text-gray-400">to build your page</div>
+              <div className="text-lg font-bold text-secondary">10 min average</div>
+              <div className="text-xs text-muted-foreground">to build your page</div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Scroll indicator */}
         <div className="text-center mt-12">
