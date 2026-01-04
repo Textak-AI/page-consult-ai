@@ -9,6 +9,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { TrialBanner } from '@/components/trial/TrialBanner';
 import { StrategyBrief } from '@/components/strategy-brief/StrategyBrief';
+import { QuickPivotModal } from '@/components/quick-pivot';
 import { 
   Plus, ArrowRight, Clock, Sparkles, 
   Zap, Search, FileText, Edit3
@@ -31,6 +32,7 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showBrief, setShowBrief] = useState(false);
   const [selectedConsultation, setSelectedConsultation] = useState<any>(null);
+  const [quickPivotOpen, setQuickPivotOpen] = useState(false);
   
   // Fetch user's landing pages
   const { data: landingPages, isLoading, refetch } = useQuery({
@@ -379,7 +381,7 @@ export default function Dashboard() {
           )}
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
             <button
               onClick={() => navigate('/new')}
               className="p-6 bg-card border border-border rounded-xl 
@@ -393,6 +395,22 @@ export default function Dashboard() {
               </h3>
               <p className="text-muted-foreground text-sm">
                 Start a strategic consultation
+              </p>
+            </button>
+
+            <button
+              onClick={() => setQuickPivotOpen(true)}
+              className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/30 rounded-xl 
+                         hover:border-purple-500/60 hover:from-purple-500/15 hover:to-purple-600/10 transition text-left group"
+            >
+              <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-500/30 transition">
+                <Zap className="w-6 h-6 text-purple-400" />
+              </div>
+              <h3 className="text-foreground font-semibold mb-1">
+                Quick Pivot
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Personalized prospect pages
               </p>
             </button>
             
@@ -562,6 +580,21 @@ export default function Dashboard() {
           }}
         />
       )}
+
+      {/* Quick Pivot Modal */}
+      <QuickPivotModal 
+        isOpen={quickPivotOpen} 
+        onClose={() => setQuickPivotOpen(false)} 
+      />
+
+      {/* Mobile FAB for Quick Pivot */}
+      <button
+        onClick={() => setQuickPivotOpen(true)}
+        className="fixed bottom-6 right-6 md:hidden w-14 h-14 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg shadow-purple-500/30 flex items-center justify-center z-40 transition-all hover:scale-105"
+        aria-label="Quick Pivot"
+      >
+        <Zap className="w-6 h-6" />
+      </button>
     </div>
   );
 }
