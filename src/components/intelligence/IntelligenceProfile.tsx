@@ -219,19 +219,19 @@ function CategorySection({
         </span>
       </button>
       
-      {/* Filled subcategories - Inline format */}
+      {/* Filled subcategories - Wrapping format */}
       {filledSubs.length > 0 && (
-        <div className="pl-3 space-y-0.5 mt-0.5">
+        <div className="pl-3 space-y-1 mt-0.5">
           {filledSubs.map((sub) => (
-            <div key={sub.id} className="flex items-center gap-1">
-              <div className="w-0.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_4px_rgba(0,255,255,0.3)] flex-shrink-0" />
+            <div key={sub.id} className="flex items-start gap-1">
+              <div className="w-0.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_4px_rgba(0,255,255,0.3)] flex-shrink-0 mt-0.5" />
               <span className="text-[9px] text-slate-400 flex-shrink-0">
                 {sub.shortLabel}:
               </span>
               {sub.source === 'demo' && (
-                <span className="text-cyan-400 text-[7px]">•</span>
+                <span className="text-cyan-400 text-[7px] flex-shrink-0">•</span>
               )}
-              <span className="text-[10px] text-cyan-400 truncate">
+              <span className="text-[10px] text-cyan-400 leading-tight break-words">
                 {sub.value}
               </span>
             </div>

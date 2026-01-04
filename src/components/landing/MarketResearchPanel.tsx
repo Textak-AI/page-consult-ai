@@ -32,30 +32,44 @@ const cleanMarkdown = (text: string): string => {
     .trim();
 };
 
-// Extract the most important sentence/phrase from longer text
-const extractKeyInsight = (text: string, maxLength: number = 100): string => {
+// Extract complete sentences from text, preserving meaning
+const extractKeyInsight = (text: string, maxLength: number = 200): string => {
   const cleaned = cleanMarkdown(text);
   
   // If short enough, return as-is
   if (cleaned.length <= maxLength) return cleaned;
   
-  // Try to find first complete sentence
-  const firstSentence = cleaned.match(/^[^.!?]+[.!?]/);
-  if (firstSentence && firstSentence[0].length <= maxLength) {
-    return firstSentence[0].trim();
+  // Find all complete sentences
+  const sentences = cleaned.match(/[^.!?]+[.!?]+/g) || [];
+  
+  // Return first complete sentence if it fits
+  if (sentences.length > 0 && sentences[0].trim().length <= maxLength) {
+    return sentences[0].trim();
   }
   
-  // Otherwise truncate at word boundary
-  const truncated = cleaned.slice(0, maxLength);
+  // If first sentence is too long, find a natural break point
+  const firstSentence = sentences[0]?.trim() || cleaned;
+  
+  // Look for comma, semicolon, or dash as natural break points
+  const naturalBreaks = [', ', '; ', ' - ', ' — '];
+  for (const breakChar of naturalBreaks) {
+    const breakIndex = firstSentence.indexOf(breakChar, maxLength * 0.5);
+    if (breakIndex > 0 && breakIndex < maxLength) {
+      return firstSentence.slice(0, breakIndex + breakChar.length - 1).trim() + '…';
+    }
+  }
+  
+  // Last resort: truncate at word boundary
+  const truncated = firstSentence.slice(0, maxLength);
   const lastSpace = truncated.lastIndexOf(' ');
-  return (lastSpace > 0 ? truncated.slice(0, lastSpace) : truncated) + '…';
+  return (lastSpace > maxLength * 0.7 ? truncated.slice(0, lastSpace) : truncated).trim() + '…';
 };
 
-// Parse objections/insights into clean bullet points
+// Parse objections/insights into clean bullet points - preserve full meaning
 const parseListItems = (items: string[]): string[] => {
   return items
     .map(item => cleanMarkdown(item))
-    .map(item => extractKeyInsight(item, 60))
+    .map(item => extractKeyInsight(item, 150)) // Increased from 60 to 150
     .filter(item => item.length > 0)
     .slice(0, 3); // Max 3 items
 };
@@ -116,9 +130,9 @@ const MarketResearchPanel = forwardRef<HTMLDivElement, MarketResearchPanelProps>
       }
     }, [hasData, market.isLoading, toast, onLoad]);
 
-    // Clean and prepare display content
-    const displayMarketSize = market.marketSize ? extractKeyInsight(market.marketSize, 120) : null;
-    const displayBuyerPersona = market.buyerPersona ? extractKeyInsight(market.buyerPersona, 80) : null;
+    // Clean and prepare display content - use generous limits to avoid truncation
+    const displayMarketSize = market.marketSize ? extractKeyInsight(market.marketSize, 250) : null;
+    const displayBuyerPersona = market.buyerPersona ? extractKeyInsight(market.buyerPersona, 200) : null;
     const displayObjections = parseListItems(market.commonObjections);
     const displayInsights = parseListItems(market.industryInsights);
 
