@@ -160,7 +160,24 @@ export default function Signup() {
           }
         });
 
-        if (error) throw error;
+        // Handle 422 error (user already exists) gracefully
+        if (error) {
+          if (error.status === 422 || error.message?.toLowerCase().includes('already registered')) {
+            console.log('👤 [Signup] User already exists, switching to login mode');
+            
+            // Show friendly message
+            toast({
+              title: "Welcome back!",
+              description: "You already have an account. Please log in instead.",
+            });
+            
+            // Switch to login mode (preserves demo data in sessionStorage)
+            setIsLogin(true);
+            setLoading(false);
+            return;
+          }
+          throw error;
+        }
 
         // Migrate anonymous session if exists
         if (sessionToken && data.user) {
