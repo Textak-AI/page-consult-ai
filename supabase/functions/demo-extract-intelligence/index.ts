@@ -189,12 +189,13 @@ VALUE PROP ACCEPT: "reduce downtime by 30%", "find hidden capacity", "close deal
 - PAIN POINTS: Specific frustrations their buyers experience
 - BUYER OBJECTIONS: What makes buyers hesitate
 - PROOF ELEMENTS: Specific results, credentials, numbers
+- SOCIAL PROOF: Client names, logos, testimonials, case studies, endorsements (e.g., "Fortune 500 clients", "847 engagements", "endorsed by...")
 
 ## CONFIDENCE SCORING (0-100)
 - Below 50 = too vague, should not display
 - 50-75 = somewhat specific, display with caution
 - Above 75 = specific enough, display confidently
-- BONUS: Add +10 confidence for specific numbers ($X, X%, Xx results)
+- BONUS: Add +15 confidence for specific numbers ($X, X%, Xx results, X years)
 - BONUS: Add +10 confidence for detailed phrases (>30 chars)
 
 ## OUTPUT FORMAT - JSON with COMPLETE phrases (up to 60 chars):
@@ -202,6 +203,7 @@ IMPORTANT: Capture the FULL meaningful phrase, not just keywords.
 For example: "leadership pipeline insurance" NOT "pipeline insur"
 For example: "succession gaps costing millions" NOT "succession gap"
 For example: "doubt coaching delivers measurable ROI" NOT "doubt ROI"
+For example: "Fortune 500 HR leaders" NOT "Fortune 500"
 
 {
   "industry": "full phrase up to 60 chars or null",
@@ -225,6 +227,9 @@ For example: "doubt coaching delivers measurable ROI" NOT "doubt ROI"
   "proofElements": "full phrase up to 60 chars or null",
   "proofConfidence": 0-100,
   "proofSummary": "2-3 sentences with specific metrics/results",
+  "socialProof": "client names, logos, testimonials up to 60 chars or null",
+  "socialProofConfidence": 0-100,
+  "socialProofSummary": "2-3 sentences about clients/endorsements",
   "inputQuality": "thin" | "adequate" | "rich"
 }
 
@@ -375,10 +380,10 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
 
     // Parse JSON from response with validation
     interface ExtractedResult {
-      // Short display values (max 14 chars for sidebar)
+      // Short display values (max 40 chars for sidebar)
       industry: string | null;
       industryConfidence: number;
-      industryFull: string | null; // Full value for Hero/CTA (max 50 chars)
+      industryFull: string | null; // Full value for Hero/CTA (max 150 chars)
       industrySummary: string | null;
       audience: string | null;
       audienceConfidence: number;
@@ -404,6 +409,10 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
       proofConfidence: number;
       proofElementsFull: string | null;
       proofSummary: string | null;
+      socialProof: string | null;
+      socialProofConfidence: number;
+      socialProofFull: string | null;
+      socialProofSummary: string | null;
       inputQuality: 'thin' | 'adequate' | 'rich';
     }
 
@@ -436,6 +445,10 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
       proofConfidence: 0,
       proofElementsFull: null,
       proofSummary: null,
+      socialProof: null,
+      socialProofConfidence: 0,
+      socialProofFull: null,
+      socialProofSummary: null,
       inputQuality: 'thin',
     };
     
@@ -519,10 +532,10 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
         const CONFIDENCE_THRESHOLD = 50;
         
         extracted = {
-          // Short values for sidebar display (max 14 chars)
+          // Short values for sidebar display (max 40 chars)
           industry: industryConfidence >= CONFIDENCE_THRESHOLD ? industry : null,
           industryConfidence,
-          // Full values for Hero/CTA generation (max 50 chars)
+          // Full values for Hero/CTA generation (max 150 chars)
           industryFull: industryConfidence >= CONFIDENCE_THRESHOLD ? industryFull : null,
           industrySummary: industryConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.industrySummary) : null,
           
@@ -555,6 +568,12 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
           proofConfidence: getConfidence(parsed.proofConfidence, 60),
           proofElementsFull: formatFull(parsed.proofElements),
           proofSummary: formatSummary(parsed.proofSummary),
+          
+          // Social proof (client names, testimonials, case studies)
+          socialProof: formatShort(parsed.socialProof),
+          socialProofConfidence: getConfidence(parsed.socialProofConfidence, 60),
+          socialProofFull: formatFull(parsed.socialProof),
+          socialProofSummary: formatSummary(parsed.socialProofSummary),
           
           inputQuality: parsed.inputQuality === 'rich' ? 'rich' : parsed.inputQuality === 'adequate' ? 'adequate' : 'thin',
         };
@@ -611,6 +630,10 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
         proofConfidence: 0,
         proofElementsFull: null,
         proofSummary: null,
+        socialProof: null,
+        socialProofConfidence: 0,
+        socialProofFull: null,
+        socialProofSummary: null,
         inputQuality: 'thin',
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

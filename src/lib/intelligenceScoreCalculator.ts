@@ -86,19 +86,20 @@ function createFieldScore(
   // Calculate points with specificity bonus
   let points = 0;
   if (strValue) {
-    // Base points for having a value (60% of max)
-    points = Math.round(maxPoints * 0.6);
+    // Base points for having a value (50% of max)
+    points = Math.round(maxPoints * 0.5);
     
     // Combine value and summary for specificity check
     const fullText = `${strValue} ${strSummary || ''}`;
     
-    // Bonus for specific numbers/metrics (+20% of max)
-    if (/\$\d+|\d+%|\d+x|\d+\s*(years?|months?|days?|clients?|customers?)/i.test(fullText)) {
-      points += Math.round(maxPoints * 0.2);
+    // Bonus for specific numbers/metrics (+30% of max)
+    // Match: $500K, 34%, 3.2x, 847 engagements, 8 years, Fortune 500, etc.
+    if (/\$[\d,]+[KMB]?|\d+(\.\d+)?%|\d+(\.\d+)?x|\d+\s*(years?|months?|days?|clients?|customers?|companies|engagements?|projects?)/i.test(fullText)) {
+      points += Math.round(maxPoints * 0.3);
     }
     
-    // Bonus for detailed content (+20% of max)
-    if (strValue.length > 20 || (strSummary && strSummary.length > 50)) {
+    // Bonus for detailed content (+20% of max) - lower thresholds for easier achievement
+    if (strValue.length > 15 || (strSummary && strSummary.length > 30)) {
       points += Math.round(maxPoints * 0.2);
     }
     
