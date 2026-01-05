@@ -366,6 +366,7 @@ export type Database = {
           extracted_intelligence: Json | null
           goal: string | null
           guarantee_offer: string | null
+          guest_session_id: string | null
           id: string
           industry: string | null
           key_benefits: string[] | null
@@ -380,7 +381,7 @@ export type Database = {
           unique_value: string | null
           updated_at: string
           urgency_angle: string | null
-          user_id: string
+          user_id: string | null
           wants_calculator: boolean | null
           website_url: string | null
         }
@@ -401,6 +402,7 @@ export type Database = {
           extracted_intelligence?: Json | null
           goal?: string | null
           guarantee_offer?: string | null
+          guest_session_id?: string | null
           id?: string
           industry?: string | null
           key_benefits?: string[] | null
@@ -415,7 +417,7 @@ export type Database = {
           unique_value?: string | null
           updated_at?: string
           urgency_angle?: string | null
-          user_id: string
+          user_id?: string | null
           wants_calculator?: boolean | null
           website_url?: string | null
         }
@@ -436,6 +438,7 @@ export type Database = {
           extracted_intelligence?: Json | null
           goal?: string | null
           guarantee_offer?: string | null
+          guest_session_id?: string | null
           id?: string
           industry?: string | null
           key_benefits?: string[] | null
@@ -450,11 +453,19 @@ export type Database = {
           unique_value?: string | null
           updated_at?: string
           urgency_angle?: string | null
-          user_id?: string
+          user_id?: string | null
           wants_calculator?: boolean | null
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "consultations_guest_session_id_fkey"
+            columns: ["guest_session_id"]
+            isOneToOne: false
+            referencedRelation: "guest_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       demo_leads: {
         Row: {
@@ -630,6 +641,48 @@ export type Database = {
           },
         ]
       }
+      guest_sessions: {
+        Row: {
+          consultation_data: Json | null
+          converted_at: string | null
+          converted_to_user_id: string | null
+          created_at: string | null
+          email: string | null
+          expires_at: string | null
+          generated_brief_id: string | null
+          generated_page_id: string | null
+          id: string
+          intelligence_state: Json | null
+          session_token: string
+        }
+        Insert: {
+          consultation_data?: Json | null
+          converted_at?: string | null
+          converted_to_user_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          expires_at?: string | null
+          generated_brief_id?: string | null
+          generated_page_id?: string | null
+          id?: string
+          intelligence_state?: Json | null
+          session_token: string
+        }
+        Update: {
+          consultation_data?: Json | null
+          converted_at?: string | null
+          converted_to_user_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          expires_at?: string | null
+          generated_brief_id?: string | null
+          generated_page_id?: string | null
+          id?: string
+          intelligence_state?: Json | null
+          session_token?: string
+        }
+        Relationships: []
+      }
       hero_image_cache: {
         Row: {
           cache_key: string
@@ -791,6 +844,47 @@ export type Database = {
             columns: ["parent_page_id"]
             isOneToOne: false
             referencedRelation: "landing_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          consultation_snapshot: Json | null
+          converted_at: string | null
+          converted_to_user_id: string | null
+          created_at: string | null
+          email: string
+          guest_session_id: string | null
+          id: string
+          source: string | null
+        }
+        Insert: {
+          consultation_snapshot?: Json | null
+          converted_at?: string | null
+          converted_to_user_id?: string | null
+          created_at?: string | null
+          email: string
+          guest_session_id?: string | null
+          id?: string
+          source?: string | null
+        }
+        Update: {
+          consultation_snapshot?: Json | null
+          converted_at?: string | null
+          converted_to_user_id?: string | null
+          created_at?: string | null
+          email?: string
+          guest_session_id?: string | null
+          id?: string
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_guest_session_id_fkey"
+            columns: ["guest_session_id"]
+            isOneToOne: false
+            referencedRelation: "guest_sessions"
             referencedColumns: ["id"]
           },
         ]
