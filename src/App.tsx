@@ -12,6 +12,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { SessionProvider } from "@/contexts/SessionContext";
+import { CompanionProvider } from "@/contexts/CompanionContext";
+import { CompanionBar } from "@/components/companion";
 import { DevFloatingButton } from "@/components/dev";
 import HomePage from "./pages/HomePage";
 import Wizard from "./pages/Wizard";
@@ -93,60 +95,63 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <DevFloatingButton />
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/new" element={<Navigate to="/wizard/form" replace />} />
-              
-              {/* Brand Setup - entry point */}
-              <Route path="/brand-setup" element={<EnhancedBrandSetup />} />
-              <Route path="/brand-setup-new" element={<EnhancedBrandSetup />} />
-              <Route path="/brand-setup-old" element={<BrandSetup />} />
-              
-              {/* Wizard Choice - decision point */}
-              <Route path="/wizard" element={<WizardChoice />} />
-              
-              {/* Wizard Paths */}
-              <Route path="/wizard/chat" element={<Wizard />} />
-              <Route path="/wizard/form" element={<NewConsultation key={Date.now()} />} />
-              <Route path="/wizard/review" element={<WizardReview />} />
-              
-              {/* Backwards compatibility */}
-              <Route path="/consultation" element={<Navigate to="/wizard/form" replace />} />
-              <Route path="/wizard-choice" element={<Navigate to="/wizard" replace />} />
-              
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/generate" element={<Generate />} />
-              <Route path="/generate/:pageId" element={<Generate />} />
-              <Route path="/gallery-test" element={<GalleryTest />} />
-              <Route path="/hero-showcase" element={<HeroShowcase />} />
-              <Route path="/section-selector" element={<SectionSelectorDemo />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/dev-test" element={<DevTest />} />
-              <Route path="/ai-loader-preview" element={<AILoaderPreview />} />
-              <Route path="/intro-preview" element={<IntroPreview />} />
-              <Route path="/design-system-test" element={<DesignSystemTest />} />
-              <Route path="/test-page" element={<TestPage />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/settings/brand" element={<Settings />} />
-              <Route path="/review/:businessSlug" element={<TestimonialRequest />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/brief/:sessionId" element={<Brief />} />
-              <Route path="/brand-intake" element={<BrandIntake />} />
-              <Route path="/pricing" element={<PricingPage />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/dev" element={<Dev />} />
-              <Route path="/prospects" element={<ProspectsDashboard />} />
-              <Route path="/dev" element={<Dev />} />
-              
-              {/* Public page routes - accessible without authentication */}
-              <Route path="/page/:slug" element={<PublicPage />} />
-              <Route path="/p/:slug" element={<ProspectPage />} />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <CompanionProvider>
+              <DevFloatingButton />
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/new" element={<Navigate to="/wizard/form" replace />} />
+                
+                {/* Brand Setup - entry point */}
+                <Route path="/brand-setup" element={<EnhancedBrandSetup />} />
+                <Route path="/brand-setup-new" element={<EnhancedBrandSetup />} />
+                <Route path="/brand-setup-old" element={<BrandSetup />} />
+                
+                {/* Wizard Choice - decision point */}
+                <Route path="/wizard" element={<WizardChoice />} />
+                
+                {/* Wizard Paths */}
+                <Route path="/wizard/chat" element={<Wizard />} />
+                <Route path="/wizard/form" element={<NewConsultation key={Date.now()} />} />
+                <Route path="/wizard/review" element={<WizardReview />} />
+                
+                {/* Backwards compatibility */}
+                <Route path="/consultation" element={<Navigate to="/wizard/form" replace />} />
+                <Route path="/wizard-choice" element={<Navigate to="/wizard" replace />} />
+                
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/generate" element={<Generate />} />
+                <Route path="/generate/:pageId" element={<Generate />} />
+                <Route path="/gallery-test" element={<GalleryTest />} />
+                <Route path="/hero-showcase" element={<HeroShowcase />} />
+                <Route path="/section-selector" element={<SectionSelectorDemo />} />
+                <Route path="/chat" element={<Chat />} />
+                <Route path="/dev-test" element={<DevTest />} />
+                <Route path="/ai-loader-preview" element={<AILoaderPreview />} />
+                <Route path="/intro-preview" element={<IntroPreview />} />
+                <Route path="/design-system-test" element={<DesignSystemTest />} />
+                <Route path="/test-page" element={<TestPage />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/settings/brand" element={<Settings />} />
+                <Route path="/review/:businessSlug" element={<TestimonialRequest />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/brief/:sessionId" element={<Brief />} />
+                <Route path="/brand-intake" element={<BrandIntake />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/dev" element={<Dev />} />
+                <Route path="/prospects" element={<ProspectsDashboard />} />
+                <Route path="/dev" element={<Dev />} />
+                
+                {/* Public page routes - accessible without authentication */}
+                <Route path="/page/:slug" element={<PublicPage />} />
+                <Route path="/p/:slug" element={<ProspectPage />} />
+                
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <CompanionBar />
+            </CompanionProvider>
           </BrowserRouter>
         </TooltipProvider>
       </SessionProvider>
