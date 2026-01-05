@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Check, Sparkles, FileText, Calculator, Clock } from "lucide-react";
 import { useSession } from "@/contexts/SessionContext";
+import { handlePostAuthMigration } from "@/lib/sessionMigration";
+import { hasGuestSession } from "@/lib/guestSession";
 
 interface DemoIntelligence {
   sessionId: string;
@@ -98,6 +100,15 @@ export default function Signup() {
         if (sessionToken) {
           await migrateAnonymousSession(sessionToken);
         }
+        
+        // Migrate guest session if exists
+        const { data: { user: loggedInUser } } = await supabase.auth.getUser();
+        if (loggedInUser && hasGuestSession()) {
+          const migrationResult = await handlePostAuthMigration(loggedInUser.id);
+          if (migrationResult?.success) {
+            console.log('✅ [Signup] Guest session migrated on login');
+          }
+        }
 
         toast({
           title: "Welcome back!",
@@ -182,6 +193,14 @@ export default function Signup() {
         // Migrate anonymous session if exists
         if (sessionToken && data.user) {
           await migrateAnonymousSession(sessionToken);
+        }
+        
+        // Migrate guest session if exists
+        if (data.user && hasGuestSession()) {
+          const migrationResult = await handlePostAuthMigration(data.user.id);
+          if (migrationResult?.success) {
+            console.log('✅ [Signup] Guest session migrated on signup');
+          }
         }
 
         toast({
