@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useResetDemoShortcut } from "@/hooks/useResetDemoShortcut";
+import { OrchestratorProvider } from "@/contexts/OrchestratorContext";
 
 // Disable automatic scroll restoration to prevent flash on refresh
 if ('scrollRestoration' in history) {
@@ -91,10 +92,11 @@ const App = () => {
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+        <OrchestratorProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
             <CompanionProvider>
               <DevFloatingButton />
               <Routes>
@@ -154,9 +156,10 @@ const App = () => {
             </CompanionProvider>
           </BrowserRouter>
         </TooltipProvider>
-      </SessionProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
+      </OrchestratorProvider>
+    </SessionProvider>
+  </QueryClientProvider>
+</HelmetProvider>
   );
 };
 

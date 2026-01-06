@@ -170,3 +170,9 @@ verify_jwt = false
 
 [functions.send-prospect-email]
 verify_jwt = true
+
+[functions.strategic-orchestrator]
+verify_jwt = false
+
+[functions.orchestrator-research]
+verify_jwt = false
