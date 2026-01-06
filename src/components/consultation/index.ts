@@ -10,9 +10,11 @@ export { QuestionExplainer, QUESTION_EXPLAINERS } from './QuestionExplainer';
 export { ReadinessIndicator } from './ReadinessIndicator';
 export { IntelligenceProfileDemo } from './IntelligenceProfileDemo';
 export { IntelligenceProfileWizard } from './IntelligenceProfileWizard';
+export { ObjectionKillerPanel } from './ObjectionKillerPanel';
 export type { ConsultationData } from './StrategicConsultation';
 export type { BrandSettings, WebsiteIntelligence } from './BrandCustomization';
 export type { QuestionMeta } from './QuestionExplainer';
+export type { PredictedObjection, AhaInsight } from './ObjectionKillerPanel';
 
 // Beta components
 export * from './beta';
