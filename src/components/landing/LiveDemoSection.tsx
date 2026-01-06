@@ -224,31 +224,32 @@ export default function LiveDemoSection() {
       
       {/* Subtle background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 via-transparent to-transparent pointer-events-none" />
-      {/* Header breadcrumb */}
-      <div className="relative z-10 max-w-6xl mx-auto w-full px-6 pt-20 md:pt-24 lg:pt-28 pb-4">
-        <nav className="flex items-center gap-2 text-sm text-white/40">
+      {/* Header section - tightened spacing */}
+      <div className="relative z-10 max-w-6xl mx-auto w-full px-6 pt-8 md:pt-10">
+        {/* Breadcrumb - subtle and compact */}
+        <nav className="flex items-center gap-1.5 text-xs text-white/30 mb-2">
           <span>PageConsult</span>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-white/70">Strategy Session</span>
+          <ChevronRight className="w-3 h-3" />
+          <span className="text-white/50">Strategy Session</span>
         </nav>
         
         {/* Section header - with scroll anchor */}
-        <div id="demo" className="scroll-mt-20 mt-4 mb-4">
+        <div id="demo" className="scroll-mt-20">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-sm font-medium mb-3"
+            className="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-sm font-medium mb-2"
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-3.5 h-3.5" />
             Live AI Demo
           </motion.div>
           <motion.h2
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-2xl md:text-3xl font-bold text-white"
+            transition={{ delay: 0.05 }}
+            className="text-2xl md:text-3xl font-bold text-white mb-3"
           >
             Experience the Strategy Session
           </motion.h2>
