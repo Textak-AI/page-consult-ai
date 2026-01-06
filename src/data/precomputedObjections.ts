@@ -520,17 +520,49 @@ const INDUSTRY_ALIASES: Record<string, string> = {
 
 /**
  * Resolve an industry string to its canonical category
+ * Handles both exact matches and partial matches within longer strings
  */
 function resolveIndustryCategory(industry: string): string {
   const normalized = industry.toLowerCase().replace(/[^a-z]/g, '');
   
-  // Check if it's an alias
+  // 1. Check exact alias match first
   if (INDUSTRY_ALIASES[normalized]) {
-    console.log(`🔄 Industry alias: "${industry}" → "${INDUSTRY_ALIASES[normalized]}"`);
+    console.log(`🔄 Industry alias (exact): "${industry}" → "${INDUSTRY_ALIASES[normalized]}"`);
     return INDUSTRY_ALIASES[normalized];
   }
   
-  // Return as-is (might be a direct match like "cybersecurity")
+  // 2. Check if normalized string is a direct industry key
+  if (PRECOMPUTED_OBJECTIONS[normalized]) {
+    console.log(`🔄 Industry direct match: "${industry}" → "${normalized}"`);
+    return normalized;
+  }
+  
+  // 3. Check if any alias is contained within the normalized string
+  // Sort by length descending to match longer/more specific aliases first
+  const sortedAliases = Object.entries(INDUSTRY_ALIASES)
+    .sort((a, b) => b[0].length - a[0].length);
+  
+  for (const [alias, category] of sortedAliases) {
+    if (normalized.includes(alias)) {
+      console.log(`🔄 Industry alias (partial): "${industry}" contains "${alias}" → "${category}"`);
+      return category;
+    }
+  }
+  
+  // 4. Check if any direct industry key is contained within the string
+  const industryKeys = Object.keys(PRECOMPUTED_OBJECTIONS)
+    .filter(k => k !== '_default')
+    .sort((a, b) => b.length - a.length);
+  
+  for (const key of industryKeys) {
+    if (normalized.includes(key)) {
+      console.log(`🔄 Industry key (partial): "${industry}" contains "${key}" → "${key}"`);
+      return key;
+    }
+  }
+  
+  // 5. No match found
+  console.log(`⚠️ No industry match for: "${industry}" (normalized: "${normalized}")`);
   return normalized;
 }
 
