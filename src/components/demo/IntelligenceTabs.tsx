@@ -106,8 +106,8 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
 
   return (
     <div className="flex flex-col h-full">
-      {/* Tab Bar */}
-      <div className="flex items-center gap-1 px-3 py-2 border-b border-white/5 bg-slate-900/50 overflow-x-auto">
+      {/* Tab Bar - more breathing room */}
+      <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-white/5 bg-slate-900/50 overflow-x-auto">
         {availableTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -168,9 +168,10 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
           );
         })}
         
-        {/* Coming Soon tabs (grayed out) */}
+        {/* Coming Soon tabs (grayed out) - only personas shows "Soon" */}
         {unavailableTabs.map((tab) => {
           const Icon = tab.icon;
+          const showSoonLabel = tab.id === 'personas'; // Only show "Soon" for personas
           return (
             <div
               key={tab.id}
@@ -178,7 +179,9 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
             >
               <Icon className="w-4 h-4" />
               <span className="hidden sm:inline">{tab.shortLabel}</span>
-              <span className="text-[10px] uppercase tracking-wide text-slate-700">Soon</span>
+              {showSoonLabel && (
+                <span className="text-[10px] uppercase tracking-wide text-slate-700">Soon</span>
+              )}
             </div>
           );
         })}
