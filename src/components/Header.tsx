@@ -133,9 +133,12 @@ const Header = () => {
               <a
                 href="/#demo"
                 onClick={(e) => {
-                  if (window.location.pathname === '/') {
+                  if (window.location.pathname === '/' || window.location.pathname === '') {
                     e.preventDefault();
-                    document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' });
+                    const demoSection = document.getElementById('demo');
+                    if (demoSection) {
+                      demoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                   }
                 }}
                 className="text-muted-foreground hover:text-foreground transition-all duration-200 relative group"

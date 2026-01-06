@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import LiveDemoSection from "@/components/landing/LiveDemoSection";
@@ -58,10 +59,22 @@ const IndexContent = () => {
 };
 
 const Index = () => {
-  // Scroll to top on mount
+  const location = useLocation();
+
+  // Scroll to top on mount, or to #demo if hash is present
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+    if (location.hash === '#demo' || window.location.hash === '#demo') {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        const demoSection = document.getElementById('demo');
+        if (demoSection) {
+          demoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [location.hash]);
 
   return (
     <IntelligenceProvider>
