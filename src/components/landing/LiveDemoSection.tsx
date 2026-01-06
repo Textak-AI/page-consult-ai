@@ -376,7 +376,7 @@ export default function LiveDemoSection() {
               </div>
               
               {/* Right: Intelligence Tabs - Desktop only */}
-              <div className="hidden lg:flex w-[380px] flex-shrink-0 bg-slate-900/50 flex-col overflow-hidden">
+              <div className="hidden lg:flex w-[450px] xl:w-[480px] flex-shrink-0 bg-slate-900/50 flex-col overflow-hidden">
                 <IntelligenceTabs 
                   onContinue={handleGenerateClick}
                   onReopenEmailGate={reopenEmailGate}
