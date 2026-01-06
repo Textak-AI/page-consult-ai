@@ -613,9 +613,18 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
             timestamp: new Date(),
           } : null;
 
+          // Sync industry from detection to extracted if not already set
+          const industryFromDetection = updatedIndustryDetection?.variant && 
+            updatedIndustryDetection.variant !== 'default' &&
+            !mergedExtracted.industry
+              ? updatedIndustryDetection.variant.charAt(0).toUpperCase() + updatedIndustryDetection.variant.slice(1)
+              : null;
+
           return {
             ...prev,
-            extracted: mergedExtracted,
+            extracted: industryFromDetection 
+              ? { ...mergedExtracted, industry: industryFromDetection }
+              : mergedExtracted,
             readiness: calculateReadiness(mergedExtracted, prev.market.marketSize !== null, prev.emailCaptured),
             conversationHistory: newTurn ? [...prev.conversationHistory, newTurn] : prev.conversationHistory,
             industryDetection: updatedIndustryDetection,
@@ -648,8 +657,28 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       });
 
       let aiResponseContent = "I'd love to learn more about your business. What's the main outcome you deliver for clients?";
+      let isResearchReveal = false;
+      
+      // Check if user is affirming the research offer
+      const lastAIMessage = state.conversation.length > 0 
+        ? state.conversation[state.conversation.length - 1]
+        : null;
+      const isAffirmativeToResearchOffer = (() => {
+        if (!lastAIMessage || lastAIMessage.role !== 'assistant') return false;
+        const affirmatives = ['yes', 'yeah', 'yep', 'sure', 'ok', 'okay', 'please', 'show me', 'absolutely'];
+        const researchOfferPhrases = ['want to see what i found', 'want to see what that looks like', 'deeper research'];
+        const isAffirmative = affirmatives.some(a => message.toLowerCase().includes(a));
+        const wasResearchOffer = researchOfferPhrases.some(p => lastAIMessage.content.toLowerCase().includes(p));
+        return isAffirmative && wasResearchOffer;
+      })();
+      
       if (!responseError && responseData?.response) {
         aiResponseContent = responseData.response;
+      }
+      
+      // If affirming research offer and email not captured, trigger the gate
+      if (isAffirmativeToResearchOffer && !state.emailCaptured) {
+        isResearchReveal = true;
       }
       
       // Update thin count in state
@@ -680,10 +709,11 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       }));
 
       // Show email gate with 2-second delay so user can read the response first
-      if (shouldShowGate) {
+      // Also trigger immediately if user affirmed research offer
+      if (shouldShowGate || isResearchReveal) {
         setTimeout(() => {
           setState(prev => ({ ...prev, showEmailGate: true, emailOffered: true }));
-        }, 2000);
+        }, isResearchReveal ? 500 : 2000); // Faster if they asked for research
       }
 
       // Update session in database (fire and forget)
@@ -749,9 +779,15 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // ----------------------------------------
   const confirmIndustrySelection = useCallback((variant: string) => {
     const confirmed = confirmIndustry(variant as any);
+    // Also sync to extracted.industry so it appears in the Intelligence Profile
+    const displayName = variant.charAt(0).toUpperCase() + variant.slice(1);
     setState(prev => ({
       ...prev,
       industryDetection: confirmed,
+      extracted: {
+        ...prev.extracted,
+        industry: prev.extracted.industry || displayName,
+      },
     }));
   }, []);
 

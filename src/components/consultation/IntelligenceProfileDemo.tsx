@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { ChevronDown, AlertCircle, Check } from 'lucide-react';
+import { ChevronDown, AlertCircle, Check, Loader2 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import type { IntelligenceScore, StrategicLevel, FieldScore } from '@/types/intelligenceScore';
 import { CATEGORY_COLORS, LEVEL_COLORS } from '@/types/intelligenceScore';
@@ -16,6 +16,7 @@ import {
   optionToVariant, 
   variantToDisplayName 
 } from '@/lib/industryDetection';
+import type { MarketResearch } from '@/contexts/IntelligenceContext';
 
 // Category configuration for Demo view (only key fields)
 const DEMO_CATEGORIES = [
@@ -64,6 +65,7 @@ const LEVEL_CONFIG: Record<StrategicLevel, { label: string; sublabel?: string }>
 interface Props {
   score: IntelligenceScore;
   industryDetection?: IndustryDetection | null;
+  marketResearch?: MarketResearch | null;
   onContinue?: () => void;
   onKeepChatting?: () => void;
   onIndustryCorrection?: (variant: string) => void;
@@ -74,6 +76,7 @@ interface Props {
 export function IntelligenceProfileDemo({
   score,
   industryDetection,
+  marketResearch,
   onContinue,
   onKeepChatting,
   onIndustryCorrection,
@@ -135,12 +138,38 @@ export function IntelligenceProfileDemo({
   
   const showCTA = score.level !== 'unqualified';
   
+  // Scroll indicator state
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+  
+  // Check if content overflows and needs scroll indicator
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    
+    const checkScroll = () => {
+      const hasMore = el.scrollHeight > el.clientHeight;
+      const notAtBottom = el.scrollTop + el.clientHeight < el.scrollHeight - 20;
+      setShowScrollHint(hasMore && notAtBottom);
+    };
+    
+    checkScroll();
+    el.addEventListener('scroll', checkScroll);
+    return () => el.removeEventListener('scroll', checkScroll);
+  }, [marketResearch]); // Re-check when market research changes
+  
   // Get filled fields count for mobile header
   const filledCount = DEMO_CATEGORIES.reduce((acc, cat) => {
     const category = score[cat.key];
     return acc + cat.fields.filter(f => (category[f.key] as FieldScore).value).length;
   }, 0);
   const totalFields = DEMO_CATEGORIES.reduce((acc, cat) => acc + cat.fields.length, 0);
+  
+  // Check if market research has data
+  const hasMarketResearchData = marketResearch && 
+    !marketResearch.isLoading && 
+    (marketResearch.marketSize || marketResearch.buyerPersona || 
+     (marketResearch.commonObjections && marketResearch.commonObjections.length > 0));
   
   // Industry correction handler
   const handleIndustrySelect = (option: string) => {
@@ -181,22 +210,20 @@ export function IntelligenceProfileDemo({
             {isConfirmed && (
               <Check className="w-3 h-3 text-green-400" />
             )}
-            {!isConfirmed && (isLowConfidence || isMediumConfidence) && (
+            {/* Only show confirm prompt for low confidence, hide for medium/high */}
+            {!isConfirmed && isLowConfidence && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => setShowIndustryCorrection(!showIndustryCorrection)}
                     className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
                   >
-                    {isLowConfidence ? '(confirm?)' : '(wrong?)'}
+                    (confirm?)
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="left" className="bg-slate-900 border-slate-700 text-slate-200 p-2 max-w-[200px]">
                   <p className="text-xs">
-                    {isLowConfidence 
-                      ? 'Low confidence detection. Click to confirm or correct.'
-                      : 'Based on: ' + industryDetection.keywords.join(', ')
-                    }
+                    Low confidence detection. Click to confirm or correct.
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -297,7 +324,7 @@ export function IntelligenceProfileDemo({
         {renderIndustryVariant()}
         
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 relative">
           {DEMO_CATEGORIES.map((cat) => {
             const category = score[cat.key];
             const catColors = CATEGORY_COLORS[cat.key];
@@ -406,6 +433,91 @@ export function IntelligenceProfileDemo({
               </div>
             );
           })}
+          
+          {/* MARKET RESEARCH section - appears when data loads */}
+          {hasMarketResearchData && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="pt-4 border-t border-slate-700/50"
+            >
+              <div className="text-[10px] text-cyan-400 uppercase tracking-wider mb-3 flex items-center justify-between">
+                <span>MARKET RESEARCH</span>
+                <span className="flex items-center gap-1">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                    <span className="relative rounded-full h-1.5 w-1.5 bg-cyan-500"></span>
+                  </span>
+                  <span className="text-[9px] text-slate-500">LIVE</span>
+                </span>
+              </div>
+              
+              <div className="space-y-2">
+                {marketResearch?.marketSize && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Market Size</span>
+                    <span className="text-slate-200 text-right max-w-[60%] truncate">
+                      {marketResearch.marketSize}
+                    </span>
+                  </div>
+                )}
+                
+                {marketResearch?.buyerPersona && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">Buyer</span>
+                    <span className="text-slate-200 text-right max-w-[60%] truncate">
+                      {marketResearch.buyerPersona}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Expandable objections */}
+                {marketResearch?.commonObjections && marketResearch.commonObjections.length > 0 && (
+                  <details className="group">
+                    <summary className="flex justify-between text-sm cursor-pointer list-none">
+                      <span className="text-slate-400">Objections</span>
+                      <span className="text-amber-400 flex items-center gap-1">
+                        {marketResearch.commonObjections.length} found
+                        <ChevronDown className="w-3 h-3 group-open:rotate-180 transition-transform" />
+                      </span>
+                    </summary>
+                    <ul className="mt-2 space-y-1 pl-2 border-l border-slate-700">
+                      {marketResearch.commonObjections.map((obj, i) => (
+                        <li key={i} className="text-xs text-slate-400">{obj}</li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            </motion.div>
+          )}
+          
+          {/* Loading state for market research */}
+          {marketResearch?.isLoading && (
+            <div className="pt-4 border-t border-slate-700/50">
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <Loader2 className="w-3 h-3 animate-spin text-cyan-400" />
+                Researching your market...
+              </div>
+            </div>
+          )}
+          
+          {/* Scroll indicator */}
+          <AnimatePresence>
+            {showScrollHint && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="sticky bottom-0 left-0 right-0 pointer-events-none"
+              >
+                <div className="h-12 bg-gradient-to-t from-slate-900 to-transparent" />
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+                  <ChevronDown className="w-4 h-4 text-cyan-400 animate-bounce" />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         
         {/* Footer - Fixed at bottom */}
