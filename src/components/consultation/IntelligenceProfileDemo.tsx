@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { ChevronDown, AlertCircle, Check, Loader2 } from 'lucide-react';
+import { ChevronDown, AlertCircle, Check, Loader2, Sparkles } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import type { IntelligenceScore, StrategicLevel, FieldScore } from '@/types/intelligenceScore';
 import { CATEGORY_COLORS, LEVEL_COLORS } from '@/types/intelligenceScore';
@@ -17,6 +17,7 @@ import {
   variantToDisplayName 
 } from '@/lib/industryDetection';
 import type { MarketResearch } from '@/contexts/IntelligenceContext';
+import { type AestheticMode, isConfidentHybrid } from '@/lib/targetAesthetic';
 
 // Category configuration for Demo view (only key fields)
 const DEMO_CATEGORIES = [
@@ -65,6 +66,7 @@ const LEVEL_CONFIG: Record<StrategicLevel, { label: string; sublabel?: string }>
 interface Props {
   score: IntelligenceScore;
   industryDetection?: IndustryDetection | null;
+  aestheticMode?: AestheticMode | null;
   marketResearch?: MarketResearch | null;
   onContinue?: () => void;
   onKeepChatting?: () => void;
@@ -76,6 +78,7 @@ interface Props {
 export function IntelligenceProfileDemo({
   score,
   industryDetection,
+  aestheticMode,
   marketResearch,
   onContinue,
   onKeepChatting,
@@ -178,13 +181,53 @@ export function IntelligenceProfileDemo({
     setShowIndustryCorrection(false);
   };
   
-  // Render industry variant badge with confidence
-  const renderIndustryVariant = () => {
+  // Render industry variant badge with confidence OR aesthetic mode
+  const renderDesignMode = () => {
+    // Check if we have a hybrid aesthetic mode
+    const hasHybridMode = aestheticMode && aestheticMode.blend === 'hybrid';
+    const isHybridConfident = aestheticMode && isConfidentHybrid(aestheticMode);
+    
+    // If hybrid mode, show split view
+    if (hasHybridMode && aestheticMode) {
+      return (
+        <div className="px-4 py-3 border-b border-slate-800/50">
+          <div className="space-y-2">
+            {/* Your Industry (provider) */}
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-400">Your Industry</span>
+              <span className="text-slate-200">{aestheticMode.secondary}</span>
+            </div>
+            
+            {/* Target Market (buyer's industry) - Primary driver */}
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-400">Target Market</span>
+              <span className="text-cyan-400 font-medium flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                {aestheticMode.primary}
+              </span>
+            </div>
+            
+            {/* Blend explanation */}
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-lg p-2 mt-2 border border-cyan-500/20"
+            >
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                <span className="text-cyan-400 font-medium">Design approach:</span>{' '}
+                {aestheticMode.rationale}
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Fall back to original industry detection display
     if (!industryDetection || industryDetection.variant === 'default') return null;
     
     const displayName = variantToDisplayName(industryDetection.variant);
     const isLowConfidence = industryDetection.confidence === 'low';
-    const isMediumConfidence = industryDetection.confidence === 'medium';
     const isConfirmed = industryDetection.manuallyConfirmed;
     
     return (
@@ -320,9 +363,8 @@ export function IntelligenceProfileDemo({
           </motion.p>
         </div>
         
-        {/* Industry Variant Badge */}
-        {renderIndustryVariant()}
-        
+        {/* Industry/Aesthetic Mode Display */}
+        {renderDesignMode()}
         {/* Scrollable Content Area */}
         <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 relative">
           {DEMO_CATEGORIES.map((cat) => {

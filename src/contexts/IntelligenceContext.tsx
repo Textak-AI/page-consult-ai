@@ -6,6 +6,10 @@ import {
   confirmIndustry, 
   type IndustryDetection 
 } from '@/lib/industryDetection';
+import { 
+  calculateAestheticMode, 
+  type AestheticMode 
+} from '@/lib/targetAesthetic';
 
 // ============================================
 // PERSISTENCE KEYS & CONFIG
@@ -71,7 +75,12 @@ export interface ExtractedIntelligence {
   painPoints: string | null;
   buyerObjections: string | null;
   proofElements: string | null;
-  socialProof: string | null; // NEW: client names, testimonials, case studies
+  socialProof: string | null; // Client names, testimonials, case studies
+  
+  // Target Aesthetic System
+  targetMarket: string | null;    // Industry of their BUYERS (if different from provider)
+  businessType: 'B2B' | 'B2C' | 'Both' | null;
+  
   // Full values (for Hero/CTA generation - max 150 chars)
   industryFull: string | null;
   audienceFull: string | null;
@@ -128,6 +137,9 @@ export interface IntelligenceState {
   // Dynamic industry detection
   industryDetection: IndustryDetection | null;
   
+  // Target Aesthetic System
+  aestheticMode: AestheticMode;
+  
   // Conversation
   conversation: ConversationMessage[];
   conversationHistory: ConversationTurn[]; // Track user messages with extractions
@@ -175,6 +187,9 @@ const initialState: IntelligenceState = {
     buyerObjections: null,
     proofElements: null,
     socialProof: null,
+    // Target Aesthetic System
+    targetMarket: null,
+    businessType: null,
     // Full values (for Hero/CTA generation)
     industryFull: null,
     audienceFull: null,
@@ -203,6 +218,12 @@ const initialState: IntelligenceState = {
   },
   readiness: 0,
   industryDetection: null,
+  aestheticMode: {
+    primary: 'default',
+    secondary: null,
+    blend: 'pure',
+    rationale: 'Designed for your industry',
+  },
   conversation: [],
   conversationHistory: [],
   isProcessing: false,
@@ -516,6 +537,9 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           buyerObjections: extractedData.buyerObjections || state.extracted.buyerObjections,
           proofElements: extractedData.proofElements || state.extracted.proofElements,
           socialProof: extractedData.socialProof || state.extracted.socialProof,
+          // Target Aesthetic System
+          targetMarket: extractedData.targetMarket || state.extracted.targetMarket,
+          businessType: extractedData.businessType || state.extracted.businessType,
           // Full values (for Hero/CTA generation)
           industryFull: extractedData.industryFull || state.extracted.industryFull,
           audienceFull: extractedData.audienceFull || state.extracted.audienceFull,
@@ -549,7 +573,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         // This handles race conditions where state might have changed since we started
         setState(prev => {
           // Re-merge with prev.extracted to handle any concurrent updates
-          const mergedExtracted = {
+          const mergedExtracted: ExtractedIntelligence = {
             // Short values (for sidebar display)
             industry: extractedData.industry || prev.extracted.industry,
             audience: extractedData.audience || prev.extracted.audience,
@@ -559,6 +583,9 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
             buyerObjections: extractedData.buyerObjections || prev.extracted.buyerObjections,
             proofElements: extractedData.proofElements || prev.extracted.proofElements,
             socialProof: extractedData.socialProof || prev.extracted.socialProof,
+            // Target Aesthetic System
+            targetMarket: extractedData.targetMarket || prev.extracted.targetMarket,
+            businessType: extractedData.businessType || prev.extracted.businessType,
             // Full values (for Hero/CTA generation)
             industryFull: extractedData.industryFull || prev.extracted.industryFull,
             audienceFull: extractedData.audienceFull || prev.extracted.audienceFull,
@@ -620,12 +647,22 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
               ? updatedIndustryDetection.variant.charAt(0).toUpperCase() + updatedIndustryDetection.variant.slice(1)
               : null;
 
+          // Calculate aesthetic mode based on provider industry and target market
+          const finalExtracted = industryFromDetection 
+            ? { ...mergedExtracted, industry: industryFromDetection }
+            : mergedExtracted;
+          
+          const updatedAestheticMode = calculateAestheticMode(
+            finalExtracted.industry,
+            finalExtracted.targetMarket,
+            finalExtracted.audience
+          );
+
           return {
             ...prev,
-            extracted: industryFromDetection 
-              ? { ...mergedExtracted, industry: industryFromDetection }
-              : mergedExtracted,
-            readiness: calculateReadiness(mergedExtracted, prev.market.marketSize !== null, prev.emailCaptured),
+            extracted: finalExtracted,
+            aestheticMode: updatedAestheticMode,
+            readiness: calculateReadiness(finalExtracted, prev.market.marketSize !== null, prev.emailCaptured),
             conversationHistory: newTurn ? [...prev.conversationHistory, newTurn] : prev.conversationHistory,
             industryDetection: updatedIndustryDetection,
           };
