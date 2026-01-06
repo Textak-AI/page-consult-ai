@@ -414,6 +414,127 @@ const PRECOMPUTED_OBJECTIONS: Record<string, Record<string, PredictedObjection[]
 };
 
 /**
+ * Map specific services/niches to their parent industry category
+ * This ensures objection lookup works regardless of how specific the detection is
+ */
+const INDUSTRY_ALIASES: Record<string, string> = {
+  // Cybersecurity aliases
+  'penetrationtesting': 'cybersecurity',
+  'pentesting': 'cybersecurity',
+  'securitytesting': 'cybersecurity',
+  'securityaudits': 'cybersecurity',
+  'securityconsulting': 'cybersecurity',
+  'infosec': 'cybersecurity',
+  'informationsecurity': 'cybersecurity',
+  'cybersecurityconsulting': 'cybersecurity',
+  'networksecurity': 'cybersecurity',
+  'applicationsecurity': 'cybersecurity',
+  'cloudsecurity': 'cybersecurity',
+  'securityassessment': 'cybersecurity',
+  'vulnerabilityassessment': 'cybersecurity',
+  'threatassessment': 'cybersecurity',
+  
+  // Consulting aliases
+  'managementconsulting': 'consulting',
+  'businessconsulting': 'consulting',
+  'strategyconsulting': 'consulting',
+  'operationsconsulting': 'consulting',
+  'itconsulting': 'consulting',
+  'hrconsulting': 'consulting',
+  'marketingconsulting': 'consulting',
+  'financialconsulting': 'consulting',
+  
+  // SaaS aliases
+  'software': 'saas',
+  'softwareasaservice': 'saas',
+  'cloudservices': 'saas',
+  'b2bsoftware': 'saas',
+  'enterprisesoftware': 'saas',
+  'startupsoftware': 'saas',
+  
+  // Coaching aliases
+  'executivecoaching': 'coaching',
+  'businesscoaching': 'coaching',
+  'leadershipcoaching': 'coaching',
+  'careercoaching': 'coaching',
+  'lifecoaching': 'coaching',
+  'performancecoaching': 'coaching',
+  
+  // Real estate aliases
+  'realestateagent': 'realestate',
+  'realtor': 'realestate',
+  'propertymanagement': 'realestate',
+  'commercialrealestate': 'realestate',
+  'residentialrealestate': 'realestate',
+  
+  // Healthcare aliases
+  'healthtech': 'healthcare',
+  'medtech': 'healthcare',
+  'digitalhealth': 'healthcare',
+  'healthcareservices': 'healthcare',
+  'medicaldevices': 'healthcare',
+  'telehealth': 'healthcare',
+  
+  // Financial aliases
+  'financialservices': 'financial',
+  'fintech': 'financial',
+  'wealthmanagement': 'financial',
+  'investmentmanagement': 'financial',
+  'financialplanning': 'financial',
+  'insurance': 'financial',
+  'banking': 'financial',
+  
+  // Fitness aliases
+  'personaltraining': 'fitness',
+  'fitnesscoaching': 'fitness',
+  'gym': 'fitness',
+  'wellness': 'fitness',
+  'healthandwellness': 'fitness',
+  'nutrition': 'fitness',
+  
+  // Legal aliases
+  'legalservices': 'legal',
+  'lawfirm': 'legal',
+  'attorney': 'legal',
+  'lawyer': 'legal',
+  
+  // Education aliases
+  'onlinecourses': 'education',
+  'elearning': 'education',
+  'training': 'education',
+  'edtech': 'education',
+  'onlineeducation': 'education',
+  
+  // E-commerce aliases
+  'onlinestore': 'ecommerce',
+  'retailecommerce': 'ecommerce',
+  'dtc': 'ecommerce',
+  'directtoconsumer': 'ecommerce',
+  'shopify': 'ecommerce',
+  
+  // Manufacturing aliases
+  'industrialmanufacturing': 'manufacturing',
+  'factoryautomation': 'manufacturing',
+  'production': 'manufacturing',
+};
+
+/**
+ * Resolve an industry string to its canonical category
+ */
+function resolveIndustryCategory(industry: string): string {
+  const normalized = industry.toLowerCase().replace(/[^a-z]/g, '');
+  
+  // Check if it's an alias
+  if (INDUSTRY_ALIASES[normalized]) {
+    console.log(`🔄 Industry alias: "${industry}" → "${INDUSTRY_ALIASES[normalized]}"`);
+    return INDUSTRY_ALIASES[normalized];
+  }
+  
+  // Return as-is (might be a direct match like "cybersecurity")
+  return normalized;
+}
+
+/**
  * Get pre-computed objections for an industry/target market combination
  */
 export function getPrecomputedObjections(
@@ -422,21 +543,33 @@ export function getPrecomputedObjections(
 ): PredictedObjection[] {
   if (!industry) return [];
   
-  const industryKey = industry.toLowerCase().replace(/[^a-z]/g, '');
-  const targetKey = targetMarket?.toLowerCase().replace(/[^a-z]/g, '') || '_default';
+  // Resolve to canonical category
+  const industryKey = resolveIndustryCategory(industry);
+  const targetKey = targetMarket 
+    ? resolveIndustryCategory(targetMarket) 
+    : '_default';
   
   const industryData = PRECOMPUTED_OBJECTIONS[industryKey];
-  if (!industryData) return [];
+  if (!industryData) {
+    console.log(`⚠️ No pre-computed objections for industry: "${industry}" (resolved: "${industryKey}")`);
+    return [];
+  }
   
   // Try specific target market first, fall back to default
-  return industryData[targetKey] || industryData['_default'] || [];
+  const objections = industryData[targetKey] || industryData['_default'] || [];
+  
+  if (objections.length > 0) {
+    console.log(`🎯 Found ${objections.length} objections for ${industryKey} → ${targetKey}`);
+  }
+  
+  return objections;
 }
 
 /**
  * Check if we have pre-computed data for an industry
  */
 export function hasPrecomputedData(industry: string): boolean {
-  const key = industry.toLowerCase().replace(/[^a-z]/g, '');
+  const key = resolveIndustryCategory(industry);
   return Boolean(PRECOMPUTED_OBJECTIONS[key]);
 }
 
