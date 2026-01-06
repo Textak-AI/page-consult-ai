@@ -2,13 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Sparkles, Send, Loader2, ChevronRight, BarChart3, X } from 'lucide-react';
+import { MessageSquare, Sparkles, Send, Loader2, ChevronRight, BarChart3, X, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import EmailGateModal from './EmailGateModal';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
+import { FocusModeOverlay } from '@/components/demo/FocusModeOverlay';
+import { FocusModeSuggestion } from '@/components/demo/FocusModeSuggestion';
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -44,6 +46,11 @@ export default function LiveDemoSection() {
   
   // Session saving state
   const [isSavingSession, setIsSavingSession] = useState(false);
+  
+  // Focus mode state
+  const [focusModeOpen, setFocusModeOpen] = useState(false);
+  const [focusModeSuggestionVisible, setFocusModeSuggestionVisible] = useState(false);
+  const [focusModeDismissed, setFocusModeDismissed] = useState(false);
 
   // Send initial AI message on mount
   useEffect(() => {
@@ -51,6 +58,28 @@ export default function LiveDemoSection() {
       hasInitialized.current = true;
     }
   }, [state.conversation.length]);
+
+  // Show focus mode suggestion at threshold
+  useEffect(() => {
+    const shouldSuggestFocusMode = 
+      (state.readiness >= 50 || state.emailCaptured) && 
+      !focusModeDismissed && 
+      !focusModeOpen;
+      
+    if (shouldSuggestFocusMode && !focusModeSuggestionVisible) {
+      setFocusModeSuggestionVisible(true);
+    }
+  }, [state.readiness, state.emailCaptured, focusModeDismissed, focusModeOpen, focusModeSuggestionVisible]);
+
+  const handleEnterFocusMode = () => {
+    setFocusModeSuggestionVisible(false);
+    setFocusModeOpen(true);
+  };
+
+  const handleDismissFocusModeSuggestion = () => {
+    setFocusModeSuggestionVisible(false);
+    setFocusModeDismissed(true);
+  };
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -255,15 +284,28 @@ export default function LiveDemoSection() {
                       </div>
                     </div>
                     
-                    {/* Mobile: Show Progress button */}
-                    <button
-                      onClick={() => setShowMobileIntelligence(true)}
-                      className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:border-slate-600 transition-all text-sm"
-                    >
-                      <BarChart3 className="w-4 h-4" />
-                      <span className="hidden sm:inline">Progress</span>
-                      <span className="text-xs text-cyan-400">{score.totalScore}/100</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {/* Focus Mode button - visible at 30%+ readiness on desktop */}
+                      {state.readiness >= 30 && (
+                        <button
+                          onClick={handleEnterFocusMode}
+                          className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/50 transition-all text-sm"
+                        >
+                          <Maximize2 className="w-4 h-4" />
+                          <span>Focus</span>
+                        </button>
+                      )}
+                      
+                      {/* Mobile: Show Progress button */}
+                      <button
+                        onClick={() => setShowMobileIntelligence(true)}
+                        className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:border-slate-600 transition-all text-sm"
+                      >
+                        <BarChart3 className="w-4 h-4" />
+                        <span className="hidden sm:inline">Progress</span>
+                        <span className="text-xs text-cyan-400">{score.totalScore}/100</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
                 
@@ -478,6 +520,113 @@ export default function LiveDemoSection() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Focus Mode Suggestion Banner */}
+      <FocusModeSuggestion
+        isVisible={focusModeSuggestionVisible}
+        onEnterFocusMode={handleEnterFocusMode}
+        onDismiss={handleDismissFocusModeSuggestion}
+      />
+
+      {/* Focus Mode Overlay */}
+      <FocusModeOverlay
+        isOpen={focusModeOpen}
+        onClose={() => setFocusModeOpen(false)}
+        onContinue={handleGenerateClick}
+        onReopenEmailGate={reopenEmailGate}
+        chatContent={
+          <>
+            {/* Header */}
+            <div className="px-4 sm:px-6 py-4 border-b border-white/5 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+                  <MessageSquare className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold">PageConsult AI</h3>
+                  <p className="text-white/50 text-sm">Strategy Consultant</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Messages - scrollable */}
+            <div className="flex-1 overflow-y-scroll px-4 sm:px-6 py-5 space-y-4 scroll-smooth">
+              <AnimatePresence mode="popLayout">
+                {displayConversation.map((message, index) => (
+                  <motion.div
+                    key={`focus-msg-${index}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[85%] md:max-w-[80%] rounded-2xl px-4 py-3 ${
+                        message.role === 'user'
+                          ? 'bg-cyan-600/20 border border-cyan-500/30 text-white'
+                          : 'bg-slate-700/50 border border-slate-600/30 text-slate-200'
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed">{message.content}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              
+              {/* Typing indicator */}
+              {state.isProcessing && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-slate-700/50 border border-slate-600/30 rounded-2xl">
+                    <TypingIndicator />
+                  </div>
+                </motion.div>
+              )}
+            </div>
+
+            {/* Input */}
+            <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-4 border-t border-white/5 flex-shrink-0">
+              {state.rateLimited ? (
+                <div className="text-center py-3">
+                  <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
+                  <Button
+                    onClick={() => navigate('/new')}
+                    className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
+                  >
+                    Start Full Strategy Session
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder="Tell me about your business..."
+                    disabled={state.isProcessing}
+                    className="flex-1 bg-slate-800 border-slate-600 focus:border-cyan-500 text-white placeholder:text-slate-500"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={!inputValue.trim() || state.isProcessing}
+                    className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white px-4"
+                  >
+                    {state.isProcessing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+              )}
+            </form>
+          </>
+        }
+      />
     </section>
   );
 }
