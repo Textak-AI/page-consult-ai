@@ -10,6 +10,7 @@ import MarketResearchPanel from './MarketResearchPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { IntelligenceProfileDemo } from '@/components/consultation/IntelligenceProfileDemo';
+import { ObjectionKillerPanel } from '@/components/consultation/ObjectionKillerPanel';
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -33,7 +34,7 @@ const TypingIndicator = () => (
 
 export default function LiveDemoSection() {
   const navigate = useNavigate();
-  const { state, processUserMessage, submitEmail, dismissEmailGate, reopenEmailGate, confirmIndustrySelection } = useIntelligence();
+  const { state, processUserMessage, submitEmail, dismissEmailGate, reopenEmailGate, confirmIndustrySelection, shouldShowObjectionPanel } = useIntelligence();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -390,6 +391,16 @@ export default function LiveDemoSection() {
                     className="h-auto border-0 rounded-none"
                   />
                   
+                  {/* Objection Killer Panel - shows when objections are loaded */}
+                  {shouldShowObjectionPanel && (
+                    <div className="p-4 border-t border-white/5">
+                      <ObjectionKillerPanel 
+                        objections={state.predictedObjections}
+                        isLoading={false}
+                      />
+                    </div>
+                  )}
+                  
                   {/* Market Research Section */}
                   <AnimatePresence mode="wait">
                     {/* Show unlock button if: dismissed without email AND industry exists AND not loading/loaded */}
@@ -487,6 +498,16 @@ export default function LiveDemoSection() {
                   isThinking={state.isProcessing}
                   className="border-0 rounded-none bg-transparent"
                 />
+                
+                {/* Objection Killer Panel - Mobile */}
+                {shouldShowObjectionPanel && (
+                  <div className="mt-4">
+                    <ObjectionKillerPanel 
+                      objections={state.predictedObjections}
+                      isLoading={false}
+                    />
+                  </div>
+                )}
                 
                 {/* Market Research Section - Mobile */}
                 <AnimatePresence mode="wait">

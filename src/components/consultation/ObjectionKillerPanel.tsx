@@ -1,15 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Target, XCircle, CheckCircle, Lightbulb, Loader2 } from 'lucide-react';
+import { PredictedObjection } from '@/data/precomputedObjections';
 
-export interface PredictedObjection {
-  objection: string;
-  frequency: 'very_common' | 'common' | 'moderate' | 'rare';
-  source: string;
-  counterStrategy: string;
-  proofNeeded: string;
-  userHasProof?: boolean;
-}
+// Re-export for backward compatibility
+export type { PredictedObjection };
 
 export interface AhaInsight {
   title: string;
