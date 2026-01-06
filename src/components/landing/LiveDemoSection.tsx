@@ -180,7 +180,7 @@ export default function LiveDemoSection() {
   const score = calculateIntelligenceScore(state.extracted);
 
   return (
-    <section id="demo" className="min-h-screen bg-slate-950 relative flex flex-col overflow-hidden scroll-mt-24">
+    <section className="min-h-screen bg-slate-950 relative flex flex-col overflow-hidden">
       {/* === LASER BEAM EFFECTS === */}
       
       {/* Horizontal beam - slow drift across */}
@@ -232,13 +232,13 @@ export default function LiveDemoSection() {
           <span className="text-white/70">Strategy Session</span>
         </nav>
         
-        {/* Section header */}
-        <div className="mt-6 mb-6">
+        {/* Section header - with scroll anchor */}
+        <div id="demo" className="scroll-mt-20 mt-4 mb-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-sm font-medium mb-4"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-sm font-medium mb-3"
           >
             <Sparkles className="w-4 h-4" />
             Live AI Demo
