@@ -131,7 +131,13 @@ const Header = () => {
                 <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-secondary transition-all duration-200 group-hover:w-full" />
               </a>
               <a
-                href="#demo"
+                href="/#demo"
+                onClick={(e) => {
+                  if (window.location.pathname === '/') {
+                    e.preventDefault();
+                    document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
                 className="text-muted-foreground hover:text-foreground transition-all duration-200 relative group"
               >
                 Demo
