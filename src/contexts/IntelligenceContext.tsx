@@ -10,6 +10,10 @@ import {
   calculateAestheticMode, 
   type AestheticMode 
 } from '@/lib/targetAesthetic';
+import { 
+  getPrecomputedObjections, 
+  type PredictedObjection 
+} from '@/data/precomputedObjections';
 
 // ============================================
 // PERSISTENCE KEYS & CONFIG
@@ -140,6 +144,12 @@ export interface IntelligenceState {
   // Target Aesthetic System
   aestheticMode: AestheticMode;
   
+  // Pre-computed objections
+  predictedObjections: PredictedObjection[];
+  
+  // Journey stage tracking
+  journeyStage: 'entry' | 'engaged' | 'ready' | 'complete';
+  
   // Conversation
   conversation: ConversationMessage[];
   conversationHistory: ConversationTurn[]; // Track user messages with extractions
@@ -170,6 +180,11 @@ export interface IntelligenceContextValue {
   dismissEmailGate: () => void;
   reopenEmailGate: () => void;
   confirmIndustrySelection: (variant: string) => void;
+  
+  // Computed visibility helpers
+  shouldShowObjectionPanel: boolean;
+  shouldShowResearchPanel: boolean;
+  shouldShowContinueButton: boolean;
 }
 
 // ============================================
@@ -224,6 +239,8 @@ const initialState: IntelligenceState = {
     blend: 'pure',
     rationale: 'Designed for your industry',
   },
+  predictedObjections: [],
+  journeyStage: 'entry',
   conversation: [],
   conversationHistory: [],
   isProcessing: false,
@@ -326,6 +343,54 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       }
     }
   }, [state.conversation, state.extracted, state.industryDetection, state.market, state.sessionId]);
+
+  // ----------------------------------------
+  // Load pre-computed objections when industry detected
+  // ----------------------------------------
+  useEffect(() => {
+    if (state.extracted.industry) {
+      const objections = getPrecomputedObjections(
+        state.extracted.industry,
+        state.extracted.targetMarket
+      );
+      
+      // Only update if we got new objections and they're different from current
+      if (objections.length > 0 && objections !== state.predictedObjections) {
+        setState(prev => ({
+          ...prev,
+          predictedObjections: objections,
+        }));
+        console.log('🎯 Loaded', objections.length, 'pre-computed objections for', state.extracted.industry);
+      }
+    }
+  }, [state.extracted.industry, state.extracted.targetMarket]);
+
+  // ----------------------------------------
+  // Calculate journey stage
+  // ----------------------------------------
+  useEffect(() => {
+    const calculateJourneyStage = (): IntelligenceState['journeyStage'] => {
+      const hasIndustry = Boolean(state.extracted.industry);
+      const hasAudience = Boolean(state.extracted.audience);
+      const hasValueProp = Boolean(state.extracted.valueProp);
+      const messageCount = state.messageCount;
+      
+      if (hasIndustry && hasAudience && hasValueProp) return 'ready';
+      if (messageCount >= 2 && hasIndustry) return 'engaged';
+      if (messageCount >= 1) return 'engaged';
+      return 'entry';
+    };
+    
+    const newStage = calculateJourneyStage();
+    
+    if (newStage !== state.journeyStage) {
+      setState(prev => ({
+        ...prev,
+        journeyStage: newStage,
+      }));
+      console.log('🎬 Journey stage:', newStage);
+    }
+  }, [state.messageCount, state.extracted.industry, state.extracted.audience, state.extracted.valueProp, state.journeyStage]);
 
   // ----------------------------------------
   // Calculate readiness score
@@ -831,6 +896,17 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // ----------------------------------------
   // Context value
   // ----------------------------------------
+  // ----------------------------------------
+  // Computed visibility helpers
+  // ----------------------------------------
+  const shouldShowObjectionPanel = state.predictedObjections.length > 0 && 
+                                   state.journeyStage !== 'entry';
+  
+  const shouldShowResearchPanel = state.market.marketSize !== null && 
+                                  !state.market.isLoading;
+  
+  const shouldShowContinueButton = state.readiness >= 60;
+
   const contextValue: IntelligenceContextValue = {
     state,
     processUserMessage,
@@ -840,6 +916,10 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     dismissEmailGate,
     reopenEmailGate,
     confirmIndustrySelection,
+    // Computed visibility helpers
+    shouldShowObjectionPanel,
+    shouldShowResearchPanel,
+    shouldShowContinueButton,
   };
 
   return (
