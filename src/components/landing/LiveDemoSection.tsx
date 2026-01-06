@@ -382,6 +382,7 @@ export default function LiveDemoSection() {
                   <IntelligenceProfileDemo 
                     score={score}
                     industryDetection={state.industryDetection}
+                    aestheticMode={state.aestheticMode}
                     marketResearch={state.emailCaptured ? state.market : null}
                     onContinue={handleGenerateClick}
                     onIndustryCorrection={confirmIndustrySelection}
@@ -476,6 +477,7 @@ export default function LiveDemoSection() {
                 <IntelligenceProfileDemo 
                   score={score}
                   industryDetection={state.industryDetection}
+                  aestheticMode={state.aestheticMode}
                   marketResearch={state.emailCaptured ? state.market : null}
                   onContinue={() => {
                     setShowMobileIntelligence(false);

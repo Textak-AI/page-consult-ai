@@ -130,11 +130,11 @@ async function hashIP(ip: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 }
 
-const systemPrompt = `You are a STRICT extraction system. Extract SPECIFIC business intelligence while CAREFULLY separating INDUSTRY from AUDIENCE.
+const systemPrompt = `You are a STRICT extraction system. Extract SPECIFIC business intelligence while CAREFULLY separating INDUSTRY from AUDIENCE and detecting TARGET MARKET.
 
-## CRITICAL DISTINCTION: INDUSTRY vs AUDIENCE
+## CRITICAL DISTINCTION: INDUSTRY vs AUDIENCE vs TARGET MARKET
 
-### INDUSTRY = What YOU do / What business YOU'RE in
+### INDUSTRY = What YOU do / What business YOU'RE in (provider's expertise)
 Trigger phrases that indicate INDUSTRY:
 - "we do [X]" → X is industry
 - "we're a [X] company/agency/firm" → X is industry
@@ -144,33 +144,45 @@ Trigger phrases that indicate INDUSTRY:
 - "I run a [X]" → X is industry
 - "our business is [X]" → X is industry
 
-Examples: "digital marketing", "SaaS", "law firm", "manufacturing consulting", "SEO services"
+Examples: "digital marketing", "SaaS", "law firm", "manufacturing consulting", "SEO services", "cybersecurity"
 
-### AUDIENCE = WHO you serve / WHO you help
+### AUDIENCE = WHO you serve / Specific job titles/roles
 Trigger phrases that indicate AUDIENCE:
-- "we help [X]" → X is audience
+- "we help [X]" → X is audience (focus on the ROLE)
 - "we work with [X]" → X is audience  
-- "we serve [X]" → X is audience
 - "our clients are [X]" → X is audience
-- "we target [X]" → X is audience
 - "targeting [X]" → X is audience
-- "for [X] companies/businesses/brands" → X is audience
-- "[X] is our target market" → X is audience
-- "we mostly help [X]" → X is audience
 
-Examples: "e-commerce brands", "CBD companies", "tech startups", "manufacturers", "small businesses"
+Examples: "CFOs", "plant managers", "IT directors", "small business owners", "hospital administrators"
+
+### TARGET MARKET = The INDUSTRY of their BUYERS (if different from provider industry)
+This is CRITICAL for hybrid design aesthetic. Extract when:
+- A provider serves buyers in a DIFFERENT industry than their own
+- Example: "cybersecurity for healthcare" → industry: "Cybersecurity", targetMarket: "Healthcare"
+- Example: "HR consulting for law firms" → industry: "HR Consulting", targetMarket: "Legal"
+- Example: "marketing agency for manufacturers" → industry: "Marketing Agency", targetMarket: "Manufacturing"
+
+Return null for targetMarket if:
+- Buyers are in the same industry as the provider
+- No specific buyer industry is mentioned
+- Example: "we're a SaaS company" → industry: "SaaS", targetMarket: null
+
+### BUSINESS TYPE DETECTION
+- "B2B" = business-to-business (serving other companies)
+- "B2C" = business-to-consumer (serving end consumers)
+- "Both" = serves both businesses and consumers
 
 ### EXTRACTION PRIORITY RULES
 1. The VERB before the noun phrase determines the field:
    - "do/provide/specialize/run" → INDUSTRY
-   - "help/serve/work with/target/for" → AUDIENCE
+   - "help/serve/work with/target/for" → AUDIENCE + potentially TARGET MARKET
 
-2. If "for [X]" appears AFTER an industry statement, [X] is AUDIENCE:
-   - "We do digital marketing for e-commerce brands" → Industry: "digital marketing", Audience: "e-commerce brands"
+2. If "for [X]" appears AFTER an industry statement, check if [X] is an industry vertical:
+   - "We do cybersecurity for healthcare companies" → Industry: "cybersecurity", targetMarket: "healthcare", audience: "healthcare companies"
+   - "We do marketing for plant managers" → Industry: "marketing", targetMarket: null (plant managers isn't an industry), audience: "plant managers"
 
-3. If a single message contains BOTH signals, extract BOTH separately.
-
-4. "CBD companies" in "help CBD companies" = AUDIENCE, not Industry.
+3. Known industry verticals for targetMarket detection:
+   Healthcare, Manufacturing, Legal, Finance/Banking, Real Estate, Retail/E-commerce, SaaS/Tech, Construction, Education, Government, Hospitality, Energy
 
 ### REJECTION RULES - Return null for generic terms:
 
@@ -209,6 +221,9 @@ For example: "Fortune 500 HR leaders" NOT "Fortune 500"
   "industry": "full phrase up to 60 chars or null",
   "industryConfidence": 0-100,
   "industrySummary": "2-3 sentences with full context",
+  "targetMarket": "buyer's industry if different from provider or null",
+  "targetMarketConfidence": 0-100,
+  "businessType": "B2B" | "B2C" | "Both" | null,
   "audience": "full phrase up to 60 chars or null",
   "audienceConfidence": 0-100,
   "audienceSummary": "2-3 sentences with full context",
@@ -234,11 +249,13 @@ For example: "Fortune 500 HR leaders" NOT "Fortune 500"
 }
 
 ## TEST YOUR EXTRACTION:
-| Input | Industry | Audience |
-| "We do digital marketing for e-commerce brands" | "digital mktg" | "e-commerce" |
-| "We mostly help CBD companies reach their audience" | null | "CBD companies" |
-| "I run a SaaS company that serves small businesses" | "SaaS" | "small business" |
-| "We're a law firm working with tech startups" | "law firm" | "tech startups" |
+| Input | Industry | targetMarket | Audience |
+| "We do digital marketing for e-commerce brands" | "digital mktg" | "e-commerce" | "e-commerce brands" |
+| "We're a cybersecurity firm serving healthcare" | "cybersecurity" | "healthcare" | null |
+| "We mostly help CBD companies reach their audience" | null | null | "CBD companies" |
+| "I run a SaaS company that serves small businesses" | "SaaS" | null | "small business" |
+| "We're a law firm working with tech startups" | "law firm" | "saas" | "tech startups" |
+| "HR consulting for manufacturing companies" | "HR consulting" | "manufacturing" | "manufacturing companies" |
 
 Return ONLY valid JSON.`;
 
@@ -385,6 +402,11 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
       industryConfidence: number;
       industryFull: string | null; // Full value for Hero/CTA (max 150 chars)
       industrySummary: string | null;
+      // Target Aesthetic System
+      targetMarket: string | null;
+      targetMarketConfidence: number;
+      businessType: 'B2B' | 'B2C' | 'Both' | null;
+      // Audience
       audience: string | null;
       audienceConfidence: number;
       audienceFull: string | null;
@@ -421,6 +443,11 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
       industryConfidence: 0,
       industryFull: null,
       industrySummary: null,
+      // Target Aesthetic System
+      targetMarket: null,
+      targetMarketConfidence: 0,
+      businessType: null,
+      // Audience
       audience: null, 
       audienceConfidence: 0,
       audienceFull: null,
@@ -539,6 +566,13 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
           industryFull: industryConfidence >= CONFIDENCE_THRESHOLD ? industryFull : null,
           industrySummary: industryConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.industrySummary) : null,
           
+          // Target Aesthetic System
+          targetMarket: formatShort(parsed.targetMarket),
+          targetMarketConfidence: getConfidence(parsed.targetMarketConfidence, 60),
+          businessType: parsed.businessType === 'B2B' || parsed.businessType === 'B2C' || parsed.businessType === 'Both' 
+            ? parsed.businessType 
+            : null,
+          
           audience: audienceConfidence >= CONFIDENCE_THRESHOLD ? audience : null,
           audienceConfidence,
           audienceFull: audienceConfidence >= CONFIDENCE_THRESHOLD ? audienceFull : null,
@@ -596,6 +630,9 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
         industryConfidence: 0,
         industryFull: null,
         industrySummary: null,
+        targetMarket: null,
+        targetMarketConfidence: 0,
+        businessType: null,
         audience: null,
         audienceConfidence: 0,
         audienceFull: null,
