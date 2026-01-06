@@ -2,15 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Sparkles, Send, Loader2, Unlock, ChevronRight, BarChart3, X } from 'lucide-react';
+import { MessageSquare, Sparkles, Send, Loader2, ChevronRight, BarChart3, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import EmailGateModal from './EmailGateModal';
-import MarketResearchPanel from './MarketResearchPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
-import { IntelligenceProfileDemo } from '@/components/consultation/IntelligenceProfileDemo';
-import { ObjectionKillerPanel } from '@/components/consultation/ObjectionKillerPanel';
+import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -34,7 +32,7 @@ const TypingIndicator = () => (
 
 export default function LiveDemoSection() {
   const navigate = useNavigate();
-  const { state, processUserMessage, submitEmail, dismissEmailGate, reopenEmailGate, confirmIndustrySelection, shouldShowObjectionPanel } = useIntelligence();
+  const { state, processUserMessage, submitEmail, dismissEmailGate, reopenEmailGate } = useIntelligence();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -377,69 +375,14 @@ export default function LiveDemoSection() {
                 </form>
               </div>
               
-              {/* Right: Intelligence Profile - Desktop only */}
-              <div className="hidden lg:flex w-[360px] flex-shrink-0 bg-slate-900/50 flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto">
-                  <IntelligenceProfileDemo 
-                    score={score}
-                    industryDetection={state.industryDetection}
-                    aestheticMode={state.aestheticMode}
-                    marketResearch={state.emailCaptured ? state.market : null}
-                    onContinue={handleGenerateClick}
-                    onIndustryCorrection={confirmIndustrySelection}
-                    isThinking={state.isProcessing}
-                    className="h-auto border-0 rounded-none"
-                  />
-                  
-                  {/* Objection Killer Panel - shows when objections are loaded */}
-                  {shouldShowObjectionPanel && (
-                    <div className="p-4 border-t border-white/5">
-                      <ObjectionKillerPanel 
-                        objections={state.predictedObjections}
-                        isLoading={false}
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Market Research Section */}
-                  <AnimatePresence mode="wait">
-                    {/* Show unlock button if: dismissed without email AND industry exists AND not loading/loaded */}
-                    {state.emailDismissed && !state.emailCaptured && !state.market.isLoading && state.extracted.industry && (
-                      <motion.div
-                        key="unlock-button"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="p-4 border-t border-white/5"
-                      >
-                        <button
-                          onClick={reopenEmailGate}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-cyan-500/40 text-cyan-400 rounded-lg hover:bg-cyan-500/10 hover:border-cyan-400/60 transition-all text-sm font-medium"
-                        >
-                          <Unlock className="w-4 h-4" />
-                          Unlock Market Research
-                        </button>
-                      </motion.div>
-                    )}
-                    
-                    {/* Show loading or results if email captured */}
-                    {state.emailCaptured && (state.market.isLoading || state.market.marketSize || state.market.industryInsights.length > 0) && (
-                      <motion.div
-                        key="market-research"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="border-t border-white/5"
-                      >
-                        <MarketResearchPanel 
-                          market={state.market}
-                          industry={state.extracted.industry}
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+              {/* Right: Intelligence Tabs - Desktop only */}
+              <div className="hidden lg:flex w-[380px] flex-shrink-0 bg-slate-900/50 flex-col overflow-hidden">
+                <IntelligenceTabs 
+                  onContinue={handleGenerateClick}
+                  onReopenEmailGate={reopenEmailGate}
+                />
               </div>
+              
               
             </div>
           </div>
@@ -474,7 +417,7 @@ export default function LiveDemoSection() {
             >
               {/* Drawer header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 flex-shrink-0">
-                <h3 className="text-white font-semibold">Intelligence Profile</h3>
+                <h3 className="text-white font-semibold">Intelligence Dashboard</h3>
                 <button
                   onClick={() => setShowMobileIntelligence(false)}
                   className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
@@ -483,73 +426,18 @@ export default function LiveDemoSection() {
                 </button>
               </div>
               
-              {/* Drawer content */}
-              <div className="flex-1 overflow-y-auto p-4">
-                <IntelligenceProfileDemo 
-                  score={score}
-                  industryDetection={state.industryDetection}
-                  aestheticMode={state.aestheticMode}
-                  marketResearch={state.emailCaptured ? state.market : null}
+              {/* Drawer content - using tabbed interface */}
+              <div className="flex-1 overflow-hidden">
+                <IntelligenceTabs 
                   onContinue={() => {
                     setShowMobileIntelligence(false);
                     handleGenerateClick();
                   }}
-                  onIndustryCorrection={confirmIndustrySelection}
-                  isThinking={state.isProcessing}
-                  className="border-0 rounded-none bg-transparent"
+                  onReopenEmailGate={() => {
+                    setShowMobileIntelligence(false);
+                    reopenEmailGate();
+                  }}
                 />
-                
-                {/* Objection Killer Panel - Mobile */}
-                {shouldShowObjectionPanel && (
-                  <div className="mt-4">
-                    <ObjectionKillerPanel 
-                      objections={state.predictedObjections}
-                      isLoading={false}
-                    />
-                  </div>
-                )}
-                
-                {/* Market Research Section - Mobile */}
-                <AnimatePresence mode="wait">
-                  {/* Show unlock button if: dismissed without email AND industry exists AND not loading/loaded */}
-                  {state.emailDismissed && !state.emailCaptured && !state.market.isLoading && state.extracted.industry && (
-                    <motion.div
-                      key="unlock-button-mobile"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="mt-4"
-                    >
-                      <button
-                        onClick={() => {
-                          setShowMobileIntelligence(false);
-                          reopenEmailGate();
-                        }}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-cyan-500/40 text-cyan-400 rounded-lg hover:bg-cyan-500/10 hover:border-cyan-400/60 transition-all text-sm font-medium"
-                      >
-                        <Unlock className="w-4 h-4" />
-                        Unlock Market Research
-                      </button>
-                    </motion.div>
-                  )}
-                  
-                  {/* Show loading or results if email captured */}
-                  {state.emailCaptured && (state.market.isLoading || state.market.marketSize || state.market.industryInsights.length > 0) && (
-                    <motion.div
-                      key="market-research-mobile"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="mt-4"
-                    >
-                      <MarketResearchPanel 
-                        market={state.market}
-                        industry={state.extracted.industry}
-                        className="p-0"
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
             </motion.div>
           </motion.div>
