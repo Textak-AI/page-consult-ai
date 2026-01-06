@@ -235,7 +235,7 @@ export default function LiveDemoSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2 }}
-          className="w-full max-w-6xl h-[65vh] min-h-[500px] max-h-[700px]"
+          className="w-full max-w-6xl h-[75vh] min-h-[600px] max-h-[850px]"
         >
           <div className="h-full bg-slate-900/80 backdrop-blur-sm rounded-3xl border border-white/10 shadow-2xl shadow-black/20 overflow-hidden">
             
