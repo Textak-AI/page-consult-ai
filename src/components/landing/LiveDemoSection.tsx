@@ -382,6 +382,7 @@ export default function LiveDemoSection() {
                   <IntelligenceProfileDemo 
                     score={score}
                     industryDetection={state.industryDetection}
+                    marketResearch={state.emailCaptured ? state.market : null}
                     onContinue={handleGenerateClick}
                     onIndustryCorrection={confirmIndustrySelection}
                     isThinking={state.isProcessing}
@@ -474,10 +475,13 @@ export default function LiveDemoSection() {
               <div className="flex-1 overflow-y-auto p-4">
                 <IntelligenceProfileDemo 
                   score={score}
+                  industryDetection={state.industryDetection}
+                  marketResearch={state.emailCaptured ? state.market : null}
                   onContinue={() => {
                     setShowMobileIntelligence(false);
                     handleGenerateClick();
                   }}
+                  onIndustryCorrection={confirmIndustrySelection}
                   isThinking={state.isProcessing}
                   className="border-0 rounded-none bg-transparent"
                 />

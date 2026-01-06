@@ -4,9 +4,23 @@ import { CompanionHeader } from './CompanionHeader';
 import { CompanionMessages } from './CompanionMessages';
 import { CompanionInput } from './CompanionInput';
 import { cn } from '@/lib/utils';
+import { useLocation } from 'react-router-dom';
+
+// Routes where the CompanionBar should be hidden (they have their own chat interfaces)
+const HIDDEN_ROUTES = ['/', '/demo'];
 
 export function CompanionBar() {
   const { state } = useCompanion();
+  const location = useLocation();
+
+  // Hide on routes that have their own chat interface to avoid duplicate UIs
+  const shouldHide = HIDDEN_ROUTES.some(route => 
+    location.pathname === route || location.pathname.startsWith('/demo')
+  );
+
+  if (shouldHide) {
+    return null;
+  }
 
   return (
     <motion.div
