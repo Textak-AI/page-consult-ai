@@ -245,15 +245,74 @@ export default function Signup() {
   const createConsultationFromDemo = async (userId: string) => {
     if (!demoIntelligence) return;
     
-    // Check if this is a high-readiness session that should skip to brand setup
     const sessionId = searchParams.get('session');
     const isReady = searchParams.get('ready') === 'true';
     
-    console.log('🚀 [Signup] Creating consultation from demo intelligence', {
-      sessionId,
-      isReady,
-      readinessScore: demoIntelligence.readinessScore,
+    console.log('🚀 [Signup] Processing demo:', { 
+      sessionId, 
+      isReady, 
+      readiness: demoIntelligence.readinessScore 
     });
+    
+    // HIGH READINESS (70%+): Skip consultation creation, go straight to brand setup
+    if (isReady && sessionId) {
+      console.log('🚀 [Signup] High readiness demo - skipping consultation creation');
+      
+      try {
+        // Just claim the demo session - that's all we need
+        const { error: claimError } = await supabase
+          .from('demo_sessions')
+          .update({ 
+            claimed_by: userId, 
+            claimed_at: new Date().toISOString() 
+          })
+          .eq('session_id', sessionId)
+          .is('claimed_by', null);
+        
+        if (claimError) {
+          console.error('⚠️ [Signup] Failed to claim session:', claimError);
+        } else {
+          console.log('✅ [Signup] Demo session claimed successfully');
+        }
+        
+        // Trigger trial welcome email
+        try {
+          await supabase.functions.invoke('loops-sync', {
+            body: {
+              event: 'trial_started',
+              email: email,
+              userId: userId,
+              properties: {
+                trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+                days_remaining: 14,
+                industry: demoIntelligence.industry,
+                from_demo: true,
+                readiness: demoIntelligence.readinessScore,
+              },
+            },
+          });
+          console.log('📧 [Signup] Trial welcome email triggered');
+        } catch (emailErr) {
+          console.error('Failed to trigger trial email:', emailErr);
+        }
+        
+        // Clean up sessionStorage
+        sessionStorage.removeItem('demoIntelligence');
+        sessionStorage.removeItem('demoEmail');
+        
+        // Go directly to brand setup with session
+        console.log('🚀 [Signup] Redirecting to brand setup with session:', sessionId);
+        navigate(`/brand-setup?session=${sessionId}`, { replace: true });
+        return;
+        
+      } catch (err) {
+        console.error('Error in high-readiness flow:', err);
+        // Fall through to normal flow on error
+      }
+    }
+    
+    // LOW READINESS: Continue with consultation creation
+    console.log('🚀 [Signup] Lower readiness - creating consultation');
     
     try {
       // Claim the demo session for this user
@@ -265,7 +324,7 @@ export default function Signup() {
             claimed_at: new Date().toISOString() 
           })
           .eq('session_id', sessionId)
-          .is('claimed_by', null); // Only claim if unclaimed
+          .is('claimed_by', null);
         
         if (!claimError) {
           console.log('✅ [Signup] Demo session claimed successfully');
@@ -291,7 +350,7 @@ export default function Signup() {
             transferredAt: new Date().toISOString(),
           },
           consultation_status: demoIntelligence.industry && demoIntelligence.audience ? 'identified' : 'not_started',
-          status: isReady ? "completed" : "in_progress", // Mark as completed if ready
+          status: "in_progress",
           readiness_score: demoIntelligence.readinessScore,
         })
         .select()
@@ -329,14 +388,7 @@ export default function Signup() {
       sessionStorage.removeItem('demoIntelligence');
       sessionStorage.removeItem('demoEmail');
       
-      // For high-readiness demos, redirect to brand setup with session ID
-      if (isReady && sessionId) {
-        console.log('🚀 [Signup] High readiness demo - redirecting to brand setup with session:', sessionId);
-        navigate(`/brand-setup?session=${sessionId}`, { replace: true });
-        return;
-      }
-      
-      // For lower readiness, redirect to selected wizard path
+      // Redirect to selected wizard path
       const targetPath = demoIntelligence.selectedPath === 'conversation' 
         ? `/wizard/chat?consultationId=${consultation.id}`
         : `/wizard/form?consultationId=${consultation.id}`;

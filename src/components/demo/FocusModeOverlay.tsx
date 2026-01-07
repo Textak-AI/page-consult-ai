@@ -74,7 +74,7 @@ export function FocusModeOverlay({
               className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
             >
               <X className="w-5 h-5" />
-              <span className="text-sm font-medium">Exit Focus Mode</span>
+              <span className="text-sm font-medium">Exit Strategy Session</span>
             </button>
             
             <div className="flex items-center gap-2">

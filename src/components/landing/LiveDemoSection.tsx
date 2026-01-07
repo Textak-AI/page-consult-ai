@@ -11,6 +11,7 @@ import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
 import { FocusModeOverlay } from '@/components/demo/FocusModeOverlay';
 import { FocusModeIndicator } from '@/components/demo/FocusModeIndicator';
+import { StrategySessionTransition } from '@/components/demo/StrategySessionTransition';
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -49,6 +50,9 @@ export default function LiveDemoSection() {
   
   // Focus mode state
   const [focusModeOpen, setFocusModeOpen] = useState(false);
+  
+  // Strategy session transition state
+  const [showSessionTransition, setShowSessionTransition] = useState(false);
 
   // 🎬 Log component mount
   useEffect(() => {
@@ -84,9 +88,16 @@ export default function LiveDemoSection() {
     }
   }, [state.conversation.length]);
 
-  // Activate focus mode (called from email gate modal or Focus button)
+  // Activate focus mode with transition
   const activateFocusMode = () => {
-    setFocusModeOpen(true);
+    // Show transition first
+    setShowSessionTransition(true);
+    
+    // After transition, activate focus mode
+    setTimeout(() => {
+      setShowSessionTransition(false);
+      setFocusModeOpen(true);
+    }, 2000); // 2 second transition
   };
 
   // Exit focus mode
@@ -571,6 +582,9 @@ export default function LiveDemoSection() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Strategy Session Transition - shows when entering focus mode */}
+      <StrategySessionTransition isVisible={showSessionTransition} />
 
       {/* Focus Mode Indicator - shows when in focus mode */}
       <FocusModeIndicator
