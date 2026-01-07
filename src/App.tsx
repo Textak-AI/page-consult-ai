@@ -5,6 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useResetDemoShortcut } from "@/hooks/useResetDemoShortcut";
 import { OrchestratorProvider } from "@/contexts/OrchestratorContext";
 
+// 🔍 Load debug helpers for console access
+import '@/utils/debugPageConsult';
+
 // Disable automatic scroll restoration to prevent flash on refresh
 if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';

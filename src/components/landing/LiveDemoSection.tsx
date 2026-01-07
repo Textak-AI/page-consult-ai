@@ -52,6 +52,33 @@ export default function LiveDemoSection() {
   const [focusModeSuggestionVisible, setFocusModeSuggestionVisible] = useState(false);
   const [focusModeDismissed, setFocusModeDismissed] = useState(false);
 
+  // 🎬 Log component mount
+  useEffect(() => {
+    console.log('🎬 [LiveDemo] Component mounted');
+  }, []);
+
+  // 🧠 Log intelligence updates
+  useEffect(() => {
+    console.log('🧠 [LiveDemo] Intelligence updated:', {
+      timestamp: new Date().toISOString(),
+      extracted: {
+        industry: state.extracted?.industry,
+        audience: state.extracted?.audience,
+        valueProp: state.extracted?.valueProp,
+        businessType: state.extracted?.businessType,
+        competitive: state.extracted?.competitorDifferentiator,
+        painPoints: state.extracted?.painPoints,
+        proofElements: state.extracted?.proofElements,
+      },
+      market: {
+        hasInsights: state.market?.industryInsights?.length || 0,
+        hasObjections: state.market?.commonObjections?.length || 0,
+        hasBuyerPersona: !!state.market?.buyerPersona,
+      },
+      readiness: state.readiness,
+    });
+  }, [state.extracted, state.market, state.readiness]);
+
   // Send initial AI message on mount
   useEffect(() => {
     if (!hasInitialized.current && state.conversation.length === 0) {
@@ -141,6 +168,16 @@ export default function LiveDemoSection() {
       selectedPath,
     };
     
+    // 🚀 Log handoff payload BEFORE saving
+    console.log('🚀 [LiveDemo→Wizard] Preparing handoff payload:', {
+      sessionId,
+      extractedIntelligence: demoIntelligence,
+      marketResearch: demoIntelligence.marketResearch,
+      conversationLength: demoIntelligence.conversationHistory?.length,
+      readiness: demoIntelligence.readinessScore,
+      FULL_EXTRACTED: JSON.stringify(demoIntelligence, null, 2),
+    });
+    
     sessionStorage.setItem('demoIntelligence', JSON.stringify(demoIntelligence));
     
     if (state.email) {
@@ -161,11 +198,17 @@ export default function LiveDemoSection() {
     };
     
     try {
-      await supabase.from('demo_sessions').insert([sessionData]);
+      const { error } = await supabase.from('demo_sessions').insert([sessionData]);
+      // 💾 Log Supabase save result
+      console.log('💾 [LiveDemo] Supabase save result:', { 
+        success: !error, 
+        error: error?.message,
+        sessionId 
+      });
       localStorage.setItem('pageconsult_session_id', sessionId);
       navigate('/signup?from=demo');
     } catch (err) {
-      console.error('Error saving demo session:', err);
+      console.error('💾 [LiveDemo] Error saving demo session:', err);
       navigate('/signup?from=demo');
     } finally {
       setIsSavingSession(false);
