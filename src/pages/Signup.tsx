@@ -245,9 +245,35 @@ export default function Signup() {
   const createConsultationFromDemo = async (userId: string) => {
     if (!demoIntelligence) return;
     
-    console.log('🚀 [Signup] Creating consultation from demo intelligence');
+    // Check if this is a high-readiness session that should skip to brand setup
+    const sessionId = searchParams.get('session');
+    const isReady = searchParams.get('ready') === 'true';
+    
+    console.log('🚀 [Signup] Creating consultation from demo intelligence', {
+      sessionId,
+      isReady,
+      readinessScore: demoIntelligence.readinessScore,
+    });
     
     try {
+      // Claim the demo session for this user
+      if (sessionId) {
+        const { error: claimError } = await supabase
+          .from('demo_sessions')
+          .update({ 
+            claimed_by: userId, 
+            claimed_at: new Date().toISOString() 
+          })
+          .eq('session_id', sessionId)
+          .is('claimed_by', null); // Only claim if unclaimed
+        
+        if (!claimError) {
+          console.log('✅ [Signup] Demo session claimed successfully');
+        } else {
+          console.error('⚠️ [Signup] Failed to claim session:', claimError);
+        }
+      }
+      
       // Create consultation with demo intelligence pre-filled
       const { data: consultation, error } = await supabase
         .from("consultations")
@@ -265,7 +291,7 @@ export default function Signup() {
             transferredAt: new Date().toISOString(),
           },
           consultation_status: demoIntelligence.industry && demoIntelligence.audience ? 'identified' : 'not_started',
-          status: "in_progress",
+          status: isReady ? "completed" : "in_progress", // Mark as completed if ready
           readiness_score: demoIntelligence.readinessScore,
         })
         .select()
@@ -273,23 +299,11 @@ export default function Signup() {
       
       if (error) {
         console.error('Failed to create consultation:', error);
-        // Fallback to wizard without pre-fill
         navigate('/wizard', { replace: true });
         return;
       }
       
       console.log('✅ [Signup] Consultation created:', consultation.id);
-      
-      // Update demo_sessions to link to user
-      if (demoIntelligence.sessionId) {
-        await supabase
-          .from('demo_sessions')
-          .update({ 
-            claimed_by: userId,
-            claimed_at: new Date().toISOString(),
-          })
-          .eq('session_id', demoIntelligence.sessionId);
-      }
       
       // Trigger trial welcome email via Loops.so
       try {
@@ -309,19 +323,25 @@ export default function Signup() {
         console.log('📧 [Signup] Trial welcome email triggered');
       } catch (emailErr) {
         console.error('Failed to trigger trial email:', emailErr);
-        // Don't block signup on email failure
       }
       
       // Clean up sessionStorage
       sessionStorage.removeItem('demoIntelligence');
       sessionStorage.removeItem('demoEmail');
       
-      // Redirect directly to selected path - skip path selection screen
+      // For high-readiness demos, redirect to brand setup with session ID
+      if (isReady && sessionId) {
+        console.log('🚀 [Signup] High readiness demo - redirecting to brand setup with session:', sessionId);
+        navigate(`/brand-setup?session=${sessionId}`, { replace: true });
+        return;
+      }
+      
+      // For lower readiness, redirect to selected wizard path
       const targetPath = demoIntelligence.selectedPath === 'conversation' 
         ? `/wizard/chat?consultationId=${consultation.id}`
         : `/wizard/form?consultationId=${consultation.id}`;
       
-      console.log('🚀 [Signup] Redirecting directly to:', targetPath, '(skipping path selection)');
+      console.log('🚀 [Signup] Redirecting to:', targetPath);
       navigate(targetPath, { replace: true });
       
     } catch (err) {
