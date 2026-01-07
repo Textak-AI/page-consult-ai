@@ -61,15 +61,15 @@ export function FocusModeIndicator({ isActive, onExit }: FocusModeIndicatorProps
                 <Sparkles className="w-4 h-4 text-cyan-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white">Focus Mode Active</p>
+                <p className="text-sm font-medium text-white">Strategy Session Active</p>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Distraction-free strategy session
+                  Full consultation mode • Your progress is saved
                 </p>
               </div>
               <button
                 onClick={onExit}
                 className="text-slate-500 hover:text-slate-300 transition-colors flex-shrink-0"
-                aria-label="Exit focus mode"
+                aria-label="Exit strategy session"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -97,13 +97,13 @@ export function FocusModeIndicator({ isActive, onExit }: FocusModeIndicatorProps
             onClick={onExit}
             onMouseEnter={() => setIsExpanded(true)}
             className="bg-slate-900/80 backdrop-blur-sm border border-cyan-500/20 rounded-full p-2.5 cursor-pointer hover:bg-slate-800 transition-colors group"
-            aria-label="Focus Mode active - click to exit"
+            aria-label="Strategy Session active - click to exit"
           >
             <Sparkles className="w-4 h-4 text-cyan-400" />
             
             {/* Tooltip on hover */}
             <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-slate-900 px-2 py-1 rounded text-xs text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700">
-              Focus Mode · Click to exit
+              Strategy Session · Click to exit
             </div>
           </button>
         </motion.div>
