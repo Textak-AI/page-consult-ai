@@ -1692,7 +1692,17 @@ function GenerateContent() {
     
     // Fallback for legacy content format that doesn't match StructuredBrief
     console.log('⚠️ Content is not a valid StructuredBrief, using legacy mapping');
-    return mapLegacyStrategyContent(content, consultationData, strategicConsultation, heroImageUrl);
+    
+    // Ensure SDI is included in consultationData before passing to legacy mapper
+    const consultationDataWithSDI = {
+      ...consultationData,
+      designIntelligence: designIntelligence, // from component state
+    };
+    
+    console.log('🎨 [Generate] Passing SDI to legacy mapper:', consultationDataWithSDI.designIntelligence ? 'YES' : 'NO');
+    console.log('🎨 [Generate] SDI industry:', consultationDataWithSDI.designIntelligence?.industry);
+    
+    return mapLegacyStrategyContent(content, consultationDataWithSDI, strategicConsultation, heroImageUrl);
   };
   
   // Legacy mapping for non-structured brief content
