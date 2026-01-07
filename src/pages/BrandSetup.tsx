@@ -123,8 +123,9 @@ export default function BrandSetup() {
 
   // Check if user already has brand setup
   useEffect(() => {
+    console.log('📂 [BrandSetup] Component mounted, sessionId from URL:', sessionId);
     checkExistingBrand();
-  }, [isFreshStart, skipDraftModal]);
+  }, [isFreshStart, skipDraftModal, sessionId]);
 
   const checkExistingBrand = async () => {
     try {
@@ -136,8 +137,9 @@ export default function BrandSetup() {
       
       setUserId(user.id);
 
-      // If fresh start or skipDraftModal, don't redirect and don't load existing data
-      if (isFreshStart || skipDraftModal) {
+      // If fresh start, skipDraftModal, or coming from demo session, don't redirect
+      if (isFreshStart || skipDraftModal || sessionId) {
+        console.log('📂 [BrandSetup] Skipping redirect check:', { isFreshStart, skipDraftModal, sessionId });
         // Load existing data for display/editing but don't redirect
         const { data: existingBrief } = await supabase
           .from('brand_briefs')
