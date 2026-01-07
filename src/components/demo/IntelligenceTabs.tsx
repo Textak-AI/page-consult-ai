@@ -44,6 +44,31 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
   const hasMarketResearchData = state.emailCaptured && 
     (state.market.isLoading || state.market.marketSize || state.market.industryInsights.length > 0);
 
+  // 📋 Log objections data when panel is available
+  useEffect(() => {
+    if (shouldShowObjectionPanel && state.predictedObjections?.length > 0) {
+      console.log('📋 [IntelPanel] Objections data:', {
+        count: state.predictedObjections?.length || 0,
+        objections: state.predictedObjections?.map((o: any) => ({
+          objection: typeof o === 'string' ? o.substring(0, 50) : o?.objection?.substring(0, 50),
+          hasResponse: typeof o === 'object' ? !!o?.response : false,
+        })),
+      });
+    }
+  }, [shouldShowObjectionPanel, state.predictedObjections]);
+
+  // 📊 Log research data when available
+  useEffect(() => {
+    if (hasMarketResearchData) {
+      console.log('📊 [IntelPanel] Research data:', {
+        industryInsights: state.market?.industryInsights?.length || 0,
+        commonObjections: state.market?.commonObjections?.length || 0,
+        marketSize: state.market?.marketSize,
+        hasBuyerPersona: !!state.market?.buyerPersona,
+      });
+    }
+  }, [hasMarketResearchData, state.market]);
+
   // Define tabs
   const tabs: Tab[] = [
     {

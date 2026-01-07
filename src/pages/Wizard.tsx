@@ -275,6 +275,16 @@ export default function Wizard() {
 
   // Function to apply session data to wizard state
   const applySessionData = useCallback((data: any) => {
+    // 📂 Log raw session data
+    console.log('📂 [Wizard] Raw Supabase data:', {
+      hasData: !!data,
+      fields: data ? Object.keys(data) : [],
+      extractedIntelligence: data?.extracted_intelligence,
+      marketResearch: data?.market_research,
+      conversationCount: data?.messages?.length,
+      readiness: data?.readiness,
+    });
+    
     const extracted = data.extracted_intelligence || {};
     const market = data.market_research || {};
     const messages = data.messages || [];
@@ -349,6 +359,11 @@ export default function Wizard() {
       return { ...tile, insight, fill, state: tileState };
     });
     
+    // 🎯 Log tiles before apply
+    console.log('🎯 [Wizard] Applying session data to tiles:', {
+      tilesBeforeApply: getDefaultTiles().map(t => ({ id: t.id, fill: t.fill })),
+    });
+    
     console.log('🎯 [Wizard] Applying session tiles:', prefilledTiles.map(t => ({
       id: t.id,
       fill: t.fill,
@@ -360,6 +375,16 @@ export default function Wizard() {
     // This ensures updates happen after any auth-related re-renders
     setTimeout(() => {
       console.log('⏰ [Wizard] Delayed state update executing');
+      
+      // 🎯 Log tiles after apply
+      console.log('🎯 [Wizard] Tiles after apply:', {
+        tilesAfterApply: prefilledTiles.map(t => ({ 
+          id: t.id, 
+          fill: t.fill, 
+          insight: t.insight?.substring(0, 40) 
+        })),
+        overallReadiness: Math.round(prefilledTiles.reduce((sum, t) => sum + t.fill, 0) / prefilledTiles.length),
+      });
       
       setTiles(prefilledTiles);
       
@@ -1077,10 +1102,27 @@ Ready to build this? Or want to adjust the approach first?`,
         overallReadiness: overallReadiness,
       };
       
+      // 📝 Log collected info for brief
+      console.log('📝 [Wizard] CollectedInfo for brief:', {
+        keys: Object.keys(collectedInfo || {}),
+        hasFromDemo: !!(collectedInfo as any)?.fromDemo,
+        hasMarketResearch: !!(collectedInfo as any)?.marketResearch,
+        FULL_COLLECTED: JSON.stringify(collectedInfo, null, 2),
+      });
+      
       console.log('📋 [Wizard] Extracted consultation data:', extractedData);
       console.log('📋 [Wizard] Tiles state:', tiles.map(t => ({ id: t.id, insight: t.insight, fill: t.fill })));
       
       // STEP 2: Generate strategy brief from extracted data
+      console.log('📄 [BriefGen] Input to brief generator:', {
+        businessName: extractedData.businessName,
+        industry: extractedData.industry,
+        consultationDataKeys: Object.keys(extractedData || {}),
+        hasObjections: !!(extractedData as any)?.commonObjections?.length,
+        hasConversationHistory: !!extractedData.conversationHistory?.length,
+        FULL_INPUT: JSON.stringify(extractedData, null, 2),
+      });
+      
       console.log('📋 [Wizard] Calling generate-strategy-brief...');
       const briefResponse = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-strategy-brief`,

@@ -202,6 +202,17 @@ export function mapBriefToSections(
   brief: StructuredBrief,
   options: MapBriefOptions
 ): Section[] {
+  // 🗺️ Log input brief
+  console.log('🗺️ [SectionMapper] Input brief:', {
+    pageStructure: brief.pageStructure,
+    headlinesPresent: !!brief.headlines,
+    messagingPillars: brief.messagingPillars?.length,
+    objections: brief.objections?.length,
+    proofPoints: brief.proofPoints,
+    processSteps: brief.processSteps?.length,
+    testimonials: brief.testimonials?.length,
+  });
+  
   console.log('🧠 [sectionMapper] Starting intelligent extraction');
   console.log('🧠 [sectionMapper] options:', JSON.stringify(options, null, 2));
   console.log('🖼️ [sectionMapper] heroImageUrl:', options.heroImageUrl);
@@ -570,6 +581,12 @@ export function mapBriefToSections(
     }
   }
 
+  // 🗺️ Log final sections
+  console.log('🗺️ [SectionMapper] Final sections:', {
+    count: sections.length,
+    types: sections.map(s => s.type),
+  });
+  
   console.log(`🧠 [sectionMapper] Generated ${sections.length} sections from pageStructure:`, pageStructure);
   return sections;
 }
