@@ -1,9 +1,9 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Globe, Image, FileText, Palette, ArrowRight, 
   Upload, Check, Loader2, Monitor, Smartphone,
-  ChevronDown, ChevronUp, X
+  ChevronDown, ChevronUp, X, Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -97,6 +97,14 @@ interface ExtractionResults {
 
 export default function EnhancedBrandSetup() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('session');
+  
+  console.log('📂 [EnhancedBrandSetup] Component rendering, sessionId:', sessionId);
+  
+  // Demo session state
+  const [demoSession, setDemoSession] = useState<any>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(!!sessionId);
   
   // State
   const [websiteUrl, setWebsiteUrl] = useState('');
@@ -120,6 +128,50 @@ export default function EnhancedBrandSetup() {
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(true);
   const [companyName, setCompanyName] = useState('Your Company');
   const [tagline, setTagline] = useState('Your compelling tagline goes here');
+
+  // Load demo session if session param exists
+  useEffect(() => {
+    const loadDemoSession = async () => {
+      if (!sessionId) {
+        setIsLoadingSession(false);
+        return;
+      }
+
+      console.log('📂 [EnhancedBrandSetup] Loading demo session:', sessionId);
+
+      const { data, error } = await supabase
+        .from('demo_sessions')
+        .select('*')
+        .eq('session_id', sessionId)
+        .single();
+
+      console.log('📂 [EnhancedBrandSetup] Supabase result:', { data: !!data, error });
+
+      if (data && !error) {
+        console.log('✅ [EnhancedBrandSetup] Demo session loaded:', {
+          hasIntelligence: !!data.extracted_intelligence,
+          readiness: data.readiness,
+          claimedBy: data.claimed_by,
+        });
+        setDemoSession(data);
+        
+        // Pre-fill company name from intelligence if available
+        const intel = data.extracted_intelligence as any;
+        if (intel?.businessName) {
+          setCompanyName(intel.businessName);
+        }
+        if (intel?.uniqueValue) {
+          setTagline(intel.uniqueValue);
+        }
+      } else {
+        console.error('❌ [EnhancedBrandSetup] Failed to load:', error?.message);
+      }
+      
+      setIsLoadingSession(false);
+    };
+
+    loadDemoSession();
+  }, [sessionId]);
   
   // Font matching states
   const [fontMatches, setFontMatches] = useState<{
@@ -506,7 +558,14 @@ export default function EnhancedBrandSetup() {
     };
     
     localStorage.setItem('pageconsult_brand_data', JSON.stringify(brandData));
-    navigate('/wizard');
+    
+    // If we have a demo session, go to generate
+    if (demoSession && sessionId) {
+      console.log('🚀 [EnhancedBrandSetup] Demo user - navigating to generate with session:', sessionId);
+      navigate(`/generate?session=${sessionId}`);
+    } else {
+      navigate('/wizard');
+    }
   };
 
   // Color picker component
@@ -536,21 +595,81 @@ export default function EnhancedBrandSetup() {
     </div>
   );
 
+  // Show loading state while fetching session
+  if (isLoadingSession) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 text-purple-500 animate-spin mx-auto mb-4" />
+          <p className="text-slate-400">Loading your session...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-900">
       {/* Header */}
       <div className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <h1 className="text-2xl md:text-3xl font-bold text-white">
-            Let's capture your brand
+            {demoSession ? 'Add Your Brand Assets' : "Let's capture your brand"}
           </h1>
           <p className="text-slate-400 mt-1">
-            We'll extract everything automatically
+            {demoSession 
+              ? 'Optional: Add your logo and colors to personalize your page'
+              : "We'll extract everything automatically"
+            }
           </p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Demo Session Summary Card */}
+        {demoSession && (
+          <div className="mb-8 p-6 bg-gradient-to-r from-purple-900/30 to-cyan-900/30 border border-purple-500/30 rounded-2xl">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-6 h-6 text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-white mb-1">
+                  Strategy Session Complete
+                </h3>
+                <p className="text-slate-400 text-sm mb-3">
+                  Your consultation data is ready. Add your brand assets below, then generate your page.
+                </p>
+                <div className="flex flex-wrap gap-4 text-sm">
+                  {(demoSession.extracted_intelligence as any)?.businessName && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500">Business:</span>
+                      <span className="text-white font-medium">
+                        {(demoSession.extracted_intelligence as any).businessName}
+                      </span>
+                    </div>
+                  )}
+                  {(demoSession.extracted_intelligence as any)?.industry && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500">Industry:</span>
+                      <span className="text-white font-medium">
+                        {(demoSession.extracted_intelligence as any).industry}
+                      </span>
+                    </div>
+                  )}
+                  {demoSession.readiness && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500">Readiness:</span>
+                      <span className="text-emerald-400 font-medium">
+                        {demoSession.readiness}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-8">
           {/* LEFT COLUMN - Extraction Panels */}
           <div className="flex-1 space-y-6">
@@ -1187,17 +1306,26 @@ export default function EnhancedBrandSetup() {
         {/* Footer */}
         <div className="flex items-center justify-between mt-12 pt-8 border-t border-slate-800">
           <button 
-            onClick={() => navigate('/wizard')}
+            onClick={() => demoSession ? navigate(`/generate?session=${sessionId}`) : navigate('/wizard')}
             className="text-slate-500 hover:text-slate-400 text-sm transition-colors"
           >
-            Skip for now (use defaults)
+            {demoSession ? 'Skip brand setup' : 'Skip for now (use defaults)'}
           </button>
           <Button
             onClick={handleContinue}
             className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white px-8 py-6 rounded-xl font-medium"
           >
-            Continue to Build Your Page
-            <ArrowRight className="w-5 h-5 ml-2" />
+            {demoSession ? (
+              <>
+                Generate My Page
+                <Sparkles className="w-5 h-5 ml-2" />
+              </>
+            ) : (
+              <>
+                Continue to Build Your Page
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </>
+            )}
           </Button>
         </div>
       </div>
