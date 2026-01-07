@@ -66,6 +66,7 @@ import {
 import type { DesignSystem } from "@/config/designSystem";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { applyBrandColors } from "@/lib/colorUtils";
+import { generateDesignIntelligence, type DesignIntelligenceOutput } from "@/lib/designIntelligence";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -311,6 +312,9 @@ function GenerateContent() {
   
   // SEO data for SEOHead component
   const [seoData, setSeoData] = useState<SEOHeadData | null>(null);
+  
+  // Strategic Design Intelligence - infers typography, colors, layout from conversation
+  const [designIntelligence, setDesignIntelligence] = useState<DesignIntelligenceOutput | null>(null);
 
   const loadingMessages = [
     { icon: Check, text: "Analyzing your strategy" },
@@ -511,8 +515,26 @@ function GenerateContent() {
         
         console.log('✅ [Generate] Loaded demo session:', demoSession.session_id);
         
-        // GATE: Check strategic level before allowing generation
+        // Generate Strategic Design Intelligence from conversation
+        const messages = (demoSession.messages as any[] || []);
+        const conversationText = messages
+          .map((m: any) => m.content || m.text || '')
+          .join('\n');
+        
         const intel = demoSession.extracted_intelligence as Partial<ExtractedIntelligence> || {};
+        
+        if (conversationText.length > 50) {
+          console.log('🎨 [SDI] Generating design intelligence from demo session...');
+          const sdiOutput = generateDesignIntelligence({
+            conversationText,
+            extractedIntelligence: intel,
+            targetMarket: intel.audience || (intel as any).targetMarket,
+          });
+          setDesignIntelligence(sdiOutput);
+          console.log('🎨 [SDI] Design intelligence generated:', sdiOutput.summary);
+        }
+        
+        // GATE: Check strategic level before allowing generation
         const levelResult = calculateStrategicLevel(intel);
         
         console.log('🔒 [Generate] Strategic level check:', {
@@ -558,6 +580,8 @@ function GenerateContent() {
           timestamp: demoSession.created_at,
           // Level info
           strategicLevel: levelResult.currentLevel,
+          // Design Intelligence - pass SDI to generation flow
+          designIntelligence: designIntelligence,
         };
         
         console.log('📦 [Generate] Transformed session data:', transformedData);
@@ -643,6 +667,24 @@ function GenerateContent() {
       }
 
       if (demoData) {
+        // Generate SDI for strategic consultation flow if we have conversation data
+        if (fromStrategicConsultation && !designIntelligence) {
+          const strategyConversation = demoData.conversationHistory || demoData.messages || [];
+          const conversationText = Array.isArray(strategyConversation)
+            ? strategyConversation.map((m: any) => m.content || m.text || '').join('\n')
+            : '';
+          
+          if (conversationText.length > 50) {
+            console.log('🎨 [SDI] Generating design intelligence from strategic consultation...');
+            const sdiOutput = generateDesignIntelligence({
+              conversationText,
+              extractedIntelligence: demoData,
+              targetMarket: demoData.targetAudience || demoData.target_audience,
+            });
+            setDesignIntelligence(sdiOutput);
+            console.log('🎨 [SDI] Design intelligence generated:', sdiOutput.summary);
+          }
+        }
         // DEV MODE: Skip auth check for testing
         if (isDevMode) {
           console.log("🔧 DEV MODE: Bypassing authentication");
@@ -693,6 +735,8 @@ function GenerateContent() {
             founderStory: demoData.founderStory || null,
             founderCredentials: demoData.founderCredentials || null,
             founderPhoto: demoData.founderPhoto || null,
+            // Design Intelligence - pass SDI to generation flow
+            designIntelligence: designIntelligence,
           };
 
           console.log('🔧 DEV MODE transformedData:', {
@@ -733,6 +777,8 @@ function GenerateContent() {
           offer: demoData.offer || demoData.goal,
           status: "completed",
           created_at: demoData.timestamp,
+          // Design Intelligence - pass SDI to generation flow
+          designIntelligence: designIntelligence,
         };
 
         setConsultation(transformedData);
@@ -1111,8 +1157,22 @@ function GenerateContent() {
       hasStrategyBriefText: !!strategicData?.strategyBrief,
       hasPreGeneratedContent: !!preGeneratedContent,
       hasIntelligence: !!intelligence,
+      hasDesignIntelligence: !!consultationData?.designIntelligence,
       consultationDataKeys: consultationData ? Object.keys(consultationData).filter(k => consultationData[k]) : [],
     });
+    
+    // Log SDI summary if available
+    if (consultationData?.designIntelligence) {
+      const sdi = consultationData.designIntelligence;
+      console.log('🎨 [SDI] Design Intelligence in generateSections:', {
+        tone: sdi.tone?.primary,
+        industry: sdi.industry,
+        colors: sdi.colors?.mode,
+        typography: `${sdi.typography?.headingFont}/${sdi.typography?.bodyFont}`,
+        awareness: sdi.awarenessLevel,
+        proofDensity: sdi.proofDensity,
+      });
+    }
     
     if (strategicData?.structuredBrief) {
       console.log('📋 [generateSections] structuredBrief contents:', {
