@@ -1702,6 +1702,9 @@ function GenerateContent() {
     strategicConsultation: any,
     heroImageUrl: string
   ): Promise<Section[]> => {
+    // DEBUG: Check if designIntelligence is being passed
+    console.log('🔍 [DEBUG] consultationData.designIntelligence:', consultationData?.designIntelligence);
+    
     // DEBUG: Log full content structure to find where data lives
     console.log('🔍 [mapLegacyStrategyContent] Full content keys:', Object.keys(content || {}));
     console.log('🔍 [mapLegacyStrategyContent] Full content:', JSON.stringify(content, null, 2).slice(0, 3000));
