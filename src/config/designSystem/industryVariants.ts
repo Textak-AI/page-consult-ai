@@ -253,6 +253,88 @@ export const saasVariant: IndustryDesignTokens = {
 };
 
 /**
+ * Healthcare Industry Variant
+ * 
+ * Design Intent: Calm, trust, clinical precision.
+ * - Light mode for cleanliness and trust
+ * - Teal primary for clinical feel
+ * - Navy secondary for authority
+ * - Accessible typography
+ * - No anxiety-inducing colors (no red accents)
+ */
+export const healthcareVariant: IndustryDesignTokens = {
+  mode: 'light',
+  
+  colors: {
+    bgPrimary: '0 0% 100%',              // #FFFFFF - pure white
+    bgSecondary: '210 40% 98%',          // #F8FAFC - slate-50
+    bgCard: '0 0% 100%',                 // #FFFFFF - white cards
+    bgDark: '210 40% 17%',               // #1E3A5F - navy dark
+    textPrimary: '222 47% 11%',          // #0F172A - slate-900
+    textSecondary: '215 16% 47%',        // #64748B - slate-500
+    textOnDark: '210 40% 98%',           // #F8FAFC - slate-50
+    accent: '173 80% 40%',               // #0D9488 - teal-600
+    accentHover: '173 80% 35%',          // Darker teal
+    border: '214 32% 91%',               // #E2E8F0 - slate-200
+    borderSubtle: '210 40% 96%',         // #F1F5F9 - slate-100
+  },
+  
+  typography: {
+    headingFont: 'Inter, system-ui, sans-serif',
+    bodyFont: 'Inter, system-ui, sans-serif',
+    headingWeight: 700,
+    letterSpacing: '-0.01em',
+    lineHeight: 1.7,
+  },
+  
+  shape: {
+    radiusCard: '0.75rem',        // 12px - slightly softer
+    radiusButton: '0.5rem',       // 8px
+    shadowCard: '0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
+    shadowButton: '0 1px 2px rgba(0, 0, 0, 0.05)',
+    borderCard: '1px solid hsl(214 32% 91%)',
+    blur: 'none',                 // No glassmorphism
+    glow: 'none',                 // No button glow
+  },
+  
+  spacing: {
+    sectionPadding: '96px',
+    contentWidth: '1024px',
+    cardPadding: '2rem',
+    elementGap: '1.5rem',
+  },
+  
+  sectionHeaders: {
+    features: {
+      title: 'Why Organizations Trust Us',
+      subtitle: 'Protecting what matters most',
+      eyebrow: 'Our Expertise',
+    },
+    process: {
+      title: 'How We Work',
+      subtitle: 'A proven approach to security',
+    },
+    proof: {
+      title: 'Results That Matter',
+      subtitle: 'Trusted by healthcare organizations nationwide',
+    },
+    testimonials: {
+      title: 'What Clients Say',
+      subtitle: 'Real results from real organizations',
+    },
+    cta: {
+      title: 'Ready to Secure Your Organization?',
+      ctaText: 'Schedule Assessment',
+      subtext: 'Free consultation • No obligation',
+    },
+    faq: {
+      title: 'Frequently Asked Questions',
+      eyebrow: 'Common Questions',
+    },
+  },
+};
+
+/**
  * Default SaaS Variant
  * Current dark mode styling - serves as the baseline
  */
@@ -334,7 +416,7 @@ export const defaultVariant: IndustryDesignTokens = {
 export const industryVariants: Record<IndustryVariant, IndustryDesignTokens> = {
   consulting: consultingVariant,
   saas: saasVariant,
-  healthcare: defaultVariant, // TODO: Implement healthcare variant
+  healthcare: healthcareVariant,
   finance: defaultVariant,    // TODO: Implement finance variant
   manufacturing: defaultVariant, // TODO: Implement manufacturing variant
   ecommerce: defaultVariant,  // TODO: Implement ecommerce variant

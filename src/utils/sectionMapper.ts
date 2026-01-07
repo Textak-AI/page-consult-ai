@@ -8,6 +8,7 @@
  * - PROOF POINTS ONLY: Stats bar shows only values from proofPoints
  * - INDUSTRY-AWARE: Apply industry-specific headers and styling
  * - INTELLIGENT EXTRACTION: Use briefExtractor for optimized content selection
+ * - SDI INTEGRATION: Use Strategic Design Intelligence when available
  */
 
 import { 
@@ -38,6 +39,7 @@ import {
   enhanceMessagingPillars,
   getIntelligentSectionHeaders,
 } from '@/lib/briefExtractor';
+import type { DesignIntelligenceOutput } from '@/lib/designIntelligence';
 
 // Type definitions
 export interface StructuredBrief {
@@ -128,6 +130,8 @@ export interface MapBriefOptions {
     hasTeamCredentials?: boolean;
     hasMediaMentions?: boolean;
   };
+  // Strategic Design Intelligence from Phase 1
+  designIntelligence?: DesignIntelligenceOutput;
 }
 
 // Enhanced return type for full page mapping
@@ -228,10 +232,27 @@ export function mapBriefToSections(
   
   const isBetaPage = pageType === 'beta-prelaunch';
   
-  // Detect industry variant for styling and headers (use new system with subcategory support)
-  const industryVariant = detectIndustryVariantNew(industry, options.industryCategory, options.industrySubcategory, pageType || undefined);
+  // Get SDI from options if available
+  const sdi = options.designIntelligence;
+  
+  // Detect industry variant - PRIORITIZE SDI over legacy detection
+  let industryVariant: IndustryVariant;
+  if (sdi?.industry) {
+    // SDI detected industry - use it directly
+    industryVariant = sdi.industry as IndustryVariant;
+    console.log('🎨 [SDI] Using industry variant from SDI:', industryVariant);
+  } else {
+    // Fall back to legacy detection
+    industryVariant = detectIndustryVariantNew(industry, options.industryCategory, options.industrySubcategory, pageType || undefined);
+  }
+  
+  // Determine mode from SDI colors
+  const sdiMode = sdi?.colors?.mode || 'dark';
+  console.log('🎨 [SDI] Mode from SDI:', sdiMode);
+  
   const industryTokens = getIndustryTokensNew(industryVariant);
   const isConsulting = industryVariant === 'consulting';
+  const isHealthcare = industryVariant === 'healthcare';
   
   // Extract authority signals once (used by multiple sections)
   const authoritySignals = extractAuthoritySignals(
@@ -250,6 +271,7 @@ export function mapBriefToSections(
   console.log('🧠 [sectionMapper] Authority signals:', authoritySignals.length);
   console.log('🧠 [sectionMapper] Page structure:', pageStructure);
   console.log('🧠 [sectionMapper] isBetaPage:', isBetaPage);
+  console.log('🎨 [SDI] Proof density:', sdi?.proofDensity);
 
   // Iterate through pageStructure and build sections in EXACT order
   for (const sectionType of pageStructure) {
@@ -291,16 +313,37 @@ export function mapBriefToSections(
             logoUrl: logoUrl || null,
             primaryColor: primaryColor || null,
             industryVariant: industryVariant,
+            mode: sdiMode,
             // Trust badge for consulting hero
             trustBadge: isConsulting ? primaryCredential : null,
+            // SDI for components that need it
+            designIntelligence: sdi,
           },
         });
         break;
       }
 
       case 'stats-bar': {
-        // Use optimized stats bar extraction
-        const stats = getOptimalStatsBar(authoritySignals, 4);
+        // PRIORITY 1: Use SDI extracted proof points if available
+        let stats: Array<{value: string, label: string}> = [];
+        
+        if (sdi?.proofPoints) {
+          stats = buildStatsFromSDI(sdi);
+          if (stats.length >= 2) {
+            console.log('🎨 [SDI] Using extracted proof points for stats:', stats);
+          }
+        }
+        
+        // PRIORITY 2: Use optimized stats bar extraction from authority signals
+        if (stats.length < 2) {
+          stats = getOptimalStatsBar(authoritySignals, 4);
+        }
+        
+        // PRIORITY 3: If proof density is 'sparse', skip stats bar entirely (no fabrication!)
+        if (sdi?.proofDensity === 'sparse' && stats.length < 2) {
+          console.log('🎨 [SDI] Skipping stats-bar - proof density is sparse (no fabrication)');
+          break;
+        }
 
         // Only render if we have at least 2 real stats
         if (stats.length >= 2) {
@@ -311,6 +354,7 @@ export function mapBriefToSections(
             content: {
               statistics: stats,
               industryVariant: industryVariant,
+              mode: sdiMode,
             },
           });
         }
@@ -329,6 +373,7 @@ export function mapBriefToSections(
               solutionTitle: 'Our Solution',
               solution: brief.solutionStatement,
               industryVariant: industryVariant,
+              mode: sdiMode,
             },
           });
         }
@@ -366,6 +411,7 @@ export function mapBriefToSections(
                 proofPoint: pillar.proofPoint,
               })),
               industryVariant: industryVariant,
+              mode: sdiMode,
             },
           });
         }
@@ -392,6 +438,7 @@ export function mapBriefToSections(
               subtitle: intelligentHeaders.process?.subtitle || industryTokens.sectionHeaders.process.subtitle,
               steps,
               industryVariant: industryVariant,
+              mode: sdiMode,
             },
           });
         }
@@ -443,6 +490,7 @@ export function mapBriefToSections(
               : [],
             achievements: brief.proofPoints?.achievements || null,
             industryVariant: industryVariant,
+            mode: sdiMode,
           },
         });
         break;
@@ -466,6 +514,7 @@ export function mapBriefToSections(
                 category: faq.category,
               })),
               industryVariant: industryVariant,
+              mode: sdiMode,
             },
           });
         }
@@ -563,6 +612,8 @@ export function mapBriefToSections(
           ],
           primaryColor: primaryColor || null,
           industryVariant: industryVariant,
+          mode: sdiMode,
+          designIntelligence: sdi,
         };
 
         console.log('🎯 [Final CTA] Built content:', ctaContent);
@@ -601,6 +652,79 @@ export function isStructuredBriefContent(content: any): content is StructuredBri
     'messagingPillars' in content &&
     'proofPoints' in content &&
     'pageStructure' in content;
+}
+
+// ============================================
+// SDI PROOF POINT EXTRACTION
+// Build stats from Strategic Design Intelligence
+// ============================================
+
+/**
+ * Build statistics from SDI proof points
+ * PRIORITY: Use real extracted data, never fabricate
+ */
+function buildStatsFromSDI(sdi: DesignIntelligenceOutput): Array<{value: string, label: string}> {
+  const proof = sdi.proofPoints;
+  if (!proof) return [];
+  
+  const stats: Array<{value: string, label: string}> = [];
+  
+  // Add percentage stats (e.g., "94% pass rate")
+  if (proof.percentageStats && proof.percentageStats.length > 0) {
+    proof.percentageStats.slice(0, 4).forEach(stat => {
+      // Parse "94% of our healthcare clients pass" into { value: "94%", label: "..." }
+      const match = stat.match(/(\d+%)/);
+      if (match) {
+        // Extract meaningful label from the rest of the stat
+        let label = stat.replace(match[1], '').trim();
+        // Clean up common words
+        label = label
+          .replace(/^of\s+(our\s+)?/i, '')
+          .replace(/^we\s+/i, '')
+          .replace(/\s+$/g, '')
+          .slice(0, 40);
+        if (label.length < 3) label = 'Success Rate';
+        // Capitalize first letter
+        label = label.charAt(0).toUpperCase() + label.slice(1);
+        stats.push({ value: match[1], label });
+      }
+    });
+  }
+  
+  // Add dollar stats (e.g., "$1.5M in fines avoided")
+  if (proof.dollarStats && proof.dollarStats.length > 0 && stats.length < 4) {
+    proof.dollarStats.slice(0, 4 - stats.length).forEach(stat => {
+      const match = stat.match(/(\$[\d,.]+[kmb]?)/i);
+      if (match) {
+        let label = stat.replace(match[1], '').trim();
+        label = label
+          .replace(/^in\s+/i, '')
+          .replace(/\s+$/g, '')
+          .slice(0, 40);
+        if (label.length < 3) label = 'Value Delivered';
+        label = label.charAt(0).toUpperCase() + label.slice(1);
+        stats.push({ value: match[1], label });
+      }
+    });
+  }
+  
+  // Add client count if available
+  if (proof.clientCount && stats.length < 4) {
+    const match = proof.clientCount.match(/(\d+\+?)/);
+    if (match) {
+      stats.push({ value: match[1] + '+', label: 'Clients Served' });
+    }
+  }
+  
+  // Add years in business if available
+  if (proof.yearsInBusiness && stats.length < 4) {
+    const match = proof.yearsInBusiness.match(/(\d+\+?)/);
+    if (match) {
+      stats.push({ value: match[1] + '+', label: 'Years Experience' });
+    }
+  }
+  
+  return stats;
 }
 
 // ============================================
