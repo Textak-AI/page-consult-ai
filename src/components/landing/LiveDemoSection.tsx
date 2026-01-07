@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
 import { FocusModeOverlay } from '@/components/demo/FocusModeOverlay';
-import { FocusModeSuggestion } from '@/components/demo/FocusModeSuggestion';
+import { FocusModeIndicator } from '@/components/demo/FocusModeIndicator';
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -49,8 +49,6 @@ export default function LiveDemoSection() {
   
   // Focus mode state
   const [focusModeOpen, setFocusModeOpen] = useState(false);
-  const [focusModeSuggestionVisible, setFocusModeSuggestionVisible] = useState(false);
-  const [focusModeDismissed, setFocusModeDismissed] = useState(false);
 
   // 🎬 Log component mount
   useEffect(() => {
@@ -86,26 +84,26 @@ export default function LiveDemoSection() {
     }
   }, [state.conversation.length]);
 
-  // Show focus mode suggestion at threshold
-  useEffect(() => {
-    const shouldSuggestFocusMode = 
-      (state.readiness >= 50 || state.emailCaptured) && 
-      !focusModeDismissed && 
-      !focusModeOpen;
-      
-    if (shouldSuggestFocusMode && !focusModeSuggestionVisible) {
-      setFocusModeSuggestionVisible(true);
-    }
-  }, [state.readiness, state.emailCaptured, focusModeDismissed, focusModeOpen, focusModeSuggestionVisible]);
-
-  const handleEnterFocusMode = () => {
-    setFocusModeSuggestionVisible(false);
+  // Activate focus mode (called from email gate modal or Focus button)
+  const activateFocusMode = () => {
     setFocusModeOpen(true);
   };
 
-  const handleDismissFocusModeSuggestion = () => {
-    setFocusModeSuggestionVisible(false);
-    setFocusModeDismissed(true);
+  // Exit focus mode
+  const exitFocusMode = () => {
+    setFocusModeOpen(false);
+  };
+
+  // Handle email gate - continue without email (activates focus mode)
+  const handleContinueWithoutEmail = () => {
+    dismissEmailGate();
+    activateFocusMode();
+  };
+
+  // Handle email gate - with email (submits email, then activates focus mode)
+  const handleEmailSubmitAndActivateFocus = async (email: string) => {
+    await submitEmail(email);
+    activateFocusMode();
   };
 
   // Scroll to bottom on new messages
@@ -332,7 +330,7 @@ export default function LiveDemoSection() {
                       {/* Focus Mode button - visible at 30%+ readiness on desktop */}
                       {state.readiness >= 30 && (
                         <button
-                          onClick={handleEnterFocusMode}
+                          onClick={activateFocusMode}
                           className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/50 transition-all text-sm"
                         >
                           <Maximize2 className="w-4 h-4" />
@@ -533,8 +531,8 @@ export default function LiveDemoSection() {
       {/* Email Gate Modal */}
       <EmailGateModal
         isOpen={state.showEmailGate}
-        onSubmit={submitEmail}
-        onDismiss={dismissEmailGate}
+        onSubmit={handleEmailSubmitAndActivateFocus}
+        onContinueWithoutEmail={handleContinueWithoutEmail}
         industry={state.extracted.industry}
         audience={state.extracted.audience}
       />
@@ -565,17 +563,16 @@ export default function LiveDemoSection() {
         )}
       </AnimatePresence>
 
-      {/* Focus Mode Suggestion Banner */}
-      <FocusModeSuggestion
-        isVisible={focusModeSuggestionVisible}
-        onEnterFocusMode={handleEnterFocusMode}
-        onDismiss={handleDismissFocusModeSuggestion}
+      {/* Focus Mode Indicator - shows when in focus mode */}
+      <FocusModeIndicator
+        isActive={focusModeOpen}
+        onExit={exitFocusMode}
       />
 
       {/* Focus Mode Overlay */}
       <FocusModeOverlay
         isOpen={focusModeOpen}
-        onClose={() => setFocusModeOpen(false)}
+        onClose={exitFocusMode}
         onContinue={handleGenerateClick}
         onReopenEmailGate={reopenEmailGate}
         chatContent={
