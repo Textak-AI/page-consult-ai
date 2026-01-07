@@ -23,8 +23,9 @@ interface StatsBarSectionProps {
 export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditing }: StatsBarSectionProps) {
   const typography = getTypography(industryVariant);
   const isConsulting = industryVariant === 'consulting';
+  const isHealthcare = industryVariant === 'healthcare';
   const isSaas = industryVariant === 'saas';
-  
+  const isLightMode = isConsulting || isHealthcare;
 
   const handleStatBlur = (index: number, field: 'value' | 'label', e: React.FocusEvent<HTMLElement>) => {
     if (!onUpdate) return;
@@ -102,6 +103,59 @@ export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditi
                 >
                   {stat.label}
                 </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Healthcare or Consulting: Light mode
+  if (isHealthcare || isConsulting) {
+    const valueColor = isHealthcare ? 'text-teal-700' : 'text-slate-900';
+    
+    return (
+      <section className={`py-16 bg-slate-50 border-y border-slate-200 ${isEditing ? 'relative' : ''}`}>
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-teal-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+        <div className="max-w-5xl mx-auto px-6">
+          <div className={`grid ${getGridClass()} gap-8 md:gap-12`}>
+            {cleanStats.map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                className="text-center"
+              >
+                <div 
+                  className={`text-4xl md:text-5xl font-bold mb-2 ${valueColor} ${
+                    isEditing ? "outline-dashed outline-2 outline-teal-500/30 rounded px-2 inline-block" : ""
+                  }`}
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleStatBlur(i, 'value', e)}
+                >
+                  {formatStatValue(stat.value)}
+                </div>
+                <div 
+                  className={`text-sm md:text-base text-slate-700 font-medium ${
+                    isEditing ? "outline-dashed outline-2 outline-teal-500/30 rounded px-1" : ""
+                  }`}
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleStatBlur(i, 'label', e)}
+                >
+                  {stat.label}
+                </div>
+                {stat.source && (
+                  <div className="text-xs text-slate-500 mt-1">
+                    Source: {stat.source}
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>

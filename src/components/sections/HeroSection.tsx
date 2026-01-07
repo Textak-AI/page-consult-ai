@@ -77,13 +77,14 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   const tokens = getIndustryTokens(industryVariant);
   const isLightMode = tokens.mode === 'light';
   const isConsulting = industryVariant === 'consulting';
+  const isHealthcare = industryVariant === 'healthcare';
   const isSaas = industryVariant === 'saas';
   
-  // Determine if we should use light text (when dark overlay is active OR when not in consulting mode)
+  // Determine if we should use light text (when dark overlay is active OR when not in light mode)
   const hasBackgroundImage = !!content.backgroundImage;
   const showDarkOverlay = hasBackgroundImage && (content.darkOverlay !== false); // Default to true when bg image exists
-  // Use light text when: overlay is active on bg image, or when not in consulting mode
-  const useLightText = showDarkOverlay || !isConsulting;
+  // Use light text when: overlay is active on bg image, or when in dark mode
+  const useLightText = showDarkOverlay || !isLightMode;
   
   // Logo size with default
   const logoSize = content.logoSize || 'medium';
@@ -280,44 +281,247 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
     );
   }
 
+  // Healthcare or Consulting: Light mode
+  if (isHealthcare || isConsulting) {
+    const bgColor = isHealthcare ? 'white' : 'white';
+    const textColor = 'text-slate-900';
+    const subTextColor = 'text-slate-600';
+    const badgeBg = isHealthcare ? 'bg-teal-50 text-teal-700' : 'bg-slate-100 text-slate-700';
+    
+    return (
+      <section 
+        className={`relative overflow-hidden ${isEditing ? "" : ""}`}
+        style={{
+          backgroundColor: bgColor,
+          minHeight: 'auto',
+        }}
+      >
+        {/* Background Image Layer (if provided) */}
+        {content.backgroundImage && (
+          <div 
+            className="absolute inset-0 z-0"
+            style={{
+              backgroundImage: `url(${content.backgroundImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            {showDarkOverlay && (
+              <div className="absolute inset-0 bg-black/60" />
+            )}
+          </div>
+        )}
+        
+        {isEditing && (
+          <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
+            <Button
+              size="sm"
+              onClick={() => setImagePickerOpen(true)}
+            >
+              <ImagePlus className="h-4 w-4 mr-2" />
+              {content.backgroundImage ? 'Change' : 'Add'} Background
+            </Button>
+            
+            {hasBackgroundImage && (
+              <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-md">
+                <Layers className="h-4 w-4 text-slate-600" />
+                <Label htmlFor="overlay-toggle" className="text-sm text-slate-700 whitespace-nowrap">Dark Overlay</Label>
+                <Switch
+                  id="overlay-toggle"
+                  checked={showDarkOverlay}
+                  onCheckedChange={handleToggleOverlay}
+                />
+              </div>
+            )}
+          </div>
+        )}
+        
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-teal-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+
+        {/* Content Layer */}
+        <div className="container mx-auto max-w-5xl text-center relative z-10 px-6 py-32">
+          <div className="flex flex-col items-center gap-8 w-full">
+            
+            {/* Logo */}
+            {(content.logoUrl || isEditing) && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="mb-2 relative"
+              >
+                {content.logoUrl ? (
+                  <div className="relative inline-flex flex-col items-center gap-2">
+                    <img 
+                      src={content.logoUrl} 
+                      alt="Logo" 
+                      className={`${logoSizeClasses[logoSize]} mx-auto object-contain`}
+                    />
+                    {isEditing && (
+                      <button
+                        onClick={() => setLogoUploaderOpen(true)}
+                        className="absolute -bottom-1 -right-1 w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center hover:bg-teal-600 transition-colors shadow-md"
+                        title="Change logo"
+                      >
+                        <Camera className="w-3 h-3 text-white" />
+                      </button>
+                    )}
+                  </div>
+                ) : isEditing ? (
+                  <button
+                    onClick={() => setLogoUploaderOpen(true)}
+                    className="w-[120px] h-[48px] flex flex-col items-center justify-center gap-1 border-2 border-dashed border-slate-300 hover:border-teal-400 hover:bg-teal-50/50 rounded-lg transition-all text-slate-400 hover:text-teal-600"
+                  >
+                    <Image className="w-5 h-5" />
+                    <span className="text-xs font-medium">Add Logo</span>
+                  </button>
+                ) : null}
+              </motion.div>
+            )}
+
+            {/* Trust Badge */}
+            {trustBadge && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${badgeBg}`}
+              >
+                <Award className="w-4 h-4" strokeWidth={1.5} />
+                <span className="text-sm font-medium">{trustBadge}</span>
+              </motion.div>
+            )}
+
+            {/* Headline */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("headline", e)}
+              className={`text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight max-w-4xl leading-tight ${
+                hasBackgroundImage && showDarkOverlay ? 'text-white' : textColor
+              } ${isEditing ? "cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2" : ""}`}
+            >
+              {content.headline}
+            </motion.h1>
+
+            {/* Subheadline */}
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("subheadline", e)}
+              className={`text-lg md:text-xl max-w-2xl leading-relaxed ${
+                hasBackgroundImage && showDarkOverlay ? 'text-white/90' : subTextColor
+              } ${isEditing ? "cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2" : ""}`}
+            >
+              {content.subheadline}
+            </motion.p>
+
+            {/* CTA Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="pt-4"
+            >
+              <Button 
+                size="lg" 
+                className={`px-10 py-6 text-lg font-semibold transition-all duration-300 hover:scale-[1.02] ${
+                  isHealthcare 
+                    ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-lg' 
+                    : 'bg-slate-900 hover:bg-slate-800 text-white shadow-lg'
+                } ${isEditing ? "outline-dashed outline-2 outline-teal-500/30" : ""}`}
+              >
+                <span
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleBlur("ctaText", e)}
+                >
+                  {content.ctaText}
+                </span>
+                <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
+              </Button>
+            </motion.div>
+
+            {/* Trust indicators */}
+            {trustBadges.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className="flex flex-wrap justify-center gap-6 pt-4"
+              >
+                {trustBadges.slice(0, 3).map((badge, i) => (
+                  <div key={i} className={`flex items-center gap-2 text-sm ${hasBackgroundImage && showDarkOverlay ? 'text-white/80' : 'text-slate-500'}`}>
+                    <CheckCircle className={`w-4 h-4 ${isHealthcare ? 'text-teal-500' : 'text-emerald-500'}`} strokeWidth={1.5} />
+                    <span>{badge}</span>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </div>
+        </div>
+
+        <ImagePicker
+          open={imagePickerOpen}
+          onClose={() => setImagePickerOpen(false)}
+          onSelect={handleImageSelect}
+          defaultQuery={isHealthcare ? "healthcare security" : "professional consulting"}
+        />
+
+        <LogoUploader
+          isOpen={logoUploaderOpen}
+          onClose={() => setLogoUploaderOpen(false)}
+          currentLogoUrl={content.logoUrl || undefined}
+          onApplyLogo={handleLogoApply}
+        />
+      </section>
+    );
+  }
+
   return (
     <section 
       className={`relative overflow-hidden ${isEditing ? "" : ""}`}
       style={{
-        backgroundColor: isConsulting ? 'white' : 'hsl(217, 33%, 6%)',
-        minHeight: isConsulting ? 'auto' : '100vh',
+        backgroundColor: 'hsl(217, 33%, 6%)',
+        minHeight: '100vh',
       }}
     >
-      {/* Premium Background Layer - only for non-consulting */}
-      {!isConsulting && (
-        <div className="absolute inset-0 z-0">
-          {/* Gradient Mesh Background */}
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: `
-                radial-gradient(at 40% 20%, hsla(189, 95%, 43%, 0.15) 0px, transparent 50%),
-                radial-gradient(at 80% 0%, hsla(270, 95%, 60%, 0.12) 0px, transparent 50%),
-                radial-gradient(at 0% 50%, hsla(189, 95%, 43%, 0.08) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, hsla(270, 95%, 60%, 0.08) 0px, transparent 50%)
-              `,
-            }}
-          />
-          
-          {/* Subtle Grid Pattern */}
-          <div className="absolute inset-0 bg-grid-pattern opacity-40" />
-          
-          {/* Floating Orbs */}
-          <div 
-            className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px] animate-float-slow"
-            style={{ backgroundColor: 'hsla(189, 95%, 43%, 0.08)' }}
-          />
-          <div 
-            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] animate-float-delayed"
-            style={{ backgroundColor: 'hsla(270, 95%, 60%, 0.06)' }}
-          />
-        </div>
-      )}
+      {/* Premium Background Layer */}
+      <div className="absolute inset-0 z-0">
+        {/* Gradient Mesh Background */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: `
+              radial-gradient(at 40% 20%, hsla(189, 95%, 43%, 0.15) 0px, transparent 50%),
+              radial-gradient(at 80% 0%, hsla(270, 95%, 60%, 0.12) 0px, transparent 50%),
+              radial-gradient(at 0% 50%, hsla(189, 95%, 43%, 0.08) 0px, transparent 50%),
+              radial-gradient(at 100% 100%, hsla(270, 95%, 60%, 0.08) 0px, transparent 50%)
+            `,
+          }}
+        />
+        
+        {/* Subtle Grid Pattern */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-40" />
+        
+        {/* Floating Orbs */}
+        <div 
+          className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px] animate-float-slow"
+          style={{ backgroundColor: 'hsla(189, 95%, 43%, 0.08)' }}
+        />
+        <div 
+          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] animate-float-delayed"
+          style={{ backgroundColor: 'hsla(270, 95%, 60%, 0.06)' }}
+        />
+      </div>
 
       {/* Background Image Layer (if provided) */}
       {content.backgroundImage && (
