@@ -10,7 +10,7 @@ const emailSchema = z.string().trim().email({ message: "Please enter a valid ema
 interface EmailGateModalProps {
   isOpen: boolean;
   onSubmit: (email: string) => Promise<void>;
-  onDismiss?: () => void;
+  onContinueWithoutEmail: () => void;
   industry?: string | null;
   audience?: string | null;
 }
@@ -18,7 +18,7 @@ interface EmailGateModalProps {
 export default function EmailGateModal({ 
   isOpen, 
   onSubmit, 
-  onDismiss,
+  onContinueWithoutEmail,
   industry,
   audience 
 }: EmailGateModalProps) {
@@ -26,11 +26,11 @@ export default function EmailGateModal({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Handle ESC key to close modal
+  // Handle ESC key - continues without email (activates focus mode)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen && onDismiss) {
-        onDismiss();
+      if (e.key === 'Escape' && isOpen) {
+        onContinueWithoutEmail();
       }
     };
 
@@ -41,7 +41,7 @@ export default function EmailGateModal({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onDismiss]);
+  }, [isOpen, onContinueWithoutEmail]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +82,7 @@ export default function EmailGateModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          onClick={onDismiss}
+          onClick={onContinueWithoutEmail}
         >
           {/* Modal */}
           <motion.div
@@ -100,15 +100,13 @@ export default function EmailGateModal({
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center mb-4">
                     <Sparkles className="w-6 h-6 text-white" />
                   </div>
-                  {onDismiss && (
-                    <button 
-                      onClick={onDismiss}
-                      className="text-slate-400 hover:text-white transition-colors p-1"
-                      aria-label="Close modal"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  )}
+                  <button 
+                    onClick={onContinueWithoutEmail}
+                    className="text-slate-400 hover:text-white transition-colors p-1"
+                    aria-label="Close modal"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
                 <h2 className="text-xl font-bold text-white mb-2">
                   Unlock Your Market Research
@@ -170,6 +168,7 @@ export default function EmailGateModal({
                   )}
                 </div>
 
+                {/* Primary CTA */}
                 <Button
                   type="submit"
                   disabled={isSubmitting || !email.trim()}
@@ -188,16 +187,15 @@ export default function EmailGateModal({
                   )}
                 </Button>
 
-                {/* Skip for now link */}
-                {onDismiss && (
-                  <button
-                    type="button"
-                    onClick={onDismiss}
-                    className="w-full text-sm text-slate-400 hover:text-slate-300 hover:underline transition-colors py-1"
-                  >
-                    Skip for now
-                  </button>
-                )}
+                {/* Secondary CTA - ghost button */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={onContinueWithoutEmail}
+                  className="w-full text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 h-10 text-sm font-normal"
+                >
+                  Continue Without Research
+                </Button>
 
                 <p className="text-xs text-slate-500 text-center">
                   No spam. Just strategy insights for your business.
