@@ -12,6 +12,11 @@ import { HowItWorksSection } from '@/components/sections/HowItWorksSection';
 import { DifferentiatorCalloutSection } from '@/components/sections/DifferentiatorCalloutSection';
 import { AudienceFitSection } from '@/components/sections/AudienceFitSection';
 import { CredibilityStripSection } from '@/components/sections/CredibilityStripSection';
+// SDI-driven sections
+import { StakesAmplifySection } from '@/components/sections/StakesAmplifySection';
+import { RiskReversalSection } from '@/components/sections/RiskReversalSection';
+import { ComparisonSection } from '@/components/sections/ComparisonSection';
+// Beta sections
 import { 
   BetaHeroTeaserSection, 
   BetaPerksSection, 
@@ -204,6 +209,34 @@ export function PublicPageRenderer({
       case 'founder':
         return (
           <FounderCredibilitySection
+            key={index}
+            content={section.content}
+            onUpdate={noOp}
+            isEditing={false}
+          />
+        );
+      // SDI-driven section types
+      case 'stakes-amplify':
+        return (
+          <StakesAmplifySection
+            key={index}
+            content={section.content}
+            onUpdate={noOp}
+            isEditing={false}
+          />
+        );
+      case 'risk-reversal':
+        return (
+          <RiskReversalSection
+            key={index}
+            content={section.content}
+            onUpdate={noOp}
+            isEditing={false}
+          />
+        );
+      case 'comparison':
+        return (
+          <ComparisonSection
             key={index}
             content={section.content}
             onUpdate={noOp}

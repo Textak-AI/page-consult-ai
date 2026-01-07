@@ -52,6 +52,7 @@ import {
 import { CreditDisplay, UpgradeDrawer } from "@/components/credits";
 import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid, generateSEOHeadData, type SEOHeadData } from "@/lib/aiSeoIntegration";
 import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief, type MappedPage } from "@/utils/sectionMapper";
+import { selectSectionsFromSDI } from "@/utils/sectionSelector";
 import { generateDesignSystem, designSystemToCSSVariables } from "@/config/designSystem";
 // Removed old detectIndustryVariant import - using detectIndustryVariantNew from industryDesignSystem
 import {
@@ -1776,12 +1777,17 @@ function GenerateContent() {
     const logoUrl = brandSettings?.logoUrl || strategicConsultation?.websiteIntelligence?.logoUrl || null;
     const primaryColor = brandSettings?.primaryColor || designSystem?.colors?.primary || null;
 
-    // Get page structure from brief - this is our blueprint
-    // For beta pages, use beta-specific structure if not provided
-    const defaultStructure = isBetaPage 
-      ? ['hero', 'features', 'founder', 'waitlist-proof', 'final-cta']
-      : ['hero', 'stats-bar', 'problem-solution', 'features', 'faq', 'final-cta'];
-    const pageStructure: string[] = content.pageStructure || defaultStructure;
+    // SDI-DRIVEN SECTION SELECTION (replaces hardcoded structure)
+    const sdiSelectionResult = selectSectionsFromSDI(sdi, { isBetaPage });
+    const pageStructure: string[] = content.pageStructure || sdiSelectionResult.sections;
+    
+    console.log('🏗️ [mapLegacyStrategyContent] SDI-driven section selection:', {
+      awarenessLevel: sdi?.awarenessLevel,
+      proofDensity: sdi?.proofDensity,
+      heroVariant: sdiSelectionResult.heroVariant,
+      reasoning: sdiSelectionResult.reasoning,
+      pageStructure
+    });
     
     console.log('🏗️ Legacy mapping with structure:', pageStructure);
 
@@ -2236,12 +2242,77 @@ function GenerateContent() {
           });
           break;
 
+        // SDI-driven section types
+        case 'stakes-amplify':
+          sections.push({
+            type: "stakes-amplify",
+            order: order++,
+            visible: true,
+            content: {
+              headline: 'The Real Cost of Inaction',
+              stakes: content.problemStatement || 'Every day without a solution increases your risk.',
+              consequences: sdi?.emotionalDrivers?.includes('urgency') 
+                ? 'Time is running out to address this critical issue.'
+                : undefined,
+              industryVariant,
+              mode: sdiMode,
+            },
+          });
+          break;
+
+        case 'risk-reversal':
+          sections.push({
+            type: "risk-reversal",
+            order: order++,
+            visible: true,
+            content: {
+              headline: 'Our Guarantee',
+              guarantee: consultationData?.guaranteeOffer || consultationData?.guarantee_offer || 
+                         strategicConsultation?.guaranteeOffer || 
+                         'Your satisfaction is 100% guaranteed.',
+              industryVariant,
+              mode: sdiMode,
+            },
+          });
+          break;
+
+        case 'comparison':
+          sections.push({
+            type: "comparison",
+            order: order++,
+            visible: true,
+            content: {
+              headline: 'A Better Approach',
+              oldWay: {
+                title: 'The Old Way',
+                points: [
+                  'Time-consuming manual processes',
+                  'Inconsistent results',
+                  'Hidden costs and surprises',
+                  'Limited support when you need it'
+                ]
+              },
+              newWay: {
+                title: 'Our Approach',
+                points: content.features?.slice(0, 4).map((f: any) => f.title || f.description) || [
+                  'Streamlined, efficient process',
+                  'Predictable, reliable outcomes',
+                  'Transparent pricing upfront',
+                  'Dedicated support every step'
+                ]
+              },
+              industryVariant,
+              mode: sdiMode,
+            },
+          });
+          break;
+
         default:
           console.warn(`⚠️ Unknown section type in pageStructure: ${sectionType}`);
       }
     }
 
-    console.log(`✅ Legacy mapper built ${sections.length} sections from pageStructure (isBeta: ${isBetaPage})`);
+    console.log(`✅ Legacy mapper built ${sections.length} sections from SDI-driven structure (isBeta: ${isBetaPage})`);
     return sections;
   };
 

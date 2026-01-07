@@ -13,6 +13,10 @@ import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
 import { DifferentiatorCalloutSection } from "@/components/sections/DifferentiatorCalloutSection";
 import { AudienceFitSection } from "@/components/sections/AudienceFitSection";
 import { CredibilityStripSection } from "@/components/sections/CredibilityStripSection";
+// SDI-driven sections
+import { StakesAmplifySection } from "@/components/sections/StakesAmplifySection";
+import { RiskReversalSection } from "@/components/sections/RiskReversalSection";
+import { ComparisonSection } from "@/components/sections/ComparisonSection";
 // Beta sections
 import { 
   BetaHeroTeaserSection, 
@@ -461,6 +465,37 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <FounderCredibilitySection
+            content={section.content}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
+          />
+        );
+      // SDI-driven section types
+      case "stakes-amplify":
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <StakesAmplifySection
+            content={section.content}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
+          />
+        );
+      case "risk-reversal":
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <RiskReversalSection
+            content={section.content}
+            onUpdate={updateSection}
+            isEditing={editingSection === index}
+          />
+        );
+      case "comparison":
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <ComparisonSection
             content={section.content}
             onUpdate={updateSection}
             isEditing={editingSection === index}
