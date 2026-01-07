@@ -28,6 +28,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   const isLightMode = tokens.mode === 'light';
   const isConsulting = industryVariant === 'consulting';
   const isSaas = industryVariant === 'saas';
+  const isHealthcare = industryVariant === 'healthcare';
   
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
@@ -136,6 +137,130 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               Cancel anytime
             </span>
           </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Healthcare variant: Light mode with teal CTA
+  if (isHealthcare) {
+    return (
+      <section className="py-32 pb-48 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 relative overflow-hidden">
+        {/* Subtle teal glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-3xl" />
+        
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-teal-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+        
+        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className={`text-3xl md:text-4xl font-bold text-white mb-6 ${
+              isEditing ? "outline-dashed outline-2 outline-teal-500/30 rounded px-2" : ""
+            }`}
+            contentEditable={isEditing}
+            suppressContentEditableWarning
+            onBlur={(e) => handleBlur("headline", e)}
+          >
+            {content.headline || "Protect Your Organization Today"}
+          </motion.h2>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className={`text-xl text-slate-300 mb-6 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-1' : ''}`}
+            contentEditable={isEditing}
+            suppressContentEditableWarning
+            onBlur={(e) => handleBlur("subtext", e)}
+          >
+            {content.subtext || "Free assessment • No obligation"}
+          </motion.p>
+
+          {/* Urgency Banner */}
+          {urgencyText && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/40 text-amber-300 px-5 py-2.5 rounded-full text-sm font-medium mb-8"
+            >
+              <span>⏰</span>
+              <span>{urgencyText}</span>
+            </motion.div>
+          )}
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Button 
+              size="lg" 
+              className={`px-12 py-6 text-lg font-semibold bg-teal-600 text-white hover:bg-teal-700 rounded-xl shadow-lg shadow-teal-600/30 ${
+                isEditing ? "outline-dashed outline-2 outline-teal-500/30" : ""
+              }`}
+            >
+              <span
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("ctaText", e)}
+              >
+                {content.ctaText || "Schedule Your Assessment"}
+              </span>
+              <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
+            </Button>
+          </motion.div>
+
+          {/* Guarantee */}
+          {guaranteeText && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.25 }}
+              className="flex items-center justify-center gap-2 text-teal-400 mt-6 mb-4"
+            >
+              <Shield className="w-5 h-5" />
+              <span className="text-sm font-medium">{guaranteeText}</span>
+            </motion.div>
+          )}
+
+          {/* Trust Indicators */}
+          {trustIndicators.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-wrap justify-center gap-6 mt-10"
+            >
+              {trustIndicators.map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm text-slate-400">
+                  <CheckCircle className="w-4 h-4 text-teal-500" strokeWidth={1.5} />
+                  <span
+                    className={isEditing ? 'cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-1' : ''}
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => {
+                      const newIndicators = [...trustIndicators];
+                      newIndicators[i] = { ...newIndicators[i], text: e.currentTarget.textContent || item.text };
+                      onUpdate({ ...content, trustIndicators: newIndicators });
+                    }}
+                  >
+                    {item.text}
+                  </span>
+                </div>
+              ))}
+            </motion.div>
+          )}
         </div>
       </section>
     );

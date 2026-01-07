@@ -27,9 +27,10 @@ interface ProblemSolutionSectionProps {
 export function ProblemSolutionSection({ content, onUpdate, isEditing }: ProblemSolutionSectionProps) {
   const isConsulting = content.industryVariant === 'consulting';
   const isSaas = content.industryVariant === 'saas';
+  const isHealthcare = content.industryVariant === 'healthcare';
   const typography = getTypography(content.industryVariant);
   
-  console.log('🎨 [ProblemSolutionSection] industryVariant:', content.industryVariant, 'isConsulting:', isConsulting, 'isSaas:', isSaas);
+  console.log('🎨 [ProblemSolutionSection] industryVariant:', content.industryVariant, 'isConsulting:', isConsulting, 'isSaas:', isSaas, 'isHealthcare:', isHealthcare);
   
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
@@ -118,6 +119,140 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
               </p>
             </motion.div>
           </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Healthcare variant: Light mode with teal accents
+  if (isHealthcare) {
+    return (
+      <section className="py-24 bg-slate-50">
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-teal-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+
+        <div className="max-w-6xl mx-auto px-6">
+          {/* Section Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
+            <span className="inline-block px-4 py-1 bg-teal-100 text-teal-800 text-sm font-semibold rounded-full mb-4">
+              THE CHALLENGE
+            </span>
+            <h2 
+              className={`text-3xl md:text-4xl font-bold text-slate-900 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-1' : ''}`}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("sectionTitle", e)}
+            >
+              {content.sectionTitle || "Why This Matters"}
+            </h2>
+          </motion.div>
+          
+          {/* Cards */}
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Problem Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="p-10 bg-red-50 border border-red-100 rounded-2xl"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-red-600" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-xl font-bold text-red-900">The Risk</h3>
+              </div>
+              <p 
+                className={`text-slate-700 leading-relaxed text-lg ${
+                  isEditing ? "outline-dashed outline-2 outline-teal-500/30 rounded px-2" : ""
+                }`}
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("problem", e)}
+              >
+                {content.problem}
+              </p>
+              
+              {content.problemStat && (
+                <div className="mt-6 p-5 rounded-xl bg-red-100/50 border border-red-200">
+                  <div className="text-2xl font-bold text-red-700 mb-2">
+                    {content.problemStat.statistic}
+                  </div>
+                  <p className="text-slate-700 text-sm">
+                    {content.problemStat.claim}
+                  </p>
+                  <cite className="text-xs text-slate-500 not-italic block mt-2">
+                    Source: {content.problemStat.fullCitation}
+                  </cite>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Solution Card */}
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="p-10 bg-teal-50 border border-teal-100 rounded-2xl"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-teal-600" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-xl font-bold text-teal-900">Our Protection</h3>
+              </div>
+              <p 
+                className={`text-slate-700 leading-relaxed text-lg ${
+                  isEditing ? "outline-dashed outline-2 outline-teal-500/30 rounded px-2" : ""
+                }`}
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("solution", e)}
+              >
+                {content.solution}
+              </p>
+              
+              {content.solutionStat && (
+                <div className="mt-6 p-5 rounded-xl bg-teal-100/50 border border-teal-200">
+                  <div className="text-2xl font-bold text-teal-700 mb-2">
+                    {content.solutionStat.statistic}
+                  </div>
+                  <p className="text-slate-700 text-sm">
+                    {content.solutionStat.claim}
+                  </p>
+                  <cite className="text-xs text-slate-500 not-italic block mt-2">
+                    Source: {content.solutionStat.fullCitation}
+                  </cite>
+                </div>
+              )}
+            </motion.div>
+          </div>
+
+          {/* Visual Connector */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="hidden md:flex justify-center mt-10"
+          >
+            <div className="flex items-center gap-4 text-slate-400">
+              <span className="text-sm font-medium">From Risk</span>
+              <div className="w-24 h-px bg-slate-300 relative">
+                <ArrowRight className="absolute -right-2 -top-2 w-4 h-4 text-slate-400" strokeWidth={1.5} />
+              </div>
+              <span className="text-sm font-medium text-teal-600">To Protection</span>
+            </div>
+          </motion.div>
         </div>
       </section>
     );
