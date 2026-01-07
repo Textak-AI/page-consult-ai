@@ -523,9 +523,12 @@ function GenerateContent() {
         
         const intel = demoSession.extracted_intelligence as Partial<ExtractedIntelligence> || {};
         
+        // Hoist sdiOutput so it can be used in transformedData
+        let sdiOutput: DesignIntelligenceOutput | null = null;
+        
         if (conversationText.length > 50) {
           console.log('🎨 [SDI] Generating design intelligence from demo session...');
-          const sdiOutput = generateDesignIntelligence({
+          sdiOutput = generateDesignIntelligence({
             conversationText,
             extractedIntelligence: intel,
             targetMarket: intel.audience || (intel as any).targetMarket,
@@ -580,8 +583,8 @@ function GenerateContent() {
           timestamp: demoSession.created_at,
           // Level info
           strategicLevel: levelResult.currentLevel,
-          // Design Intelligence - pass SDI to generation flow
-          designIntelligence: designIntelligence,
+          // Design Intelligence - use sdiOutput directly (React state is async)
+          designIntelligence: sdiOutput || designIntelligence,
         };
         
         console.log('📦 [Generate] Transformed session data:', transformedData);
@@ -668,6 +671,9 @@ function GenerateContent() {
 
       if (demoData) {
         // Generate SDI for strategic consultation flow if we have conversation data
+        // Hoist sdiOutput so it can be used in transformedData
+        let sdiOutput: DesignIntelligenceOutput | null = null;
+        
         if (fromStrategicConsultation && !designIntelligence) {
           const strategyConversation = demoData.conversationHistory || demoData.messages || [];
           const conversationText = Array.isArray(strategyConversation)
@@ -676,7 +682,7 @@ function GenerateContent() {
           
           if (conversationText.length > 50) {
             console.log('🎨 [SDI] Generating design intelligence from strategic consultation...');
-            const sdiOutput = generateDesignIntelligence({
+            sdiOutput = generateDesignIntelligence({
               conversationText,
               extractedIntelligence: demoData,
               targetMarket: demoData.targetAudience || demoData.target_audience,
@@ -735,8 +741,8 @@ function GenerateContent() {
             founderStory: demoData.founderStory || null,
             founderCredentials: demoData.founderCredentials || null,
             founderPhoto: demoData.founderPhoto || null,
-            // Design Intelligence - pass SDI to generation flow
-            designIntelligence: designIntelligence,
+            // Design Intelligence - use sdiOutput directly (React state is async)
+            designIntelligence: sdiOutput || designIntelligence,
           };
 
           console.log('🔧 DEV MODE transformedData:', {
@@ -777,8 +783,8 @@ function GenerateContent() {
           offer: demoData.offer || demoData.goal,
           status: "completed",
           created_at: demoData.timestamp,
-          // Design Intelligence - pass SDI to generation flow
-          designIntelligence: designIntelligence,
+          // Design Intelligence - use sdiOutput directly (React state is async)
+          designIntelligence: sdiOutput || designIntelligence,
         };
 
         setConsultation(transformedData);
@@ -1694,13 +1700,16 @@ function GenerateContent() {
     console.log('⚠️ Content is not a valid StructuredBrief, using legacy mapping');
     
     // Ensure SDI is included in consultationData before passing to legacy mapper
+    // consultationData.designIntelligence should be set from the transformation step
+    const sdiFromData = consultationData?.designIntelligence;
+    
     const consultationDataWithSDI = {
       ...consultationData,
-      designIntelligence: designIntelligence, // from component state
+      designIntelligence: sdiFromData,
     };
     
-    console.log('🎨 [Generate] Passing SDI to legacy mapper:', consultationDataWithSDI.designIntelligence ? 'YES' : 'NO');
-    console.log('🎨 [Generate] SDI industry:', consultationDataWithSDI.designIntelligence?.industry);
+    console.log('🎨 [Generate] Passing SDI to legacy mapper:', sdiFromData ? 'YES' : 'NO');
+    console.log('🎨 [Generate] SDI industry:', sdiFromData?.industry);
     
     return mapLegacyStrategyContent(content, consultationDataWithSDI, strategicConsultation, heroImageUrl);
   };
