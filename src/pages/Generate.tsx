@@ -1717,14 +1717,37 @@ function GenerateContent() {
     const isBetaPage = pageType === 'beta-prelaunch';
     console.log('🏗️ [mapLegacyStrategyContent] pageType:', pageType, '| isBetaPage:', isBetaPage);
     
-    // CRITICAL: Detect industry variant for styling (use NEW detection for better accuracy)
-    const industryVariant = detectIndustryVariantNew(
-      consultationData?.industry || strategicConsultation?.industry,
-      strategicConsultation?.industryCategory,
-      strategicConsultation?.industrySubcategory,
-      pageType
-    );
-    console.log('🏗️ [mapLegacyStrategyContent] industryVariant:', industryVariant);
+    // PRIORITY: Extract SDI (Strategic Design Intelligence) if available
+    const sdi = consultationData?.designIntelligence;
+    
+    if (sdi) {
+      console.log('🎨 [SDI] Legacy mapper found design intelligence:', {
+        industry: sdi.industry,
+        mode: sdi.colors?.mode,
+        proofDensity: sdi.proofDensity,
+        hasProofPoints: !!sdi.proofPoints,
+      });
+    }
+    
+    // PRIORITY 1: Use SDI industry if available
+    let industryVariant: IndustryVariant;
+    if (sdi?.industry) {
+      industryVariant = sdi.industry as IndustryVariant;
+      console.log('🎨 [SDI] Using industry from SDI:', industryVariant);
+    } else {
+      // Fallback to legacy detection
+      industryVariant = detectIndustryVariantNew(
+        consultationData?.industry || strategicConsultation?.industry,
+        strategicConsultation?.industryCategory,
+        strategicConsultation?.industrySubcategory,
+        pageType
+      );
+      console.log('🔍 [Legacy] Detected industry from string:', industryVariant);
+    }
+    
+    // Get mode from SDI colors
+    const sdiMode = sdi?.colors?.mode || 'dark';
+    console.log('🎨 [SDI] Mode:', sdiMode);
     
     // Get brand settings for passing to sections
     const brandSettings = strategicConsultation?.brandSettings || effectiveNavState?.strategicData?.brandSettings;
@@ -1753,20 +1776,75 @@ function GenerateContent() {
       }).filter(item => item.question.length > 5);
     };
 
-    // Build statistics from proof points (NO fabrication) - check multiple possible field locations
-    const buildStatistics = () => {
-      
+    // Build statistics from SDI proof points FIRST, then fallback to legacy logic
+    const buildStatistics = (): Array<{ value: string; label: string }> => {
       const stats: Array<{ value: string; label: string }> = [];
       
-      // Check proofPoints object first
-      const proofPoints = content.proofPoints || {};
+      // PRIORITY 1: Use SDI extracted proof points
+      if (sdi?.proofPoints) {
+        const proof = sdi.proofPoints;
+        
+        // Extract percentage stats (e.g., "94% of clients pass")
+        if (proof.percentageStats && proof.percentageStats.length > 0) {
+          proof.percentageStats.slice(0, 4).forEach((stat: string) => {
+            const match = stat.match(/(\d+%)/);
+            if (match) {
+              let label = stat.replace(match[1], '').trim();
+              label = label
+                .replace(/^of\s+(our\s+)?/i, '')
+                .replace(/^we\s+/i, '')
+                .replace(/\s+$/g, '')
+                .slice(0, 40);
+              if (label.length < 3) label = 'Success Rate';
+              label = label.charAt(0).toUpperCase() + label.slice(1);
+              stats.push({ value: match[1], label });
+            }
+          });
+        }
+        
+        // Extract dollar stats (e.g., "$1.5M fines")
+        if (proof.dollarStats && proof.dollarStats.length > 0 && stats.length < 4) {
+          proof.dollarStats.slice(0, 4 - stats.length).forEach((stat: string) => {
+            const match = stat.match(/(\$[\d,.]+[kmb]?)/i);
+            if (match) {
+              let label = stat.replace(match[1], '').trim();
+              label = label.replace(/^in\s+/i, '').slice(0, 40);
+              if (label.length < 3) label = 'Value Delivered';
+              label = label.charAt(0).toUpperCase() + label.slice(1);
+              stats.push({ value: match[1], label });
+            }
+          });
+        }
+        
+        // Add client count if available
+        if (proof.clientCount && stats.length < 4) {
+          const match = proof.clientCount.match(/(\d+\+?)/);
+          if (match) {
+            stats.push({ value: match[1] + '+', label: 'Clients Served' });
+          }
+        }
+        
+        // Add years in business if available
+        if (proof.yearsInBusiness && stats.length < 4) {
+          const match = proof.yearsInBusiness.match(/(\d+\+?)/);
+          if (match) {
+            stats.push({ value: match[1] + '+', label: 'Years Experience' });
+          }
+        }
+        
+        if (stats.length >= 2) {
+          console.log('🎨 [SDI] Using extracted proof points for stats:', stats);
+          return stats.slice(0, 4);
+        }
+      }
       
-      // Check content first, then consultationData as fallback
+      // PRIORITY 2: Legacy extraction from content/consultationData
+      const proofPoints = content.proofPoints || {};
       const clientCount = proofPoints.clientCount || content.clientCount || consultationData?.clientCount;
       const yearsInBusiness = proofPoints.yearsInBusiness || content.yearsInBusiness || consultationData?.yearsInBusiness;
       const otherStats = proofPoints.otherStats || content.otherStats || consultationData?.otherStats || [];
       
-      console.log('🔍 [buildStatistics] Sources:', { 
+      console.log('🔍 [buildStatistics] Legacy sources:', { 
         fromContent: { clientCount: content.clientCount, yearsInBusiness: content.yearsInBusiness },
         fromConsultation: { clientCount: consultationData?.clientCount, yearsInBusiness: consultationData?.yearsInBusiness },
         resolved: { clientCount, yearsInBusiness }
@@ -1795,8 +1873,14 @@ function GenerateContent() {
         });
       }
       
-      // If no stats found, generate industry-appropriate defaults
-      if (stats.length === 0) {
+      // PRIORITY 3: If proof density is sparse and no stats found, DON'T fabricate
+      if (sdi?.proofDensity === 'sparse' && stats.length < 2) {
+        console.log('🎨 [SDI] Proof density sparse - not fabricating stats');
+        return [];
+      }
+      
+      // LAST RESORT: Industry fallback (only if no SDI)
+      if (stats.length === 0 && !sdi) {
         const industry = consultationData?.industry || '';
         const isConsulting = industry.toLowerCase().includes('consulting') || 
                              industry.toLowerCase().includes('professional');
@@ -1812,7 +1896,7 @@ function GenerateContent() {
           stats.push({ value: '99%', label: 'On-Time Delivery' });
           stats.push({ value: '24/7', label: 'Support Available' });
         }
-        console.log('[buildStatistics] Using fallback stats for industry:', industry);
+        console.log('⚠️ [buildStatistics] Using fallback stats for industry:', industry);
       }
       
       console.log('🔍 [buildStatistics] Built stats:', stats.length);
@@ -1840,6 +1924,8 @@ function GenerateContent() {
               logoUrl,
               primaryColor,
               industryVariant,
+              mode: sdiMode,
+              designIntelligence: sdi,
             } : {
               headline: content.headline,
               subheadline: content.subheadline,
@@ -1849,6 +1935,8 @@ function GenerateContent() {
               logoUrl,
               primaryColor,
               industryVariant,
+              mode: sdiMode,
+              designIntelligence: sdi,
             },
           });
           break;
@@ -1863,7 +1951,7 @@ function GenerateContent() {
               type: "stats-bar",
               order: order++,
               visible: true,
-              content: { statistics, industryVariant },
+              content: { statistics, industryVariant, mode: sdiMode },
             });
           } else {
             console.log('⚠️ [mapLegacyStrategyContent] stats-bar skipped: no stats found');
@@ -1880,6 +1968,7 @@ function GenerateContent() {
                 problem: content.problemStatement,
                 solution: content.solutionStatement,
                 industryVariant,
+                mode: sdiMode,
               },
             });
           }
@@ -1898,6 +1987,7 @@ function GenerateContent() {
                 perks: strategicConsultation?.betaPerks || consultationData.betaPerks || ['lifetime-discount', 'founding-member', 'priority-support'],
                 scarcityMessage: `Only ${strategicConsultation?.maxSignups || consultationData.maxSignups || 100} spots available`,
                 industryVariant,
+                mode: sdiMode,
               },
             });
           } else if (content.features && content.features.length > 0) {
@@ -1914,6 +2004,7 @@ function GenerateContent() {
                   icon: f.icon || "CheckCircle",
                 })),
                 industryVariant,
+                mode: sdiMode,
               },
             });
           }
@@ -1933,6 +2024,7 @@ function GenerateContent() {
                 subtitle: 'Your path to results',
                 steps: processSteps,
                 industryVariant,
+                mode: sdiMode,
               },
             });
           } else {
@@ -1965,6 +2057,7 @@ function GenerateContent() {
                 rating: 5,
               } : undefined,
               industryVariant,
+              mode: sdiMode,
             },
           });
           break;
@@ -1983,6 +2076,7 @@ function GenerateContent() {
                 credentials: strategicConsultation?.founderCredentials || founder?.credentials || [],
                 photo: strategicConsultation?.founderPhoto || founder?.photo || null,
                 industryVariant,
+                mode: sdiMode,
               },
             });
             break;
@@ -1998,6 +2092,7 @@ function GenerateContent() {
                 todaySignups: 0,
                 spotsRemaining: strategicConsultation?.maxSignups || consultationData.maxSignups || 100,
                 industryVariant,
+                mode: sdiMode,
               },
             });
             break;
@@ -2036,6 +2131,7 @@ function GenerateContent() {
                   answer: faq.answer,
                 })),
                 industryVariant,
+                mode: sdiMode,
               },
             });
           } else {
@@ -2092,9 +2188,11 @@ function GenerateContent() {
               spotsRemaining: strategicConsultation?.maxSignups || consultationData.maxSignups || 100,
               primaryColor,
               industryVariant,
+              mode: sdiMode,
               secondaryCta,
               urgencyText,
               guaranteeText,
+              designIntelligence: sdi,
             } : {
               headline: "Ready to Get Started?",
               subtext: ctaSubtext,
@@ -2102,6 +2200,7 @@ function GenerateContent() {
               ctaLink: "#contact",
               primaryColor,
               industryVariant,
+              mode: sdiMode,
               secondaryCta,
               urgencyText,
               guaranteeText,
@@ -2110,6 +2209,7 @@ function GenerateContent() {
                 { icon: 'check', text: 'Free consultation' },
                 { icon: 'check', text: 'Cancel anytime' },
               ],
+              designIntelligence: sdi,
             },
           });
           break;
