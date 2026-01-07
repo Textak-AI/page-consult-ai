@@ -1,8 +1,19 @@
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MessageSquare, ClipboardList, ArrowRight } from 'lucide-react';
 
 export default function WizardChoice() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Redirect to brand setup if user has a demo session
+  useEffect(() => {
+    const sessionId = searchParams.get('session');
+    if (sessionId) {
+      console.log('🔄 [WizardChoice] Redirecting to brand setup - user has session:', sessionId);
+      navigate(`/brand-setup?session=${sessionId}`, { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">

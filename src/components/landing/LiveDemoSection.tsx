@@ -132,6 +132,7 @@ export default function LiveDemoSection() {
     setIsSavingSession(true);
     
     const sessionId = crypto.randomUUID();
+    const isReady = state.readiness >= 70; // High readiness = skip wizard, go to brand setup
     
     const demoIntelligence = {
       sessionId,
@@ -169,6 +170,7 @@ export default function LiveDemoSection() {
     // 🚀 Log handoff payload BEFORE saving
     console.log('🚀 [LiveDemo→Wizard] Preparing handoff payload:', {
       sessionId,
+      isReady,
       extractedIntelligence: demoIntelligence,
       marketResearch: demoIntelligence.marketResearch,
       conversationLength: demoIntelligence.conversationHistory?.length,
@@ -191,7 +193,7 @@ export default function LiveDemoSection() {
         content: msg.content,
       })),
       readiness: state.readiness,
-      completed: false,
+      completed: isReady, // Mark as completed if high readiness
       continued_to_consultation: true,
     };
     
@@ -201,10 +203,17 @@ export default function LiveDemoSection() {
       console.log('💾 [LiveDemo] Supabase save result:', { 
         success: !error, 
         error: error?.message,
-        sessionId 
+        sessionId,
+        isReady,
       });
       localStorage.setItem('pageconsult_session_id', sessionId);
-      navigate('/signup?from=demo');
+      
+      // Include session ID and ready flag in URL for post-signup claiming
+      const signupUrl = isReady 
+        ? `/signup?from=demo&session=${sessionId}&ready=true`
+        : `/signup?from=demo&session=${sessionId}`;
+      
+      navigate(signupUrl);
     } catch (err) {
       console.error('💾 [LiveDemo] Error saving demo session:', err);
       navigate('/signup?from=demo');

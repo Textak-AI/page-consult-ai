@@ -16,7 +16,9 @@ import {
   MessageSquare,
   Pencil,
   Globe,
-  ArrowLeft
+  ArrowLeft,
+  ArrowRight,
+  Sparkles
 } from 'lucide-react';
 import { LogoEditor } from '@/components/consultation/LogoEditor';
 
@@ -44,6 +46,15 @@ interface BrandBrief {
   source_file_name?: string;
 }
 
+interface DemoSession {
+  id: string;
+  session_id: string;
+  extracted_intelligence: any;
+  market_research: any;
+  readiness: number;
+  completed: boolean;
+}
+
 export default function BrandSetup() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -53,6 +64,8 @@ export default function BrandSetup() {
   const isFreshStart = searchParams.get('fresh') === 'true';
   // Check if we should skip draft modal (coming from Edit button in wizard)
   const skipDraftModal = searchParams.get('skipDraftModal') === 'true';
+  // Check for demo session
+  const sessionId = searchParams.get('session');
   
   // State
   const [isLoading, setIsLoading] = useState(true);
@@ -67,6 +80,11 @@ export default function BrandSetup() {
   const [showReview, setShowReview] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   
+  // Demo session state
+  const [demoSession, setDemoSession] = useState<DemoSession | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStep, setGenerationStep] = useState('');
+  
   // Website URL state
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [isAnalyzingWebsite, setIsAnalyzingWebsite] = useState(false);
@@ -75,6 +93,33 @@ export default function BrandSetup() {
   // Logo editor state
   const [logoEditorOpen, setLogoEditorOpen] = useState(false);
   const [logoEditorUrl, setLogoEditorUrl] = useState<string | null>(null);
+
+  // Load demo session if present
+  useEffect(() => {
+    const loadDemoSession = async () => {
+      if (!sessionId) return;
+      
+      console.log('📂 [BrandSetup] Loading demo session:', sessionId);
+      
+      const { data, error } = await supabase
+        .from('demo_sessions')
+        .select('*')
+        .eq('session_id', sessionId)
+        .single();
+      
+      if (data && !error) {
+        console.log('✅ [BrandSetup] Demo session loaded:', {
+          hasIntelligence: !!data.extracted_intelligence,
+          readiness: data.readiness,
+        });
+        setDemoSession(data as DemoSession);
+      } else {
+        console.error('❌ [BrandSetup] Failed to load demo session:', error);
+      }
+    };
+    
+    loadDemoSession();
+  }, [sessionId]);
 
   // Check if user already has brand setup
   useEffect(() => {
@@ -494,6 +539,65 @@ export default function BrandSetup() {
     navigate('/consultation');
   };
 
+  // Handle generate from demo session - streamlined flow
+  const handleGenerateFromDemo = async () => {
+    if (!demoSession || !userId) return;
+    
+    setIsGenerating(true);
+    
+    try {
+      // Step 1: Save brand settings
+      setGenerationStep('Saving brand settings...');
+      
+      if (noBrandGuide) {
+        await saveManualColor();
+      }
+      
+      // Get or create brand brief
+      const { data: existingBrief } = await supabase
+        .from('brand_briefs')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      const brandData = existingBrief || {
+        user_id: userId,
+        logo_url: logoPreview,
+        colors: { primary: { hex: manualColor, name: 'Primary' } },
+        website_url: websiteUrl || null,
+      };
+      
+      // Step 2: Navigate to generate page with session data
+      setGenerationStep('Preparing generation...');
+      
+      // Store the intelligence data for the generate page
+      sessionStorage.setItem('demoSessionForGeneration', JSON.stringify({
+        sessionId: demoSession.session_id,
+        intelligence: demoSession.extracted_intelligence,
+        marketResearch: demoSession.market_research,
+        readiness: demoSession.readiness,
+        brand: brandData,
+      }));
+      
+      console.log('🚀 [BrandSetup] Navigating to generate with demo session data');
+      navigate(`/generate?session=${demoSession.session_id}`, { replace: true });
+      
+    } catch (error) {
+      console.error('Generation preparation failed:', error);
+      setGenerationStep('');
+      setIsGenerating(false);
+      toast({
+        title: 'Preparation failed',
+        description: 'Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Check if we have enough brand data to continue
+  const hasBrandData = logoPreview || noBrandGuide;
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -654,13 +758,94 @@ export default function BrandSetup() {
       </header>
 
       <div className="max-w-2xl mx-auto py-12 px-4">
+        
+        {/* Progress Steps - only show for demo sessions */}
+        {demoSession && (
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <Check className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <span className="text-primary font-medium">Strategy</span>
+            </div>
+            <div className="w-12 h-px bg-border" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                2
+              </div>
+              <span className="text-foreground font-medium">Brand</span>
+            </div>
+            <div className="w-12 h-px bg-border" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                3
+              </div>
+              <span className="text-muted-foreground">Generate</span>
+            </div>
+          </div>
+        )}
+        
+        {/* Session Summary Card (if coming from demo) */}
+        {demoSession && (
+          <div className="bg-card rounded-xl p-6 mb-8 border border-primary/20">
+            <div className="flex items-start gap-4">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Sparkles className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold text-foreground mb-1">
+                  Your strategy session is ready
+                </h3>
+                <p className="text-muted-foreground text-sm mb-4">
+                  We captured everything from your demo conversation.
+                </p>
+                
+                <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                  {demoSession.extracted_intelligence?.industry && (
+                    <>
+                      <dt className="text-muted-foreground">Industry</dt>
+                      <dd className="text-foreground">{demoSession.extracted_intelligence.industry}</dd>
+                    </>
+                  )}
+                  {demoSession.extracted_intelligence?.audience && (
+                    <>
+                      <dt className="text-muted-foreground">Audience</dt>
+                      <dd className="text-foreground">{demoSession.extracted_intelligence.audience}</dd>
+                    </>
+                  )}
+                  {demoSession.extracted_intelligence?.valueProp && (
+                    <>
+                      <dt className="text-muted-foreground">Value Prop</dt>
+                      <dd className="text-foreground truncate">{demoSession.extracted_intelligence.valueProp}</dd>
+                    </>
+                  )}
+                  {demoSession.market_research?.commonObjections?.length > 0 && (
+                    <>
+                      <dt className="text-muted-foreground">Objections</dt>
+                      <dd className="text-foreground">{demoSession.market_research.commonObjections.length} identified</dd>
+                    </>
+                  )}
+                </dl>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <div className="text-2xl font-bold text-primary">
+                  {demoSession.readiness}%
+                </div>
+                <div className="text-xs text-muted-foreground">Ready</div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Title */}
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-foreground mb-3">
-            Let's set up your brand
+            {demoSession ? "One more thing: your brand" : "Let's set up your brand"}
           </h1>
           <p className="text-muted-foreground">
-            This takes 2 minutes and makes every page on-brand.
+            {demoSession 
+              ? "We'll use your logo and colors to make the page uniquely yours."
+              : "This takes 2 minutes and makes every page on-brand."}
           </p>
         </div>
 
@@ -870,22 +1055,51 @@ export default function BrandSetup() {
           </div>
         )}
 
-        {/* Continue Button */}
-        <div className="text-center">
-          <Button
-            onClick={handleContinue}
-            disabled={!logoPreview && !noBrandGuide}
-            className="px-8 py-3 text-lg h-auto"
-          >
-            Continue →
-          </Button>
+        {/* Continue/Generate Button */}
+        <div className="mt-8">
+          {isGenerating ? (
+            <div className="bg-card rounded-xl p-6 text-center border border-border">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-foreground font-medium">{generationStep}</p>
+              <p className="text-muted-foreground text-sm mt-1">This usually takes 30-60 seconds</p>
+            </div>
+          ) : demoSession ? (
+            // Demo session flow - streamlined generate
+            <>
+              <Button
+                onClick={handleGenerateFromDemo}
+                disabled={!hasBrandData}
+                className="w-full py-4 text-lg h-auto bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
+              >
+                Generate My Page
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              
+              {!hasBrandData && (
+                <p className="text-center text-muted-foreground text-sm mt-3">
+                  Add your brand info above to continue
+                </p>
+              )}
+            </>
+          ) : (
+            // Normal flow - continue to wizard
+            <div className="text-center">
+              <Button
+                onClick={handleContinue}
+                disabled={!logoPreview && !noBrandGuide}
+                className="px-8 py-3 text-lg h-auto"
+              >
+                Continue →
+              </Button>
 
-          <button
-            onClick={() => navigate('/consultation')}
-            className="block mx-auto mt-4 text-muted-foreground text-sm hover:text-foreground transition-colors"
-          >
-            Skip for now (use defaults)
-          </button>
+              <button
+                onClick={() => navigate('/consultation')}
+                className="block mx-auto mt-4 text-muted-foreground text-sm hover:text-foreground transition-colors"
+              >
+                Skip for now (use defaults)
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
