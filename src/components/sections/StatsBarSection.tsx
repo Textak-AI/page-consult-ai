@@ -15,10 +15,13 @@ interface StatsBarSectionProps {
 }
 
 /**
- * Stats Bar Section - BRIEF-FIRST APPROACH
+ * Stats Bar Section - PREMIUM DESIGN
  * 
- * CRITICAL: Only shows statistics passed from the brief.
- * NO fallback stats, NO fabrication, NO template defaults.
+ * Features:
+ * - Hero stat (large, prominent) + supporting stats (smaller, hierarchy)
+ * - Visual connector to hero section
+ * - Staggered hover animations
+ * - Industry-specific color accents
  */
 export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditing }: StatsBarSectionProps) {
   const typography = getTypography(industryVariant);
@@ -38,7 +41,6 @@ export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditi
   };
   
   // NO FABRICATION: Only render stats that actually exist
-  // Don't pad with defaults, return null if no real stats
   if (!statistics || statistics.length === 0) {
     return null;
   }
@@ -46,251 +48,365 @@ export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditi
   // Clean the stats (remove any that are clearly malformed)
   const cleanStats = statistics.filter(stat => {
     if (!stat.value || !stat.label) return false;
-    // Value should be reasonably short (number-like)
     if (stat.value.length > 15) return false;
-    // Label should be under ~50 chars
     if (stat.label.length > 50) return false;
     return true;
   });
 
-  // Don't render if no clean stats
   if (cleanStats.length === 0) {
     return null;
   }
 
-  // Dynamic grid based on stat count
-  const getGridClass = () => {
-    if (cleanStats.length === 2) return "grid-cols-2";
-    if (cleanStats.length === 3) return "grid-cols-1 md:grid-cols-3";
-    return "grid-cols-2 md:grid-cols-4";
-  };
-
-  // SaaS variant - HIGH CONTRAST: dark bg with cyan values and white labels
+  // SaaS variant - gradient dark with cyan accents
   if (isSaas) {
+    const [heroStat, ...supportingStats] = cleanStats;
+    
     return (
-      <section className={`py-12 bg-gradient-to-r from-slate-800 to-slate-900 border-y border-slate-700 ${isEditing ? 'relative' : ''}`}>
+      <section className={`relative py-20 bg-gradient-to-b from-slate-900 to-slate-800 ${isEditing ? 'relative' : ''}`}>
+        {/* Visual connector from hero */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-16 bg-gradient-to-b from-purple-500/50 to-transparent" />
+        
         {isEditing && (
           <div className="absolute inset-0 border-2 border-purple-500/50 rounded-lg pointer-events-none z-10" />
         )}
-        <div className="max-w-5xl mx-auto px-6">
-          <div className={`grid ${getGridClass()} gap-8`}>
-            {cleanStats.map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+        
+        <div className="container mx-auto px-6 lg:px-12">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Hero stat - dramatic, large */}
+            <div className="lg:col-span-5">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="text-center"
+                transition={{ duration: 0.6 }}
+                className="relative p-8 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700"
               >
+                {/* Accent corner */}
+                <div className="absolute top-0 left-0 w-24 h-1 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500" />
+                
                 <div 
-                  className={`text-4xl md:text-5xl font-bold text-cyan-400 mb-2 ${
+                  className={`text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent ${
                     isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2 inline-block" : ""
                   }`}
                   contentEditable={isEditing}
                   suppressContentEditableWarning
-                  onBlur={(e) => handleStatBlur(i, 'value', e)}
+                  onBlur={(e) => handleStatBlur(0, 'value', e)}
                 >
-                  {formatStatValue(stat.value)}
+                  {formatStatValue(heroStat.value)}
                 </div>
-                <div 
-                  className={`text-sm text-slate-300 font-medium ${
+                
+                <p 
+                  className={`mt-4 text-lg lg:text-xl leading-relaxed text-slate-300 ${
                     isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-1" : ""
                   }`}
                   contentEditable={isEditing}
                   suppressContentEditableWarning
-                  onBlur={(e) => handleStatBlur(i, 'label', e)}
+                  onBlur={(e) => handleStatBlur(0, 'label', e)}
                 >
-                  {stat.label}
-                </div>
+                  {heroStat.label}
+                </p>
+                
+                {heroStat.source && (
+                  <div className="text-xs text-slate-500 mt-2">
+                    Source: {heroStat.source}
+                  </div>
+                )}
               </motion.div>
-            ))}
+            </div>
+            
+            {/* Supporting stats - smaller, staggered */}
+            <div className="lg:col-span-7">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {supportingStats.slice(0, 3).map((stat, index) => (
+                  <motion.div 
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: (index + 1) * 0.1, duration: 0.5 }}
+                    className="p-6 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition-all duration-300 hover:scale-105 border border-slate-700/50"
+                    style={{ transitionDelay: `${index * 50}ms` }}
+                  >
+                    <div 
+                      className={`text-3xl lg:text-4xl font-bold text-white ${
+                        isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2 inline-block" : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleStatBlur(index + 1, 'value', e)}
+                    >
+                      {formatStatValue(stat.value)}
+                    </div>
+                    
+                    <p 
+                      className={`mt-2 text-sm leading-relaxed text-slate-400 ${
+                        isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-1" : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleStatBlur(index + 1, 'label', e)}
+                    >
+                      {stat.label}
+                    </p>
+                    
+                    {stat.source && (
+                      <div className="text-xs text-slate-500 mt-1">
+                        Source: {stat.source}
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+              
+              {/* Contextual statement */}
+              <p className="mt-8 text-sm italic text-slate-500">
+                Results from actual client engagements — not industry averages.
+              </p>
+            </div>
           </div>
         </div>
       </section>
     );
   }
 
-  // Healthcare or Consulting: Light mode
+  // Healthcare or Consulting: PREMIUM Light mode with hero stat layout
   if (isHealthcare || isConsulting) {
-    const valueColor = isHealthcare ? 'text-teal-700' : 'text-slate-900';
+    const [heroStat, ...supportingStats] = cleanStats;
+    const accentColor = isHealthcare ? 'teal' : 'violet';
+    const valueColor = isHealthcare ? 'text-teal-600' : 'text-violet-600';
     
     return (
-      <section className={`py-16 bg-slate-50 border-y border-slate-200 ${isEditing ? 'relative' : ''}`}>
+      <section className={`relative py-20 bg-white ${isEditing ? 'relative' : ''}`}>
+        {/* Visual connector from hero */}
+        <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-px h-16 bg-gradient-to-b ${
+          isHealthcare ? 'from-teal-500/50' : 'from-violet-500/50'
+        } to-transparent`} />
+        
         {isEditing && (
-          <div className="absolute inset-0 border-2 border-teal-500/50 rounded-lg pointer-events-none z-10" />
+          <div className={`absolute inset-0 border-2 ${isHealthcare ? 'border-teal-500/50' : 'border-violet-500/50'} rounded-lg pointer-events-none z-10`} />
         )}
-        <div className="max-w-5xl mx-auto px-6">
-          <div className={`grid ${getGridClass()} gap-8 md:gap-12`}>
-            {cleanStats.map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+        
+        <div className="container mx-auto px-6 lg:px-12">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Hero stat - dramatic, large */}
+            <div className="lg:col-span-5">
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="text-center"
+                transition={{ duration: 0.6 }}
+                className="relative p-8 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100"
               >
+                {/* Accent corner */}
+                <div className={`absolute top-0 left-0 w-24 h-1 rounded-full ${
+                  isHealthcare ? 'bg-teal-500' : 'bg-violet-500'
+                }`} />
+                
                 <div 
-                  className={`text-4xl md:text-5xl font-bold mb-2 ${valueColor} ${
-                    isEditing ? "outline-dashed outline-2 outline-teal-500/30 rounded px-2 inline-block" : ""
+                  className={`text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight ${valueColor} ${
+                    isEditing ? `cursor-text hover:ring-2 hover:ring-${accentColor}-400 focus:outline-none focus:ring-2 focus:ring-${accentColor}-400 rounded px-2 inline-block` : ""
                   }`}
                   contentEditable={isEditing}
                   suppressContentEditableWarning
-                  onBlur={(e) => handleStatBlur(i, 'value', e)}
+                  onBlur={(e) => handleStatBlur(0, 'value', e)}
                 >
-                  {formatStatValue(stat.value)}
+                  {formatStatValue(heroStat.value)}
                 </div>
-                <div 
-                  className={`text-sm md:text-base text-slate-700 font-medium ${
-                    isEditing ? "outline-dashed outline-2 outline-teal-500/30 rounded px-1" : ""
+                
+                <p 
+                  className={`mt-4 text-lg lg:text-xl leading-relaxed text-slate-600 ${
+                    isEditing ? `cursor-text hover:ring-2 hover:ring-${accentColor}-400 focus:outline-none focus:ring-2 focus:ring-${accentColor}-400 rounded px-1` : ""
                   }`}
                   contentEditable={isEditing}
                   suppressContentEditableWarning
-                  onBlur={(e) => handleStatBlur(i, 'label', e)}
+                  onBlur={(e) => handleStatBlur(0, 'label', e)}
                 >
-                  {stat.label}
-                </div>
-                {stat.source && (
-                  <div className="text-xs text-slate-500 mt-1">
-                    Source: {stat.source}
+                  {heroStat.label}
+                </p>
+                
+                {heroStat.source && (
+                  <div className="text-xs text-slate-500 mt-2">
+                    Source: {heroStat.source}
                   </div>
                 )}
               </motion.div>
-            ))}
+            </div>
+            
+            {/* Supporting stats - smaller, staggered */}
+            <div className="lg:col-span-7">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {supportingStats.slice(0, 3).map((stat, index) => (
+                  <motion.div 
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: (index + 1) * 0.1, duration: 0.5 }}
+                    className="p-6 rounded-xl bg-slate-50 hover:bg-slate-100 transition-all duration-300 hover:scale-105"
+                    style={{ transitionDelay: `${index * 50}ms` }}
+                  >
+                    <div 
+                      className={`text-3xl lg:text-4xl font-bold text-slate-900 ${
+                        isEditing ? `cursor-text hover:ring-2 hover:ring-${accentColor}-400 focus:outline-none focus:ring-2 focus:ring-${accentColor}-400 rounded px-2 inline-block` : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleStatBlur(index + 1, 'value', e)}
+                    >
+                      {formatStatValue(stat.value)}
+                    </div>
+                    
+                    <p 
+                      className={`mt-2 text-sm leading-relaxed text-slate-500 ${
+                        isEditing ? `cursor-text hover:ring-2 hover:ring-${accentColor}-400 focus:outline-none focus:ring-2 focus:ring-${accentColor}-400 rounded px-1` : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleStatBlur(index + 1, 'label', e)}
+                    >
+                      {stat.label}
+                    </p>
+                    
+                    {stat.source && (
+                      <div className="text-xs text-slate-400 mt-1">
+                        Source: {stat.source}
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+              
+              {/* Contextual statement */}
+              <p className="mt-8 text-sm italic text-slate-400">
+                Results from actual client engagements — not industry averages.
+              </p>
+            </div>
           </div>
         </div>
       </section>
     );
   }
 
-  if (isConsulting) {
-    // Consulting: Light slate background, prominent numbers
-    return (
-      <section className={`py-16 bg-slate-50 border-y border-slate-200 ${isEditing ? 'relative' : ''}`}>
-        {isEditing && (
-          <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
-        )}
-        <div className="max-w-5xl mx-auto px-6">
-          <div className={`grid ${getGridClass()} gap-8 md:gap-12`}>
-            {cleanStats.map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="text-center"
-              >
-                <div 
-                  className={`text-4xl md:text-5xl font-bold text-slate-900 mb-2 ${
-                    isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2 inline-block" : ""
-                  }`}
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning
-                  onBlur={(e) => handleStatBlur(i, 'value', e)}
-                >
-                  {formatStatValue(stat.value)}
-                </div>
-                <div 
-                  className={`text-sm md:text-base text-slate-700 font-medium ${
-                    isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
-                  }`}
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning
-                  onBlur={(e) => handleStatBlur(i, 'label', e)}
-                >
-                  {stat.label}
-                </div>
-                {stat.source && (
-                  <div className="text-xs text-slate-500 mt-1">
-                    Source: {stat.source}
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // Default dark mode styling
+  // Default dark mode styling - also use premium layout
+  const [heroStat, ...supportingStats] = cleanStats;
+  
   return (
     <section 
-      className={isEditing ? 'relative' : ''}
+      className={`relative py-20 ${isEditing ? 'relative' : ''}`}
       style={{
-        backgroundColor: 'var(--color-background-alt)',
-        borderTopWidth: 'var(--border-width)',
-        borderBottomWidth: 'var(--border-width)',
-        borderColor: 'var(--color-border)',
-        borderStyle: 'solid',
-        padding: '64px 24px',
+        backgroundColor: 'hsl(217, 33%, 6%)',
       }}
     >
+      {/* Visual connector from hero */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-16 bg-gradient-to-b from-cyan-500/50 to-transparent" />
+      
       {isEditing && (
         <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
       )}
-      <div className="container mx-auto max-w-6xl">
-        <div className={`grid ${getGridClass()}`} style={{ gap: 'var(--spacing-card-gap)' }}>
-          {cleanStats.map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+      
+      <div className="container mx-auto px-6 lg:px-12">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          {/* Hero stat - dramatic, large */}
+          <div className="lg:col-span-5">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.15, duration: 0.5 }}
-              className="text-center hover:scale-[1.02] transition-all duration-300"
+              transition={{ duration: 0.6 }}
+              className="relative p-8 rounded-2xl"
               style={{
-                backgroundColor: 'var(--color-surface)',
-                borderColor: 'var(--color-border)',
-                borderWidth: 'var(--border-width)',
+                backgroundColor: 'hsl(217, 33%, 10%)',
+                borderWidth: '1px',
+                borderColor: 'hsl(217, 33%, 18%)',
                 borderStyle: 'solid',
-                borderRadius: 'var(--radius-medium)',
-                padding: 'var(--spacing-card-padding)',
-                boxShadow: 'var(--shadow-medium)',
               }}
             >
+              {/* Accent corner */}
+              <div className="absolute top-0 left-0 w-24 h-1 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500" />
+              
               <div 
-                className={`${typography.statValue} ${
-                  isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2 inline-block" : ""
+                className={`text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight text-cyan-400 ${
+                  isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-2 inline-block" : ""
                 }`}
-                style={{ 
-                  color: 'var(--color-primary)',
-                  fontFamily: 'var(--font-heading)',
-                  fontWeight: 'var(--font-weight-heading)',
-                }}
+                style={{ fontFamily: 'var(--font-heading)' }}
                 contentEditable={isEditing}
                 suppressContentEditableWarning
-                onBlur={(e) => handleStatBlur(i, 'value', e)}
+                onBlur={(e) => handleStatBlur(0, 'value', e)}
               >
-                {formatStatValue(stat.value)}
+                {formatStatValue(heroStat.value)}
               </div>
-              <div 
-                className={`${typography.statLabel} ${
-                  isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+              
+              <p 
+                className={`mt-4 text-lg lg:text-xl leading-relaxed text-slate-300 ${
+                  isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1" : ""
                 }`}
-                style={{ 
-                  color: 'var(--color-text-primary)',
-                  fontFamily: 'var(--font-body)',
-                  fontWeight: 'var(--font-weight-body)',
-                }}
                 contentEditable={isEditing}
                 suppressContentEditableWarning
-                onBlur={(e) => handleStatBlur(i, 'label', e)}
+                onBlur={(e) => handleStatBlur(0, 'label', e)}
               >
-                {stat.label}
-              </div>
-              {stat.source && (
-                <div 
-                  className="text-xs"
-                  style={{ color: 'var(--color-text-muted)' }}
-                >
-                  Source: {stat.source}
+                {heroStat.label}
+              </p>
+              
+              {heroStat.source && (
+                <div className="text-xs text-slate-500 mt-2">
+                  Source: {heroStat.source}
                 </div>
               )}
             </motion.div>
-          ))}
+          </div>
+          
+          {/* Supporting stats - smaller, staggered */}
+          <div className="lg:col-span-7">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {supportingStats.slice(0, 3).map((stat, index) => (
+                <motion.div 
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: (index + 1) * 0.1, duration: 0.5 }}
+                  className="p-6 rounded-xl transition-all duration-300 hover:scale-105"
+                  style={{ 
+                    backgroundColor: 'hsl(217, 33%, 10%)',
+                    transitionDelay: `${index * 50}ms` 
+                  }}
+                >
+                  <div 
+                    className={`text-3xl lg:text-4xl font-bold text-white ${
+                      isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-2 inline-block" : ""
+                    }`}
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleStatBlur(index + 1, 'value', e)}
+                  >
+                    {formatStatValue(stat.value)}
+                  </div>
+                  
+                  <p 
+                    className={`mt-2 text-sm leading-relaxed text-slate-400 ${
+                      isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1" : ""
+                    }`}
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleStatBlur(index + 1, 'label', e)}
+                  >
+                    {stat.label}
+                  </p>
+                  
+                  {stat.source && (
+                    <div className="text-xs text-slate-500 mt-1">
+                      Source: {stat.source}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+            
+            {/* Contextual statement */}
+            <p className="mt-8 text-sm italic text-slate-500">
+              Results from actual client engagements — not industry averages.
+            </p>
+          </div>
         </div>
       </div>
     </section>

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
 import { LogoUploader } from "@/components/editor/LogoUploader";
 import { useState, useMemo } from "react";
-import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star, Image, Layers } from "lucide-react";
+import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star, Image, Layers, PlayCircle, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
 import { Switch } from "@/components/ui/switch";
@@ -14,6 +14,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+// Helper component for premium headline highlighting
+function HeadlineWithHighlight({ text, highlightColor, mode }: { 
+  text: string; 
+  highlightColor: 'teal' | 'violet'; 
+  mode: string;
+}) {
+  const words = text.split(' ');
+  // Highlight last 2-4 words for emphasis
+  const highlightStart = Math.max(0, words.length - 3);
+  const beforeHighlight = words.slice(0, highlightStart).join(' ');
+  const highlighted = words.slice(highlightStart).join(' ');
+  
+  const highlightClass = highlightColor === 'teal' 
+    ? 'bg-gradient-to-r from-teal-500/20 to-teal-400/10 px-3 -mx-1 rounded-lg'
+    : 'bg-gradient-to-r from-violet-500/20 to-violet-400/10 px-3 -mx-1 rounded-lg';
+  
+  if (!beforeHighlight) {
+    return <>{text}</>;
+  }
+  
+  return (
+    <>
+      {beforeHighlight}{' '}
+      <span className={highlightClass}>{highlighted}</span>
+    </>
+  );
+}
 
 interface CitedStat {
   statistic: string;
@@ -281,20 +309,17 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
     );
   }
 
-  // Healthcare or Consulting: Light mode
+  // Healthcare or Consulting: PREMIUM Light mode layout
   if (isHealthcare || isConsulting) {
-    const bgColor = isHealthcare ? 'white' : 'white';
-    const textColor = 'text-slate-900';
-    const subTextColor = 'text-slate-600';
-    const badgeBg = isHealthcare ? 'bg-teal-50 text-teal-700' : 'bg-slate-100 text-slate-700';
+    const accentColor = isHealthcare ? 'teal' : 'violet';
     
     return (
       <section 
-        className={`relative overflow-hidden ${isEditing ? "" : ""}`}
-        style={{
-          backgroundColor: bgColor,
-          minHeight: 'auto',
-        }}
+        className={`relative min-h-[85vh] flex items-center overflow-hidden ${
+          content.backgroundImage 
+            ? '' 
+            : 'bg-gradient-to-br from-slate-50 via-white to-slate-50'
+        }`}
       >
         {/* Background Image Layer (if provided) */}
         {content.backgroundImage && (
@@ -312,16 +337,24 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           </div>
         )}
         
+        {/* Subtle gradient orbs - visual anchors (only when no bg image) */}
+        {!content.backgroundImage && (
+          <>
+            <div className={`absolute top-20 right-[10%] w-[500px] h-[500px] rounded-full blur-3xl opacity-20 ${
+              isHealthcare ? 'bg-teal-400' : 'bg-violet-500'
+            }`} />
+            <div className={`absolute bottom-10 left-[5%] w-[300px] h-[300px] rounded-full blur-3xl opacity-10 ${
+              isHealthcare ? 'bg-cyan-400' : 'bg-indigo-500'
+            }`} />
+          </>
+        )}
+        
         {isEditing && (
           <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
-            <Button
-              size="sm"
-              onClick={() => setImagePickerOpen(true)}
-            >
+            <Button size="sm" onClick={() => setImagePickerOpen(true)}>
               <ImagePlus className="h-4 w-4 mr-2" />
               {content.backgroundImage ? 'Change' : 'Add'} Background
             </Button>
-            
             {hasBackgroundImage && (
               <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-md">
                 <Layers className="h-4 w-4 text-slate-600" />
@@ -337,135 +370,198 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         )}
         
         {isEditing && (
-          <div className="absolute inset-0 border-2 border-teal-500/50 rounded-lg pointer-events-none z-10" />
+          <div className={`absolute inset-0 border-2 ${isHealthcare ? 'border-teal-500/50' : 'border-violet-500/50'} rounded-lg pointer-events-none z-10`} />
         )}
 
-        {/* Content Layer */}
-        <div className="container mx-auto max-w-5xl text-center relative z-10 px-6 py-32">
-          <div className="flex flex-col items-center gap-8 w-full">
-            
-            {/* Logo */}
-            {(content.logoUrl || isEditing) && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="mb-2 relative"
-              >
-                {content.logoUrl ? (
-                  <div className="relative inline-flex flex-col items-center gap-2">
-                    <img 
-                      src={content.logoUrl} 
-                      alt="Logo" 
-                      className={`${logoSizeClasses[logoSize]} mx-auto object-contain`}
-                    />
-                    {isEditing && (
-                      <button
-                        onClick={() => setLogoUploaderOpen(true)}
-                        className="absolute -bottom-1 -right-1 w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center hover:bg-teal-600 transition-colors shadow-md"
-                        title="Change logo"
-                      >
-                        <Camera className="w-3 h-3 text-white" />
-                      </button>
-                    )}
-                  </div>
-                ) : isEditing ? (
-                  <button
-                    onClick={() => setLogoUploaderOpen(true)}
-                    className="w-[120px] h-[48px] flex flex-col items-center justify-center gap-1 border-2 border-dashed border-slate-300 hover:border-teal-400 hover:bg-teal-50/50 rounded-lg transition-all text-slate-400 hover:text-teal-600"
-                  >
-                    <Image className="w-5 h-5" />
-                    <span className="text-xs font-medium">Add Logo</span>
-                  </button>
-                ) : null}
-              </motion.div>
-            )}
-
-            {/* Trust Badge */}
-            {trustBadge && (
+        <div className="container mx-auto px-6 lg:px-12 relative z-10">
+          <div className="grid lg:grid-cols-12 gap-12 items-center">
+            {/* Content - 7 columns (asymmetric split) */}
+            <div className="lg:col-span-7 space-y-8">
+              
+              {/* Logo */}
+              {(content.logoUrl || isEditing) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="mb-2"
+                >
+                  {content.logoUrl ? (
+                    <div className="relative inline-block">
+                      <img 
+                        src={content.logoUrl} 
+                        alt="Logo" 
+                        className={`${logoSizeClasses[logoSize]} object-contain`}
+                      />
+                      {isEditing && (
+                        <button
+                          onClick={() => setLogoUploaderOpen(true)}
+                          className={`absolute -bottom-1 -right-1 w-6 h-6 ${isHealthcare ? 'bg-teal-500 hover:bg-teal-600' : 'bg-violet-500 hover:bg-violet-600'} rounded-full flex items-center justify-center transition-colors shadow-md`}
+                        >
+                          <Camera className="w-3 h-3 text-white" />
+                        </button>
+                      )}
+                    </div>
+                  ) : isEditing ? (
+                    <button
+                      onClick={() => setLogoUploaderOpen(true)}
+                      className={`w-[120px] h-[48px] flex flex-col items-center justify-center gap-1 border-2 border-dashed rounded-lg transition-all ${
+                        isHealthcare 
+                          ? 'border-slate-300 hover:border-teal-400 hover:bg-teal-50/50 text-slate-400 hover:text-teal-600'
+                          : 'border-slate-300 hover:border-violet-400 hover:bg-violet-50/50 text-slate-400 hover:text-violet-600'
+                      }`}
+                    >
+                      <Image className="w-5 h-5" />
+                      <span className="text-xs font-medium">Add Logo</span>
+                    </button>
+                  ) : null}
+                </motion.div>
+              )}
+              
+              {/* Eyebrow / Category tag */}
               <motion.div 
-                initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${badgeBg}`}
+                className="flex items-center gap-3"
               >
-                <Award className="w-4 h-4" strokeWidth={1.5} />
-                <span className="text-sm font-medium">{trustBadge}</span>
-              </motion.div>
-            )}
-
-            {/* Headline */}
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              contentEditable={isEditing}
-              suppressContentEditableWarning
-              onBlur={(e) => handleBlur("headline", e)}
-              className={`text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight max-w-4xl leading-tight ${
-                hasBackgroundImage && showDarkOverlay ? 'text-white' : textColor
-              } ${isEditing ? "cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2" : ""}`}
-            >
-              {content.headline}
-            </motion.h1>
-
-            {/* Subheadline */}
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              contentEditable={isEditing}
-              suppressContentEditableWarning
-              onBlur={(e) => handleBlur("subheadline", e)}
-              className={`text-lg md:text-xl max-w-2xl leading-relaxed ${
-                hasBackgroundImage && showDarkOverlay ? 'text-white/90' : subTextColor
-              } ${isEditing ? "cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2" : ""}`}
-            >
-              {content.subheadline}
-            </motion.p>
-
-            {/* CTA Button */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="pt-4"
-            >
-              <Button 
-                size="lg" 
-                className={`px-10 py-6 text-lg font-semibold transition-all duration-300 hover:scale-[1.02] ${
-                  isHealthcare 
-                    ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-lg' 
-                    : 'bg-slate-900 hover:bg-slate-800 text-white shadow-lg'
-                } ${isEditing ? "outline-dashed outline-2 outline-teal-500/30" : ""}`}
-              >
-                <span
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning
-                  onBlur={(e) => handleBlur("ctaText", e)}
-                >
-                  {content.ctaText}
+                <div className={`h-px w-12 ${isHealthcare ? 'bg-teal-500' : 'bg-violet-500'}`} />
+                <span className={`text-sm font-medium tracking-wide uppercase ${
+                  hasBackgroundImage && showDarkOverlay ? 'text-slate-300' : 'text-slate-500'
+                }`}>
+                  {isHealthcare ? 'Healthcare Cybersecurity' : 'Strategic Solutions'}
                 </span>
-                <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
-              </Button>
-            </motion.div>
-
-            {/* Trust indicators */}
-            {trustBadges.length > 0 && (
+              </motion.div>
+              
+              {/* Headline with highlight treatment */}
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("headline", e)}
+                className={`text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight ${
+                  hasBackgroundImage && showDarkOverlay ? 'text-white' : 'text-slate-900'
+                } ${isEditing ? `cursor-text hover:ring-2 hover:ring-${accentColor}-400 focus:outline-none focus:ring-2 focus:ring-${accentColor}-400 rounded px-2` : ""}`}
+              >
+                <HeadlineWithHighlight 
+                  text={content.headline}
+                  highlightColor={accentColor}
+                  mode={hasBackgroundImage && showDarkOverlay ? 'dark' : 'light'}
+                />
+              </motion.h1>
+              
+              {/* Subheadline with breathing room */}
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("subheadline", e)}
+                className={`text-xl lg:text-2xl leading-relaxed max-w-xl ${
+                  hasBackgroundImage && showDarkOverlay ? 'text-slate-300' : 'text-slate-600'
+                } ${isEditing ? `cursor-text hover:ring-2 hover:ring-${accentColor}-400 focus:outline-none focus:ring-2 focus:ring-${accentColor}-400 rounded px-2` : ""}`}
+              >
+                {content.subheadline}
+              </motion.p>
+              
+              {/* CTA Cluster - not a lonely button */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pt-4"
+              >
+                <Button 
+                  size="lg" 
+                  className={`group px-8 py-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:-translate-y-0.5 ${
+                    isHealthcare 
+                      ? 'bg-teal-600 hover:bg-teal-500 text-white shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40' 
+                      : 'bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40'
+                  } ${isEditing ? `outline-dashed outline-2 outline-${accentColor}-500/30` : ""}`}
+                >
+                  <span
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleBlur("ctaText", e)}
+                  >
+                    {content.ctaText}
+                  </span>
+                  <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+                </Button>
+                
+                {/* Secondary action */}
+                <a 
+                  href="#how-it-works" 
+                  className={`flex items-center gap-2 font-medium transition-colors ${
+                    hasBackgroundImage && showDarkOverlay 
+                      ? 'text-slate-300 hover:text-white' 
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <PlayCircle className="w-5 h-5" />
+                  See how it works
+                </a>
+              </motion.div>
+              
+              {/* Trust micro-copy */}
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
-                className="flex flex-wrap justify-center gap-6 pt-4"
+                className={`flex items-center gap-6 pt-2 text-sm ${
+                  hasBackgroundImage && showDarkOverlay ? 'text-slate-400' : 'text-slate-500'
+                }`}
               >
-                {trustBadges.slice(0, 3).map((badge, i) => (
-                  <div key={i} className={`flex items-center gap-2 text-sm ${hasBackgroundImage && showDarkOverlay ? 'text-white/80' : 'text-slate-500'}`}>
-                    <CheckCircle className={`w-4 h-4 ${isHealthcare ? 'text-teal-500' : 'text-emerald-500'}`} strokeWidth={1.5} />
-                    <span>{badge}</span>
-                  </div>
-                ))}
+                <span className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-green-500" />
+                  No credit card required
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-green-500" />
+                  Free consultation
+                </span>
               </motion.div>
-            )}
+            </div>
+            
+            {/* Visual element - 5 columns (asymmetric) */}
+            <div className="lg:col-span-5 relative hidden lg:block">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.7, delay: 0.3 }}
+                className={`relative aspect-square rounded-3xl ${
+                  hasBackgroundImage && showDarkOverlay 
+                    ? 'bg-white/5 backdrop-blur-sm' 
+                    : 'bg-gradient-to-br from-slate-100 to-slate-200'
+                } p-8 shadow-2xl`}
+              >
+                {/* Abstract representation - sophisticated placeholder */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className={`w-40 h-40 rounded-full border-4 ${
+                    isHealthcare ? 'border-teal-500/30' : 'border-violet-500/30'
+                  } flex items-center justify-center animate-pulse`}>
+                    <div className={`w-28 h-28 rounded-full ${
+                      isHealthcare ? 'bg-teal-500/20' : 'bg-violet-500/20'
+                    } flex items-center justify-center`}>
+                      <Shield className={`w-14 h-14 ${
+                        isHealthcare ? 'text-teal-500' : 'text-violet-500'
+                      }`} />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Decorative rings */}
+                <div className={`absolute inset-8 rounded-full border ${
+                  isHealthcare ? 'border-teal-500/10' : 'border-violet-500/10'
+                }`} />
+                <div className={`absolute inset-16 rounded-full border ${
+                  isHealthcare ? 'border-teal-500/5' : 'border-violet-500/5'
+                }`} />
+              </motion.div>
+            </div>
           </div>
         </div>
 
