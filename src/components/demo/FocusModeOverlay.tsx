@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowRight, Sparkles } from 'lucide-react';
+import { X, ArrowRight } from 'lucide-react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { IntelligenceTabs } from './IntelligenceTabs';
 import { Button } from '@/components/ui/button';
@@ -78,24 +78,8 @@ export function FocusModeOverlay({
               <span className="text-sm font-medium">Exit Strategy Session</span>
             </button>
             
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
-              <div className="hidden sm:block">
-                <p className="text-white font-semibold text-sm">PageConsult AI</p>
-                <p className="text-slate-500 text-xs">Strategy Session</p>
-              </div>
-            </div>
-            
-            <Button
-              onClick={onContinue}
-              className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white text-sm gap-2"
-            >
-              <span className="hidden sm:inline">Continue to Full Consultation</span>
-              <span className="sm:hidden">Continue</span>
-              <ArrowRight className="w-4 h-4" />
-            </Button>
+            {/* Spacer for layout balance */}
+            <div />
           </motion.header>
           
           {/* Main Content */}
