@@ -199,6 +199,18 @@ export default function LiveDemoSection() {
     
     sessionStorage.setItem('demoIntelligence', JSON.stringify(demoIntelligence));
     
+    // Store brand prefill data for Brand Setup page
+    const brandPrefill = {
+      logo: state.extractedLogo || null,
+      companyName: state.businessCard?.companyName || state.companyResearch?.companyName || null,
+      website: state.businessCard?.website || null,
+      colors: state.extractedBrand?.colors || null,
+      fonts: state.extractedBrand?.fonts || null,
+      industry: state.extracted?.industry || null,
+    };
+    sessionStorage.setItem('brandPrefill', JSON.stringify(brandPrefill));
+    console.log('📦 [LiveDemo] Brand prefill stored:', brandPrefill);
+    
     if (state.email) {
       sessionStorage.setItem('demoEmail', state.email);
     }

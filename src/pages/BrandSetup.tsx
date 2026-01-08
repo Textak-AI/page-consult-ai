@@ -93,6 +93,58 @@ export default function BrandSetup() {
   // Logo editor state
   const [logoEditorOpen, setLogoEditorOpen] = useState(false);
   const [logoEditorUrl, setLogoEditorUrl] = useState<string | null>(null);
+  
+  // Brand prefill state (from demo business card)
+  const [isPrefilled, setIsPrefilled] = useState(false);
+  const [prefilledColors, setPrefilledColors] = useState<{primary?: string; secondary?: string; accent?: string} | null>(null);
+  const [prefilledFonts, setPrefilledFonts] = useState<{heading?: string; body?: string} | null>(null);
+
+  // Load brand prefill data from demo flow (via sessionStorage)
+  useEffect(() => {
+    const prefillData = sessionStorage.getItem('brandPrefill');
+    
+    if (prefillData) {
+      try {
+        const data = JSON.parse(prefillData);
+        console.log('📋 [BrandSetup] Loading prefill data:', data);
+        
+        // Pre-fill logo
+        if (data.logo && !logoPreview) {
+          setLogoPreview(data.logo);
+          console.log('🖼️ [BrandSetup] Logo pre-filled:', data.logo);
+        }
+        
+        // Pre-fill colors
+        if (data.colors) {
+          if (data.colors.primary) {
+            setManualColor(data.colors.primary);
+          }
+          setPrefilledColors(data.colors);
+          console.log('🎨 [BrandSetup] Colors pre-filled:', data.colors);
+        }
+        
+        // Pre-fill fonts
+        if (data.fonts && (data.fonts.heading || data.fonts.body)) {
+          setPrefilledFonts(data.fonts);
+          console.log('🔤 [BrandSetup] Fonts pre-filled:', data.fonts);
+        }
+        
+        // Pre-fill website URL
+        if (data.website && !websiteUrl) {
+          setWebsiteUrl(data.website);
+          setWebsiteAnalyzed(true);
+        }
+        
+        setIsPrefilled(true);
+        
+        // Clear prefill data so it doesn't persist on refresh
+        sessionStorage.removeItem('brandPrefill');
+        
+      } catch (e) {
+        console.error('Failed to parse brand prefill:', e);
+      }
+    }
+  }, []);
 
   // Load demo session if present
   useEffect(() => {
@@ -851,6 +903,25 @@ export default function BrandSetup() {
           </p>
         </div>
 
+        {/* Pre-filled from website indicator */}
+        {isPrefilled && (logoPreview || prefilledColors) && (
+          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/30">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-emerald-500/20">
+                <Sparkles className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="font-medium text-emerald-700 dark:text-emerald-300">
+                  Brand assets detected from your website
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  We've pre-filled your logo{prefilledColors ? ', colors' : ''}{prefilledFonts ? ', and fonts' : ''}. Adjust anything that doesn't look right.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Step 1: Website URL (Optional) */}
         <div className="bg-card rounded-xl p-8 mb-6 border border-border">
           <div className="flex items-center gap-3 mb-6">
@@ -933,10 +1004,17 @@ export default function BrandSetup() {
             </div>
           ) : logoPreview ? (
             <div className="flex items-center gap-6">
-              <img src={logoPreview} alt="Logo" className="h-16 object-contain bg-muted/50 rounded-lg p-2" />
+              <div className="relative">
+                <img src={logoPreview} alt="Logo" className="h-16 object-contain bg-muted/50 rounded-lg p-2" />
+                {isPrefilled && (
+                  <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs rounded-full border border-emerald-500/30">
+                    Auto
+                  </span>
+                )}
+              </div>
               <div>
                 <p className="text-primary text-sm flex items-center gap-1">
-                  <Check className="w-4 h-4" /> {websiteAnalyzed ? 'Extracted from website' : 'Uploaded'}
+                  <Check className="w-4 h-4" /> {isPrefilled ? 'Detected from website' : websiteAnalyzed ? 'Extracted from website' : 'Uploaded'}
                 </p>
                 <button
                   onClick={() => setLogoPreview(null)}

@@ -13,7 +13,9 @@ import {
   Award,
   Calendar,
   MapPin,
-  Loader2
+  Loader2,
+  Palette,
+  Type
 } from 'lucide-react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { IntelligenceProfileDemo } from '@/components/consultation/IntelligenceProfileDemo';
@@ -393,6 +395,42 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
                             </li>
                           ))}
                         </ul>
+                      </div>
+                    )}
+
+                    {/* Extracted Brand Colors */}
+                    {state.extractedBrand?.colors?.all && state.extractedBrand.colors.all.length > 0 && (
+                      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Palette className="w-3 h-3 text-slate-500" />
+                          <span className="text-xs text-slate-500">Brand Colors</span>
+                        </div>
+                        <div className="flex gap-2">
+                          {state.extractedBrand.colors.all.slice(0, 5).map((color: string, i: number) => (
+                            <div 
+                              key={i} 
+                              className="w-8 h-8 rounded-lg border border-slate-600 shadow-sm"
+                              style={{ backgroundColor: color }}
+                              title={color}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Extracted Fonts */}
+                    {state.extractedBrand?.fonts?.heading && (
+                      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Type className="w-3 h-3 text-slate-500" />
+                          <span className="text-xs text-slate-500">Typography</span>
+                        </div>
+                        <p className="text-sm text-slate-300">
+                          {state.extractedBrand.fonts.heading}
+                          {state.extractedBrand.fonts.body && state.extractedBrand.fonts.body !== state.extractedBrand.fonts.heading && (
+                            <span className="text-slate-500"> / {state.extractedBrand.fonts.body}</span>
+                          )}
+                        </p>
                       </div>
                     )}
                   </div>

@@ -157,6 +157,21 @@ export interface CompanyResearch {
   researchedAt: string;
 }
 
+// Extracted brand assets (from website)
+export interface ExtractedBrand {
+  colors: {
+    primary: string | null;
+    secondary: string | null;
+    accent: string | null;
+    all: string[];
+  };
+  fonts: {
+    heading: string | null;
+    body: string | null;
+  };
+  extractedAt: string;
+}
+
 export interface IntelligenceState {
   // Core intelligence
   extracted: ExtractedIntelligence;
@@ -196,6 +211,7 @@ export interface IntelligenceState {
   businessCard: BusinessCardData | null;
   companyResearch: CompanyResearch | null;
   extractedLogo: string | null;
+  extractedBrand: ExtractedBrand | null;
   foundersPricingUnlocked: boolean;
   isResearchingCompany: boolean;
   
@@ -289,6 +305,7 @@ const initialState: IntelligenceState = {
   businessCard: null,
   companyResearch: null,
   extractedLogo: null,
+  extractedBrand: null,
   foundersPricingUnlocked: false,
   isResearchingCompany: false,
   consecutiveThinInputs: 0,
@@ -977,12 +994,16 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     sessionStorage.setItem('pageconsult_founders', 'true');
 
     try {
-      // Run parallel operations
-      const [researchResult, logoResult, loopsResult] = await Promise.allSettled([
+      // Run ALL parallel operations (including brand extraction)
+      const [researchResult, logoResult, brandResult, loopsResult] = await Promise.allSettled([
         supabase.functions.invoke('company-research', {
           body: { companyName, website, industryContext: state.extracted.industry },
         }),
         supabase.functions.invoke('extract-logo', {
+          body: { url: website },
+        }),
+        // Brand assets extraction (colors, fonts) using existing extract-website-intelligence
+        supabase.functions.invoke('extract-website-intelligence', {
           body: { url: website },
         }),
         supabase.functions.invoke('loops-contact', {
@@ -1028,6 +1049,37 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           extractedLogo: logoResult.value.data.logoUrl,
         }));
         console.log('🖼️ [Research] Logo extracted:', logoResult.value.data.logoUrl);
+      }
+
+      // Process brand assets (colors, fonts)
+      if (brandResult.status === 'fulfilled' && brandResult.value.data?.success) {
+        const brandData = brandResult.value.data.data;
+        const extractedBrand: ExtractedBrand = {
+          colors: {
+            primary: brandData.brandColors?.[0] || null,
+            secondary: brandData.brandColors?.[1] || null,
+            accent: brandData.brandColors?.[2] || null,
+            all: brandData.brandColors || [],
+          },
+          fonts: {
+            heading: brandData.fonts?.heading || null,
+            body: brandData.fonts?.body || null,
+          },
+          extractedAt: new Date().toISOString(),
+        };
+        
+        setState(prev => ({
+          ...prev,
+          extractedBrand,
+          // Also update logo if brand extraction found one and we didn't get it from extract-logo
+          extractedLogo: prev.extractedLogo || brandData.logoUrl || null,
+        }));
+        
+        console.log('🎨 [Research] Brand assets extracted:', {
+          primaryColor: extractedBrand.colors.primary,
+          font: extractedBrand.fonts.heading,
+          colorCount: extractedBrand.colors.all.length,
+        });
       }
 
       // Flag Founders pricing
