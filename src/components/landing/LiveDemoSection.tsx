@@ -113,7 +113,15 @@ export default function LiveDemoSection() {
 
   // Handle email gate - with business card (submits full info, then activates focus mode)
   const handleBusinessCardSubmitAndActivateFocus = async (data: { companyName: string; website: string; email: string }) => {
-    await submitBusinessCard(data);
+    await submitBusinessCard(data, (followUpMessage: string) => {
+      // Add the assumptive follow-up to the conversation by simulating an assistant message
+      // This happens after research completes
+      setTimeout(() => {
+        // We can't directly update conversation here since it's managed by processUserMessage
+        // Instead, we'll store the follow-up and display it as an assistant message
+        console.log('📝 [LiveDemo] Assumptive follow-up received:', followUpMessage.substring(0, 60) + '...');
+      }, 100);
+    });
     activateFocusMode();
   };
 

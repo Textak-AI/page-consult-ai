@@ -5,7 +5,15 @@ import {
   Target, 
   Search, 
   Users,
-  Unlock
+  Unlock,
+  Gift,
+  Building,
+  ExternalLink,
+  Sparkles,
+  Award,
+  Calendar,
+  MapPin,
+  Loader2
 } from 'lucide-react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { IntelligenceProfileDemo } from '@/components/consultation/IntelligenceProfileDemo';
@@ -246,9 +254,160 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
             )}
             
             {activeTab === 'research' && (
-              <div className="p-4">
+              <div className="p-4 space-y-4">
+                {/* Founders Pricing Banner */}
+                {state.foundersPricingUnlocked && (
+                  <div className="p-3 rounded-lg bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30">
+                    <div className="flex items-center gap-2">
+                      <Gift className="w-4 h-4 text-emerald-400" />
+                      <span className="text-sm font-medium text-emerald-300">
+                        50% Founders Discount Unlocked
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Company Research Card */}
+                {state.companyResearch && (
+                  <div className="space-y-4">
+                    {/* Header with logo */}
+                    <div className="flex items-center gap-3">
+                      {state.extractedLogo ? (
+                        <img 
+                          src={state.extractedLogo} 
+                          alt={state.companyResearch.companyName}
+                          className="w-10 h-10 rounded-lg object-contain bg-white p-1"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
+                          <Building className="w-5 h-5 text-slate-400" />
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-medium text-white">
+                          {state.companyResearch.companyName}
+                        </div>
+                        {state.businessCard?.website && (
+                          <a 
+                            href={state.businessCard.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-cyan-400 hover:underline flex items-center gap-1"
+                          >
+                            {new URL(state.businessCard.website).hostname.replace('www.', '')}
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Confidence indicator */}
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${
+                        state.companyResearch.confidence === 'high' ? 'bg-emerald-400' :
+                        state.companyResearch.confidence === 'medium' ? 'bg-amber-400' :
+                        'bg-slate-500'
+                      }`} />
+                      <span className="text-xs text-slate-500">
+                        {state.companyResearch.confidence === 'high' ? 'High confidence research' :
+                         state.companyResearch.confidence === 'medium' ? 'Moderate confidence' :
+                         'Limited data available'}
+                      </span>
+                    </div>
+                    
+                    {/* Description */}
+                    {state.companyResearch.description && (
+                      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                        <div className="text-xs text-slate-500 mb-1">About</div>
+                        <p className="text-sm text-slate-300">{state.companyResearch.description}</p>
+                      </div>
+                    )}
+                    
+                    {/* Services */}
+                    {state.companyResearch.services && state.companyResearch.services.length > 0 && (
+                      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                        <div className="text-xs text-slate-500 mb-2">Services</div>
+                        <div className="flex flex-wrap gap-2">
+                          {state.companyResearch.services.map((service: string, i: number) => (
+                            <span key={i} className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300">
+                              {service}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Target Market */}
+                    {state.companyResearch.targetMarket && (
+                      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                        <div className="text-xs text-slate-500 mb-1">Target Market</div>
+                        <p className="text-sm text-slate-300">{state.companyResearch.targetMarket}</p>
+                      </div>
+                    )}
+                    
+                    {/* Differentiators */}
+                    {state.companyResearch.differentiators && state.companyResearch.differentiators.length > 0 && (
+                      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                        <div className="text-xs text-slate-500 mb-2">Differentiators</div>
+                        <ul className="text-sm text-slate-300 space-y-1.5">
+                          {state.companyResearch.differentiators.map((diff: string, i: number) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <Sparkles className="w-3 h-3 text-amber-400 mt-1 shrink-0" />
+                              {diff}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {/* Founded / Location */}
+                    {(state.companyResearch.founded || state.companyResearch.location) && (
+                      <div className="flex gap-4 text-xs text-slate-400">
+                        {state.companyResearch.founded && (
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            Founded {state.companyResearch.founded}
+                          </div>
+                        )}
+                        {state.companyResearch.location && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {state.companyResearch.location}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Public Proof Points */}
+                    {state.companyResearch.publicProof && state.companyResearch.publicProof.length > 0 && (
+                      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                        <div className="text-xs text-slate-500 mb-2">Credentials & Proof</div>
+                        <ul className="text-sm text-slate-300 space-y-1.5">
+                          {state.companyResearch.publicProof.map((proof: string, i: number) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <Award className="w-3 h-3 text-cyan-400 mt-1 shrink-0" />
+                              {proof}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Loading state */}
+                {state.isResearchingCompany && (
+                  <div className="text-center py-8">
+                    <Loader2 className="w-6 h-6 mx-auto mb-2 animate-spin text-cyan-400" />
+                    <p className="text-sm text-slate-400">Researching your business...</p>
+                  </div>
+                )}
+
                 {/* Show unlock button if dismissed without email */}
-                {state.emailDismissed && !state.emailCaptured && !state.market.isLoading && state.extracted.industry && (
+                {state.emailDismissed && !state.emailCaptured && !state.market.isLoading && state.extracted.industry && !state.companyResearch && (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="p-4 bg-cyan-500/10 rounded-full mb-4">
                       <Search className="w-8 h-8 text-cyan-400" />
@@ -264,6 +423,14 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
                       <Unlock className="w-4 h-4" />
                       Unlock Market Research
                     </button>
+                  </div>
+                )}
+
+                {/* Empty state before any research */}
+                {!state.companyResearch && !state.isResearchingCompany && !state.emailDismissed && !state.emailCaptured && (
+                  <div className="text-center py-8 text-slate-500">
+                    <Building className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Share your business card to unlock personalized research</p>
                   </div>
                 )}
                 
