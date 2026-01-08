@@ -155,21 +155,13 @@ Be specific and concise. Return factual information.`;
     const perplexityData = await perplexityResponse.json();
     const researchContent = perplexityData.choices?.[0]?.message?.content || '';
 
-    // Helper to strip citation brackets
-    const stripCitations = (text: string): string => {
-      return text
-        .replace(/\[\d+(?:,\s*\d+)*\]/g, '')
-        .replace(/\[\d+\]\[\d+\]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-    };
-
     // Parse the research into structured format
+    // Note: cleanText is applied inside extractSection and extractList
     const result = {
-      marketSize: stripCitations(extractSection(researchContent, 'market size') || `The ${sanitizedIndustry} market continues to grow`),
-      buyerPersona: stripCitations(extractSection(researchContent, 'buyer persona') || `Decision-makers in ${sanitizedAudience}`),
-      commonObjections: extractList(researchContent, 'objections').map(stripCitations),
-      industryInsights: extractList(researchContent, 'insights').map(stripCitations),
+      marketSize: extractSection(researchContent, 'market size') || `The ${sanitizedIndustry} market continues to grow`,
+      buyerPersona: extractSection(researchContent, 'buyer persona') || extractSection(researchContent, 'typical buyer') || `Decision-makers in ${sanitizedAudience}`,
+      commonObjections: extractList(researchContent, 'objection') || extractList(researchContent, 'concern'),
+      industryInsights: extractList(researchContent, 'insight') || extractList(researchContent, 'behavior'),
     };
 
     // Ensure we have at least some objections and insights
@@ -215,17 +207,68 @@ Be specific and concise. Return factual information.`;
   }
 });
 
+// Clean markdown and citations from text
+function cleanText(text: string): string {
+  return text
+    .replace(/^#+\s*/, '')              // Remove leading # headers
+    .replace(/^\d+\.\s*/, '')           // Remove leading numbers like "1. "
+    .replace(/\*\*/g, '')               // Remove bold markdown
+    .replace(/\*/g, '')                 // Remove italic markdown
+    .replace(/\[\d+(?:,\s*\d+)*\]/g, '') // Remove citation brackets [1], [1, 2, 3]
+    .replace(/\[\d+\]\[\d+\]/g, '')     // Remove adjacent citations [1][2]
+    .replace(/\s+/g, ' ')               // Normalize whitespace
+    .trim();
+}
+
 function extractSection(text: string, keyword: string): string | null {
   const lines = text.split('\n');
+  
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].toLowerCase().includes(keyword)) {
-      let result = lines[i].replace(/^\d+\.\s*/, '').replace(/\*\*/g, '').trim();
-      if (lines[i + 1] && !lines[i + 1].match(/^\d+\./)) {
-        result += ' ' + lines[i + 1].replace(/\*\*/g, '').trim();
+    const line = lines[i].toLowerCase();
+    
+    // Check if this line is a header containing the keyword
+    if (line.includes(keyword)) {
+      // Check if this is a header line (starts with # or number)
+      const isHeader = lines[i].match(/^#+\s*/) || lines[i].match(/^\d+\.\s*\**[^:]+\**/);
+      
+      if (isHeader) {
+        // Collect content from lines AFTER the header
+        const contentLines: string[] = [];
+        
+        for (let j = i + 1; j < lines.length && j < i + 5; j++) {
+          const nextLine = lines[j].trim();
+          
+          // Stop if we hit another header (# or numbered section)
+          if (nextLine.match(/^#+\s*/) || nextLine.match(/^\d+\.\s*\**/)) {
+            break;
+          }
+          
+          // Skip empty lines
+          if (nextLine.length === 0) continue;
+          
+          // Clean and add content
+          const cleaned = cleanText(nextLine);
+          if (cleaned.length > 5) {
+            contentLines.push(cleaned);
+          }
+        }
+        
+        if (contentLines.length > 0) {
+          return contentLines.join(' ').slice(0, 300);
+        }
+      } else {
+        // Not a header - the content might be on the same line after a colon
+        const colonIndex = lines[i].indexOf(':');
+        if (colonIndex !== -1) {
+          const content = cleanText(lines[i].slice(colonIndex + 1));
+          if (content.length > 10) {
+            return content.slice(0, 300);
+          }
+        }
       }
-      return result.slice(0, 200);
     }
   }
+  
   return null;
 }
 
@@ -234,21 +277,31 @@ function extractList(text: string, keyword: string): string[] {
   const lines = text.split('\n');
   let inSection = false;
   
-  for (const line of lines) {
-    if (line.toLowerCase().includes(keyword)) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lowerLine = line.toLowerCase();
+    
+    // Check if this is the section header
+    if (lowerLine.includes(keyword)) {
       inSection = true;
       continue;
     }
     
     if (inSection) {
-      const cleaned = line.replace(/^[-•*]\s*/, '').replace(/^\d+\.\s*/, '').replace(/\*\*/g, '').trim();
-      if (cleaned.length > 10 && cleaned.length < 150) {
+      // Stop if we hit a new numbered section header
+      if (line.match(/^\d+\.\s*\*\*[A-Z]/)) {
+        inSection = false;
+        continue;
+      }
+      
+      // Extract list items (bullets or sub-numbers)
+      const cleaned = cleanText(line.replace(/^[-•*]\s*/, ''));
+      
+      if (cleaned.length > 10 && cleaned.length < 200) {
         results.push(cleaned);
       }
+      
       if (results.length >= 3) break;
-      if (line.match(/^\d+\./) && !line.toLowerCase().includes(keyword)) {
-        inSection = false;
-      }
     }
   }
   
