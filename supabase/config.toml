@@ -176,3 +176,12 @@ verify_jwt = false
 
 [functions.orchestrator-research]
 verify_jwt = false
+
+[functions.company-research]
+verify_jwt = false
+
+[functions.loops-contact]
+verify_jwt = false
+
+[functions.extract-logo]
+verify_jwt = false

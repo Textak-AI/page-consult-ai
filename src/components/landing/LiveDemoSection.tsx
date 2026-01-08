@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Sparkles, Send, Loader2, ChevronRight, BarChart3, X, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import EmailGateModal from './EmailGateModal';
+import BusinessCardGateModal from './BusinessCardGateModal';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
@@ -35,7 +35,7 @@ const TypingIndicator = () => (
 
 export default function LiveDemoSection() {
   const navigate = useNavigate();
-  const { state, processUserMessage, submitEmail, dismissEmailGate, reopenEmailGate } = useIntelligence();
+  const { state, processUserMessage, submitEmail, submitBusinessCard, dismissEmailGate, reopenEmailGate } = useIntelligence();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -111,9 +111,9 @@ export default function LiveDemoSection() {
     activateFocusMode();
   };
 
-  // Handle email gate - with email (submits email, then activates focus mode)
-  const handleEmailSubmitAndActivateFocus = async (email: string) => {
-    await submitEmail(email);
+  // Handle email gate - with business card (submits full info, then activates focus mode)
+  const handleBusinessCardSubmitAndActivateFocus = async (data: { companyName: string; website: string; email: string }) => {
+    await submitBusinessCard(data);
     activateFocusMode();
   };
 
@@ -548,13 +548,12 @@ export default function LiveDemoSection() {
         )}
       </AnimatePresence>
 
-      {/* Email Gate Modal */}
-      <EmailGateModal
+      {/* Business Card Gate Modal */}
+      <BusinessCardGateModal
         isOpen={state.showEmailGate}
-        onSubmit={handleEmailSubmitAndActivateFocus}
-        onContinueWithoutEmail={handleContinueWithoutEmail}
+        onSubmit={handleBusinessCardSubmitAndActivateFocus}
+        onContinueWithoutResearch={handleContinueWithoutEmail}
         industry={state.extracted.industry}
-        audience={state.extracted.audience}
       />
 
       {/* Saving session loader - shown when transitioning to signup */}

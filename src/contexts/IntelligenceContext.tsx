@@ -132,6 +132,30 @@ export interface ConversationTurn {
   timestamp: Date;
 }
 
+// Business card data (captured from modal)
+export interface BusinessCardData {
+  companyName: string;
+  website: string;
+  email: string;
+  submittedAt: string;
+}
+
+// Company research (from Perplexity)
+export interface CompanyResearch {
+  companyName: string;
+  website: string | null;
+  description: string | null;
+  services: string[];
+  targetMarket: string | null;
+  founded: string | null;
+  location: string | null;
+  differentiators: string[];
+  publicProof: string[];
+  industryPosition: string | null;
+  confidence: 'low' | 'medium' | 'high';
+  researchedAt: string;
+}
+
 export interface IntelligenceState {
   // Core intelligence
   extracted: ExtractedIntelligence;
@@ -160,12 +184,19 @@ export interface IntelligenceState {
   sessionId: string;
   rateLimited: boolean;
   
-  // Email gate
+  // Email gate (legacy - now business card)
   email: string | null;
   emailCaptured: boolean;
   emailOffered: boolean;      // Track if modal was shown
   emailDismissed: boolean;    // Track if user dismissed without entering email
   showEmailGate: boolean;
+  
+  // Business card & company research (new)
+  businessCard: BusinessCardData | null;
+  companyResearch: CompanyResearch | null;
+  extractedLogo: string | null;
+  foundersPricingUnlocked: boolean;
+  isResearchingCompany: boolean;
   
   // Thin input tracking for PROBE → GUIDE flow
   consecutiveThinInputs: number;  // Reset to 0 on adequate/rich input
@@ -177,6 +208,7 @@ export interface IntelligenceContextValue {
   resetIntelligence: () => void;
   getPrefillData: () => object;
   submitEmail: (email: string) => Promise<void>;
+  submitBusinessCard: (data: { companyName: string; website: string; email: string }) => Promise<void>;
   dismissEmailGate: () => void;
   reopenEmailGate: () => void;
   confirmIndustrySelection: (variant: string) => void;
@@ -252,6 +284,12 @@ const initialState: IntelligenceState = {
   emailOffered: false,
   emailDismissed: false,
   showEmailGate: false,
+  // Business card & company research
+  businessCard: null,
+  companyResearch: null,
+  extractedLogo: null,
+  foundersPricingUnlocked: false,
+  isResearchingCompany: false,
   consecutiveThinInputs: 0,
 };
 
@@ -907,12 +945,104 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   
   const shouldShowContinueButton = state.readiness >= 60;
 
+  // ----------------------------------------
+  // Submit business card (triggers company research)
+  // ----------------------------------------
+  const submitBusinessCard = useCallback(async (data: { companyName: string; website: string; email: string }) => {
+    const { companyName, website, email } = data;
+    
+    // Store business card immediately
+    setState(prev => ({
+      ...prev,
+      businessCard: {
+        companyName,
+        website,
+        email,
+        submittedAt: new Date().toISOString(),
+      },
+      email,
+      emailCaptured: true,
+      showEmailGate: false,
+      isResearchingCompany: true,
+    }));
+
+    // Store in sessionStorage for signup pre-fill
+    sessionStorage.setItem('pageconsult_email', email);
+    sessionStorage.setItem('pageconsult_company', companyName);
+    sessionStorage.setItem('pageconsult_website', website);
+    sessionStorage.setItem('pageconsult_founders', 'true');
+
+    try {
+      // Run parallel operations
+      const [researchResult, logoResult, loopsResult] = await Promise.allSettled([
+        supabase.functions.invoke('company-research', {
+          body: { companyName, website, industryContext: state.extracted.industry },
+        }),
+        supabase.functions.invoke('extract-logo', {
+          body: { url: website },
+        }),
+        supabase.functions.invoke('loops-contact', {
+          body: {
+            email,
+            properties: {
+              company: companyName,
+              website,
+              source: 'demo_business_card',
+              discountTier: 'founders-50',
+              foundersEligible: true,
+            },
+            tags: ['demo-engaged', 'founders-eligible'],
+          },
+        }),
+      ]);
+
+      // Process research results
+      if (researchResult.status === 'fulfilled' && researchResult.value.data?.success) {
+        setState(prev => ({
+          ...prev,
+          companyResearch: {
+            ...researchResult.value.data.data,
+            researchedAt: new Date().toISOString(),
+          },
+        }));
+        console.log('🔍 [Research] Company research complete:', researchResult.value.data.data);
+      }
+
+      // Process logo
+      if (logoResult.status === 'fulfilled' && logoResult.value.data?.success) {
+        setState(prev => ({
+          ...prev,
+          extractedLogo: logoResult.value.data.logoUrl,
+        }));
+        console.log('🖼️ [Research] Logo extracted:', logoResult.value.data.logoUrl);
+      }
+
+      // Flag Founders pricing
+      if (loopsResult.status === 'fulfilled') {
+        setState(prev => ({
+          ...prev,
+          foundersPricingUnlocked: true,
+        }));
+        console.log('💰 [Research] Founders pricing unlocked');
+      }
+
+      // Also fetch market research
+      if (state.extracted.industry) {
+        await fetchMarketResearch(state.extracted.industry, state.extracted.audience);
+      }
+
+    } finally {
+      setState(prev => ({ ...prev, isResearchingCompany: false }));
+    }
+  }, [state.extracted.industry, state.extracted.audience, fetchMarketResearch]);
+
   const contextValue: IntelligenceContextValue = {
     state,
     processUserMessage,
     resetIntelligence,
     getPrefillData,
     submitEmail,
+    submitBusinessCard,
     dismissEmailGate,
     reopenEmailGate,
     confirmIndustrySelection,
