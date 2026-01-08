@@ -14,6 +14,7 @@ import {
   getPrecomputedObjections, 
   type PredictedObjection 
 } from '@/data/precomputedObjections';
+import { generateAssumptiveFollowUp } from '@/utils/assumptiveFollowUp';
 
 // ============================================
 // PERSISTENCE KEYS & CONFIG
@@ -208,7 +209,7 @@ export interface IntelligenceContextValue {
   resetIntelligence: () => void;
   getPrefillData: () => object;
   submitEmail: (email: string) => Promise<void>;
-  submitBusinessCard: (data: { companyName: string; website: string; email: string }) => Promise<void>;
+  submitBusinessCard: (data: { companyName: string; website: string; email: string }, onFollowUp?: (message: string) => void) => Promise<void>;
   dismissEmailGate: () => void;
   reopenEmailGate: () => void;
   confirmIndustrySelection: (variant: string) => void;
@@ -948,7 +949,10 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // ----------------------------------------
   // Submit business card (triggers company research)
   // ----------------------------------------
-  const submitBusinessCard = useCallback(async (data: { companyName: string; website: string; email: string }) => {
+  const submitBusinessCard = useCallback(async (
+    data: { companyName: string; website: string; email: string },
+    onFollowUp?: (message: string) => void
+  ) => {
     const { companyName, website, email } = data;
     
     // Store business card immediately
@@ -998,14 +1002,23 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
 
       // Process research results
       if (researchResult.status === 'fulfilled' && researchResult.value.data?.success) {
+        const researchData = researchResult.value.data.data;
+        
         setState(prev => ({
           ...prev,
           companyResearch: {
-            ...researchResult.value.data.data,
+            ...researchData,
             researchedAt: new Date().toISOString(),
           },
         }));
-        console.log('🔍 [Research] Company research complete:', researchResult.value.data.data);
+        console.log('🔍 [Research] Company research complete:', researchData);
+        
+        // Generate and trigger assumptive follow-up message
+        if (onFollowUp && researchData) {
+          const followUpMessage = generateAssumptiveFollowUp(researchData, state.extracted.industry);
+          console.log('📝 [Research] Assumptive follow-up queued:', followUpMessage.substring(0, 60) + '...');
+          onFollowUp(followUpMessage);
+        }
       }
 
       // Process logo

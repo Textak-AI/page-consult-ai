@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Check, Sparkles, FileText, Calculator, Clock } from "lucide-react";
+import { Loader2, Check, Sparkles, FileText, Calculator, Clock, Gift } from "lucide-react";
 import { useSession } from "@/contexts/SessionContext";
 import { handlePostAuthMigration } from "@/lib/sessionMigration";
 import { hasGuestSession } from "@/lib/guestSession";
@@ -59,8 +59,30 @@ export default function Signup() {
   const isFromDemo = searchParams.get('from') === 'demo';
   const [demoIntelligence, setDemoIntelligence] = useState<DemoIntelligence | null>(null);
   
+  // Founders pricing flag
+  const [foundersDiscount, setFoundersDiscount] = useState(false);
+  const [companyName, setCompanyName] = useState("");
+  
   // Load demo data on mount
   useEffect(() => {
+    // Always check for Founders pricing from sessionStorage (even if not from demo)
+    const savedEmail = sessionStorage.getItem('pageconsult_email');
+    const savedCompany = sessionStorage.getItem('pageconsult_company');
+    const isFounders = sessionStorage.getItem('pageconsult_founders') === 'true';
+    
+    if (savedEmail) {
+      setEmail(savedEmail);
+      console.log('📋 [Signup] Pre-filled email from sessionStorage');
+    }
+    if (savedCompany) {
+      setCompanyName(savedCompany);
+      console.log('📋 [Signup] Pre-filled company from sessionStorage');
+    }
+    if (isFounders) {
+      setFoundersDiscount(true);
+      console.log('💰 [Signup] Founders discount applied from demo');
+    }
+    
     if (isFromDemo) {
       const storedIntelligence = sessionStorage.getItem('demoIntelligence');
       if (storedIntelligence) {
@@ -72,9 +94,9 @@ export default function Signup() {
         }
       }
       
-      // Pre-fill email if available
+      // Pre-fill email if available (legacy)
       const storedEmail = sessionStorage.getItem('demoEmail');
-      if (storedEmail) {
+      if (storedEmail && !savedEmail) {
         setEmail(storedEmail);
       }
     }
@@ -483,6 +505,18 @@ export default function Signup() {
 
           {/* Value bullets */}
           <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-4 mb-6">
+            {/* Founders Discount Banner */}
+            {foundersDiscount && (
+              <div className="mb-4 p-3 rounded-lg bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30">
+                <div className="flex items-center gap-2">
+                  <Gift className="w-4 h-4 text-emerald-400" />
+                  <span className="text-sm font-medium text-emerald-300">
+                    Founders Discount Applied: 50% Off First Year
+                  </span>
+                </div>
+              </div>
+            )}
+            
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">

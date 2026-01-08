@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, Loader2, Zap, Shield, Crown, Users } from "lucide-react";
+import { Check, ArrowRight, Loader2, Zap, Shield, Crown, Users, Gift } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -97,7 +97,17 @@ const faqs = [
 const PricingPage = () => {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [foundingSpotsLeft] = useState(127);
+  const [foundersDiscount, setFoundersDiscount] = useState(false);
   const navigate = useNavigate();
+
+  // Check for Founders discount from demo flow
+  useEffect(() => {
+    const isFounders = sessionStorage.getItem('pageconsult_founders') === 'true';
+    if (isFounders) {
+      setFoundersDiscount(true);
+      console.log('💰 [Pricing] Founders discount detected from demo');
+    }
+  }, []);
 
   const handlePlanSelect = async (plan: typeof plans[0]) => {
     setLoadingPlan(plan.id);
@@ -111,11 +121,15 @@ const PricingPage = () => {
         return;
       }
 
+      // Include founders discount flag if applicable
+      const isFounders = sessionStorage.getItem('pageconsult_founders') === 'true';
+
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: {
           priceId: plan.priceId,
           successUrl: `${window.location.origin}/dashboard?checkout=success`,
           cancelUrl: `${window.location.origin}/pricing?checkout=canceled`,
+          foundersDiscount: isFounders,
         },
       });
 
@@ -148,14 +162,24 @@ const PricingPage = () => {
             Start building high-converting landing pages in minutes, not weeks.
           </p>
           
-          {/* Founding Member Banner */}
-          <div className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 rounded-full px-6 py-3">
-            <Crown className="w-5 h-5 text-cyan-400" />
-            <span className="text-cyan-200 font-medium">
-              🎉 Limited Time: Lock in Founding Member pricing forever 
-              <span className="text-cyan-400 ml-1">({foundingSpotsLeft} spots left)</span>
-            </span>
-          </div>
+          {/* Founders Discount Banner - special when they have discount from demo */}
+          {foundersDiscount ? (
+            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 rounded-full px-6 py-3">
+              <Gift className="w-5 h-5 text-emerald-400" />
+              <span className="text-emerald-200 font-medium">
+                🎁 Founders Discount Unlocked: <span className="text-emerald-400">50% Off First Year</span>
+              </span>
+            </div>
+          ) : (
+            /* Founding Member Banner */
+            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 rounded-full px-6 py-3">
+              <Crown className="w-5 h-5 text-cyan-400" />
+              <span className="text-cyan-200 font-medium">
+                🎉 Limited Time: Lock in Founding Member pricing forever 
+                <span className="text-cyan-400 ml-1">({foundingSpotsLeft} spots left)</span>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Pricing Cards */}
