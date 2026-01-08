@@ -111,8 +111,9 @@ export default function LiveDemoSection() {
     activateFocusMode();
   };
 
-  // Handle email gate - with business card (submits full info, then activates focus mode)
+  // Handle email gate - with business card (activates focus mode immediately, research runs in background)
   const handleBusinessCardSubmitAndActivateFocus = async (data: { companyName: string; website: string; email: string }) => {
+    activateFocusMode(); // Expand immediately
     await submitBusinessCard(data, (followUpMessage: string) => {
       // Add the assumptive follow-up to the conversation by simulating an assistant message
       // This happens after research completes
@@ -122,7 +123,6 @@ export default function LiveDemoSection() {
         console.log('📝 [LiveDemo] Assumptive follow-up received:', followUpMessage.substring(0, 60) + '...');
       }, 100);
     });
-    activateFocusMode();
   };
 
   // Scroll to bottom on new messages
