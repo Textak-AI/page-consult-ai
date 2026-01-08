@@ -101,48 +101,68 @@ export default function BrandSetup() {
 
   // Load brand prefill data from demo flow (via sessionStorage)
   useEffect(() => {
-    const prefillData = sessionStorage.getItem('brandPrefill');
+    const prefillRaw = sessionStorage.getItem('brandPrefill');
+    console.log('🎨 [BrandSetup] Raw brandPrefill:', prefillRaw);
     
-    if (prefillData) {
-      try {
-        const data = JSON.parse(prefillData);
-        console.log('📋 [BrandSetup] Loading prefill data:', data);
+    if (!prefillRaw) {
+      console.log('🎨 [BrandSetup] No brandPrefill found in sessionStorage');
+      return;
+    }
+    
+    try {
+      const data = JSON.parse(prefillRaw);
+      console.log('📋 [BrandSetup] Parsed prefill data:', data);
+      
+      // Pre-fill logo (always apply if present)
+      if (data.logo) {
+        setLogoPreview(data.logo);
+        console.log('🖼️ [BrandSetup] Logo applied:', data.logo);
+      }
+      
+      // Pre-fill website URL
+      if (data.website) {
+        setWebsiteUrl(data.website);
+        setWebsiteAnalyzed(true);
+        console.log('🌐 [BrandSetup] Website applied:', data.website);
+      }
+      
+      // Pre-fill colors - handle the structure from extractedBrand
+      if (data.colors) {
+        // The colors object from extractedBrand has: { primary, secondary, accent, all }
+        const colors = data.colors;
         
-        // Pre-fill logo
-        if (data.logo && !logoPreview) {
-          setLogoPreview(data.logo);
-          console.log('🖼️ [BrandSetup] Logo pre-filled:', data.logo);
+        if (colors.primary) {
+          setManualColor(colors.primary);
+          console.log('🎨 [BrandSetup] Primary color applied:', colors.primary);
         }
         
-        // Pre-fill colors
-        if (data.colors) {
-          if (data.colors.primary) {
-            setManualColor(data.colors.primary);
-          }
-          setPrefilledColors(data.colors);
-          console.log('🎨 [BrandSetup] Colors pre-filled:', data.colors);
-        }
-        
-        // Pre-fill fonts
-        if (data.fonts && (data.fonts.heading || data.fonts.body)) {
-          setPrefilledFonts(data.fonts);
+        setPrefilledColors({
+          primary: colors.primary || undefined,
+          secondary: colors.secondary || undefined,
+          accent: colors.accent || undefined,
+        });
+        console.log('🎨 [BrandSetup] Colors pre-filled:', colors);
+      }
+      
+      // Pre-fill fonts
+      if (data.fonts) {
+        if (data.fonts.heading || data.fonts.body) {
+          setPrefilledFonts({
+            heading: data.fonts.heading || undefined,
+            body: data.fonts.body || undefined,
+          });
           console.log('🔤 [BrandSetup] Fonts pre-filled:', data.fonts);
         }
-        
-        // Pre-fill website URL
-        if (data.website && !websiteUrl) {
-          setWebsiteUrl(data.website);
-          setWebsiteAnalyzed(true);
-        }
-        
-        setIsPrefilled(true);
-        
-        // Clear prefill data so it doesn't persist on refresh
-        sessionStorage.removeItem('brandPrefill');
-        
-      } catch (e) {
-        console.error('Failed to parse brand prefill:', e);
       }
+      
+      setIsPrefilled(true);
+      console.log('✅ [BrandSetup] Prefill complete');
+      
+      // Clear prefill data after applying
+      sessionStorage.removeItem('brandPrefill');
+      
+    } catch (e) {
+      console.error('❌ [BrandSetup] Failed to parse brandPrefill:', e);
     }
   }, []);
 
