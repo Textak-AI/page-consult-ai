@@ -212,28 +212,41 @@ export function IntelligencePanel({
       
       {/* Readiness Footer */}
       <div className="p-4 border-t border-white/10 space-y-4">
-        {/* Overall readiness meter */}
+        {/* Overall readiness meter - now shows X/100 */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-white/60">Ready for research</span>
+            <span className="text-sm text-white/60">Intelligence Score</span>
             <span className={cn(
               "text-sm font-semibold",
-              overallReadiness >= 80 ? "text-cyan-400" : "text-white/60"
+              overallReadiness >= 70 ? "text-cyan-400" : "text-white/60"
             )}>
-              {overallReadiness}%
+              {overallReadiness}/100
             </span>
           </div>
-          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+          <div className="h-2 bg-white/10 rounded-full overflow-hidden relative">
+            {/* 70 threshold marker */}
+            <div 
+              className="absolute top-0 bottom-0 w-0.5 bg-white/30 z-10"
+              style={{ left: '70%' }}
+            />
             <motion.div
               className={cn(
                 "h-full rounded-full transition-all duration-500",
-                overallReadiness >= 80 
+                overallReadiness >= 70 
                   ? "bg-gradient-to-r from-cyan-400 to-purple-400" 
                   : "bg-gradient-to-r from-cyan-500/50 to-purple-500/50"
               )}
               animate={{ width: `${overallReadiness}%` }}
               transition={{ duration: 0.6, ease: "easeOut" }}
             />
+          </div>
+          {/* Status message */}
+          <div className="text-xs mt-1.5">
+            {overallReadiness >= 70 ? (
+              <span className="text-emerald-400">Ready to generate</span>
+            ) : (
+              <span className="text-white/40">Generation unlocks at 70</span>
+            )}
           </div>
         </div>
         

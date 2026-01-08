@@ -4,6 +4,7 @@ import { X, ArrowRight, Sparkles } from 'lucide-react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { IntelligenceTabs } from './IntelligenceTabs';
 import { Button } from '@/components/ui/button';
+import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 
 interface FocusModeOverlayProps {
   isOpen: boolean;
@@ -118,37 +119,47 @@ export function FocusModeOverlay({
             </div>
           </motion.div>
           
-          {/* Footer with Progress */}
+          {/* Footer - simplified, no redundant progress bar */}
           <motion.footer
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="relative z-10 px-6 py-4 border-t border-white/10"
+            className="relative z-10 px-6 py-3 border-t border-white/10"
           >
-            <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4 flex-1">
-                <span className="text-slate-400 text-sm whitespace-nowrap">Strategy Readiness</span>
-                <div className="flex-1 max-w-xs h-2 bg-slate-800 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${state.readiness}%` }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
-                    className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full"
-                  />
-                </div>
-                <span className="text-cyan-400 font-semibold text-sm">{state.readiness}%</span>
-              </div>
+            {(() => {
+              const score = calculateIntelligenceScore(state.extracted);
+              const canGenerate = score.totalScore >= 70;
               
-              {state.readiness >= 60 && (
-                <Button
-                  onClick={onContinue}
-                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white gap-2"
-                >
-                  Generate Your Page
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
+              return (
+                <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-400 text-sm">
+                      Intelligence Score: <span className="text-white font-medium">{score.totalScore}/100</span>
+                    </span>
+                    {!canGenerate && (
+                      <span className="text-slate-500 text-xs">
+                        • Generation unlocks at 70
+                      </span>
+                    )}
+                    {canGenerate && (
+                      <span className="text-emerald-400 text-xs font-medium flex items-center gap-1">
+                        • Ready to generate
+                      </span>
+                    )}
+                  </div>
+                  
+                  {canGenerate && (
+                    <Button
+                      onClick={onContinue}
+                      className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white gap-2"
+                    >
+                      Generate Your Page
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              );
+            })()}
           </motion.footer>
         </motion.div>
       )}
