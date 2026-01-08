@@ -14,7 +14,7 @@ import { AIConsultantSidebar } from "@/components/editor/AIConsultantSidebar";
 import { CalculatorUpgradeModal } from "@/components/editor/CalculatorUpgradeModal";
 import { StylePicker } from "@/components/editor/StylePicker";
 import { VariantGeneratorModal } from "@/components/editor/VariantGeneratorModal";
-import { PageGenerationLoader } from "@/components/editor/PageGenerationLoader";
+import { UnifiedGenerationFlow } from "@/components/editor/UnifiedGenerationFlow";
 import { StrategyBriefPanel } from "@/components/builder/StrategyBriefPanel";
 import { ConsultantPanel } from "@/components/editor/ConsultantPanel";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
@@ -109,7 +109,7 @@ function transformSolutionStatement(uniqueValue?: string, industry?: string): st
   );
 }
 
-type Phase = "loading" | "building" | "editor";
+type Phase = "generating" | "editor";
 type Section = {
   type: string;
   order: number;
@@ -204,7 +204,8 @@ function GenerateContent() {
   const { pageId } = useParams();
   const { toast } = useToast();
   const { pushHistory, undo, redo, canUndo, canRedo, clearHistory } = useEditing();
-  const [phase, setPhase] = useState<Phase>("loading");
+  const [phase, setPhase] = useState<Phase>("generating");
+  const [isGenerating, setIsGenerating] = useState(true);
   const [progress, setProgress] = useState(0);
   const [buildStep, setBuildStep] = useState(0);
   const [consultation, setConsultation] = useState<any>(null);
@@ -317,11 +318,6 @@ function GenerateContent() {
   // Strategic Design Intelligence - infers typography, colors, layout from conversation
   const [designIntelligence, setDesignIntelligence] = useState<DesignIntelligenceOutput | null>(null);
 
-  const loadingMessages = [
-    { icon: Check, text: "Analyzing your strategy" },
-    { icon: Check, text: "Writing compelling copy" },
-    { icon: Check, text: "Optimizing for conversion" },
-  ];
 
 
   // Apply brand colors when nav state is available OR load from DB
@@ -838,7 +834,9 @@ function GenerateContent() {
 
   const startGeneration = async (consultationData: any, userId: string) => {
     // Start generation immediately, show loading UI
-    setPhase("building");
+    // Show unified generation flow
+    setPhase("generating");
+    setIsGenerating(true);
 
     // Animate progress bar while API calls happen
     let progressInterval = setInterval(() => {
@@ -857,7 +855,8 @@ function GenerateContent() {
 
   // Dev mode generation - skips database operations
   const startDevGeneration = async (consultationData: any) => {
-    setPhase("building");
+    setPhase("generating");
+    setIsGenerating(true);
 
     let progressInterval = setInterval(() => {
       setProgress((prev) => Math.min(prev + 2, 90));
@@ -890,10 +889,9 @@ function GenerateContent() {
 
       clearInterval(progressInterval);
       setProgress(100);
-      setShowConfetti(true);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setPhase("editor");
-      setShowConfetti(false);
+      
+      // Mark generation complete - UnifiedGenerationFlow handles transition
+      setIsGenerating(false);
     } catch (error) {
       clearInterval(progressInterval);
       console.error("❌ Dev generation failed:", error);
@@ -1030,6 +1028,8 @@ function GenerateContent() {
           
           setPageData(existingPage);
           setSections(sectionsWithVariant);
+          // Mark generation complete for immediate editor transition
+          setIsGenerating(false);
           setPhase("editor");
           return;
         }
@@ -1130,13 +1130,8 @@ function GenerateContent() {
         setSections(generatedSections);
       }
 
-      // Quick confetti then transition
-      setShowConfetti(true);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      console.log("🎉 Transitioning to editor with", generatedSections.length, "sections");
-      setPhase("editor");
-      setShowConfetti(false);
+      // Mark generation complete - UnifiedGenerationFlow handles transition
+      setIsGenerating(false);
     } catch (error) {
       console.error("❌ Generation failed:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -3001,52 +2996,19 @@ function GenerateContent() {
     }
   };
 
-  // Phase 1: Loading
-  if (phase === "loading") {
+  // Unified Generation Phase - single loading experience
+  if (phase === "generating") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f0a1f] via-[#1a1332] to-[#0f0a1f] relative overflow-hidden">
-        {/* Ambient orbs */}
-        <div className="absolute top-20 left-20 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
-        
-        <div className="text-center space-y-8 max-w-md px-4 relative z-10">
-          <div className="flex justify-center">
-            <Loader2 className="w-16 h-16 text-cyan-400 animate-spin" />
-          </div>
-
-          <h2 className="text-2xl font-bold text-white">Crafting your page...</h2>
-
-          <div className="space-y-4">
-            {loadingMessages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex items-center gap-3 transition-opacity duration-300 ${
-                  progress > (i / loadingMessages.length) * 100 ? "opacity-100" : "opacity-30"
-                }`}
-              >
-                <msg.icon className="w-5 h-5 text-cyan-400" />
-                <span className="text-gray-300">{msg.text}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="w-full bg-white/10 backdrop-blur-sm rounded-full h-2">
-            <div
-              className="bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-      </div>
+      <UnifiedGenerationFlow 
+        consultation={consultation}
+        isGenerating={isGenerating}
+        onComplete={() => {
+          setPhase("editor");
+        }}
+      />
     );
   }
 
-  // Phase 2: Building animation - Premium loader
-  if (phase === "building") {
-    return (
-      <PageGenerationLoader consultation={consultation} />
-    );
-  }
 
   // Phase 3: Editor
   return (
