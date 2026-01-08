@@ -57,7 +57,7 @@ export function DefaultHero({ onStartConsultation, isNavigating }: DefaultHeroPr
       
       {/* Credit card disclaimer */}
       <p className="text-gray-500 text-sm text-center sm:text-left">
-        No credit card required • See results in 2 minutes
+        No credit card required • See results in 3 seconds
       </p>
     </motion.div>
   );
