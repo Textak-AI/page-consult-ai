@@ -292,15 +292,13 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 {/* Left: Logo (clickable to unlock) - actual PageConsult branding */}
                 <button
                   onClick={deactivateLock}
-                  className="flex items-center gap-3 text-white hover:text-cyan-400 transition-colors"
+                  className="flex items-center hover:opacity-80 transition-opacity"
                 >
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-                    <span className="text-white font-bold text-lg">P</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-sm leading-tight">PageConsult</span>
-                    <span className="text-[10px] text-slate-500 leading-tight">AI Strategy</span>
-                  </div>
+                  <img 
+                    src="/logo/whiteAsset_3combimark_darkmode.svg" 
+                    alt="PageConsult AI" 
+                    className="h-8 w-auto"
+                  />
                 </button>
                 
                 {/* Center: Session label */}
