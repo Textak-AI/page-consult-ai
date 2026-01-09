@@ -41,6 +41,7 @@ export default function LiveDemoSection() {
   const inputRef = useRef<HTMLInputElement>(null);
   const hasInitialized = useRef(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const focusModeScrollRef = useRef<HTMLDivElement>(null);
   
   // Mobile intelligence drawer state
   const [showMobileIntelligence, setShowMobileIntelligence] = useState(false);
@@ -131,6 +132,13 @@ export default function LiveDemoSection() {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [state.conversation, inputValue]);
+
+  // Auto-scroll in focus mode when typing
+  useEffect(() => {
+    if (inputValue.trim() && focusModeOpen && focusModeScrollRef.current) {
+      focusModeScrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [inputValue, focusModeOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -599,6 +607,22 @@ export default function LiveDemoSection() {
                 ))}
               </AnimatePresence>
               
+              {/* Live typing preview */}
+              {inputValue.trim() && !state.isProcessing && (
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex justify-end"
+                >
+                  <div className="max-w-[85%] md:max-w-[80%] px-4 py-3 rounded-2xl rounded-br-sm bg-slate-700/20 border border-slate-600/20">
+                    <p className="text-sm leading-relaxed text-slate-500 italic">
+                      {inputValue}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+              
               {/* Typing indicator */}
               {state.isProcessing && (
                 <motion.div
@@ -611,6 +635,9 @@ export default function LiveDemoSection() {
                   </div>
                 </motion.div>
               )}
+              
+              {/* Scroll anchor */}
+              <div ref={focusModeScrollRef} />
             </div>
 
             {/* Input */}
