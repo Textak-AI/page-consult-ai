@@ -51,6 +51,9 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
   const [isLocked, setIsLocked] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   
+  // Ghost text activation state - tracks when user engages with input
+  const [isGhostActivated, setIsGhostActivated] = useState(false);
+  
   // Mobile intelligence drawer state
   const [showMobileIntelligence, setShowMobileIntelligence] = useState(false);
   
@@ -115,9 +118,20 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
     }
   }, [isLocked]);
 
-  // Handle input focus - trigger lock
+  // Handle input focus - trigger lock and activate ghost text
   const handleInputFocus = () => {
     activateLock();
+    if (!isGhostActivated) {
+      setIsGhostActivated(true);
+    }
+  };
+
+  // Handle input change - also activates ghost text
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    if (!isGhostActivated && e.target.value.length > 0) {
+      setIsGhostActivated(true);
+    }
   };
 
   // Scroll to bottom on new messages
@@ -341,29 +355,57 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 >
                   <div className="max-w-4xl mx-auto px-6 py-6 space-y-6 w-full">
                     <AnimatePresence mode="popLayout">
-                      {displayConversation.map((message, index) => (
-                        <motion.div
-                          key={`msg-${index}`}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          {message.role === 'assistant' ? (
-                            <div className="flex gap-4">
-                              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                                <MessageSquare className="w-5 h-5 text-slate-300" />
-                              </div>
-                              <div className="flex-1 min-w-0 max-w-[85%]">
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <span className="text-sm font-medium text-white">PageConsult AI</span>
-                                  <span className="text-xs text-slate-500">Strategy Consultant</span>
+                      {displayConversation.map((message, index) => {
+                        // Check if this is the initial ghost message (first message, no real conversation yet)
+                        const isInitialGhostMessage = index === 0 && state.conversation.length === 0;
+                        const showAsGhost = isInitialGhostMessage && !isGhostActivated;
+                        
+                        return (
+                          <motion.div
+                            key={`msg-${index}`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            {message.role === 'assistant' ? (
+                              <div className="flex gap-4">
+                                <motion.div 
+                                  className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center"
+                                  animate={{ opacity: showAsGhost ? 0.5 : 1 }}
+                                  transition={{ duration: 0.35 }}
+                                >
+                                  <MessageSquare className="w-5 h-5 text-slate-300" />
+                                </motion.div>
+                                <div className="flex-1 min-w-0 max-w-[85%]">
+                                  <motion.div 
+                                    className="flex items-center gap-2 mb-1.5"
+                                    animate={{ opacity: showAsGhost ? 0.5 : 1 }}
+                                    transition={{ duration: 0.35 }}
+                                  >
+                                    <span className="text-sm font-medium text-white">PageConsult AI</span>
+                                    <span className="text-xs text-slate-500">Strategy Consultant</span>
+                                  </motion.div>
+                                  <motion.div 
+                                    className="rounded-2xl rounded-tl-md px-4 py-3 text-[15px] leading-relaxed break-words"
+                                    animate={{ 
+                                      opacity: showAsGhost ? 0.55 : 1,
+                                      backgroundColor: showAsGhost ? 'rgba(30, 41, 59, 0)' : 'rgba(30, 41, 59, 0.6)',
+                                    }}
+                                    transition={{ duration: 0.35 }}
+                                  >
+                                    <motion.span
+                                      className="text-slate-200"
+                                      animate={{ 
+                                        fontStyle: showAsGhost ? 'italic' : 'normal',
+                                      }}
+                                      transition={{ duration: 0.35 }}
+                                    >
+                                      {message.content}
+                                    </motion.span>
+                                  </motion.div>
                                 </div>
-                                <div className="bg-slate-800/60 rounded-2xl rounded-tl-md px-4 py-3 text-slate-200 text-[15px] leading-relaxed break-words">
-                                  {message.content}
-                                </div>
                               </div>
-                            </div>
                           ) : (
                             <div className="flex justify-end">
                               <div className="max-w-[85%]">
@@ -374,7 +416,8 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                             </div>
                           )}
                         </motion.div>
-                      ))}
+                        );
+                      })}
                     </AnimatePresence>
                     
                     {/* Typing indicator */}
@@ -417,7 +460,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                             ref={inputRef}
                             type="text"
                             value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
+                            onChange={handleInputChange}
                             onFocus={handleInputFocus}
                             placeholder="Tell me about your business..."
                             disabled={state.isProcessing}
