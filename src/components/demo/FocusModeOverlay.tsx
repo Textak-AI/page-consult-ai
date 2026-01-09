@@ -87,7 +87,7 @@ export function FocusModeOverlay({
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="relative z-10 flex-1 grid grid-cols-1 lg:grid-cols-[1fr_480px] xl:grid-cols-[1fr_540px] 2xl:grid-cols-[1fr_580px] gap-6 p-6 overflow-hidden"
+            className="relative z-10 flex-1 grid grid-cols-1 lg:grid-cols-[1fr_520px] xl:grid-cols-[1fr_580px] 2xl:grid-cols-[1fr_640px] gap-6 p-6 overflow-hidden"
           >
             {/* Chat Panel */}
             <div className="min-w-0 bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden flex flex-col">
