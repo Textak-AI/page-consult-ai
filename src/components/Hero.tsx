@@ -241,7 +241,7 @@ const Hero = () => {
 
           {/* Right - Animated Flow Demo */}
           <motion.div 
-            className="hidden lg:flex items-center justify-center"
+            className="hidden lg:flex items-center justify-center overflow-hidden"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
