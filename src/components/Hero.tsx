@@ -195,13 +195,13 @@ const Hero = () => {
       </div>
 
       {/* Main content */}
-      <div className="w-full max-w-7xl mx-auto px-6 lg:px-12 relative z-20">
+      <div className="w-full px-6 lg:px-8 xl:px-12 relative z-20">
         
-        {/* Main hero grid - full width with balanced columns */}
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+        {/* Main hero grid - full width, centered content */}
+        <div className="max-w-[1400px] mx-auto grid lg:grid-cols-[1fr_auto] gap-8 lg:gap-12 xl:gap-20 items-center">
           
           {/* Left content - Animated transitions between states */}
-          <div className="min-h-[400px]">
+          <div className="min-h-[400px] max-w-2xl">
             <AnimatePresence mode="wait">
               {demoState === 'generating' ? (
                 <motion.div
@@ -245,16 +245,15 @@ const Hero = () => {
             </AnimatePresence>
           </div>
 
-          {/* Right - Animated Flow Demo - aligned to right edge */}
+          {/* Right - Animated Flow Demo */}
           <motion.div 
-            className="flex items-center justify-end"
+            className="hidden lg:flex items-center justify-center"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
             <HeroFlowAnimation />
           </motion.div>
-          
         </div>
 
         {/* Stats row - BELOW grid, CENTERED */}
