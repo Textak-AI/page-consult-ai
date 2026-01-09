@@ -261,256 +261,216 @@ export default function LiveDemoSection() {
   const score = calculateIntelligenceScore(state.extracted);
 
   return (
-    <section className="min-h-screen bg-slate-950 relative flex flex-col overflow-hidden">
-      {/* === LASER BEAM EFFECTS === */}
-      
-      {/* Horizontal beam - slow drift across */}
-      <div className="absolute top-1/4 left-0 w-full h-px overflow-hidden pointer-events-none">
-        <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent blur-sm animate-beam-horizontal" />
-      </div>
-      
-      {/* Diagonal beam - top left to bottom right */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/2 left-1/4 w-px h-[200%] bg-gradient-to-b from-transparent via-purple-500/20 to-transparent blur-sm animate-beam-diagonal" />
-      </div>
-      
-      {/* Diagonal beam - top right to bottom left */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div 
-          className="absolute -top-1/2 right-1/3 w-px h-[200%] bg-gradient-to-b from-transparent via-cyan-500/15 to-transparent blur-sm animate-beam-diagonal-reverse"
-          style={{ animationDelay: '3s' }}
-        />
-      </div>
-      
-      {/* Subtle glow orbs that pulse */}
-      <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-[100px] animate-glow-pulse pointer-events-none" />
-      <div 
-        className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-cyan-500/10 rounded-full blur-[80px] animate-glow-pulse pointer-events-none"
-        style={{ animationDelay: '3s' }}
-      />
-      
-      {/* Grid pattern overlay - very subtle */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-[0.02]"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-          `,
-          backgroundSize: '60px 60px'
-        }}
-      />
-      
-      {/* === END LASER EFFECTS === */}
-      
-      {/* Subtle background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 via-transparent to-transparent pointer-events-none" />
-      {/* Header section - tightened spacing */}
-      <div className="relative z-10 max-w-6xl mx-auto w-full px-6 pt-8 md:pt-10">
-        {/* Breadcrumb - subtle and compact */}
-        <nav className="flex items-center gap-1.5 text-xs text-white/30 mb-2">
-          <span>PageConsult</span>
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-white/50">Strategy Session</span>
-        </nav>
-        
-        {/* Section header - with scroll anchor */}
-        <div id="demo" className="scroll-mt-20">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-sm font-medium mb-2"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            Live AI Demo
-          </motion.div>
-          <motion.h2
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.05 }}
-            className="text-2xl md:text-3xl font-bold text-white mb-3"
-          >
-            Experience the Strategy Session
-          </motion.h2>
-        </div>
-      </div>
-
-      {/* Centered consultation container */}
-      <div className="relative z-10 flex-1 flex items-start justify-center px-4 sm:px-6 pb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="w-full max-w-6xl h-[500px] md:h-[600px] lg:h-[calc(100vh-120px)] lg:min-h-[600px] lg:max-h-[1000px]"
-        >
-          <div className="h-full bg-slate-900/80 backdrop-blur-sm rounded-3xl border border-white/10 shadow-2xl shadow-black/20 overflow-hidden">
+    <section className="min-h-screen bg-slate-950 flex flex-col overflow-hidden">
+      {/* Header - sticky with glass effect */}
+      <header className="sticky top-0 z-50 h-16 border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-xl flex-shrink-0">
+        <div className="h-full max-w-[1600px] mx-auto px-6 flex items-center justify-between">
+          {/* Left: Logo + Breadcrumb */}
+          <div className="flex items-center gap-4">
+            <nav className="flex items-center gap-1.5 text-sm">
+              <span className="text-slate-400">PageConsult</span>
+              <ChevronRight className="w-4 h-4 text-slate-600" />
+              <span className="text-white font-medium">Strategy Session</span>
+            </nav>
+          </div>
+          
+          {/* Right: Demo badge + Focus Mode */}
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/10 to-violet-500/10 border border-cyan-500/20">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="text-sm font-medium text-cyan-300">Live AI Demo</span>
+            </div>
             
-            {/* Single row: Chat + Intelligence Profile */}
-            <div className="h-full flex flex-col lg:flex-row">
-              
-              {/* Left: Chat Interface */}
-              <div className="flex-1 flex flex-col lg:border-r border-white/5 min-w-0 lg:min-w-[400px]">
-                {/* Header */}
-                <div className="px-4 sm:px-6 py-4 border-b border-white/5 flex-shrink-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
-                        <MessageSquare className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-white font-semibold">PageConsult AI</h3>
-                        <p className="text-white/50 text-sm">Strategy Consultant</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {/* Focus Mode button - visible at 30%+ readiness on desktop */}
-                      {state.readiness >= 30 && (
-                        <button
-                          onClick={activateFocusMode}
-                          className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/50 transition-all text-sm"
-                        >
-                          <Maximize2 className="w-4 h-4" />
-                          <span>Focus</span>
-                        </button>
-                      )}
-                      
-                      {/* Mobile: Show Progress button */}
-                      <button
-                        onClick={() => setShowMobileIntelligence(true)}
-                        className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:border-slate-600 transition-all text-sm"
-                      >
-                        <BarChart3 className="w-4 h-4" />
-                        <span className="hidden sm:inline">Progress</span>
-                        <span className="text-xs text-cyan-400">{score.totalScore}/100</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Messages - scrollable */}
-                <div 
-                  ref={chatContainerRef} 
-                  className="flex-1 overflow-y-scroll px-4 sm:px-6 py-5 space-y-4 scroll-smooth scrollbar-gutter-stable"
-                >
-                  <AnimatePresence mode="popLayout">
-                    {displayConversation.map((message, index) => (
-                      <motion.div
-                        key={`msg-${index}`}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-[85%] md:max-w-[80%] rounded-2xl px-4 py-3 ${
-                            message.role === 'user'
-                              ? 'bg-cyan-600/20 border border-cyan-500/30 text-white'
-                              : 'bg-slate-700/50 border border-slate-600/30 text-slate-200'
-                          }`}
-                        >
-                          <p className="text-sm leading-relaxed">{message.content}</p>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                  
-                  {/* Live typing preview */}
-                  <AnimatePresence>
-                    {inputValue.trim().length > 0 && !state.isProcessing && (
-                      <motion.div
-                        key="typing-preview"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                        transition={{ duration: 0.15, ease: 'easeOut' }}
-                        className="flex justify-end"
-                      >
-                        <div className="max-w-[85%] md:max-w-[80%] rounded-2xl px-4 py-3 border border-dashed border-slate-600 bg-slate-800/30">
-                          <p className="text-sm leading-relaxed text-slate-400 italic">
-                            {inputValue}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1.5">
-                            <span className="text-xs text-slate-500">composing...</span>
-                            <span className="w-1 h-1 bg-slate-500 rounded-full animate-pulse" />
-                            <span className="text-xs text-slate-600 ml-auto">{inputValue.length}/500</span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  
-                  {/* Typing indicator */}
-                  {state.isProcessing && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex justify-start"
-                    >
-                      <div className="bg-slate-700/50 border border-slate-600/30 rounded-2xl">
-                        <TypingIndicator />
-                      </div>
-                    </motion.div>
-                  )}
-                  
-                  <div ref={messagesEndRef} />
-                </div>
+            {/* Focus Mode button - visible at 30%+ readiness */}
+            {state.readiness >= 30 && (
+              <button
+                onClick={activateFocusMode}
+                className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/50 transition-all text-sm"
+              >
+                <Maximize2 className="w-4 h-4" />
+                <span>Focus</span>
+              </button>
+            )}
+            
+            {/* Mobile: Show Progress button */}
+            <button
+              onClick={() => setShowMobileIntelligence(true)}
+              className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:border-slate-600 transition-all text-sm"
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span className="text-cyan-400">{score.totalScore}/100</span>
+            </button>
+          </div>
+        </div>
+      </header>
 
-                {/* Input - fixed at bottom */}
-                <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-4 border-t border-white/5 flex-shrink-0">
-                  {state.rateLimited ? (
-                    <div className="text-center py-3">
-                      <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
-                      <Button
-                        onClick={() => navigate('/new')}
-                        className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
-                      >
-                        Start Full Strategy Session
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Input
-                        ref={inputRef}
-                        type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        placeholder="Tell me about your business..."
-                        disabled={state.isProcessing}
-                        className="flex-1 bg-slate-800 border-slate-600 focus:border-cyan-500 text-white placeholder:text-slate-500"
-                      />
-                      <Button
-                        type="submit"
-                        disabled={!inputValue.trim() || state.isProcessing}
-                        className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white px-4"
-                      >
-                        {state.isProcessing ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Send className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </div>
-                  )}
-                </form>
+      {/* Main Content - Chat + Sidebar */}
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* Chat Container (Main Area) */}
+        <main className="flex-1 flex flex-col min-w-0 relative">
+          {/* Subtle ambient glow */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl" />
+          </div>
+          
+          {/* Page Title Area */}
+          <div className="px-6 py-6 border-b border-slate-800/30 flex-shrink-0 relative z-10">
+            <div className="max-w-2xl mx-auto">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/10 to-violet-500/10 border border-cyan-500/20 mb-3">
+                <Sparkles className="w-4 h-4 text-cyan-400" />
+                <span className="text-sm font-medium text-cyan-300">Live AI Demo</span>
               </div>
-              
-              {/* Right: Intelligence Tabs - Desktop only */}
-              <div className="hidden lg:flex w-[450px] xl:w-[480px] flex-shrink-0 bg-slate-900/50 flex-col overflow-hidden">
-                <IntelligenceTabs 
-                  onContinue={handleGenerateClick}
-                  onReopenEmailGate={reopenEmailGate}
-                />
-              </div>
-              
-              
+              <h1 className="text-2xl font-semibold text-white">
+                Experience the Strategy Session
+              </h1>
             </div>
           </div>
-        </motion.div>
+          
+          {/* Messages Area - Scrollable */}
+          <div 
+            ref={chatContainerRef} 
+            className="flex-1 overflow-y-auto scroll-smooth relative z-10"
+          >
+            <div className="max-w-2xl mx-auto px-6 py-6 space-y-6">
+              <AnimatePresence mode="popLayout">
+                {displayConversation.map((message, index) => (
+                  <motion.div
+                    key={`msg-${index}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {message.role === 'assistant' ? (
+                      // AI Message (left-aligned with avatar)
+                      <div className="flex gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                          <MessageSquare className="w-5 h-5 text-slate-300" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-sm font-medium text-white">PageConsult AI</span>
+                            <span className="text-xs text-slate-500">Strategy Consultant</span>
+                          </div>
+                          <div className="bg-slate-800/60 rounded-2xl rounded-tl-md px-4 py-3 text-slate-200 text-[15px] leading-relaxed break-words">
+                            {message.content}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // User Message (right-aligned)
+                      <div className="flex justify-end">
+                        <div className="max-w-[80%]">
+                          <div className="bg-cyan-600/20 border border-cyan-500/20 rounded-2xl rounded-tr-md px-4 py-3 text-slate-200 text-[15px] leading-relaxed break-words">
+                            {message.content}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              
+              {/* Live typing preview */}
+              <AnimatePresence>
+                {inputValue.trim().length > 0 && !state.isProcessing && (
+                  <motion.div
+                    key="typing-preview"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="flex justify-end"
+                  >
+                    <div className="max-w-[80%]">
+                      <div className="rounded-2xl rounded-tr-md px-4 py-3 border border-dashed border-slate-600 bg-slate-800/30">
+                        <p className="text-[15px] leading-relaxed text-slate-400 italic">
+                          {inputValue}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className="text-xs text-slate-500">composing...</span>
+                          <span className="w-1 h-1 bg-slate-500 rounded-full animate-pulse" />
+                          <span className="text-xs text-slate-600 ml-auto">{inputValue.length}/500</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              {/* Typing indicator */}
+              {state.isProcessing && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex gap-4"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-slate-300" />
+                  </div>
+                  <div className="bg-slate-800/60 rounded-2xl rounded-tl-md">
+                    <TypingIndicator />
+                  </div>
+                </motion.div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+
+          {/* Input Area - Sticky Bottom */}
+          <div className="sticky bottom-0 border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-xl flex-shrink-0 relative z-10">
+            <div className="max-w-2xl mx-auto px-6 py-4">
+              {state.rateLimited ? (
+                <div className="text-center py-3">
+                  <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
+                  <Button
+                    onClick={() => navigate('/new')}
+                    className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
+                  >
+                    Start Full Strategy Session
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit}>
+                  <div className="relative">
+                    <Input
+                      ref={inputRef}
+                      type="text"
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      placeholder="Tell me about your business..."
+                      disabled={state.isProcessing}
+                      className="w-full px-4 py-3 pr-14 bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/10 transition-all text-[15px] leading-relaxed"
+                    />
+                    <Button
+                      type="submit"
+                      disabled={!inputValue.trim() || state.isProcessing}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 p-0 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity"
+                    >
+                      {state.isProcessing ? (
+                        <Loader2 className="w-5 h-5 text-white animate-spin" />
+                      ) : (
+                        <Send className="w-5 h-5 text-white" />
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </main>
+        
+        {/* Intel Sidebar - Desktop only (fixed width 380px) */}
+        <aside className="hidden lg:flex w-[380px] flex-shrink-0 border-l border-slate-800/50 bg-slate-900/30 flex-col overflow-hidden">
+          <IntelligenceTabs 
+            onContinue={handleGenerateClick}
+            onReopenEmailGate={reopenEmailGate}
+          />
+        </aside>
+        
       </div>
 
       {/* Mobile Intelligence Drawer */}
