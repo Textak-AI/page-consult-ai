@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Sparkles, Send, Loader2, X, BarChart3 } from 'lucide-react';
+import { Sparkles, Send, Loader2, X, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import BusinessCardGateModal from './BusinessCardGateModal';
@@ -11,6 +11,7 @@ import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
 import { DemoPreviewWidget } from './DemoPreviewWidget';
 import { MutedCircuitBackground } from './MutedCircuitBackground';
+import { StrategistIcon } from '@/components/ui/StrategistIcon';
 
 // Circuit pattern SVG - extremely subtle for expanded view (2% opacity)
 const circuitPatternSvg = `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.02'%3E%3Cpath d='M0 40h20v-20h20v-20'/%3E%3Cpath d='M80 40h-20v20h-20v20'/%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='60' cy='60' r='2'/%3E%3C/g%3E%3C/svg%3E")`;
@@ -383,11 +384,11 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                             {message.role === 'assistant' ? (
                               <div className="flex gap-4">
                                 <motion.div 
-                                  className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center"
+                                  className="flex-shrink-0"
                                   animate={{ opacity: showAsGhost ? 0.5 : 1 }}
                                   transition={{ duration: 0.35 }}
                                 >
-                                  <MessageSquare className="w-5 h-5 text-slate-300" />
+                                  <StrategistIcon size={40} />
                                 </motion.div>
                                 <div className="flex-1 min-w-0 max-w-[85%]">
                                   <motion.div 
@@ -439,8 +440,8 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                         animate={{ opacity: 1, y: 0 }}
                         className="flex gap-4"
                       >
-                        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                          <MessageSquare className="w-5 h-5 text-slate-300" />
+                        <div className="flex-shrink-0">
+                          <StrategistIcon size={40} />
                         </div>
                         <div className="bg-slate-800/60 rounded-2xl rounded-tl-md">
                           <TypingIndicator />

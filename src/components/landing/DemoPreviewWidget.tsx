@@ -1,8 +1,9 @@
 import { useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquare, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CircuitGridBackground } from './CircuitGridBackground';
+import { StrategistIcon } from '@/components/ui/StrategistIcon';
 
 interface DemoPreviewWidgetProps {
   onActivate: () => void;
@@ -88,9 +89,7 @@ export function DemoPreviewWidget({ onActivate }: DemoPreviewWidgetProps) {
               <div className="p-6 min-h-[380px] flex flex-col">
                 {/* AI Avatar + Label */}
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-slate-300" />
-                  </div>
+                  <StrategistIcon size={40} />
                   <div>
                     <div className="text-sm font-medium text-white">PageConsult AI</div>
                     <div className="text-xs text-slate-500">Strategy Consultant</div>
