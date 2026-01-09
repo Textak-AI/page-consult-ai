@@ -188,14 +188,14 @@ const Hero = () => {
         <div className="absolute top-1/2 right-1/4 w-72 h-72 bg-violet-500 rounded-full blur-[120px] opacity-[0.04]" />
       </div>
 
-      {/* Main content - CENTERED */}
-      <div className="w-full max-w-5xl mx-auto px-6 lg:px-12 relative z-20">
+      {/* Main content */}
+      <div className="w-full max-w-[1400px] mx-auto px-6 lg:px-12 xl:px-16 relative z-20">
         
-        {/* Hero content - centered and stacked */}
-        <div className="text-center">
+        {/* Main hero grid - balanced 50/50 columns */}
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           
-          {/* Content - Animated transitions between states */}
-          <div className="min-h-[350px] flex flex-col items-center justify-center">
+          {/* Left content - Animated transitions between states */}
+          <div className="min-h-[400px]">
             <AnimatePresence mode="wait">
               {demoState === 'generating' ? (
                 <motion.div
@@ -204,7 +204,6 @@ const Hero = () => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full"
                 >
                   <GeneratingHero industry={extracted?.industry} />
                 </motion.div>
@@ -215,7 +214,6 @@ const Hero = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5, ease: "easeOut" }}
-                  className="w-full"
                 >
                   <PersonalizedHero
                     content={personalizedContent}
@@ -231,7 +229,6 @@ const Hero = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5 }}
-                  className="w-full"
                 >
                   <DefaultHero
                     onStartConsultation={handleStartConsultation}
@@ -242,9 +239,9 @@ const Hero = () => {
             </AnimatePresence>
           </div>
 
-          {/* Flow Animation - below content on larger screens */}
+          {/* Right - Animated Flow Demo */}
           <motion.div 
-            className="hidden lg:flex items-center justify-center mt-12"
+            className="hidden lg:flex items-center justify-center"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
