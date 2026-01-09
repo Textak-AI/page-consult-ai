@@ -123,7 +123,7 @@ export function HeroFlowAnimation() {
   ];
 
   return (
-    <div className="relative w-[450px] h-[340px]">
+    <div className="relative w-full max-w-[550px] h-[380px]">
       {cards.map((card, index) => {
         let depth = index - activeIndex;
         if (depth < 0) depth += 3;
@@ -132,7 +132,7 @@ export function HeroFlowAnimation() {
         return (
           <motion.div
             key={card.id}
-            className="absolute top-0 right-0 w-[340px] h-full rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-5"
+            className="absolute top-0 right-0 w-[400px] h-full rounded-xl bg-slate-900/95 backdrop-blur-sm border border-slate-800/50 p-5"
             animate={{
               x: depth * -50,
               y: depth * 15,
