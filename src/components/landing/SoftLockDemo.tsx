@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
 import { DemoPreviewWidget } from './DemoPreviewWidget';
+import { MutedCircuitBackground } from './MutedCircuitBackground';
 
 // Circuit pattern SVG - extremely subtle for expanded view (2% opacity)
 const circuitPatternSvg = `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.02'%3E%3Cpath d='M0 40h20v-20h20v-20'/%3E%3Cpath d='M80 40h-20v20h-20v20'/%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='60' cy='60' r='2'/%3E%3C/g%3E%3C/svg%3E")`;
@@ -345,8 +346,19 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
             {/* Main Content - Chat + Sidebar with proper padding on all sides */}
             <div className="flex-1 flex overflow-hidden relative z-10 p-6 lg:p-8 gap-6">
               
-              {/* Chat Container */}
-              <main className="flex-1 flex flex-col min-w-0 bg-slate-900/30 rounded-2xl border border-slate-800/30 overflow-hidden">
+              {/* Chat Container with glass panel effect */}
+              <main className="flex-1 flex flex-col min-w-0 relative rounded-2xl overflow-hidden">
+                {/* Muted circuitry background */}
+                <MutedCircuitBackground />
+                
+                {/* Glass panel overlay */}
+                <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+                
+                {/* Border */}
+                <div className="absolute inset-0 rounded-2xl border border-slate-800/40 pointer-events-none" />
+                
+                {/* Content container */}
+                <div className="relative z-10 flex flex-col flex-1 overflow-hidden">
                 
                 {/* Messages Area - normal top-down layout */}
                 <div 
@@ -440,9 +452,9 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                   </div>
                 </div>
 
-                {/* Input Area - with comfortable padding */}
-                <div className="border-t border-slate-800/50 bg-slate-900/50 flex-shrink-0 px-6 py-6">
-                  <div className="max-w-2xl mx-auto">
+                {/* Input Area - aligned with messages */}
+                <div className="border-t border-slate-800/30 bg-slate-950/40 flex-shrink-0 px-6 py-6">
+                  <div className="max-w-4xl mx-auto">
                     {state.rateLimited ? (
                       <div className="text-center py-3">
                         <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
@@ -481,6 +493,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                       </form>
                     )}
                   </div>
+                </div>
                 </div>
               </main>
               
