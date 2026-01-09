@@ -334,13 +334,50 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
               {/* Chat Container */}
               <main className="flex-1 flex flex-col min-w-0 bg-slate-900/30 rounded-2xl border border-slate-800/30 overflow-hidden">
                 
-                {/* Messages Area - flex-col-reverse anchors content to bottom */}
+                {/* Messages Area - normal top-down layout */}
                 <div 
                   ref={chatContainerRef} 
-                  className="flex-1 overflow-y-auto flex flex-col-reverse min-h-0"
+                  className="flex-1 overflow-y-auto min-h-0"
                 >
-                  <div className="max-w-2xl mx-auto px-6 py-6 space-y-6 w-full">
-                    {/* Typing indicator - shows first due to flex-col-reverse */}
+                  <div className="max-w-4xl mx-auto px-6 py-6 space-y-6 w-full">
+                    <AnimatePresence mode="popLayout">
+                      {displayConversation.map((message, index) => (
+                        <motion.div
+                          key={`msg-${index}`}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {message.role === 'assistant' ? (
+                            <div className="flex gap-4">
+                              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                                <MessageSquare className="w-5 h-5 text-slate-300" />
+                              </div>
+                              <div className="flex-1 min-w-0 max-w-[85%]">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <span className="text-sm font-medium text-white">PageConsult AI</span>
+                                  <span className="text-xs text-slate-500">Strategy Consultant</span>
+                                </div>
+                                <div className="bg-slate-800/60 rounded-2xl rounded-tl-md px-4 py-3 text-slate-200 text-[15px] leading-relaxed break-words">
+                                  {message.content}
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex justify-end">
+                              <div className="max-w-[85%]">
+                                <div className="bg-cyan-600/20 border border-cyan-500/20 rounded-2xl rounded-tr-md px-4 py-3 text-slate-200 text-[15px] leading-relaxed break-words">
+                                  {message.content}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                    
+                    {/* Typing indicator */}
                     {state.isProcessing && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
@@ -357,43 +394,6 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                     )}
                     
                     <div ref={messagesEndRef} />
-                    
-                    <AnimatePresence mode="popLayout">
-                      {[...displayConversation].reverse().map((message, index) => (
-                        <motion.div
-                          key={`msg-${displayConversation.length - 1 - index}`}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          {message.role === 'assistant' ? (
-                            <div className="flex gap-4">
-                              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                                <MessageSquare className="w-5 h-5 text-slate-300" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <span className="text-sm font-medium text-white">PageConsult AI</span>
-                                  <span className="text-xs text-slate-500">Strategy Consultant</span>
-                                </div>
-                                <div className="bg-slate-800/60 rounded-2xl rounded-tl-md px-4 py-3 text-slate-200 text-[15px] leading-relaxed break-words">
-                                  {message.content}
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex justify-end">
-                              <div className="max-w-[80%]">
-                                <div className="bg-cyan-600/20 border border-cyan-500/20 rounded-2xl rounded-tr-md px-4 py-3 text-slate-200 text-[15px] leading-relaxed break-words">
-                                  {message.content}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
                   </div>
                 </div>
 
