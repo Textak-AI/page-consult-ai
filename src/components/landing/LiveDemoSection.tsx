@@ -312,11 +312,11 @@ export default function LiveDemoSection() {
         </div>
       </header>
 
-      {/* Main Content - Chat + Sidebar */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main Content - Chat + Sidebar with flexible ratio */}
+      <div className="flex-1 flex gap-0 overflow-hidden">
         
-        {/* Chat Container (Main Area) */}
-        <main className="flex-1 flex flex-col min-w-0">
+        {/* Chat Container - takes remaining space with controlled max-width */}
+        <main className="flex-[55] min-w-0 flex flex-col">
           
           {/* Messages Area - Scrollable */}
           <div 
@@ -453,8 +453,8 @@ export default function LiveDemoSection() {
           </div>
         </main>
         
-        {/* Intel Sidebar - Desktop only (wider for better content) */}
-        <aside className="hidden lg:flex w-[440px] xl:w-[500px] 2xl:w-[540px] flex-shrink-0 border-l border-slate-800/50 bg-slate-900/30 flex-col overflow-hidden">
+        {/* Intel Sidebar - Desktop only with flexible width */}
+        <aside className="hidden lg:flex flex-[45] max-w-[580px] border-l border-slate-800/50 bg-slate-900/30 flex-col overflow-hidden">
           <IntelligenceTabs 
             onContinue={handleGenerateClick}
             onReopenEmailGate={reopenEmailGate}
