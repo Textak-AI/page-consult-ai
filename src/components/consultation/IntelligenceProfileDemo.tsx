@@ -250,33 +250,46 @@ export function IntelligenceProfileDemo({
             >
               {displayName}
             </motion.span>
-            {isConfirmed && (
-              <Check className="w-3 h-3 text-green-400" />
-            )}
-            {/* Only show confirm prompt for low confidence, hide for medium/high */}
-            {!isConfirmed && isLowConfidence && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setShowIndustryCorrection(!showIndustryCorrection)}
-                    className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
-                  >
-                    (confirm?)
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="left" className="bg-slate-900 border-slate-700 text-slate-200 p-2 max-w-[200px]">
-                  <p className="text-xs">
-                    Low confidence detection. Click to confirm or correct.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
+            
+            {/* Confirmed state - show locked indicator */}
+            {isConfirmed ? (
+              <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+                <Check className="w-3 h-3" />
+                Locked
+              </span>
+            ) : (
+              /* Not confirmed - show confirm button and edit option */
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => onIndustryCorrection?.(industryDetection.variant)}
+                  className="flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+                >
+                  <Check className="w-3 h-3" />
+                  Confirm
+                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setShowIndustryCorrection(!showIndustryCorrection)}
+                      className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors px-1"
+                    >
+                      Edit
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="bg-slate-900 border-slate-700 text-slate-200 p-2 max-w-[200px]">
+                    <p className="text-xs">
+                      Wrong industry? Click to correct.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
             )}
           </div>
         </div>
         
         {/* Industry correction UI */}
         <AnimatePresence>
-          {showIndustryCorrection && (
+          {showIndustryCorrection && !isConfirmed && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
