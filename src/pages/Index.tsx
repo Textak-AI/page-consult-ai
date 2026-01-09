@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import LiveDemoSection from "@/components/landing/LiveDemoSection";
+import SoftLockDemo from "@/components/landing/SoftLockDemo";
 import AIQuestionsShowcase from "@/components/landing/AIQuestionsShowcase";
 import WhyThisMattersSection from "@/components/landing/WhyThisMattersSection";
 import HowItWorks from "@/components/HowItWorks";
@@ -19,41 +19,85 @@ import { motion, AnimatePresence } from "framer-motion";
 // Inner component that can access IntelligenceContext
 const IndexContent = () => {
   const { state } = useIntelligence();
+  const [isDemoLocked, setIsDemoLocked] = useState(false);
   
   // Show WhyThisMatters only after user has interacted with demo
   const showWhyThisMatters = state.extracted.industry || state.readiness >= 30;
 
   return (
     <div className="min-h-screen">
-      <Header />
+      {/* Header - hide when demo is locked */}
+      <AnimatePresence>
+        {!isDemoLocked && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, filter: 'blur(8px)' }}
+            transition={{ duration: 0.4 }}
+          >
+            <Header />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       <main>
-        <Hero />
-        <LiveDemoSection />
-        <AIQuestionsShowcase />
+        {/* Hero - fade and blur when demo is locked */}
+        <div
+          className={`transition-all duration-400 ease-out ${
+            isDemoLocked 
+              ? 'opacity-20 blur-lg pointer-events-none' 
+              : 'opacity-100 blur-0'
+          }`}
+        >
+          <Hero />
+        </div>
         
-        {/* Conditionally show WhyThisMatters with fade-in animation */}
-        <AnimatePresence>
-          {showWhyThisMatters && (
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-            >
-              <WhyThisMattersSection />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Demo section with soft lock */}
+        <SoftLockDemo onLockChange={setIsDemoLocked} />
         
-        <HowItWorks />
-        <TimelineComparison />
-        <Features />
-        <SocialProof />
-        <FAQ />
-        <Pricing />
-        <FinalCTA />
+        {/* Content below demo - fade and blur when locked */}
+        <div
+          className={`transition-all duration-400 ease-out ${
+            isDemoLocked 
+              ? 'opacity-20 blur-lg pointer-events-none' 
+              : 'opacity-100 blur-0'
+          }`}
+        >
+          <AIQuestionsShowcase />
+          
+          {/* Conditionally show WhyThisMatters with fade-in animation */}
+          <AnimatePresence>
+            {showWhyThisMatters && (
+              <motion.div
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              >
+                <WhyThisMattersSection />
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          <HowItWorks />
+          <TimelineComparison />
+          <Features />
+          <SocialProof />
+          <FAQ />
+          <Pricing />
+          <FinalCTA />
+        </div>
       </main>
-      <Footer />
+      
+      {/* Footer - fade when locked */}
+      <div
+        className={`transition-all duration-400 ease-out ${
+          isDemoLocked 
+            ? 'opacity-20 blur-lg pointer-events-none' 
+            : 'opacity-100 blur-0'
+        }`}
+      >
+        <Footer />
+      </div>
     </div>
   );
 };
