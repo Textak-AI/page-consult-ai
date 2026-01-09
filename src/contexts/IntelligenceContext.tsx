@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { 
@@ -15,6 +16,7 @@ import {
   type PredictedObjection 
 } from '@/data/precomputedObjections';
 import { generateAssumptiveFollowUp } from '@/utils/assumptiveFollowUp';
+import { handleChatNavigation } from '@/lib/chatNavigationHandler';
 
 // ============================================
 // PERSISTENCE KEYS & CONFIG
@@ -352,6 +354,7 @@ function safeClearDemoState(): void {
 }
 
 export function IntelligenceProvider({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
   const [state, setState] = useState<IntelligenceState>(() => ({
     ...initialState,
     sessionId: uuidv4(),
@@ -601,6 +604,28 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // Process user message through the demo pipeline
   // ----------------------------------------
   const processUserMessage = useCallback(async (message: string) => {
+    // Check for navigation intent first
+    const navResult = handleChatNavigation(message, navigate);
+    if (navResult.navigated && navResult.responseMessage) {
+      // Add user message and navigation response to conversation
+      const userMessage: ConversationMessage = {
+        role: 'user',
+        content: message,
+        timestamp: new Date(),
+      };
+      const assistantMessage: ConversationMessage = {
+        role: 'assistant',
+        content: navResult.responseMessage,
+        timestamp: new Date(),
+      };
+      setState(prev => ({
+        ...prev,
+        conversation: [...prev.conversation, userMessage, assistantMessage],
+        messageCount: prev.messageCount + 1,
+      }));
+      return;
+    }
+    
     // Rate limiting check
     if (state.messageCount >= 5) {
       setState(prev => ({ ...prev, rateLimited: true }));
@@ -905,7 +930,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         isProcessing: false,
       }));
     }
-  }, [state, calculateReadiness]);
+  }, [state, calculateReadiness, navigate]);
 
   // ----------------------------------------
   // Reset intelligence state
