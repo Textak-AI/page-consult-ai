@@ -15,13 +15,16 @@ import {
   MapPin,
   Loader2,
   Palette,
-  Type
+  Type,
+  FileText,
+  ArrowRight
 } from 'lucide-react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { IntelligenceProfileDemo } from '@/components/consultation/IntelligenceProfileDemo';
 import { ObjectionKillerPanel } from '@/components/consultation/ObjectionKillerPanel';
 import MarketResearchPanel from '@/components/landing/MarketResearchPanel';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
+import { Button } from '@/components/ui/button';
 
 interface Tab {
   id: string;
@@ -139,8 +142,10 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
   const availableTabs = tabs.filter(tab => tab.isAvailable);
   const unavailableTabs = tabs.filter(tab => !tab.isAvailable);
 
+  const canGenerate = score.totalScore >= 70;
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
       {/* Tab Bar - more breathing room */}
       <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-white/5 bg-slate-900/50 overflow-x-auto">
         {availableTabs.map((tab) => {
@@ -222,8 +227,8 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
         })}
       </div>
 
-      {/* Tab Content */}
-      <div className="flex-1 overflow-hidden">
+      {/* Tab Content - single scroll container */}
+      <div className="flex-1 overflow-y-auto pb-28">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -231,7 +236,7 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="h-full overflow-y-auto"
+            className="min-h-full"
           >
             {activeTab === 'intelligence' && (
               <IntelligenceProfileDemo 
@@ -493,6 +498,37 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
             )}
           </motion.div>
         </AnimatePresence>
+      </div>
+
+      {/* Sticky CTA area */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 space-y-2">
+        {/* Brief Review - always visible */}
+        <button
+          onClick={() => {
+            // TODO: Open brief review modal
+            console.log('Open Brief Review');
+          }}
+          className="w-full py-2.5 px-4 rounded-lg border border-slate-600/50 text-slate-300 hover:bg-slate-800/50 transition-colors flex items-center justify-center gap-2 text-sm"
+        >
+          <FileText className="w-4 h-4" />
+          Review Brief
+        </button>
+        
+        {/* Generate - enabled at 70+ */}
+        <Button
+          onClick={onContinue}
+          disabled={!canGenerate}
+          className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          Generate Your Page
+          <ArrowRight className="w-4 h-4" />
+        </Button>
+        
+        {!canGenerate && (
+          <p className="text-center text-xs text-slate-500">
+            Share more to unlock generation ({70 - score.totalScore} points needed)
+          </p>
+        )}
       </div>
     </div>
   );

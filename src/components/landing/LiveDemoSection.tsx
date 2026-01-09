@@ -453,8 +453,8 @@ export default function LiveDemoSection() {
           </div>
         </main>
         
-        {/* Intel Sidebar - Desktop only (fixed width 380px) */}
-        <aside className="hidden lg:flex w-[360px] flex-shrink-0 border-l border-slate-800/50 bg-slate-900/30 flex-col overflow-hidden">
+        {/* Intel Sidebar - Desktop only (wider for better content) */}
+        <aside className="hidden lg:flex w-[400px] xl:w-[440px] flex-shrink-0 border-l border-slate-800/50 bg-slate-900/30 flex-col overflow-hidden">
           <IntelligenceTabs 
             onContinue={handleGenerateClick}
             onReopenEmailGate={reopenEmailGate}
