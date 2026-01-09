@@ -261,10 +261,10 @@ export default function LiveDemoSection() {
   const score = calculateIntelligenceScore(state.extracted);
 
   return (
-    <section className="min-h-screen bg-slate-950 flex flex-col overflow-hidden">
+    <section className="min-h-screen bg-slate-950 flex flex-col">
       {/* Header - sticky with glass effect */}
       <header className="sticky top-0 z-50 h-16 border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-xl flex-shrink-0">
-        <div className="h-full max-w-[1600px] mx-auto px-6 flex items-center justify-between">
+        <div className="h-full px-6 flex items-center justify-between">
           {/* Left: Logo + Breadcrumb */}
           <div className="flex items-center gap-4">
             <nav className="flex items-center gap-1.5 text-sm">
@@ -308,30 +308,12 @@ export default function LiveDemoSection() {
       <div className="flex-1 flex overflow-hidden">
         
         {/* Chat Container (Main Area) */}
-        <main className="flex-1 flex flex-col min-w-0 relative">
-          {/* Subtle ambient glow */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-3xl" />
-          </div>
-          
-          {/* Page Title Area */}
-          <div className="px-6 py-6 border-b border-slate-800/30 flex-shrink-0 relative z-10">
-            <div className="max-w-2xl mx-auto">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/10 to-violet-500/10 border border-cyan-500/20 mb-3">
-                <Sparkles className="w-4 h-4 text-cyan-400" />
-                <span className="text-sm font-medium text-cyan-300">Live AI Demo</span>
-              </div>
-              <h1 className="text-2xl font-semibold text-white">
-                Experience the Strategy Session
-              </h1>
-            </div>
-          </div>
+        <main className="flex-1 flex flex-col min-w-0">
           
           {/* Messages Area - Scrollable */}
           <div 
             ref={chatContainerRef} 
-            className="flex-1 overflow-y-auto scroll-smooth relative z-10"
+            className="flex-1 overflow-y-auto"
           >
             <div className="max-w-2xl mx-auto px-6 py-6 space-y-6">
               <AnimatePresence mode="popLayout">
@@ -421,7 +403,7 @@ export default function LiveDemoSection() {
           </div>
 
           {/* Input Area - Sticky Bottom */}
-          <div className="sticky bottom-0 border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-xl flex-shrink-0 relative z-10">
+          <div className="sticky bottom-0 border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-xl flex-shrink-0">
             <div className="max-w-2xl mx-auto px-6 py-4">
               {state.rateLimited ? (
                 <div className="text-center py-3">
@@ -464,7 +446,7 @@ export default function LiveDemoSection() {
         </main>
         
         {/* Intel Sidebar - Desktop only (fixed width 380px) */}
-        <aside className="hidden lg:flex w-[380px] flex-shrink-0 border-l border-slate-800/50 bg-slate-900/30 flex-col overflow-hidden">
+        <aside className="hidden lg:flex w-[360px] flex-shrink-0 border-l border-slate-800/50 bg-slate-900/30 flex-col overflow-hidden">
           <IntelligenceTabs 
             onContinue={handleGenerateClick}
             onReopenEmailGate={reopenEmailGate}
