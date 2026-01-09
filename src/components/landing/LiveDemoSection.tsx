@@ -330,7 +330,7 @@ export default function LiveDemoSection() {
         <main className="min-w-0 flex flex-col">
           {/* Messages Area - Scrollable */}
           <div ref={chatContainerRef} className="flex-1 overflow-y-auto">
-            <div className="max-w-2xl mx-auto px-6 py-6 space-y-6">
+            <div className="max-w-2xl mx-auto px-6 py-6 space-y-6 w-full">
               <AnimatePresence mode="popLayout">
                 {displayConversation.map((message, index) => (
                   <motion.div
@@ -413,7 +413,7 @@ export default function LiveDemoSection() {
 
           {/* Input Area - Sticky Bottom */}
           <div className="sticky bottom-0 border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-xl flex-shrink-0">
-            <div className="max-w-2xl mx-auto px-6 py-4">
+            <div className="max-w-2xl mx-auto px-6 py-4 w-full">
               {state.rateLimited ? (
                 <div className="text-center py-3">
                   <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
