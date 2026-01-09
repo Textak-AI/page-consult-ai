@@ -1,26 +1,22 @@
 import { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquare, Send, Check, Sparkles } from 'lucide-react';
+import { MessageSquare, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CircuitGridBackground } from './CircuitGridBackground';
 
 interface DemoPreviewWidgetProps {
   onActivate: () => void;
   onInputFocus: () => void;
 }
 
-// Circuit pattern SVG for background
-const circuitPatternSvg = `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.08'%3E%3Cpath d='M0 40h20v-20h20v-20'/%3E%3Cpath d='M80 40h-20v20h-20v20'/%3E%3Cpath d='M40 0v20h20v20h20'/%3E%3Cpath d='M40 80v-20h-20v-20h-20'/%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='60' cy='20' r='2'/%3E%3Ccircle cx='20' cy='60' r='2'/%3E%3Ccircle cx='60' cy='60' r='2'/%3E%3Ccircle cx='40' cy='40' r='3'/%3E%3C/g%3E%3C/svg%3E")`;
-
-// Intelligence category data for preview
+// Intelligence category data - ALL ZEROED for preview
 const intelligenceCategories = [
-  { label: 'WHO YOU ARE', progress: 70, checks: 2 },
-  { label: 'WHAT YOU OFFER', progress: 80, checks: 2 },
-  { label: 'BUYER REALITY', progress: 65, checks: 2 },
-  { label: 'PROOF', progress: 75, checks: 1 },
+  { label: 'WHO YOU ARE', score: 0, max: 25, color: 'cyan' },
+  { label: 'WHAT YOU OFFER', score: 0, max: 25, color: 'violet' },
+  { label: 'BUYER REALITY', score: 0, max: 25, color: 'emerald' },
+  { label: 'PROOF & CREDIBILITY', score: 0, max: 25, color: 'amber' },
 ];
-
-const previewTags = ['B2B SaaS', 'Product-led', 'Series A', 'Dev Tools'];
 
 export function DemoPreviewWidget({ onActivate, onInputFocus }: DemoPreviewWidgetProps) {
   const [inputValue, setInputValue] = useState('');
@@ -44,26 +40,8 @@ export function DemoPreviewWidget({ onActivate, onInputFocus }: DemoPreviewWidge
       className="relative py-24 overflow-hidden"
       style={{ background: '#0a0a0f' }}
     >
-      {/* Circuit pattern layer */}
-      <div 
-        className="absolute inset-0 pointer-events-none"
-        style={{ 
-          backgroundImage: circuitPatternSvg,
-          backgroundSize: '80px 80px',
-          opacity: 0.6
-        }}
-      />
-      
-      {/* Rear projection glow */}
-      <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-        style={{
-          width: '1000px',
-          height: '700px',
-          background: 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.12) 0%, rgba(139, 92, 246, 0.08) 35%, transparent 65%)',
-          filter: 'blur(60px)',
-        }}
-      />
+      {/* Animated Circuit Grid Background */}
+      <CircuitGridBackground />
 
       {/* Section header */}
       <div className="relative z-10 text-center mb-10">
@@ -76,23 +54,28 @@ export function DemoPreviewWidget({ onActivate, onInputFocus }: DemoPreviewWidge
       </div>
 
       {/* Miniature Preview Widget */}
-      <div className="relative z-10 max-w-[920px] mx-auto px-6">
+      <div className="relative z-10 max-w-4xl mx-auto px-6">
         <motion.div
           onClick={handleClick}
           className="relative rounded-2xl overflow-hidden cursor-pointer group"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          whileHover={{ scale: 1.005 }}
+          whileHover={{ scale: 1.01 }}
           transition={{ duration: 0.4 }}
-          style={{
-            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(139, 92, 246, 0.15))',
-            padding: '2px',
-          }}
         >
+          {/* Outer frame with gradient border */}
+          <div 
+            className="absolute inset-0 rounded-2xl"
+            style={{
+              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))',
+              padding: '1px',
+            }}
+          />
+          
           {/* Animated border glow on hover */}
           <div 
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"
             style={{
               background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.4), rgba(139, 92, 246, 0.4))',
               filter: 'blur(20px)',
@@ -100,14 +83,19 @@ export function DemoPreviewWidget({ onActivate, onInputFocus }: DemoPreviewWidge
           />
           
           {/* Inner container */}
-          <div className="relative bg-slate-950 rounded-2xl overflow-hidden">
-            <div className="flex">
-              {/* Left Panel - Chat (scaled down feel) */}
-              <div className="flex-1 bg-slate-950 p-5 min-h-[420px] flex flex-col border-r border-slate-800/50">
+          <div className="relative bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-slate-800/50 overflow-hidden shadow-2xl shadow-violet-500/5">
+            {/* Subtle inner glow at top */}
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
+            
+            {/* Two-panel grid */}
+            <div className="grid md:grid-cols-2 divide-x divide-slate-800/50">
+              
+              {/* Left Panel - Chat */}
+              <div className="p-6 min-h-[380px] flex flex-col">
                 {/* AI Avatar + Label */}
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                    <MessageSquare className="w-4 h-4 text-slate-300" />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-slate-300" />
                   </div>
                   <div>
                     <div className="text-sm font-medium text-white">PageConsult AI</div>
@@ -117,7 +105,7 @@ export function DemoPreviewWidget({ onActivate, onInputFocus }: DemoPreviewWidge
                 
                 {/* Single chat bubble */}
                 <div className="flex-1">
-                  <div className="bg-slate-800/60 rounded-2xl rounded-tl-md px-4 py-3 max-w-[90%]">
+                  <div className="bg-slate-800/60 rounded-2xl rounded-tl-md px-4 py-3 max-w-[95%]">
                     <p className="text-slate-200 text-sm leading-relaxed">
                       Tell me about your business — who do you help and what do you do for them?
                     </p>
@@ -155,81 +143,73 @@ export function DemoPreviewWidget({ onActivate, onInputFocus }: DemoPreviewWidge
                 </form>
               </div>
               
-              {/* Right Panel - Intelligence (dense, info-rich) */}
-              <div className="w-[340px] bg-slate-900/60 p-5 flex-shrink-0">
+              {/* Right Panel - Intelligence Profile (ZEROED) */}
+              <div className="p-6 bg-slate-900/50 flex flex-col">
                 {/* Score header */}
-                <div className="text-center mb-5">
-                  <div className="text-5xl font-bold bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
-                    72<span className="text-2xl text-slate-500">/100</span>
+                <div className="mb-5">
+                  <div className="flex items-baseline justify-between mb-1">
+                    <span className="text-xs text-slate-500 uppercase tracking-wider font-medium">Intelligence Profile</span>
+                    <span className="text-slate-500 text-sm font-medium">0<span className="text-slate-600">/100</span></span>
                   </div>
-                  <div className="text-xs text-slate-500 mt-1 uppercase tracking-wider">
-                    Intelligence Score
-                  </div>
-                </div>
-                
-                {/* Main progress bar */}
-                <div className="mb-6">
+                  {/* Main progress bar - empty */}
                   <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                    {/* Ghost gradient hint at 2% opacity */}
                     <div 
-                      className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-violet-500"
-                      style={{ width: '72%' }}
+                      className="h-full w-full rounded-full"
+                      style={{ 
+                        background: 'linear-gradient(to right, rgba(6, 182, 212, 0.02), rgba(139, 92, 246, 0.02))',
+                      }}
                     />
                   </div>
                 </div>
                 
-                {/* Category sections */}
-                <div className="space-y-4">
+                {/* Category sections - all zeroed */}
+                <div className="space-y-4 flex-1">
                   {intelligenceCategories.map((category, index) => (
-                    <div key={index} className="space-y-2">
+                    <div key={index} className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                           {category.label}
                         </span>
-                        <div className="flex gap-1">
-                          {Array.from({ length: category.checks }).map((_, i) => (
-                            <div key={i} className="w-4 h-4 rounded bg-emerald-500/20 flex items-center justify-center">
-                              <Check className="w-2.5 h-2.5 text-emerald-400" />
-                            </div>
-                          ))}
-                        </div>
+                        <span className="text-[10px] text-slate-500 font-medium">
+                          {category.score}/{category.max}
+                        </span>
                       </div>
+                      {/* Empty progress bar track */}
                       <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        {/* Very faint ghost of where color will appear */}
                         <div 
-                          className="h-full rounded-full bg-gradient-to-r from-cyan-500/70 to-violet-500/70"
-                          style={{ width: `${category.progress}%` }}
+                          className="h-full rounded-full"
+                          style={{ 
+                            width: '100%',
+                            background: category.color === 'cyan' 
+                              ? 'rgba(6, 182, 212, 0.02)'
+                              : category.color === 'violet'
+                              ? 'rgba(139, 92, 246, 0.02)'
+                              : category.color === 'emerald'
+                              ? 'rgba(16, 185, 129, 0.02)'
+                              : 'rgba(245, 158, 11, 0.02)',
+                          }}
                         />
                       </div>
                     </div>
                   ))}
                 </div>
                 
-                {/* Tags */}
-                <div className="mt-6 pt-5 border-t border-slate-800/50">
-                  <div className="flex flex-wrap gap-2">
-                    {previewTags.map((tag, index) => (
-                      <span 
-                        key={index}
-                        className="px-2.5 py-1 bg-slate-800/80 border border-slate-700/50 rounded-full text-xs text-slate-400"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Demo badge */}
-                <div className="mt-5 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-cyan-500/10 to-violet-500/10 border border-cyan-500/20">
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="text-xs font-medium text-cyan-300">Click to try live demo</span>
+                {/* Empty state message */}
+                <div className="mt-6 pt-4 border-t border-slate-800/50 text-center">
+                  <p className="text-xs text-slate-500 italic">
+                    Ready to capture your business intelligence
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </motion.div>
         
-        {/* Hint text */}
-        <p className="text-center text-slate-600 text-sm mt-6">
-          Click anywhere on the widget or start typing to begin
+        {/* Call to action below */}
+        <p className="text-center mt-6 text-slate-500 text-sm">
+          <span className="text-cyan-400">✦</span> Click anywhere to start your strategy session
         </p>
       </div>
     </section>
