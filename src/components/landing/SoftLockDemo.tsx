@@ -281,24 +281,26 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
               }}
             />
 
-            {/* Minimal Header - with comfortable padding */}
+            {/* Header - matches main site nav exactly */}
             <motion.header
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="sticky top-0 z-50 h-16 border-b border-slate-800/50 bg-slate-950/95 backdrop-blur-xl flex-shrink-0"
+              className="sticky top-0 z-50 h-[72px] border-b border-slate-800/50 bg-slate-950/95 backdrop-blur-xl flex-shrink-0"
             >
-              <div className="h-full px-8 flex items-center justify-between max-w-[1600px] mx-auto">
-                {/* Left: Logo (clickable to unlock) - actual PageConsult branding */}
+              <div className="h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between max-w-7xl mx-auto">
+                {/* Left: Logo - identical to main nav */}
                 <button
                   onClick={deactivateLock}
-                  className="flex items-center hover:opacity-80 transition-opacity"
+                  className="flex items-center py-2 hover:opacity-80 transition-opacity"
                 >
-                  <img 
-                    src="/logo/whiteAsset_3combimark_darkmode.svg" 
-                    alt="PageConsult AI" 
-                    className="h-8 w-auto"
-                  />
+                  <div className="h-8 w-32 flex items-center flex-shrink-0">
+                    <img 
+                      src="/logo/whiteAsset_3combimark_darkmode.svg" 
+                      alt="PageConsult AI" 
+                      className="h-8 w-auto"
+                    />
+                  </div>
                 </button>
                 
                 {/* Center: Session label */}
