@@ -627,11 +627,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       return;
     }
     
-    // Rate limiting check
-    if (state.messageCount >= 5) {
-      setState(prev => ({ ...prev, rateLimited: true }));
-      return;
-    }
+    // Rate limiting removed - gate at generation, not conversation
 
     // If email gate is showing, don't process more messages
     if (state.showEmailGate) {

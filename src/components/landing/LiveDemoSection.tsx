@@ -616,35 +616,23 @@ export default function LiveDemoSection() {
 
             {/* Input */}
             <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-4 border-t border-white/5 flex-shrink-0">
-              {state.rateLimited ? (
-                <div className="text-center py-3">
-                  <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
-                  <Button
-                    onClick={() => navigate("/new")}
-                    className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
-                  >
-                    Start Full Strategy Session
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Tell me about your business..."
-                    disabled={state.isProcessing}
-                    className="flex-1 bg-slate-800 border-slate-600 focus:border-cyan-500 text-white placeholder:text-slate-500"
-                  />
-                  <Button
-                    type="submit"
-                    disabled={!inputValue.trim() || state.isProcessing}
-                    className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white px-4"
-                  >
-                    {state.isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  </Button>
-                </div>
-              )}
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="Tell me about your business..."
+                  disabled={state.isProcessing}
+                  className="flex-1 bg-slate-800 border-slate-600 focus:border-cyan-500 text-white placeholder:text-slate-500"
+                />
+                <Button
+                  type="submit"
+                  disabled={!inputValue.trim() || state.isProcessing}
+                  className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white px-4"
+                >
+                  {state.isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                </Button>
+              </div>
             </form>
           </>
         }
