@@ -189,7 +189,7 @@ const Hero = () => {
       </div>
 
       {/* Main content */}
-      <div className="w-full max-w-[1400px] mx-auto px-6 lg:px-12 xl:px-16 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
         
         {/* Main hero grid - balanced 50/50 columns */}
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
