@@ -10,6 +10,7 @@ import { PersonalizedHero, type PersonalizedContent } from "@/components/landing
 import { GeneratingHero } from "@/components/landing/GeneratingHero";
 import { useDemoState, type DemoState } from "@/hooks/useDemoState";
 import { formatForHeadline } from "@/utils/formatForDisplay";
+import { GlossyBackground } from "@/components/ui/GlossyBackground";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -173,7 +174,12 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative min-h-[90vh] flex items-center py-20 overflow-x-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]">
+    <GlossyBackground 
+      pattern="diagonal" 
+      glossDirection="vertical" 
+      glossRange={50}
+      className="min-h-[90vh] flex items-center py-20 overflow-x-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]"
+    >
       {/* Background layer - BEHIND everything */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         {/* Animated ambient orbs */}
@@ -285,7 +291,7 @@ const Hero = () => {
         </div>
         
       </div>
-    </section>
+    </GlossyBackground>
   );
 };
 
