@@ -1,8 +1,7 @@
-import { useState, useRef, useCallback } from 'react';
+import { useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquare, Send } from 'lucide-react';
+import { MessageSquare, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { CircuitGridBackground } from './CircuitGridBackground';
 
 interface DemoPreviewWidgetProps {
@@ -18,22 +17,10 @@ const intelligenceCategories = [
   { label: 'PROOF & CREDIBILITY', score: 0, max: 25, color: 'amber' },
 ];
 
-export function DemoPreviewWidget({ onActivate, onInputFocus }: DemoPreviewWidgetProps) {
-  const [inputValue, setInputValue] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-
+export function DemoPreviewWidget({ onActivate }: DemoPreviewWidgetProps) {
   const handleClick = useCallback(() => {
     onActivate();
   }, [onActivate]);
-
-  const handleInputFocus = useCallback(() => {
-    onInputFocus();
-  }, [onInputFocus]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onActivate();
-  };
 
   return (
     <section 
@@ -97,7 +84,7 @@ export function DemoPreviewWidget({ onActivate, onInputFocus }: DemoPreviewWidge
               {/* Two-panel grid */}
               <div className="grid md:grid-cols-2 divide-x divide-slate-800/50">
               
-              {/* Left Panel - Chat */}
+              {/* Left Panel - Chat Preview */}
               <div className="p-6 min-h-[380px] flex flex-col">
                 {/* AI Avatar + Label */}
                 <div className="flex items-center gap-3 mb-6">
@@ -119,35 +106,16 @@ export function DemoPreviewWidget({ onActivate, onInputFocus }: DemoPreviewWidge
                   </div>
                 </div>
                 
-                {/* Input field */}
-                <form onSubmit={handleSubmit} className="mt-auto pt-4">
-                  <div className="relative">
-                    <Input
-                      ref={inputRef}
-                      type="text"
-                      value={inputValue}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        setInputValue(e.target.value);
-                      }}
-                      onFocus={(e) => {
-                        e.stopPropagation();
-                        handleInputFocus();
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      placeholder="Type your response..."
-                      className="w-full px-4 py-3 pr-12 bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/10 text-sm"
-                    />
-                    <Button
-                      type="submit"
-                      size="sm"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 p-0 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Send className="w-4 h-4 text-white" />
-                    </Button>
-                  </div>
-                </form>
+                {/* CTA Button instead of input */}
+                <div className="mt-auto pt-4">
+                  <Button
+                    onClick={handleClick}
+                    className="w-full bg-gradient-to-r from-cyan-500 to-violet-500 hover:from-cyan-600 hover:to-violet-600 text-white py-3 rounded-xl font-medium group/btn"
+                  >
+                    Start Strategy Session
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                  </Button>
+                </div>
               </div>
               
               {/* Right Panel - Intelligence Profile (ZEROED) */}
