@@ -61,34 +61,41 @@ export function DemoPreviewWidget({ onActivate, onInputFocus }: DemoPreviewWidge
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          whileHover={{ scale: 1.01 }}
-          transition={{ duration: 0.4 }}
+          whileHover={{ scale: 1.005 }}
+          transition={{ duration: 0.3 }}
         >
-          {/* Outer frame with gradient border */}
+          {/* Ambient border glow - always visible at low opacity */}
           <div 
-            className="absolute inset-0 rounded-2xl"
+            className="absolute -inset-1 rounded-2xl opacity-100 transition-opacity duration-500"
             style={{
-              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(139, 92, 246, 0.2))',
+              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(139, 92, 246, 0.12))',
+              filter: 'blur(12px)',
+            }}
+          />
+          
+          {/* Enhanced border glow on hover */}
+          <div 
+            className="absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            style={{
+              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(139, 92, 246, 0.25))',
+              filter: 'blur(16px)',
+            }}
+          />
+          
+          {/* Inner container with gradient border */}
+          <div 
+            className="relative rounded-2xl overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(139, 92, 246, 0.15))',
               padding: '1px',
             }}
-          />
-          
-          {/* Animated border glow on hover */}
-          <div 
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"
-            style={{
-              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.4), rgba(139, 92, 246, 0.4))',
-              filter: 'blur(20px)',
-            }}
-          />
-          
-          {/* Inner container */}
-          <div className="relative bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-slate-800/50 overflow-hidden shadow-2xl shadow-violet-500/5">
-            {/* Subtle inner glow at top */}
-            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
-            
-            {/* Two-panel grid */}
-            <div className="grid md:grid-cols-2 divide-x divide-slate-800/50">
+          >
+            <div className="relative bg-slate-900/90 backdrop-blur-xl rounded-2xl overflow-hidden shadow-2xl shadow-black/40">
+              {/* Subtle inner glow at top */}
+              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+              
+              {/* Two-panel grid */}
+              <div className="grid md:grid-cols-2 divide-x divide-slate-800/50">
               
               {/* Left Panel - Chat */}
               <div className="p-6 min-h-[380px] flex flex-col">
@@ -204,6 +211,7 @@ export function DemoPreviewWidget({ onActivate, onInputFocus }: DemoPreviewWidge
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </motion.div>
         
