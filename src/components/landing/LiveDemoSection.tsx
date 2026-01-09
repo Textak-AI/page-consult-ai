@@ -1,17 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
-import { useIntelligence } from '@/contexts/IntelligenceContext';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Sparkles, Send, Loader2, ChevronRight, BarChart3, X, Maximize2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import BusinessCardGateModal from './BusinessCardGateModal';
-import { supabase } from '@/integrations/supabase/client';
-import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
-import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
-import { FocusModeOverlay } from '@/components/demo/FocusModeOverlay';
-import { FocusModeIndicator } from '@/components/demo/FocusModeIndicator';
-import { StrategySessionTransition } from '@/components/demo/StrategySessionTransition';
+import { useState, useEffect, useRef } from "react";
+import { useIntelligence } from "@/contexts/IntelligenceContext";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { MessageSquare, Sparkles, Send, Loader2, ChevronRight, BarChart3, X, Maximize2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import BusinessCardGateModal from "./BusinessCardGateModal";
+import { supabase } from "@/integrations/supabase/client";
+import { calculateIntelligenceScore } from "@/lib/intelligenceScoreCalculator";
+import { IntelligenceTabs } from "@/components/demo/IntelligenceTabs";
+import { FocusModeOverlay } from "@/components/demo/FocusModeOverlay";
+import { FocusModeIndicator } from "@/components/demo/FocusModeIndicator";
+import { StrategySessionTransition } from "@/components/demo/StrategySessionTransition";
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -35,34 +35,35 @@ const TypingIndicator = () => (
 
 export default function LiveDemoSection() {
   const navigate = useNavigate();
-  const { state, processUserMessage, submitEmail, submitBusinessCard, dismissEmailGate, reopenEmailGate } = useIntelligence();
-  const [inputValue, setInputValue] = useState('');
+  const { state, processUserMessage, submitEmail, submitBusinessCard, dismissEmailGate, reopenEmailGate } =
+    useIntelligence();
+  const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasInitialized = useRef(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const focusModeScrollRef = useRef<HTMLDivElement>(null);
-  
+
   // Mobile intelligence drawer state
   const [showMobileIntelligence, setShowMobileIntelligence] = useState(false);
-  
+
   // Session saving state
   const [isSavingSession, setIsSavingSession] = useState(false);
-  
+
   // Focus mode state
   const [focusModeOpen, setFocusModeOpen] = useState(false);
-  
+
   // Strategy session transition state
   const [showSessionTransition, setShowSessionTransition] = useState(false);
 
   // 🎬 Log component mount
   useEffect(() => {
-    console.log('🎬 [LiveDemo] Component mounted');
+    console.log("🎬 [LiveDemo] Component mounted");
   }, []);
 
   // 🧠 Log intelligence updates
   useEffect(() => {
-    console.log('🧠 [LiveDemo] Intelligence updated:', {
+    console.log("🧠 [LiveDemo] Intelligence updated:", {
       timestamp: new Date().toISOString(),
       extracted: {
         industry: state.extracted?.industry,
@@ -93,7 +94,7 @@ export default function LiveDemoSection() {
   const activateFocusMode = () => {
     // Show transition first
     setShowSessionTransition(true);
-    
+
     // After transition, activate focus mode
     setTimeout(() => {
       setShowSessionTransition(false);
@@ -113,7 +114,11 @@ export default function LiveDemoSection() {
   };
 
   // Handle email gate - with business card (activates focus mode immediately, research runs in background)
-  const handleBusinessCardSubmitAndActivateFocus = async (data: { companyName: string; website: string; email: string }) => {
+  const handleBusinessCardSubmitAndActivateFocus = async (data: {
+    companyName: string;
+    website: string;
+    email: string;
+  }) => {
     activateFocusMode(); // Expand immediately
     await submitBusinessCard(data, (followUpMessage: string) => {
       // Add the assumptive follow-up to the conversation by simulating an assistant message
@@ -121,7 +126,7 @@ export default function LiveDemoSection() {
       setTimeout(() => {
         // We can't directly update conversation here since it's managed by processUserMessage
         // Instead, we'll store the follow-up and display it as an assistant message
-        console.log('📝 [LiveDemo] Assumptive follow-up received:', followUpMessage.substring(0, 60) + '...');
+        console.log("📝 [LiveDemo] Assumptive follow-up received:", followUpMessage.substring(0, 60) + "...");
       }, 100);
     });
   };
@@ -129,14 +134,14 @@ export default function LiveDemoSection() {
   // Scroll to bottom on new messages
   useEffect(() => {
     if (messagesEndRef.current && chatContainerRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [state.conversation, inputValue]);
 
   // Auto-scroll in focus mode when typing
   useEffect(() => {
     if (inputValue.trim() && focusModeOpen && focusModeScrollRef.current) {
-      focusModeScrollRef.current.scrollIntoView({ behavior: 'smooth' });
+      focusModeScrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [inputValue, focusModeOpen]);
 
@@ -145,25 +150,25 @@ export default function LiveDemoSection() {
     if (!inputValue.trim() || state.isProcessing || state.rateLimited) return;
 
     const message = inputValue.trim();
-    setInputValue('');
+    setInputValue("");
     await processUserMessage(message);
   };
 
   // Skip mode selection - go directly to signup
   // User already experienced conversational mode in demo, will continue with structured form after signup
   const handleGenerateClick = () => {
-    handleContinueToWizard('wizard'); // Default to structured form
+    handleContinueToWizard("wizard"); // Default to structured form
   };
 
-  const handleContinueToWizard = async (selectedPath: 'conversation' | 'wizard' = 'wizard') => {
+  const handleContinueToWizard = async (selectedPath: "conversation" | "wizard" = "wizard") => {
     setIsSavingSession(true);
-    
+
     const sessionId = crypto.randomUUID();
     const isReady = state.readiness >= 70; // High readiness = skip wizard, go to brand setup
-    
+
     const demoIntelligence = {
       sessionId,
-      source: 'demo',
+      source: "demo",
       capturedAt: new Date().toISOString(),
       industry: state.extracted.industry || null,
       industrySummary: state.extracted.industrySummary || null,
@@ -185,7 +190,7 @@ export default function LiveDemoSection() {
         commonObjections: state.market.commonObjections || [],
         industryInsights: state.market.industryInsights || [],
       },
-      conversationHistory: state.conversation.map(msg => ({
+      conversationHistory: state.conversation.map((msg) => ({
         role: msg.role,
         content: msg.content,
         timestamp: msg.timestamp?.toISOString() || new Date().toISOString(),
@@ -193,9 +198,9 @@ export default function LiveDemoSection() {
       readinessScore: state.readiness,
       selectedPath,
     };
-    
+
     // 🚀 Log handoff payload BEFORE saving
-    console.log('🚀 [LiveDemo→Wizard] Preparing handoff payload:', {
+    console.log("🚀 [LiveDemo→Wizard] Preparing handoff payload:", {
       sessionId,
       isReady,
       extractedIntelligence: demoIntelligence,
@@ -204,9 +209,9 @@ export default function LiveDemoSection() {
       readiness: demoIntelligence.readinessScore,
       FULL_EXTRACTED: JSON.stringify(demoIntelligence, null, 2),
     });
-    
-    sessionStorage.setItem('demoIntelligence', JSON.stringify(demoIntelligence));
-    
+
+    sessionStorage.setItem("demoIntelligence", JSON.stringify(demoIntelligence));
+
     // Store brand prefill data for Brand Setup page
     const brandPrefill = {
       logo: state.extractedLogo || null,
@@ -216,18 +221,18 @@ export default function LiveDemoSection() {
       fonts: state.extractedBrand?.fonts || null,
       industry: state.extracted?.industry || null,
     };
-    sessionStorage.setItem('brandPrefill', JSON.stringify(brandPrefill));
-    console.log('📦 [LiveDemo] Brand prefill stored:', brandPrefill);
-    
+    sessionStorage.setItem("brandPrefill", JSON.stringify(brandPrefill));
+    console.log("📦 [LiveDemo] Brand prefill stored:", brandPrefill);
+
     if (state.email) {
-      sessionStorage.setItem('demoEmail', state.email);
+      sessionStorage.setItem("demoEmail", state.email);
     }
-    
+
     const sessionData = {
       session_id: sessionId,
       extracted_intelligence: demoIntelligence,
       market_research: demoIntelligence.marketResearch,
-      messages: state.conversation.map(msg => ({
+      messages: state.conversation.map((msg) => ({
         role: msg.role,
         content: msg.content,
       })),
@@ -235,35 +240,42 @@ export default function LiveDemoSection() {
       completed: isReady, // Mark as completed if high readiness
       continued_to_consultation: true,
     };
-    
+
     try {
-      const { error } = await supabase.from('demo_sessions').insert([sessionData]);
+      const { error } = await supabase.from("demo_sessions").insert([sessionData]);
       // 💾 Log Supabase save result
-      console.log('💾 [LiveDemo] Supabase save result:', { 
-        success: !error, 
+      console.log("💾 [LiveDemo] Supabase save result:", {
+        success: !error,
         error: error?.message,
         sessionId,
         isReady,
       });
-      localStorage.setItem('pageconsult_session_id', sessionId);
-      
+      localStorage.setItem("pageconsult_session_id", sessionId);
+
       // Include session ID and ready flag in URL for post-signup claiming
-      const signupUrl = isReady 
+      const signupUrl = isReady
         ? `/signup?from=demo&session=${sessionId}&ready=true`
         : `/signup?from=demo&session=${sessionId}`;
-      
+
       navigate(signupUrl);
     } catch (err) {
-      console.error('💾 [LiveDemo] Error saving demo session:', err);
-      navigate('/signup?from=demo');
+      console.error("💾 [LiveDemo] Error saving demo session:", err);
+      navigate("/signup?from=demo");
     } finally {
       setIsSavingSession(false);
     }
   };
 
-  const displayConversation = state.conversation.length === 0 
-    ? [{ role: 'assistant' as const, content: "Tell me about your business — who do you help and what do you do for them?", timestamp: new Date() }]
-    : state.conversation;
+  const displayConversation =
+    state.conversation.length === 0
+      ? [
+          {
+            role: "assistant" as const,
+            content: "Tell me about your business — who do you help and what do you do for them?",
+            timestamp: new Date(),
+          },
+        ]
+      : state.conversation;
 
   // Calculate score - this will recalculate on every render when state.extracted changes
   const score = calculateIntelligenceScore(state.extracted);
@@ -281,14 +293,14 @@ export default function LiveDemoSection() {
               <span className="text-white font-medium">Strategy Session</span>
             </nav>
           </div>
-          
+
           {/* Right: Demo badge + Focus Mode */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/10 to-violet-500/10 border border-cyan-500/20">
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
               <span className="text-sm font-medium text-cyan-300">Live AI Demo</span>
             </div>
-            
+
             {/* Focus Mode button - visible at 30%+ readiness */}
             {state.readiness >= 30 && (
               <button
@@ -299,7 +311,7 @@ export default function LiveDemoSection() {
                 <span>Focus</span>
               </button>
             )}
-            
+
             {/* Mobile: Show Progress button */}
             <button
               onClick={() => setShowMobileIntelligence(true)}
@@ -312,17 +324,12 @@ export default function LiveDemoSection() {
         </div>
       </header>
 
-      {/* Main Content - Chat + Sidebar with explicit grid */}
+      {/* Main Content - Chat + Sidebar with grid layout */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_480px] xl:grid-cols-[1fr_540px] 2xl:grid-cols-[1fr_580px] overflow-hidden">
-        
-        {/* Chat Container */}
+        {/* Chat Container - takes remaining space */}
         <main className="min-w-0 flex flex-col">
-          
           {/* Messages Area - Scrollable */}
-          <div 
-            ref={chatContainerRef} 
-            className="flex-1 overflow-y-auto"
-          >
+          <div ref={chatContainerRef} className="flex-1 overflow-y-auto">
             <div className="max-w-2xl mx-auto px-6 py-6 space-y-6">
               <AnimatePresence mode="popLayout">
                 {displayConversation.map((message, index) => (
@@ -333,7 +340,7 @@ export default function LiveDemoSection() {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    {message.role === 'assistant' ? (
+                    {message.role === "assistant" ? (
                       // AI Message (left-aligned with avatar)
                       <div className="flex gap-4">
                         <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
@@ -362,7 +369,7 @@ export default function LiveDemoSection() {
                   </motion.div>
                 ))}
               </AnimatePresence>
-              
+
               {/* Live typing preview */}
               <AnimatePresence>
                 {inputValue.trim().length > 0 && !state.isProcessing && (
@@ -371,14 +378,12 @@ export default function LiveDemoSection() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
                     className="flex justify-end"
                   >
                     <div className="max-w-[80%]">
                       <div className="rounded-2xl rounded-tr-md px-4 py-3 border border-dashed border-slate-600 bg-slate-800/30">
-                        <p className="text-[15px] leading-relaxed text-slate-400 italic">
-                          {inputValue}
-                        </p>
+                        <p className="text-[15px] leading-relaxed text-slate-400 italic">{inputValue}</p>
                         <div className="flex items-center gap-2 mt-1.5">
                           <span className="text-xs text-slate-500">composing...</span>
                           <span className="w-1 h-1 bg-slate-500 rounded-full animate-pulse" />
@@ -389,14 +394,10 @@ export default function LiveDemoSection() {
                   </motion.div>
                 )}
               </AnimatePresence>
-              
+
               {/* Typing indicator */}
               {state.isProcessing && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex gap-4"
-                >
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-4">
                   <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
                     <MessageSquare className="w-5 h-5 text-slate-300" />
                   </div>
@@ -405,7 +406,7 @@ export default function LiveDemoSection() {
                   </div>
                 </motion.div>
               )}
-              
+
               <div ref={messagesEndRef} />
             </div>
           </div>
@@ -417,7 +418,7 @@ export default function LiveDemoSection() {
                 <div className="text-center py-3">
                   <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
                   <Button
-                    onClick={() => navigate('/new')}
+                    onClick={() => navigate("/new")}
                     className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
                   >
                     Start Full Strategy Session
@@ -452,15 +453,11 @@ export default function LiveDemoSection() {
             </div>
           </div>
         </main>
-        
-        {/* Intel Sidebar - Desktop only with fixed grid width */}
-        <aside className="hidden lg:flex border-l border-slate-800/50 bg-slate-900/30 flex-col overflow-hidden">
-          <IntelligenceTabs 
-            onContinue={handleGenerateClick}
-            onReopenEmailGate={reopenEmailGate}
-          />
+
+        {/* Intel Sidebar - Desktop only with flexible width */}
+        <aside className="hidden lg:flex flex-[45] max-w-[580px] border-l border-slate-800/50 bg-slate-900/30 flex-col overflow-hidden">
+          <IntelligenceTabs onContinue={handleGenerateClick} onReopenEmailGate={reopenEmailGate} />
         </aside>
-        
       </div>
 
       {/* Mobile Intelligence Drawer */}
@@ -480,13 +477,13 @@ export default function LiveDemoSection() {
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setShowMobileIntelligence(false)}
             />
-            
+
             {/* Drawer */}
             <motion.div
-              initial={{ y: '100%' }}
+              initial={{ y: "100%" }}
               animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className="absolute bottom-0 left-0 right-0 bg-slate-900 border-t border-white/10 rounded-t-3xl max-h-[80vh] flex flex-col"
             >
               {/* Drawer header */}
@@ -499,10 +496,10 @@ export default function LiveDemoSection() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              
+
               {/* Drawer content - using tabbed interface */}
               <div className="flex-1 overflow-hidden">
-                <IntelligenceTabs 
+                <IntelligenceTabs
                   onContinue={() => {
                     setShowMobileIntelligence(false);
                     handleGenerateClick();
@@ -544,9 +541,7 @@ export default function LiveDemoSection() {
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span className="font-medium">Preparing your session...</span>
               </div>
-              <p className="text-sm text-slate-400 mt-2">
-                Saving your strategy progress
-              </p>
+              <p className="text-sm text-slate-400 mt-2">Saving your strategy progress</p>
             </motion.div>
           </motion.div>
         )}
@@ -556,10 +551,7 @@ export default function LiveDemoSection() {
       <StrategySessionTransition isVisible={showSessionTransition} />
 
       {/* Focus Mode Indicator - shows when in focus mode */}
-      <FocusModeIndicator
-        isActive={focusModeOpen}
-        onExit={exitFocusMode}
-      />
+      <FocusModeIndicator isActive={focusModeOpen} onExit={exitFocusMode} />
 
       {/* Focus Mode Overlay */}
       <FocusModeOverlay
@@ -581,7 +573,7 @@ export default function LiveDemoSection() {
                 </div>
               </div>
             </div>
-            
+
             {/* Messages - scrollable */}
             <div className="flex-1 overflow-y-scroll px-4 sm:px-6 py-5 space-y-4 scroll-smooth">
               <AnimatePresence mode="popLayout">
@@ -592,13 +584,13 @@ export default function LiveDemoSection() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
                       className={`max-w-[85%] md:max-w-[80%] rounded-2xl px-4 py-3 ${
-                        message.role === 'user'
-                          ? 'bg-cyan-600/20 border border-cyan-500/30 text-white'
-                          : 'bg-slate-700/50 border border-slate-600/30 text-slate-200'
+                        message.role === "user"
+                          ? "bg-cyan-600/20 border border-cyan-500/30 text-white"
+                          : "bg-slate-700/50 border border-slate-600/30 text-slate-200"
                       }`}
                     >
                       <p className="text-sm leading-relaxed">{message.content}</p>
@@ -606,7 +598,7 @@ export default function LiveDemoSection() {
                   </motion.div>
                 ))}
               </AnimatePresence>
-              
+
               {/* Live typing preview */}
               {inputValue.trim() && !state.isProcessing && (
                 <motion.div
@@ -616,26 +608,20 @@ export default function LiveDemoSection() {
                   className="flex justify-end"
                 >
                   <div className="max-w-[85%] md:max-w-[80%] px-4 py-3 rounded-2xl rounded-br-sm bg-slate-700/20 border border-slate-600/20">
-                    <p className="text-sm leading-relaxed text-slate-500 italic">
-                      {inputValue}
-                    </p>
+                    <p className="text-sm leading-relaxed text-slate-500 italic">{inputValue}</p>
                   </div>
                 </motion.div>
               )}
-              
+
               {/* Typing indicator */}
               {state.isProcessing && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex justify-start"
-                >
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
                   <div className="bg-slate-700/50 border border-slate-600/30 rounded-2xl">
                     <TypingIndicator />
                   </div>
                 </motion.div>
               )}
-              
+
               {/* Scroll anchor */}
               <div ref={focusModeScrollRef} />
             </div>
@@ -646,7 +632,7 @@ export default function LiveDemoSection() {
                 <div className="text-center py-3">
                   <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
                   <Button
-                    onClick={() => navigate('/new')}
+                    onClick={() => navigate("/new")}
                     className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
                   >
                     Start Full Strategy Session
@@ -667,11 +653,7 @@ export default function LiveDemoSection() {
                     disabled={!inputValue.trim() || state.isProcessing}
                     className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white px-4"
                   >
-                    {state.isProcessing ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4" />
-                    )}
+                    {state.isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   </Button>
                 </div>
               )}
