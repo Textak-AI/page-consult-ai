@@ -178,7 +178,7 @@ const Hero = () => {
       pattern="diagonal" 
       glossDirection="vertical" 
       glossRange={50}
-      className="min-h-[90vh] flex items-center py-20 overflow-x-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]"
+      className="min-h-[90vh] flex items-center py-20 overflow-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]"
     >
       {/* Background layer - subtle ambient only */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
@@ -189,13 +189,13 @@ const Hero = () => {
       </div>
 
       {/* Main content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 overflow-hidden">
         
         {/* Main hero grid - balanced 50/50 columns */}
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center overflow-hidden">
           
           {/* Left content - Animated transitions between states */}
-          <div className="min-h-[400px]">
+          <div className="min-h-[400px] overflow-hidden">
             <AnimatePresence mode="wait">
               {demoState === 'generating' ? (
                 <motion.div
@@ -241,7 +241,7 @@ const Hero = () => {
 
           {/* Right - Animated Flow Demo */}
           <motion.div 
-            className="hidden lg:flex items-center justify-center overflow-hidden"
+            className="hidden lg:flex items-center justify-center overflow-hidden max-w-full"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
