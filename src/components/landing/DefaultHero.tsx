@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Play, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface DefaultHeroProps {
@@ -36,8 +36,8 @@ export function DefaultHero({ onStartConsultation, isNavigating }: DefaultHeroPr
         pages proven to convert. No templates. No guesswork.
       </p>
       
-      {/* CTA buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      {/* CTA button */}
+      <div className="mb-6">
         <Button 
           onClick={onStartConsultation}
           disabled={isNavigating}
@@ -46,12 +46,6 @@ export function DefaultHero({ onStartConsultation, isNavigating }: DefaultHeroPr
         >
           <span className="relative z-10">Start Strategic Consultation</span>
           <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover/btn:translate-x-1" />
-        </Button>
-        <Button asChild variant="outline" size="lg" className="text-lg px-8 py-4 bg-transparent border-2 border-white/30 text-white hover:border-cyan-400 hover:text-cyan-400 hover:bg-cyan-400/5 hover:shadow-lg hover:shadow-cyan-400/30 rounded-xl font-semibold transition-all duration-300 group">
-          <a href="#demo" className="flex items-center">
-            <Play className="w-4 h-4 mr-2 text-cyan-400 group-hover:translate-x-0.5 transition-transform duration-300" />
-            Watch How It Works
-          </a>
         </Button>
       </div>
       
