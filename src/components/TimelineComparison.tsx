@@ -6,10 +6,13 @@ const TimelineComparison = () => {
   const navigate = useNavigate();
 
   return (
-    <section id="timeline" className="section-spacing bg-slate-950 relative overflow-hidden scroll-mt-16">
-      {/* Ambient background effects */}
-      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
-      <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px]" />
+    <section id="timeline" className="py-32 bg-slate-900/50 relative overflow-hidden scroll-mt-16">
+      {/* Top divider line */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 max-w-md h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      
+      {/* Ambient background effects - slightly different treatment */}
+      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/8 rounded-full blur-[120px]" />
+      <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-violet-500/8 rounded-full blur-[120px]" />
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section header */}
