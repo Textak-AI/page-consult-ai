@@ -414,42 +414,30 @@ export default function LiveDemoSection() {
           {/* Input Area - Sticky Bottom */}
           <div className="sticky bottom-0 border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-xl flex-shrink-0">
             <div className="max-w-2xl mx-auto px-6 py-4 w-full">
-              {state.rateLimited ? (
-                <div className="text-center py-3">
-                  <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
+              <form onSubmit={handleSubmit}>
+                <div className="relative">
+                  <Input
+                    ref={inputRef}
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder="Tell me about your business..."
+                    disabled={state.isProcessing}
+                    className="w-full px-4 py-3 pr-14 bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/10 transition-all text-[15px] leading-relaxed"
+                  />
                   <Button
-                    onClick={() => navigate("/new")}
-                    className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white"
+                    type="submit"
+                    disabled={!inputValue.trim() || state.isProcessing}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 p-0 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity"
                   >
-                    Start Full Strategy Session
+                    {state.isProcessing ? (
+                      <Loader2 className="w-5 h-5 text-white animate-spin" />
+                    ) : (
+                      <Send className="w-5 h-5 text-white" />
+                    )}
                   </Button>
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit}>
-                  <div className="relative">
-                    <Input
-                      ref={inputRef}
-                      type="text"
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      placeholder="Tell me about your business..."
-                      disabled={state.isProcessing}
-                      className="w-full px-4 py-3 pr-14 bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/10 transition-all text-[15px] leading-relaxed"
-                    />
-                    <Button
-                      type="submit"
-                      disabled={!inputValue.trim() || state.isProcessing}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 p-0 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity"
-                    >
-                      {state.isProcessing ? (
-                        <Loader2 className="w-5 h-5 text-white animate-spin" />
-                      ) : (
-                        <Send className="w-5 h-5 text-white" />
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              )}
+              </form>
             </div>
           </div>
         </main>
