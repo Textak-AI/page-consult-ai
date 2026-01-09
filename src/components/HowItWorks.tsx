@@ -1,4 +1,5 @@
 import { MessageCircle, Zap, Target } from "lucide-react";
+import { GlossyBackground } from "@/components/ui/GlossyBackground";
 
 const steps = [
   {
@@ -32,10 +33,16 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section id="how-it-works" className="section-spacing bg-slate-950 relative overflow-hidden scroll-mt-16">
-      {/* Ambient background effects */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
-      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px]" />
+    <GlossyBackground
+      pattern="hexagon"
+      glossDirection="horizontal"
+      glossRange={60}
+      className="section-spacing bg-slate-950 overflow-hidden scroll-mt-16"
+    >
+      <section id="how-it-works" className="relative">
+        {/* Ambient background effects */}
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px]" />
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16 animate-fade-in">
@@ -104,7 +111,8 @@ const HowItWorks = () => {
           })}
         </div>
       </div>
-    </section>
+      </section>
+    </GlossyBackground>
   );
 };
 

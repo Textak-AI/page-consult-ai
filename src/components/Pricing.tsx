@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { STRIPE_PRICES } from "@/lib/stripe-config";
+import { GlossyBackground } from "@/components/ui/GlossyBackground";
 
 const plans = [
   {
@@ -104,11 +105,17 @@ const Pricing = () => {
   };
 
   return (
-    <section id="pricing" className="section-spacing bg-slate-950 relative overflow-hidden scroll-mt-16">
-      {/* Background effects */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-purple-500/10 to-transparent blur-[100px]" />
-      
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <GlossyBackground
+      pattern="diamond"
+      glossDirection="vertical"
+      glossRange={50}
+      className="section-spacing bg-slate-950 overflow-hidden scroll-mt-16"
+    >
+      <section id="pricing" className="relative">
+        {/* Background effects */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-purple-500/10 to-transparent blur-[100px]" />
+        
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16 animate-fade-in">
           <p className="text-cyan-400 text-sm font-semibold tracking-wide uppercase mb-3">
             Pricing
@@ -253,7 +260,8 @@ const Pricing = () => {
           </Link>
         </div>
       </div>
-    </section>
+      </section>
+    </GlossyBackground>
   );
 };
 
