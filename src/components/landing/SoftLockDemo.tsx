@@ -105,6 +105,16 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
     };
   }, []);
 
+  // Auto-focus input when session expands
+  useEffect(() => {
+    if (isLocked && inputRef.current) {
+      // Small delay to ensure the expanded view has rendered
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [isLocked]);
+
   // Handle input focus - trigger lock
   const handleInputFocus = () => {
     activateLock();
