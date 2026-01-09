@@ -82,20 +82,20 @@ export function FocusModeOverlay({
             <div />
           </motion.header>
           
-          {/* Main Content - Flexible ratio layout */}
+          {/* Main Content - Explicit grid layout */}
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="relative z-10 flex-1 flex gap-6 p-6 overflow-hidden"
+            className="relative z-10 flex-1 grid grid-cols-1 lg:grid-cols-[1fr_480px] xl:grid-cols-[1fr_540px] 2xl:grid-cols-[1fr_580px] gap-6 p-6 overflow-hidden"
           >
-            {/* Chat Panel - 55% of space */}
-            <div className="flex-[55] min-w-0 bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden flex flex-col">
+            {/* Chat Panel */}
+            <div className="min-w-0 bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden flex flex-col">
               {chatContent}
             </div>
             
-            {/* Intelligence Panel - 45% of space with max-width cap */}
-            <div className="hidden lg:flex flex-[45] max-w-[580px] bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
+            {/* Intelligence Panel - Fixed width from grid */}
+            <div className="hidden lg:flex bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
               <IntelligenceTabs 
                 onContinue={onContinue}
                 onReopenEmailGate={onReopenEmailGate}

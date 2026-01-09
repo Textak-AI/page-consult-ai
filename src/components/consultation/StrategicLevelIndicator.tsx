@@ -311,11 +311,7 @@ export function StrategicLevelIndicator({
                   </button>
                 )}
               </div>
-            ) : (
-              <p className="text-xs text-slate-600 text-center">
-                Share more to unlock
-              </p>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
