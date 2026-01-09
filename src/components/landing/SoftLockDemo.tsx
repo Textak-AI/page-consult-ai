@@ -11,8 +11,8 @@ import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
 import { DemoPreviewWidget } from './DemoPreviewWidget';
 
-// Circuit pattern SVG for expanded background - VERY subtle
-const circuitPatternSvg = `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.03'%3E%3Cpath d='M0 40h20v-20h20v-20'/%3E%3Cpath d='M80 40h-20v20h-20v20'/%3E%3Cpath d='M40 0v20h20v20h20'/%3E%3Cpath d='M40 80v-20h-20v-20h-20'/%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='60' cy='60' r='2'/%3E%3C/g%3E%3C/svg%3E")`;
+// Circuit pattern SVG - extremely subtle for expanded view (2% opacity)
+const circuitPatternSvg = `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.02'%3E%3Cpath d='M0 40h20v-20h20v-20'/%3E%3Cpath d='M80 40h-20v20h-20v20'/%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='60' cy='60' r='2'/%3E%3C/g%3E%3C/svg%3E")`;
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -318,22 +318,40 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
               </div>
             </motion.header>
 
-            {/* Main Content - Chat + Sidebar with padding */}
-            <div className="flex-1 flex overflow-hidden relative z-10 px-4 lg:px-6 pb-6">
+            {/* Main Content - Chat + Sidebar with proper padding on all sides */}
+            <div className="flex-1 flex overflow-hidden relative z-10 p-6 lg:p-8 gap-6">
               
-              {/* Chat Container - with proper spacing */}
-              <main className="flex-1 flex flex-col min-w-0 bg-slate-900/30 rounded-2xl border border-slate-800/30 overflow-hidden my-4 mr-0 lg:mr-4">
+              {/* Chat Container */}
+              <main className="flex-1 flex flex-col min-w-0 bg-slate-900/30 rounded-2xl border border-slate-800/30 overflow-hidden">
                 
-                {/* Messages Area - Scrollable, anchored to bottom */}
+                {/* Messages Area - flex-col-reverse anchors content to bottom */}
                 <div 
                   ref={chatContainerRef} 
-                  className="flex-1 overflow-y-auto flex flex-col justify-end min-h-0"
+                  className="flex-1 overflow-y-auto flex flex-col-reverse min-h-0"
                 >
                   <div className="max-w-2xl mx-auto px-6 py-6 space-y-6 w-full">
+                    {/* Typing indicator - shows first due to flex-col-reverse */}
+                    {state.isProcessing && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex gap-4"
+                      >
+                        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                          <MessageSquare className="w-5 h-5 text-slate-300" />
+                        </div>
+                        <div className="bg-slate-800/60 rounded-2xl rounded-tl-md">
+                          <TypingIndicator />
+                        </div>
+                      </motion.div>
+                    )}
+                    
+                    <div ref={messagesEndRef} />
+                    
                     <AnimatePresence mode="popLayout">
-                      {displayConversation.map((message, index) => (
+                      {[...displayConversation].reverse().map((message, index) => (
                         <motion.div
-                          key={`msg-${index}`}
+                          key={`msg-${displayConversation.length - 1 - index}`}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0 }}
@@ -366,29 +384,11 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                         </motion.div>
                       ))}
                     </AnimatePresence>
-                    
-                    {/* Typing indicator */}
-                    {state.isProcessing && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex gap-4"
-                      >
-                        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                          <MessageSquare className="w-5 h-5 text-slate-300" />
-                        </div>
-                        <div className="bg-slate-800/60 rounded-2xl rounded-tl-md">
-                          <TypingIndicator />
-                        </div>
-                      </motion.div>
-                    )}
-                    
-                    <div ref={messagesEndRef} />
                   </div>
                 </div>
 
-                {/* Input Area - with bottom padding */}
-                <div className="border-t border-slate-800/50 bg-slate-900/50 flex-shrink-0 px-6 py-5">
+                {/* Input Area - with comfortable padding */}
+                <div className="border-t border-slate-800/50 bg-slate-900/50 flex-shrink-0 px-6 py-6">
                   <div className="max-w-2xl mx-auto">
                     {state.rateLimited ? (
                       <div className="text-center py-3">
@@ -431,8 +431,8 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 </div>
               </main>
               
-              {/* Intel Sidebar - Desktop only, with padding */}
-              <aside className="hidden lg:flex w-[380px] flex-shrink-0 bg-slate-900/40 border border-slate-800/30 rounded-2xl flex-col overflow-hidden my-4 mr-2">
+              {/* Intel Sidebar - Desktop only, with proper right margin */}
+              <aside className="hidden lg:flex w-[380px] flex-shrink-0 bg-slate-900/40 border border-slate-800/30 rounded-2xl flex-col overflow-hidden">
                 <div className="p-5 flex-1 overflow-hidden">
                   <IntelligenceTabs 
                     onContinue={handleGenerateClick}
