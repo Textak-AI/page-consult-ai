@@ -89,13 +89,13 @@ export function FocusModeOverlay({
             transition={{ delay: 0.2 }}
             className="relative z-10 flex-1 flex gap-6 p-6 overflow-hidden"
           >
-            {/* Chat Panel - Left */}
-            <div className="flex-1 min-w-0 bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden flex flex-col">
+            {/* Chat Panel - Left (constrained max-width) */}
+            <div className="flex-1 min-w-0 max-w-3xl bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden flex flex-col">
               {chatContent}
             </div>
             
-            {/* Intelligence Panel - Right */}
-            <div className="hidden lg:flex w-[500px] xl:w-[540px] flex-shrink-0 bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
+            {/* Intelligence Panel - Right (wider) */}
+            <div className="hidden lg:flex w-[420px] xl:w-[480px] flex-shrink-0 bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
               <IntelligenceTabs 
                 onContinue={onContinue}
                 onReopenEmailGate={onReopenEmailGate}
