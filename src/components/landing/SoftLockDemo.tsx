@@ -456,43 +456,31 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 {/* Input Area - aligned with messages */}
                 <div className="border-t border-slate-800/30 bg-slate-950/40 flex-shrink-0 px-6 py-6">
                   <div className="max-w-4xl mx-auto">
-                    {state.rateLimited ? (
-                      <div className="text-center py-3">
-                        <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
-                        <Button
-                          onClick={() => navigate('/new')}
-                          className="bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-600 hover:to-violet-700 text-white"
+                    <form onSubmit={handleSubmit}>
+                      <div className="relative flex items-center">
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={inputValue}
+                          onChange={handleInputChange}
+                          onFocus={handleInputFocus}
+                          placeholder="Tell me about your business..."
+                          disabled={state.isProcessing}
+                          className="w-full px-4 py-3 pr-12 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-slate-600 transition-colors text-[15px]"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!inputValue.trim() || state.isProcessing}
+                          className="absolute right-3 p-1.5 rounded-md text-slate-400 hover:text-cyan-400 disabled:text-slate-600 disabled:cursor-not-allowed transition-colors"
                         >
-                          Start Full Strategy Session
-                        </Button>
+                          {state.isProcessing ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Send className="w-4 h-4" />
+                          )}
+                        </button>
                       </div>
-                    ) : (
-                      <form onSubmit={handleSubmit}>
-                        <div className="relative flex items-center">
-                          <input
-                            ref={inputRef}
-                            type="text"
-                            value={inputValue}
-                            onChange={handleInputChange}
-                            onFocus={handleInputFocus}
-                            placeholder="Tell me about your business..."
-                            disabled={state.isProcessing}
-                            className="w-full px-4 py-3 pr-12 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-slate-600 transition-colors text-[15px]"
-                          />
-                          <button
-                            type="submit"
-                            disabled={!inputValue.trim() || state.isProcessing}
-                            className="absolute right-3 p-1.5 rounded-md text-slate-400 hover:text-cyan-400 disabled:text-slate-600 disabled:cursor-not-allowed transition-colors"
-                          >
-                            {state.isProcessing ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Send className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </form>
-                    )}
+                    </form>
                   </div>
                 </div>
                 </div>

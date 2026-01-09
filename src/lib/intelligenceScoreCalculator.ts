@@ -121,107 +121,116 @@ export function calculateIntelligenceScore(intelligence: GenericIntelligence | n
   }
 
   // Calculate WHO YOU ARE (25 pts max)
+  // Using 2 main fields: industry (12), audience (13)
   const industryField = createFieldScore(
-    intelligence.industry,
+    intelligence.industry || intelligence.industryFull,
     intelligence.industrySummary,
-    FIELD_POINTS.industry
+    12 // Increased from 10
   );
   const audienceField = createFieldScore(
-    intelligence.audience,
+    intelligence.audience || intelligence.audienceFull,
     intelligence.audienceSummary,
-    FIELD_POINTS.audience
+    13 // Increased from 10, absorbs geography points
   );
+  // Geography bonus if available
   const geographyField = createFieldScore(
     intelligence.geography,
     intelligence.geographySummary,
-    FIELD_POINTS.geography
+    0 // Optional bonus field
   );
   
+  const whoYouAreTotal = Math.min(25, industryField.points + audienceField.points + geographyField.points);
   const whoYouAre: WhoYouAreScore = {
-    industry: industryField,
-    audience: audienceField,
+    industry: { ...industryField, maxPoints: 12 },
+    audience: { ...audienceField, maxPoints: 13 },
     geography: geographyField,
-    total: industryField.points + audienceField.points + geographyField.points,
+    total: whoYouAreTotal,
     maxPoints: 25,
-    percentage: Math.round(((industryField.points + audienceField.points + geographyField.points) / 25) * 100),
+    percentage: Math.round((whoYouAreTotal / 25) * 100),
   };
 
   // Calculate WHAT YOU OFFER (25 pts max)
+  // Using 2 main fields: valueProp (13), edge (12)
   const valuePropField = createFieldScore(
-    intelligence.valueProp,
+    intelligence.valueProp || intelligence.valuePropFull,
     intelligence.valuePropSummary,
-    FIELD_POINTS.valueProp
+    13 // Increased from 10
   );
   const edgeField = createFieldScore(
-    intelligence.competitiveEdge || intelligence.competitorDifferentiator || intelligence.competitorDifferentiation,
+    intelligence.competitiveEdge || intelligence.competitorDifferentiator || intelligence.competitorDifferentiation || intelligence.competitorDifferentiatorFull,
     intelligence.edgeSummary,
-    FIELD_POINTS.edge
+    12 // Increased from 10, absorbs method points
   );
   const methodField = createFieldScore(
     intelligence.method,
     intelligence.methodSummary,
-    FIELD_POINTS.method
+    0 // Optional bonus field
   );
   
+  const whatYouOfferTotal = Math.min(25, valuePropField.points + edgeField.points + methodField.points);
   const whatYouOffer: WhatYouOfferScore = {
-    valueProp: valuePropField,
-    edge: edgeField,
+    valueProp: { ...valuePropField, maxPoints: 13 },
+    edge: { ...edgeField, maxPoints: 12 },
     method: methodField,
-    total: valuePropField.points + edgeField.points + methodField.points,
+    total: whatYouOfferTotal,
     maxPoints: 25,
-    percentage: Math.round(((valuePropField.points + edgeField.points + methodField.points) / 25) * 100),
+    percentage: Math.round((whatYouOfferTotal / 25) * 100),
   };
 
   // Calculate BUYER REALITY (25 pts max)
+  // Using 2 main fields: painPoints (13), objections (12)
   const painPointsField = createFieldScore(
-    intelligence.painPoints,
+    intelligence.painPoints || intelligence.painPointsFull,
     intelligence.painSummary,
-    FIELD_POINTS.painPoints
+    13 // Increased from 10
   );
   const objectionsField = createFieldScore(
-    intelligence.buyerObjections,
+    intelligence.buyerObjections || intelligence.buyerObjectionsFull,
     intelligence.objectionsSummary,
-    FIELD_POINTS.objections
+    12 // Increased from 10, absorbs triggers points
   );
   const triggersField = createFieldScore(
     intelligence.triggers,
     intelligence.triggersSummary,
-    FIELD_POINTS.triggers
+    0 // Optional bonus field
   );
   
+  const buyerRealityTotal = Math.min(25, painPointsField.points + objectionsField.points + triggersField.points);
   const buyerReality: BuyerRealityScore = {
-    painPoints: painPointsField,
-    objections: objectionsField,
+    painPoints: { ...painPointsField, maxPoints: 13 },
+    objections: { ...objectionsField, maxPoints: 12 },
     triggers: triggersField,
-    total: painPointsField.points + objectionsField.points + triggersField.points,
+    total: buyerRealityTotal,
     maxPoints: 25,
-    percentage: Math.round(((painPointsField.points + objectionsField.points + triggersField.points) / 25) * 100),
+    percentage: Math.round((buyerRealityTotal / 25) * 100),
   };
 
   // Calculate PROOF & CREDIBILITY (25 pts max)
+  // Using 2 main fields: results/proofElements (13), socialProof (12)
   const resultsField = createFieldScore(
-    intelligence.proofElements || intelligence.results,
+    intelligence.proofElements || intelligence.proofElementsFull || intelligence.results,
     intelligence.proofSummary || intelligence.resultsSummary,
-    FIELD_POINTS.results
+    13 // Increased from 10
   );
   const socialProofField = createFieldScore(
     intelligence.socialProof,
     intelligence.socialProofSummary,
-    FIELD_POINTS.socialProof
+    12 // Increased from 10, absorbs credentials points
   );
   const credentialsField = createFieldScore(
     intelligence.credentials,
     intelligence.credentialsSummary,
-    FIELD_POINTS.credentials
+    0 // Optional bonus field
   );
   
+  const proofCredibilityTotal = Math.min(25, resultsField.points + socialProofField.points + credentialsField.points);
   const proofCredibility: ProofCredibilityScore = {
-    results: resultsField,
-    socialProof: socialProofField,
+    results: { ...resultsField, maxPoints: 13 },
+    socialProof: { ...socialProofField, maxPoints: 12 },
     credentials: credentialsField,
-    total: resultsField.points + socialProofField.points + credentialsField.points,
+    total: proofCredibilityTotal,
     maxPoints: 25,
-    percentage: Math.round(((resultsField.points + socialProofField.points + credentialsField.points) / 25) * 100),
+    percentage: Math.round((proofCredibilityTotal / 25) * 100),
   };
 
   // Calculate totals
