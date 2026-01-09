@@ -265,7 +265,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
   const score = calculateIntelligenceScore(state.extracted);
 
   return (
-    <>
+    <div id="demo">
       {/* Preview Widget - shows when unlocked */}
       <AnimatePresence>
         {!isLocked && (
@@ -595,6 +595,6 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
