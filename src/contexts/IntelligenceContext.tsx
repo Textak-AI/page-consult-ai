@@ -231,6 +231,7 @@ export interface IntelligenceContextValue {
   dismissEmailGate: () => void;
   reopenEmailGate: () => void;
   confirmIndustrySelection: (variant: string) => void;
+  updateExtracted: (updates: Partial<ExtractedIntelligence>) => void;
   
   // Computed visibility helpers
   shouldShowObjectionPanel: boolean;
@@ -1126,6 +1127,14 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     }
   }, [state.extracted.industry, state.extracted.audience, fetchMarketResearch]);
 
+  // Update extracted intelligence
+  const updateExtracted = useCallback((updates: Partial<ExtractedIntelligence>) => {
+    setState(prev => ({
+      ...prev,
+      extracted: { ...prev.extracted, ...updates },
+    }));
+  }, []);
+
   const contextValue: IntelligenceContextValue = {
     state,
     processUserMessage,
@@ -1136,6 +1145,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     dismissEmailGate,
     reopenEmailGate,
     confirmIndustrySelection,
+    updateExtracted,
     // Computed visibility helpers
     shouldShowObjectionPanel,
     shouldShowResearchPanel,

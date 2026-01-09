@@ -25,6 +25,8 @@ import { ObjectionKillerPanel } from '@/components/consultation/ObjectionKillerP
 import MarketResearchPanel from '@/components/landing/MarketResearchPanel';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { Button } from '@/components/ui/button';
+import { BriefReviewModal } from './BriefReviewModal';
+import type { BriefData } from '@/types/brief-validation';
 
 interface Tab {
   id: string;
@@ -51,6 +53,7 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
   const [activeTab, setActiveTab] = useState('intelligence');
   const [seenTabs, setSeenTabs] = useState<Set<string>>(new Set(['intelligence']));
   const [newDataTabs, setNewDataTabs] = useState<Set<string>>(new Set());
+  const [showBriefReview, setShowBriefReview] = useState(false);
 
   const score = calculateIntelligenceScore(state.extracted);
   
@@ -504,10 +507,7 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
       <div className="absolute bottom-0 left-0 right-0 p-4 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 space-y-2">
         {/* Brief Review - always visible */}
         <button
-          onClick={() => {
-            // TODO: Open brief review modal
-            console.log('Open Brief Review');
-          }}
+          onClick={() => setShowBriefReview(true)}
           className="w-full py-2.5 px-4 rounded-lg border border-slate-600/50 text-slate-300 hover:bg-slate-800/50 transition-colors flex items-center justify-center gap-2 text-sm"
         >
           <FileText className="w-4 h-4" />
@@ -530,6 +530,17 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
           </p>
         )}
       </div>
+
+      {/* Brief Review Modal */}
+      <BriefReviewModal
+        isOpen={showBriefReview}
+        onClose={() => setShowBriefReview(false)}
+        onGenerate={(briefData: BriefData) => {
+          setShowBriefReview(false);
+          console.log('Generating with brief data:', briefData);
+          onContinue();
+        }}
+      />
     </div>
   );
 }

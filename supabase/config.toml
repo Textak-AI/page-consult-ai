@@ -185,3 +185,6 @@ verify_jwt = false
 
 [functions.extract-logo]
 verify_jwt = false
+
+[functions.validate-brief-intelligence]
+verify_jwt = false
