@@ -325,7 +325,7 @@ export default function LiveDemoSection() {
       </header>
 
       {/* Main Content - Chat + Sidebar with grid layout */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_480px] xl:grid-cols-[1fr_540px] 2xl:grid-cols-[1fr_580px] overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_520px] xl:grid-cols-[1fr_580px] 2xl:grid-cols-[1fr_640px] overflow-hidden">
         {/* Chat Container - takes remaining space */}
         <main className="min-w-0 flex flex-col">
           {/* Messages Area - Scrollable */}
