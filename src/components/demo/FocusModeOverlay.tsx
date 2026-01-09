@@ -95,7 +95,7 @@ export function FocusModeOverlay({
             </div>
             
             {/* Intelligence Panel - Right (wider) */}
-            <div className="hidden lg:flex w-[420px] xl:w-[480px] flex-shrink-0 bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
+            <div className="hidden lg:flex w-[440px] xl:w-[500px] 2xl:w-[540px] flex-shrink-0 bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
               <IntelligenceTabs 
                 onContinue={onContinue}
                 onReopenEmailGate={onReopenEmailGate}

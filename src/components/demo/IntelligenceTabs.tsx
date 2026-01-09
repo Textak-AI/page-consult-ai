@@ -516,17 +516,17 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
         
         {/* Generate - enabled at 70+ */}
         <Button
-          onClick={onContinue}
+          onClick={() => setShowBriefReview(true)}
           disabled={!canGenerate}
           className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          Generate Your Page
+          Generate Your Brief
           <ArrowRight className="w-4 h-4" />
         </Button>
         
         {!canGenerate && (
           <p className="text-center text-xs text-slate-500">
-            Share more to unlock generation ({70 - score.totalScore} points needed)
+            {70 - score.totalScore} more points to unlock
           </p>
         )}
       </div>
