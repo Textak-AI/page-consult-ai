@@ -11,8 +11,8 @@ import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
 import { DemoPreviewWidget } from './DemoPreviewWidget';
 
-// Circuit pattern SVG for expanded background
-const circuitPatternSvg = `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.04'%3E%3Cpath d='M0 40h20v-20h20v-20'/%3E%3Cpath d='M80 40h-20v20h-20v20'/%3E%3Cpath d='M40 0v20h20v20h20'/%3E%3Cpath d='M40 80v-20h-20v-20h-20'/%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='60' cy='20' r='2'/%3E%3Ccircle cx='20' cy='60' r='2'/%3E%3Ccircle cx='60' cy='60' r='2'/%3E%3Ccircle cx='40' cy='40' r='3'/%3E%3C/g%3E%3C/svg%3E")`;
+// Circuit pattern SVG for expanded background - VERY subtle
+const circuitPatternSvg = `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.03'%3E%3Cpath d='M0 40h20v-20h20v-20'/%3E%3Cpath d='M80 40h-20v20h-20v20'/%3E%3Cpath d='M40 0v20h20v20h20'/%3E%3Cpath d='M40 80v-20h-20v-20h-20'/%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='60' cy='60' r='2'/%3E%3C/g%3E%3C/svg%3E")`;
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -281,23 +281,26 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
               }}
             />
 
-            {/* Minimal Header */}
+            {/* Minimal Header - with comfortable padding */}
             <motion.header
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="sticky top-0 z-50 h-14 border-b border-slate-800/50 bg-slate-950/95 backdrop-blur-xl flex-shrink-0"
+              className="sticky top-0 z-50 h-16 border-b border-slate-800/50 bg-slate-950/95 backdrop-blur-xl flex-shrink-0"
             >
-              <div className="h-full px-6 flex items-center justify-between">
-                {/* Left: Logo (clickable to unlock) */}
+              <div className="h-full px-8 flex items-center justify-between max-w-[1600px] mx-auto">
+                {/* Left: Logo (clickable to unlock) - actual PageConsult branding */}
                 <button
                   onClick={deactivateLock}
-                  className="flex items-center gap-2 text-white hover:text-cyan-400 transition-colors"
+                  className="flex items-center gap-3 text-white hover:text-cyan-400 transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-white" />
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                    <span className="text-white font-bold text-lg">P</span>
                   </div>
-                  <span className="font-semibold text-sm">PageConsult</span>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-sm leading-tight">PageConsult</span>
+                    <span className="text-[10px] text-slate-500 leading-tight">AI Strategy</span>
+                  </div>
                 </button>
                 
                 {/* Center: Session label */}
@@ -308,25 +311,25 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 {/* Right: X button */}
                 <button
                   onClick={deactivateLock}
-                  className="w-8 h-8 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                  className="w-9 h-9 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             </motion.header>
 
-            {/* Main Content - Chat + Sidebar */}
-            <div className="flex-1 flex overflow-hidden relative z-10">
+            {/* Main Content - Chat + Sidebar with padding */}
+            <div className="flex-1 flex overflow-hidden relative z-10 px-4 lg:px-6 pb-6">
               
-              {/* Chat Container */}
-              <main className="flex-1 flex flex-col min-w-0">
+              {/* Chat Container - with proper spacing */}
+              <main className="flex-1 flex flex-col min-w-0 bg-slate-900/30 rounded-2xl border border-slate-800/30 overflow-hidden my-4 mr-0 lg:mr-4">
                 
-                {/* Messages Area - Scrollable */}
+                {/* Messages Area - Scrollable, anchored to bottom */}
                 <div 
                   ref={chatContainerRef} 
-                  className="flex-1 overflow-y-auto"
+                  className="flex-1 overflow-y-auto flex flex-col justify-end min-h-0"
                 >
-                  <div className="max-w-2xl mx-auto px-6 py-6 space-y-6">
+                  <div className="max-w-2xl mx-auto px-6 py-6 space-y-6 w-full">
                     <AnimatePresence mode="popLayout">
                       {displayConversation.map((message, index) => (
                         <motion.div
@@ -384,9 +387,9 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                   </div>
                 </div>
 
-                {/* Input Area - Sticky Bottom */}
-                <div className="sticky bottom-0 border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-xl flex-shrink-0">
-                  <div className="max-w-2xl mx-auto px-6 py-4">
+                {/* Input Area - with bottom padding */}
+                <div className="border-t border-slate-800/50 bg-slate-900/50 flex-shrink-0 px-6 py-5">
+                  <div className="max-w-2xl mx-auto">
                     {state.rateLimited ? (
                       <div className="text-center py-3">
                         <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
@@ -408,7 +411,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                             onFocus={handleInputFocus}
                             placeholder="Tell me about your business..."
                             disabled={state.isProcessing}
-                            className="w-full px-4 py-3 pr-14 bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/10 transition-all text-[15px] leading-relaxed"
+                            className="w-full px-4 py-3.5 pr-14 bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/10 transition-all text-[15px] leading-relaxed"
                           />
                           <Button
                             type="submit"
@@ -428,12 +431,14 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 </div>
               </main>
               
-              {/* Intel Sidebar - Desktop only */}
-              <aside className="hidden lg:flex w-[360px] flex-shrink-0 border-l border-slate-800/50 bg-slate-900/30 flex-col overflow-hidden">
-                <IntelligenceTabs 
-                  onContinue={handleGenerateClick}
-                  onReopenEmailGate={reopenEmailGate}
-                />
+              {/* Intel Sidebar - Desktop only, with padding */}
+              <aside className="hidden lg:flex w-[380px] flex-shrink-0 bg-slate-900/40 border border-slate-800/30 rounded-2xl flex-col overflow-hidden my-4 mr-2">
+                <div className="p-5 flex-1 overflow-hidden">
+                  <IntelligenceTabs 
+                    onContinue={handleGenerateClick}
+                    onReopenEmailGate={reopenEmailGate}
+                  />
+                </div>
               </aside>
               
             </div>
