@@ -468,7 +468,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                       </div>
                     ) : (
                       <form onSubmit={handleSubmit}>
-                        <div className="relative">
+                        <div className="relative flex items-center">
                           <Input
                             ref={inputRef}
                             type="text"
@@ -477,19 +477,19 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                             onFocus={handleInputFocus}
                             placeholder="Tell me about your business..."
                             disabled={state.isProcessing}
-                            className="w-full px-4 py-3.5 pr-14 bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/10 transition-all text-[15px] leading-relaxed"
+                            className="w-full px-4 py-3 pr-12 bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-slate-600 transition-colors text-[15px]"
                           />
-                          <Button
+                          <button
                             type="submit"
                             disabled={!inputValue.trim() || state.isProcessing}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 p-0 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity"
+                            className="absolute right-3 p-1.5 rounded-md text-slate-400 hover:text-cyan-400 disabled:text-slate-600 disabled:cursor-not-allowed transition-colors"
                           >
                             {state.isProcessing ? (
-                              <Loader2 className="w-5 h-5 text-white animate-spin" />
+                              <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
-                              <Send className="w-5 h-5 text-white" />
+                              <Send className="w-4 h-4" />
                             )}
-                          </Button>
+                          </button>
                         </div>
                       </form>
                     )}
