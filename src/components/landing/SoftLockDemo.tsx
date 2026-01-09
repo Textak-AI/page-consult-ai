@@ -469,7 +469,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                     ) : (
                       <form onSubmit={handleSubmit}>
                         <div className="relative flex items-center">
-                          <Input
+                          <input
                             ref={inputRef}
                             type="text"
                             value={inputValue}
@@ -477,7 +477,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                             onFocus={handleInputFocus}
                             placeholder="Tell me about your business..."
                             disabled={state.isProcessing}
-                            className="w-full px-4 py-3 pr-12 bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-slate-600 transition-colors text-[15px]"
+                            className="w-full px-4 py-3 pr-12 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-slate-600 transition-colors text-[15px]"
                           />
                           <button
                             type="submit"
