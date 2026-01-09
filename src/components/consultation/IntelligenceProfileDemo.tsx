@@ -608,14 +608,10 @@ export function IntelligenceProfileDemo({
                 />
               </div>
               <p className="text-xs text-slate-500 text-center">
-                Share more to unlock page generation
+                {70 - score.totalScore} points to unlock
               </p>
             </div>
-          ) : (
-            <p className="text-xs text-slate-600 text-center">
-              Share more to unlock
-            </p>
-          )}
+          ) : null}
         </div>
       </div>
 

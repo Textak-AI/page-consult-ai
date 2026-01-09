@@ -147,9 +147,18 @@ export function MobileIntelligencePanel({
                 </button>
                 
                 {!canGenerate && (
-                  <p className="text-center text-xs text-slate-500">
-                    Share more to unlock generation ({70 - score.totalScore} points needed)
-                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400">Progress</span>
+                      <span className="text-cyan-400 font-medium">{score.totalScore}/70</span>
+                    </div>
+                    <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (score.totalScore / 70) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
