@@ -180,18 +180,12 @@ const Hero = () => {
       glossRange={50}
       className="min-h-[90vh] flex items-center py-20 overflow-x-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]"
     >
-      {/* Background layer - BEHIND everything */}
+      {/* Background layer - subtle ambient only */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-        {/* Animated ambient orbs */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600 rounded-full blur-[120px] opacity-20 animate-pulse-slow" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500 rounded-full blur-[100px] opacity-15 animate-pulse-slow" style={{
-          animationDelay: '1s',
-          animationDuration: '4s'
-        }} />
-        <div className="absolute top-1/2 right-1/4 w-72 h-72 bg-pink-500 rounded-full blur-[90px] opacity-10 animate-pulse-slow" style={{
-          animationDelay: '2s',
-          animationDuration: '5s'
-        }} />
+        {/* Very subtle ambient glow - 5-8% opacity max */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600 rounded-full blur-[150px] opacity-[0.06]" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500 rounded-full blur-[130px] opacity-[0.05]" />
+        <div className="absolute top-1/2 right-1/4 w-72 h-72 bg-violet-500 rounded-full blur-[120px] opacity-[0.04]" />
       </div>
 
       {/* Main content */}
