@@ -176,7 +176,7 @@ const Hero = () => {
   return (
     // DIAGNOSTIC: Temporarily using plain div instead of GlossyBackground to test centering
     <div 
-      className="relative min-h-[90vh] flex items-center py-20 overflow-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]"
+      className="relative min-h-[90vh] flex items-center pt-32 lg:pt-40 pb-20 overflow-hidden bg-gradient-to-b from-[#1e1b4b] via-[#0f0a1f] to-[#000000]"
     >
       {/* Background layer - subtle ambient only */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
