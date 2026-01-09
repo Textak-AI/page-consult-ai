@@ -7,7 +7,13 @@ import { cn } from '@/lib/utils';
 import { useLocation } from 'react-router-dom';
 
 // Routes where the CompanionBar should be hidden (they have their own chat interfaces)
-const HIDDEN_ROUTES = ['/', '/demo'];
+const HIDDEN_ROUTES = [
+  '/',           // Homepage with Strategy Session demo
+  '/demo',       // Demo pages
+  '/new',        // New consultation wizard
+  '/wizard',     // Wizard chat
+  '/consultation', // Consultation chat
+];
 
 export function CompanionBar() {
   const { state } = useCompanion();
@@ -15,7 +21,8 @@ export function CompanionBar() {
 
   // Hide on routes that have their own chat interface to avoid duplicate UIs
   const shouldHide = HIDDEN_ROUTES.some(route => 
-    location.pathname === route || location.pathname.startsWith('/demo')
+    location.pathname === route || 
+    location.pathname.startsWith(route + '/')
   );
 
   if (shouldHide) {
