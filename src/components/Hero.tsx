@@ -195,10 +195,10 @@ const Hero = () => {
       </div>
 
       {/* Main content */}
-      <div className="container mx-auto px-6 relative z-20">
+      <div className="w-full max-w-7xl mx-auto px-6 lg:px-12 relative z-20">
         
-        {/* Main hero grid - centered with max-width */}
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center max-w-6xl mx-auto">
+        {/* Main hero grid - full width with balanced columns */}
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           
           {/* Left content - Animated transitions between states */}
           <div className="min-h-[400px]">
