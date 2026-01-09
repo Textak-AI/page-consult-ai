@@ -195,13 +195,13 @@ const Hero = () => {
       </div>
 
       {/* Main content */}
-      <div className="w-full px-6 lg:px-8 xl:px-12 relative z-20">
+      <div className="w-full max-w-[1400px] mx-auto px-6 lg:px-12 xl:px-16 relative z-20">
         
-        {/* Main hero grid - full width, centered content */}
-        <div className="max-w-[1400px] mx-auto grid lg:grid-cols-[1fr_auto] gap-8 lg:gap-12 xl:gap-20 items-center">
+        {/* Main hero grid - balanced 50/50 columns */}
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           
           {/* Left content - Animated transitions between states */}
-          <div className="min-h-[400px] max-w-2xl">
+          <div className="min-h-[400px]">
             <AnimatePresence mode="wait">
               {demoState === 'generating' ? (
                 <motion.div
