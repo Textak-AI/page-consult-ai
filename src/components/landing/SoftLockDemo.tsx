@@ -9,6 +9,10 @@ import BusinessCardGateModal from './BusinessCardGateModal';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
+import { DemoPreviewWidget } from './DemoPreviewWidget';
+
+// Circuit pattern SVG for expanded background
+const circuitPatternSvg = `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.04'%3E%3Cpath d='M0 40h20v-20h20v-20'/%3E%3Cpath d='M80 40h-20v20h-20v20'/%3E%3Cpath d='M40 0v20h20v20h20'/%3E%3Cpath d='M40 80v-20h-20v-20h-20'/%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='60' cy='20' r='2'/%3E%3Ccircle cx='20' cy='60' r='2'/%3E%3Ccircle cx='60' cy='60' r='2'/%3E%3Ccircle cx='40' cy='40' r='3'/%3E%3C/g%3E%3C/svg%3E")`;
 
 // Typing indicator component
 const TypingIndicator = () => (
@@ -236,25 +240,51 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
 
   return (
     <>
-      {/* Demo Section - transforms when locked */}
-      <section 
-        ref={sectionRef}
-        id="demo"
-        className={`
-          bg-slate-950 flex flex-col transition-all duration-400 ease-out
-          ${isLocked 
-            ? 'fixed inset-0 z-40 min-h-screen' 
-            : 'relative min-h-screen'
-          }
-        `}
-      >
-        {/* Minimal Header - only shows when locked */}
-        <AnimatePresence>
-          {isLocked && (
+      {/* Preview Widget - shows when unlocked */}
+      <AnimatePresence>
+        {!isLocked && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.3 }}
+          >
+            <DemoPreviewWidget 
+              onActivate={activateLock}
+              onInputFocus={activateLock}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Full Strategy Session - shows when locked */}
+      <AnimatePresence>
+        {isLocked && (
+          <motion.section 
+            ref={sectionRef}
+            id="demo-expanded"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="fixed inset-0 z-40 min-h-screen bg-slate-950 flex flex-col"
+          >
+            {/* Circuit pattern background - fades in */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="absolute inset-0 pointer-events-none"
+              style={{ 
+                backgroundImage: circuitPatternSvg,
+                backgroundSize: '80px 80px',
+              }}
+            />
+
+            {/* Minimal Header */}
             <motion.header
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
               className="sticky top-0 z-50 h-14 border-b border-slate-800/50 bg-slate-950/95 backdrop-blur-xl flex-shrink-0"
             >
@@ -284,165 +314,132 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 </button>
               </div>
             </motion.header>
-          )}
-        </AnimatePresence>
 
-        {/* Regular Header - only shows when unlocked */}
-        {!isLocked && (
-          <header className="sticky top-0 z-50 h-16 border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-xl flex-shrink-0">
-            <div className="h-full px-6 flex items-center justify-between">
-              {/* Left: Breadcrumb */}
-              <nav className="flex items-center gap-1.5 text-sm">
-                <span className="text-slate-400">PageConsult</span>
-                <span className="text-slate-600">›</span>
-                <span className="text-white font-medium">Strategy Session</span>
-              </nav>
+            {/* Main Content - Chat + Sidebar */}
+            <div className="flex-1 flex overflow-hidden relative z-10">
               
-              {/* Right: Demo badge + Mobile intel button */}
-              <div className="flex items-center gap-3">
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/10 to-violet-500/10 border border-cyan-500/20">
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="text-sm font-medium text-cyan-300">Live AI Demo</span>
-                </div>
+              {/* Chat Container */}
+              <main className="flex-1 flex flex-col min-w-0">
                 
-                {/* Mobile: Show Progress button */}
-                <button
-                  onClick={() => setShowMobileIntelligence(true)}
-                  className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white hover:border-slate-600 transition-all text-sm"
+                {/* Messages Area - Scrollable */}
+                <div 
+                  ref={chatContainerRef} 
+                  className="flex-1 overflow-y-auto"
                 >
-                  <BarChart3 className="w-4 h-4" />
-                  <span className="text-cyan-400">{score.totalScore}/100</span>
-                </button>
-              </div>
-            </div>
-          </header>
-        )}
-
-        {/* Main Content - Chat + Sidebar */}
-        <div className="flex-1 flex overflow-hidden">
-          
-          {/* Chat Container */}
-          <main className="flex-1 flex flex-col min-w-0">
-            
-            {/* Messages Area - Scrollable */}
-            <div 
-              ref={chatContainerRef} 
-              className="flex-1 overflow-y-auto"
-            >
-              <div className="max-w-2xl mx-auto px-6 py-6 space-y-6">
-                <AnimatePresence mode="popLayout">
-                  {displayConversation.map((message, index) => (
-                    <motion.div
-                      key={`msg-${index}`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      {message.role === 'assistant' ? (
-                        <div className="flex gap-4">
-                          <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                            <MessageSquare className="w-5 h-5 text-slate-300" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1.5">
-                              <span className="text-sm font-medium text-white">PageConsult AI</span>
-                              <span className="text-xs text-slate-500">Strategy Consultant</span>
+                  <div className="max-w-2xl mx-auto px-6 py-6 space-y-6">
+                    <AnimatePresence mode="popLayout">
+                      {displayConversation.map((message, index) => (
+                        <motion.div
+                          key={`msg-${index}`}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {message.role === 'assistant' ? (
+                            <div className="flex gap-4">
+                              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                                <MessageSquare className="w-5 h-5 text-slate-300" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <span className="text-sm font-medium text-white">PageConsult AI</span>
+                                  <span className="text-xs text-slate-500">Strategy Consultant</span>
+                                </div>
+                                <div className="bg-slate-800/60 rounded-2xl rounded-tl-md px-4 py-3 text-slate-200 text-[15px] leading-relaxed break-words">
+                                  {message.content}
+                                </div>
+                              </div>
                             </div>
-                            <div className="bg-slate-800/60 rounded-2xl rounded-tl-md px-4 py-3 text-slate-200 text-[15px] leading-relaxed break-words">
-                              {message.content}
+                          ) : (
+                            <div className="flex justify-end">
+                              <div className="max-w-[80%]">
+                                <div className="bg-cyan-600/20 border border-cyan-500/20 rounded-2xl rounded-tr-md px-4 py-3 text-slate-200 text-[15px] leading-relaxed break-words">
+                                  {message.content}
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex justify-end">
-                          <div className="max-w-[80%]">
-                            <div className="bg-cyan-600/20 border border-cyan-500/20 rounded-2xl rounded-tr-md px-4 py-3 text-slate-200 text-[15px] leading-relaxed break-words">
-                              {message.content}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                
-                {/* Typing indicator */}
-                {state.isProcessing && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex gap-4"
-                  >
-                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                      <MessageSquare className="w-5 h-5 text-slate-300" />
-                    </div>
-                    <div className="bg-slate-800/60 rounded-2xl rounded-tl-md">
-                      <TypingIndicator />
-                    </div>
-                  </motion.div>
-                )}
-                
-                <div ref={messagesEndRef} />
-              </div>
-            </div>
-
-            {/* Input Area - Sticky Bottom */}
-            <div className="sticky bottom-0 border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-xl flex-shrink-0">
-              <div className="max-w-2xl mx-auto px-6 py-4">
-                {state.rateLimited ? (
-                  <div className="text-center py-3">
-                    <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
-                    <Button
-                      onClick={() => navigate('/new')}
-                      className="bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-600 hover:to-violet-700 text-white"
-                    >
-                      Start Full Strategy Session
-                    </Button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit}>
-                    <div className="relative">
-                      <Input
-                        ref={inputRef}
-                        type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onFocus={handleInputFocus}
-                        placeholder="Tell me about your business..."
-                        disabled={state.isProcessing}
-                        className="w-full px-4 py-3 pr-14 bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/10 transition-all text-[15px] leading-relaxed"
-                      />
-                      <Button
-                        type="submit"
-                        disabled={!inputValue.trim() || state.isProcessing}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 p-0 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity"
+                          )}
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                    
+                    {/* Typing indicator */}
+                    {state.isProcessing && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex gap-4"
                       >
-                        {state.isProcessing ? (
-                          <Loader2 className="w-5 h-5 text-white animate-spin" />
-                        ) : (
-                          <Send className="w-5 h-5 text-white" />
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                )}
-              </div>
-            </div>
-          </main>
-          
-          {/* Intel Sidebar - Desktop only */}
-          <aside className="hidden lg:flex w-[360px] flex-shrink-0 border-l border-slate-800/50 bg-slate-900/30 flex-col overflow-hidden">
-            <IntelligenceTabs 
-              onContinue={handleGenerateClick}
-              onReopenEmailGate={reopenEmailGate}
-            />
-          </aside>
-          
-        </div>
-      </section>
+                        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                          <MessageSquare className="w-5 h-5 text-slate-300" />
+                        </div>
+                        <div className="bg-slate-800/60 rounded-2xl rounded-tl-md">
+                          <TypingIndicator />
+                        </div>
+                      </motion.div>
+                    )}
+                    
+                    <div ref={messagesEndRef} />
+                  </div>
+                </div>
 
-      {/* Mobile Intelligence Drawer */}
+                {/* Input Area - Sticky Bottom */}
+                <div className="sticky bottom-0 border-t border-slate-800/50 bg-slate-950/80 backdrop-blur-xl flex-shrink-0">
+                  <div className="max-w-2xl mx-auto px-6 py-4">
+                    {state.rateLimited ? (
+                      <div className="text-center py-3">
+                        <p className="text-amber-400 text-sm mb-2">Demo limit reached (5 messages)</p>
+                        <Button
+                          onClick={() => navigate('/new')}
+                          className="bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-600 hover:to-violet-700 text-white"
+                        >
+                          Start Full Strategy Session
+                        </Button>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleSubmit}>
+                        <div className="relative">
+                          <Input
+                            ref={inputRef}
+                            type="text"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onFocus={handleInputFocus}
+                            placeholder="Tell me about your business..."
+                            disabled={state.isProcessing}
+                            className="w-full px-4 py-3 pr-14 bg-slate-800/50 border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/10 transition-all text-[15px] leading-relaxed"
+                          />
+                          <Button
+                            type="submit"
+                            disabled={!inputValue.trim() || state.isProcessing}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 p-0 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-lg flex items-center justify-center hover:opacity-90 transition-opacity"
+                          >
+                            {state.isProcessing ? (
+                              <Loader2 className="w-5 h-5 text-white animate-spin" />
+                            ) : (
+                              <Send className="w-5 h-5 text-white" />
+                            )}
+                          </Button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                </div>
+              </main>
+              
+              {/* Intel Sidebar - Desktop only */}
+              <aside className="hidden lg:flex w-[360px] flex-shrink-0 border-l border-slate-800/50 bg-slate-900/30 flex-col overflow-hidden">
+                <IntelligenceTabs 
+                  onContinue={handleGenerateClick}
+                  onReopenEmailGate={reopenEmailGate}
+                />
+              </aside>
+              
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {showMobileIntelligence && (
           <motion.div
