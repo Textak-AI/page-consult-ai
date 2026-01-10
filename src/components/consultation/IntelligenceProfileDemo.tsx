@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ChevronDown, AlertCircle, Check, Loader2, Sparkles } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { IntelligenceScore, StrategicLevel, FieldScore } from '@/types/intelligenceScore';
 import { CATEGORY_COLORS, LEVEL_COLORS } from '@/types/intelligenceScore';
 import {
@@ -11,13 +11,147 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { 
-  type IndustryDetection, 
-  INDUSTRY_OPTIONS, 
-  optionToVariant, 
+  type IndustryDetection,
+  type IndustryVariant,
   variantToDisplayName 
 } from '@/lib/industryDetection';
 import type { MarketResearch } from '@/contexts/IntelligenceContext';
 import { type AestheticMode, isConfidentHybrid } from '@/lib/targetAesthetic';
+import { IndustrySelector, INDUSTRY_DATA } from '@/components/consultation/IndustrySelector';
+
+// Map subcategory to design variant
+const SUBCATEGORY_TO_VARIANT: Record<string, IndustryVariant> = {
+  // Professional Services
+  'Design / Creative Agency': 'consulting',
+  'Marketing / Advertising Agency': 'consulting',
+  'Consulting': 'consulting',
+  'Legal / LegalTech': 'legal',
+  'Recruiting / Staffing': 'consulting',
+  'Accounting / Bookkeeping': 'finance',
+  'Other Services': 'consulting',
+  
+  // B2B SaaS
+  'Marketing / Sales Tools': 'saas',
+  'HR / People Operations': 'saas',
+  'Developer Tools': 'saas',
+  'AI / Machine Learning': 'saas',
+  'Analytics / Business Intelligence': 'saas',
+  'Security / Compliance': 'saas',
+  'Productivity / Collaboration': 'saas',
+  'Finance / Accounting Tools': 'saas',
+  'Customer Support / Success': 'saas',
+  'Other SaaS': 'saas',
+  
+  // Healthcare
+  'Biotechnology': 'healthcare',
+  'Medical Devices': 'healthcare',
+  'Digital Health / Telemedicine': 'healthcare',
+  'Pharmaceuticals': 'healthcare',
+  'Healthcare IT / EMR': 'healthcare',
+  'Mental Health / Wellness': 'healthcare',
+  'Clinical Research': 'healthcare',
+  'Health Insurance': 'healthcare',
+  'Other Healthcare': 'healthcare',
+  
+  // E-commerce
+  'Fashion / Apparel': 'ecommerce',
+  'Food / Beverage': 'ecommerce',
+  'Beauty / Personal Care': 'ecommerce',
+  'Home / Furniture': 'ecommerce',
+  'Electronics / Gadgets': 'ecommerce',
+  'Marketplace / Multi-vendor': 'ecommerce',
+  'Subscription / DTC': 'ecommerce',
+  'Other Retail': 'ecommerce',
+  
+  // Financial
+  'Banking / Neobanks': 'finance',
+  'Insurance / InsurTech': 'finance',
+  'Payments / FinTech': 'finance',
+  'Investment / WealthTech': 'finance',
+  'Lending / Credit': 'finance',
+  'Cryptocurrency / Web3': 'finance',
+  'Accounting / Tax': 'finance',
+  'Other Financial': 'finance',
+  
+  // Technology / Hardware
+  'Consumer Electronics': 'manufacturing',
+  'IoT / Smart Devices': 'manufacturing',
+  'Robotics / Automation': 'manufacturing',
+  'Semiconductors': 'manufacturing',
+  'Clean Tech / Energy': 'manufacturing',
+  'Aerospace / Defense': 'manufacturing',
+  'Networking / Infrastructure': 'manufacturing',
+  'Other Hardware': 'manufacturing',
+  
+  // Real Estate
+  'Residential': 'consulting',
+  'Commercial': 'consulting',
+  'Property Management': 'consulting',
+  'Mortgage / Lending': 'finance',
+  'Construction / Development': 'manufacturing',
+  'Other Real Estate': 'consulting',
+  
+  // Education
+  'K-12': 'consulting',
+  'Higher Education': 'consulting',
+  'Corporate Training': 'consulting',
+  'Online Courses / MOOCs': 'saas',
+  'Tutoring / Test Prep': 'consulting',
+  'Language Learning': 'saas',
+  'Other Education': 'consulting',
+  
+  // Media / Entertainment
+  'Streaming / Video': 'saas',
+  'Gaming': 'saas',
+  'Music / Audio': 'saas',
+  'Publishing / News': 'consulting',
+  'Social Media': 'saas',
+  'Sports / Fitness': 'consulting',
+  'Other Media': 'consulting',
+  
+  // Consumer Apps
+  'Dating / Social': 'saas',
+  'Travel / Hospitality': 'ecommerce',
+  'Food Delivery': 'ecommerce',
+  'Transportation / Mobility': 'saas',
+  'Personal Finance': 'finance',
+  'Health / Fitness': 'healthcare',
+  'Other Consumer': 'saas',
+  
+  // Non-Profit
+  'Environmental / Climate': 'consulting',
+  'Social Services': 'consulting',
+  'Arts / Culture': 'consulting',
+  'International Development': 'consulting',
+  'Animal Welfare': 'consulting',
+  'Community / Local': 'consulting',
+  'Other Non-Profit': 'consulting',
+};
+
+// Helper to get variant from subcategory with fallback to category
+function getVariantFromSelection(category: string, subcategory: string): IndustryVariant {
+  // Try exact subcategory match
+  if (SUBCATEGORY_TO_VARIANT[subcategory]) {
+    return SUBCATEGORY_TO_VARIANT[subcategory];
+  }
+  
+  // Fallback based on category
+  const categoryToVariant: Record<string, IndustryVariant> = {
+    'Healthcare / Medical': 'healthcare',
+    'Financial Services': 'finance',
+    'B2B SaaS / Software': 'saas',
+    'Technology / Hardware': 'manufacturing',
+    'E-commerce / Retail': 'ecommerce',
+    'Professional Services': 'consulting',
+    'Real Estate / PropTech': 'consulting',
+    'Education / EdTech': 'consulting',
+    'Media / Entertainment': 'saas',
+    'Consumer Apps': 'saas',
+    'Non-Profit / Social Impact': 'consulting',
+  };
+  
+  return categoryToVariant[category] || 'default';
+}
 
 // Category configuration for Demo view (only key fields)
 const DEMO_CATEGORIES = [
@@ -174,9 +308,16 @@ export function IntelligenceProfileDemo({
     (marketResearch.marketSize || marketResearch.buyerPersona || 
      (marketResearch.commonObjections && marketResearch.commonObjections.length > 0));
   
-  // Industry correction handler
-  const handleIndustrySelect = (option: string) => {
-    const variant = optionToVariant(option);
+  // Industry selector state for hierarchical selection
+  const [industryValue, setIndustryValue] = useState<{ category: string; subcategory: string }>({
+    category: '',
+    subcategory: '',
+  });
+  
+  // Industry correction handler using hierarchical selector
+  const handleIndustryChange = (value: { category: string; subcategory: string }) => {
+    setIndustryValue(value);
+    const variant = getVariantFromSelection(value.category, value.subcategory);
     onIndustryCorrection?.(variant);
     setShowIndustryCorrection(false);
   };
@@ -251,7 +392,7 @@ export function IntelligenceProfileDemo({
               </p>
             </motion.div>
             
-            {/* Industry correction UI for hybrid mode */}
+            {/* Industry correction UI for hybrid mode - Hierarchical Selector */}
             <AnimatePresence>
               {showIndustryCorrection && !isConfirmed && (
                 <motion.div
@@ -263,22 +404,10 @@ export function IntelligenceProfileDemo({
                 >
                   <div className="p-2 bg-slate-800/50 rounded-lg border border-slate-700/50">
                     <p className="text-[10px] text-slate-400 mb-2">Select your industry:</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {INDUSTRY_OPTIONS.map(option => (
-                        <button
-                          key={option}
-                          onClick={() => handleIndustrySelect(option)}
-                          className={cn(
-                            "px-2 py-1 text-[10px] rounded-full border transition-all",
-                            industryDetection && optionToVariant(option) === industryDetection.variant
-                              ? "border-cyan-500 bg-cyan-500/20 text-cyan-400"
-                              : "border-slate-600 text-slate-400 hover:border-slate-500 hover:text-slate-300"
-                          )}
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
+                    <IndustrySelector
+                      value={industryValue}
+                      onChange={handleIndustryChange}
+                    />
                   </div>
                 </motion.div>
               )}
@@ -351,7 +480,7 @@ export function IntelligenceProfileDemo({
           </div>
         </div>
         
-        {/* Industry correction UI */}
+        {/* Industry correction UI - Hierarchical Selector */}
         <AnimatePresence>
           {showIndustryCorrection && !isConfirmed && (
             <motion.div
@@ -363,22 +492,10 @@ export function IntelligenceProfileDemo({
             >
               <div className="mt-2 p-2 bg-slate-800/50 rounded-lg border border-slate-700/50">
                 <p className="text-[10px] text-slate-400 mb-2">Select your industry:</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {INDUSTRY_OPTIONS.map(option => (
-                    <button
-                      key={option}
-                      onClick={() => handleIndustrySelect(option)}
-                      className={cn(
-                        "px-2 py-1 text-[10px] rounded-full border transition-all",
-                        optionToVariant(option) === industryDetection.variant
-                          ? "border-cyan-500 bg-cyan-500/20 text-cyan-400"
-                          : "border-slate-600 text-slate-400 hover:border-slate-500 hover:text-slate-300"
-                      )}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
+                <IndustrySelector
+                  value={industryValue}
+                  onChange={handleIndustryChange}
+                />
               </div>
             </motion.div>
           )}
