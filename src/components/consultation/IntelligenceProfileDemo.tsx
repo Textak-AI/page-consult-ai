@@ -18,26 +18,7 @@ import {
 import type { MarketResearch } from '@/contexts/IntelligenceContext';
 import { type AestheticMode, isConfidentHybrid } from '@/lib/targetAesthetic';
 import { Button } from '@/components/ui/button';
-
-// Sub-options for Professional Services category - compact pills
-const PROFESSIONAL_SERVICES_SUBS = [
-  { id: 'creative', label: 'Creative / Design', variant: 'creative' as IndustryVariant },
-  { id: 'marketing', label: 'Marketing / Ads', variant: 'creative' as IndustryVariant },
-  { id: 'consulting', label: 'Management Consulting', variant: 'consulting' as IndustryVariant },
-  { id: 'dev', label: 'Development / Technical', variant: 'consulting' as IndustryVariant },
-  { id: 'coaching', label: 'Coaching / Training', variant: 'consulting' as IndustryVariant },
-  { id: 'other', label: 'Other Services', variant: 'consulting' as IndustryVariant },
-] as const;
-
-// Quick industry capsules for fast selection
-const QUICK_INDUSTRY_OPTIONS = [
-  { id: 'saas', label: 'SaaS / Software', variant: 'saas' as IndustryVariant },
-  { id: 'professional', label: 'Consulting / Agency', variant: 'consulting' as IndustryVariant, hasSubOptions: true },
-  { id: 'healthcare', label: 'Healthcare', variant: 'healthcare' as IndustryVariant },
-  { id: 'ecommerce', label: 'E-commerce', variant: 'ecommerce' as IndustryVariant },
-  { id: 'finance', label: 'Financial Services', variant: 'finance' as IndustryVariant },
-  { id: 'other', label: 'Other', variant: 'default' as IndustryVariant },
-] as const;
+import { IndustryDropdown, getDesignApproachText } from '@/components/demo/IndustryDropdown';
 
 // Category configuration for Demo view (only key fields)
 const DEMO_CATEGORIES = [
@@ -114,9 +95,6 @@ export function IntelligenceProfileDemo({
   
   // Industry correction UI state
   const [showIndustryCorrection, setShowIndustryCorrection] = useState(false);
-  
-  // Selected professional services sub-option
-  const [selectedProfessionalSub, setSelectedProfessionalSub] = useState<string | null>(null);
   
   // Track previous score for animations
   const prevScoreRef = useRef(score.totalScore);
@@ -196,25 +174,11 @@ export function IntelligenceProfileDemo({
     !marketResearch.isLoading && 
     (marketResearch.marketSize || marketResearch.buyerPersona || 
      (marketResearch.commonObjections && marketResearch.commonObjections.length > 0));
-  
-  // Quick select industry capsule
-  const handleQuickIndustrySelect = (option: (typeof QUICK_INDUSTRY_OPTIONS)[number]) => {
-    if ('hasSubOptions' in option && option.hasSubOptions) {
-      // Show sub-options for Professional Services
-      setSelectedProfessionalSub(option.id === 'professional' ? 'professional' : null);
-    } else {
-      // Direct selection
-      onIndustryCorrection?.(option.variant);
-      setShowIndustryCorrection(false);
-      setSelectedProfessionalSub(null);
-    }
-  };
 
-  // Select professional services sub-option
-  const handleProfessionalSubSelect = (sub: typeof PROFESSIONAL_SERVICES_SUBS[number]) => {
-    onIndustryCorrection?.(sub.variant);
+  // Handler for industry selection from dropdown
+  const handleIndustrySelect = (variant: IndustryVariant, displayName: string) => {
+    onIndustryCorrection?.(variant);
     setShowIndustryCorrection(false);
-    setSelectedProfessionalSub(null);
   };
   
   // Render industry variant badge with confidence OR aesthetic mode
@@ -287,7 +251,7 @@ export function IntelligenceProfileDemo({
               </p>
             </motion.div>
             
-            {/* Industry correction UI for hybrid mode - Compact capsules */}
+            {/* Industry correction UI for hybrid mode - Progressive dropdown */}
             <AnimatePresence>
               {showIndustryCorrection && !isConfirmed && (
                 <motion.div
@@ -297,63 +261,10 @@ export function IntelligenceProfileDemo({
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="p-2 bg-slate-800/50 rounded-lg border border-slate-700/50 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-[10px] text-slate-400">Select your industry:</p>
-                      <button
-                        onClick={() => {
-                          setShowIndustryCorrection(false);
-                          setSelectedProfessionalSub(null);
-                        }}
-                        className="text-[10px] text-slate-500 hover:text-slate-300"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                    
-                    {/* Quick industry capsules */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {QUICK_INDUSTRY_OPTIONS.map((option) => (
-                        <button
-                          key={option.id}
-                          onClick={() => handleQuickIndustrySelect(option)}
-                          className={cn(
-                            "px-2 py-0.5 text-[11px] rounded-full border transition-all duration-200",
-                            selectedProfessionalSub === option.id
-                              ? "border-cyan-500 bg-cyan-500/20 text-cyan-300"
-                              : "border-slate-600 text-slate-400 hover:border-slate-500 hover:text-slate-300"
-                          )}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                    
-                    {/* Sub-options for Professional Services */}
-                    <AnimatePresence>
-                      {selectedProfessionalSub === 'professional' && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.15 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="flex flex-wrap gap-1 pl-2 border-l-2 border-cyan-500/30">
-                            {PROFESSIONAL_SERVICES_SUBS.map((sub) => (
-                              <button
-                                key={sub.id}
-                                onClick={() => handleProfessionalSubSelect(sub)}
-                                className="px-2 py-0.5 text-[10px] rounded-full border border-slate-600/50 text-slate-400 hover:border-cyan-500/50 hover:text-cyan-300 hover:bg-cyan-500/10 transition-all"
-                              >
-                                {sub.label}
-                              </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                  <IndustryDropdown
+                    onSelect={handleIndustrySelect}
+                    onClose={() => setShowIndustryCorrection(false)}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -404,70 +315,14 @@ export function IntelligenceProfileDemo({
       );
     }
     
-    // Show compact industry selector with capsules + sub-options
+    // Show progressive industry dropdown
     if (showIndustryCorrection && !isConfirmed) {
       return (
         <div className="px-4 py-3 border-b border-slate-800/50">
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider">
-                Select Your Industry
-              </span>
-              <button
-                onClick={() => setShowIndustryCorrection(false)}
-                className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-            
-            {/* Quick industry capsules */}
-            <div className="flex flex-wrap gap-1.5">
-              {QUICK_INDUSTRY_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => handleQuickIndustrySelect(option)}
-                  className={cn(
-                    "px-2.5 py-1 text-xs rounded-full border transition-all duration-200",
-                    selectedProfessionalSub === option.id
-                      ? "border-cyan-500 bg-cyan-500/20 text-cyan-300"
-                      : "border-slate-600 text-slate-400 hover:border-slate-500 hover:text-slate-300"
-                  )}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-            
-            {/* Sub-options for Professional Services */}
-            <AnimatePresence>
-              {selectedProfessionalSub === 'professional' && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="overflow-hidden"
-                >
-                  <div className="flex flex-wrap gap-1.5 pl-2 border-l-2 border-cyan-500/30">
-                    {PROFESSIONAL_SERVICES_SUBS.map((sub) => (
-                      <button
-                        key={sub.id}
-                        onClick={() => handleProfessionalSubSelect(sub)}
-                        className="px-2 py-0.5 text-[11px] rounded-full border border-slate-600/50 text-slate-400 hover:border-cyan-500/50 hover:text-cyan-300 hover:bg-cyan-500/10 transition-all duration-150"
-                      >
-                        {sub.label}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+          <IndustryDropdown
+            onSelect={handleIndustrySelect}
+            onClose={() => setShowIndustryCorrection(false)}
+          />
         </div>
       );
     }
