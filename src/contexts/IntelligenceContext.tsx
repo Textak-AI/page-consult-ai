@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { 
   detectIndustryFromConversation, 
   confirmIndustry, 
+  variantToDisplayName,
   type IndustryDetection 
 } from '@/lib/industryDetection';
 import { 
@@ -959,14 +960,18 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // ----------------------------------------
   const confirmIndustrySelection = useCallback((variant: string) => {
     const confirmed = confirmIndustry(variant as any);
-    // Also sync to extracted.industry so it appears in the Intelligence Profile
-    const displayName = variant.charAt(0).toUpperCase() + variant.slice(1);
+    // Use the proper display name from the variant (imported at top of file)
+    const displayName = variantToDisplayName(variant as any);
+    
+    console.log('🎯 [Industry] User confirmed selection:', variant, '→', displayName);
+    
+    // Always update to the new selected value (not ||, which keeps old value)
     setState(prev => ({
       ...prev,
       industryDetection: confirmed,
       extracted: {
         ...prev.extracted,
-        industry: prev.extracted.industry || displayName,
+        industry: displayName, // Always use the new selected value
       },
     }));
   }, []);
