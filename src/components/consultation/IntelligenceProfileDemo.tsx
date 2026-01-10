@@ -13,145 +13,31 @@ import {
 import { 
   type IndustryDetection,
   type IndustryVariant,
-  variantToDisplayName 
+  variantToDisplayName
 } from '@/lib/industryDetection';
 import type { MarketResearch } from '@/contexts/IntelligenceContext';
 import { type AestheticMode, isConfidentHybrid } from '@/lib/targetAesthetic';
-import { IndustrySelector, INDUSTRY_DATA } from '@/components/consultation/IndustrySelector';
+import { Button } from '@/components/ui/button';
 
-// Map subcategory to design variant
-const SUBCATEGORY_TO_VARIANT: Record<string, IndustryVariant> = {
-  // Professional Services
-  'Design / Creative Agency': 'creative',      // Bold, expressive, portfolio-forward
-  'Marketing / Advertising Agency': 'creative', // Creative energy
-  'Consulting': 'consulting',
-  'Legal / LegalTech': 'legal',
-  'Recruiting / Staffing': 'consulting',
-  'Accounting / Bookkeeping': 'finance',
-  'Other Services': 'consulting',
-  
-  // B2B SaaS
-  'Marketing / Sales Tools': 'saas',
-  'HR / People Operations': 'saas',
-  'Developer Tools': 'saas',
-  'AI / Machine Learning': 'saas',
-  'Analytics / Business Intelligence': 'saas',
-  'Security / Compliance': 'saas',
-  'Productivity / Collaboration': 'saas',
-  'Finance / Accounting Tools': 'saas',
-  'Customer Support / Success': 'saas',
-  'Other SaaS': 'saas',
-  
-  // Healthcare
-  'Biotechnology': 'healthcare',
-  'Medical Devices': 'healthcare',
-  'Digital Health / Telemedicine': 'healthcare',
-  'Pharmaceuticals': 'healthcare',
-  'Healthcare IT / EMR': 'healthcare',
-  'Mental Health / Wellness': 'healthcare',
-  'Clinical Research': 'healthcare',
-  'Health Insurance': 'healthcare',
-  'Other Healthcare': 'healthcare',
-  
-  // E-commerce
-  'Fashion / Apparel': 'ecommerce',
-  'Food / Beverage': 'ecommerce',
-  'Beauty / Personal Care': 'ecommerce',
-  'Home / Furniture': 'ecommerce',
-  'Electronics / Gadgets': 'ecommerce',
-  'Marketplace / Multi-vendor': 'ecommerce',
-  'Subscription / DTC': 'ecommerce',
-  'Other Retail': 'ecommerce',
-  
-  // Financial
-  'Banking / Neobanks': 'finance',
-  'Insurance / InsurTech': 'finance',
-  'Payments / FinTech': 'finance',
-  'Investment / WealthTech': 'finance',
-  'Lending / Credit': 'finance',
-  'Cryptocurrency / Web3': 'finance',
-  'Accounting / Tax': 'finance',
-  'Other Financial': 'finance',
-  
-  // Technology / Hardware
-  'Consumer Electronics': 'manufacturing',
-  'IoT / Smart Devices': 'manufacturing',
-  'Robotics / Automation': 'manufacturing',
-  'Semiconductors': 'manufacturing',
-  'Clean Tech / Energy': 'manufacturing',
-  'Aerospace / Defense': 'manufacturing',
-  'Networking / Infrastructure': 'manufacturing',
-  'Other Hardware': 'manufacturing',
-  
-  // Real Estate
-  'Residential': 'consulting',
-  'Commercial': 'consulting',
-  'Property Management': 'consulting',
-  'Mortgage / Lending': 'finance',
-  'Construction / Development': 'manufacturing',
-  'Other Real Estate': 'consulting',
-  
-  // Education
-  'K-12': 'consulting',
-  'Higher Education': 'consulting',
-  'Corporate Training': 'consulting',
-  'Online Courses / MOOCs': 'saas',
-  'Tutoring / Test Prep': 'consulting',
-  'Language Learning': 'saas',
-  'Other Education': 'consulting',
-  
-  // Media / Entertainment
-  'Streaming / Video': 'saas',
-  'Gaming': 'saas',
-  'Music / Audio': 'saas',
-  'Publishing / News': 'consulting',
-  'Social Media': 'saas',
-  'Sports / Fitness': 'consulting',
-  'Other Media': 'consulting',
-  
-  // Consumer Apps
-  'Dating / Social': 'saas',
-  'Travel / Hospitality': 'ecommerce',
-  'Food Delivery': 'ecommerce',
-  'Transportation / Mobility': 'saas',
-  'Personal Finance': 'finance',
-  'Health / Fitness': 'healthcare',
-  'Other Consumer': 'saas',
-  
-  // Non-Profit
-  'Environmental / Climate': 'consulting',
-  'Social Services': 'consulting',
-  'Arts / Culture': 'consulting',
-  'International Development': 'consulting',
-  'Animal Welfare': 'consulting',
-  'Community / Local': 'consulting',
-  'Other Non-Profit': 'consulting',
-};
+// Sub-options for Professional Services category - compact pills
+const PROFESSIONAL_SERVICES_SUBS = [
+  { id: 'creative', label: 'Creative / Design', variant: 'creative' as IndustryVariant },
+  { id: 'marketing', label: 'Marketing / Ads', variant: 'creative' as IndustryVariant },
+  { id: 'consulting', label: 'Management Consulting', variant: 'consulting' as IndustryVariant },
+  { id: 'dev', label: 'Development / Technical', variant: 'consulting' as IndustryVariant },
+  { id: 'coaching', label: 'Coaching / Training', variant: 'consulting' as IndustryVariant },
+  { id: 'other', label: 'Other Services', variant: 'consulting' as IndustryVariant },
+] as const;
 
-// Helper to get variant from subcategory with fallback to category
-function getVariantFromSelection(category: string, subcategory: string): IndustryVariant {
-  // Try exact subcategory match
-  if (SUBCATEGORY_TO_VARIANT[subcategory]) {
-    return SUBCATEGORY_TO_VARIANT[subcategory];
-  }
-  
-  // Fallback based on category
-  const categoryToVariant: Record<string, IndustryVariant> = {
-    'Healthcare / Medical': 'healthcare',
-    'Financial Services': 'finance',
-    'B2B SaaS / Software': 'saas',
-    'Technology / Hardware': 'manufacturing',
-    'E-commerce / Retail': 'ecommerce',
-    'Professional Services': 'consulting',
-    'Real Estate / PropTech': 'consulting',
-    'Education / EdTech': 'consulting',
-    'Media / Entertainment': 'saas',
-    'Consumer Apps': 'saas',
-    'Non-Profit / Social Impact': 'consulting',
-  };
-  
-  return categoryToVariant[category] || 'default';
-}
+// Quick industry capsules for fast selection
+const QUICK_INDUSTRY_OPTIONS = [
+  { id: 'saas', label: 'SaaS / Software', variant: 'saas' as IndustryVariant },
+  { id: 'professional', label: 'Consulting / Agency', variant: 'consulting' as IndustryVariant, hasSubOptions: true },
+  { id: 'healthcare', label: 'Healthcare', variant: 'healthcare' as IndustryVariant },
+  { id: 'ecommerce', label: 'E-commerce', variant: 'ecommerce' as IndustryVariant },
+  { id: 'finance', label: 'Financial Services', variant: 'finance' as IndustryVariant },
+  { id: 'other', label: 'Other', variant: 'default' as IndustryVariant },
+] as const;
 
 // Category configuration for Demo view (only key fields)
 const DEMO_CATEGORIES = [
@@ -228,6 +114,9 @@ export function IntelligenceProfileDemo({
   
   // Industry correction UI state
   const [showIndustryCorrection, setShowIndustryCorrection] = useState(false);
+  
+  // Selected professional services sub-option
+  const [selectedProfessionalSub, setSelectedProfessionalSub] = useState<string | null>(null);
   
   // Track previous score for animations
   const prevScoreRef = useRef(score.totalScore);
@@ -308,18 +197,24 @@ export function IntelligenceProfileDemo({
     (marketResearch.marketSize || marketResearch.buyerPersona || 
      (marketResearch.commonObjections && marketResearch.commonObjections.length > 0));
   
-  // Industry selector state for hierarchical selection
-  const [industryValue, setIndustryValue] = useState<{ category: string; subcategory: string }>({
-    category: '',
-    subcategory: '',
-  });
-  
-  // Industry correction handler using hierarchical selector
-  const handleIndustryChange = (value: { category: string; subcategory: string }) => {
-    setIndustryValue(value);
-    const variant = getVariantFromSelection(value.category, value.subcategory);
-    onIndustryCorrection?.(variant);
+  // Quick select industry capsule
+  const handleQuickIndustrySelect = (option: (typeof QUICK_INDUSTRY_OPTIONS)[number]) => {
+    if ('hasSubOptions' in option && option.hasSubOptions) {
+      // Show sub-options for Professional Services
+      setSelectedProfessionalSub(option.id === 'professional' ? 'professional' : null);
+    } else {
+      // Direct selection
+      onIndustryCorrection?.(option.variant);
+      setShowIndustryCorrection(false);
+      setSelectedProfessionalSub(null);
+    }
+  };
+
+  // Select professional services sub-option
+  const handleProfessionalSubSelect = (sub: typeof PROFESSIONAL_SERVICES_SUBS[number]) => {
+    onIndustryCorrection?.(sub.variant);
     setShowIndustryCorrection(false);
+    setSelectedProfessionalSub(null);
   };
   
   // Render industry variant badge with confidence OR aesthetic mode
@@ -392,7 +287,7 @@ export function IntelligenceProfileDemo({
               </p>
             </motion.div>
             
-            {/* Industry correction UI for hybrid mode - Hierarchical Selector */}
+            {/* Industry correction UI for hybrid mode - Compact capsules */}
             <AnimatePresence>
               {showIndustryCorrection && !isConfirmed && (
                 <motion.div
@@ -402,12 +297,62 @@ export function IntelligenceProfileDemo({
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="p-2 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                    <p className="text-[10px] text-slate-400 mb-2">Select your industry:</p>
-                    <IndustrySelector
-                      value={industryValue}
-                      onChange={handleIndustryChange}
-                    />
+                  <div className="p-2 bg-slate-800/50 rounded-lg border border-slate-700/50 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] text-slate-400">Select your industry:</p>
+                      <button
+                        onClick={() => {
+                          setShowIndustryCorrection(false);
+                          setSelectedProfessionalSub(null);
+                        }}
+                        className="text-[10px] text-slate-500 hover:text-slate-300"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    
+                    {/* Quick industry capsules */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {QUICK_INDUSTRY_OPTIONS.map((option) => (
+                        <button
+                          key={option.id}
+                          onClick={() => handleQuickIndustrySelect(option)}
+                          className={cn(
+                            "px-2 py-0.5 text-[11px] rounded-full border transition-all duration-200",
+                            selectedProfessionalSub === option.id
+                              ? "border-cyan-500 bg-cyan-500/20 text-cyan-300"
+                              : "border-slate-600 text-slate-400 hover:border-slate-500 hover:text-slate-300"
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    {/* Sub-options for Professional Services */}
+                    <AnimatePresence>
+                      {selectedProfessionalSub === 'professional' && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.15 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="flex flex-wrap gap-1 pl-2 border-l-2 border-cyan-500/30">
+                            {PROFESSIONAL_SERVICES_SUBS.map((sub) => (
+                              <button
+                                key={sub.id}
+                                onClick={() => handleProfessionalSubSelect(sub)}
+                                className="px-2 py-0.5 text-[10px] rounded-full border border-slate-600/50 text-slate-400 hover:border-cyan-500/50 hover:text-cyan-300 hover:bg-cyan-500/10 transition-all"
+                              >
+                                {sub.label}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </motion.div>
               )}
@@ -417,12 +362,117 @@ export function IntelligenceProfileDemo({
       );
     }
     
-    // Fall back to original industry detection display
+    // Fall back to original industry detection display with smart confirmation
     if (!industryDetection || industryDetection.variant === 'default') return null;
     
     const displayName = variantToDisplayName(industryDetection.variant);
     const isLowConfidence = industryDetection.confidence === 'low';
     
+    // Show confirmation prompt if detected but not confirmed
+    if (!isConfirmed && !showIndustryCorrection) {
+      return (
+        <div className="px-4 py-3 border-b border-slate-800/50">
+          <motion.div
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-slate-800/50 border border-slate-700 rounded-lg p-3"
+          >
+            <p className="text-sm text-slate-300 mb-2.5">
+              <Sparkles className="w-4 h-4 inline mr-1.5 text-cyan-400" />
+              You appear to be a <strong className="text-cyan-400">{displayName}</strong>
+            </p>
+            <div className="flex gap-2">
+              <Button 
+                size="sm" 
+                onClick={() => onIndustryCorrection?.(industryDetection.variant)}
+                className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs h-7"
+              >
+                <Check className="w-3 h-3 mr-1" />
+                Yes, correct
+              </Button>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={() => setShowIndustryCorrection(true)}
+                className="text-slate-400 hover:text-slate-200 text-xs h-7"
+              >
+                Change
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      );
+    }
+    
+    // Show compact industry selector with capsules + sub-options
+    if (showIndustryCorrection && !isConfirmed) {
+      return (
+        <div className="px-4 py-3 border-b border-slate-800/50">
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                Select Your Industry
+              </span>
+              <button
+                onClick={() => setShowIndustryCorrection(false)}
+                className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+            
+            {/* Quick industry capsules */}
+            <div className="flex flex-wrap gap-1.5">
+              {QUICK_INDUSTRY_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => handleQuickIndustrySelect(option)}
+                  className={cn(
+                    "px-2.5 py-1 text-xs rounded-full border transition-all duration-200",
+                    selectedProfessionalSub === option.id
+                      ? "border-cyan-500 bg-cyan-500/20 text-cyan-300"
+                      : "border-slate-600 text-slate-400 hover:border-slate-500 hover:text-slate-300"
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            
+            {/* Sub-options for Professional Services */}
+            <AnimatePresence>
+              {selectedProfessionalSub === 'professional' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex flex-wrap gap-1.5 pl-2 border-l-2 border-cyan-500/30">
+                    {PROFESSIONAL_SERVICES_SUBS.map((sub) => (
+                      <button
+                        key={sub.id}
+                        onClick={() => handleProfessionalSubSelect(sub)}
+                        className="px-2 py-0.5 text-[11px] rounded-full border border-slate-600/50 text-slate-400 hover:border-cyan-500/50 hover:text-cyan-300 hover:bg-cyan-500/10 transition-all duration-150"
+                      >
+                        {sub.label}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
+      );
+    }
+    
+    // Confirmed state - show locked indicator with display name
     return (
       <div className="px-4 py-2 border-b border-slate-800/50">
         <div className="flex items-center justify-between">
@@ -436,70 +486,16 @@ export function IntelligenceProfileDemo({
                 color: ['rgb(148, 163, 184)', 'rgb(34, 211, 238)', 'rgb(148, 163, 184)']
               } : {}}
               transition={{ duration: 0.5 }}
-              className={cn(
-                "text-xs font-medium",
-                isLowConfidence ? "text-amber-400" : "text-cyan-400"
-              )}
+              className="text-xs font-medium text-cyan-400"
             >
               {displayName}
             </motion.span>
-            
-            {/* Confirmed state - show locked indicator */}
-            {isConfirmed ? (
-              <span className="flex items-center gap-1 text-[10px] text-emerald-400">
-                <Check className="w-3 h-3" />
-                Locked
-              </span>
-            ) : (
-              /* Not confirmed - show confirm button and edit option */
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => onIndustryCorrection?.(industryDetection.variant)}
-                  className="flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 transition-colors"
-                >
-                  <Check className="w-3 h-3" />
-                  Confirm
-                </button>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => setShowIndustryCorrection(!showIndustryCorrection)}
-                      className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors px-1"
-                    >
-                      Edit
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="left" className="bg-slate-900 border-slate-700 text-slate-200 p-2 max-w-[200px]">
-                    <p className="text-xs">
-                      Wrong industry? Click to correct.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            )}
+            <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+              <Check className="w-3 h-3" />
+              Locked
+            </span>
           </div>
         </div>
-        
-        {/* Industry correction UI - Hierarchical Selector */}
-        <AnimatePresence>
-          {showIndustryCorrection && !isConfirmed && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="mt-2 p-2 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                <p className="text-[10px] text-slate-400 mb-2">Select your industry:</p>
-                <IndustrySelector
-                  value={industryValue}
-                  onChange={handleIndustryChange}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     );
   };
