@@ -47,31 +47,33 @@ function containsAgencySignals(text: string): boolean {
 const INDUSTRY_PATTERNS: Record<IndustryVariant, { keywords: string[]; weight: number }[]> = {
   creative: [
     // Creative/branding agency patterns - HIGHEST weight to catch before consulting
-    { keywords: ['creative agency', 'branding agency', 'brand agency', 'design agency'], weight: 20 },
-    { keywords: ['brand strategy', 'brand translation', 'brand system'], weight: 18 },
-    { keywords: ['visual identity', 'brand identity', 'brand design'], weight: 18 },
-    { keywords: ['creative studio', 'design studio', 'creative shop'], weight: 18 },
-    { keywords: ['brand consultancy', 'branding consultancy'], weight: 20 },
+    { keywords: ['creative agency', 'branding agency', 'brand agency', 'design agency', 'strategic brand agency'], weight: 25 },
+    { keywords: ['brand strategy', 'brand translation', 'brand system', 'brand positioning'], weight: 22 },
+    { keywords: ['visual identity', 'brand identity', 'brand design', 'identity design'], weight: 22 },
+    { keywords: ['creative studio', 'design studio', 'creative shop', 'brand studio'], weight: 20 },
+    { keywords: ['brand consultancy', 'branding consultancy', 'brand consultant'], weight: 22 },
     { keywords: ['marketing agency', 'advertising agency', 'ad agency'], weight: 18 },
     { keywords: ['creative director', 'art director', 'design director'], weight: 15 },
-    { keywords: ['rebrand', 'rebranding', 'brand refresh'], weight: 16 },
-    { keywords: ['logo design', 'brand guidelines', 'style guide'], weight: 15 },
-    // Key differentiators from generic consulting
-    { keywords: ['brands', 'branding'], weight: 15 },
-    { keywords: ['brand'], weight: 12 }, // Single 'brand' also matters
-    { keywords: ['visual', 'identity'], weight: 10 },
-    { keywords: ['creative'], weight: 10 },
-    { keywords: ['design'], weight: 8 },
+    { keywords: ['rebrand', 'rebranding', 'brand refresh', 'brand transformation'], weight: 18 },
+    { keywords: ['logo design', 'brand guidelines', 'style guide', 'brand book'], weight: 15 },
+    // Key differentiators - these should strongly signal creative
+    { keywords: ['translate technology into brands', 'translate into brands', 'into brands'], weight: 25 },
+    { keywords: ['brands', 'branding'], weight: 18 },
+    { keywords: ['brand'], weight: 14 }, // Single 'brand' - higher weight
+    { keywords: ['visual', 'identity'], weight: 12 },
+    { keywords: ['creative'], weight: 12 },
+    { keywords: ['design'], weight: 10 },
   ],
   consulting: [
     // Traditional consulting patterns - lower weight than creative
+    // IMPORTANT: Avoid patterns that could match creative agencies (e.g., "strategy" alone)
     { keywords: ['consulting', 'consultant', 'consultancy'], weight: 10 },
     { keywords: ['advisory', 'advisor', 'advisors'], weight: 10 },
     { keywords: ['professional services', 'b2b services'], weight: 9 },
     { keywords: ['coaching', 'coach', 'executive coach', 'leadership coach'], weight: 10 },
     { keywords: ['hr ', ' hr', 'human resources', 'talent', 'recruitment', 'staffing'], weight: 9 },
     { keywords: ['leadership development', 'executive development', 'leadership training'], weight: 10 },
-    { keywords: ['management', 'operations consulting', 'strategy'], weight: 7 },
+    { keywords: ['management consulting', 'operations consulting', 'business strategy'], weight: 8 },
     { keywords: ['training', 'facilitation', 'facilitator', 'workshop'], weight: 8 },
     { keywords: ['workforce', 'organizational', 'organizational development'], weight: 7 },
     { keywords: ['executive', 'leadership', 'c-suite', 'cfo', 'ceo', 'chro'], weight: 7 },
@@ -183,18 +185,31 @@ export function detectIndustryFromConversation(
       }
     }
 
-    // If agency signals detected and this is consulting, boost score
-    // If agency signals detected and this is NOT consulting, reduce score
-    // This handles "we help biotech founders" → consulting, not healthcare
+    // If agency signals detected, handle creative vs consulting
+    // Creative agencies ARE agencies, so don't penalize creative for agency signals!
     if (hasAgencySignals) {
-      if (variant === 'consulting') {
-        totalScore += 15; // Boost consulting when agency signals present
-        matchedKeywords.push('(agency signal detected)');
+      if (variant === 'creative') {
+        // Creative agencies are agencies - BOOST creative when agency signals present
+        totalScore += 10;
+        matchedKeywords.push('(agency signal: creative agency)');
+      } else if (variant === 'consulting') {
+        // Only boost consulting if no creative patterns matched
+        // This prevents "brand agency" from going to consulting
+        const creativeScore = scores.get('creative')?.score || 0;
+        if (creativeScore === 0) {
+          totalScore += 15;
+          matchedKeywords.push('(agency signal: general consulting)');
+        }
       } else if (variant !== 'default' && totalScore > 0) {
-        // Reduce non-consulting scores when agency signals present
+        // Reduce non-agency scores when agency signals present
         // They're probably serving that industry, not in it
         totalScore = Math.max(0, totalScore - 8);
       }
+    }
+
+    // Debug logging
+    if (totalScore > 0) {
+      console.log(`🎯 [Industry] ${variant}: score=${totalScore}, keywords=[${matchedKeywords.join(', ')}]`);
     }
 
     if (totalScore > 0) {
@@ -229,6 +244,10 @@ export function detectIndustryFromConversation(
   const existingScore = existingDetection?.score || 0;
   const scoreChanged = Math.abs(bestScore - existingScore) >= 5;
   const variantChanged = existingDetection?.variant !== bestVariant;
+
+  // Log final decision
+  console.log(`🎯 [Industry] FINAL: ${bestVariant} (score=${bestScore}, confidence=${confidence})`);
+  console.log(`🎯 [Industry] All scores:`, Array.from(scores.entries()).map(([v, s]) => `${v}=${s.score}`).join(', '));
 
   // Keep existing if no significant change and existing had higher confidence
   if (!variantChanged && !scoreChanged && existingDetection) {
