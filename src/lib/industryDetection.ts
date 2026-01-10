@@ -186,22 +186,14 @@ export function detectIndustryFromConversation(
     }
 
     // If agency signals detected, handle creative vs consulting
-    // Creative agencies ARE agencies, so don't penalize creative for agency signals!
+    // Creative agencies ARE agencies, so boost BOTH creative and consulting
     if (hasAgencySignals) {
-      if (variant === 'creative') {
-        // Creative agencies are agencies - BOOST creative when agency signals present
+      if (variant === 'consulting' || variant === 'creative') {
+        // Boost both agency-type industries when agency signals present
         totalScore += 10;
-        matchedKeywords.push('(agency signal: creative agency)');
-      } else if (variant === 'consulting') {
-        // Only boost consulting if no creative patterns matched
-        // This prevents "brand agency" from going to consulting
-        const creativeScore = scores.get('creative')?.score || 0;
-        if (creativeScore === 0) {
-          totalScore += 15;
-          matchedKeywords.push('(agency signal: general consulting)');
-        }
+        matchedKeywords.push('(agency signal detected)');
       } else if (variant !== 'default' && totalScore > 0) {
-        // Reduce non-agency scores when agency signals present
+        // Only penalize non-agency industries (healthcare, saas, etc.)
         // They're probably serving that industry, not in it
         totalScore = Math.max(0, totalScore - 8);
       }
