@@ -6,6 +6,7 @@
  */
 
 import type { IndustryVariant } from '@/config/designSystem/industryVariants';
+export type { IndustryVariant };
 
 export interface IndustryDetection {
   variant: IndustryVariant;
