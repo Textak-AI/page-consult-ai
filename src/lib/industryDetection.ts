@@ -15,18 +15,51 @@ export interface IndustryDetection {
   manuallyConfirmed: boolean;
 }
 
+// Agency signal patterns - if these appear, the person is likely an agency/consultant
+// who SERVES an industry, not a member of that industry
+const AGENCY_SIGNALS = [
+  'we help',
+  'we work with',
+  'we serve',
+  'our clients are',
+  'our clients include',
+  'founders who',
+  'companies that',
+  'businesses that',
+  'i help',
+  'i work with',
+  'helping',
+  'partner with',
+];
+
+/**
+ * Check if the text contains agency signals (e.g., "we help biotech founders")
+ * which means they're an agency/consultant, not the client's industry
+ */
+function containsAgencySignals(text: string): boolean {
+  const lowerText = text.toLowerCase();
+  return AGENCY_SIGNALS.some(signal => lowerText.includes(signal));
+}
+
 // Industry keyword patterns with weights
 const INDUSTRY_PATTERNS: Record<IndustryVariant, { keywords: string[]; weight: number }[]> = {
   consulting: [
+    // Creative/branding agency patterns - high weight
+    { keywords: ['creative agency', 'branding agency', 'brand agency', 'design agency'], weight: 12 },
+    { keywords: ['brand strategy', 'brand translation', 'brand system'], weight: 11 },
+    { keywords: ['visual identity', 'brand identity', 'brand design'], weight: 11 },
+    { keywords: ['creative studio', 'design studio', 'creative shop'], weight: 11 },
+    { keywords: ['brand consultancy', 'branding consultancy'], weight: 12 },
+    // Traditional consulting patterns
     { keywords: ['consulting', 'consultant', 'consultancy'], weight: 10 },
     { keywords: ['advisory', 'advisor', 'advisors'], weight: 10 },
     { keywords: ['professional services', 'b2b services'], weight: 9 },
-    { keywords: ['coaching', 'coach', 'executive coach', 'leadership coach'], weight: 10 }, // Boost coaching
-    { keywords: ['hr ', ' hr', 'human resources', 'talent', 'recruitment', 'staffing'], weight: 9 }, // Boost HR
+    { keywords: ['coaching', 'coach', 'executive coach', 'leadership coach'], weight: 10 },
+    { keywords: ['hr ', ' hr', 'human resources', 'talent', 'recruitment', 'staffing'], weight: 9 },
     { keywords: ['leadership development', 'executive development', 'leadership training'], weight: 10 },
     { keywords: ['management', 'operations consulting', 'strategy'], weight: 7 },
     { keywords: ['training', 'facilitation', 'facilitator', 'workshop'], weight: 8 },
-    { keywords: ['agency', 'agencies'], weight: 6 },
+    { keywords: ['agency', 'agencies'], weight: 8 }, // Boosted from 6
     { keywords: ['workforce', 'organizational', 'organizational development'], weight: 7 },
     { keywords: ['executive', 'leadership', 'c-suite', 'cfo', 'ceo', 'chro'], weight: 7 },
     { keywords: ['succession', 'retention', 'turnover', 'engagement'], weight: 7 },
@@ -110,6 +143,9 @@ export function detectIndustryFromConversation(
     ...recentMessages, // Double weight for recent
   ].join(' ').toLowerCase();
 
+  // Check for agency signals - if present, boost consulting/agency score
+  const hasAgencySignals = containsAgencySignals(weightedText);
+
   // Score each industry
   const scores: Map<IndustryVariant, { score: number; keywords: string[] }> = new Map();
 
@@ -129,6 +165,20 @@ export function detectIndustryFromConversation(
             matchedKeywords.push(keyword);
           }
         }
+      }
+    }
+
+    // If agency signals detected and this is consulting, boost score
+    // If agency signals detected and this is NOT consulting, reduce score
+    // This handles "we help biotech founders" → consulting, not healthcare
+    if (hasAgencySignals) {
+      if (variant === 'consulting') {
+        totalScore += 15; // Boost consulting when agency signals present
+        matchedKeywords.push('(agency signal detected)');
+      } else if (variant !== 'default' && totalScore > 0) {
+        // Reduce non-consulting scores when agency signals present
+        // They're probably serving that industry, not in it
+        totalScore = Math.max(0, totalScore - 8);
       }
     }
 
@@ -228,16 +278,41 @@ export function variantToDisplayName(variant: IndustryVariant): string {
 }
 
 /**
+ * Map user-friendly display option to variant
+ * Handles additional options like 'Creative Agency' that map to 'consulting'
+ */
+export function displayOptionToVariant(option: string): IndustryVariant {
+  const mapping: Record<string, IndustryVariant> = {
+    'SaaS / Software': 'saas',
+    'Consulting / Agency': 'consulting',
+    'Creative Agency': 'consulting', // Creative agencies use consulting variant
+    'Coaching / Training': 'consulting', // Coaches use consulting variant
+    'Healthcare': 'healthcare',
+    'E-commerce': 'ecommerce',
+    'Manufacturing': 'manufacturing',
+    'Financial Services': 'finance',
+    'Legal': 'legal',
+    'Real Estate': 'consulting', // Real estate uses consulting variant for now
+    'Professional Services': 'consulting',
+    'Other': 'default',
+  };
+  return mapping[option] || 'default';
+}
+
+/**
  * Get industry options for correction UI
  */
 export const INDUSTRY_OPTIONS = [
   'SaaS / Software',
   'Consulting / Agency',
+  'Creative Agency',
+  'Coaching / Training',
   'Healthcare',
   'E-commerce',
   'Manufacturing',
   'Financial Services',
   'Legal',
+  'Real Estate',
   'Other',
 ] as const;
 
