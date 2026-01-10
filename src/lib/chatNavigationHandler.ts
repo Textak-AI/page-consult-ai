@@ -23,8 +23,8 @@ const NAVIGATION_PATTERNS: { pattern: RegExp; route: string; scrollTo?: string }
   // Features
   { pattern: /\b(features?|what\s+can|capabilities)\b/i, route: '/#features', scrollTo: 'features' },
   
-  // Contact / Support
-  { pattern: /\b(contact|talk\s+to\s+someone|support|help|human|real\s+person)\b/i, route: '/contact' },
+  // Contact / Support - Disabled: /contact route does not exist
+  // { pattern: /\b(contact|talk\s+to\s+someone|support|help|human|real\s+person)\b/i, route: '/contact' },
   
   // FAQ
   { pattern: /\b(faq|questions|help)\b/i, route: '/#faq', scrollTo: 'faq' },
