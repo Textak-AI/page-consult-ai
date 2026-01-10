@@ -15,6 +15,7 @@
 
 export type IndustryVariant = 
   | 'consulting'
+  | 'creative'
   | 'saas'
   | 'healthcare'
   | 'finance'
@@ -167,6 +168,96 @@ export const consultingVariant: IndustryDesignTokens = {
     faq: {
       title: 'Frequently Asked Questions',
       eyebrow: 'Common Questions',
+    },
+  },
+};
+
+/**
+ * Creative Agency Industry Variant
+ * 
+ * Design Intent: Bold, expressive, portfolio-forward.
+ * - Dark OR light mode - more flexibility for personality
+ * - Display fonts allowed, dramatic sizing
+ * - Editorial, can break the mold
+ * - Portfolio and case studies as proof
+ * - Personality-forward, not buttoned-up
+ * 
+ * Layout characteristics:
+ * - Visual-first hero with portfolio showcase
+ * - "Selected Work" instead of "Case Studies"
+ * - Client logos as social proof
+ * - Bold typography and creative layout
+ */
+export const creativeVariant: IndustryDesignTokens = {
+  mode: 'dark',
+  
+  colors: {
+    // Dark mode with warm undertones for creative feel
+    bgPrimary: '240 10% 6%',              // Near black with warmth
+    bgSecondary: '240 10% 10%',           // Slightly lighter
+    bgCard: '240 10% 12%',                // Card backgrounds
+    bgDark: '240 10% 4%',                 // Darker sections
+    textPrimary: '0 0% 98%',              // Near white
+    textSecondary: '0 0% 65%',            // Warm gray
+    textOnDark: '0 0% 98%',               // Near white
+    // Accent - warm coral/orange for creative energy
+    accent: '15 90% 60%',                 // Warm coral
+    accentHover: '15 90% 65%',            // Lighter coral
+    border: '240 10% 20%',                // Subtle border
+    borderSubtle: '240 10% 15%',          // Very subtle border
+  },
+  
+  typography: {
+    headingFont: '"Clash Display", "Cabinet Grotesk", Inter, system-ui, sans-serif',
+    bodyFont: 'Inter, system-ui, sans-serif',
+    headingWeight: 600,
+    letterSpacing: '-0.03em',             // Tighter tracking for display
+    lineHeight: 1.3,                      // Tighter line height for headlines
+  },
+  
+  shape: {
+    radiusCard: '1.5rem',                 // Larger radius for modern feel
+    radiusButton: '2rem',                 // Pill buttons
+    shadowCard: '0 8px 32px rgba(0, 0, 0, 0.3)',
+    shadowButton: 'none',                 // Clean buttons
+    borderCard: '1px solid hsla(240, 10%, 100%, 0.06)',
+    blur: 'blur(16px)',
+    glow: 'none',                         // No glow - too techy
+  },
+  
+  spacing: {
+    sectionPadding: '120px',              // Generous spacing
+    contentWidth: '1280px',               // Wider for portfolio
+    cardPadding: '2.5rem',
+    elementGap: '2rem',
+  },
+  
+  sectionHeaders: {
+    features: {
+      title: 'What We Do',
+      subtitle: 'Transforming brands through strategic creativity',
+      eyebrow: 'CAPABILITIES',
+    },
+    process: {
+      title: 'Our Process',
+      subtitle: 'From insight to impact',
+    },
+    proof: {
+      title: 'Selected Work',
+      subtitle: 'Projects that moved the needle',
+    },
+    testimonials: {
+      title: 'Client Love',
+      subtitle: 'Words from the people we work with',
+    },
+    cta: {
+      title: "Let's Create Something",
+      ctaText: 'Start a Project',
+      subtext: 'We respond within 24 hours',
+    },
+    faq: {
+      title: 'Common Questions',
+      eyebrow: 'FAQ',
     },
   },
 };
@@ -415,6 +506,7 @@ export const defaultVariant: IndustryDesignTokens = {
  */
 export const industryVariants: Record<IndustryVariant, IndustryDesignTokens> = {
   consulting: consultingVariant,
+  creative: creativeVariant,
   saas: saasVariant,
   healthcare: healthcareVariant,
   finance: defaultVariant,    // TODO: Implement finance variant

@@ -44,13 +44,19 @@ function containsAgencySignals(text: string): boolean {
 
 // Industry keyword patterns with weights
 const INDUSTRY_PATTERNS: Record<IndustryVariant, { keywords: string[]; weight: number }[]> = {
-  consulting: [
+  creative: [
     // Creative/branding agency patterns - high weight
-    { keywords: ['creative agency', 'branding agency', 'brand agency', 'design agency'], weight: 12 },
-    { keywords: ['brand strategy', 'brand translation', 'brand system'], weight: 11 },
-    { keywords: ['visual identity', 'brand identity', 'brand design'], weight: 11 },
-    { keywords: ['creative studio', 'design studio', 'creative shop'], weight: 11 },
-    { keywords: ['brand consultancy', 'branding consultancy'], weight: 12 },
+    { keywords: ['creative agency', 'branding agency', 'brand agency', 'design agency'], weight: 15 },
+    { keywords: ['brand strategy', 'brand translation', 'brand system'], weight: 14 },
+    { keywords: ['visual identity', 'brand identity', 'brand design'], weight: 14 },
+    { keywords: ['creative studio', 'design studio', 'creative shop'], weight: 14 },
+    { keywords: ['brand consultancy', 'branding consultancy'], weight: 15 },
+    { keywords: ['marketing agency', 'advertising agency', 'ad agency'], weight: 14 },
+    { keywords: ['creative director', 'art director', 'design director'], weight: 12 },
+    { keywords: ['rebrand', 'rebranding', 'brand refresh'], weight: 12 },
+    { keywords: ['logo design', 'brand guidelines', 'style guide'], weight: 11 },
+  ],
+  consulting: [
     // Traditional consulting patterns
     { keywords: ['consulting', 'consultant', 'consultancy'], weight: 10 },
     { keywords: ['advisory', 'advisor', 'advisors'], weight: 10 },
@@ -60,7 +66,6 @@ const INDUSTRY_PATTERNS: Record<IndustryVariant, { keywords: string[]; weight: n
     { keywords: ['leadership development', 'executive development', 'leadership training'], weight: 10 },
     { keywords: ['management', 'operations consulting', 'strategy'], weight: 7 },
     { keywords: ['training', 'facilitation', 'facilitator', 'workshop'], weight: 8 },
-    { keywords: ['agency', 'agencies'], weight: 8 }, // Boosted from 6
     { keywords: ['workforce', 'organizational', 'organizational development'], weight: 7 },
     { keywords: ['executive', 'leadership', 'c-suite', 'cfo', 'ceo', 'chro'], weight: 7 },
     { keywords: ['succession', 'retention', 'turnover', 'engagement'], weight: 7 },
@@ -267,6 +272,7 @@ export function optionToVariant(option: string): IndustryVariant {
 export function variantToDisplayName(variant: IndustryVariant): string {
   const mapping: Record<IndustryVariant, string> = {
     consulting: 'Consulting / Services',
+    creative: 'Creative Agency',
     saas: 'SaaS / Software',
     healthcare: 'Healthcare',
     ecommerce: 'E-commerce',
@@ -280,20 +286,20 @@ export function variantToDisplayName(variant: IndustryVariant): string {
 
 /**
  * Map user-friendly display option to variant
- * Handles additional options like 'Creative Agency' that map to 'consulting'
+ * Handles additional options like 'Creative Agency' that map to 'creative'
  */
 export function displayOptionToVariant(option: string): IndustryVariant {
   const mapping: Record<string, IndustryVariant> = {
     'SaaS / Software': 'saas',
     'Consulting / Agency': 'consulting',
-    'Creative Agency': 'consulting', // Creative agencies use consulting variant
-    'Coaching / Training': 'consulting', // Coaches use consulting variant
+    'Creative Agency': 'creative', // Bold, expressive, portfolio-forward
+    'Coaching / Training': 'consulting',
     'Healthcare': 'healthcare',
     'E-commerce': 'ecommerce',
     'Manufacturing': 'manufacturing',
     'Financial Services': 'finance',
     'Legal': 'legal',
-    'Real Estate': 'consulting', // Real estate uses consulting variant for now
+    'Real Estate': 'consulting',
     'Professional Services': 'consulting',
     'Other': 'default',
   };
