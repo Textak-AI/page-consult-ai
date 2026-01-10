@@ -6,6 +6,8 @@ import {
   detectIndustryFromConversation, 
   confirmIndustry, 
   variantToDisplayName,
+  displayOptionToVariant,
+  INDUSTRY_OPTIONS,
   type IndustryDetection 
 } from '@/lib/industryDetection';
 import { 
@@ -364,6 +366,10 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   
   const marketResearchFetched = useRef(false);
   const hasRestoredState = useRef(false);
+  
+  // Debounce timer for session updates to prevent rate limiting (429 errors)
+  const sessionUpdateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingSessionUpdateRef = useRef<object | null>(null);
 
   // ----------------------------------------
   // DISABLED: Don't restore demo state on page load
@@ -785,9 +791,12 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           } : null;
 
           // Sync industry from detection to extracted if not already set
+          // BUT: don't overwrite if user manually confirmed an industry
+          const isManuallyConfirmed = prev.industryDetection?.manuallyConfirmed || false;
           const industryFromDetection = updatedIndustryDetection?.variant && 
             updatedIndustryDetection.variant !== 'default' &&
-            !mergedExtracted.industry
+            !mergedExtracted.industry &&
+            !isManuallyConfirmed
               ? updatedIndustryDetection.variant.charAt(0).toUpperCase() + updatedIndustryDetection.variant.slice(1)
               : null;
 
@@ -802,13 +811,18 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
             finalExtracted.audience
           );
 
+          // Preserve manually confirmed detection - don't overwrite with auto-detection
+          const finalIndustryDetection = isManuallyConfirmed 
+            ? prev.industryDetection 
+            : updatedIndustryDetection;
+
           return {
             ...prev,
             extracted: finalExtracted,
             aestheticMode: updatedAestheticMode,
             readiness: calculateReadiness(finalExtracted, prev.market.marketSize !== null, prev.emailCaptured),
             conversationHistory: newTurn ? [...prev.conversationHistory, newTurn] : prev.conversationHistory,
-            industryDetection: updatedIndustryDetection,
+            industryDetection: finalIndustryDetection,
           };
         });
       }
@@ -897,20 +911,41 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         }, isResearchReveal ? 500 : 2000); // Faster if they asked for research
       }
 
-      // Update session in database (fire and forget)
-      supabase.functions.invoke('demo-update-session', {
-        body: {
-          sessionId: state.sessionId,
-          messages: [...state.conversation, userMessage, aiMessage].map(m => ({
-            role: m.role,
-            content: m.content,
-            timestamp: m.timestamp.toISOString(),
-          })),
-          extractedIntelligence: mergedExtractedForApi,
-          marketResearch: state.market,
-          messageCount: newMessageCount,
-        },
-      }).catch(console.error);
+      // Update session in database (debounced to prevent 429 rate limit errors)
+      const sessionData = {
+        sessionId: state.sessionId,
+        messages: [...state.conversation, userMessage, aiMessage].map(m => ({
+          role: m.role,
+          content: m.content,
+          timestamp: m.timestamp.toISOString(),
+        })),
+        extractedIntelligence: mergedExtractedForApi,
+        marketResearch: state.market,
+        messageCount: newMessageCount,
+      };
+      
+      // Store the pending update
+      pendingSessionUpdateRef.current = sessionData;
+      
+      // Clear any existing timer
+      if (sessionUpdateTimerRef.current) {
+        clearTimeout(sessionUpdateTimerRef.current);
+      }
+      
+      // Debounce: wait 1.5 seconds before sending to allow for rapid message exchanges
+      sessionUpdateTimerRef.current = setTimeout(() => {
+        if (pendingSessionUpdateRef.current) {
+          supabase.functions.invoke('demo-update-session', {
+            body: pendingSessionUpdateRef.current,
+          }).catch(err => {
+            // Only log non-rate-limit errors
+            if (!err?.message?.includes('429')) {
+              console.error('Session update error:', err);
+            }
+          });
+          pendingSessionUpdateRef.current = null;
+        }
+      }, 1500);
 
     } catch (err) {
       console.error('Error processing message:', err);
@@ -958,20 +993,30 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // ----------------------------------------
   // Manual industry selection (user correction)
   // ----------------------------------------
-  const confirmIndustrySelection = useCallback((variant: string) => {
-    const confirmed = confirmIndustry(variant as any);
-    // Use the proper display name from the variant (imported at top of file)
-    const displayName = variantToDisplayName(variant as any);
+  const confirmIndustrySelection = useCallback((variantOrDisplayOption: string) => {
+    // Handle both raw variants (e.g., 'consulting') and display options (e.g., 'Creative Agency')
+    // First try to map as a display option, then fall back to treating as a variant
+    const variant = displayOptionToVariant(variantOrDisplayOption) !== 'default' || variantOrDisplayOption === 'Other'
+      ? displayOptionToVariant(variantOrDisplayOption)
+      : variantOrDisplayOption as any;
     
-    console.log('🎯 [Industry] User confirmed selection:', variant, '→', displayName);
+    const confirmed = confirmIndustry(variant);
     
-    // Always update to the new selected value (not ||, which keeps old value)
+    // For display, use the original selection if it's a display option, otherwise convert
+    const displayName = INDUSTRY_OPTIONS.includes(variantOrDisplayOption as any) 
+      ? variantOrDisplayOption 
+      : variantToDisplayName(variant);
+    
+    console.log('🎯 [Industry] User confirmed selection:', variantOrDisplayOption, '→ variant:', variant, '→ display:', displayName);
+    
+    // Always update to the new selected value
+    // The confirmed detection has manuallyConfirmed: true, which prevents re-detection
     setState(prev => ({
       ...prev,
       industryDetection: confirmed,
       extracted: {
         ...prev.extracted,
-        industry: displayName, // Always use the new selected value
+        industry: displayName,
       },
     }));
   }, []);
