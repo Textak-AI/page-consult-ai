@@ -5,21 +5,25 @@ import { Loader2, Home, FileX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PublicPageRenderer } from '@/components/public/PublicPageRenderer';
 
-interface LandingPage {
+// Only include fields returned by the secure get_public_landing_page RPC
+interface PublicLandingPage {
   id: string;
   title: string;
   slug: string;
   sections: any[];
   styles: any;
   is_published: boolean;
+  published_at: string | null;
+  published_url: string | null;
   meta_title: string | null;
   meta_description: string | null;
-  consultation_data: any;
+  hero_thumbnail_url: string | null;
+  status: string;
 }
 
 export default function PublicPage() {
   const { slug } = useParams<{ slug: string }>();
-  const [page, setPage] = useState<LandingPage | null>(null);
+  const [page, setPage] = useState<PublicLandingPage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,13 +36,9 @@ export default function PublicPage() {
       }
 
       try {
-        // Fetch the page by slug (RLS policy allows public access to published pages)
+        // Use secure RPC function that only returns safe fields (no user_id, consultation_data, etc.)
         const { data, error: fetchError } = await supabase
-          .from('landing_pages')
-          .select('*')
-          .eq('slug', slug)
-          .eq('is_published', true)
-          .single();
+          .rpc('get_public_landing_page', { page_slug: slug });
 
         if (fetchError || !data) {
           setError('Page not found or not published');
@@ -46,10 +46,14 @@ export default function PublicPage() {
           return;
         }
 
-        setPage(data as LandingPage);
+        // Cast through unknown since RPC returns Json type
+        const pageData = data as unknown as PublicLandingPage;
+        setPage(pageData);
 
         // Track the view (fire and forget)
-        trackPageView(data.id);
+        if (pageData.id) {
+          trackPageView(pageData.id);
+        }
       } catch (err) {
         console.error('Error fetching page:', err);
         setError('Something went wrong');
