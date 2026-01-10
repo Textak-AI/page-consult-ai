@@ -26,8 +26,8 @@ const NAVIGATION_PATTERNS: { pattern: RegExp; route: string; scrollTo?: string }
   // Contact / Support - Disabled: /contact route does not exist
   // { pattern: /\b(contact|talk\s+to\s+someone|support|help|human|real\s+person)\b/i, route: '/contact' },
   
-  // FAQ
-  { pattern: /\b(faq|questions|help)\b/i, route: '/#faq', scrollTo: 'faq' },
+  // FAQ - Requires explicit FAQ reference to avoid false positives on common words like "help" or "questions"
+  { pattern: /\b(faq|frequently\s+asked|q\s*&\s*a)\b/i, route: '/#faq', scrollTo: 'faq' },
   
   // Dashboard
   { pattern: /\b(dashboard|my\s+pages?|my\s+account)\b/i, route: '/dashboard' },
@@ -37,7 +37,8 @@ const NAVIGATION_PATTERNS: { pattern: RegExp; route: string; scrollTo?: string }
 ];
 
 // Action verb patterns that indicate navigation intent
-const ACTION_VERBS = /\b(take\s+me\s+to|go\s+to|show\s+me|navigate\s+to|open|visit|see|view|check\s+out|i\s+want\s+to\s+(?:see|go|check))\b/i;
+// These MUST be present for high-confidence navigation detection
+const ACTION_VERBS = /\b(take\s+me\s+to|go\s+to|show\s+me\s+(?:the|your)|navigate\s+to|open\s+(?:the|your)|visit|check\s+out\s+(?:the|your)|i\s+want\s+to\s+(?:see|go\s+to|check))\b/i;
 
 export interface NavigationIntent {
   detected: boolean;
@@ -93,7 +94,8 @@ export function handleChatNavigation(
     return { navigated: false, route: null, responseMessage: null };
   }
   
-  // Only auto-navigate for high confidence matches
+  // Only auto-navigate for high confidence matches (action verb + route keyword)
+  // This prevents false positives when users use words like "help" in their business descriptions
   if (intent.confidence === 'high') {
     // Handle scroll-to targets on same page
     if (intent.scrollTo && (intent.route === '/' || intent.route.startsWith('/#'))) {
