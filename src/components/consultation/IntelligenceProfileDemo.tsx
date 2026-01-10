@@ -22,8 +22,8 @@ import { IndustrySelector, INDUSTRY_DATA } from '@/components/consultation/Indus
 // Map subcategory to design variant
 const SUBCATEGORY_TO_VARIANT: Record<string, IndustryVariant> = {
   // Professional Services
-  'Design / Creative Agency': 'consulting',
-  'Marketing / Advertising Agency': 'consulting',
+  'Design / Creative Agency': 'creative',      // Bold, expressive, portfolio-forward
+  'Marketing / Advertising Agency': 'creative', // Creative energy
   'Consulting': 'consulting',
   'Legal / LegalTech': 'legal',
   'Recruiting / Staffing': 'consulting',
