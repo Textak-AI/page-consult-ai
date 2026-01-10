@@ -43,21 +43,28 @@ function containsAgencySignals(text: string): boolean {
 }
 
 // Industry keyword patterns with weights
+// CREATIVE has highest weights to catch branding/design agencies before consulting
 const INDUSTRY_PATTERNS: Record<IndustryVariant, { keywords: string[]; weight: number }[]> = {
   creative: [
-    // Creative/branding agency patterns - high weight
-    { keywords: ['creative agency', 'branding agency', 'brand agency', 'design agency'], weight: 15 },
-    { keywords: ['brand strategy', 'brand translation', 'brand system'], weight: 14 },
-    { keywords: ['visual identity', 'brand identity', 'brand design'], weight: 14 },
-    { keywords: ['creative studio', 'design studio', 'creative shop'], weight: 14 },
-    { keywords: ['brand consultancy', 'branding consultancy'], weight: 15 },
-    { keywords: ['marketing agency', 'advertising agency', 'ad agency'], weight: 14 },
-    { keywords: ['creative director', 'art director', 'design director'], weight: 12 },
-    { keywords: ['rebrand', 'rebranding', 'brand refresh'], weight: 12 },
-    { keywords: ['logo design', 'brand guidelines', 'style guide'], weight: 11 },
+    // Creative/branding agency patterns - HIGHEST weight to catch before consulting
+    { keywords: ['creative agency', 'branding agency', 'brand agency', 'design agency'], weight: 20 },
+    { keywords: ['brand strategy', 'brand translation', 'brand system'], weight: 18 },
+    { keywords: ['visual identity', 'brand identity', 'brand design'], weight: 18 },
+    { keywords: ['creative studio', 'design studio', 'creative shop'], weight: 18 },
+    { keywords: ['brand consultancy', 'branding consultancy'], weight: 20 },
+    { keywords: ['marketing agency', 'advertising agency', 'ad agency'], weight: 18 },
+    { keywords: ['creative director', 'art director', 'design director'], weight: 15 },
+    { keywords: ['rebrand', 'rebranding', 'brand refresh'], weight: 16 },
+    { keywords: ['logo design', 'brand guidelines', 'style guide'], weight: 15 },
+    // Key differentiators from generic consulting
+    { keywords: ['brands', 'branding'], weight: 15 },
+    { keywords: ['brand'], weight: 12 }, // Single 'brand' also matters
+    { keywords: ['visual', 'identity'], weight: 10 },
+    { keywords: ['creative'], weight: 10 },
+    { keywords: ['design'], weight: 8 },
   ],
   consulting: [
-    // Traditional consulting patterns
+    // Traditional consulting patterns - lower weight than creative
     { keywords: ['consulting', 'consultant', 'consultancy'], weight: 10 },
     { keywords: ['advisory', 'advisor', 'advisors'], weight: 10 },
     { keywords: ['professional services', 'b2b services'], weight: 9 },
@@ -114,8 +121,10 @@ const INDUSTRY_PATTERNS: Record<IndustryVariant, { keywords: string[]; weight: n
 };
 
 // Order matters - more specific industries should be checked first
+// CREATIVE goes first to catch branding/design agencies before generic consulting
 const DETECTION_ORDER: IndustryVariant[] = [
-  'consulting',  // Most common for B2B services
+  'creative',     // Check BEFORE consulting to catch branding agencies
+  'consulting',   // Most common for B2B services
   'legal',
   'finance',
   'healthcare',
