@@ -187,11 +187,43 @@ export function IntelligenceProfileDemo({
     const hasHybridMode = aestheticMode && aestheticMode.blend === 'hybrid';
     const isHybridConfident = aestheticMode && isConfidentHybrid(aestheticMode);
     
-    // If hybrid mode, show split view
+    // Get confirmation state from industryDetection
+    const isConfirmed = industryDetection?.manuallyConfirmed;
+    
+    // If hybrid mode, show split view with edit capability
     if (hasHybridMode && aestheticMode) {
       return (
         <div className="px-4 py-3 border-b border-slate-800/50">
           <div className="space-y-2">
+            {/* Header with confirm/edit */}
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                Design Mode
+              </span>
+              {isConfirmed ? (
+                <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+                  <Check className="w-3 h-3" />
+                  Locked
+                </span>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => industryDetection && onIndustryCorrection?.(industryDetection.variant)}
+                    className="flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+                  >
+                    <Check className="w-3 h-3" />
+                    Confirm
+                  </button>
+                  <button
+                    onClick={() => setShowIndustryCorrection(!showIndustryCorrection)}
+                    className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors px-1"
+                  >
+                    Edit
+                  </button>
+                </div>
+              )}
+            </div>
+            
             {/* Your Industry (provider) */}
             <div className="flex justify-between text-sm">
               <span className="text-slate-400">Your Industry</span>
@@ -218,6 +250,39 @@ export function IntelligenceProfileDemo({
                 {aestheticMode.rationale}
               </p>
             </motion.div>
+            
+            {/* Industry correction UI for hybrid mode */}
+            <AnimatePresence>
+              {showIndustryCorrection && !isConfirmed && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="p-2 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                    <p className="text-[10px] text-slate-400 mb-2">Select your industry:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {INDUSTRY_OPTIONS.map(option => (
+                        <button
+                          key={option}
+                          onClick={() => handleIndustrySelect(option)}
+                          className={cn(
+                            "px-2 py-1 text-[10px] rounded-full border transition-all",
+                            industryDetection && optionToVariant(option) === industryDetection.variant
+                              ? "border-cyan-500 bg-cyan-500/20 text-cyan-400"
+                              : "border-slate-600 text-slate-400 hover:border-slate-500 hover:text-slate-300"
+                          )}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       );
@@ -228,7 +293,6 @@ export function IntelligenceProfileDemo({
     
     const displayName = variantToDisplayName(industryDetection.variant);
     const isLowConfidence = industryDetection.confidence === 'low';
-    const isConfirmed = industryDetection.manuallyConfirmed;
     
     return (
       <div className="px-4 py-2 border-b border-slate-800/50">
