@@ -134,37 +134,15 @@ const Hero = () => {
     return 'AI-powered landing pages built around your unique strategy and market positioning.';
   }
 
-  // Handle CTA click - check for brand first
-  const handleStartConsultation = async () => {
-    setIsNavigating(true);
-    
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        navigate('/signup');
-        return;
-      }
-      
-      // Check for existing brand setup
-      const { data: brandBrief } = await supabase
-        .from('brand_briefs')
-        .select('id, logo_url')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .maybeSingle();
-      
-      // If no brand or no logo, go to brand setup first
-      if (!brandBrief || !brandBrief.logo_url) {
-        navigate('/brand-setup');
-      } else {
-        navigate('/consultation');
-      }
-    } catch (error) {
-      console.error('Error checking brand:', error);
-      navigate('/brand-setup');
-    } finally {
-      setIsNavigating(false);
+  // Handle CTA click - scroll to Strategy Session demo
+  const handleStartConsultation = () => {
+    // Scroll to the Strategy Session demo section
+    const demoSection = document.getElementById('demo');
+    if (demoSection) {
+      demoSection.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // Fallback: navigate to demo route
+      navigate('/#demo');
     }
   };
 
