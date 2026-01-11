@@ -190,23 +190,45 @@ export function IntelligenceProfileDemo({
     const isHybridConfident = aestheticMode && isConfidentHybrid(aestheticMode);
     
     // Get confirmation state from industryDetection
-    const isConfirmed = industryDetection?.manuallyConfirmed;
+    const isConfirmed = industryDetection?.manuallyConfirmed === true;
+    
+    // Debug: Log what we're rendering with
+    console.log('🔍 [Profile] renderDesignMode:', {
+      hasHybridMode,
+      isConfirmed,
+      industryDetection: industryDetection ? {
+        variant: industryDetection.variant,
+        manuallyConfirmed: industryDetection.manuallyConfirmed,
+      } : null,
+      aestheticMode: aestheticMode ? {
+        primary: aestheticMode.primary,
+        secondary: aestheticMode.secondary,
+      } : null,
+    });
     
     // If hybrid mode, show split view with edit capability
     if (hasHybridMode && aestheticMode) {
       // Get the display name for YOUR industry from industryDetection (user-confirmed) or aestheticMode
-      const yourIndustryDisplay = isConfirmed && industryDetection
+      // PRIORITY: confirmed industryDetection > aestheticMode.secondary > fallback
+      const yourIndustryDisplay = industryDetection 
         ? variantToDisplayName(industryDetection.variant)
-        : aestheticMode.secondary || variantToDisplayName(industryDetection?.variant || 'default');
+        : aestheticMode.secondary || '—';
       
       // Target market comes from aestheticMode.primary (buyer's industry)
-      const targetMarketDisplay = aestheticMode.primary;
+      const targetMarketDisplay = aestheticMode.primary || '—';
       
       // Design approach based on YOUR confirmed industry, not target market
       const confirmedVariant = industryDetection?.variant || 'default';
-      const designApproach = isConfirmed
+      const designApproach = isConfirmed && industryDetection
         ? getDesignApproachText(confirmedVariant as any, targetMarketDisplay)
         : aestheticMode.rationale;
+      
+      console.log('🎨 [Profile] Display values:', {
+        yourIndustryDisplay,
+        targetMarketDisplay,
+        designApproach: designApproach?.substring(0, 50) + '...',
+        isConfirmed,
+      });
       
       return (
         <div className="px-4 py-3 border-b border-slate-800/50">
