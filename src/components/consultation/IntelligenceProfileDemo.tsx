@@ -217,11 +217,12 @@ export function IntelligenceProfileDemo({
       // Target market comes from aestheticMode.primary (buyer's industry)
       const targetMarketDisplay = aestheticMode.primary || '—';
       
-      // Design approach based on YOUR confirmed industry, not target market
-      const confirmedVariant = industryDetection?.variant || 'default';
-      const designApproach = isConfirmed && industryDetection
-        ? getDesignApproachText(confirmedVariant as any, targetMarketDisplay)
-        : aestheticMode.rationale;
+      // Design approach based on YOUR detected/confirmed industry, not target market
+      // Use getDesignApproachText whenever we have an industry variant (not just when confirmed)
+      const detectedVariant = industryDetection?.variant;
+      const designApproach = detectedVariant && detectedVariant !== 'default'
+        ? getDesignApproachText(detectedVariant as any, targetMarketDisplay)
+        : aestheticMode?.rationale || 'Balanced design adaptable to your market';
       
       console.log('🎨 [Profile] Display values:', {
         yourIndustryDisplay,
