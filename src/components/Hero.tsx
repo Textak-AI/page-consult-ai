@@ -134,16 +134,9 @@ const Hero = () => {
     return 'AI-powered landing pages built around your unique strategy and market positioning.';
   }
 
-  // Handle CTA click - scroll to Strategy Session demo
+  // Handle CTA click - navigate directly to Strategy Session
   const handleStartConsultation = () => {
-    // Scroll to the Strategy Session demo section
-    const demoSection = document.getElementById('demo');
-    if (demoSection) {
-      demoSection.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      // Fallback: navigate to demo route
-      navigate('/#demo');
-    }
+    navigate('/strategy-session');
   };
 
   const handleReset = () => {
@@ -165,13 +158,13 @@ const Hero = () => {
       </div>
 
       {/* Main content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
         
         {/* Main hero grid - balanced 50/50 columns */}
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center overflow-hidden">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           
           {/* Left content - Animated transitions between states */}
-          <div className="min-h-[400px] overflow-hidden">
+          <div className="min-h-[400px]">
             <AnimatePresence mode="wait">
               {demoState === 'generating' ? (
                 <motion.div

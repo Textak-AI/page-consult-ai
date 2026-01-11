@@ -37,8 +37,8 @@ export function DefaultHero({ onStartConsultation, isNavigating }: DefaultHeroPr
       </p>
       
       {/* CTA button */}
-      <div className="mb-6">
-        <Button 
+      <div className="mb-6 p-2 -m-2">
+        <Button
           onClick={onStartConsultation}
           disabled={isNavigating}
           size="lg" 
