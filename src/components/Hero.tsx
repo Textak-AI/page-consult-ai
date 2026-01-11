@@ -134,9 +134,12 @@ const Hero = () => {
     return 'AI-powered landing pages built around your unique strategy and market positioning.';
   }
 
-  // Handle CTA click - navigate directly to Strategy Session
+  // Handle CTA click - scroll to Strategy Session demo section
   const handleStartConsultation = () => {
-    navigate('/strategy-session');
+    const demoSection = document.getElementById('demo');
+    if (demoSection) {
+      demoSection.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const handleReset = () => {
