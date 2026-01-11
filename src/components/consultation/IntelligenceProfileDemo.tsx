@@ -176,8 +176,10 @@ export function IntelligenceProfileDemo({
      (marketResearch.commonObjections && marketResearch.commonObjections.length > 0));
 
   // Handler for industry selection from dropdown
+  // Pass displayName (e.g. "Design / Creative Agency") to the context for proper display
   const handleIndustrySelect = (variant: IndustryVariant, displayName: string) => {
-    onIndustryCorrection?.(variant);
+    console.log('🎯 [Profile] Industry selection:', displayName, '→ variant:', variant);
+    onIndustryCorrection?.(displayName);
     setShowIndustryCorrection(false);
   };
   

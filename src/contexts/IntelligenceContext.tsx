@@ -994,18 +994,46 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // Manual industry selection (user correction)
   // ----------------------------------------
   const confirmIndustrySelection = useCallback((variantOrDisplayOption: string) => {
-    // Handle both raw variants (e.g., 'consulting') and display options (e.g., 'Creative Agency')
-    // First try to map as a display option, then fall back to treating as a variant
-    const variant = displayOptionToVariant(variantOrDisplayOption) !== 'default' || variantOrDisplayOption === 'Other'
-      ? displayOptionToVariant(variantOrDisplayOption)
-      : variantOrDisplayOption as any;
+    // Handle both raw variants (e.g., 'consulting'), display options (e.g., 'Creative Agency'),
+    // and subcategory labels (e.g., 'Design / Creative Agency')
+    
+    // First try to map as a display option
+    let variant = displayOptionToVariant(variantOrDisplayOption);
+    let displayName = variantOrDisplayOption;
+    
+    if (variant === 'default' && variantOrDisplayOption !== 'Other') {
+      // Not a recognized display option - check if it's a raw variant
+      const validVariants = ['saas', 'consulting', 'creative', 'healthcare', 'ecommerce', 'manufacturing', 'finance', 'legal', 'default'];
+      if (validVariants.includes(variantOrDisplayOption)) {
+        // It's a raw variant, convert to display name
+        variant = variantOrDisplayOption as any;
+        displayName = variantToDisplayName(variant);
+      } else {
+        // It's a custom label like "Design / Creative Agency" from dropdown subcategory
+        // Try to infer variant from keywords
+        const lowerInput = variantOrDisplayOption.toLowerCase();
+        if (lowerInput.includes('creative') || lowerInput.includes('design') || lowerInput.includes('brand')) {
+          variant = 'creative';
+        } else if (lowerInput.includes('saas') || lowerInput.includes('software') || lowerInput.includes('tech')) {
+          variant = 'saas';
+        } else if (lowerInput.includes('consult') || lowerInput.includes('coach') || lowerInput.includes('train')) {
+          variant = 'consulting';
+        } else if (lowerInput.includes('health') || lowerInput.includes('medical')) {
+          variant = 'healthcare';
+        } else if (lowerInput.includes('ecommerce') || lowerInput.includes('commerce') || lowerInput.includes('retail')) {
+          variant = 'ecommerce';
+        } else if (lowerInput.includes('financ') || lowerInput.includes('bank') || lowerInput.includes('insur')) {
+          variant = 'finance';
+        } else if (lowerInput.includes('legal') || lowerInput.includes('law') || lowerInput.includes('attorney')) {
+          variant = 'legal';
+        } else if (lowerInput.includes('manufactur') || lowerInput.includes('industrial')) {
+          variant = 'manufacturing';
+        }
+        // Keep the original displayName from the subcategory
+      }
+    }
     
     const confirmed = confirmIndustry(variant);
-    
-    // For display, use the original selection if it's a display option, otherwise convert
-    const displayName = INDUSTRY_OPTIONS.includes(variantOrDisplayOption as any) 
-      ? variantOrDisplayOption 
-      : variantToDisplayName(variant);
     
     console.log('🎯 [Industry] User confirmed selection:', variantOrDisplayOption, '→ variant:', variant, '→ display:', displayName);
     
