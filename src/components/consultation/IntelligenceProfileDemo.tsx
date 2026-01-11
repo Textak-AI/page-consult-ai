@@ -194,6 +194,20 @@ export function IntelligenceProfileDemo({
     
     // If hybrid mode, show split view with edit capability
     if (hasHybridMode && aestheticMode) {
+      // Get the display name for YOUR industry from industryDetection (user-confirmed) or aestheticMode
+      const yourIndustryDisplay = isConfirmed && industryDetection
+        ? variantToDisplayName(industryDetection.variant)
+        : aestheticMode.secondary || variantToDisplayName(industryDetection?.variant || 'default');
+      
+      // Target market comes from aestheticMode.primary (buyer's industry)
+      const targetMarketDisplay = aestheticMode.primary;
+      
+      // Design approach based on YOUR confirmed industry, not target market
+      const confirmedVariant = industryDetection?.variant || 'default';
+      const designApproach = isConfirmed
+        ? getDesignApproachText(confirmedVariant as any, targetMarketDisplay)
+        : aestheticMode.rationale;
+      
       return (
         <div className="px-4 py-3 border-b border-slate-800/50">
           <div className="space-y-2">
@@ -226,10 +240,10 @@ export function IntelligenceProfileDemo({
               )}
             </div>
             
-            {/* Your Industry (provider) */}
+            {/* Your Industry (provider) - uses confirmed industryDetection */}
             <div className="flex justify-between text-sm">
               <span className="text-slate-400">Your Industry</span>
-              <span className="text-slate-200">{aestheticMode.secondary}</span>
+              <span className="text-slate-200">{yourIndustryDisplay}</span>
             </div>
             
             {/* Target Market (buyer's industry) - Primary driver */}
@@ -237,11 +251,11 @@ export function IntelligenceProfileDemo({
               <span className="text-slate-400">Target Market</span>
               <span className="text-cyan-400 font-medium flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
-                {aestheticMode.primary}
+                {targetMarketDisplay}
               </span>
             </div>
             
-            {/* Blend explanation */}
+            {/* Blend explanation - uses YOUR industry for design approach */}
             <motion.div 
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -249,7 +263,7 @@ export function IntelligenceProfileDemo({
             >
               <p className="text-[11px] text-slate-300 leading-relaxed">
                 <span className="text-cyan-400 font-medium">Design approach:</span>{' '}
-                {aestheticMode.rationale}
+                {designApproach}
               </p>
             </motion.div>
             
