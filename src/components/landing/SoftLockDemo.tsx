@@ -486,11 +486,31 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 </div>
 
                 {/* ============================================
-                    INPUT AREA - Absolute positioned at main container level
+                    INPUT AREA - Matches Intel panel exactly:
+                    absolute bottom-0, p-4, space-y-3, same structure
                     ============================================ */}
-                <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm p-4">
+                <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm p-4 space-y-3">
+                  {/* Spacer matching Intel's "Progress to unlock" section height */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400 invisible">Progress to unlock</span>
+                      <span className="text-cyan-400 font-medium invisible">0/70</span>
+                    </div>
+                    <div className="h-1.5" />
+                  </div>
+                  
+                  {/* Input preview for long messages */}
+                  {showInputPreview && inputValue.trim() && (
+                    <div className="px-4 py-2 rounded-lg bg-slate-800/50 border border-slate-700/30 -mt-1">
+                      <p className="text-sm text-slate-400/70 italic whitespace-pre-wrap line-clamp-3">
+                        {inputValue}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Input field - py-3 matches Generate button's py-3 */}
                   <form onSubmit={handleSubmit}>
-                    <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 h-[44px]">
+                    <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 py-3">
                       <textarea
                         ref={inputRef}
                         value={inputValue}
@@ -505,14 +525,14 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                         placeholder="Tell me about your business..."
                         disabled={state.isProcessing}
                         rows={1}
-                        className="flex-1 bg-transparent text-slate-200 placeholder:text-slate-500 resize-none outline-none text-[15px] leading-none"
-                        style={{ height: '20px' }}
+                        className="flex-1 bg-transparent text-slate-200 placeholder:text-slate-500 resize-none outline-none text-[15px] leading-relaxed overflow-hidden"
+                        style={{ height: '24px' }}
                       />
                       
                       <button
                         type="submit"
                         disabled={state.isProcessing || !inputValue.trim()}
-                        className="flex-shrink-0 p-1 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        className="flex-shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       >
                         {state.isProcessing ? (
                           <Loader2 className="w-5 h-5 animate-spin" />
