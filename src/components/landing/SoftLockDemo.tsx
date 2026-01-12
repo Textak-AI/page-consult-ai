@@ -365,12 +365,13 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 
                 {/* ============================================
                     MESSAGES AREA - Scrollable container
+                    Added pb-32 to account for absolute-positioned input
                     ============================================ */}
                 <div 
                   ref={chatContainerRef} 
                   className="flex-1 overflow-y-auto min-h-0"
                 >
-                  <div className="px-6 py-6 space-y-2">
+                  <div className="px-6 py-6 pb-40 space-y-2">
                     <AnimatePresence mode="popLayout">
                       {displayConversation.map((message, index) => {
                         const isInitialGhostMessage = index === 0 && state.conversation.length === 0;
@@ -485,9 +486,9 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 </div>
 
                 {/* ============================================
-                    INPUT AREA - Matches Intel panel bottom exactly
+                    INPUT AREA - Absolute positioned to match Intel panel
                     ============================================ */}
-                <div className="flex-shrink-0 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm p-4 space-y-3">
+                <div className="absolute bottom-0 left-0 right-0 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm p-4 space-y-3">
                   {/* Spacer matching Intel's "Progress to unlock" section exactly */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs h-5">
