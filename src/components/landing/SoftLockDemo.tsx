@@ -360,18 +360,17 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 {/* Border */}
                 <div className="absolute inset-0 rounded-2xl border border-slate-800/40 pointer-events-none" />
                 
-                {/* Content container */}
+                {/* Content container - messages only */}
                 <div className="relative z-10 flex flex-col flex-1 overflow-hidden">
                 
                 {/* ============================================
                     MESSAGES AREA - Scrollable container
-                    Added pb-32 to account for absolute-positioned input
                     ============================================ */}
                 <div 
                   ref={chatContainerRef} 
                   className="flex-1 overflow-y-auto min-h-0"
                 >
-                  <div className="px-6 py-6 pb-40 space-y-2">
+                  <div className="px-6 py-6 pb-32 space-y-2">
                     <AnimatePresence mode="popLayout">
                       {displayConversation.map((message, index) => {
                         const isInitialGhostMessage = index === 0 && state.conversation.length === 0;
@@ -484,20 +483,12 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                     <div ref={messagesEndRef} />
                   </div>
                 </div>
+                </div>
 
                 {/* ============================================
-                    INPUT AREA - Absolute positioned to match Intel panel
+                    INPUT AREA - Absolute positioned at main container level
                     ============================================ */}
-                <div className="absolute bottom-0 left-0 right-0 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm p-4 space-y-3">
-                  {/* Spacer matching Intel's "Progress to unlock" section exactly */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs h-5">
-                      <span className="text-slate-500 opacity-0">Spacer</span>
-                    </div>
-                    <div className="h-1.5" />
-                  </div>
-                  
-                  {/* Input field - height matches Generate button exactly */}
+                <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm p-4">
                   <form onSubmit={handleSubmit}>
                     <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 h-[44px]">
                       <textarea
@@ -531,7 +522,6 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                       </button>
                     </div>
                   </form>
-                </div>
                 </div>
               </main>
               
