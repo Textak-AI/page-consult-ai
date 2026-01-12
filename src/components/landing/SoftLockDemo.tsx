@@ -367,15 +367,16 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 {/* Content container */}
                 <div className="relative z-10 flex flex-col flex-1 overflow-hidden">
                 
-                {/* Messages Area - normal top-down layout */}
+                {/* ============================================
+                    MESSAGES AREA - Scrollable container
+                    ============================================ */}
                 <div 
                   ref={chatContainerRef} 
                   className="flex-1 overflow-y-auto min-h-0"
                 >
-                  <div className="max-w-4xl mx-auto px-6 py-6 space-y-6 w-full">
+                  <div className="max-w-3xl mx-auto px-6 py-6 space-y-2">
                     <AnimatePresence mode="popLayout">
                       {displayConversation.map((message, index) => {
-                        // Check if this is the initial ghost message (first message, no real conversation yet)
                         const isInitialGhostMessage = index === 0 && state.conversation.length === 0;
                         const showAsGhost = isInitialGhostMessage && !isGhostActivated;
                         
@@ -386,88 +387,85 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.3 }}
+                            className="w-full"
                           >
                             {message.role === 'assistant' ? (
-                              /* AI Message - Premium styling with glow */
-                              <div className="flex gap-4 group">
-                                {/* Avatar with subtle glow */}
+                              /* ======== AI MESSAGE - LEFT ALIGNED ======== */
+                              <div className="flex items-start gap-4 mb-8">
+                                {/* Avatar with glow */}
                                 <motion.div 
-                                  className="flex-shrink-0 relative"
+                                  className="relative flex-shrink-0"
                                   animate={{ opacity: showAsGhost ? 0.5 : 1 }}
                                   transition={{ duration: 0.35 }}
                                 >
-                                  <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                  <div className="relative">
-                                    <StrategistIcon size={40} />
+                                  <div className="absolute inset-0 bg-cyan-500/25 rounded-full blur-md" />
+                                  <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-cyan-500/40 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+                                    <StrategistIcon size={24} />
                                   </div>
                                 </motion.div>
                                 
-                                <div className="flex-1 min-w-0 max-w-[85%]">
+                                {/* Message content - max 75% width */}
+                                <div className="max-w-[75%]">
                                   <motion.div 
                                     className="flex items-center gap-2 mb-1.5"
                                     animate={{ opacity: showAsGhost ? 0.5 : 1 }}
                                     transition={{ duration: 0.35 }}
                                   >
-                                    <span className="text-xs font-medium text-cyan-400/80">PageConsult AI</span>
-                                    <span className="text-[10px] text-slate-500">Strategy Consultant</span>
+                                    <span className="text-cyan-400 font-medium text-sm">PageConsult AI</span>
+                                    <span className="text-slate-500 text-xs">Strategy Consultant</span>
                                   </motion.div>
                                   
-                                  {/* Message bubble with ultra-fine glow */}
                                   <div className="relative">
-                                    {/* Subtle glow layer */}
+                                    {/* Glow layer - prominent */}
                                     <motion.div 
-                                      className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/15 to-purple-500/15 rounded-2xl blur-sm"
-                                      animate={{ opacity: showAsGhost ? 0 : 0.6 }}
+                                      className="absolute -inset-px bg-gradient-to-r from-cyan-500/20 to-purple-500/10 rounded-2xl blur-sm"
+                                      animate={{ opacity: showAsGhost ? 0 : 0.7 }}
                                       transition={{ duration: 0.35 }}
                                     />
                                     
-                                    {/* Main bubble */}
+                                    {/* Bubble */}
                                     <motion.div 
-                                      className="relative bg-slate-800/70 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 border border-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.08)]"
-                                      animate={{ 
-                                        opacity: showAsGhost ? 0.55 : 1,
-                                      }}
+                                      className="relative bg-slate-800/70 backdrop-blur-sm rounded-2xl px-4 py-3 border border-cyan-500/25 shadow-[0_0_20px_rgba(6,182,212,0.08)]"
+                                      animate={{ opacity: showAsGhost ? 0.55 : 1 }}
                                       transition={{ duration: 0.35 }}
                                     >
                                       <motion.div
-                                        className="text-[15px] leading-relaxed text-slate-200 selection:bg-purple-500/30"
-                                        animate={{ 
-                                          fontStyle: showAsGhost ? 'italic' : 'normal',
-                                        }}
+                                        className="text-[15px] text-slate-100 leading-relaxed"
+                                        animate={{ fontStyle: showAsGhost ? 'italic' : 'normal' }}
                                         transition={{ duration: 0.35 }}
                                       >
-                                        <div className="prose prose-invert prose-sm max-w-none prose-p:my-1 prose-p:leading-relaxed">
-                                          <ReactMarkdown
-                                            components={{
-                                              strong: ({ children }) => <span className="font-semibold text-white">{children}</span>,
-                                              p: ({ children }) => <span className="block">{children}</span>,
-                                              ul: ({ children }) => <ul className="my-2 ml-4 list-disc">{children}</ul>,
-                                              li: ({ children }) => <li className="text-slate-200">{children}</li>,
-                                            }}
-                                          >
-                                            {message.content}
-                                          </ReactMarkdown>
-                                        </div>
+                                        <ReactMarkdown
+                                          components={{
+                                            strong: ({ children }) => <span className="font-semibold text-white">{children}</span>,
+                                            em: ({ children }) => <span className="italic text-slate-200">{children}</span>,
+                                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                            ul: ({ children }) => <ul className="my-2 ml-4 list-disc">{children}</ul>,
+                                            li: ({ children }) => <li className="text-slate-100">{children}</li>,
+                                          }}
+                                        >
+                                          {message.content}
+                                        </ReactMarkdown>
                                       </motion.div>
                                     </motion.div>
                                   </div>
                                 </div>
                               </div>
                             ) : (
-                              /* User Message - Premium styling with gradient glow */
-                              <div className="flex justify-end">
-                                <div className="max-w-[85%]">
+                              /* ======== USER MESSAGE - RIGHT ALIGNED ======== */
+                              <div className="flex justify-end mb-6">
+                                <div className="max-w-[65%]">
                                   <div className="relative">
                                     {/* Subtle glow layer */}
-                                    <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-500/15 to-cyan-500/15 rounded-2xl blur-sm opacity-50" />
+                                    <div className="absolute -inset-px bg-gradient-to-r from-slate-600/10 to-cyan-500/10 rounded-2xl blur-sm opacity-40" />
                                     
-                                    {/* Main bubble */}
-                                    <div className="relative bg-gradient-to-br from-cyan-600/15 to-purple-600/15 backdrop-blur-sm rounded-2xl rounded-tr-md px-4 py-3 border border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.08)]">
-                                      <div className="text-[15px] leading-relaxed text-slate-100 selection:bg-cyan-500/30 prose prose-invert prose-sm max-w-none prose-p:my-0">
+                                    {/* Bubble */}
+                                    <div className="relative bg-slate-700/50 backdrop-blur-sm rounded-2xl px-4 py-3 border border-slate-600/40">
+                                      <div className="text-[15px] text-slate-200 leading-relaxed">
                                         <ReactMarkdown
                                           components={{
                                             strong: ({ children }) => <span className="font-semibold text-white">{children}</span>,
-                                            p: ({ children }) => <span>{children}</span>,
+                                            em: ({ children }) => <span className="italic text-slate-300">{children}</span>,
+                                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
                                           }}
                                         >
                                           {message.content}
@@ -483,23 +481,24 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                       })}
                     </AnimatePresence>
                     
-                    {/* Typing indicator - with premium styling */}
+                    {/* Typing indicator */}
                     {state.isProcessing && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex gap-4"
+                        className="flex items-start gap-4 mb-8"
                       >
-                        <div className="flex-shrink-0 relative">
-                          <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-md animate-pulse" />
-                          <div className="relative">
-                            <StrategistIcon size={40} />
+                        <div className="relative flex-shrink-0">
+                          <div className="absolute inset-0 bg-cyan-500/25 rounded-full blur-md animate-pulse" />
+                          <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-cyan-500/40 flex items-center justify-center">
+                            <StrategistIcon size={24} />
                           </div>
                         </div>
-                        <div className="relative">
-                          <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-2xl blur-sm animate-pulse" />
-                          <div className="relative bg-slate-800/70 backdrop-blur-sm rounded-2xl rounded-tl-md border border-cyan-500/10">
-                            <TypingIndicator />
+                        <div className="bg-slate-800/70 rounded-2xl px-4 py-3 border border-cyan-500/25">
+                          <div className="flex gap-1">
+                            <span className="w-2 h-2 bg-cyan-400/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-2 h-2 bg-cyan-400/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-2 h-2 bg-cyan-400/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                           </div>
                         </div>
                       </motion.div>
@@ -509,11 +508,13 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                   </div>
                 </div>
 
-                {/* Input Area - Premium styling with overflow preview */}
-                <div className="border-t border-slate-800/30 bg-slate-950/40 flex-shrink-0 px-6 py-5">
-                  <div className="max-w-4xl mx-auto">
+                {/* ============================================
+                    INPUT AREA - Fixed at bottom, same alignment
+                    ============================================ */}
+                <div className="flex-shrink-0 border-t border-slate-800/50">
+                  <div className="max-w-3xl mx-auto px-6 py-4">
                     <form onSubmit={handleSubmit}>
-                      {/* Overflow preview - shows when content exceeds one line */}
+                      {/* Overflow preview - only when text > 80 chars */}
                       <AnimatePresence>
                         {showInputPreview && inputValue.trim() && (
                           <motion.div
@@ -523,8 +524,8 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                             transition={{ duration: 0.2 }}
                             className="overflow-hidden"
                           >
-                            <div className="px-4 py-3 rounded-xl bg-slate-800/40 border border-slate-700/40">
-                              <p className="text-sm text-slate-300/70 italic whitespace-pre-wrap leading-relaxed">
+                            <div className="px-4 py-2.5 rounded-xl bg-slate-800/30 border border-slate-700/40">
+                              <p className="text-sm text-slate-400/70 italic leading-relaxed whitespace-pre-wrap">
                                 {inputValue}
                               </p>
                             </div>
@@ -532,12 +533,10 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                         )}
                       </AnimatePresence>
                       
-                      {/* Main input with premium styling */}
+                      {/* Input field with premium styling */}
                       <div className="relative">
-                        {/* Subtle glow under input */}
-                        <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-2xl blur-sm opacity-0 focus-within:opacity-100 transition-opacity duration-300" />
-                        
-                        <div className="relative flex items-end gap-3 bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 py-3">
+                        <div className="absolute -inset-px bg-gradient-to-r from-cyan-500/5 to-purple-500/5 rounded-2xl blur-sm" />
+                        <div className="relative flex items-end gap-3 bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 py-3">
                           <textarea
                             ref={inputRef}
                             value={inputValue}
@@ -552,19 +551,19 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                             placeholder="Tell me about your business..."
                             disabled={state.isProcessing}
                             rows={1}
-                            className="flex-1 bg-transparent text-slate-200 placeholder:text-slate-500 resize-none outline-none text-[15px] max-h-24 overflow-y-auto leading-relaxed selection:bg-cyan-500/30"
+                            className="flex-1 bg-transparent text-slate-200 placeholder:text-slate-500 resize-none outline-none text-[15px] leading-relaxed max-h-32 overflow-y-auto"
                             onInput={(e) => {
                               const target = e.target as HTMLTextAreaElement;
                               target.style.height = 'auto';
-                              target.style.height = Math.min(target.scrollHeight, 96) + 'px';
+                              target.style.height = Math.min(target.scrollHeight, 128) + 'px';
                             }}
                           />
                           
-                          {/* Send button with gradient and hover glow */}
+                          {/* Send button */}
                           <button
                             type="submit"
-                            disabled={!inputValue.trim() || state.isProcessing}
-                            className="flex-shrink-0 p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all duration-200"
+                            disabled={state.isProcessing || !inputValue.trim()}
+                            className="flex-shrink-0 p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-[0_0_20px_rgba(6,182,212,0.35)] transition-all duration-200"
                           >
                             {state.isProcessing ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
