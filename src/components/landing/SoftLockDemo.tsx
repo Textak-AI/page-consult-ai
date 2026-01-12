@@ -370,7 +370,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                   ref={chatContainerRef} 
                   className="flex-1 overflow-y-auto min-h-0"
                 >
-                  <div className="px-6 py-6 pb-32 space-y-2">
+                  <div className="px-6 py-6 pb-20 space-y-2">
                     <AnimatePresence mode="popLayout">
                       {displayConversation.map((message, index) => {
                         const isInitialGhostMessage = index === 0 && state.conversation.length === 0;
