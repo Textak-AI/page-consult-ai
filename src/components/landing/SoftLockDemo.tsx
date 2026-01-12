@@ -485,71 +485,52 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 </div>
 
                 {/* ============================================
-                    INPUT AREA - Fixed at bottom, same alignment
+                    INPUT AREA - Matches Intel panel bottom exactly
                     ============================================ */}
-                <div className="flex-shrink-0 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm">
-                  <div className="px-4 py-4">
-                    <form onSubmit={handleSubmit}>
-                      {/* Overflow preview - only when text > 80 chars */}
-                      <AnimatePresence>
-                        {showInputPreview && inputValue.trim() && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            animate={{ opacity: 1, height: 'auto', marginBottom: 12 }}
-                            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="px-4 py-2.5 rounded-xl bg-slate-800/30 border border-slate-700/40">
-                              <p className="text-sm text-slate-400/70 italic leading-relaxed whitespace-pre-wrap">
-                                {inputValue}
-                              </p>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                      
-                      {/* Input field - compact styling */}
-                      <div className="relative">
-                        <div className="relative flex items-end gap-3 bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-3 py-2">
-                          <textarea
-                            ref={inputRef}
-                            value={inputValue}
-                            onChange={handleInputChange}
-                            onFocus={handleInputFocus}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSubmit(e);
-                              }
-                            }}
-                            placeholder="Tell me about your business..."
-                            disabled={state.isProcessing}
-                            rows={1}
-                            className="flex-1 bg-transparent text-slate-200 placeholder:text-slate-500 resize-none outline-none text-[15px] leading-relaxed max-h-32 overflow-y-auto"
-                            onInput={(e) => {
-                              const target = e.target as HTMLTextAreaElement;
-                              target.style.height = 'auto';
-                              target.style.height = Math.min(target.scrollHeight, 128) + 'px';
-                            }}
-                          />
-                          
-                          {/* Send button - understated */}
-                          <button
-                            type="submit"
-                            disabled={state.isProcessing || !inputValue.trim()}
-                            className="flex-shrink-0 p-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                          >
-                            {state.isProcessing ? (
-                              <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : (
-                              <Send className="w-5 h-5" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </form>
+                <div className="flex-shrink-0 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm p-4 space-y-3">
+                  {/* Spacer to match "Progress to unlock" height on Intel side */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500">Type your response below</span>
+                    </div>
+                    <div className="h-1.5" /> {/* Match progress bar height */}
                   </div>
+                  
+                  {/* Input field - matches Generate button height (py-3) */}
+                  <form onSubmit={handleSubmit} className="relative">
+                    <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 py-3">
+                      <textarea
+                        ref={inputRef}
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        onFocus={handleInputFocus}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSubmit(e);
+                          }
+                        }}
+                        placeholder="Tell me about your business..."
+                        disabled={state.isProcessing}
+                        rows={1}
+                        className="flex-1 bg-transparent text-slate-200 placeholder:text-slate-500 resize-none outline-none text-[15px] leading-relaxed max-h-32 overflow-y-auto"
+                        style={{ minHeight: '24px', height: '24px' }}
+                      />
+                      
+                      {/* Send button */}
+                      <button
+                        type="submit"
+                        disabled={state.isProcessing || !inputValue.trim()}
+                        className="flex-shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {state.isProcessing ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Send className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                  </form>
                 </div>
                 </div>
               </main>
