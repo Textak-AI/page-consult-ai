@@ -209,9 +209,10 @@ export function IntelligenceProfileDemo({
     // If hybrid mode, show split view with edit capability
     if (hasHybridMode && aestheticMode) {
       // Get the display name for YOUR industry from industryDetection (user-confirmed) or aestheticMode
-      // PRIORITY: confirmed industryDetection > aestheticMode.secondary > fallback
+      // PRIORITY: user-selected displayName > variantToDisplayName > aestheticMode.secondary > fallback
+      // This ensures "Marketing Agency" shows instead of generic "General"
       const yourIndustryDisplay = industryDetection 
-        ? variantToDisplayName(industryDetection.variant)
+        ? (industryDetection.displayName || variantToDisplayName(industryDetection.variant))
         : aestheticMode.secondary || '—';
       
       // Target market comes from aestheticMode.primary (buyer's industry)

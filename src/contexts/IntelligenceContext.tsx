@@ -1033,12 +1033,14 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       }
     }
     
-    const confirmed = confirmIndustry(variant);
+    // Pass displayName to confirmIndustry so it's stored in the detection object
+    const confirmed = confirmIndustry(variant, displayName);
     
     console.log('🎯 [Industry] User confirmed selection:', variantOrDisplayOption, '→ variant:', variant, '→ display:', displayName);
     
     // Always update to the new selected value
     // The confirmed detection has manuallyConfirmed: true, which prevents re-detection
+    // displayName is now stored in the industryDetection object itself
     setState(prev => ({
       ...prev,
       industryDetection: confirmed,
