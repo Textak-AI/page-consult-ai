@@ -14,6 +14,7 @@ export interface IndustryDetection {
   keywords: string[];
   score: number;
   manuallyConfirmed: boolean;
+  displayName?: string; // User-selected display name (e.g., "Marketing Agency" instead of generic "General")
 }
 
 // Agency signal patterns - if these appear, the person is likely an agency/consultant
@@ -258,13 +259,14 @@ export function detectIndustryFromConversation(
 /**
  * Create a manually confirmed industry detection
  */
-export function confirmIndustry(variant: IndustryVariant): IndustryDetection {
+export function confirmIndustry(variant: IndustryVariant, displayName?: string): IndustryDetection {
   return {
     variant,
     confidence: 'high',
     keywords: ['User confirmed'],
     score: 100,
     manuallyConfirmed: true,
+    displayName: displayName || undefined,
   };
 }
 
