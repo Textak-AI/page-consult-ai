@@ -2,9 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Send, Loader2, X, BarChart3 } from 'lucide-react';
+import { Send, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import BusinessCardGateModal from './BusinessCardGateModal';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
@@ -12,6 +11,7 @@ import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
 import { DemoPreviewWidget } from './DemoPreviewWidget';
 import { MutedCircuitBackground } from './MutedCircuitBackground';
 import { StrategistIcon } from '@/components/ui/StrategistIcon';
+import ReactMarkdown from 'react-markdown';
 
 // Circuit pattern SVG - extremely subtle for expanded view (2% opacity)
 const circuitPatternSvg = `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.02'%3E%3Cpath d='M0 40h20v-20h20v-20'/%3E%3Cpath d='M80 40h-20v20h-20v20'/%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='60' cy='60' r='2'/%3E%3C/g%3E%3C/svg%3E")`;
@@ -44,10 +44,16 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
   const navigate = useNavigate();
   const { state, processUserMessage, submitBusinessCard, dismissEmailGate, reopenEmailGate } = useIntelligence();
   const [inputValue, setInputValue] = useState('');
+  const [showInputPreview, setShowInputPreview] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Check if input content exceeds one line (80 chars or newline)
+  useEffect(() => {
+    setShowInputPreview(inputValue.length > 80 || inputValue.includes('\n'));
+  }, [inputValue]);
   
   // Soft lock state
   const [isLocked, setIsLocked] = useState(false);
@@ -129,7 +135,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
   };
 
   // Handle input change - also activates ghost text
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
     if (!isGhostActivated && e.target.value.length > 0) {
       setIsGhostActivated(true);
@@ -382,69 +388,119 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                             transition={{ duration: 0.3 }}
                           >
                             {message.role === 'assistant' ? (
-                              <div className="flex gap-4">
+                              /* AI Message - Premium styling with glow */
+                              <div className="flex gap-4 group">
+                                {/* Avatar with subtle glow */}
                                 <motion.div 
-                                  className="flex-shrink-0"
+                                  className="flex-shrink-0 relative"
                                   animate={{ opacity: showAsGhost ? 0.5 : 1 }}
                                   transition={{ duration: 0.35 }}
                                 >
-                                  <StrategistIcon size={40} />
+                                  <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                  <div className="relative">
+                                    <StrategistIcon size={40} />
+                                  </div>
                                 </motion.div>
+                                
                                 <div className="flex-1 min-w-0 max-w-[85%]">
                                   <motion.div 
                                     className="flex items-center gap-2 mb-1.5"
                                     animate={{ opacity: showAsGhost ? 0.5 : 1 }}
                                     transition={{ duration: 0.35 }}
                                   >
-                                    <span className="text-sm font-medium text-white">PageConsult AI</span>
-                                    <span className="text-xs text-slate-500">Strategy Consultant</span>
+                                    <span className="text-xs font-medium text-cyan-400/80">PageConsult AI</span>
+                                    <span className="text-[10px] text-slate-500">Strategy Consultant</span>
                                   </motion.div>
-                                  <motion.div 
-                                    className="rounded-2xl rounded-tl-md px-4 py-3 text-[15px] leading-relaxed break-words"
-                                    animate={{ 
-                                      opacity: showAsGhost ? 0.55 : 1,
-                                      backgroundColor: showAsGhost ? 'rgba(30, 41, 59, 0)' : 'rgba(30, 41, 59, 0.6)',
-                                    }}
-                                    transition={{ duration: 0.35 }}
-                                  >
-                                    <motion.span
-                                      className="text-slate-200"
+                                  
+                                  {/* Message bubble with ultra-fine glow */}
+                                  <div className="relative">
+                                    {/* Subtle glow layer */}
+                                    <motion.div 
+                                      className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/15 to-purple-500/15 rounded-2xl blur-sm"
+                                      animate={{ opacity: showAsGhost ? 0 : 0.6 }}
+                                      transition={{ duration: 0.35 }}
+                                    />
+                                    
+                                    {/* Main bubble */}
+                                    <motion.div 
+                                      className="relative bg-slate-800/70 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 border border-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.08)]"
                                       animate={{ 
-                                        fontStyle: showAsGhost ? 'italic' : 'normal',
+                                        opacity: showAsGhost ? 0.55 : 1,
                                       }}
                                       transition={{ duration: 0.35 }}
                                     >
-                                      {message.content}
-                                    </motion.span>
-                                  </motion.div>
+                                      <motion.div
+                                        className="text-[15px] leading-relaxed text-slate-200 selection:bg-purple-500/30"
+                                        animate={{ 
+                                          fontStyle: showAsGhost ? 'italic' : 'normal',
+                                        }}
+                                        transition={{ duration: 0.35 }}
+                                      >
+                                        <div className="prose prose-invert prose-sm max-w-none prose-p:my-1 prose-p:leading-relaxed">
+                                          <ReactMarkdown
+                                            components={{
+                                              strong: ({ children }) => <span className="font-semibold text-white">{children}</span>,
+                                              p: ({ children }) => <span className="block">{children}</span>,
+                                              ul: ({ children }) => <ul className="my-2 ml-4 list-disc">{children}</ul>,
+                                              li: ({ children }) => <li className="text-slate-200">{children}</li>,
+                                            }}
+                                          >
+                                            {message.content}
+                                          </ReactMarkdown>
+                                        </div>
+                                      </motion.div>
+                                    </motion.div>
+                                  </div>
                                 </div>
                               </div>
-                          ) : (
-                            <div className="flex justify-end">
-                              <div className="max-w-[85%]">
-                                <div className="bg-cyan-600/20 border border-cyan-500/20 rounded-2xl rounded-tr-md px-4 py-3 text-slate-200 text-[15px] leading-relaxed break-words">
-                                  {message.content}
+                            ) : (
+                              /* User Message - Premium styling with gradient glow */
+                              <div className="flex justify-end">
+                                <div className="max-w-[85%]">
+                                  <div className="relative">
+                                    {/* Subtle glow layer */}
+                                    <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-500/15 to-cyan-500/15 rounded-2xl blur-sm opacity-50" />
+                                    
+                                    {/* Main bubble */}
+                                    <div className="relative bg-gradient-to-br from-cyan-600/15 to-purple-600/15 backdrop-blur-sm rounded-2xl rounded-tr-md px-4 py-3 border border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.08)]">
+                                      <div className="text-[15px] leading-relaxed text-slate-100 selection:bg-cyan-500/30 prose prose-invert prose-sm max-w-none prose-p:my-0">
+                                        <ReactMarkdown
+                                          components={{
+                                            strong: ({ children }) => <span className="font-semibold text-white">{children}</span>,
+                                            p: ({ children }) => <span>{children}</span>,
+                                          }}
+                                        >
+                                          {message.content}
+                                        </ReactMarkdown>
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
-                        </motion.div>
+                            )}
+                          </motion.div>
                         );
                       })}
                     </AnimatePresence>
                     
-                    {/* Typing indicator */}
+                    {/* Typing indicator - with premium styling */}
                     {state.isProcessing && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="flex gap-4"
                       >
-                        <div className="flex-shrink-0">
-                          <StrategistIcon size={40} />
+                        <div className="flex-shrink-0 relative">
+                          <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-md animate-pulse" />
+                          <div className="relative">
+                            <StrategistIcon size={40} />
+                          </div>
                         </div>
-                        <div className="bg-slate-800/60 rounded-2xl rounded-tl-md">
-                          <TypingIndicator />
+                        <div className="relative">
+                          <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-2xl blur-sm animate-pulse" />
+                          <div className="relative bg-slate-800/70 backdrop-blur-sm rounded-2xl rounded-tl-md border border-cyan-500/10">
+                            <TypingIndicator />
+                          </div>
                         </div>
                       </motion.div>
                     )}
@@ -453,32 +509,70 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                   </div>
                 </div>
 
-                {/* Input Area - aligned with messages */}
-                <div className="border-t border-slate-800/30 bg-slate-950/40 flex-shrink-0 px-6 py-6">
+                {/* Input Area - Premium styling with overflow preview */}
+                <div className="border-t border-slate-800/30 bg-slate-950/40 flex-shrink-0 px-6 py-5">
                   <div className="max-w-4xl mx-auto">
                     <form onSubmit={handleSubmit}>
-                      <div className="relative flex items-center">
-                        <input
-                          ref={inputRef}
-                          type="text"
-                          value={inputValue}
-                          onChange={handleInputChange}
-                          onFocus={handleInputFocus}
-                          placeholder="Tell me about your business..."
-                          disabled={state.isProcessing}
-                          className="w-full px-4 py-3 pr-12 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-slate-600 transition-colors text-[15px]"
-                        />
-                        <button
-                          type="submit"
-                          disabled={!inputValue.trim() || state.isProcessing}
-                          className="absolute right-3 p-1.5 rounded-md text-slate-400 hover:text-cyan-400 disabled:text-slate-600 disabled:cursor-not-allowed transition-colors"
-                        >
-                          {state.isProcessing ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Send className="w-4 h-4" />
-                          )}
-                        </button>
+                      {/* Overflow preview - shows when content exceeds one line */}
+                      <AnimatePresence>
+                        {showInputPreview && inputValue.trim() && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                            animate={{ opacity: 1, height: 'auto', marginBottom: 12 }}
+                            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-4 py-3 rounded-xl bg-slate-800/40 border border-slate-700/40">
+                              <p className="text-sm text-slate-300/70 italic whitespace-pre-wrap leading-relaxed">
+                                {inputValue}
+                              </p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      
+                      {/* Main input with premium styling */}
+                      <div className="relative">
+                        {/* Subtle glow under input */}
+                        <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-2xl blur-sm opacity-0 focus-within:opacity-100 transition-opacity duration-300" />
+                        
+                        <div className="relative flex items-end gap-3 bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 py-3">
+                          <textarea
+                            ref={inputRef}
+                            value={inputValue}
+                            onChange={handleInputChange}
+                            onFocus={handleInputFocus}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSubmit(e);
+                              }
+                            }}
+                            placeholder="Tell me about your business..."
+                            disabled={state.isProcessing}
+                            rows={1}
+                            className="flex-1 bg-transparent text-slate-200 placeholder:text-slate-500 resize-none outline-none text-[15px] max-h-24 overflow-y-auto leading-relaxed selection:bg-cyan-500/30"
+                            onInput={(e) => {
+                              const target = e.target as HTMLTextAreaElement;
+                              target.style.height = 'auto';
+                              target.style.height = Math.min(target.scrollHeight, 96) + 'px';
+                            }}
+                          />
+                          
+                          {/* Send button with gradient and hover glow */}
+                          <button
+                            type="submit"
+                            disabled={!inputValue.trim() || state.isProcessing}
+                            className="flex-shrink-0 p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all duration-200"
+                          >
+                            {state.isProcessing ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Send className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </form>
                   </div>
