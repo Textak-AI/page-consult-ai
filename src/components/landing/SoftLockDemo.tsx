@@ -486,29 +486,19 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 </div>
 
                 {/* ============================================
-                    INPUT AREA - Matches Intel panel exactly:
-                    absolute bottom-0, p-4, space-y-3, same structure
+                    INPUT AREA - Simple absolute positioning, no spacer
                     ============================================ */}
-                <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm p-4 space-y-3">
-                  {/* Spacer matching Intel's "Progress to unlock" section height */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400 invisible">Progress to unlock</span>
-                      <span className="text-cyan-400 font-medium invisible">0/70</span>
-                    </div>
-                    <div className="h-1.5" />
-                  </div>
-                  
+                <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm px-4 py-3">
                   {/* Input preview for long messages */}
                   {showInputPreview && inputValue.trim() && (
-                    <div className="px-4 py-2 rounded-lg bg-slate-800/50 border border-slate-700/30 -mt-1">
+                    <div className="mb-3 px-4 py-2 rounded-lg bg-slate-800/50 border border-slate-700/30">
                       <p className="text-sm text-slate-400/70 italic whitespace-pre-wrap line-clamp-3">
                         {inputValue}
                       </p>
                     </div>
                   )}
                   
-                  {/* Input field - explicit h-[44px] matches Generate button exactly */}
+                  {/* Input field - h-[44px] matches Generate button */}
                   <form onSubmit={handleSubmit}>
                     <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 h-[44px]">
                       <textarea
