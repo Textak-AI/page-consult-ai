@@ -313,37 +313,33 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
               }}
             />
 
-            {/* Header - matches main site nav exactly */}
+            {/* Header - Logo left, Strategy Session center, X right */}
             <motion.header
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="sticky top-0 z-50 h-[72px] border-b border-slate-800/50 bg-slate-950/95 backdrop-blur-xl flex-shrink-0"
+              className="sticky top-0 z-50 h-[56px] border-b border-slate-800/50 bg-slate-950/95 backdrop-blur-xl flex-shrink-0"
             >
-              <div className="h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between max-w-7xl mx-auto">
-                {/* Left: Logo - identical to main nav */}
+              <div className="h-full px-6 flex items-center justify-between relative">
+                {/* Left: Logo + Brand */}
+                <div className="flex items-center gap-2">
+                  <img 
+                    src="/lovable-uploads/030a356d-7f38-4efc-888f-5c6da8e5ff02.png" 
+                    className="w-6 h-6" 
+                    alt="" 
+                  />
+                  <span className="text-cyan-400 font-semibold text-sm">PageConsult AI</span>
+                </div>
+                
+                {/* Center: Strategy Session title */}
+                <div className="absolute left-1/2 transform -translate-x-1/2">
+                  <span className="text-slate-300 font-medium text-sm">Strategy Session</span>
+                </div>
+                
+                {/* Right: Close button */}
                 <button
                   onClick={deactivateLock}
-                  className="flex items-center py-2 hover:opacity-80 transition-opacity"
-                >
-                  <div className="h-8 w-32 flex items-center flex-shrink-0">
-                    <img 
-                      src="/logo/whiteAsset_3combimark_darkmode.svg" 
-                      alt="PageConsult AI" 
-                      className="h-8 w-auto"
-                    />
-                  </div>
-                </button>
-                
-                {/* Center: Session label */}
-                <span className="text-sm text-slate-400 font-medium">
-                  Strategy Session
-                </span>
-                
-                {/* Right: X button */}
-                <button
-                  onClick={deactivateLock}
-                  className="w-9 h-9 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                  className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -391,16 +387,14 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                           >
                             {message.role === 'assistant' ? (
                               /* ======== AI MESSAGE - LEFT ALIGNED ======== */
-                              <div className="flex items-start gap-4 mb-8">
-                                {/* Avatar with glow */}
+                              <div className="flex items-start gap-3 mb-8">
+                                {/* Avatar - just icon, no circle container */}
                                 <motion.div 
-                                  className="relative flex-shrink-0"
+                                  className="flex-shrink-0 text-cyan-400"
                                   animate={{ opacity: showAsGhost ? 0.5 : 1 }}
                                   transition={{ duration: 0.35 }}
                                 >
-                                  <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700/60 flex items-center justify-center">
-                                    <StrategistIcon size={24} />
-                                  </div>
+                                  <StrategistIcon size={24} />
                                 </motion.div>
                                 
                                 {/* Message content - max 75% width */}
@@ -471,12 +465,10 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex items-start gap-4 mb-8"
+                        className="flex items-start gap-3 mb-8"
                       >
-                        <div className="flex-shrink-0">
-                          <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700/60 flex items-center justify-center">
-                            <StrategistIcon size={24} />
-                          </div>
+                        <div className="flex-shrink-0 text-cyan-400">
+                          <StrategistIcon size={24} />
                         </div>
                         <div className="bg-slate-800/80 rounded-2xl px-4 py-3 border border-slate-700/50 shadow-sm">
                           <div className="flex gap-1">
@@ -496,7 +488,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                     INPUT AREA - Fixed at bottom, same alignment
                     ============================================ */}
                 <div className="flex-shrink-0 border-t border-slate-800/50">
-                  <div className="max-w-4xl mr-auto px-6 py-4">
+                  <div className="max-w-4xl mr-auto px-6 py-3">
                     <form onSubmit={handleSubmit}>
                       {/* Overflow preview - only when text > 80 chars */}
                       <AnimatePresence>
@@ -517,9 +509,9 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                         )}
                       </AnimatePresence>
                       
-                      {/* Input field - clean styling */}
+                      {/* Input field - compact styling */}
                       <div className="relative">
-                        <div className="relative flex items-end gap-3 bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 py-3">
+                        <div className="relative flex items-end gap-3 bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-3 py-2">
                           <textarea
                             ref={inputRef}
                             value={inputValue}
