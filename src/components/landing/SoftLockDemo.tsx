@@ -324,7 +324,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 {/* Left: Logo + Brand */}
                 <div className="flex items-center gap-2">
                   <img 
-                    src="/lovable-uploads/030a356d-7f38-4efc-888f-5c6da8e5ff02.png" 
+                    src="/pageconsult-logo.png" 
                     className="w-6 h-6" 
                     alt="" 
                   />
@@ -487,8 +487,8 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 {/* ============================================
                     INPUT AREA - Fixed at bottom, same alignment
                     ============================================ */}
-                <div className="flex-shrink-0 border-t border-slate-800/50">
-                  <div className="px-6 py-4">
+                <div className="flex-shrink-0 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm">
+                  <div className="px-4 py-4">
                     <form onSubmit={handleSubmit}>
                       {/* Overflow preview - only when text > 80 chars */}
                       <AnimatePresence>
