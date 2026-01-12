@@ -347,7 +347,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
             </motion.header>
 
             {/* Main Content - Chat + Sidebar with proper padding on all sides */}
-            <div className="flex-1 flex overflow-hidden relative z-10 p-6 lg:p-8 gap-6">
+            <div className="flex-1 flex overflow-hidden relative z-10 p-6 lg:p-8 gap-4">
               
               {/* Chat Container with glass panel effect */}
               <main className="flex-1 flex flex-col min-w-0 relative rounded-2xl overflow-hidden">
@@ -370,7 +370,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                   ref={chatContainerRef} 
                   className="flex-1 overflow-y-auto min-h-0"
                 >
-                  <div className="max-w-4xl mr-auto px-6 py-6 space-y-2">
+                  <div className="px-6 py-6 space-y-2">
                     <AnimatePresence mode="popLayout">
                       {displayConversation.map((message, index) => {
                         const isInitialGhostMessage = index === 0 && state.conversation.length === 0;
@@ -488,7 +488,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                     INPUT AREA - Fixed at bottom, same alignment
                     ============================================ */}
                 <div className="flex-shrink-0 border-t border-slate-800/50">
-                  <div className="max-w-4xl mr-auto px-6 py-3">
+                  <div className="px-6 py-4">
                     <form onSubmit={handleSubmit}>
                       {/* Overflow preview - only when text > 80 chars */}
                       <AnimatePresence>
