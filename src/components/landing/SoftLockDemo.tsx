@@ -488,17 +488,17 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                     INPUT AREA - Matches Intel panel bottom exactly
                     ============================================ */}
                 <div className="flex-shrink-0 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm p-4 space-y-3">
-                  {/* Spacer to match "Progress to unlock" height on Intel side */}
+                  {/* Spacer matching Intel's "Progress to unlock" section exactly */}
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-500">Type your response below</span>
+                    <div className="flex items-center justify-between text-xs h-5">
+                      <span className="text-slate-500 opacity-0">Spacer</span>
                     </div>
-                    <div className="h-1.5" /> {/* Match progress bar height */}
+                    <div className="h-1.5" />
                   </div>
                   
-                  {/* Input field - matches Generate button height (py-3) */}
-                  <form onSubmit={handleSubmit} className="relative">
-                    <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 py-3">
+                  {/* Input field - height matches Generate button exactly */}
+                  <form onSubmit={handleSubmit}>
+                    <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 h-[44px]">
                       <textarea
                         ref={inputRef}
                         value={inputValue}
@@ -513,15 +513,14 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                         placeholder="Tell me about your business..."
                         disabled={state.isProcessing}
                         rows={1}
-                        className="flex-1 bg-transparent text-slate-200 placeholder:text-slate-500 resize-none outline-none text-[15px] leading-relaxed max-h-32 overflow-y-auto"
-                        style={{ minHeight: '24px', height: '24px' }}
+                        className="flex-1 bg-transparent text-slate-200 placeholder:text-slate-500 resize-none outline-none text-[15px] leading-none"
+                        style={{ height: '20px' }}
                       />
                       
-                      {/* Send button */}
                       <button
                         type="submit"
                         disabled={state.isProcessing || !inputValue.trim()}
-                        className="flex-shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        className="flex-shrink-0 p-1 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       >
                         {state.isProcessing ? (
                           <Loader2 className="w-5 h-5 animate-spin" />
