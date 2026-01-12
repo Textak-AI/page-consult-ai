@@ -508,9 +508,9 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                     </div>
                   )}
                   
-                  {/* Input field - py-3 matches Generate button's py-3 */}
+                  {/* Input field - explicit h-[44px] matches Generate button exactly */}
                   <form onSubmit={handleSubmit}>
-                    <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 py-3">
+                    <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 h-[44px]">
                       <textarea
                         ref={inputRef}
                         value={inputValue}
@@ -525,8 +525,8 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                         placeholder="Tell me about your business..."
                         disabled={state.isProcessing}
                         rows={1}
-                        className="flex-1 bg-transparent text-slate-200 placeholder:text-slate-500 resize-none outline-none text-[15px] leading-relaxed overflow-hidden"
-                        style={{ height: '24px' }}
+                        className="flex-1 bg-transparent text-slate-200 placeholder:text-slate-500 resize-none outline-none text-[15px] leading-tight overflow-hidden"
+                        style={{ height: '20px', minHeight: '20px', maxHeight: '20px' }}
                       />
                       
                       <button
