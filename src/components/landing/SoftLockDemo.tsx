@@ -374,7 +374,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                   ref={chatContainerRef} 
                   className="flex-1 overflow-y-auto min-h-0"
                 >
-                  <div className="max-w-3xl mx-auto px-6 py-6 space-y-2">
+                  <div className="max-w-4xl mr-auto px-6 py-6 space-y-2">
                     <AnimatePresence mode="popLayout">
                       {displayConversation.map((message, index) => {
                         const isInitialGhostMessage = index === 0 && state.conversation.length === 0;
@@ -512,7 +512,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                     INPUT AREA - Fixed at bottom, same alignment
                     ============================================ */}
                 <div className="flex-shrink-0 border-t border-slate-800/50">
-                  <div className="max-w-3xl mx-auto px-6 py-4">
+                  <div className="max-w-4xl mr-auto px-6 py-4">
                     <form onSubmit={handleSubmit}>
                       {/* Overflow preview - only when text > 80 chars */}
                       <AnimatePresence>
