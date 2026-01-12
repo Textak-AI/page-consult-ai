@@ -398,8 +398,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                                   animate={{ opacity: showAsGhost ? 0.5 : 1 }}
                                   transition={{ duration: 0.35 }}
                                 >
-                                  <div className="absolute inset-0 bg-cyan-500/25 rounded-full blur-md" />
-                                  <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-cyan-500/40 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+                                  <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700/60 flex items-center justify-center">
                                     <StrategistIcon size={24} />
                                   </div>
                                 </motion.div>
@@ -415,62 +414,48 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                                     <span className="text-slate-500 text-xs">Strategy Consultant</span>
                                   </motion.div>
                                   
-                                  <div className="relative">
-                                    {/* Glow layer - prominent */}
-                                    <motion.div 
-                                      className="absolute -inset-px bg-gradient-to-r from-cyan-500/20 to-purple-500/10 rounded-2xl blur-sm"
-                                      animate={{ opacity: showAsGhost ? 0 : 0.7 }}
-                                      transition={{ duration: 0.35 }}
-                                    />
-                                    
-                                    {/* Bubble */}
-                                    <motion.div 
-                                      className="relative bg-slate-800/70 backdrop-blur-sm rounded-2xl px-4 py-3 border border-cyan-500/25 shadow-[0_0_20px_rgba(6,182,212,0.08)]"
-                                      animate={{ opacity: showAsGhost ? 0.55 : 1 }}
+                                  {/* Bubble - clean, no glow */}
+                                  <motion.div 
+                                    className="bg-slate-800/80 rounded-2xl px-4 py-3 border border-slate-700/50 shadow-sm"
+                                    animate={{ opacity: showAsGhost ? 0.55 : 1 }}
+                                    transition={{ duration: 0.35 }}
+                                  >
+                                    <motion.div
+                                      className="text-[15px] text-slate-100 leading-relaxed"
+                                      animate={{ fontStyle: showAsGhost ? 'italic' : 'normal' }}
                                       transition={{ duration: 0.35 }}
                                     >
-                                      <motion.div
-                                        className="text-[15px] text-slate-100 leading-relaxed"
-                                        animate={{ fontStyle: showAsGhost ? 'italic' : 'normal' }}
-                                        transition={{ duration: 0.35 }}
+                                      <ReactMarkdown
+                                        components={{
+                                          strong: ({ children }) => <span className="font-semibold text-white">{children}</span>,
+                                          em: ({ children }) => <span className="italic text-slate-200">{children}</span>,
+                                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                          ul: ({ children }) => <ul className="my-2 ml-4 list-disc">{children}</ul>,
+                                          li: ({ children }) => <li className="text-slate-100">{children}</li>,
+                                        }}
                                       >
-                                        <ReactMarkdown
-                                          components={{
-                                            strong: ({ children }) => <span className="font-semibold text-white">{children}</span>,
-                                            em: ({ children }) => <span className="italic text-slate-200">{children}</span>,
-                                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                                            ul: ({ children }) => <ul className="my-2 ml-4 list-disc">{children}</ul>,
-                                            li: ({ children }) => <li className="text-slate-100">{children}</li>,
-                                          }}
-                                        >
-                                          {message.content}
-                                        </ReactMarkdown>
-                                      </motion.div>
+                                        {message.content}
+                                      </ReactMarkdown>
                                     </motion.div>
-                                  </div>
+                                  </motion.div>
                                 </div>
                               </div>
                             ) : (
                               /* ======== USER MESSAGE - RIGHT ALIGNED ======== */
                               <div className="flex justify-end mb-6">
                                 <div className="max-w-[65%]">
-                                  <div className="relative">
-                                    {/* Subtle glow layer */}
-                                    <div className="absolute -inset-px bg-gradient-to-r from-slate-600/10 to-cyan-500/10 rounded-2xl blur-sm opacity-40" />
-                                    
-                                    {/* Bubble */}
-                                    <div className="relative bg-slate-700/50 backdrop-blur-sm rounded-2xl px-4 py-3 border border-slate-600/40">
-                                      <div className="text-[15px] text-slate-200 leading-relaxed">
-                                        <ReactMarkdown
-                                          components={{
-                                            strong: ({ children }) => <span className="font-semibold text-white">{children}</span>,
-                                            em: ({ children }) => <span className="italic text-slate-300">{children}</span>,
-                                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                                          }}
-                                        >
-                                          {message.content}
-                                        </ReactMarkdown>
-                                      </div>
+                                  {/* Bubble - clean, no glow */}
+                                  <div className="bg-slate-700/60 rounded-2xl px-4 py-3 border border-slate-600/50 shadow-sm">
+                                    <div className="text-[15px] text-slate-200 leading-relaxed">
+                                      <ReactMarkdown
+                                        components={{
+                                          strong: ({ children }) => <span className="font-semibold text-white">{children}</span>,
+                                          em: ({ children }) => <span className="italic text-slate-300">{children}</span>,
+                                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                        }}
+                                      >
+                                        {message.content}
+                                      </ReactMarkdown>
                                     </div>
                                   </div>
                                 </div>
@@ -488,13 +473,12 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                         animate={{ opacity: 1, y: 0 }}
                         className="flex items-start gap-4 mb-8"
                       >
-                        <div className="relative flex-shrink-0">
-                          <div className="absolute inset-0 bg-cyan-500/25 rounded-full blur-md animate-pulse" />
-                          <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-cyan-500/40 flex items-center justify-center">
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700/60 flex items-center justify-center">
                             <StrategistIcon size={24} />
                           </div>
                         </div>
-                        <div className="bg-slate-800/70 rounded-2xl px-4 py-3 border border-cyan-500/25">
+                        <div className="bg-slate-800/80 rounded-2xl px-4 py-3 border border-slate-700/50 shadow-sm">
                           <div className="flex gap-1">
                             <span className="w-2 h-2 bg-cyan-400/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                             <span className="w-2 h-2 bg-cyan-400/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -533,9 +517,8 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                         )}
                       </AnimatePresence>
                       
-                      {/* Input field with premium styling */}
+                      {/* Input field - clean styling */}
                       <div className="relative">
-                        <div className="absolute -inset-px bg-gradient-to-r from-cyan-500/5 to-purple-500/5 rounded-2xl blur-sm" />
                         <div className="relative flex items-end gap-3 bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 py-3">
                           <textarea
                             ref={inputRef}
@@ -559,16 +542,16 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                             }}
                           />
                           
-                          {/* Send button */}
+                          {/* Send button - understated */}
                           <button
                             type="submit"
                             disabled={state.isProcessing || !inputValue.trim()}
-                            className="flex-shrink-0 p-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-[0_0_20px_rgba(6,182,212,0.35)] transition-all duration-200"
+                            className="flex-shrink-0 p-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                           >
                             {state.isProcessing ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                              <Send className="w-4 h-4" />
+                              <Send className="w-5 h-5" />
                             )}
                           </button>
                         </div>
@@ -580,7 +563,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
               </main>
               
               {/* Intel Sidebar - Desktop only, with proper right margin */}
-              <aside className="hidden lg:flex w-[380px] flex-shrink-0 bg-slate-900/40 border border-slate-800/30 rounded-2xl flex-col overflow-hidden">
+              <aside className="hidden lg:flex w-[420px] flex-shrink-0 bg-slate-900/40 border border-slate-800/30 rounded-2xl flex-col overflow-hidden">
                 <div className="p-5 flex-1 overflow-hidden">
                   <IntelligenceTabs 
                     onContinue={handleGenerateClick}
