@@ -350,12 +350,15 @@ export type Database = {
       }
       consultations: {
         Row: {
+          active_brief_version: number | null
           ai_seo_data: Json | null
           audience_goals: string[] | null
           audience_pain_points: string[] | null
           authority_markers: string[] | null
+          brief_versions: Json | null
           business_name: string | null
           calculator_config: Json | null
+          card_notes: Json | null
           case_study_highlight: string | null
           challenge: string | null
           client_count: string | null
@@ -364,12 +367,16 @@ export type Database = {
           created_at: string
           credentials: string | null
           extracted_intelligence: Json | null
+          flow_history: Json | null
+          flow_state: string | null
           goal: string | null
           guarantee_offer: string | null
           guest_session_id: string | null
           id: string
           industry: string | null
           key_benefits: string[] | null
+          last_huddle_at: string | null
+          last_huddle_type: string | null
           offer: string | null
           primary_cta: string | null
           readiness_score: number | null
@@ -377,6 +384,7 @@ export type Database = {
           secondary_cta: string | null
           service_type: string | null
           status: string
+          strategy_brief: Json | null
           target_audience: string | null
           unique_value: string | null
           updated_at: string
@@ -386,12 +394,15 @@ export type Database = {
           website_url: string | null
         }
         Insert: {
+          active_brief_version?: number | null
           ai_seo_data?: Json | null
           audience_goals?: string[] | null
           audience_pain_points?: string[] | null
           authority_markers?: string[] | null
+          brief_versions?: Json | null
           business_name?: string | null
           calculator_config?: Json | null
+          card_notes?: Json | null
           case_study_highlight?: string | null
           challenge?: string | null
           client_count?: string | null
@@ -400,12 +411,16 @@ export type Database = {
           created_at?: string
           credentials?: string | null
           extracted_intelligence?: Json | null
+          flow_history?: Json | null
+          flow_state?: string | null
           goal?: string | null
           guarantee_offer?: string | null
           guest_session_id?: string | null
           id?: string
           industry?: string | null
           key_benefits?: string[] | null
+          last_huddle_at?: string | null
+          last_huddle_type?: string | null
           offer?: string | null
           primary_cta?: string | null
           readiness_score?: number | null
@@ -413,6 +428,7 @@ export type Database = {
           secondary_cta?: string | null
           service_type?: string | null
           status?: string
+          strategy_brief?: Json | null
           target_audience?: string | null
           unique_value?: string | null
           updated_at?: string
@@ -422,12 +438,15 @@ export type Database = {
           website_url?: string | null
         }
         Update: {
+          active_brief_version?: number | null
           ai_seo_data?: Json | null
           audience_goals?: string[] | null
           audience_pain_points?: string[] | null
           authority_markers?: string[] | null
+          brief_versions?: Json | null
           business_name?: string | null
           calculator_config?: Json | null
+          card_notes?: Json | null
           case_study_highlight?: string | null
           challenge?: string | null
           client_count?: string | null
@@ -436,12 +455,16 @@ export type Database = {
           created_at?: string
           credentials?: string | null
           extracted_intelligence?: Json | null
+          flow_history?: Json | null
+          flow_state?: string | null
           goal?: string | null
           guarantee_offer?: string | null
           guest_session_id?: string | null
           id?: string
           industry?: string | null
           key_benefits?: string[] | null
+          last_huddle_at?: string | null
+          last_huddle_type?: string | null
           offer?: string | null
           primary_cta?: string | null
           readiness_score?: number | null
@@ -449,6 +472,7 @@ export type Database = {
           secondary_cta?: string | null
           service_type?: string | null
           status?: string
+          strategy_brief?: Json | null
           target_audience?: string | null
           unique_value?: string | null
           updated_at?: string
@@ -963,6 +987,7 @@ export type Database = {
           job_title: string | null
           marketing_emails: boolean | null
           phone_number: string | null
+          preferred_mode: string | null
           prospect_view_alerts: boolean | null
           signature_email: string | null
           signature_enabled: boolean | null
@@ -989,6 +1014,7 @@ export type Database = {
           job_title?: string | null
           marketing_emails?: boolean | null
           phone_number?: string | null
+          preferred_mode?: string | null
           prospect_view_alerts?: boolean | null
           signature_email?: string | null
           signature_enabled?: boolean | null
@@ -1015,6 +1041,7 @@ export type Database = {
           job_title?: string | null
           marketing_emails?: boolean | null
           phone_number?: string | null
+          preferred_mode?: string | null
           prospect_view_alerts?: boolean | null
           signature_email?: string | null
           signature_enabled?: boolean | null

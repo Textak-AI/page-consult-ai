@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getNextStep, updateFlowState } from '@/services/flowEngine';
 
 const FONT_OPTIONS = [
   'Inter',
@@ -546,7 +547,7 @@ export default function EnhancedBrandSetup() {
   }, []);
 
   // Handle continue - save brand data before navigating
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const brandData = {
       websiteUrl,
       logo,
@@ -559,8 +560,23 @@ export default function EnhancedBrandSetup() {
     
     localStorage.setItem('pageconsult_brand_data', JSON.stringify(brandData));
     
-    // If we have a demo session, go to generate
-    if (demoSession && sessionId) {
+    // Get consultationId from URL params
+    const consultationId = searchParams.get('consultationId');
+    
+    if (consultationId) {
+      // Use Flow Engine for intelligent routing
+      await updateFlowState(consultationId, 'brand_captured', 'brand_setup_complete');
+      const decision = await getNextStep(consultationId);
+      
+      console.log('🧭 [EnhancedBrandSetup] Flow decision:', decision);
+      
+      if (decision.huddleType) {
+        navigate(`/huddle?type=${decision.huddleType}&consultationId=${consultationId}`);
+      } else {
+        navigate(`${decision.route}?consultationId=${consultationId}`);
+      }
+    } else if (demoSession && sessionId) {
+      // Legacy demo session flow
       console.log('🚀 [EnhancedBrandSetup] Demo user - navigating to generate with session:', sessionId);
       navigate(`/generate?session=${sessionId}`);
     } else {

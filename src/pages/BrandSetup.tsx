@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { getNextStep, updateFlowState } from '@/services/flowEngine';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -604,13 +605,26 @@ export default function BrandSetup() {
     }
   };
 
-  // Handle continue - navigate to wizard, not generate
+  // Handle continue - use Flow Engine for routing
   const handleContinue = async () => {
     if (noBrandGuide) {
       await saveManualColor();
     }
-    // Navigate to consultation wizard, not directly to generate
-    navigate('/consultation');
+    
+    const consultationId = searchParams.get('consultationId');
+    
+    if (consultationId) {
+      await updateFlowState(consultationId, 'brand_captured', 'brand_setup_complete');
+      const decision = await getNextStep(consultationId);
+      
+      if (decision.huddleType) {
+        navigate(`/huddle?type=${decision.huddleType}&consultationId=${consultationId}`);
+      } else {
+        navigate(`${decision.route}?consultationId=${consultationId}`);
+      }
+    } else {
+      navigate('/wizard');
+    }
   };
 
   // Handle generate from demo session - streamlined flow
