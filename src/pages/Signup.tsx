@@ -9,6 +9,7 @@ import { Loader2, Check, Sparkles, FileText, Calculator, Clock, Gift } from "luc
 import { useSession } from "@/contexts/SessionContext";
 import { handlePostAuthMigration } from "@/lib/sessionMigration";
 import { hasGuestSession } from "@/lib/guestSession";
+import { getNextStep, updateFlowState } from "@/services/flowEngine";
 
 interface DemoIntelligence {
   sessionId: string;
@@ -410,13 +411,18 @@ export default function Signup() {
       sessionStorage.removeItem('demoIntelligence');
       sessionStorage.removeItem('demoEmail');
       
-      // Redirect to selected wizard path
-      const targetPath = demoIntelligence.selectedPath === 'conversation' 
-        ? `/wizard/chat?consultationId=${consultation.id}`
-        : `/wizard/form?consultationId=${consultation.id}`;
+      // Use Flow Engine for intelligent routing
+      await updateFlowState(consultation.id, 'signed_up', 'signup_complete');
+      const decision = await getNextStep(consultation.id);
       
-      console.log('🚀 [Signup] Redirecting to:', targetPath);
-      navigate(targetPath, { replace: true });
+      console.log('🧭 [Signup] Flow decision:', decision);
+      
+      // Navigate based on Flow Engine decision
+      if (decision.huddleType) {
+        navigate(`/huddle?type=${decision.huddleType}&consultationId=${consultation.id}`, { replace: true });
+      } else {
+        navigate(`${decision.route}?consultationId=${consultation.id}`, { replace: true });
+      }
       
     } catch (err) {
       console.error('Error creating consultation from demo:', err);
