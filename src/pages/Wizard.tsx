@@ -570,18 +570,78 @@ export default function Wizard() {
     };
   }, [searchParams, applySessionData]);
 
-  // Load demo session from Supabase
+  // Load session from Supabase (demo_sessions OR consultations)
   useEffect(() => {
-    const loadDemoSession = async () => {
+    const loadSession = async () => {
       // Already initialized
       if (initCompleteRef.current) return;
+      
+      // Check for consultationId first (from signup flow)
+      const consultationId = searchParams.get('consultationId');
       
       // Check URL first, then localStorage as fallback (survives auth redirect)
       const sessionIdFromUrl = searchParams.get('session');
       const sessionIdFromStorage = localStorage.getItem('pageconsult_session_id');
       const sessionId = sessionIdFromUrl || sessionIdFromStorage;
       
-      console.log('📂 [Wizard] Session ID sources:', { sessionIdFromUrl, sessionIdFromStorage, sessionId });
+      console.log('📂 [Wizard] Session sources:', { consultationId, sessionIdFromUrl, sessionIdFromStorage, sessionId });
+      
+      // If we have a consultationId, load from consultations table
+      if (consultationId) {
+        console.log('📂 [Wizard] Loading from consultations table:', consultationId);
+        setIsLoadingSession(true);
+        
+        try {
+          const { data: consultation, error } = await supabase
+            .from('consultations')
+            .select('*')
+            .eq('id', consultationId)
+            .maybeSingle();
+          
+          if (error || !consultation) {
+            console.error('Failed to load consultation:', error);
+            setMessages([{ id: "1", role: "assistant", content: INITIAL_MESSAGE }]);
+            initCompleteRef.current = true;
+            setIsLoadingSession(false);
+            return;
+          }
+          
+          console.log('✅ [Wizard] Loaded consultation:', consultation.id);
+          
+          // Map consultation data to the format expected by applySessionData
+          const mappedData = {
+            extracted_intelligence: consultation.extracted_intelligence || {
+              industry: consultation.industry,
+              audience: consultation.target_audience,
+              valueProp: consultation.unique_value,
+              competitorDifferentiator: consultation.competitor_differentiator,
+              painPoints: consultation.audience_pain_points?.join(', '),
+              proofElements: consultation.authority_markers?.join(', '),
+            },
+            market_research: {},
+            messages: [],
+            readiness: consultation.readiness_score || 0,
+          };
+          
+          // Store in ref for auth state changes
+          sessionDataRef.current = mappedData;
+          sessionLoadedRef.current = true;
+          initCompleteRef.current = true;
+          
+          // Apply the data
+          applySessionData(mappedData);
+          setSavedConsultationId(consultationId);
+          
+          setIsLoadingSession(false);
+          return;
+        } catch (err) {
+          console.error('Error loading consultation:', err);
+          setMessages([{ id: "1", role: "assistant", content: INITIAL_MESSAGE }]);
+          initCompleteRef.current = true;
+          setIsLoadingSession(false);
+          return;
+        }
+      }
       
       if (!sessionId) {
         // No session param - set default message
@@ -655,7 +715,7 @@ export default function Wizard() {
       }
     };
     
-    loadDemoSession();
+    loadSession();
   }, [searchParams, applySessionData]);
 
   // Re-apply session data if state gets reset after auth changes
