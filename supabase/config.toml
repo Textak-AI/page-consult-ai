@@ -1,5 +1,8 @@
 project_id = "wopnfuzevpldhkshkmrk"
 
+[functions.extract-communication-style]
+verify_jwt = false
+
 [functions.beta-signup]
 verify_jwt = false
 

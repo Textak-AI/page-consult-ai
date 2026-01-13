@@ -362,6 +362,7 @@ export type Database = {
           case_study_highlight: string | null
           challenge: string | null
           client_count: string | null
+          communication_style: Json | null
           competitor_differentiator: string | null
           consultation_status: string | null
           created_at: string
@@ -406,6 +407,7 @@ export type Database = {
           case_study_highlight?: string | null
           challenge?: string | null
           client_count?: string | null
+          communication_style?: Json | null
           competitor_differentiator?: string | null
           consultation_status?: string | null
           created_at?: string
@@ -450,6 +452,7 @@ export type Database = {
           case_study_highlight?: string | null
           challenge?: string | null
           client_count?: string | null
+          communication_style?: Json | null
           competitor_differentiator?: string | null
           consultation_status?: string | null
           created_at?: string

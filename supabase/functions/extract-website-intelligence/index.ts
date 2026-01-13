@@ -95,6 +95,7 @@ serve(async (req) => {
       testimonials: [] as string[],
       companyName: null as string | null,
       fonts: { heading: null as string | null, body: null as string | null },
+      pageCopy: null as string | null,
       sourceUrl: normalizedUrl
     };
 
@@ -373,6 +374,68 @@ serve(async (req) => {
         if (extractedData.testimonials.length >= 3) break;
       }
     }
+
+    // ============================================
+    // 7. PAGE COPY EXTRACTION (for communication style analysis)
+    // ============================================
+    const extractPageCopy = (htmlContent: string): string => {
+      // Remove script, style, and other non-content elements
+      let cleaned = htmlContent
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
+        .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '')
+        .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '')
+        .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '');
+      
+      const textParts: string[] = [];
+      
+      // Get meta descriptions first
+      const metaDescMatch = htmlContent.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
+      const ogDescMatch = htmlContent.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i);
+      if (metaDescMatch) textParts.push(metaDescMatch[1]);
+      if (ogDescMatch && ogDescMatch[1] !== metaDescMatch?.[1]) textParts.push(ogDescMatch[1]);
+      
+      // Extract text from main content areas
+      const copySelectors = [
+        /<main[^>]*>([\s\S]*?)<\/main>/gi,
+        /<article[^>]*>([\s\S]*?)<\/article>/gi,
+        /<section[^>]*>([\s\S]*?)<\/section>/gi,
+        /<(?:div)[^>]*class=["'][^"']*(?:hero|content|about|services)[^"']*["'][^>]*>([\s\S]*?)<\/div>/gi,
+      ];
+      
+      // Extract headings
+      const headingMatches = cleaned.matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi);
+      for (const match of headingMatches) {
+        const text = match[1].replace(/<[^>]+>/g, '').trim();
+        if (text.length > 5 && text.length < 200 && !textParts.includes(text)) {
+          textParts.push(text);
+        }
+      }
+      
+      // Extract paragraphs
+      const paragraphMatches = cleaned.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi);
+      for (const match of paragraphMatches) {
+        const text = match[1].replace(/<[^>]+>/g, '').trim();
+        if (text.length > 20 && text.length < 500 && !textParts.includes(text)) {
+          textParts.push(text);
+        }
+      }
+      
+      // Extract list items
+      const listMatches = cleaned.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi);
+      for (const match of listMatches) {
+        const text = match[1].replace(/<[^>]+>/g, '').trim();
+        if (text.length > 10 && text.length < 300 && !textParts.includes(text)) {
+          textParts.push(text);
+        }
+      }
+      
+      return textParts.slice(0, 50).join('\n\n');
+    };
+    
+    extractedData.pageCopy = extractPageCopy(html);
+    console.log('[extract-website-intelligence] Page copy length:', extractedData.pageCopy?.length || 0);
 
     console.log('[extract-website-intelligence] Final extracted data:', JSON.stringify(extractedData, null, 2));
 
