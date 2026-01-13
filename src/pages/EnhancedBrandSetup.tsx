@@ -20,6 +20,14 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getNextStep, updateFlowState } from '@/services/flowEngine';
+import { CommunicationStyleCard } from '@/components/brand/CommunicationStyleCard';
+
+interface CommunicationStyle {
+  tone: { descriptors: string[]; primary: string };
+  voice: { pov: string; addressesReader: boolean; sentenceStyle: string };
+  vocabulary: { favoredWords: string[]; avoidedPatterns: string[] };
+  formality: { level: number; description: string };
+}
 
 const FONT_OPTIONS = [
   'Inter',
@@ -94,6 +102,8 @@ interface ExtractionResults {
   colors: string[];
   companyName: string | null;
   tagline: string | null;
+  pageCopy?: string | null;
+  industry?: string | null;
 }
 
 export default function EnhancedBrandSetup() {
@@ -129,6 +139,10 @@ export default function EnhancedBrandSetup() {
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(true);
   const [companyName, setCompanyName] = useState('Your Company');
   const [tagline, setTagline] = useState('Your compelling tagline goes here');
+  
+  // Communication style state
+  const [communicationStyle, setCommunicationStyle] = useState<CommunicationStyle | null>(null);
+  const [styleLoading, setStyleLoading] = useState(false);
 
   // Load demo session if session param exists
   useEffect(() => {
@@ -419,9 +433,19 @@ export default function EnhancedBrandSetup() {
           colors: extracted.brandColors || [],
           companyName: name || null,
           tagline: extracted.tagline || extracted.description || null,
+          pageCopy: extracted.pageCopy || null,
         };
         setExtractionResults(results);
         setExtractionSuccess(true);
+
+        // Trigger communication style extraction if we have enough text
+        if (extracted.pageCopy && extracted.pageCopy.length >= 100) {
+          extractCommunicationStyle(
+            extracted.pageCopy,
+            name || companyName,
+            (demoSession?.extracted_intelligence as any)?.industry || ''
+          );
+        }
 
         toast.success('Website analyzed successfully!');
       }
@@ -430,6 +454,33 @@ export default function EnhancedBrandSetup() {
       toast.error('Failed to analyze website. Please try again.');
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  // Extract communication style from website copy
+  const extractCommunicationStyle = async (pageCopy: string, company: string, industry: string) => {
+    if (!pageCopy || pageCopy.length < 100) return;
+    
+    setStyleLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('extract-communication-style', {
+        body: { websiteText: pageCopy, companyName: company, industry }
+      });
+      
+      if (error) {
+        console.error('Style extraction error:', error);
+        return;
+      }
+      
+      if (data?.success && data?.style) {
+        setCommunicationStyle(data.style);
+        console.log('✅ Communication style extracted:', data.style);
+      }
+    } catch (err) {
+      console.error('Style extraction failed:', err);
+    } finally {
+      setStyleLoading(false);
     }
   };
 
@@ -556,6 +607,7 @@ export default function EnhancedBrandSetup() {
       colors,
       fontSettings,
       extractionResults,
+      communicationStyle,
     };
     
     localStorage.setItem('pageconsult_brand_data', JSON.stringify(brandData));
@@ -564,6 +616,14 @@ export default function EnhancedBrandSetup() {
     const consultationId = searchParams.get('consultationId');
     
     if (consultationId) {
+      // Save communication style to consultation
+      if (communicationStyle) {
+        await supabase
+          .from('consultations')
+          .update({ communication_style: communicationStyle as any })
+          .eq('id', consultationId);
+      }
+      
       // Use Flow Engine for intelligent routing
       await updateFlowState(consultationId, 'brand_captured', 'brand_setup_complete');
       const decision = await getNextStep(consultationId);
@@ -1188,6 +1248,18 @@ export default function EnhancedBrandSetup() {
                 </button>
               </div>
             </div>
+
+            {/* 5. Communication Style Section */}
+            {(communicationStyle || styleLoading) && (
+              <CommunicationStyleCard
+                style={communicationStyle}
+                loading={styleLoading}
+                onEdit={() => {
+                  // Future: open style editor modal
+                  console.log('Edit communication style');
+                }}
+              />
+            )}
           </div>
 
           {/* RIGHT COLUMN - Live Preview */}
