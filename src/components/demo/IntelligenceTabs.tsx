@@ -55,7 +55,15 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
   const [newDataTabs, setNewDataTabs] = useState<Set<string>>(new Set());
   const [showBriefReview, setShowBriefReview] = useState(false);
 
-  const score = calculateIntelligenceScore(state.extracted);
+  // Calculate if market research is complete (has actual data, not just loading)
+  const marketResearchComplete = state.emailCaptured && 
+    !state.market.isLoading && 
+    (!!state.market.marketSize || state.market.industryInsights.length > 0);
+  
+  // Pass research bonus to score calculator
+  const score = calculateIntelligenceScore(state.extracted, {
+    marketResearchComplete,
+  });
   
   const hasMarketResearchData = state.emailCaptured && 
     (state.market.isLoading || state.market.marketSize || state.market.industryInsights.length > 0);

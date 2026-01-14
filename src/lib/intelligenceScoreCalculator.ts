@@ -55,6 +55,12 @@ export interface GenericIntelligence {
   credentialsSummary?: string | null;
 }
 
+// Bonus points from research and other unlocks
+export interface ScoreBonuses {
+  marketResearchComplete?: boolean;  // +10 pts for completing research
+  emailCaptured?: boolean;           // For tracking, not points
+}
+
 // Helper to check if field has meaningful value
 function hasValue(val: unknown): boolean {
   if (val === null || val === undefined) return false;
@@ -115,9 +121,21 @@ function createFieldScore(
   };
 }
 
-export function calculateIntelligenceScore(intelligence: GenericIntelligence | null): IntelligenceScore {
+// Research bonus points constant
+const RESEARCH_BONUS_POINTS = 10;
+
+export function calculateIntelligenceScore(
+  intelligence: GenericIntelligence | null, 
+  bonuses?: ScoreBonuses
+): IntelligenceScore {
   if (!intelligence) {
     return createEmptyScore();
+  }
+  
+  // Track bonus points for logging
+  const bonusPoints = bonuses?.marketResearchComplete ? RESEARCH_BONUS_POINTS : 0;
+  if (bonusPoints > 0) {
+    console.log('[Score Update]', { source: 'research', points: bonusPoints });
   }
 
   // Calculate WHO YOU ARE (25 pts max)
@@ -233,9 +251,21 @@ export function calculateIntelligenceScore(intelligence: GenericIntelligence | n
     percentage: Math.round((proofCredibilityTotal / 25) * 100),
   };
 
-  // Calculate totals
-  const totalScore = whoYouAre.total + whatYouOffer.total + buyerReality.total + proofCredibility.total;
+  // Calculate totals with research bonus
+  const researchBonus = bonuses?.marketResearchComplete ? RESEARCH_BONUS_POINTS : 0;
+  const baseScore = whoYouAre.total + whatYouOffer.total + buyerReality.total + proofCredibility.total;
+  const totalScore = Math.min(100, baseScore + researchBonus); // Cap at 100
   const totalPercentage = Math.round((totalScore / 100) * 100);
+
+  // Log score calculation for debugging
+  if (researchBonus > 0) {
+    console.log('[Score Update]', { 
+      source: 'calculation', 
+      baseScore, 
+      researchBonus, 
+      totalScore 
+    });
+  }
 
   // Determine level
   let level: StrategicLevel = 'unqualified';

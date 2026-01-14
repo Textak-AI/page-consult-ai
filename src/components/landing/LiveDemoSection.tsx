@@ -299,8 +299,15 @@ export default function LiveDemoSection() {
         ]
       : state.conversation;
 
-  // Calculate score - this will recalculate on every render when state.extracted changes
-  const score = calculateIntelligenceScore(state.extracted);
+  // Calculate if market research is complete (has actual data, not just loading)
+  const marketResearchComplete = state.emailCaptured && 
+    !state.market.isLoading && 
+    (!!state.market.marketSize || state.market.industryInsights.length > 0);
+  
+  // Calculate score with research bonus
+  const score = calculateIntelligenceScore(state.extracted, {
+    marketResearchComplete,
+  });
 
   return (
     <section className="min-h-screen bg-slate-950 flex flex-col">

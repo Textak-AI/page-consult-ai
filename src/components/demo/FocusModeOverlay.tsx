@@ -111,7 +111,14 @@ export function FocusModeOverlay({
             className="relative z-10 px-6 py-3 border-t border-white/10"
           >
             {(() => {
-              const score = calculateIntelligenceScore(state.extracted);
+              // Calculate if market research is complete (has actual data, not just loading)
+              const marketResearchComplete = state.emailCaptured && 
+                !state.market.isLoading && 
+                (!!state.market.marketSize || state.market.industryInsights.length > 0);
+              
+              const score = calculateIntelligenceScore(state.extracted, {
+                marketResearchComplete,
+              });
               const canGenerate = score.totalScore >= 70;
               
               return (

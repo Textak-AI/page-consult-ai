@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { IntelligenceProfileWizard } from '@/components/consultation/IntelligenceProfileWizard';
-import { calculateIntelligenceScore, getNextPrompt, type GenericIntelligence } from '@/lib/intelligenceScoreCalculator';
+import { calculateIntelligenceScore, getNextPrompt, type GenericIntelligence, type ScoreBonuses } from '@/lib/intelligenceScoreCalculator';
 
 // Re-export the GenericIntelligence type as ExtractedIntelligence for backwards compatibility
 export type ExtractedIntelligence = GenericIntelligence;
@@ -10,6 +10,7 @@ interface WizardIntelligenceProfileProps {
   recentlyFilled?: string[];
   showDemoImportBadge?: boolean;
   isThinking?: boolean;
+  bonuses?: ScoreBonuses; // Optional score bonuses (e.g., research complete)
 }
 
 /**
@@ -20,10 +21,11 @@ export function WizardIntelligenceProfile({
   recentlyFilled,
   showDemoImportBadge = false,
   isThinking = false,
+  bonuses,
 }: WizardIntelligenceProfileProps) {
   const score = useMemo(
-    () => calculateIntelligenceScore(extractedIntelligence),
-    [extractedIntelligence]
+    () => calculateIntelligenceScore(extractedIntelligence, bonuses),
+    [extractedIntelligence, bonuses]
   );
   
   const nextPrompt = useMemo(

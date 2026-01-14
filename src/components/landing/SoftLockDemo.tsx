@@ -268,7 +268,14 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
     ? [{ role: 'assistant' as const, content: "Tell me about your business — who do you help and what do you do for them?", timestamp: new Date() }]
     : state.conversation;
 
-  const score = calculateIntelligenceScore(state.extracted);
+  // Calculate if market research is complete (has actual data, not just loading)
+  const marketResearchComplete = state.emailCaptured && 
+    !state.market.isLoading && 
+    (!!state.market.marketSize || state.market.industryInsights.length > 0);
+  
+  const score = calculateIntelligenceScore(state.extracted, {
+    marketResearchComplete,
+  });
 
   return (
     <div id="demo">

@@ -18,6 +18,7 @@ interface MobileIntelligencePanelProps {
   onToggle: () => void;
   onGenerateClick: () => void;
   onReviewBrief: () => void;
+  marketResearchComplete?: boolean; // Optional prop for research bonus
 }
 
 export function MobileIntelligencePanel({
@@ -26,8 +27,12 @@ export function MobileIntelligencePanel({
   onToggle,
   onGenerateClick,
   onReviewBrief,
+  marketResearchComplete = false,
 }: MobileIntelligencePanelProps) {
-  const score = calculateIntelligenceScore(extracted);
+  // Pass research bonus to score calculator
+  const score = calculateIntelligenceScore(extracted, {
+    marketResearchComplete,
+  });
   const canGenerate = score.totalScore >= 70;
   
   const categories = [
