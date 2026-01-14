@@ -163,9 +163,27 @@ export default function LiveDemoSection() {
   const handleContinueToWizard = async (selectedPath: "conversation" | "wizard" = "wizard") => {
     setIsSavingSession(true);
 
-    // Use the session ID from the IntelligenceContext (which is already in the database)
+    // Use the session ID from the IntelligenceContext - should match what's in database
     const sessionId = state.sessionId;
     const isReady = state.readiness >= 70; // High readiness = skip wizard, go to brand setup
+
+    // Verify session ID consistency
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlSessionId = urlParams.get('session');
+    const localStorageSessionId = localStorage.getItem('pageconsult_session_id');
+    
+    console.log('🔑 [LiveDemo] Session ID verification:', {
+      stateSessionId: sessionId,
+      urlSessionId,
+      localStorageSessionId,
+      match: sessionId === urlSessionId && sessionId === localStorageSessionId,
+    });
+
+    // If there's a mismatch, prefer the state session ID (it's what we've been updating)
+    // but also update localStorage to stay in sync
+    if (sessionId && localStorageSessionId !== sessionId) {
+      localStorage.setItem('pageconsult_session_id', sessionId);
+    }
 
     const demoIntelligence = {
       sessionId,

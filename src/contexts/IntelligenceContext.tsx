@@ -359,10 +359,29 @@ function safeClearDemoState(): void {
 
 export function IntelligenceProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  const [state, setState] = useState<IntelligenceState>(() => ({
-    ...initialState,
-    sessionId: uuidv4(),
-  }));
+  
+  // Initialize sessionId from URL or localStorage FIRST to prevent ID mismatch
+  const [state, setState] = useState<IntelligenceState>(() => {
+    // Check URL first (highest priority)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlSessionId = urlParams.get('session');
+    
+    // Check localStorage second
+    const storedSessionId = safeGetItem('pageconsult_session_id') || safeGetItem(STORAGE_KEYS.sessionId);
+    
+    // Use URL > localStorage > generate new
+    const sessionId = urlSessionId || storedSessionId || uuidv4();
+    
+    console.log('🔑 [IntelligenceContext] Session ID initialized:', {
+      source: urlSessionId ? 'URL' : storedSessionId ? 'localStorage' : 'generated',
+      sessionId,
+    });
+    
+    return {
+      ...initialState,
+      sessionId,
+    };
+  });
   
   const marketResearchFetched = useRef(false);
   const hasRestoredState = useRef(false);
@@ -711,6 +730,10 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
 
       console.log('✅ [IntelligenceContext] Database session created:', sessionId);
       sessionCreatedInDb.current = true;
+
+      // Store to localStorage for persistence across page loads
+      safeSetItem('pageconsult_session_id', sessionId);
+      safeSetItem(STORAGE_KEYS.sessionId, sessionId);
 
       // Add session ID to URL immediately
       const url = new URL(window.location.href);
