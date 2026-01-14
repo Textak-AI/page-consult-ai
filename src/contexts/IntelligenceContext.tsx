@@ -717,11 +717,27 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           messages: [],
         });
 
+      // Helper to add session to URL and localStorage
+      const addSessionToUrlAndStorage = () => {
+        // Store to localStorage for persistence across page loads
+        safeSetItem('pageconsult_session_id', sessionId);
+        safeSetItem(STORAGE_KEYS.sessionId, sessionId);
+
+        // Add session ID to URL immediately
+        const url = new URL(window.location.href);
+        if (!url.searchParams.has('session')) {
+          url.searchParams.set('session', sessionId);
+          window.history.replaceState({}, '', url.toString());
+          console.log('🔗 [IntelligenceContext] Added session to URL:', sessionId);
+        }
+      };
+
       if (error) {
-        // If it already exists (unique constraint), that's fine
+        // If it already exists (unique constraint), that's fine - STILL add to URL
         if (error.code === '23505') {
-          console.log('✅ [IntelligenceContext] Session already exists');
+          console.log('✅ [IntelligenceContext] Session already exists, still adding to URL');
           sessionCreatedInDb.current = true;
+          addSessionToUrlAndStorage();
           return true;
         }
         console.error('❌ [IntelligenceContext] Failed to create session:', error);
@@ -730,18 +746,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
 
       console.log('✅ [IntelligenceContext] Database session created:', sessionId);
       sessionCreatedInDb.current = true;
-
-      // Store to localStorage for persistence across page loads
-      safeSetItem('pageconsult_session_id', sessionId);
-      safeSetItem(STORAGE_KEYS.sessionId, sessionId);
-
-      // Add session ID to URL immediately
-      const url = new URL(window.location.href);
-      if (!url.searchParams.has('session')) {
-        url.searchParams.set('session', sessionId);
-        window.history.replaceState({}, '', url.toString());
-        console.log('🔗 [IntelligenceContext] Added session to URL:', sessionId);
-      }
+      addSessionToUrlAndStorage();
 
       return true;
     } catch (err) {
