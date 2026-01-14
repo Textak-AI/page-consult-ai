@@ -55,7 +55,19 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   
   // Get session/consultationId from URL params - this is the key to preserving data
-  const sessionIdFromUrl = searchParams.get('session') || searchParams.get('consultationId');
+  // PRIORITY: Check sessionStorage first (stored before signup modal), then URL params
+  const storedSessionId = typeof window !== 'undefined' ? sessionStorage.getItem('demo_session_id_for_migration') : null;
+  const sessionIdFromUrl = storedSessionId || searchParams.get('session') || searchParams.get('consultationId');
+  
+  // Log the session ID source for debugging
+  useEffect(() => {
+    console.log('[Session Persistence] Retrieved after signup:', {
+      storedSessionId,
+      urlSession: searchParams.get('session'),
+      urlConsultation: searchParams.get('consultationId'),
+      final: sessionIdFromUrl,
+    });
+  }, [storedSessionId, searchParams, sessionIdFromUrl]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   
@@ -190,7 +202,12 @@ export default function Signup() {
       .single();
     
     if (error || !consultation) {
-      console.error('❌ [Signup] Failed to create consultation:', error);
+      console.error('❌ [Signup] Failed to create consultation:', {
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code,
+      });
       return null;
     }
     
@@ -257,9 +274,12 @@ export default function Signup() {
           return;
         }
         
-        // PRIORITY 1: If we have a session from URL, use it (don't check for old sessions!)
+        // PRIORITY 1: If we have a session from URL or stored, use it (don't check for old sessions!)
         if (sessionIdFromUrl) {
-          console.log('🚀 [Login] Session in URL - loading demo session:', sessionIdFromUrl);
+          console.log('🚀 [Login] Session found - loading demo session:', sessionIdFromUrl);
+          
+          // Clear the stored session ID since we're using it now
+          sessionStorage.removeItem('demo_session_id_for_migration');
           
           // Try sessionStorage first, then database
           let intel = demoIntelligence;
@@ -270,14 +290,16 @@ export default function Signup() {
           if (intel) {
             const consultationId = await createConsultationFromIntelligence(user.id, intel);
             if (consultationId) {
-              console.log('🚀 [Login] Redirecting to huddle:', consultationId);
-              navigate(`/huddle?type=pre_brief&consultationId=${consultationId}`, { replace: true });
+              // Store consultation ID for brand-setup to find
+              sessionStorage.setItem('pendingConsultationId', consultationId);
+              console.log('🚀 [Login] Redirecting to brand-setup with consultation:', consultationId);
+              navigate(`/brand-setup?consultationId=${consultationId}`, { replace: true });
               return;
             }
           }
           
           // Fallback: go to brand-setup with session
-          console.log('⚠️ [Login] No intelligence found, going to brand-setup');
+          console.log('⚠️ [Login] No intelligence found, going to brand-setup with session');
           navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
           return;
         }
@@ -372,9 +394,12 @@ export default function Signup() {
           return;
         }
         
-        // PRIORITY 1: If we have a session from URL, use it (don't check for old sessions!)
+        // PRIORITY 1: If we have a session from URL or stored, use it (don't check for old sessions!)
         if (sessionIdFromUrl) {
-          console.log('🚀 [Signup] Session in URL - loading demo session:', sessionIdFromUrl);
+          console.log('🚀 [Signup] Session found - loading demo session:', sessionIdFromUrl);
+          
+          // Clear the stored session ID since we're using it now
+          sessionStorage.removeItem('demo_session_id_for_migration');
           
           // Try sessionStorage first, then database
           let intel = demoIntelligence;
@@ -385,14 +410,16 @@ export default function Signup() {
           if (intel) {
             const consultationId = await createConsultationFromIntelligence(data.user.id, intel);
             if (consultationId) {
-              console.log('🚀 [Signup] Redirecting to huddle:', consultationId);
-              navigate(`/huddle?type=pre_brief&consultationId=${consultationId}`, { replace: true });
+              // Store consultation ID for brand-setup to find
+              sessionStorage.setItem('pendingConsultationId', consultationId);
+              console.log('🚀 [Signup] Redirecting to brand-setup with consultation:', consultationId);
+              navigate(`/brand-setup?consultationId=${consultationId}`, { replace: true });
               return;
             }
           }
           
           // Fallback: go to brand-setup with session
-          console.log('⚠️ [Signup] No intelligence found, going to brand-setup');
+          console.log('⚠️ [Signup] No intelligence found, going to brand-setup with session');
           navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
           return;
         }

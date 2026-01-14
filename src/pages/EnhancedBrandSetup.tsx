@@ -673,11 +673,29 @@ export default function EnhancedBrandSetup() {
         })
         .eq('id', consultationId);
       
-      // Update flow state and go directly to generate (brand is captured, brief was generated in Huddle)
+      // Update flow state
       await updateFlowState(consultationId, 'brand_captured', 'brand_setup_complete');
       
-      console.log('🚀 [EnhancedBrandSetup] Brand captured - navigating to generate with consultationId:', consultationId);
-      navigate(`/generate?consultationId=${consultationId}`);
+      // Check if this consultation has high readiness (demo user) - go to huddle for "I listened" moment
+      const { data: consultation } = await supabase
+        .from('consultations')
+        .select('readiness_score, strategy_brief')
+        .eq('id', consultationId)
+        .single();
+      
+      const readinessScore = consultation?.readiness_score || 0;
+      
+      console.log('🚀 [EnhancedBrandSetup] Brand captured:', { consultationId, readinessScore });
+      
+      // High readiness: show huddle with "I listened" recap before generation
+      if (readinessScore >= 50) {
+        console.log('🚀 [EnhancedBrandSetup] High readiness - navigating to huddle');
+        navigate(`/huddle?type=pre_brief&consultationId=${consultationId}`, { replace: true });
+      } else {
+        // Low readiness: go directly to wizard for more info
+        console.log('🚀 [EnhancedBrandSetup] Low readiness - navigating to wizard');
+        navigate(`/wizard?consultationId=${consultationId}`, { replace: true });
+      }
     } else if (demoSession && sessionId) {
       // Demo session flow - need to check if we should create consultation first
       console.log('🚀 [EnhancedBrandSetup] Demo user - checking for high-readiness flow');
