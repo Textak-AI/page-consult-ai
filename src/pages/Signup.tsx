@@ -53,6 +53,9 @@ export default function Signup() {
   const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(searchParams.get('mode') === 'login');
   const [loading, setLoading] = useState(false);
+  
+  // Get session/consultationId from URL params - this is the key to preserving data
+  const sessionIdFromUrl = searchParams.get('session') || searchParams.get('consultationId');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   
@@ -182,6 +185,52 @@ export default function Signup() {
           }
           console.log('🚀 Login: Redirecting to', redirectTo, 'with consultation data:', consultationData);
           navigate(redirectTo, { state: { consultationData }, replace: true });
+        } else if (sessionIdFromUrl) {
+          // User has a session from demo - check for existing consultation or create one
+          console.log('🚀 Login: Found session in URL, checking for consultation:', sessionIdFromUrl);
+          
+          // Try to find or create consultation from demo session
+          const { data: existingConsultation } = await supabase
+            .from('consultations')
+            .select('id')
+            .eq('user_id', user?.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          if (existingConsultation) {
+            console.log('🚀 Login: Found existing consultation, going to huddle:', existingConsultation.id);
+            navigate(`/huddle?type=pre_brief&consultationId=${existingConsultation.id}`, { replace: true });
+          } else {
+            // Try to load demo session and create consultation
+            const storedIntelligence = sessionStorage.getItem('demoIntelligence');
+            if (storedIntelligence && user) {
+              const intel = JSON.parse(storedIntelligence);
+              const { data: newConsultation } = await supabase
+                .from('consultations')
+                .insert({
+                  user_id: user.id,
+                  industry: intel.industry,
+                  target_audience: intel.audience,
+                  unique_value: intel.valueProp,
+                  competitor_differentiator: intel.competitorDifferentiator,
+                  extracted_intelligence: intel,
+                  status: 'in_progress',
+                  flow_state: 'signed_up',
+                })
+                .select()
+                .single();
+              
+              if (newConsultation) {
+                sessionStorage.removeItem('demoIntelligence');
+                navigate(`/huddle?type=pre_brief&consultationId=${newConsultation.id}`, { replace: true });
+              } else {
+                navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
+              }
+            } else {
+              navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
+            }
+          }
         } else {
           navigate(redirectTo, { replace: true });
         }
@@ -250,6 +299,38 @@ export default function Signup() {
           await saveConsultationData(data.user.id);
           console.log('🚀 Signup: Redirecting to', redirectTo, 'with consultation data:', consultationData);
           navigate(redirectTo, { state: { consultationData }, replace: true });
+        } else if (sessionIdFromUrl && data.user) {
+          // User has a session from demo - create consultation from stored intelligence
+          console.log('🚀 Signup: Found session in URL, creating consultation:', sessionIdFromUrl);
+          
+          const storedIntelligence = sessionStorage.getItem('demoIntelligence');
+          if (storedIntelligence) {
+            const intel = JSON.parse(storedIntelligence);
+            const { data: newConsultation } = await supabase
+              .from('consultations')
+              .insert({
+                user_id: data.user.id,
+                industry: intel.industry,
+                target_audience: intel.audience,
+                unique_value: intel.valueProp,
+                competitor_differentiator: intel.competitorDifferentiator,
+                extracted_intelligence: intel,
+                status: 'in_progress',
+                flow_state: 'signed_up',
+                readiness_score: intel.readinessScore || 0,
+              })
+              .select()
+              .single();
+            
+            if (newConsultation) {
+              sessionStorage.removeItem('demoIntelligence');
+              navigate(`/huddle?type=pre_brief&consultationId=${newConsultation.id}`, { replace: true });
+            } else {
+              navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
+            }
+          } else {
+            navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
+          }
         } else {
           navigate(redirectTo, { replace: true });
         }

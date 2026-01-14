@@ -6,9 +6,19 @@ export default function WizardChoice() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Redirect to brand setup if user has a demo session
+  // Redirect to appropriate page if user has an existing session/consultation
   useEffect(() => {
     const sessionId = searchParams.get('session');
+    const consultationId = searchParams.get('consultationId');
+    
+    // If user has a consultationId, go to huddle (they already have data)
+    if (consultationId) {
+      console.log('🔄 [WizardChoice] Redirecting to huddle - user has consultation:', consultationId);
+      navigate(`/huddle?type=pre_brief&consultationId=${consultationId}`, { replace: true });
+      return;
+    }
+    
+    // If user has a session from demo, go to brand setup
     if (sessionId) {
       console.log('🔄 [WizardChoice] Redirecting to brand setup - user has session:', sessionId);
       navigate(`/brand-setup?session=${sessionId}`, { replace: true });
