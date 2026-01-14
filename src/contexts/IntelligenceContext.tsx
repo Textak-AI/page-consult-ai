@@ -366,23 +366,94 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   
   const marketResearchFetched = useRef(false);
   const hasRestoredState = useRef(false);
+  const sessionCreatedInDb = useRef(false);
   
   // Debounce timer for session updates to prevent rate limiting (429 errors)
   const sessionUpdateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSessionUpdateRef = useRef<object | null>(null);
 
   // ----------------------------------------
-  // DISABLED: Don't restore demo state on page load
-  // Fresh visits should always start with a clean slate
+  // Check for existing session in URL on mount
   // ----------------------------------------
   useEffect(() => {
     if (hasRestoredState.current) return;
     hasRestoredState.current = true;
 
-    // Always clear old demo state on mount - fresh start every time
-    safeClearDemoState();
-    console.log('[IntelligenceContext] Starting fresh - cleared old demo state');
+    const urlParams = new URLSearchParams(window.location.search);
+    const existingSessionId = urlParams.get('session');
+
+    if (existingSessionId) {
+      console.log('📂 [IntelligenceContext] Found session in URL:', existingSessionId);
+      // Load existing session from database
+      loadExistingSession(existingSessionId);
+    } else {
+      // Fresh start - clear old demo state
+      safeClearDemoState();
+      console.log('[IntelligenceContext] Starting fresh - cleared old demo state');
+    }
   }, []);
+
+  // ----------------------------------------
+  // Load existing session from database
+  // ----------------------------------------
+  const loadExistingSession = async (sessionId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('demo_sessions')
+        .select('*')
+        .eq('session_id', sessionId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('❌ [IntelligenceContext] Error loading session:', error);
+        return;
+      }
+
+      if (data) {
+        console.log('✅ [IntelligenceContext] Loaded existing session:', data);
+        sessionCreatedInDb.current = true;
+        
+        const intel = data.extracted_intelligence as any;
+        const messages = (data.messages as any[]) || [];
+        
+        setState(prev => ({
+          ...prev,
+          sessionId,
+          extracted: intel ? {
+            ...prev.extracted,
+            industry: intel.industry || null,
+            audience: intel.audience || null,
+            valueProp: intel.valueProp || null,
+            competitorDifferentiator: intel.competitorDifferentiator || null,
+            painPoints: intel.painPoints || null,
+            buyerObjections: intel.buyerObjections || null,
+            proofElements: intel.proofElements || null,
+            industrySummary: intel.industrySummary || null,
+            audienceSummary: intel.audienceSummary || null,
+            valuePropSummary: intel.valuePropSummary || null,
+            edgeSummary: intel.edgeSummary || null,
+            painSummary: intel.painSummary || null,
+          } : prev.extracted,
+          conversation: messages.map((m: any) => ({
+            role: m.role,
+            content: m.content,
+            timestamp: new Date(m.timestamp || Date.now()),
+          })),
+          messageCount: data.message_count || messages.length,
+          readiness: data.readiness || 0,
+        }));
+      } else {
+        // Session ID in URL but not in database - use this ID for new session
+        console.log('📝 [IntelligenceContext] Session ID not in DB, will create on first message:', sessionId);
+        setState(prev => ({
+          ...prev,
+          sessionId,
+        }));
+      }
+    } catch (err) {
+      console.error('❌ [IntelligenceContext] Failed to load session:', err);
+    }
+  };
 
   // ----------------------------------------
   // Persist state to localStorage when it changes
@@ -609,6 +680,54 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   }, []);
 
   // ----------------------------------------
+  // Create database session on first message
+  // ----------------------------------------
+  const createSessionInDatabase = useCallback(async (sessionId: string): Promise<boolean> => {
+    if (sessionCreatedInDb.current) return true;
+    
+    console.log('📝 [IntelligenceContext] Creating database session:', sessionId);
+    
+    try {
+      const { error } = await supabase
+        .from('demo_sessions')
+        .insert({
+          session_id: sessionId,
+          extracted_intelligence: {},
+          readiness: 0,
+          message_count: 0,
+          messages: [],
+        });
+
+      if (error) {
+        // If it already exists (unique constraint), that's fine
+        if (error.code === '23505') {
+          console.log('✅ [IntelligenceContext] Session already exists');
+          sessionCreatedInDb.current = true;
+          return true;
+        }
+        console.error('❌ [IntelligenceContext] Failed to create session:', error);
+        return false;
+      }
+
+      console.log('✅ [IntelligenceContext] Database session created:', sessionId);
+      sessionCreatedInDb.current = true;
+
+      // Add session ID to URL immediately
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has('session')) {
+        url.searchParams.set('session', sessionId);
+        window.history.replaceState({}, '', url.toString());
+        console.log('🔗 [IntelligenceContext] Added session to URL:', sessionId);
+      }
+
+      return true;
+    } catch (err) {
+      console.error('❌ [IntelligenceContext] Error creating session:', err);
+      return false;
+    }
+  }, []);
+
+  // ----------------------------------------
   // Process user message through the demo pipeline
   // ----------------------------------------
   const processUserMessage = useCallback(async (message: string) => {
@@ -640,6 +759,9 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     if (state.showEmailGate) {
       return;
     }
+
+    // Create database session on first message
+    await createSessionInDatabase(state.sessionId);
 
     const userMessage: ConversationMessage = {
       role: 'user',
@@ -912,6 +1034,9 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       }
 
       // Update session in database (debounced to prevent 429 rate limit errors)
+      // Calculate current readiness for the update
+      const currentReadiness = calculateReadiness(mergedExtractedForApi, state.market.marketSize !== null, state.emailCaptured);
+      
       const sessionData = {
         sessionId: state.sessionId,
         messages: [...state.conversation, userMessage, aiMessage].map(m => ({
@@ -922,6 +1047,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         extractedIntelligence: mergedExtractedForApi,
         marketResearch: state.market,
         messageCount: newMessageCount,
+        readiness: currentReadiness,
       };
       
       // Store the pending update
@@ -963,14 +1089,19 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         isProcessing: false,
       }));
     }
-  }, [state, calculateReadiness, navigate]);
+  }, [state, calculateReadiness, navigate, createSessionInDatabase]);
 
   // ----------------------------------------
   // Reset intelligence state
   // ----------------------------------------
   const resetIntelligence = useCallback(() => {
     marketResearchFetched.current = false;
+    sessionCreatedInDb.current = false; // Reset database session flag
     safeClearDemoState(); // Clear localStorage when resetting
+    // Also remove session from URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete('session');
+    window.history.replaceState({}, '', url.toString());
     setState({
       ...initialState,
       sessionId: uuidv4(),

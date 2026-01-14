@@ -13,7 +13,7 @@ serve(async (req) => {
   const corsHeaders = getCorsHeaders(origin);
 
   try {
-    const { sessionId, messages, extractedIntelligence, marketResearch, messageCount } = await req.json();
+    const { sessionId, messages, extractedIntelligence, marketResearch, messageCount, readiness } = await req.json();
 
     if (!sessionId) {
       return new Response(
@@ -44,6 +44,9 @@ serve(async (req) => {
       );
     }
 
+    // Calculate readiness score if not provided
+    const calculatedReadiness = readiness ?? (extractedIntelligence ? calculateReadinessFromIntel(extractedIntelligence) : 0);
+
     // Upsert session
     const { error } = await supabase
       .from('demo_sessions')
@@ -54,7 +57,8 @@ serve(async (req) => {
         market_research: marketResearch || {},
         message_count: messageCount || 0,
         ip_hash: ipHash,
-        completed: messageCount >= 3,
+        readiness: calculatedReadiness,
+        completed: calculatedReadiness >= 70,
       }, { onConflict: 'session_id' });
 
     if (error) {
@@ -74,6 +78,19 @@ serve(async (req) => {
     );
   }
 });
+
+// Calculate readiness score from extracted intelligence
+function calculateReadinessFromIntel(intel: Record<string, unknown>): number {
+  let score = 0;
+  if (intel.industry) score += 15;
+  if (intel.audience) score += 15;
+  if (intel.valueProp) score += 15;
+  if (intel.competitorDifferentiator) score += 10;
+  if (intel.painPoints) score += 10;
+  if (intel.buyerObjections) score += 10;
+  if (intel.proofElements) score += 10;
+  return score;
+}
 
 async function hashString(str: string): Promise<string> {
   const encoder = new TextEncoder();
