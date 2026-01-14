@@ -20,6 +20,14 @@ import {
 } from '@/data/precomputedObjections';
 import { generateAssumptiveFollowUp } from '@/utils/assumptiveFollowUp';
 import { handleChatNavigation } from '@/lib/chatNavigationHandler';
+import { 
+  type ConsultationArtifacts,
+  type CreativeArtifact,
+  createEmptyArtifacts,
+  detectPositiveSelection,
+  extractArtifactsFromMessage,
+  logArtifactCapture,
+} from '@/lib/artifactDetection';
 
 // ============================================
 // PERSISTENCE KEYS & CONFIG
@@ -177,11 +185,17 @@ export interface ExtractedBrand {
   extractedAt: string;
 }
 
+// Re-export ConsultationArtifacts for external use
+export type { ConsultationArtifacts, CreativeArtifact };
+
 export interface IntelligenceState {
   // Core intelligence
   extracted: ExtractedIntelligence;
   market: MarketResearch;
   readiness: number;
+  
+  // Consultation artifacts (headlines, CTAs, copy captured during conversation)
+  artifacts: ConsultationArtifacts;
   
   // Dynamic industry detection
   industryDetection: IndustryDetection | null;
@@ -287,6 +301,7 @@ const initialState: IntelligenceState = {
     isLoading: false,
   },
   readiness: 0,
+  artifacts: createEmptyArtifacts(),
   industryDetection: null,
   aestheticMode: {
     primary: 'default',
@@ -1047,10 +1062,108 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         timestamp: new Date(),
       };
 
+      // Step 4: Artifact detection - check if AI generated creative options
+      // and if the user is selecting one
+      const aiArtifacts = extractArtifactsFromMessage(aiResponseContent);
+      const userSelection = detectPositiveSelection(message);
+      
+      let artifactUpdates: Partial<ConsultationArtifacts> | null = null;
+      
+      // If AI generated headlines in this response, store them as alternatives
+      if (aiArtifacts.headlines.length > 0) {
+        logArtifactCapture('headline', 'detected', aiArtifacts.headlines.join(', '), 'AI generated options');
+        artifactUpdates = {
+          alternativeHeadlines: aiArtifacts.headlines.map(h => ({
+            type: 'headline' as const,
+            content: h,
+            capturedAt: new Date().toISOString(),
+          })),
+        };
+      }
+      
+      // If user positively selected something, find the previous AI message with options
+      if (userSelection.isPositive && state.conversation.length > 0) {
+        const lastAIMsg = state.conversation.filter(m => m.role === 'assistant').slice(-1)[0];
+        if (lastAIMsg) {
+          const prevArtifacts = extractArtifactsFromMessage(lastAIMsg.content);
+          
+          // User selected a headline option
+          if (prevArtifacts.headlines.length > 0) {
+            let selectedContent: string | null = null;
+            
+            if (userSelection.selectedOption !== null && prevArtifacts.headlines[userSelection.selectedOption - 1]) {
+              selectedContent = prevArtifacts.headlines[userSelection.selectedOption - 1];
+            } else {
+              // Default to first option if no specific number given
+              selectedContent = prevArtifacts.headlines[0];
+            }
+            
+            if (selectedContent) {
+              logArtifactCapture('headline', 'selected', selectedContent, userSelection.feedback || undefined);
+              artifactUpdates = {
+                ...artifactUpdates,
+                selectedHeadline: {
+                  type: 'headline',
+                  content: selectedContent,
+                  context: userSelection.feedback || 'User selected this option',
+                  capturedAt: new Date().toISOString(),
+                },
+                alternativeHeadlines: prevArtifacts.headlines
+                  .filter(h => h !== selectedContent)
+                  .map(h => ({
+                    type: 'headline' as const,
+                    content: h,
+                    capturedAt: new Date().toISOString(),
+                  })),
+                userFeedback: userSelection.feedback,
+              };
+            }
+          }
+          
+          // User selected a CTA option
+          if (prevArtifacts.ctas.length > 0) {
+            let selectedCTA: string | null = null;
+            
+            if (userSelection.selectedOption !== null && prevArtifacts.ctas[userSelection.selectedOption - 1]) {
+              selectedCTA = prevArtifacts.ctas[userSelection.selectedOption - 1];
+            } else if (prevArtifacts.ctas.length === 1) {
+              selectedCTA = prevArtifacts.ctas[0];
+            }
+            
+            if (selectedCTA) {
+              logArtifactCapture('cta', 'selected', selectedCTA, userSelection.feedback || undefined);
+              artifactUpdates = {
+                ...artifactUpdates,
+                selectedCTA: {
+                  type: 'cta',
+                  content: selectedCTA,
+                  context: userSelection.feedback || 'User selected this CTA',
+                  capturedAt: new Date().toISOString(),
+                },
+                alternativeCTAs: prevArtifacts.ctas
+                  .filter(c => c !== selectedCTA)
+                  .map(c => ({
+                    type: 'cta' as const,
+                    content: c,
+                    capturedAt: new Date().toISOString(),
+                  })),
+              };
+            }
+          }
+        }
+      }
+
       setState(prev => ({
         ...prev,
         conversation: [...prev.conversation, aiMessage],
         isProcessing: false,
+        // Update artifacts if we detected/captured any
+        ...(artifactUpdates ? {
+          artifacts: {
+            ...prev.artifacts,
+            ...artifactUpdates,
+          }
+        } : {}),
       }));
 
       // Show email gate with 2-second delay so user can read the response first
@@ -1146,6 +1259,8 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       email: state.email,
       source: 'landing_demo',
       sessionId: state.sessionId,
+      // Include artifacts for Strategy Brief generation
+      artifacts: state.artifacts,
     };
   }, [state]);
 

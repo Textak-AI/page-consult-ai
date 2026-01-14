@@ -15,10 +15,11 @@ import {
   type IndustryVariant,
   variantToDisplayName
 } from '@/lib/industryDetection';
-import type { MarketResearch } from '@/contexts/IntelligenceContext';
+import type { MarketResearch, ConsultationArtifacts } from '@/contexts/IntelligenceContext';
 import { type AestheticMode, isConfidentHybrid } from '@/lib/targetAesthetic';
 import { Button } from '@/components/ui/button';
 import { IndustryDropdown, getDesignApproachText } from '@/components/demo/IndustryDropdown';
+import { CreativeDirectionPanel } from '@/components/demo/CreativeDirectionPanel';
 
 // Category configuration for Demo view (only key fields)
 const DEMO_CATEGORIES = [
@@ -69,6 +70,7 @@ interface Props {
   industryDetection?: IndustryDetection | null;
   aestheticMode?: AestheticMode | null;
   marketResearch?: MarketResearch | null;
+  artifacts?: ConsultationArtifacts | null;
   onContinue?: () => void;
   onKeepChatting?: () => void;
   onIndustryCorrection?: (variant: string) => void;
@@ -81,6 +83,7 @@ export function IntelligenceProfileDemo({
   industryDetection,
   aestheticMode,
   marketResearch,
+  artifacts,
   onContinue,
   onKeepChatting,
   onIndustryCorrection,
@@ -560,6 +563,17 @@ export function IntelligenceProfileDemo({
               </div>
             );
           })}
+          
+          {/* CREATIVE DIRECTION section - appears when user selects artifacts */}
+          {artifacts && (artifacts.selectedHeadline || artifacts.selectedCTA || artifacts.alternativeHeadlines.length > 0) && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="pt-4 border-t border-slate-700/50"
+            >
+              <CreativeDirectionPanel artifacts={artifacts} />
+            </motion.div>
+          )}
           
           {/* MARKET RESEARCH section - appears when data loads */}
           {hasMarketResearchData && (
