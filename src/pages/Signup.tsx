@@ -277,12 +277,12 @@ export default function Signup() {
       readiness: demoIntelligence.readinessScore 
     });
     
-    // HIGH READINESS (70%+): Skip consultation creation, go straight to brand setup
+    // HIGH READINESS (70%+): Create consultation and go to Huddle first
     if (isReady && sessionId) {
-      console.log('🚀 [Signup] High readiness demo - skipping consultation creation');
+      console.log('🚀 [Signup] High readiness demo - creating consultation for huddle');
       
       try {
-        // Just claim the demo session - that's all we need
+        // Claim the demo session
         const { error: claimError } = await supabase
           .from('demo_sessions')
           .update({ 
@@ -297,6 +297,38 @@ export default function Signup() {
         } else {
           console.log('✅ [Signup] Demo session claimed successfully');
         }
+        
+        // Create consultation with demo intelligence for the Huddle
+        const { data: consultation, error: consultationError } = await supabase
+          .from("consultations")
+          .insert({
+            user_id: userId,
+            industry: demoIntelligence.industry,
+            target_audience: demoIntelligence.audience,
+            unique_value: demoIntelligence.valueProp,
+            competitor_differentiator: demoIntelligence.competitorDifferentiator,
+            audience_pain_points: demoIntelligence.painPoints ? [demoIntelligence.painPoints] : [],
+            authority_markers: demoIntelligence.proofElements ? [demoIntelligence.proofElements] : [],
+            extracted_intelligence: {
+              ...demoIntelligence,
+              source: 'demo',
+              transferredAt: new Date().toISOString(),
+            },
+            consultation_status: 'identified',
+            status: "in_progress",
+            readiness_score: demoIntelligence.readinessScore,
+            flow_state: 'signed_up',
+          })
+          .select()
+          .single();
+        
+        if (consultationError || !consultation) {
+          console.error('❌ [Signup] Failed to create consultation:', consultationError);
+          navigate('/wizard', { replace: true });
+          return;
+        }
+        
+        console.log('✅ [Signup] Created consultation for high-readiness user:', consultation.id);
         
         // Trigger trial welcome email
         try {
@@ -323,9 +355,9 @@ export default function Signup() {
         sessionStorage.removeItem('demoIntelligence');
         sessionStorage.removeItem('demoEmail');
         
-        // Go directly to brand setup with session
-        console.log('🚀 [Signup] Redirecting to brand setup with session:', sessionId);
-        navigate(`/brand-setup?session=${sessionId}`, { replace: true });
+        // Always go to Huddle first - the "prove I listened" moment
+        console.log('🚀 [Signup] Redirecting to huddle with consultationId:', consultation.id);
+        navigate(`/huddle?type=pre_brief&consultationId=${consultation.id}`, { replace: true });
         return;
         
       } catch (err) {
