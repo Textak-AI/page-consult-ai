@@ -52,9 +52,11 @@ export default function Huddle() {
   const [consultation, setConsultation] = useState<ConsultationData | null>(null);
   const [huddleContent, setHuddleContent] = useState<HuddleContent | null>(null);
   const [cardNotes, setCardNotes] = useState<Record<string, string>>({});
+  const [error, setError] = useState<string | null>(null);
 
   const huddleType = searchParams.get('type') || 'pre_brief';
-  const consultationId = searchParams.get('consultationId');
+  // Accept both consultationId and session params
+  const consultationId = searchParams.get('consultationId') || searchParams.get('session');
 
   useEffect(() => {
     loadConsultationAndGenerateHuddle();
@@ -62,24 +64,66 @@ export default function Huddle() {
 
   async function loadConsultationAndGenerateHuddle() {
     if (!consultationId) {
+      console.error('❌ [Huddle] No consultationId or session param');
       navigate('/demo');
       return;
     }
 
+    console.log('📂 [Huddle] Loading consultation:', consultationId);
     setLoading(true);
+    setError(null);
 
-    // Load consultation data
-    const { data, error } = await supabase
+    // First try consultations table
+    let { data, error: consultationError } = await supabase
       .from('consultations')
       .select('*')
       .eq('id', consultationId)
-      .single();
+      .maybeSingle();
 
-    if (error || !data) {
-      console.error('Failed to load consultation:', error);
-      navigate('/demo');
+    // If not found in consultations, check demo_sessions table
+    if (!data) {
+      console.log('📂 [Huddle] Not in consultations, checking demo_sessions...');
+      const { data: demoSession, error: demoError } = await supabase
+        .from('demo_sessions')
+        .select('*')
+        .eq('session_id', consultationId)
+        .maybeSingle();
+
+      if (demoSession) {
+        console.log('✅ [Huddle] Found demo_session, converting to consultation format');
+        const intel = demoSession.extracted_intelligence as Record<string, unknown> || {};
+        
+        // Convert demo_session to consultation-like format
+        data = {
+          id: demoSession.session_id,
+          industry: intel?.industry as string,
+          target_audience: intel?.audience as string,
+          unique_value: intel?.valueProp as string || intel?.uniqueValue as string,
+          competitor_differentiator: intel?.competitorDifferentiator as string,
+          extracted_intelligence: intel,
+          readiness_score: demoSession.readiness || (intel?.readinessScore as number),
+          business_name: intel?.companyName as string || intel?.businessName as string,
+          audience_pain_points: intel?.painPoints as string[],
+          authority_markers: intel?.proofElements as string[],
+        } as any;
+      } else {
+        console.error('❌ [Huddle] Not found in demo_sessions either:', demoError?.message);
+      }
+    }
+
+    if (!data) {
+      console.error('❌ [Huddle] No data found for ID:', consultationId);
+      setError('Could not load your consultation data. The session may have expired.');
+      setLoading(false);
       return;
     }
+
+    console.log('✅ [Huddle] Loaded data:', {
+      id: data.id,
+      businessName: data.business_name,
+      industry: data.industry,
+      hasIntelligence: !!data.extracted_intelligence
+    });
 
     setConsultation(data as ConsultationData);
     setCardNotes((data.card_notes as Record<string, string>) || {});
@@ -88,14 +132,16 @@ export default function Huddle() {
     const content = await generateHuddleContent(data as ConsultationData, huddleType);
     setHuddleContent(content);
 
-    // Update last huddle tracking
-    await supabase
-      .from('consultations')
-      .update({
-        last_huddle_type: huddleType,
-        last_huddle_at: new Date().toISOString()
-      })
-      .eq('id', consultationId);
+    // Only update if we have a real consultation record
+    if (data.id && !data.id.includes('-')) {
+      await supabase
+        .from('consultations')
+        .update({
+          last_huddle_type: huddleType,
+          last_huddle_at: new Date().toISOString()
+        })
+        .eq('id', consultationId);
+    }
 
     setLoading(false);
   }
@@ -296,6 +342,22 @@ export default function Huddle() {
     return (
       <div className="min-h-screen bg-[#0d0d1a] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#0d0d1a] flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <p className="text-red-400 mb-4">{error}</p>
+          <button
+            onClick={() => navigate('/demo')}
+            className="text-purple-400 hover:text-purple-300 underline"
+          >
+            Start a new session
+          </button>
+        </div>
       </div>
     );
   }

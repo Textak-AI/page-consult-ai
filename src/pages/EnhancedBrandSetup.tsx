@@ -148,87 +148,85 @@ export default function EnhancedBrandSetup() {
   useEffect(() => {
     const loadSessionData = async () => {
       const consultationId = searchParams.get('consultationId');
+      const sessionParam = searchParams.get('session') || sessionId;
+      const idToLoad = consultationId || sessionParam;
       
-      // Priority 1: Load from consultationId
-      if (consultationId) {
-        console.log('📂 [EnhancedBrandSetup] Loading consultation:', consultationId);
+      if (!idToLoad) {
+        setIsLoadingSession(false);
+        return;
+      }
+      
+      console.log('📂 [EnhancedBrandSetup] Loading data for:', { consultationId, sessionParam, idToLoad });
+      
+      // Try consultations table first
+      let { data: consultationData, error: consultationError } = await supabase
+        .from('consultations')
+        .select('*')
+        .eq('id', idToLoad)
+        .maybeSingle();
+      
+      if (consultationData) {
+        console.log('✅ [EnhancedBrandSetup] Consultation loaded:', {
+          hasIntelligence: !!consultationData.extracted_intelligence,
+          businessName: consultationData.business_name,
+          industry: consultationData.industry,
+        });
         
-        const { data, error } = await supabase
-          .from('consultations')
-          .select('*')
-          .eq('id', consultationId)
-          .single();
+        // Pre-fill company name
+        const companyFromData = consultationData.business_name;
+        const intel = consultationData.extracted_intelligence as any;
         
-        if (data && !error) {
-          console.log('✅ [EnhancedBrandSetup] Consultation loaded:', {
-            hasIntelligence: !!data.extracted_intelligence,
-            businessName: data.business_name,
-            industry: data.industry,
-          });
-          
-          // Pre-fill company name
-          const companyFromData = data.business_name;
-          const intel = data.extracted_intelligence as any;
-          
-          if (companyFromData) {
-            setCompanyName(companyFromData);
-          } else if (intel?.companyName || intel?.businessName) {
-            setCompanyName(intel.companyName || intel.businessName);
-          }
-          
-          // Pre-fill tagline from unique value
-          if (data.unique_value) {
-            setTagline(data.unique_value);
-          } else if (intel?.valueProp || intel?.uniqueValue) {
-            setTagline(intel.valueProp || intel.uniqueValue);
-          }
-          
-          // Pre-fill website URL if available
-          if (intel?.websiteUrl) {
-            setWebsiteUrl(intel.websiteUrl);
-          }
-        } else {
-          console.error('❌ [EnhancedBrandSetup] Failed to load consultation:', error?.message);
+        if (companyFromData) {
+          setCompanyName(companyFromData);
+        } else if (intel?.companyName || intel?.businessName) {
+          setCompanyName(intel.companyName || intel.businessName);
+        }
+        
+        // Pre-fill tagline from unique value
+        if (consultationData.unique_value) {
+          setTagline(consultationData.unique_value);
+        } else if (intel?.valueProp || intel?.uniqueValue) {
+          setTagline(intel.valueProp || intel.uniqueValue);
+        }
+        
+        // Pre-fill website URL if available
+        if (intel?.websiteUrl) {
+          setWebsiteUrl(intel.websiteUrl);
         }
         
         setIsLoadingSession(false);
         return;
       }
       
-      // Priority 2: Load from sessionId (legacy demo flow)
-      if (!sessionId) {
-        setIsLoadingSession(false);
-        return;
-      }
-
-      console.log('📂 [EnhancedBrandSetup] Loading demo session:', sessionId);
-
-      const { data, error } = await supabase
+      // Fallback: check demo_sessions table
+      console.log('📂 [EnhancedBrandSetup] Not in consultations, checking demo_sessions...');
+      const { data: demoData, error: demoError } = await supabase
         .from('demo_sessions')
         .select('*')
-        .eq('session_id', sessionId)
-        .single();
+        .eq('session_id', idToLoad)
+        .maybeSingle();
 
-      console.log('📂 [EnhancedBrandSetup] Supabase result:', { data: !!data, error });
-
-      if (data && !error) {
+      if (demoData) {
         console.log('✅ [EnhancedBrandSetup] Demo session loaded:', {
-          hasIntelligence: !!data.extracted_intelligence,
-          readiness: data.readiness,
-          claimedBy: data.claimed_by,
+          hasIntelligence: !!demoData.extracted_intelligence,
+          readiness: demoData.readiness,
+          claimedBy: demoData.claimed_by,
         });
-        setDemoSession(data);
+        setDemoSession(demoData);
         
         // Pre-fill company name from intelligence if available
-        const intel = data.extracted_intelligence as any;
-        if (intel?.businessName) {
-          setCompanyName(intel.businessName);
+        const intel = demoData.extracted_intelligence as any;
+        if (intel?.companyName || intel?.businessName) {
+          setCompanyName(intel.companyName || intel.businessName);
         }
-        if (intel?.uniqueValue) {
-          setTagline(intel.uniqueValue);
+        if (intel?.valueProp || intel?.uniqueValue) {
+          setTagline(intel.valueProp || intel.uniqueValue);
+        }
+        if (intel?.websiteUrl) {
+          setWebsiteUrl(intel.websiteUrl);
         }
       } else {
-        console.error('❌ [EnhancedBrandSetup] Failed to load:', error?.message);
+        console.error('❌ [EnhancedBrandSetup] Not found in either table:', { consultationError, demoError });
       }
       
       setIsLoadingSession(false);
