@@ -679,8 +679,74 @@ export default function EnhancedBrandSetup() {
       console.log('🚀 [EnhancedBrandSetup] Brand captured - navigating to generate with consultationId:', consultationId);
       navigate(`/generate?consultationId=${consultationId}`);
     } else if (demoSession && sessionId) {
-      // Legacy demo session flow
-      console.log('🚀 [EnhancedBrandSetup] Demo user - navigating to generate with session:', sessionId);
+      // Demo session flow - need to check if we should create consultation first
+      console.log('🚀 [EnhancedBrandSetup] Demo user - checking for high-readiness flow');
+      
+      // Check readiness from demo session
+      const readiness = demoSession.readiness || 0;
+      const hasIntelligence = !!demoSession.extracted_intelligence;
+      
+      console.log('[Demo Handoff] Route decision:', {
+        hasStrategyBrief: false,
+        score: readiness,
+        hasIntelligence,
+        route: readiness >= 50 ? 'create consultation then huddle' : 'generate with session',
+      });
+      
+      // If high readiness, create a consultation first and route to huddle
+      if (readiness >= 50 && hasIntelligence) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const intel = demoSession.extracted_intelligence as any;
+          
+          // Create consultation from demo intelligence
+          const { data: newConsultation, error: createError } = await supabase
+            .from('consultations')
+            .insert({
+              user_id: user.id,
+              industry: intel.industry,
+              target_audience: intel.audience,
+              unique_value: intel.valueProp,
+              competitor_differentiator: intel.competitorDifferentiator,
+              audience_pain_points: intel.painPoints ? [intel.painPoints] : [],
+              authority_markers: intel.proofElements ? [intel.proofElements] : [],
+              extracted_intelligence: {
+                ...intel,
+                source: 'demo',
+                migratedAt: new Date().toISOString(),
+              },
+              business_name: companyName,
+              website_url: websiteUrl,
+              communication_style: communicationStyle as any,
+              consultation_status: intel.industry && intel.audience ? 'identified' : 'not_started',
+              status: 'in_progress',
+              readiness_score: readiness,
+              flow_state: 'brand_captured',
+            })
+            .select()
+            .single();
+          
+          if (!createError && newConsultation) {
+            // Claim the demo session
+            await supabase
+              .from('demo_sessions')
+              .update({
+                claimed_by: user.id,
+                claimed_at: new Date().toISOString(),
+              })
+              .eq('session_id', sessionId)
+              .is('claimed_by', null);
+            
+            console.log('✅ [EnhancedBrandSetup] Created consultation from demo:', newConsultation.id);
+            navigate(`/huddle?type=pre_brief&consultationId=${newConsultation.id}`, { replace: true });
+            return;
+          } else {
+            console.error('❌ [EnhancedBrandSetup] Failed to create consultation:', createError);
+          }
+        }
+      }
+      
+      // Fallback: navigate to generate with session
       navigate(`/generate?session=${sessionId}`);
     } else {
       navigate('/wizard');
