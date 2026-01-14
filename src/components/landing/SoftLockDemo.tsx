@@ -185,6 +185,11 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
     const sessionId = crypto.randomUUID();
     const isReady = state.readiness >= 70;
     
+    // CRITICAL: Store session ID before signup for migration
+    // This ensures the exact same session ID is used after signup
+    sessionStorage.setItem('demo_session_id_for_migration', sessionId);
+    console.log('[Session Persistence] Stored for migration:', sessionId);
+    
     const demoIntelligence = {
       sessionId,
       source: 'demo',
