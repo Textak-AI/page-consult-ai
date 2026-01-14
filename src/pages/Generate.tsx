@@ -477,6 +477,7 @@ function GenerateContent() {
       const searchParams = new URLSearchParams(window.location.search);
       const forceRegenerate = searchParams.get('regenerate') === 'true';
       const sessionParam = searchParams.get('session');
+      const consultationIdParam = searchParams.get('consultationId');
       
       // Support both route params (/generate/:pageId) and query params (?id=xxx)
       const effectivePageId = pageId || searchParams.get('id');
@@ -484,10 +485,98 @@ function GenerateContent() {
       console.log('[Generate] Loading with:', {
         routePageId: pageId,
         queryParamId: searchParams.get('id'),
+        consultationIdParam,
         sessionParam,
         effectivePageId,
         forceRegenerate,
       });
+
+      // PRIORITY 0: Check for consultationId param (from Huddle/Brand Setup flow)
+      if (consultationIdParam) {
+        console.log('🎯 [Generate] Loading from consultationId:', consultationIdParam);
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          sessionStorage.setItem('pendingConsultationId', consultationIdParam);
+          navigate("/signup");
+          return;
+        }
+        
+        const { data: consultationData, error: consultationError } = await supabase
+          .from('consultations')
+          .select('*')
+          .eq('id', consultationIdParam)
+          .single();
+        
+        if (consultationError || !consultationData) {
+          console.error('❌ Consultation not found:', consultationError);
+          toast({
+            title: "Consultation Not Found",
+            description: "Please start a new consultation.",
+            variant: "destructive",
+          });
+          navigate("/");
+          return;
+        }
+        
+        console.log('✅ [Generate] Loaded consultation:', consultationData.id, {
+          hasIntelligence: !!consultationData.extracted_intelligence,
+          hasBrief: !!consultationData.strategy_brief,
+          readiness: consultationData.readiness_score,
+        });
+        
+        // Transform consultation data to expected format
+        const intel = consultationData.extracted_intelligence as any || {};
+        const brief = consultationData.strategy_brief as any || {};
+        
+        // Generate SDI from consultation if available
+        let sdiOutput: DesignIntelligenceOutput | null = null;
+        const conversationHistory = intel.conversationHistory || [];
+        const conversationText = Array.isArray(conversationHistory)
+          ? conversationHistory.map((m: any) => m.content || '').join('\n')
+          : '';
+        
+        if (conversationText.length > 50) {
+          console.log('🎨 [SDI] Generating design intelligence from consultation...');
+          sdiOutput = generateDesignIntelligence({
+            conversationText,
+            extractedIntelligence: intel,
+            targetMarket: consultationData.target_audience || intel.audience,
+          });
+          setDesignIntelligence(sdiOutput);
+        }
+        
+        const transformedData = {
+          id: consultationData.id,
+          user_id: user.id,
+          industry: consultationData.industry || intel.industry,
+          businessName: consultationData.business_name || intel.businessName || intel.companyName,
+          service_type: consultationData.service_type || intel.specificService,
+          goal: consultationData.goal || intel.goals,
+          target_audience: consultationData.target_audience || intel.audience,
+          challenge: consultationData.challenge || intel.challenge,
+          unique_value: consultationData.unique_value || intel.valueProp,
+          competitor_differentiator: consultationData.competitor_differentiator || intel.competitorDifferentiator,
+          offer: consultationData.offer || intel.offer,
+          status: 'completed',
+          created_at: consultationData.created_at,
+          // Strategy brief data
+          structuredBrief: brief,
+          strategicLevel: 'armed',
+          // Design Intelligence
+          designIntelligence: sdiOutput || designIntelligence,
+          // Communication style
+          communicationStyle: consultationData.communication_style,
+        };
+        
+        console.log('📦 [Generate] Transformed consultation data:', transformedData);
+        
+        setConsultation(transformedData);
+        
+        // Start generation
+        await startGeneration(transformedData, user.id);
+        return;
+      }
 
       // ZERO: Check for session param from Brand Intake flow
       if (sessionParam) {
