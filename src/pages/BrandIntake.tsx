@@ -104,12 +104,32 @@ export default function BrandIntake() {
       
       if (error) throw error;
       
+      // Build color array from all extracted colors
+      const extractedColorList: string[] = [];
+      if (data?.brand?.themeColor) extractedColorList.push(data.brand.themeColor);
+      if (data?.brand?.secondaryColor) extractedColorList.push(data.brand.secondaryColor);
+      if (data?.brand?.accentColor) extractedColorList.push(data.brand.accentColor);
+      
+      // Extract font names
+      const fontList: string[] = [];
+      if (data?.brand?.fonts?.heading) fontList.push(data.brand.fonts.heading);
+      if (data?.brand?.fonts?.body && data.brand.fonts.body !== data.brand.fonts.heading) {
+        fontList.push(data.brand.fonts.body);
+      }
+      
       const results: DetectionResults = {
-        logo: data?.brand?.faviconUrl || data?.brand?.logoUrl,
-        colors: data?.brand?.themeColor ? [data.brand.themeColor] : [],
-        fonts: data?.brand?.fonts || [],
+        logo: data?.brand?.logoUrl || data?.brand?.faviconUrl,
+        colors: extractedColorList,
+        fonts: fontList,
         companyName: data?.brand?.companyName
       };
+      
+      console.log('[Brand Extraction]', {
+        logo: results.logo,
+        name: results.companyName,
+        colors: results.colors,
+        fonts: results.fonts
+      });
       
       setDetectionResults(results);
       
@@ -124,9 +144,18 @@ export default function BrandIntake() {
         setColorsAutoDetected(true);
       }
       
+      // Build applied items list
+      const appliedItems: string[] = [];
+      if (results.logo) appliedItems.push('logo');
+      if (results.companyName) appliedItems.push('company name');
+      if (results.colors && results.colors.length > 0) appliedItems.push('colors');
+      if (results.fonts && results.fonts.length > 0) appliedItems.push('fonts');
+      
       toast({
-        title: "Brand detected!",
-        description: "We found your logo and colors. Review below."
+        title: "Extracted successfully",
+        description: appliedItems.length > 0 
+          ? `Applied: ${appliedItems.join(', ')}`
+          : "Review detected assets below."
       });
       
     } catch (error) {

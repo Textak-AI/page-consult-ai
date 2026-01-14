@@ -1,14 +1,52 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
+// Colors to filter out (whites, blacks, grays)
+const EXCLUDED_COLORS = new Set([
+  '#fff', '#ffffff', '#000', '#000000', 
+  '#eee', '#eeeeee', '#ddd', '#dddddd', '#ccc', '#cccccc', 
+  '#bbb', '#bbbbbb', '#aaa', '#aaaaaa', '#999', '#999999',
+  '#888', '#888888', '#777', '#777777', '#666', '#666666',
+  '#555', '#555555', '#444', '#444444', '#333', '#333333',
+  '#222', '#222222', '#111', '#111111', '#f5f5f5', '#fafafa',
+  '#e5e5e5', '#d4d4d4', '#a3a3a3', '#737373', '#525252',
+  '#404040', '#262626', '#171717', '#0a0a0a'
+]);
+
+function isExcludedColor(color: string): boolean {
+  const hex = color.toLowerCase().trim();
+  if (EXCLUDED_COLORS.has(hex)) return true;
+  
+  // Check for short hex versions
+  if (hex.length === 4) {
+    const expanded = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+    if (EXCLUDED_COLORS.has(expanded)) return true;
+  }
+  
+  // Check for rgb grays
+  const rgbMatch = hex.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+  if (rgbMatch) {
+    const [, r, g, b] = rgbMatch.map(Number);
+    if (Math.abs(r - g) < 20 && Math.abs(g - b) < 20 && Math.abs(r - b) < 20) {
+      if (r > 200 || r < 50) return true;
+    }
+  }
+  
+  return false;
+}
+
 interface BrandData {
   companyName: string | null;
   faviconUrl: string | null;
+  logoUrl: string | null;
   description: string | null;
   tagline: string | null;
   themeColor: string | null;
+  secondaryColor: string | null;
+  accentColor: string | null;
   ogImage: string | null;
   domain: string;
+  fonts: { heading: string | null; body: string | null };
 }
 
 serve(async (req) => {
@@ -31,16 +69,17 @@ serve(async (req) => {
       normalizedUrl = `https://${normalizedUrl}`;
     }
 
-    console.log(`Extracting brand from: ${normalizedUrl}`);
+    console.log(`[Brand Extraction] Starting extraction from: ${normalizedUrl}`);
 
     // Fetch with timeout
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 10000);
 
     const response = await fetch(normalizedUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; PageConsultBot/1.0)',
-        'Accept': 'text/html',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
       },
       signal: controller.signal,
     });
@@ -57,35 +96,63 @@ serve(async (req) => {
     const brand: BrandData = {
       companyName: null,
       faviconUrl: null,
+      logoUrl: null,
       description: null,
       tagline: null,
       themeColor: null,
+      secondaryColor: null,
+      accentColor: null,
       ogImage: null,
       domain: baseUrl.hostname.replace('www.', ''),
+      fonts: { heading: null, body: null },
     };
 
-    // Extract company name (very reliable)
+    // Extract company name
     brand.companyName = extractCompanyName(html, baseUrl);
+    console.log('[Brand Extraction] Company name:', brand.companyName);
 
-    // Extract favicon (very reliable)
+    // Extract favicon
     brand.faviconUrl = extractFavicon(html, baseUrl);
+    
+    // Extract logo
+    brand.logoUrl = extractLogo(html, baseUrl);
+    console.log('[Brand Extraction] Logo:', brand.logoUrl);
 
-    // Extract description (very reliable)
+    // Extract description
     brand.description = extractMeta(html, 'description');
     
-    // Extract OG description as tagline if shorter
+    // Extract OG description as tagline
     const ogDesc = extractMeta(html, 'og:description');
     if (ogDesc && (!brand.description || ogDesc.length < brand.description.length)) {
       brand.tagline = ogDesc;
     }
 
-    // Extract theme color (moderately reliable)
-    brand.themeColor = extractMeta(html, 'theme-color');
+    // Extract colors (priority order)
+    const extractedColors = extractColors(html);
+    console.log('[Brand Extraction] Colors extracted:', extractedColors);
+    
+    if (extractedColors.length > 0) {
+      brand.themeColor = extractedColors[0];
+      brand.secondaryColor = extractedColors[1] || null;
+      brand.accentColor = extractedColors[2] || null;
+    } else {
+      // Fallback to meta theme-color
+      brand.themeColor = extractMeta(html, 'theme-color');
+    }
 
-    // Extract OG image (moderately reliable)
+    // Extract fonts
+    brand.fonts = extractFonts(html);
+    console.log('[Brand Extraction] Fonts:', brand.fonts);
+
+    // Extract OG image
     brand.ogImage = extractOgImage(html, baseUrl);
 
-    console.log('Extracted brand:', JSON.stringify(brand, null, 2));
+    console.log('[Brand Extraction] Final result:', {
+      logo: brand.logoUrl || brand.faviconUrl,
+      name: brand.companyName,
+      colors: [brand.themeColor, brand.secondaryColor, brand.accentColor].filter(Boolean),
+      fonts: brand.fonts
+    });
 
     return new Response(
       JSON.stringify({ success: true, brand }),
@@ -93,7 +160,7 @@ serve(async (req) => {
     );
 
   } catch (error: unknown) {
-    console.error('Brand extraction error:', error);
+    console.error('[Brand Extraction] Error:', error);
     const err = error as { name?: string; message?: string };
     const message = err.name === 'AbortError' 
       ? 'Site took too long to respond'
@@ -105,6 +172,164 @@ serve(async (req) => {
     );
   }
 });
+
+function extractColors(html: string): string[] {
+  const collectedColors: string[] = [];
+  
+  // Priority 1: Meta theme-color
+  const themeColorPatterns = [
+    /<meta[^>]*name=["']theme-color["'][^>]*content=["']([^"']+)["']/i,
+    /<meta[^>]*content=["']([^"']+)["'][^>]*name=["']theme-color["']/i,
+  ];
+  for (const pattern of themeColorPatterns) {
+    const match = html.match(pattern);
+    if (match && !isExcludedColor(match[1])) {
+      collectedColors.push(match[1]);
+      break;
+    }
+  }
+  
+  // Priority 2: CSS custom properties
+  const cssVarPatterns = [
+    /--(?:primary|brand|main|accent|theme)(?:-color)?:\s*(#[0-9a-fA-F]{3,6})/gi,
+    /--(?:color-primary|color-brand|color-accent):\s*(#[0-9a-fA-F]{3,6})/gi,
+  ];
+  for (const pattern of cssVarPatterns) {
+    const matches = html.matchAll(pattern);
+    for (const match of matches) {
+      if (!isExcludedColor(match[1]) && !collectedColors.includes(match[1].toLowerCase())) {
+        collectedColors.push(match[1]);
+      }
+    }
+  }
+  
+  // Priority 3: Button/CTA background colors
+  const buttonPatterns = [
+    /\.(?:btn|button|cta)[^{]*\{[^}]*background(?:-color)?:\s*(#[0-9a-fA-F]{3,6})/gi,
+    /button[^{]*\{[^}]*background(?:-color)?:\s*(#[0-9a-fA-F]{3,6})/gi,
+  ];
+  for (const pattern of buttonPatterns) {
+    const matches = html.matchAll(pattern);
+    for (const match of matches) {
+      if (!isExcludedColor(match[1]) && !collectedColors.includes(match[1].toLowerCase())) {
+        collectedColors.push(match[1]);
+      }
+    }
+  }
+  
+  // Priority 4: Inline styles
+  const inlinePatterns = [
+    /style=["'][^"']*background(?:-color)?:\s*(#[0-9a-fA-F]{3,6})/gi,
+    /style=["'][^"']*(?:^|;\s*)color:\s*(#[0-9a-fA-F]{3,6})/gi,
+  ];
+  for (const pattern of inlinePatterns) {
+    const matches = html.matchAll(pattern);
+    for (const match of matches) {
+      if (!isExcludedColor(match[1]) && !collectedColors.includes(match[1].toLowerCase())) {
+        collectedColors.push(match[1]);
+      }
+    }
+  }
+
+  // Priority 5: Look for common brand color patterns in any CSS
+  const genericColorPatterns = [
+    /:\s*(#[0-9a-fA-F]{6})\s*[;}]/g,
+  ];
+  for (const pattern of genericColorPatterns) {
+    const matches = html.matchAll(pattern);
+    const colorCounts: Record<string, number> = {};
+    for (const match of matches) {
+      const color = match[1].toLowerCase();
+      if (!isExcludedColor(color)) {
+        colorCounts[color] = (colorCounts[color] || 0) + 1;
+      }
+    }
+    // Get most frequent colors not already collected
+    const sortedColors = Object.entries(colorCounts)
+      .sort((a, b) => b[1] - a[1])
+      .filter(([color]) => !collectedColors.includes(color))
+      .slice(0, 3);
+    
+    for (const [color] of sortedColors) {
+      if (collectedColors.length < 5) {
+        collectedColors.push(color);
+      }
+    }
+  }
+  
+  return [...new Set(collectedColors)].slice(0, 5);
+}
+
+function extractFonts(html: string): { heading: string | null; body: string | null } {
+  const fonts: { heading: string | null; body: string | null } = { heading: null, body: null };
+  
+  // Check Google Fonts
+  const googleFontsMatches = html.matchAll(/fonts\.googleapis\.com\/css2?\?[^"']*family=([^"'&]+)/gi);
+  const googleFontFamilies: string[] = [];
+  for (const match of googleFontsMatches) {
+    const familyParam = match[1];
+    const families = familyParam.split(/[&|]/).map(f => {
+      const familyMatch = f.match(/(?:family=)?([^:@]+)/);
+      return familyMatch ? familyMatch[1].replace(/\+/g, ' ').trim() : null;
+    }).filter(Boolean);
+    googleFontFamilies.push(...families as string[]);
+  }
+  
+  if (googleFontFamilies.length > 0) {
+    fonts.heading = googleFontFamilies[0];
+    fonts.body = googleFontFamilies[1] || googleFontFamilies[0];
+  }
+  
+  // Check @font-face
+  if (!fonts.heading) {
+    const fontFaceMatches = html.matchAll(/@font-face\s*\{[^}]*font-family:\s*["']?([^"';}]+)["']?/gi);
+    const fontFaceFamilies: string[] = [];
+    for (const match of fontFaceMatches) {
+      const family = match[1].trim();
+      if (family && !fontFaceFamilies.includes(family)) {
+        fontFaceFamilies.push(family);
+      }
+    }
+    if (fontFaceFamilies.length > 0) {
+      fonts.heading = fontFaceFamilies[0];
+      fonts.body = fontFaceFamilies[1] || fontFaceFamilies[0];
+    }
+  }
+  
+  return fonts;
+}
+
+function extractLogo(html: string, baseUrl: URL): string | null {
+  // Priority 1: Logo in header/nav
+  const headerLogoPatterns = [
+    /<(?:header|nav)[^>]*>[\s\S]*?<img[^>]*src=["']([^"']+)["'][^>]*(?:class|alt)=["'][^"']*logo/i,
+    /<(?:header|nav)[^>]*>[\s\S]*?<img[^>]*(?:class|alt)=["'][^"']*logo[^"']*["'][^>]*src=["']([^"']+)["']/i,
+  ];
+  
+  for (const pattern of headerLogoPatterns) {
+    const match = html.match(pattern);
+    if (match && match[1] && !match[1].startsWith('data:')) {
+      return resolveUrl(match[1], baseUrl);
+    }
+  }
+  
+  // Priority 2: Any img with "logo" in class/alt/src
+  const logoImgPatterns = [
+    /<img[^>]*class=["'][^"']*logo[^"']*["'][^>]*src=["']([^"']+)["']/i,
+    /<img[^>]*src=["']([^"']+)["'][^>]*class=["'][^"']*logo[^"']*["']/i,
+    /<img[^>]*alt=["'][^"']*logo[^"']*["'][^>]*src=["']([^"']+)["']/i,
+    /<img[^>]*src=["']([^"']*logo[^"']*)["']/i,
+  ];
+  
+  for (const pattern of logoImgPatterns) {
+    const match = html.match(pattern);
+    if (match && match[1] && !match[1].startsWith('data:') && !match[1].includes('1x1')) {
+      return resolveUrl(match[1], baseUrl);
+    }
+  }
+  
+  return null;
+}
 
 function extractCompanyName(html: string, baseUrl: URL): string | null {
   // 1. OG site_name (most reliable)
@@ -127,7 +352,6 @@ function extractCompanyName(html: string, baseUrl: URL): string | null {
 }
 
 function extractFavicon(html: string, baseUrl: URL): string {
-  // Check for explicit favicon links
   const patterns = [
     /<link[^>]+rel=["'](?:shortcut )?icon["'][^>]+href=["']([^"']+)["']/i,
     /<link[^>]+href=["']([^"']+)["'][^>]+rel=["'](?:shortcut )?icon["']/i,
@@ -141,12 +365,10 @@ function extractFavicon(html: string, baseUrl: URL): string {
     }
   }
 
-  // Default favicon location
   return `${baseUrl.origin}/favicon.ico`;
 }
 
 function extractMeta(html: string, name: string): string | null {
-  // Handle both name="" and property="" attributes
   const patterns = [
     new RegExp(`<meta[^>]+(?:name|property)=["']${name}["'][^>]+content=["']([^"']+)["']`, 'i'),
     new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:name|property)=["']${name}["']`, 'i'),
