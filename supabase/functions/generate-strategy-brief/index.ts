@@ -29,6 +29,19 @@ CRITICAL: Your output will be used as the LITERAL BLUEPRINT for page generation.
 
 Output the brief in clean markdown format with a STRUCTURED JSON block at the end for the page generator to parse.`;
 
+    // Extract creative direction artifacts if available
+    const artifacts = consultationData.artifacts || {};
+    const hasSelectedHeadline = !!artifacts.selectedHeadline?.content;
+    const hasSelectedCTA = !!artifacts.selectedCTA?.content;
+    const alternativeHeadlines = artifacts.alternativeHeadlines || [];
+    
+    console.log('[generate-strategy-brief] Creative artifacts:', {
+      hasSelectedHeadline,
+      hasSelectedCTA,
+      alternativeCount: alternativeHeadlines.length,
+      userFeedback: artifacts.userFeedback?.substring(0, 50),
+    });
+
     const userPrompt = `Create a strategy brief for this landing page project:
 
 ## Client Information
@@ -63,6 +76,15 @@ ${consultationData.websiteIntelligence ? `
 - Tagline Found: ${consultationData.websiteIntelligence.tagline || 'None'}
 - Description: ${consultationData.websiteIntelligence.description || 'None'}
 - Existing Testimonials: ${consultationData.websiteIntelligence.testimonials?.join(' | ') || 'None'}
+` : ''}
+
+${hasSelectedHeadline || hasSelectedCTA || alternativeHeadlines.length > 0 ? `
+## Creative Direction (User-Selected)
+${hasSelectedHeadline ? `- Selected Headline: "${artifacts.selectedHeadline.content}"` : ''}
+${hasSelectedCTA ? `- Selected CTA: "${artifacts.selectedCTA.content}"` : ''}
+${alternativeHeadlines.length > 0 ? `- Alternative Headlines Considered:
+${alternativeHeadlines.slice(0, 3).map((h: any, i: number) => `  ${i + 1}. "${h.content}"`).join('\n')}` : ''}
+${artifacts.userFeedback ? `- User's Reasoning: "${artifacts.userFeedback}"` : ''}
 ` : ''}
 
 ---
@@ -102,6 +124,10 @@ Generate a STRATEGY BRIEF with these sections:
     - Option A (Direct benefit)
     - Option B (Problem-focused)
     - Option C (Outcome-focused)
+${hasSelectedHeadline ? `
+    IMPORTANT: The user has already selected their preferred headline direction: "${artifacts.selectedHeadline.content}"
+    Use this as Option A and create 2 variations that maintain the same strategic angle.
+` : ''}
 
 ---
 
