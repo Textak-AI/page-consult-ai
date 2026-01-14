@@ -9,11 +9,16 @@ export default function WizardChoice() {
   // Redirect to appropriate page if user has an existing session/consultation
   useEffect(() => {
     const sessionId = searchParams.get('session');
-    const consultationId = searchParams.get('consultationId');
+    const consultationIdFromUrl = searchParams.get('consultationId');
+    
+    // Also check sessionStorage for pending consultation
+    const pendingConsultationId = sessionStorage.getItem('pendingConsultationId');
+    const consultationId = consultationIdFromUrl || pendingConsultationId;
     
     // If user has a consultationId, go to huddle (they already have data)
     if (consultationId) {
       console.log('🔄 [WizardChoice] Redirecting to huddle - user has consultation:', consultationId);
+      sessionStorage.removeItem('pendingConsultationId'); // Clean up
       navigate(`/huddle?type=pre_brief&consultationId=${consultationId}`, { replace: true });
       return;
     }

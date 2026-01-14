@@ -106,6 +106,116 @@ export default function Signup() {
     }
   }, [isFromDemo]);
 
+  // Helper: Load demo session from database if sessionStorage is empty
+  const loadDemoSessionFromDatabase = async (sessionId: string): Promise<DemoIntelligence | null> => {
+    console.log('📥 [Signup] Loading demo session from database:', sessionId);
+    
+    const { data: demoSession, error } = await supabase
+      .from('demo_sessions')
+      .select('*')
+      .eq('session_id', sessionId)
+      .maybeSingle();
+    
+    if (error || !demoSession) {
+      console.error('❌ [Signup] Failed to load demo session from DB:', error);
+      return null;
+    }
+    
+    console.log('✅ [Signup] Loaded demo session from database:', {
+      hasIntelligence: !!demoSession.extracted_intelligence,
+      readiness: demoSession.readiness,
+    });
+    
+    const intel = demoSession.extracted_intelligence as any;
+    if (!intel) return null;
+    
+    return {
+      sessionId: demoSession.session_id,
+      source: 'demo',
+      capturedAt: demoSession.created_at || new Date().toISOString(),
+      industry: intel.industry || null,
+      industrySummary: intel.industrySummary || null,
+      audience: intel.audience || null,
+      audienceSummary: intel.audienceSummary || null,
+      valueProp: intel.valueProp || null,
+      valuePropSummary: intel.valuePropSummary || null,
+      competitorDifferentiator: intel.competitorDifferentiator || null,
+      edgeSummary: intel.edgeSummary || null,
+      painPoints: intel.painPoints || null,
+      painSummary: intel.painSummary || null,
+      buyerObjections: intel.buyerObjections || null,
+      objectionsSummary: intel.objectionsSummary || null,
+      proofElements: intel.proofElements || null,
+      proofSummary: intel.proofSummary || null,
+      marketResearch: intel.marketResearch || {
+        marketSize: null,
+        buyerPersona: null,
+        commonObjections: [],
+        industryInsights: [],
+      },
+      conversationHistory: intel.conversationHistory || [],
+      readinessScore: demoSession.readiness || intel.readinessScore || 0,
+      selectedPath: intel.selectedPath || 'wizard',
+    };
+  };
+
+  // Helper: Create consultation from demo intelligence (either from sessionStorage or DB)
+  const createConsultationFromIntelligence = async (userId: string, intel: DemoIntelligence): Promise<string | null> => {
+    console.log('🚀 [Signup] Creating consultation from intelligence:', {
+      industry: intel.industry,
+      readiness: intel.readinessScore,
+    });
+    
+    const { data: consultation, error } = await supabase
+      .from('consultations')
+      .insert({
+        user_id: userId,
+        industry: intel.industry,
+        target_audience: intel.audience,
+        unique_value: intel.valueProp,
+        competitor_differentiator: intel.competitorDifferentiator,
+        audience_pain_points: intel.painPoints ? [intel.painPoints] : [],
+        authority_markers: intel.proofElements ? [intel.proofElements] : [],
+        extracted_intelligence: {
+          ...intel,
+          source: 'demo',
+          transferredAt: new Date().toISOString(),
+        },
+        consultation_status: intel.industry && intel.audience ? 'identified' : 'not_started',
+        status: 'in_progress',
+        readiness_score: intel.readinessScore,
+        flow_state: 'signed_up',
+      })
+      .select()
+      .single();
+    
+    if (error || !consultation) {
+      console.error('❌ [Signup] Failed to create consultation:', error);
+      return null;
+    }
+    
+    console.log('✅ [Signup] Created consultation:', consultation.id);
+    
+    // Claim the demo session
+    const sessionId = intel.sessionId;
+    if (sessionId) {
+      await supabase
+        .from('demo_sessions')
+        .update({ 
+          claimed_by: userId, 
+          claimed_at: new Date().toISOString() 
+        })
+        .eq('session_id', sessionId)
+        .is('claimed_by', null);
+    }
+    
+    // Clean up sessionStorage
+    sessionStorage.removeItem('demoIntelligence');
+    sessionStorage.removeItem('demoEmail');
+    
+    return consultation.id;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -141,16 +251,44 @@ export default function Signup() {
           description: "Redirecting..."
         });
         
-        // Handle demo intelligence transfer for login
-        if (isFromDemo && demoIntelligence) {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            await createConsultationFromDemo(user.id);
-            return;
-          }
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          navigate(redirectTo, { replace: true });
+          return;
         }
         
-        // Check for pending session from Brand Intake flow first
+        // PRIORITY 1: If we have a session from URL, use it (don't check for old sessions!)
+        if (sessionIdFromUrl) {
+          console.log('🚀 [Login] Session in URL - loading demo session:', sessionIdFromUrl);
+          
+          // Try sessionStorage first, then database
+          let intel = demoIntelligence;
+          if (!intel) {
+            intel = await loadDemoSessionFromDatabase(sessionIdFromUrl);
+          }
+          
+          if (intel) {
+            const consultationId = await createConsultationFromIntelligence(user.id, intel);
+            if (consultationId) {
+              console.log('🚀 [Login] Redirecting to huddle:', consultationId);
+              navigate(`/huddle?type=pre_brief&consultationId=${consultationId}`, { replace: true });
+              return;
+            }
+          }
+          
+          // Fallback: go to brand-setup with session
+          console.log('⚠️ [Login] No intelligence found, going to brand-setup');
+          navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
+          return;
+        }
+        
+        // PRIORITY 2: Handle demo intelligence transfer (from sessionStorage)
+        if (isFromDemo && demoIntelligence) {
+          await createConsultationFromDemo(user.id);
+          return;
+        }
+        
+        // PRIORITY 3: Check for pending session from Brand Intake flow
         if (pendingSessionId) {
           console.log('🚀 Login: Found pending session, redirecting to /generate?session=', pendingSessionId);
           sessionStorage.removeItem('pendingSessionId');
@@ -158,82 +296,31 @@ export default function Signup() {
           return;
         }
         
-        // Check for existing completed consultation
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user && !consultationData) {
-          const { data: existingConsultation } = await supabase
-            .from("consultations")
-            .select("*")
-            .eq("user_id", user.id)
-            .eq("status", "completed")
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          if (existingConsultation) {
-            // User has a completed consultation, redirect to generate
-            console.log('🚀 Login: Found completed consultation, redirecting to /generate');
-            navigate("/generate", { replace: true });
-            return;
-          }
+        // PRIORITY 4: If we have consultation data from state, use it
+        if (consultationData) {
+          await saveConsultationData(user.id);
+          console.log('🚀 Login: Redirecting to', redirectTo, 'with consultation data');
+          navigate(redirectTo, { state: { consultationData }, replace: true });
+          return;
         }
         
-        // If we have consultation data, save it and redirect to generate
-        if (consultationData) {
-          if (user) {
-            await saveConsultationData(user.id);
-          }
-          console.log('🚀 Login: Redirecting to', redirectTo, 'with consultation data:', consultationData);
-          navigate(redirectTo, { state: { consultationData }, replace: true });
-        } else if (sessionIdFromUrl) {
-          // User has a session from demo - check for existing consultation or create one
-          console.log('🚀 Login: Found session in URL, checking for consultation:', sessionIdFromUrl);
-          
-          // Try to find or create consultation from demo session
-          const { data: existingConsultation } = await supabase
-            .from('consultations')
-            .select('id')
-            .eq('user_id', user?.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          
-          if (existingConsultation) {
-            console.log('🚀 Login: Found existing consultation, going to huddle:', existingConsultation.id);
-            navigate(`/huddle?type=pre_brief&consultationId=${existingConsultation.id}`, { replace: true });
-          } else {
-            // Try to load demo session and create consultation
-            const storedIntelligence = sessionStorage.getItem('demoIntelligence');
-            if (storedIntelligence && user) {
-              const intel = JSON.parse(storedIntelligence);
-              const { data: newConsultation } = await supabase
-                .from('consultations')
-                .insert({
-                  user_id: user.id,
-                  industry: intel.industry,
-                  target_audience: intel.audience,
-                  unique_value: intel.valueProp,
-                  competitor_differentiator: intel.competitorDifferentiator,
-                  extracted_intelligence: intel,
-                  status: 'in_progress',
-                  flow_state: 'signed_up',
-                })
-                .select()
-                .single();
-              
-              if (newConsultation) {
-                sessionStorage.removeItem('demoIntelligence');
-                navigate(`/huddle?type=pre_brief&consultationId=${newConsultation.id}`, { replace: true });
-              } else {
-                navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
-              }
-            } else {
-              navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
-            }
-          }
-        } else {
-          navigate(redirectTo, { replace: true });
+        // PRIORITY 5: Check for existing completed consultation (only if no session param)
+        const { data: existingConsultation } = await supabase
+          .from("consultations")
+          .select("id")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (existingConsultation) {
+          console.log('🚀 Login: Found existing consultation:', existingConsultation.id);
+          navigate(`/huddle?type=pre_brief&consultationId=${existingConsultation.id}`, { replace: true });
+          return;
         }
+        
+        // No session, no consultation - go to default redirect
+        navigate(redirectTo, { replace: true });
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -280,13 +367,43 @@ export default function Signup() {
           description: isFromDemo ? "Your strategy profile is ready." : "Redirecting..."
         });
         
-        // Handle demo intelligence transfer for signup
-        if (isFromDemo && demoIntelligence && data.user) {
+        if (!data.user) {
+          navigate(redirectTo, { replace: true });
+          return;
+        }
+        
+        // PRIORITY 1: If we have a session from URL, use it (don't check for old sessions!)
+        if (sessionIdFromUrl) {
+          console.log('🚀 [Signup] Session in URL - loading demo session:', sessionIdFromUrl);
+          
+          // Try sessionStorage first, then database
+          let intel = demoIntelligence;
+          if (!intel) {
+            intel = await loadDemoSessionFromDatabase(sessionIdFromUrl);
+          }
+          
+          if (intel) {
+            const consultationId = await createConsultationFromIntelligence(data.user.id, intel);
+            if (consultationId) {
+              console.log('🚀 [Signup] Redirecting to huddle:', consultationId);
+              navigate(`/huddle?type=pre_brief&consultationId=${consultationId}`, { replace: true });
+              return;
+            }
+          }
+          
+          // Fallback: go to brand-setup with session
+          console.log('⚠️ [Signup] No intelligence found, going to brand-setup');
+          navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
+          return;
+        }
+        
+        // PRIORITY 2: Handle demo intelligence transfer (from sessionStorage only, no URL session)
+        if (isFromDemo && demoIntelligence) {
           await createConsultationFromDemo(data.user.id);
           return;
         }
         
-        // Check for pending session from Brand Intake flow first
+        // PRIORITY 3: Check for pending session from Brand Intake flow
         if (pendingSessionId) {
           console.log('🚀 Signup: Found pending session, redirecting to /generate?session=', pendingSessionId);
           sessionStorage.removeItem('pendingSessionId');
@@ -294,46 +411,16 @@ export default function Signup() {
           return;
         }
         
-        // If we have consultation data, save it and redirect to generate
-        if (consultationData && data.user) {
+        // PRIORITY 4: If we have consultation data from state, use it
+        if (consultationData) {
           await saveConsultationData(data.user.id);
-          console.log('🚀 Signup: Redirecting to', redirectTo, 'with consultation data:', consultationData);
+          console.log('🚀 Signup: Redirecting to', redirectTo, 'with consultation data');
           navigate(redirectTo, { state: { consultationData }, replace: true });
-        } else if (sessionIdFromUrl && data.user) {
-          // User has a session from demo - create consultation from stored intelligence
-          console.log('🚀 Signup: Found session in URL, creating consultation:', sessionIdFromUrl);
-          
-          const storedIntelligence = sessionStorage.getItem('demoIntelligence');
-          if (storedIntelligence) {
-            const intel = JSON.parse(storedIntelligence);
-            const { data: newConsultation } = await supabase
-              .from('consultations')
-              .insert({
-                user_id: data.user.id,
-                industry: intel.industry,
-                target_audience: intel.audience,
-                unique_value: intel.valueProp,
-                competitor_differentiator: intel.competitorDifferentiator,
-                extracted_intelligence: intel,
-                status: 'in_progress',
-                flow_state: 'signed_up',
-                readiness_score: intel.readinessScore || 0,
-              })
-              .select()
-              .single();
-            
-            if (newConsultation) {
-              sessionStorage.removeItem('demoIntelligence');
-              navigate(`/huddle?type=pre_brief&consultationId=${newConsultation.id}`, { replace: true });
-            } else {
-              navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
-            }
-          } else {
-            navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
-          }
-        } else {
-          navigate(redirectTo, { replace: true });
+          return;
         }
+        
+        // No session, no consultation - go to default redirect
+        navigate(redirectTo, { replace: true });
       }
     } catch (error: any) {
       toast({
