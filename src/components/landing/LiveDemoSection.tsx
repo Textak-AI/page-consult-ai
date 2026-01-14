@@ -163,7 +163,8 @@ export default function LiveDemoSection() {
   const handleContinueToWizard = async (selectedPath: "conversation" | "wizard" = "wizard") => {
     setIsSavingSession(true);
 
-    const sessionId = crypto.randomUUID();
+    // Use the session ID from the IntelligenceContext (which is already in the database)
+    const sessionId = state.sessionId;
     const isReady = state.readiness >= 70; // High readiness = skip wizard, go to brand setup
 
     const demoIntelligence = {
@@ -228,6 +229,7 @@ export default function LiveDemoSection() {
       sessionStorage.setItem("demoEmail", state.email);
     }
 
+    // Update the existing session (already created on first message)
     const sessionData = {
       session_id: sessionId,
       extracted_intelligence: demoIntelligence,
@@ -242,7 +244,8 @@ export default function LiveDemoSection() {
     };
 
     try {
-      const { error } = await supabase.from("demo_sessions").insert([sessionData]);
+      // Use upsert instead of insert since the session may already exist
+      const { error } = await supabase.from("demo_sessions").upsert([sessionData], { onConflict: 'session_id' });
       // 💾 Log Supabase save result
       console.log("💾 [LiveDemo] Supabase save result:", {
         success: !error,
@@ -260,7 +263,8 @@ export default function LiveDemoSection() {
       navigate(signupUrl);
     } catch (err) {
       console.error("💾 [LiveDemo] Error saving demo session:", err);
-      navigate("/signup?from=demo");
+      // Still try to navigate with the session ID
+      navigate(`/signup?from=demo&session=${sessionId}`);
     } finally {
       setIsSavingSession(false);
     }
