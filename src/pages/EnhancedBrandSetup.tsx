@@ -144,9 +144,58 @@ export default function EnhancedBrandSetup() {
   const [communicationStyle, setCommunicationStyle] = useState<CommunicationStyle | null>(null);
   const [styleLoading, setStyleLoading] = useState(false);
 
-  // Load demo session if session param exists
+  // Load demo session if session param exists, OR load consultation data
   useEffect(() => {
-    const loadDemoSession = async () => {
+    const loadSessionData = async () => {
+      const consultationId = searchParams.get('consultationId');
+      
+      // Priority 1: Load from consultationId
+      if (consultationId) {
+        console.log('📂 [EnhancedBrandSetup] Loading consultation:', consultationId);
+        
+        const { data, error } = await supabase
+          .from('consultations')
+          .select('*')
+          .eq('id', consultationId)
+          .single();
+        
+        if (data && !error) {
+          console.log('✅ [EnhancedBrandSetup] Consultation loaded:', {
+            hasIntelligence: !!data.extracted_intelligence,
+            businessName: data.business_name,
+            industry: data.industry,
+          });
+          
+          // Pre-fill company name
+          const companyFromData = data.business_name;
+          const intel = data.extracted_intelligence as any;
+          
+          if (companyFromData) {
+            setCompanyName(companyFromData);
+          } else if (intel?.companyName || intel?.businessName) {
+            setCompanyName(intel.companyName || intel.businessName);
+          }
+          
+          // Pre-fill tagline from unique value
+          if (data.unique_value) {
+            setTagline(data.unique_value);
+          } else if (intel?.valueProp || intel?.uniqueValue) {
+            setTagline(intel.valueProp || intel.uniqueValue);
+          }
+          
+          // Pre-fill website URL if available
+          if (intel?.websiteUrl) {
+            setWebsiteUrl(intel.websiteUrl);
+          }
+        } else {
+          console.error('❌ [EnhancedBrandSetup] Failed to load consultation:', error?.message);
+        }
+        
+        setIsLoadingSession(false);
+        return;
+      }
+      
+      // Priority 2: Load from sessionId (legacy demo flow)
       if (!sessionId) {
         setIsLoadingSession(false);
         return;
@@ -185,8 +234,8 @@ export default function EnhancedBrandSetup() {
       setIsLoadingSession(false);
     };
 
-    loadDemoSession();
-  }, [sessionId]);
+    loadSessionData();
+  }, [sessionId, searchParams]);
   
   // Font matching states
   const [fontMatches, setFontMatches] = useState<{
@@ -616,25 +665,21 @@ export default function EnhancedBrandSetup() {
     const consultationId = searchParams.get('consultationId');
     
     if (consultationId) {
-      // Save communication style to consultation
-      if (communicationStyle) {
-        await supabase
-          .from('consultations')
-          .update({ communication_style: communicationStyle as any })
-          .eq('id', consultationId);
-      }
+      // Save brand data and communication style to consultation
+      await supabase
+        .from('consultations')
+        .update({ 
+          communication_style: communicationStyle as any,
+          business_name: companyName,
+          website_url: websiteUrl,
+        })
+        .eq('id', consultationId);
       
-      // Use Flow Engine for intelligent routing
+      // Update flow state and go directly to generate (brand is captured, brief was generated in Huddle)
       await updateFlowState(consultationId, 'brand_captured', 'brand_setup_complete');
-      const decision = await getNextStep(consultationId);
       
-      console.log('🧭 [EnhancedBrandSetup] Flow decision:', decision);
-      
-      if (decision.huddleType) {
-        navigate(`/huddle?type=${decision.huddleType}&consultationId=${consultationId}`);
-      } else {
-        navigate(`${decision.route}?consultationId=${consultationId}`);
-      }
+      console.log('🚀 [EnhancedBrandSetup] Brand captured - navigating to generate with consultationId:', consultationId);
+      navigate(`/generate?consultationId=${consultationId}`);
     } else if (demoSession && sessionId) {
       // Legacy demo session flow
       console.log('🚀 [EnhancedBrandSetup] Demo user - navigating to generate with session:', sessionId);

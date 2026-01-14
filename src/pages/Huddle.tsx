@@ -212,8 +212,14 @@ export default function Huddle() {
     const action = huddleContent.primaryCTA.action;
 
     if (action === 'generate_brief') {
+      // Save card notes first
+      await supabase
+        .from('consultations')
+        .update({ card_notes: cardNotes })
+        .eq('id', consultationId);
+
       // Update flow state
-      await updateFlowState(consultationId!, 'consultation_complete', 'huddle_primary_cta');
+      await updateFlowState(consultationId!, 'brief_generated', 'huddle_complete');
 
       // Generate the strategy brief
       const brief = await generateStrategyBrief(consultation, cardNotes);
@@ -223,7 +229,6 @@ export default function Huddle() {
         .from('consultations')
         .update({
           strategy_brief: brief as unknown as import('@/integrations/supabase/types').Json,
-          flow_state: 'brief_generated',
           active_brief_version: 1,
           brief_versions: [{
             version: 1,
@@ -234,8 +239,8 @@ export default function Huddle() {
         })
         .eq('id', consultationId);
 
-      // Navigate to brief review page
-      navigate(`/strategy-brief?consultationId=${consultationId}`);
+      // Navigate to Brand Setup (not to a separate Brief page)
+      navigate(`/brand-setup?consultationId=${consultationId}`);
     } else if (action === 'generate_page') {
       await updateFlowState(consultationId!, 'brief_generated', 'huddle_primary_cta');
       navigate(`/generate?consultationId=${consultationId}`);
