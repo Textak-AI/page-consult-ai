@@ -182,13 +182,21 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
   const handleContinueToWizard = async (selectedPath: 'conversation' | 'wizard' = 'wizard') => {
     setIsSavingSession(true);
     
-    const sessionId = crypto.randomUUID();
+    // CRITICAL FIX: Use EXISTING session ID if available, only create new if none exists
+    // Check localStorage first (from earlier interactions), then generate new
+    const existingSessionId = localStorage.getItem('pageconsult_session_id');
+    const sessionId = existingSessionId || crypto.randomUUID();
     const isReady = state.readiness >= 70;
+    
+    console.log('[Session Persistence] Using session ID:', {
+      existingSessionId,
+      finalSessionId: sessionId,
+      createdNew: !existingSessionId,
+    });
     
     // CRITICAL: Store session ID before signup for migration
     // This ensures the exact same session ID is used after signup
     sessionStorage.setItem('demo_session_id_for_migration', sessionId);
-    console.log('[Session Persistence] Stored for migration:', sessionId);
     
     const demoIntelligence = {
       sessionId,
@@ -253,7 +261,21 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
     };
     
     try {
-      await supabase.from('demo_sessions').insert([sessionData]);
+      // Use upsert in case session already exists from earlier interaction
+      const { error } = await supabase
+        .from('demo_sessions')
+        .upsert([sessionData], { onConflict: 'session_id' });
+      
+      if (error) {
+        console.error('[Session Persistence] Failed to save demo session:', {
+          message: error.message,
+          details: error.details,
+          code: error.code,
+        });
+      } else {
+        console.log('[Session Persistence] Demo session saved successfully:', sessionId);
+      }
+      
       localStorage.setItem('pageconsult_session_id', sessionId);
       
       const signupUrl = isReady 
