@@ -173,41 +173,51 @@ export default function Signup() {
 
   // Helper: Create consultation from demo intelligence (either from sessionStorage or DB)
   const createConsultationFromIntelligence = async (userId: string, intel: DemoIntelligence): Promise<string | null> => {
-    console.log('🚀 [Signup] Creating consultation from intelligence:', {
+    // ========== PRE-INSERT LOGGING ==========
+    console.log('[Consultation Creation] ========== ATTEMPTING INSERT ==========');
+    console.log('[Consultation Creation] User ID:', userId);
+    console.log('[Consultation Creation] Intel object keys:', Object.keys(intel));
+    console.log('[Consultation Creation] Intel values:', JSON.stringify(intel, null, 2));
+    console.log('[Consultation Creation] Readiness score:', intel.readinessScore);
+    
+    const insertPayload = {
+      user_id: userId,
       industry: intel.industry,
-      readiness: intel.readinessScore,
-    });
+      target_audience: intel.audience,
+      unique_value: intel.valueProp,
+      competitor_differentiator: intel.competitorDifferentiator,
+      audience_pain_points: intel.painPoints ? [intel.painPoints] : [],
+      authority_markers: intel.proofElements ? [intel.proofElements] : [],
+      extracted_intelligence: {
+        ...intel,
+        source: 'demo',
+        transferredAt: new Date().toISOString(),
+      },
+      consultation_status: intel.industry && intel.audience ? 'identified' : 'not_started',
+      status: 'in_progress',
+      readiness_score: intel.readinessScore,
+      flow_state: 'signed_up',
+    };
+    
+    console.log('[Consultation Creation] Insert payload:', JSON.stringify(insertPayload, null, 2));
     
     const { data: consultation, error } = await supabase
       .from('consultations')
-      .insert({
-        user_id: userId,
-        industry: intel.industry,
-        target_audience: intel.audience,
-        unique_value: intel.valueProp,
-        competitor_differentiator: intel.competitorDifferentiator,
-        audience_pain_points: intel.painPoints ? [intel.painPoints] : [],
-        authority_markers: intel.proofElements ? [intel.proofElements] : [],
-        extracted_intelligence: {
-          ...intel,
-          source: 'demo',
-          transferredAt: new Date().toISOString(),
-        },
-        consultation_status: intel.industry && intel.audience ? 'identified' : 'not_started',
-        status: 'in_progress',
-        readiness_score: intel.readinessScore,
-        flow_state: 'signed_up',
-      })
+      .insert(insertPayload)
       .select()
       .single();
     
     if (error || !consultation) {
-      console.error('❌ [Signup] Failed to create consultation:', {
-        message: error?.message,
-        details: error?.details,
-        hint: error?.hint,
-        code: error?.code,
-      });
+      console.error('[Consultation Creation] ========== FULL ERROR DUMP ==========');
+      console.error('[Consultation Creation] Raw error object:', error);
+      console.error('[Consultation Creation] JSON stringified:', JSON.stringify(error, null, 2));
+      console.error('[Consultation Creation] error.message:', error?.message);
+      console.error('[Consultation Creation] error.details:', error?.details);
+      console.error('[Consultation Creation] error.hint:', error?.hint);
+      console.error('[Consultation Creation] error.code:', error?.code);
+      console.error('[Consultation Creation] ========== DATA ATTEMPTED ==========');
+      console.error('[Consultation Creation] Insert payload was:', JSON.stringify(insertPayload, null, 2));
+      console.error('[Consultation Creation] =====================================');
       return null;
     }
     
