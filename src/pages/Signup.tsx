@@ -362,9 +362,21 @@ export default function Signup() {
           }
         });
 
-        // Handle 422 error (user already exists) gracefully
+        // Handle signup errors
         if (error) {
-          if (error.status === 422 || error.message?.toLowerCase().includes('already registered')) {
+          console.log('[Signup] Error details:', {
+            message: error.message,
+            status: error.status,
+            name: error.name,
+            fullError: JSON.stringify(error, null, 2)
+          });
+          
+          // ONLY switch to login mode if error explicitly says user exists
+          // Supabase returns "User already registered" for existing users
+          const errorMsg = error.message?.toLowerCase() || '';
+          if (errorMsg.includes('already registered') || 
+              errorMsg.includes('already exists') ||
+              errorMsg.includes('user already registered')) {
             console.log('👤 [Signup] User already exists, switching to login mode');
             
             // Show friendly message
@@ -378,7 +390,16 @@ export default function Signup() {
             setLoading(false);
             return;
           }
-          throw error;
+          
+          // For other errors (validation, rate limiting, etc.), show the actual error
+          console.log('[Signup] Other signup error - NOT switching to login mode:', error.message);
+          toast({
+            title: "Signup failed",
+            description: error.message || "Please check your email and password and try again.",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
         }
 
         // Migrate anonymous session if exists
