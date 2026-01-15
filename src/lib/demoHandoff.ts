@@ -203,7 +203,7 @@ export async function migrateDemoToUser(userId: string): Promise<{
           migratedAt: new Date().toISOString(),
         },
         strategy_brief: handoff.strategyBrief || null,
-        consultation_status: handoff.extracted.industry && handoff.extracted.audience ? 'identified' : 'not_started',
+        consultation_status: 'not_started',
         status: 'in_progress',
         readiness_score: handoff.readinessScore,
         flow_state: 'signed_up',

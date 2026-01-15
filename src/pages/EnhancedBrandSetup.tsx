@@ -736,7 +736,7 @@ export default function EnhancedBrandSetup() {
               business_name: companyName,
               website_url: websiteUrl,
               communication_style: communicationStyle as any,
-              consultation_status: intel.industry && intel.audience ? 'identified' : 'not_started',
+              consultation_status: 'not_started',
               status: 'in_progress',
               readiness_score: readiness,
               flow_state: 'brand_captured',
