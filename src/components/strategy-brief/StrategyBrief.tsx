@@ -50,6 +50,8 @@ interface StrategyBriefProps {
   // Optional: market research data passed separately
   marketResearch?: MarketResearchData | null;
   onClose?: () => void;
+  // Optional: callback when user wants to generate their page (for demo flow)
+  onGeneratePage?: () => void;
 }
 
 /**
@@ -113,7 +115,8 @@ export function StrategyBrief({
   consultation, 
   artifacts,
   marketResearch: externalMarketResearch,
-  onClose 
+  onClose,
+  onGeneratePage
 }: StrategyBriefProps) {
   const briefRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -445,6 +448,21 @@ export function StrategyBrief({
               </div>
             </div>
           </CollapsibleBriefSection>
+
+          {/* Generate Page CTA (if callback provided) */}
+          {onGeneratePage && (
+            <div className="pt-6 border-t border-slate-800">
+              <Button
+                onClick={onGeneratePage}
+                className="w-full py-4 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-semibold text-lg"
+              >
+                Generate Your Page →
+              </Button>
+              <p className="text-center text-xs text-slate-500 mt-2">
+                Your strategy is ready. Let's build your high-converting landing page.
+              </p>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="text-center pt-8 border-t border-slate-800">
