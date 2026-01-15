@@ -419,7 +419,7 @@ export default function BrandIntake() {
                 migratedAt: new Date().toISOString(),
               },
               website_url: websiteUrl,
-              consultation_status: intel.industry && intel.audience ? 'identified' : 'not_started',
+              consultation_status: 'not_started',
               status: 'in_progress',
               readiness_score: readiness,
               flow_state: 'brand_captured',
