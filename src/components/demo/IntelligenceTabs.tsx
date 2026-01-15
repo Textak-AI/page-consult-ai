@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BarChart3, 
@@ -25,8 +25,8 @@ import { ObjectionKillerPanel } from '@/components/consultation/ObjectionKillerP
 import MarketResearchPanel from '@/components/landing/MarketResearchPanel';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { Button } from '@/components/ui/button';
-import { BriefReviewModal } from './BriefReviewModal';
-import type { BriefData } from '@/types/brief-validation';
+import { StrategyBrief } from '@/components/strategy-brief/StrategyBrief';
+import type { ConsultationArtifacts } from '@/lib/artifactDetection';
 
 interface Tab {
   id: string;
@@ -541,16 +541,98 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
         </Button>
       </div>
 
-      {/* Brief Review Modal */}
-      <BriefReviewModal
-        isOpen={showBriefReview}
-        onClose={() => setShowBriefReview(false)}
-        onGenerate={(briefData: BriefData) => {
-          setShowBriefReview(false);
-          console.log('Generating with brief data:', briefData);
-          onContinue();
-        }}
-      />
+      {/* Enhanced Strategy Brief Modal */}
+      {showBriefReview && (
+        <EnhancedStrategyBriefWrapper
+          state={state}
+          score={score}
+          onClose={() => setShowBriefReview(false)}
+          onContinue={onContinue}
+        />
+      )}
     </div>
+  );
+}
+
+// Wrapper component to build props for StrategyBrief from demo state
+function EnhancedStrategyBriefWrapper({
+  state,
+  score,
+  onClose,
+  onContinue,
+}: {
+  state: ReturnType<typeof useIntelligence>['state'];
+  score: ReturnType<typeof calculateIntelligenceScore>;
+  onClose: () => void;
+  onContinue: () => void;
+}) {
+  // Build consultation object from demo state
+  const consultation = useMemo(() => ({
+    id: state.sessionId || 'demo-session',
+    industry: state.extracted.industry || null,
+    target_audience: state.extracted.audience || null,
+    unique_value: state.extracted.valueProp || null,
+    competitor_differentiator: state.extracted.competitorDifferentiator || null,
+    audience_pain_points: state.extracted.painPoints ? [state.extracted.painPoints] : null,
+    authority_markers: state.extracted.proofElements ? [state.extracted.proofElements] : null,
+    business_name: state.businessCard?.companyName || state.companyResearch?.companyName || null,
+    created_at: new Date().toISOString(),
+    extracted_intelligence: {
+      industry: state.extracted.industry,
+      industrySummary: state.extracted.industrySummary,
+      audience: state.extracted.audience,
+      audienceSummary: state.extracted.audienceSummary,
+      valueProp: state.extracted.valueProp,
+      valuePropSummary: state.extracted.valuePropSummary,
+      painPoints: state.extracted.painPoints,
+      painPointsFull: state.extracted.painPoints,
+      painSummary: state.extracted.painSummary,
+      buyerObjections: state.extracted.buyerObjections,
+      buyerObjectionsFull: state.extracted.buyerObjections,
+      objectionsSummary: state.extracted.objectionsSummary,
+      proofElements: state.extracted.proofElements,
+      proofElementsFull: state.extracted.proofElements,
+      proofSummary: state.extracted.proofSummary,
+      competitorDifferentiator: state.extracted.competitorDifferentiator,
+      edgeSummary: state.extracted.edgeSummary,
+      marketResearch: {
+        marketSize: state.market.marketSize || null,
+        buyerPersona: state.market.buyerPersona || null,
+        commonObjections: state.market.commonObjections || [],
+        industryInsights: state.market.industryInsights || [],
+      },
+    },
+  }), [state.extracted, state.market, state.businessCard, state.companyResearch, state.sessionId]);
+
+  // Build artifacts from any captured creative direction
+  const artifacts: ConsultationArtifacts | null = useMemo(() => {
+    // Check if we have any creative artifacts captured
+    // For now, return null - can be enhanced later when artifact capture is implemented in demo
+    return null;
+  }, []);
+
+  // Market research data
+  const marketResearch = useMemo(() => ({
+    marketSize: state.market.marketSize || null,
+    buyerPersona: state.market.buyerPersona || null,
+    commonObjections: state.market.commonObjections || [],
+    industryInsights: state.market.industryInsights || [],
+  }), [state.market]);
+
+  console.log('[Demo] Rendering ENHANCED StrategyBrief with:', { 
+    consultation, 
+    artifacts, 
+    marketResearch,
+    score: score.totalScore,
+  });
+
+  return (
+    <StrategyBrief
+      consultation={consultation}
+      artifacts={artifacts}
+      marketResearch={marketResearch}
+      onClose={onClose}
+      onGeneratePage={onContinue}
+    />
   );
 }
