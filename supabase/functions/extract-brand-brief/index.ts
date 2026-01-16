@@ -11,13 +11,30 @@ serve(async (req) => {
   const corsHeaders = getCorsHeaders(origin);
 
   try {
-    const { pdfBase64, fileName, userId } = await req.json();
+    // Get user from auth header
+    const authHeader = req.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
     
-    if (!pdfBase64 || !userId) {
-      throw new Error('Missing required fields: pdfBase64 and userId');
+    let userId: string | null = null;
+    
+    if (token) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+      const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey);
+      
+      const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
+      if (!authError && user) {
+        userId = user.id;
+      }
+    }
+    
+    const { pdfBase64, fileName } = await req.json();
+    
+    if (!pdfBase64) {
+      throw new Error('Missing required field: pdfBase64');
     }
 
-    console.log('[extract-brand-brief] Starting extraction for user:', userId);
+    console.log('[extract-brand-brief] Starting extraction for user:', userId || 'anonymous');
     console.log('[extract-brand-brief] File:', fileName);
     
     const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
