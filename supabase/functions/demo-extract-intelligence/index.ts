@@ -397,10 +397,10 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
 
     // Parse JSON from response with validation
     interface ExtractedResult {
-      // Short display values (max 40 chars for sidebar)
+      // Short display values (max 200 chars for sidebar)
       industry: string | null;
       industryConfidence: number;
-      industryFull: string | null; // Full value for Hero/CTA (max 150 chars)
+      industryFull: string | null; // Full value for Hero/CTA (max 500 chars)
       industrySummary: string | null;
       // Target Aesthetic System
       targetMarket: string | null;
@@ -485,22 +485,22 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
         const parsed = JSON.parse(jsonMatch[0]);
         
         // Validate and format extracted fields
-        // Short value for sidebar display (up to 40 chars - enough for meaningful phrases)
+        // Short value for sidebar display (up to 200 chars - enough for meaningful strategic content)
         const formatShort = (val: any) => {
           if (typeof val !== 'string' || !val.trim()) return null;
-          return val.trim().slice(0, 40);
+          return val.trim().slice(0, 200);
         };
         
-        // Full value for Hero/CTA generation (up to 150 chars for complete context)
+        // Full value for Hero/CTA generation (up to 500 chars for complete context)
         const formatFull = (val: any) => {
           if (typeof val !== 'string' || !val.trim()) return null;
-          return val.trim().slice(0, 150);
+          return val.trim().slice(0, 500);
         };
         
         const formatSummary = (val: any) => {
           if (typeof val !== 'string' || !val.trim()) return null;
-          // Limit summary to 300 chars for rich context
-          return val.trim().slice(0, 300);
+          // Limit summary to 800 chars for rich context
+          return val.trim().slice(0, 800);
         };
 
         const getConfidence = (val: any, fallback: number = 0) => {
@@ -559,10 +559,10 @@ Extract only SPECIFIC information. If the input is vague, return null for those 
         const CONFIDENCE_THRESHOLD = 50;
         
         extracted = {
-          // Short values for sidebar display (max 40 chars)
+          // Short values for sidebar display (max 200 chars)
           industry: industryConfidence >= CONFIDENCE_THRESHOLD ? industry : null,
           industryConfidence,
-          // Full values for Hero/CTA generation (max 150 chars)
+          // Full values for Hero/CTA generation (max 500 chars)
           industryFull: industryConfidence >= CONFIDENCE_THRESHOLD ? industryFull : null,
           industrySummary: industryConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.industrySummary) : null,
           
