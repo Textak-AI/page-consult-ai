@@ -613,21 +613,84 @@ export default function EnhancedBrandSetup() {
 
         if (error) throw error;
 
-        if (data?.colors) {
+        console.log('[BrandSetup] Brand brief extraction response:', data);
+
+        // Handle nested response structure from API
+        const brandBrief = data?.brandBrief || data;
+        const extractedColors = brandBrief?.colors;
+        const extractedTypography = brandBrief?.typography;
+        const extractedVoiceTone = brandBrief?.voice_tone;
+
+        // Update colors - handle both {hex, name} objects and direct hex strings
+        if (extractedColors) {
           setColors(prev => ({
-            primary: data.colors.primary || prev.primary,
-            secondary: data.colors.secondary || prev.secondary,
-            accent: data.colors.accent || prev.accent,
+            primary: extractedColors.primary?.hex || extractedColors.primary || prev.primary,
+            secondary: extractedColors.secondary?.hex || extractedColors.secondary || prev.secondary,
+            accent: extractedColors.accent?.hex || extractedColors.accent || prev.accent,
           }));
         }
 
+        // Update typography/font settings
+        if (extractedTypography) {
+          const headlineFont = extractedTypography.headlineFont || extractedTypography.heading;
+          const bodyFont = extractedTypography.bodyFont || extractedTypography.body;
+          
+          if (headlineFont) {
+            setFontSettings(prev => ({
+              ...prev,
+              h1: headlineFont,
+              h2: headlineFont,
+              h3: headlineFont,
+            }));
+          }
+          
+          if (bodyFont) {
+            setFontSettings(prev => ({
+              ...prev,
+              body: bodyFont,
+              small: bodyFont,
+            }));
+          }
+        }
+
+        // Update communication style from voice_tone
+        if (extractedVoiceTone) {
+          // Map voice_tone to communication style format if needed
+          const mappedStyle: CommunicationStyle = {
+            tone: {
+              descriptors: extractedVoiceTone.personality || [],
+              primary: extractedVoiceTone.personality?.[0] || '',
+            },
+            voice: {
+              pov: 'first-person',
+              addressesReader: true,
+              sentenceStyle: 'balanced',
+            },
+            vocabulary: {
+              favoredWords: extractedVoiceTone.doSay || [],
+              avoidedPatterns: extractedVoiceTone.avoidSay || [],
+            },
+            formality: {
+              level: 3,
+              description: extractedVoiceTone.description || '',
+            },
+          };
+          setCommunicationStyle(mappedStyle);
+        }
+
+        console.log('[BrandSetup] Applied brand brief to UI state:', { 
+          colors: extractedColors, 
+          typography: extractedTypography, 
+          voice_tone: extractedVoiceTone 
+        });
+
         toast.success('Brand guide extracted successfully!');
+        setIsExtractingBrief(false);
       };
       reader.readAsDataURL(file);
     } catch (error) {
       console.error('Brand guide extraction error:', error);
       toast.error('Failed to extract brand guide');
-    } finally {
       setIsExtractingBrief(false);
     }
   };
