@@ -602,7 +602,8 @@ export default function EnhancedBrandSetup() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setBrandGuide(file);
+    // Set loading state FIRST, before setting brandGuide
+    // This ensures the loading UI shows instead of the checkmark
     setIsExtractingBrief(true);
 
     try {
@@ -693,6 +694,8 @@ export default function EnhancedBrandSetup() {
           voice_tone: extractedVoiceTone 
         });
 
+        // Set brandGuide AFTER extraction completes, then clear loading state
+        setBrandGuide(file);
         toast.success('Brand guide extracted successfully!');
         setIsExtractingBrief(false);
       };
