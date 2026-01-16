@@ -264,13 +264,10 @@ export default function Huddle() {
         .update({ card_notes: cardNotes })
         .eq('id', consultationId);
 
-      // Update flow state
-      await updateFlowState(consultationId!, 'brief_generated', 'huddle_complete');
-
       // Generate the strategy brief
       const brief = await generateStrategyBrief(consultation, cardNotes);
 
-      // Save brief to consultation
+      // Save brief to consultation and update flow state
       await supabase
         .from('consultations')
         .update({
@@ -281,12 +278,30 @@ export default function Huddle() {
             generated_at: new Date().toISOString(),
             trigger: 'huddle_generation',
             positioning_summary: String(brief.positioning || '')
-          }] as unknown as import('@/integrations/supabase/types').Json
+          }] as unknown as import('@/integrations/supabase/types').Json,
+          flow_state: 'brief_generated'
         })
         .eq('id', consultationId);
 
-      // Navigate to Brand Setup (not to a separate Brief page)
-      navigate(`/brand-setup?consultationId=${consultationId}`);
+      // Check if brand data already exists - skip brand setup if so
+      const { data: consultationData } = await supabase
+        .from('consultations')
+        .select('extracted_intelligence, website_url, business_name')
+        .eq('id', consultationId)
+        .single();
+      
+      const intel = consultationData?.extracted_intelligence as Record<string, unknown> | null;
+      const hasBrandData = !!(consultationData?.website_url || intel?.logoUrl || intel?.colors);
+      
+      if (hasBrandData) {
+        // Brand data exists, skip directly to pre_page huddle
+        console.log('✅ [Huddle] Brand data exists, skipping to pre_page huddle');
+        navigate(`/huddle?type=pre_page&consultationId=${consultationId}`);
+      } else {
+        // Need brand data, go to brand setup
+        console.log('📂 [Huddle] No brand data, routing to brand-setup');
+        navigate(`/brand-setup?consultationId=${consultationId}`);
+      }
     } else if (action === 'generate_page') {
       await updateFlowState(consultationId!, 'brief_generated', 'huddle_primary_cta');
       navigate(`/generate?consultationId=${consultationId}`);

@@ -145,6 +145,7 @@ export default function EnhancedBrandSetup() {
   const [styleLoading, setStyleLoading] = useState(false);
 
   // Load demo session if session param exists, OR load consultation data
+  // Also check if brand setup should be skipped (user already has brand data + brief generated)
   useEffect(() => {
     const loadSessionData = async () => {
       const consultationId = searchParams.get('consultationId');
@@ -170,11 +171,26 @@ export default function EnhancedBrandSetup() {
           hasIntelligence: !!consultationData.extracted_intelligence,
           businessName: consultationData.business_name,
           industry: consultationData.industry,
+          flowState: consultationData.flow_state,
+          hasBrief: !!consultationData.strategy_brief,
         });
+        
+        const intel = consultationData.extracted_intelligence as any;
+        
+        // GUARD: Check if brand setup should be skipped
+        // Skip if: has strategy_brief AND (has website_url OR has logo in intel OR flow_state indicates completion)
+        const hasBrief = !!consultationData.strategy_brief;
+        const hasBrandData = !!(consultationData.website_url || intel?.logoUrl || intel?.colors);
+        const flowAllowsSkip = ['brief_generated', 'page_generated', 'published'].includes(consultationData.flow_state || '');
+        
+        if (hasBrief && hasBrandData && flowAllowsSkip) {
+          console.log('📂 [EnhancedBrandSetup] Brand data exists & brief generated, skipping to pre_page huddle');
+          navigate(`/huddle?type=pre_page&consultationId=${consultationId}`, { replace: true });
+          return;
+        }
         
         // Pre-fill company name
         const companyFromData = consultationData.business_name;
-        const intel = consultationData.extracted_intelligence as any;
         
         if (companyFromData) {
           setCompanyName(companyFromData);
@@ -190,8 +206,24 @@ export default function EnhancedBrandSetup() {
         }
         
         // Pre-fill website URL if available
-        if (intel?.websiteUrl) {
+        if (consultationData.website_url) {
+          setWebsiteUrl(consultationData.website_url);
+        } else if (intel?.websiteUrl) {
           setWebsiteUrl(intel.websiteUrl);
+        }
+        
+        // Pre-fill logo if available
+        if (intel?.logoUrl) {
+          setLogo(intel.logoUrl);
+        }
+        
+        // Pre-fill colors if available
+        if (intel?.colors && Array.isArray(intel.colors) && intel.colors.length > 0) {
+          setColors({
+            primary: intel.colors[0] || DEFAULT_COLORS.primary,
+            secondary: intel.colors[1] || intel.colors[0] || DEFAULT_COLORS.secondary,
+            accent: intel.colors[2] || intel.colors[1] || DEFAULT_COLORS.accent,
+          });
         }
         
         setIsLoadingSession(false);
@@ -225,6 +257,9 @@ export default function EnhancedBrandSetup() {
         if (intel?.websiteUrl) {
           setWebsiteUrl(intel.websiteUrl);
         }
+        if (intel?.logoUrl) {
+          setLogo(intel.logoUrl);
+        }
       } else {
         console.error('❌ [EnhancedBrandSetup] Not found in either table:', { consultationError, demoError });
       }
@@ -233,7 +268,7 @@ export default function EnhancedBrandSetup() {
     };
 
     loadSessionData();
-  }, [sessionId, searchParams]);
+  }, [sessionId, searchParams, navigate]);
   
   // Font matching states
   const [fontMatches, setFontMatches] = useState<{
