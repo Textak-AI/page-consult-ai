@@ -125,11 +125,22 @@ export async function getNextStep(consultationId: string): Promise<FlowDecision>
       };
 
     case 'brief_generated':
-      // After brief, show pre-page huddle
+      // After brief, check if brand data exists
+      const intel2 = consultation.extracted_intelligence as Record<string, unknown> | null;
+      const hasBrandForPage = !!(intel2?.logoUrl || intel2?.colors || consultation.website_url);
+      
+      if (hasBrandForPage) {
+        // Brand data exists, show pre-page huddle
+        return {
+          route: '/huddle',
+          huddleType: 'pre_page',
+          reasoning: 'Brief complete with brand data, confirming before page generation'
+        };
+      }
+      // Need brand data first
       return {
-        route: '/huddle',
-        huddleType: 'pre_page',
-        reasoning: 'Brief complete, confirming before page generation'
+        route: '/brand-setup',
+        reasoning: 'Brief complete but missing brand data'
       };
 
     case 'page_generated':
