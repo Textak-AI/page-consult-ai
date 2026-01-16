@@ -143,6 +143,9 @@ export default function EnhancedBrandSetup() {
   // Communication style state
   const [communicationStyle, setCommunicationStyle] = useState<CommunicationStyle | null>(null);
   const [styleLoading, setStyleLoading] = useState(false);
+  
+  // Track if brand guide has set colors (takes priority over website extraction)
+  const [colorsFromBrandGuide, setColorsFromBrandGuide] = useState(false);
 
   // Load demo session if session param exists, OR load consultation data
   // Also check if brand setup should be skipped (user already has brand data + brief generated)
@@ -427,7 +430,8 @@ export default function EnhancedBrandSetup() {
         }
 
         // Set colors - skip whites, near-whites, grays, and near-blacks
-        if (extracted.brandColors && extracted.brandColors.length > 0) {
+        // Only apply website colors if brand guide hasn't set them
+        if (!colorsFromBrandGuide && extracted.brandColors && extracted.brandColors.length > 0) {
           const isUsableColor = (hex: string) => {
             const h = hex.toLowerCase().replace('#', '');
             
@@ -467,6 +471,8 @@ export default function EnhancedBrandSetup() {
             secondary: filteredColors[1] || filteredColors[0] || DEFAULT_COLORS.secondary,
             accent: filteredColors[2] || filteredColors[1] || DEFAULT_COLORS.accent,
           });
+        } else if (colorsFromBrandGuide) {
+          console.log('[BrandSetup] Skipping website colors - brand guide takes priority');
         }
 
         // Set company name - try to extract from title "Home - Envita" → "Envita"
@@ -628,6 +634,9 @@ export default function EnhancedBrandSetup() {
             secondary: extractedColors.secondary?.hex || extractedColors.secondary || prev.secondary,
             accent: extractedColors.accent?.hex || extractedColors.accent || prev.accent,
           }));
+          // Mark brand guide as the authoritative source for colors
+          setColorsFromBrandGuide(true);
+          console.log('[BrandSetup] Brand guide set as color authority');
         }
 
         // Update typography/font settings
@@ -1249,6 +1258,7 @@ export default function EnhancedBrandSetup() {
                   onClick={() => {
                     setColors(DEFAULT_COLORS);
                     setFontSettings({ h1: 'Inter', h2: 'Inter', h3: 'Inter', body: 'Inter', small: 'Inter' });
+                    setColorsFromBrandGuide(false); // Reset brand guide authority
                   }}
                   className="text-slate-400 border-slate-600 hover:bg-slate-700"
                 >
