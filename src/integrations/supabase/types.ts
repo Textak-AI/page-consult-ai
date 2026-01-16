@@ -1611,28 +1611,17 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       reset_api_calls: { Args: never; Returns: undefined }
       reset_monthly_usage: { Args: never; Returns: undefined }
-      track_ai_action:
-        | {
-            Args: {
-              p_action_cost: number
-              p_action_type: Database["public"]["Enums"]["ai_action_type"]
-              p_page_id?: string
-              p_section_type?: string
-              p_user_id: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_action_cost: number
-              p_action_type: Database["public"]["Enums"]["ai_action_type"]
-              p_description?: string
-              p_page_id?: string
-              p_section_type?: string
-              p_user_id: string
-            }
-            Returns: Json
-          }
+      track_ai_action: {
+        Args: {
+          p_action_cost: number
+          p_action_type: Database["public"]["Enums"]["ai_action_type"]
+          p_description?: string
+          p_page_id?: string
+          p_section_type?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       ai_action_type:
