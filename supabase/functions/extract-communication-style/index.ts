@@ -60,6 +60,8 @@ serve(async (req) => {
   const origin = req.headers.get('Origin');
   const corsHeaders = getCorsHeaders(origin);
 
+  console.log('[extract-communication-style] v2 - model updated');
+
   try {
     const { websiteText, companyName, industry } = await req.json();
 

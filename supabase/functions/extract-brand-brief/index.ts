@@ -10,6 +10,8 @@ serve(async (req) => {
   const origin = req.headers.get('Origin');
   const corsHeaders = getCorsHeaders(origin);
 
+  console.log('[extract-brand-brief] v2 - auth fix applied');
+
   try {
     // Get user from auth header
     const authHeader = req.headers.get('Authorization');
