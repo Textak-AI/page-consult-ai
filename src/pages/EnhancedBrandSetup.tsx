@@ -1016,7 +1016,17 @@ export default function EnhancedBrandSetup() {
                 </Button>
               </div>
 
-              {extractionResults && (
+              {/* Extraction loading state */}
+              {isAnalyzing && (
+                <div className="mt-4 p-4 bg-purple-500/10 rounded-xl border border-purple-500/30">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
+                    <p className="text-white font-medium">Extracting logo, colors & company info...</p>
+                  </div>
+                </div>
+              )}
+
+              {extractionResults && !isAnalyzing && (
                 <div className="mt-4 p-4 bg-slate-900/50 rounded-xl border border-emerald-500/30">
                   <div className="flex items-center gap-2 text-emerald-400 mb-3">
                     <Check className="w-4 h-4" />
@@ -1197,16 +1207,16 @@ export default function EnhancedBrandSetup() {
 
               {!skipBrandGuide && (
                 <>
-                  {!brandGuide ? (
+                  {isExtractingBrief ? (
+                    <div className="flex flex-col items-center justify-center p-8 bg-amber-500/5 border-2 border-amber-500/30 rounded-xl">
+                      <Loader2 className="w-10 h-10 text-amber-400 animate-spin mb-3" />
+                      <p className="text-white font-medium">Analyzing brand guide...</p>
+                      <p className="text-slate-400 text-sm mt-1">Extracting colors, typography & voice</p>
+                    </div>
+                  ) : !brandGuide ? (
                     <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-600 rounded-xl hover:border-amber-500/50 transition-colors cursor-pointer">
-                      {isExtractingBrief ? (
-                        <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
-                      ) : (
-                        <>
-                          <FileText className="w-8 h-8 text-slate-500 mb-2" />
-                          <p className="text-slate-400 text-sm">Drop PDF here</p>
-                        </>
-                      )}
+                      <FileText className="w-8 h-8 text-slate-500 mb-2" />
+                      <p className="text-slate-400 text-sm">Drop PDF here</p>
                       <input
                         type="file"
                         accept=".pdf"
@@ -1243,7 +1253,19 @@ export default function EnhancedBrandSetup() {
             </div>
 
             {/* 4. Colors and Typography Section */}
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 relative overflow-hidden">
+              {/* Loading overlay */}
+              {(isExtractingBrief || isAnalyzing) && (
+                <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-10 flex items-center justify-center">
+                  <div className="text-center">
+                    <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-2" />
+                    <p className="text-white font-medium">
+                      {isExtractingBrief ? 'Applying brand guide...' : 'Extracting from website...'}
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex items-start gap-4 mb-6">
                 <div className="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center flex-shrink-0">
                   <Palette className="w-6 h-6 text-pink-400" />
@@ -1267,7 +1289,7 @@ export default function EnhancedBrandSetup() {
               </div>
 
               {/* Colors */}
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className={`grid grid-cols-3 gap-4 mb-6 transition-opacity ${(isExtractingBrief || isAnalyzing) ? 'opacity-50' : ''}`}>
                 <ColorPicker 
                   label="Primary" 
                   value={colors.primary} 
@@ -1536,7 +1558,7 @@ export default function EnhancedBrandSetup() {
 
                   {/* Preview Content */}
                   <div 
-                    className={`p-6 transition-all ${previewMode === 'mobile' ? 'max-w-[280px] mx-auto' : ''}`}
+                    className={`p-6 transition-all ${previewMode === 'mobile' ? 'max-w-[280px] mx-auto' : ''} ${(isExtractingBrief || isAnalyzing) ? 'animate-pulse' : ''}`}
                     style={{ 
                       fontFamily: fontSettings.body,
                     }}
