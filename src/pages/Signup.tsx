@@ -15,6 +15,7 @@ interface DemoIntelligence {
   sessionId: string;
   source: string;
   capturedAt: string;
+  // Short values (for display)
   industry: string | null;
   industrySummary: string | null;
   audience: string | null;
@@ -29,6 +30,14 @@ interface DemoIntelligence {
   objectionsSummary: string | null;
   proofElements: string | null;
   proofSummary: string | null;
+  // Full values (for database storage - use these for consultations!)
+  industryFull?: string | null;
+  audienceFull?: string | null;
+  valuePropFull?: string | null;
+  competitorDifferentiatorFull?: string | null;
+  painPointsFull?: string | null;
+  buyerObjectionsFull?: string | null;
+  proofElementsFull?: string | null;
   marketResearch: {
     marketSize: string | null;
     buyerPersona: string | null;
@@ -145,6 +154,7 @@ export default function Signup() {
       sessionId: demoSession.session_id,
       source: 'demo',
       capturedAt: demoSession.created_at || new Date().toISOString(),
+      // Short values (for display)
       industry: intel.industry || null,
       industrySummary: intel.industrySummary || null,
       audience: intel.audience || null,
@@ -159,6 +169,14 @@ export default function Signup() {
       objectionsSummary: intel.objectionsSummary || null,
       proofElements: intel.proofElements || null,
       proofSummary: intel.proofSummary || null,
+      // Full values (for database storage - these are NOT truncated)
+      industryFull: intel.industryFull || null,
+      audienceFull: intel.audienceFull || null,
+      valuePropFull: intel.valuePropFull || null,
+      competitorDifferentiatorFull: intel.competitorDifferentiatorFull || null,
+      painPointsFull: intel.painPointsFull || null,
+      buyerObjectionsFull: intel.buyerObjectionsFull || null,
+      proofElementsFull: intel.proofElementsFull || null,
       marketResearch: intel.marketResearch || {
         marketSize: null,
         buyerPersona: null,
@@ -182,12 +200,13 @@ export default function Signup() {
     
     const insertPayload = {
       user_id: userId,
-      industry: intel.industry,
-      target_audience: intel.audience,
-      unique_value: intel.valueProp,
-      competitor_differentiator: intel.competitorDifferentiator,
-      audience_pain_points: intel.painPoints ? [intel.painPoints] : [],
-      authority_markers: intel.proofElements ? [intel.proofElements] : [],
+      // Use FULL values for database storage, fallback to short values
+      industry: intel.industryFull || intel.industry,
+      target_audience: intel.audienceFull || intel.audience,
+      unique_value: intel.valuePropFull || intel.valueProp,
+      competitor_differentiator: intel.competitorDifferentiatorFull || intel.competitorDifferentiator,
+      audience_pain_points: intel.painPointsFull ? [intel.painPointsFull] : (intel.painPoints ? [intel.painPoints] : []),
+      authority_markers: intel.proofElementsFull ? [intel.proofElementsFull] : (intel.proofElements ? [intel.proofElements] : []),
       extracted_intelligence: {
         ...intel,
         source: 'demo',
@@ -529,12 +548,13 @@ export default function Signup() {
           .from("consultations")
           .insert({
             user_id: userId,
-            industry: demoIntelligence.industry,
-            target_audience: demoIntelligence.audience,
-            unique_value: demoIntelligence.valueProp,
-            competitor_differentiator: demoIntelligence.competitorDifferentiator,
-            audience_pain_points: demoIntelligence.painPoints ? [demoIntelligence.painPoints] : [],
-            authority_markers: demoIntelligence.proofElements ? [demoIntelligence.proofElements] : [],
+            // Use FULL values for database storage, fallback to short values
+            industry: demoIntelligence.industryFull || demoIntelligence.industry,
+            target_audience: demoIntelligence.audienceFull || demoIntelligence.audience,
+            unique_value: demoIntelligence.valuePropFull || demoIntelligence.valueProp,
+            competitor_differentiator: demoIntelligence.competitorDifferentiatorFull || demoIntelligence.competitorDifferentiator,
+            audience_pain_points: demoIntelligence.painPointsFull ? [demoIntelligence.painPointsFull] : (demoIntelligence.painPoints ? [demoIntelligence.painPoints] : []),
+            authority_markers: demoIntelligence.proofElementsFull ? [demoIntelligence.proofElementsFull] : (demoIntelligence.proofElements ? [demoIntelligence.proofElements] : []),
             extracted_intelligence: {
               ...demoIntelligence,
               source: 'demo',
@@ -619,12 +639,13 @@ export default function Signup() {
         .from("consultations")
         .insert({
           user_id: userId,
-          industry: demoIntelligence.industry,
-          target_audience: demoIntelligence.audience,
-          unique_value: demoIntelligence.valueProp,
-          competitor_differentiator: demoIntelligence.competitorDifferentiator,
-          audience_pain_points: demoIntelligence.painPoints ? [demoIntelligence.painPoints] : [],
-          authority_markers: demoIntelligence.proofElements ? [demoIntelligence.proofElements] : [],
+          // Use FULL values for database storage, fallback to short values
+          industry: demoIntelligence.industryFull || demoIntelligence.industry,
+          target_audience: demoIntelligence.audienceFull || demoIntelligence.audience,
+          unique_value: demoIntelligence.valuePropFull || demoIntelligence.valueProp,
+          competitor_differentiator: demoIntelligence.competitorDifferentiatorFull || demoIntelligence.competitorDifferentiator,
+          audience_pain_points: demoIntelligence.painPointsFull ? [demoIntelligence.painPointsFull] : (demoIntelligence.painPoints ? [demoIntelligence.painPoints] : []),
+          authority_markers: demoIntelligence.proofElementsFull ? [demoIntelligence.proofElementsFull] : (demoIntelligence.proofElements ? [demoIntelligence.proofElements] : []),
           extracted_intelligence: {
             ...demoIntelligence,
             source: 'demo',

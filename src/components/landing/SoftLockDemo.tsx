@@ -202,6 +202,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
       sessionId,
       source: 'demo',
       capturedAt: new Date().toISOString(),
+      // Short values (for sidebar display)
       industry: state.extracted.industry || null,
       industrySummary: state.extracted.industrySummary || null,
       audience: state.extracted.audience || null,
@@ -216,6 +217,14 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
       objectionsSummary: state.extracted.objectionsSummary || null,
       proofElements: state.extracted.proofElements || null,
       proofSummary: state.extracted.proofSummary || null,
+      // Full values (for database storage - these should NOT be truncated)
+      industryFull: state.extracted.industryFull || state.extracted.industry || null,
+      audienceFull: state.extracted.audienceFull || state.extracted.audience || null,
+      valuePropFull: state.extracted.valuePropFull || state.extracted.valueProp || null,
+      competitorDifferentiatorFull: state.extracted.competitorDifferentiatorFull || state.extracted.competitorDifferentiator || null,
+      painPointsFull: state.extracted.painPointsFull || state.extracted.painPoints || null,
+      buyerObjectionsFull: state.extracted.buyerObjectionsFull || state.extracted.buyerObjections || null,
+      proofElementsFull: state.extracted.proofElementsFull || state.extracted.proofElements || null,
       marketResearch: {
         marketSize: state.market.marketSize || null,
         buyerPersona: state.market.buyerPersona || null,
