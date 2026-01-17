@@ -276,10 +276,17 @@ export class IntelligenceConcierge {
   private getIndustryDesignConventions(industry: string): MarketData['designConventions'] {
     const normalized = industry.toLowerCase();
     
-    // Developer Tools / SaaS / DevOps / Software
-    if (normalized.includes('developer') || normalized.includes('devops') || 
-        normalized.includes('saas') || normalized.includes('software') ||
-        normalized.includes('pipeline') || normalized.includes('deployment')) {
+    // Developer Tools / DevOps / SaaS (check FIRST - highest priority)
+    const devToolsKeywords = [
+      'developer', 'devops', 'saas', 'software', 'pipeline', 
+      'deployment', 'ci/cd', 'orchestration', 'automation',
+      'infrastructure', 'kubernetes', 'docker', 'api',
+      'platform', 'cloud', 'enterprise software', 'engineering',
+      'code', 'git', 'tech', 'data platform'
+    ];
+    
+    if (devToolsKeywords.some(kw => normalized.includes(kw))) {
+      console.log('🏷️ [Industry] Matched Developer Tools pattern for:', industry);
       return {
         colorMode: 'dark',
         cardStyle: 'glass',
@@ -288,30 +295,14 @@ export class IntelligenceConcierge {
       };
     }
     
-    // Consulting / Professional Services / Advisory
-    if (normalized.includes('consulting') || normalized.includes('professional') ||
-        normalized.includes('advisory') || normalized.includes('strategy')) {
-      return {
-        colorMode: 'light',
-        cardStyle: 'bordered',
-        proofTiming: 'early',
-        trustSignalPriority: ['case-studies', 'testimonials', 'credentials', 'methodology'],
-      };
-    }
-    
-    // Manufacturing / Industrial
-    if (normalized.includes('manufacturing') || normalized.includes('industrial') ||
-        normalized.includes('factory') || normalized.includes('production')) {
-      return {
-        colorMode: 'light',
-        cardStyle: 'flat',
-        proofTiming: 'early',
-        trustSignalPriority: ['results', 'case-studies', 'certifications', 'testimonials'],
-      };
-    }
-    
     // Finance / Fintech
-    if (normalized.includes('finance') || normalized.includes('fintech') || normalized.includes('banking')) {
+    const financeKeywords = [
+      'finance', 'fintech', 'banking', 'investment', 'wealth',
+      'trading', 'payments', 'insurance'
+    ];
+    
+    if (financeKeywords.some(kw => normalized.includes(kw))) {
+      console.log('🏷️ [Industry] Matched Finance pattern for:', industry);
       return {
         colorMode: 'light',
         cardStyle: 'bordered',
@@ -321,7 +312,13 @@ export class IntelligenceConcierge {
     }
     
     // Healthcare / Medical
-    if (normalized.includes('health') || normalized.includes('medical') || normalized.includes('pharma')) {
+    const healthcareKeywords = [
+      'health', 'medical', 'pharma', 'healthcare', 'clinical',
+      'hospital', 'patient', 'biotech'
+    ];
+    
+    if (healthcareKeywords.some(kw => normalized.includes(kw))) {
+      console.log('🏷️ [Industry] Matched Healthcare pattern for:', industry);
       return {
         colorMode: 'light',
         cardStyle: 'flat',
@@ -330,8 +327,46 @@ export class IntelligenceConcierge {
       };
     }
     
+    // Manufacturing / Industrial
+    const manufacturingKeywords = [
+      'manufacturing', 'factory', 'production', 'industrial',
+      'assembly', 'supply chain', 'operations', 'lean', 'six sigma'
+    ];
+    
+    if (manufacturingKeywords.some(kw => normalized.includes(kw))) {
+      console.log('🏷️ [Industry] Matched Manufacturing pattern for:', industry);
+      return {
+        colorMode: 'light',
+        cardStyle: 'flat',
+        proofTiming: 'early',
+        trustSignalPriority: ['results', 'case-studies', 'certifications', 'testimonials'],
+      };
+    }
+    
+    // Consulting / Professional Services
+    const consultingKeywords = [
+      'consulting', 'advisory', 'professional services', 'strategy',
+      'management consulting', 'business advisory', 'fractional'
+    ];
+    
+    if (consultingKeywords.some(kw => normalized.includes(kw))) {
+      console.log('🏷️ [Industry] Matched Consulting pattern for:', industry);
+      return {
+        colorMode: 'light',
+        cardStyle: 'bordered',
+        proofTiming: 'early',
+        trustSignalPriority: ['case-studies', 'testimonials', 'credentials', 'methodology'],
+      };
+    }
+    
     // E-commerce / Retail
-    if (normalized.includes('ecommerce') || normalized.includes('retail') || normalized.includes('shop')) {
+    const ecommerceKeywords = [
+      'ecommerce', 'e-commerce', 'retail', 'shop', 'store',
+      'commerce', 'marketplace'
+    ];
+    
+    if (ecommerceKeywords.some(kw => normalized.includes(kw))) {
+      console.log('🏷️ [Industry] Matched E-commerce pattern for:', industry);
       return {
         colorMode: 'light',
         cardStyle: 'flat',
@@ -340,8 +375,26 @@ export class IntelligenceConcierge {
       };
     }
     
-    // Agency / Marketing
-    if (normalized.includes('agency') || normalized.includes('marketing') || normalized.includes('creative')) {
+    // Creative Agency / Marketing (check LAST to avoid false matches)
+    const creativeKeywords = [
+      'design agency', 'creative agency', 'branding agency',
+      'advertising', 'graphic design', 'video production',
+      'marketing agency', 'creative studio'
+    ];
+    
+    if (creativeKeywords.some(kw => normalized.includes(kw))) {
+      console.log('🏷️ [Industry] Matched Creative Agency pattern for:', industry);
+      return {
+        colorMode: 'dark',
+        cardStyle: 'glass',
+        proofTiming: 'late',
+        trustSignalPriority: ['portfolio', 'case-studies', 'awards', 'testimonials'],
+      };
+    }
+    
+    // Generic agency/marketing fallback (less specific)
+    if (normalized.includes('agency') || normalized.includes('marketing')) {
+      console.log('🏷️ [Industry] Matched Agency/Marketing fallback for:', industry);
       return {
         colorMode: 'dark',
         cardStyle: 'glass',
@@ -350,7 +403,8 @@ export class IntelligenceConcierge {
       };
     }
     
-    // Default
+    // Default fallback
+    console.log('🏷️ [Industry] Using default pattern for:', industry);
     return {
       colorMode: 'light',
       cardStyle: 'flat',
