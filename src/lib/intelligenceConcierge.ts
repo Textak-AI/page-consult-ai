@@ -276,8 +276,10 @@ export class IntelligenceConcierge {
   private getIndustryDesignConventions(industry: string): MarketData['designConventions'] {
     const normalized = industry.toLowerCase();
     
-    // Developer Tools / SaaS
-    if (normalized.includes('developer') || normalized.includes('devops') || normalized.includes('saas')) {
+    // Developer Tools / SaaS / DevOps / Software
+    if (normalized.includes('developer') || normalized.includes('devops') || 
+        normalized.includes('saas') || normalized.includes('software') ||
+        normalized.includes('pipeline') || normalized.includes('deployment')) {
       return {
         colorMode: 'dark',
         cardStyle: 'glass',
@@ -286,13 +288,25 @@ export class IntelligenceConcierge {
       };
     }
     
-    // Consulting / Professional Services
-    if (normalized.includes('consulting') || normalized.includes('professional')) {
+    // Consulting / Professional Services / Advisory
+    if (normalized.includes('consulting') || normalized.includes('professional') ||
+        normalized.includes('advisory') || normalized.includes('strategy')) {
       return {
         colorMode: 'light',
         cardStyle: 'bordered',
         proofTiming: 'early',
         trustSignalPriority: ['case-studies', 'testimonials', 'credentials', 'methodology'],
+      };
+    }
+    
+    // Manufacturing / Industrial
+    if (normalized.includes('manufacturing') || normalized.includes('industrial') ||
+        normalized.includes('factory') || normalized.includes('production')) {
+      return {
+        colorMode: 'light',
+        cardStyle: 'flat',
+        proofTiming: 'early',
+        trustSignalPriority: ['results', 'case-studies', 'certifications', 'testimonials'],
       };
     }
     
