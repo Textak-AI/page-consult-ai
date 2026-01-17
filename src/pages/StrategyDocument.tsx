@@ -96,6 +96,8 @@ export default function StrategyDocument() {
   // Load consultation and accumulator data
   useEffect(() => {
     const loadData = async () => {
+      console.log('📄 [Strategy] Loading consultation:', consultationId);
+      
       if (!consultationId) {
         setLoading(false);
         return;
@@ -124,7 +126,7 @@ export default function StrategyDocument() {
       const acc = await intelligenceConcierge.getBySessionId(consultationId);
       if (acc) {
         setAccumulator(acc);
-        console.log('📊 [Strategy Document] Loaded accumulator:', acc);
+        console.log('📄 [Strategy] Accumulator loaded:', acc.completionStage);
       }
 
       setLoading(false);
@@ -141,9 +143,11 @@ export default function StrategyDocument() {
   }, [consultation, accumulator]);
 
   const score = useMemo(() => {
-    return calculateIntelligenceScore(intelligence, {
+    const calculatedScore = calculateIntelligenceScore(intelligence, {
       marketResearchComplete: !!accumulator?.marketData,
     });
+    console.log('📄 [Strategy] Intelligence score:', calculatedScore.totalScore);
+    return calculatedScore;
   }, [intelligence, accumulator]);
 
   // Get strategy data

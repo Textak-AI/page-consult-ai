@@ -841,10 +841,10 @@ export default function EnhancedBrandSetup() {
       
       console.log('🚀 [EnhancedBrandSetup] Brand captured:', { consultationId, readinessScore });
       
-      // High readiness: show huddle with "I listened" recap before generation
+      // High readiness: show Strategy Document with complete blueprint
       if (readinessScore >= 50) {
-        console.log('🚀 [EnhancedBrandSetup] High readiness - navigating to huddle');
-        navigate(`/huddle?type=pre_brief&consultationId=${consultationId}`, { replace: true });
+        console.log('🚀 [EnhancedBrandSetup] High readiness - navigating to Strategy Document');
+        navigate(`/strategy-document?consultationId=${consultationId}`, { replace: true });
       } else {
         // Low readiness: go directly to wizard for more info
         console.log('🚀 [EnhancedBrandSetup] Low readiness - navigating to wizard');
@@ -910,7 +910,7 @@ export default function EnhancedBrandSetup() {
               .is('claimed_by', null);
             
             console.log('✅ [EnhancedBrandSetup] Created consultation from demo:', newConsultation.id);
-            navigate(`/huddle?type=pre_brief&consultationId=${newConsultation.id}`, { replace: true });
+            navigate(`/strategy-document?consultationId=${newConsultation.id}`, { replace: true });
             return;
           } else {
             console.error('❌ [EnhancedBrandSetup] Failed to create consultation:', createError);
@@ -1793,12 +1793,12 @@ export default function EnhancedBrandSetup() {
           >
             {demoSession ? (
               <>
-                Generate My Page
+                View Your Strategy Blueprint
                 <Sparkles className="w-5 h-5 ml-2" />
               </>
             ) : (
               <>
-                Continue to Build Your Page
+                View Your Strategy Blueprint
                 <ArrowRight className="w-5 h-5 ml-2" />
               </>
             )}
