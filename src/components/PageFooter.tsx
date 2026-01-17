@@ -23,6 +23,8 @@ export function PageFooter() {
             <span className="mx-2">•</span>
             <Link to="/privacy" className="hover:text-cyan-400 transition-colors">Privacy</Link>
             <span className="mx-2">•</span>
+            <Link to="/trust-center" className="hover:text-cyan-400 transition-colors">Trust & Security</Link>
+            <span className="mx-2">•</span>
             <a href="mailto:support@pageconsult.ai" className="hover:text-cyan-400 transition-colors">Support</a>
           </div>
         </div>

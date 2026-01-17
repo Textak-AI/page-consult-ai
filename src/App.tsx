@@ -43,6 +43,7 @@ import Brief from "./pages/Brief";
 import Huddle from "./pages/Huddle";
 import StrategyBrief from "./pages/StrategyBrief";
 import StrategyDocument from "./pages/StrategyDocument";
+import TrustCenter from "./pages/TrustCenter";
 import BrandIntake from "./pages/BrandIntake";
 import WizardChoice from "./pages/WizardChoice";
 import EnhancedBrandSetup from "./pages/EnhancedBrandSetup";
@@ -151,6 +152,7 @@ const App = () => {
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/dev" element={<Dev />} />
+                <Route path="/trust-center" element={<TrustCenter />} />
                 <Route path="/prospects" element={<ProspectsDashboard />} />
                 <Route path="/dev" element={<Dev />} />
                 
