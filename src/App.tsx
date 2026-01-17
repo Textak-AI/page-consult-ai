@@ -42,6 +42,7 @@ import Admin from "./pages/Admin";
 import Brief from "./pages/Brief";
 import Huddle from "./pages/Huddle";
 import StrategyBrief from "./pages/StrategyBrief";
+import StrategyDocument from "./pages/StrategyDocument";
 import BrandIntake from "./pages/BrandIntake";
 import WizardChoice from "./pages/WizardChoice";
 import EnhancedBrandSetup from "./pages/EnhancedBrandSetup";
@@ -144,6 +145,7 @@ const App = () => {
                 <Route path="/brief/:sessionId" element={<Brief />} />
                 <Route path="/huddle" element={<Huddle />} />
                 <Route path="/strategy-brief" element={<StrategyBrief />} />
+                <Route path="/strategy-document" element={<StrategyDocument />} />
                 <Route path="/brand-intake" element={<BrandIntake />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/terms" element={<Terms />} />
