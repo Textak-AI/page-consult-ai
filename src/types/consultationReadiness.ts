@@ -14,12 +14,16 @@ export interface ExtractedIntelligence {
   capturedAt: string;
   
   // Core positioning (required for generation)
-  industry: string | null;
+  industry: string | null;  // Raw text from user
   subIndustry: string | null;
   audience: string | null;
   audienceRole: string | null;
   valueProp: string | null;
   businessName: string | null;
+  
+  // Pre-detected industry category (from intelligent detection)
+  industryCategory?: string | null;  // Normalized category (e.g., "creative", "consulting", "saas")
+  industryConfidence?: 'high' | 'medium' | 'low' | null;  // Detection confidence
   
   // Strategic depth (required for quality generation)
   painPoints: string[];

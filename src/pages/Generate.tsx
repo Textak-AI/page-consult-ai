@@ -539,10 +539,17 @@ function GenerateContent() {
         
         if (conversationText.length > 50) {
           console.log('🎨 [SDI] Generating design intelligence from consultation...');
+          
+          // Get pre-detected industry category if available
+          const industryCategory = intel.industryCategory || null;
+          const industryConfidence = intel.industryConfidence || null;
+          
           sdiOutput = generateDesignIntelligence({
             conversationText,
             extractedIntelligence: intel,
             targetMarket: consultationData.target_audience || intel.audience,
+            industryCategory: industryCategory || undefined,
+            industryConfidence: industryConfidence || undefined,
           });
           setDesignIntelligence(sdiOutput);
         }
@@ -615,10 +622,17 @@ function GenerateContent() {
         
         if (conversationText.length > 50) {
           console.log('🎨 [SDI] Generating design intelligence from demo session...');
+          
+          // Get pre-detected industry category if available
+          const industryCategory = (intel as any).industryCategory || null;
+          const industryConfidence = (intel as any).industryConfidence || null;
+          
           sdiOutput = generateDesignIntelligence({
             conversationText,
             extractedIntelligence: intel,
             targetMarket: intel.audience || (intel as any).targetMarket,
+            industryCategory: industryCategory || undefined,
+            industryConfidence: industryConfidence || undefined,
           });
           setDesignIntelligence(sdiOutput);
           console.log('🎨 [SDI] Design intelligence generated:', sdiOutput.summary);
@@ -769,10 +783,17 @@ function GenerateContent() {
           
           if (conversationText.length > 50) {
             console.log('🎨 [SDI] Generating design intelligence from strategic consultation...');
+            
+            // Get pre-detected industry category if available
+            const industryCategory = demoData.industryCategory || null;
+            const industryConfidence = demoData.industryConfidence || null;
+            
             sdiOutput = generateDesignIntelligence({
               conversationText,
               extractedIntelligence: demoData,
               targetMarket: demoData.targetAudience || demoData.target_audience,
+              industryCategory: industryCategory || undefined,
+              industryConfidence: industryConfidence || undefined,
             });
             setDesignIntelligence(sdiOutput);
             console.log('🎨 [SDI] Design intelligence generated:', sdiOutput.summary);

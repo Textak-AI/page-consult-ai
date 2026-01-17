@@ -14,6 +14,9 @@ export interface DesignIntelligenceInput {
   conversationText: string;
   extractedIntelligence: any;
   targetMarket?: string;
+  // Pre-detected industry from consultation (avoids re-detection)
+  industryCategory?: string;
+  industryConfidence?: 'high' | 'medium' | 'low';
 }
 
 export interface DesignIntelligenceOutput {
@@ -41,14 +44,22 @@ export interface DesignIntelligenceOutput {
 export function generateDesignIntelligence(input: DesignIntelligenceInput): DesignIntelligenceOutput {
   console.log('🎨 [SDI] Starting design intelligence analysis...');
   
-  const { conversationText, extractedIntelligence, targetMarket } = input;
+  const { conversationText, extractedIntelligence, targetMarket, industryCategory, industryConfidence } = input;
   
   // 1. Detect tone from conversation
   const tone = detectTone(conversationText);
   const typography = getTypographyRecommendation(tone);
   
-  // 2. Detect industry and emotional drivers
-  const industry = detectIndustry(conversationText);
+  // 2. Use pre-detected industry if available (already intelligently detected during consultation)
+  let industry: string;
+  if (industryCategory && industryConfidence !== 'low') {
+    industry = industryCategory;
+    console.log(`🎨 [SDI] Using pre-detected industry: ${industry} (confidence: ${industryConfidence})`);
+  } else {
+    industry = detectIndustry(conversationText);
+    console.log(`🎨 [SDI] Industry detected from text: ${industry}`);
+  }
+  
   const emotionalDrivers = detectEmotionalDrivers(conversationText);
   const colors = getColorPalette(industry, targetMarket, emotionalDrivers);
   

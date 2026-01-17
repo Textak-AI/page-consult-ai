@@ -2,8 +2,11 @@ import { supabase } from '@/integrations/supabase/client';
 
 // TypeScript Interfaces
 export interface ConsultationData {
-  industry: string;
+  industry: string;  // Raw text from user
   industryVertical?: string;
+  // Pre-detected industry category (normalized, from intelligent detection)
+  industryCategory?: string;  // e.g., "creative", "consulting", "saas"
+  industryConfidence?: 'high' | 'medium' | 'low';
   businessName?: string;
   audience: string;
   audienceRole?: string;
@@ -98,10 +101,11 @@ export class IntelligenceConcierge {
   ): Promise<IntelligenceAccumulator> {
     console.log('🧠 [Concierge] Creating accumulator from consultation');
     
-    // Fetch market intelligence based on industry
+    // Fetch market intelligence based on industry (use pre-detected category if available)
     const marketData = await this.fetchMarketIntelligence(
       consultationData.industry,
-      consultationData.audience
+      consultationData.audience,
+      consultationData.industryCategory
     );
     
     const { data, error } = await supabase
@@ -257,12 +261,14 @@ export class IntelligenceConcierge {
   // Fetch market intelligence (placeholder - integrate with existing research)
   private async fetchMarketIntelligence(
     industry: string,
-    audience: string
+    audience: string,
+    industryCategory?: string
   ): Promise<MarketData> {
     // TODO: Integrate with existing Perplexity research
     // For now, return basic structure with industry design conventions
     
-    const designConventions = this.getIndustryDesignConventions(industry);
+    // Pass pre-detected category to avoid re-detecting from raw text
+    const designConventions = this.getIndustryDesignConventions(industry, industryCategory);
     
     return {
       industryInsights: [],
@@ -273,7 +279,72 @@ export class IntelligenceConcierge {
   }
   
   // Get industry design conventions
-  private getIndustryDesignConventions(industry: string): MarketData['designConventions'] {
+  // Now accepts optional pre-detected category to skip heuristic detection
+  private getIndustryDesignConventions(
+    industry: string, 
+    industryCategory?: string
+  ): MarketData['designConventions'] {
+    // Check for pre-detected industry category first (already intelligently detected)
+    if (industryCategory && industryCategory !== 'default') {
+      console.log(`🏷️ [Industry] Using pre-detected category: ${industryCategory}`);
+      
+      const categoryConventions: Record<string, MarketData['designConventions']> = {
+        creative: {
+          colorMode: 'dark',
+          cardStyle: 'glass',
+          proofTiming: 'late',
+          trustSignalPriority: ['portfolio', 'case-studies', 'awards', 'testimonials'],
+        },
+        consulting: {
+          colorMode: 'light',
+          cardStyle: 'bordered',
+          proofTiming: 'early',
+          trustSignalPriority: ['case-studies', 'testimonials', 'credentials', 'methodology'],
+        },
+        saas: {
+          colorMode: 'dark',
+          cardStyle: 'glass',
+          proofTiming: 'early',
+          trustSignalPriority: ['metrics', 'case-studies', 'client-logos', 'security-badges'],
+        },
+        healthcare: {
+          colorMode: 'light',
+          cardStyle: 'flat',
+          proofTiming: 'early',
+          trustSignalPriority: ['credentials', 'certifications', 'case-studies', 'testimonials'],
+        },
+        finance: {
+          colorMode: 'light',
+          cardStyle: 'bordered',
+          proofTiming: 'early',
+          trustSignalPriority: ['security-badges', 'credentials', 'client-logos', 'testimonials'],
+        },
+        manufacturing: {
+          colorMode: 'light',
+          cardStyle: 'flat',
+          proofTiming: 'early',
+          trustSignalPriority: ['results', 'case-studies', 'certifications', 'testimonials'],
+        },
+        ecommerce: {
+          colorMode: 'light',
+          cardStyle: 'flat',
+          proofTiming: 'late',
+          trustSignalPriority: ['testimonials', 'reviews', 'client-logos', 'metrics'],
+        },
+        legal: {
+          colorMode: 'light',
+          cardStyle: 'bordered',
+          proofTiming: 'early',
+          trustSignalPriority: ['credentials', 'case-studies', 'testimonials', 'client-logos'],
+        },
+      };
+      
+      if (categoryConventions[industryCategory]) {
+        return categoryConventions[industryCategory];
+      }
+    }
+    
+    // Fallback: Heuristic detection from raw industry text
     const normalized = industry.toLowerCase();
     
     // Developer Tools / DevOps / SaaS (check FIRST - highest priority)
