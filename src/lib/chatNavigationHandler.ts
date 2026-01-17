@@ -17,8 +17,9 @@ const NAVIGATION_PATTERNS: { pattern: RegExp; route: string; scrollTo?: string }
   // Homepage
   { pattern: /\b(home\s*page|go\s+home|back\s+to\s+home|main\s+page)\b/i, route: '/' },
   
-  // Demo section
-  { pattern: /\b(demo|try\s+it|show\s+me|strategy\s+session)\b/i, route: '/', scrollTo: 'demo' },
+  // REMOVED: Demo section navigation - causes "I'm taking you to demo" without actual navigation
+  // Users should naturally scroll or use the hero CTA. AI should not announce navigation that fails.
+  // { pattern: /\b(demo|try\s+it|show\s+me|strategy\s+session)\b/i, route: '/', scrollTo: 'demo' },
   
   // Features
   { pattern: /\b(features?|what\s+can|capabilities)\b/i, route: '/#features', scrollTo: 'features' },
@@ -102,11 +103,17 @@ export function handleChatNavigation(
       const element = document.getElementById(intent.scrollTo);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        console.log('💬 [Navigation] Scrolled to section:', intent.scrollTo);
+        // Don't announce scroll navigation - just do it silently
         return { 
           navigated: true, 
           route: intent.route,
-          responseMessage: `I'm taking you to the ${intent.scrollTo} section.`
+          responseMessage: null // Silent navigation - no announcement
         };
+      } else {
+        // Element not found - don't announce failed navigation
+        console.log('💬 [Navigation] Section not found, skipping:', intent.scrollTo);
+        return { navigated: false, route: null, responseMessage: null };
       }
     }
     
@@ -115,10 +122,11 @@ export function handleChatNavigation(
     options?.onNavigate?.(intent.route);
     
     const routeName = getRouteName(intent.route);
+    console.log('💬 [Navigation] Navigated to:', routeName);
     return { 
       navigated: true, 
       route: intent.route,
-      responseMessage: `Taking you to ${routeName}...`
+      responseMessage: null // Silent navigation - let the page change speak for itself
     };
   }
   
