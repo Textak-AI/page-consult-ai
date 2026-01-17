@@ -13,6 +13,12 @@ const HIDDEN_ROUTES = [
   '/new',        // New consultation wizard
   '/wizard',     // Wizard chat
   '/consultation', // Consultation chat
+  '/strategy-document', // Strategy Blueprint page
+  '/builder',    // Page builder
+  '/brand-setup', // Brand setup
+  '/huddle',     // Strategy huddle
+  '/trust-center', // Trust center page
+  '/brief',      // Brief page
 ];
 
 export function CompanionBar() {
