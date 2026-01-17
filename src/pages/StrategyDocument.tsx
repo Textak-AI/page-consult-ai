@@ -674,10 +674,10 @@ export default function StrategyDocument() {
                 Refine Strategy
               </Button>
               <Button 
-                onClick={() => navigate(`/brand-setup?consultationId=${consultationId}`)}
+                onClick={() => navigate(`/builder?consultationId=${consultationId}`)}
                 className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
               >
-                Continue to Brand Setup
+                Generate Your Page
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
