@@ -966,9 +966,21 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
               : null;
 
           // Calculate aesthetic mode based on provider industry and target market
-          const finalExtracted = industryFromDetection 
-            ? { ...mergedExtracted, industry: industryFromDetection }
-            : mergedExtracted;
+          // Also store the normalized industryCategory and confidence for SDI handoff
+          const finalIndustryDetection = isManuallyConfirmed 
+            ? prev.industryDetection 
+            : updatedIndustryDetection;
+          
+          const industryCategory = finalIndustryDetection?.variant || null;
+          const industryConfidence = finalIndustryDetection?.confidence || null;
+          
+          const finalExtracted = {
+            ...mergedExtracted,
+            ...(industryFromDetection ? { industry: industryFromDetection } : {}),
+            // Store normalized industry category and confidence for SDI handoff
+            industryCategory: industryCategory !== 'default' ? industryCategory : null,
+            industryConfidence: industryConfidence,
+          };
           
           const updatedAestheticMode = calculateAestheticMode(
             finalExtracted.industry,
@@ -976,10 +988,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
             finalExtracted.audience
           );
 
-          // Preserve manually confirmed detection - don't overwrite with auto-detection
-          const finalIndustryDetection = isManuallyConfirmed 
-            ? prev.industryDetection 
-            : updatedIndustryDetection;
+          // finalIndustryDetection was already calculated above for industryCategory/Confidence
 
           return {
             ...prev,

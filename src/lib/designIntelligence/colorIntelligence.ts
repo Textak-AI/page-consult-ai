@@ -94,6 +94,30 @@ const INDUSTRY_PALETTES: Record<string, ColorPalette> = {
     ctaText: '#FFFFFF',
     reasoning: 'Industrial palette signals capability, reliability, and safety'
   },
+  creative: {
+    mode: 'dark',
+    primary: '#8B5CF6',      // Purple - creativity, innovation
+    secondary: '#0F172A',    // Deep slate - sophistication
+    accent: '#F97316',       // Orange - energy, bold expression
+    background: '#0A0A0F',   // Near-black - gallery feel
+    foreground: '#F8FAFC',
+    muted: '#94A3B8',
+    ctaBackground: '#8B5CF6',
+    ctaText: '#FFFFFF',
+    reasoning: 'Dark mode signals creative sophistication; purple conveys creativity and transformation'
+  },
+  agency: {
+    mode: 'dark',
+    primary: '#8B5CF6',      // Purple - creativity
+    secondary: '#1E293B',    // Slate - professional
+    accent: '#06B6D4',       // Cyan - modern, digital
+    background: '#0F172A',
+    foreground: '#F1F5F9',
+    muted: '#94A3B8',
+    ctaBackground: '#8B5CF6',
+    ctaText: '#FFFFFF',
+    reasoning: 'Creative agency palette with dark sophistication and vibrant accents'
+  },
   coaching: {
     mode: 'warm',
     primary: '#7C3AED',      // Purple - transformation
@@ -156,15 +180,21 @@ const EMOTIONAL_PATTERNS: Record<EmotionalDriver, string[]> = {
 export function detectIndustry(text: string): string {
   const lowered = text.toLowerCase();
   
-  // Industry detection patterns
+  // Industry detection patterns - order matters! Check more specific first
   const patterns: Record<string, string[]> = {
+    // Creative/branding agencies - check FIRST (before consulting)
+    creative: ['branding', 'brand agency', 'creative agency', 'design agency', 'brand strategy', 
+               'visual identity', 'brand identity', 'translate into brands', 'brand studio',
+               'creative studio', 'brand design', 'brand consultancy', 'rebranding', 'rebrand'],
+    agency: ['agency', 'advertising', 'marketing agency', 'digital agency'],
     healthcare: ['healthcare', 'hospital', 'clinic', 'patient', 'medical', 'HIPAA', 'health', 'clinical', 'physician'],
     cybersecurity: ['cybersecurity', 'security', 'penetration', 'vulnerability', 'breach', 'hacker', 'threat', 'SOC'],
     finance: ['finance', 'financial', 'bank', 'investment', 'wealth', 'insurance', 'fintech', 'trading'],
     saas: ['SaaS', 'software', 'platform', 'app', 'subscription', 'cloud', 'API'],
-    consulting: ['consulting', 'consultant', 'advisory', 'strategy', 'management consulting'],
+    consulting: ['consulting', 'consultant', 'advisory', 'management consulting'],
     manufacturing: ['manufacturing', 'factory', 'production', 'supply chain', 'industrial', 'warehouse'],
-    coaching: ['coaching', 'coach', 'mentor', 'training', 'development', 'leadership']
+    coaching: ['coaching', 'coach', 'mentor', 'training', 'development', 'leadership'],
+    technology: ['tech', 'developer', 'devops', 'engineering', 'startup']
   };
 
   const scores: Record<string, number> = {};
