@@ -256,7 +256,6 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
                 aestheticMode={state.aestheticMode}
                 marketResearch={state.emailCaptured ? state.market : null}
                 artifacts={state.artifacts}
-                onContinue={onContinue}
                 onIndustryCorrection={confirmIndustrySelection}
                 isThinking={state.isProcessing}
                 className="h-auto border-0 rounded-none"
