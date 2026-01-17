@@ -10,7 +10,7 @@ import { useSession } from "@/contexts/SessionContext";
 import { handlePostAuthMigration } from "@/lib/sessionMigration";
 import { hasGuestSession } from "@/lib/guestSession";
 import { getNextStep, updateFlowState } from "@/services/flowEngine";
-
+import { intelligenceConcierge, type ConsultationData } from "@/lib/intelligenceConcierge";
 interface DemoIntelligence {
   sessionId: string;
   source: string;
@@ -241,6 +241,34 @@ export default function Signup() {
     }
     
     console.log('✅ [Signup] Created consultation:', consultation.id);
+    
+    // 🧠 Create Intelligence Accumulator if high readiness
+    if (intel.readinessScore >= 70) {
+      try {
+        const consultationData: ConsultationData = {
+          industry: intel.industryFull || intel.industry || '',
+          audience: intel.audienceFull || intel.audience || '',
+          valueProp: intel.valuePropFull || intel.valueProp || '',
+          edge: intel.competitorDifferentiatorFull || intel.competitorDifferentiator || '',
+          painPoints: intel.painPointsFull ? [intel.painPointsFull] : (intel.painPoints ? [intel.painPoints] : []),
+          objections: intel.buyerObjectionsFull ? [intel.buyerObjectionsFull] : [],
+          results: intel.proofElementsFull ? [intel.proofElementsFull] : (intel.proofElements ? [intel.proofElements] : []),
+          businessName: undefined,
+          pageGoal: intel.selectedPath === 'demo' ? 'book-demo' : 'book-meeting',
+        };
+        
+        await intelligenceConcierge.createFromConsultation(
+          consultation.id,
+          consultationData,
+          intel.readinessScore,
+          userId
+        );
+        console.log('🧠 [Signup] Intelligence Accumulator created');
+      } catch (accError) {
+        console.error('🧠 [Signup] Failed to create accumulator (non-blocking):', accError);
+        // Non-blocking - continue without accumulator
+      }
+    }
     
     // Claim the demo session
     const sessionId = intel.sessionId;
@@ -575,6 +603,30 @@ export default function Signup() {
         }
         
         console.log('✅ [Signup] Created consultation for high-readiness user:', consultation.id);
+        
+        // 🧠 Create Intelligence Accumulator
+        try {
+          const consultationData: ConsultationData = {
+            industry: demoIntelligence.industryFull || demoIntelligence.industry || '',
+            audience: demoIntelligence.audienceFull || demoIntelligence.audience || '',
+            valueProp: demoIntelligence.valuePropFull || demoIntelligence.valueProp || '',
+            edge: demoIntelligence.competitorDifferentiatorFull || demoIntelligence.competitorDifferentiator || '',
+            painPoints: demoIntelligence.painPointsFull ? [demoIntelligence.painPointsFull] : (demoIntelligence.painPoints ? [demoIntelligence.painPoints] : []),
+            objections: demoIntelligence.buyerObjectionsFull ? [demoIntelligence.buyerObjectionsFull] : [],
+            results: demoIntelligence.proofElementsFull ? [demoIntelligence.proofElementsFull] : (demoIntelligence.proofElements ? [demoIntelligence.proofElements] : []),
+            pageGoal: 'book-meeting',
+          };
+          
+          await intelligenceConcierge.createFromConsultation(
+            consultation.id,
+            consultationData,
+            demoIntelligence.readinessScore,
+            userId
+          );
+          console.log('🧠 [Signup] Intelligence Accumulator created for high-readiness user');
+        } catch (accError) {
+          console.error('🧠 [Signup] Failed to create accumulator (non-blocking):', accError);
+        }
         
         // Trigger trial welcome email
         try {

@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Globe, Image, FileText, Palette, ArrowRight, 
   Upload, Check, Loader2, Monitor, Smartphone,
-  ChevronDown, ChevronUp, X, Sparkles
+  ChevronDown, ChevronUp, X, Sparkles, Brain
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { getNextStep, updateFlowState } from '@/services/flowEngine';
 import { CommunicationStyleCard } from '@/components/brand/CommunicationStyleCard';
+import { intelligenceConcierge, type IntelligenceAccumulator, type BrandData } from '@/lib/intelligenceConcierge';
 
 interface CommunicationStyle {
   tone: { descriptors: string[]; primary: string };
@@ -144,8 +145,26 @@ export default function EnhancedBrandSetup() {
   const [communicationStyle, setCommunicationStyle] = useState<CommunicationStyle | null>(null);
   const [styleLoading, setStyleLoading] = useState(false);
   
+  // Intelligence Accumulator state
+  const [accumulator, setAccumulator] = useState<IntelligenceAccumulator | null>(null);
+  
   // Track if brand guide has set colors (takes priority over website extraction)
   const [colorsFromBrandGuide, setColorsFromBrandGuide] = useState(false);
+
+  // Load accumulator on mount
+  useEffect(() => {
+    const loadAccumulator = async () => {
+      const consultationId = searchParams.get('consultationId');
+      if (consultationId) {
+        const acc = await intelligenceConcierge.getBySessionId(consultationId);
+        if (acc) {
+          setAccumulator(acc);
+          console.log('🧠 [Brand Setup] Loaded accumulator:', acc.completionStage);
+        }
+      }
+    };
+    loadAccumulator();
+  }, [searchParams]);
 
   // Load demo session if session param exists, OR load consultation data
   // Also check if brand setup should be skipped (user already has brand data + brief generated)
@@ -771,6 +790,31 @@ export default function EnhancedBrandSetup() {
     
     // Get consultationId from URL params
     const consultationId = searchParams.get('consultationId');
+    
+    // 🧠 Merge brand data to accumulator if exists
+    if (consultationId && accumulator) {
+      try {
+        const accBrandData: BrandData = {
+          companyName: companyName,
+          website: websiteUrl,
+          logo: logo || undefined,
+          colors: {
+            primary: colors.primary,
+            secondary: colors.secondary,
+            accent: colors.accent,
+          },
+          fonts: {
+            heading: fontSettings.h1,
+            body: fontSettings.body,
+          },
+          extractionSource: extractionResults ? 'website' : (brandGuide ? 'upload' : 'manual'),
+        };
+        await intelligenceConcierge.addBrandData(consultationId, accBrandData);
+        console.log('🧠 [Brand Setup] Brand data merged to accumulator');
+      } catch (accError) {
+        console.error('🧠 [Brand Setup] Failed to merge brand data (non-blocking):', accError);
+      }
+    }
     
     if (consultationId) {
       // Save brand data and communication style to consultation
