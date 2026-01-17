@@ -68,6 +68,7 @@ import type { DesignSystem } from "@/config/designSystem";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { applyBrandColors } from "@/lib/colorUtils";
 import { generateDesignIntelligence, type DesignIntelligenceOutput } from "@/lib/designIntelligence";
+import { intelligenceConcierge } from "@/lib/intelligenceConcierge";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -997,6 +998,41 @@ function GenerateContent() {
       // Check for force regenerate query param (for testing)
       const searchParams = new URLSearchParams(window.location.search);
       const forceRegenerate = searchParams.get('regenerate') === 'true';
+      
+      // 🧠 INTELLIGENCE CONCIERGE: Synthesize strategy from accumulator if available
+      const sessionId = consultationData.id || consultationData.session_id;
+      if (sessionId) {
+        console.log('🧠 [Generation] Checking for intelligence accumulator:', sessionId);
+        try {
+          const accumulator = await intelligenceConcierge.synthesizeStrategy(sessionId);
+          
+          if (accumulator) {
+            console.log('🧠 [Generation] Strategy synthesized:', accumulator.strategyData);
+            console.log('🧠 [Generation] Using design conventions:', accumulator.marketData?.designConventions);
+            
+            // Enrich consultation data with accumulated intelligence
+            if (accumulator.consultationData) {
+              consultationData.accumulatorIndustry = accumulator.consultationData.industry;
+              consultationData.accumulatorAudience = accumulator.consultationData.audience;
+              consultationData.accumulatorValueProp = accumulator.consultationData.valueProp;
+            }
+            if (accumulator.marketData?.designConventions) {
+              consultationData.designConventions = accumulator.marketData.designConventions;
+            }
+            if (accumulator.strategyData) {
+              consultationData.strategyApproach = accumulator.strategyData;
+            }
+            if (accumulator.brandData) {
+              consultationData.accumulatorBrand = accumulator.brandData;
+            }
+            
+            console.log('🧠 [Generation] Page generation enriched with strategic intelligence');
+          }
+        } catch (accError) {
+          console.log('🧠 [Generation] No accumulator found, using standard generation:', accError);
+          // Continue with existing generation logic as fallback
+        }
+      }
       
       // Check if a page already exists for this consultation OR session
       const isDemoSession = !!consultationData.session_id;
