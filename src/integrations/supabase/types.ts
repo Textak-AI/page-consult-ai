@@ -755,6 +755,48 @@ export type Database = {
         }
         Relationships: []
       }
+      intelligence_accumulator: {
+        Row: {
+          brand_data: Json | null
+          completion_stage: string | null
+          consultation_data: Json | null
+          created_at: string
+          id: string
+          market_data: Json | null
+          readiness_score: number | null
+          session_id: string
+          strategy_data: Json | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          brand_data?: Json | null
+          completion_stage?: string | null
+          consultation_data?: Json | null
+          created_at?: string
+          id?: string
+          market_data?: Json | null
+          readiness_score?: number | null
+          session_id: string
+          strategy_data?: Json | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          brand_data?: Json | null
+          completion_stage?: string | null
+          consultation_data?: Json | null
+          created_at?: string
+          id?: string
+          market_data?: Json | null
+          readiness_score?: number | null
+          session_id?: string
+          strategy_data?: Json | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       landing_pages: {
         Row: {
           ai_seo_breakdown: Json | null
