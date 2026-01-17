@@ -456,10 +456,10 @@ export function StrategyBrief({
                 onClick={onGeneratePage}
                 className="w-full py-4 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-semibold text-lg"
               >
-                Generate Your Page →
+                Continue to Brand Setup →
               </Button>
               <p className="text-center text-xs text-slate-500 mt-2">
-                Your strategy is ready. Let's build your high-converting landing page.
+                Your brief is ready. Let's set up your brand so we can ensure alignment.
               </p>
             </div>
           )}
