@@ -1027,6 +1027,90 @@ export default function EnhancedBrandSetup() {
           </div>
         )}
 
+        {/* Intelligence Accumulator Summary */}
+        {accumulator && (
+          <div className="mb-8 bg-gradient-to-br from-purple-500/10 to-blue-500/10 backdrop-blur-sm rounded-xl border border-purple-500/20 p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="text-3xl">📊</div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Intelligence Gathered</h3>
+                <p className="text-sm text-purple-200">From your strategy consultation</p>
+              </div>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              {accumulator.consultationData?.industry && (
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-purple-300 uppercase tracking-wider">Industry</div>
+                  <p className="text-white font-medium">{accumulator.consultationData.industry}</p>
+                </div>
+              )}
+              
+              {accumulator.consultationData?.audience && (
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-purple-300 uppercase tracking-wider">Target Audience</div>
+                  <p className="text-white font-medium">{accumulator.consultationData.audience}</p>
+                </div>
+              )}
+              
+              {accumulator.consultationData?.valueProp && (
+                <div className="md:col-span-2 space-y-1">
+                  <div className="text-xs font-medium text-purple-300 uppercase tracking-wider">Value Proposition</div>
+                  <p className="text-white">{accumulator.consultationData.valueProp}</p>
+                </div>
+              )}
+              
+              {accumulator.consultationData?.edge && (
+                <div className="md:col-span-2 space-y-1">
+                  <div className="text-xs font-medium text-purple-300 uppercase tracking-wider">Competitive Edge</div>
+                  <p className="text-white">{accumulator.consultationData.edge}</p>
+                </div>
+              )}
+              
+              {accumulator.consultationData?.painPoints && accumulator.consultationData.painPoints.length > 0 && (
+                <div className="md:col-span-2 space-y-1">
+                  <div className="text-xs font-medium text-purple-300 uppercase tracking-wider">Key Pain Points</div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {accumulator.consultationData.painPoints.slice(0, 3).map((pain, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-purple-500/20 text-purple-100 text-sm rounded-full border border-purple-500/30">
+                        {pain}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="md:col-span-2 pt-4 border-t border-white/10">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-purple-300 uppercase tracking-wider">Intelligence Score</div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl font-bold text-white">{accumulator.readinessScore}/100</span>
+                      <span className="px-2 py-1 bg-green-500/20 text-green-300 text-xs font-medium rounded-full border border-green-500/30">
+                        ✓ Ready for Generation
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {accumulator.marketData?.designConventions && (
+                    <div className="text-right space-y-1">
+                      <div className="text-xs font-medium text-purple-300 uppercase tracking-wider">Design System</div>
+                      <div className="flex gap-2 justify-end">
+                        <span className="px-2 py-1 bg-slate-800/50 text-slate-300 text-xs rounded border border-slate-700">
+                          {accumulator.marketData.designConventions.colorMode === 'dark' ? '🌙 Dark' : '☀️ Light'}
+                        </span>
+                        <span className="px-2 py-1 bg-slate-800/50 text-slate-300 text-xs rounded border border-slate-700 capitalize">
+                          {accumulator.marketData.designConventions.cardStyle}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-8">
           {/* LEFT COLUMN - Extraction Panels */}
           <div className="flex-1 space-y-6">
