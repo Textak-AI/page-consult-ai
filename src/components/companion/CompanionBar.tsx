@@ -10,6 +10,7 @@ import { useLocation } from 'react-router-dom';
 const HIDDEN_ROUTES = [
   '/',           // Homepage with Strategy Session demo
   '/demo',       // Demo pages
+  '/try',        // Try demo page with full consultation interface
   '/new',        // New consultation wizard
   '/wizard',     // Wizard chat
   '/consultation', // Consultation chat
