@@ -1,11 +1,16 @@
 import { useNavigate } from 'react-router-dom';
 import { Edit3, Sparkles, Target, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { PageWithVersions } from './PageCard';
+
+interface SimplePage {
+  id: string;
+  title?: string;
+  status?: string;
+}
 
 interface PriorityActionProps {
-  drafts: PageWithVersions[];
-  pages: PageWithVersions[];
+  drafts: SimplePage[];
+  pages: SimplePage[];
   inProgressConsultation?: {
     id: string;
     industry?: string;

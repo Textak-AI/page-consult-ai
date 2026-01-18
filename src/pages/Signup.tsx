@@ -392,14 +392,10 @@ export default function Signup() {
           .limit(1)
           .maybeSingle();
 
-        if (existingConsultation) {
-          console.log('🚀 Login: Found existing consultation:', existingConsultation.id);
-          navigate(`/huddle?type=pre_brief&consultationId=${existingConsultation.id}`, { replace: true });
-          return;
-        }
-        
-        // No session, no consultation - go to default redirect
-        navigate(redirectTo, { replace: true });
+        // Always go to dashboard after login - don't auto-redirect to mid-flow pages
+        // User can choose to continue their work from the dashboard
+        console.log('🚀 Login: Going to dashboard (user can continue from there)');
+        navigate('/', { replace: true });
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,
