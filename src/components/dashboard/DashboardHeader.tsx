@@ -1,5 +1,6 @@
 import { FileText, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { capitalizeDisplayName } from '@/lib/formatters';
 
 interface DashboardHeaderProps {
   userName: string;
@@ -45,10 +46,13 @@ export function DashboardHeader({
   draftCount, 
   credits 
 }: DashboardHeaderProps) {
+  // Capitalize the user's display name
+  const displayName = capitalizeDisplayName(userName);
+
   const getGreeting = () => {
-    if (pageCount === 0) return `Let's build your first page, ${userName}`;
-    if (draftCount > 0) return `Welcome back, ${userName} — you have work in progress`;
-    return `Welcome back, ${userName}`;
+    if (pageCount === 0) return `Let's build your first page, ${displayName}`;
+    if (draftCount > 0) return `Welcome back, ${displayName} — you have work in progress`;
+    return `Welcome back, ${displayName}`;
   };
 
   const getSubtext = () => {

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, LogOut, User, Settings, ChevronDown, Zap, LayoutDashboard, Users } from "lucide-react";
+import { Plus, LogOut, Settings, ChevronDown, Zap, LayoutDashboard, Users } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,10 +14,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { capitalizeDisplayName, getNameInitials } from "@/lib/formatters";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [logoLoaded, setLogoLoaded] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const { credits } = useCredits(user?.id ?? null);
@@ -29,6 +32,22 @@ const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Fetch user profile for avatar
+  useEffect(() => {
+    if (user?.id) {
+      supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.avatar_url) {
+            setAvatarUrl(data.avatar_url);
+          }
+        });
+    }
+  }, [user?.id]);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -48,15 +67,19 @@ const Header = () => {
   };
 
   const getUserDisplayName = () => {
-    if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
-    if (user?.user_metadata?.name) return user.user_metadata.name;
-    if (user?.email) return user.email.split('@')[0];
-    return 'Account';
+    const rawName = user?.user_metadata?.full_name 
+      || user?.user_metadata?.name 
+      || user?.email?.split('@')[0] 
+      || 'Account';
+    return capitalizeDisplayName(rawName);
   };
 
   const getUserInitials = () => {
-    const name = getUserDisplayName();
-    return name.charAt(0).toUpperCase();
+    const name = user?.user_metadata?.full_name 
+      || user?.user_metadata?.name 
+      || user?.email?.split('@')[0] 
+      || 'U';
+    return getNameInitials(name) || name.charAt(0).toUpperCase();
   };
 
   return (
@@ -181,9 +204,12 @@ const Header = () => {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-primary-foreground font-medium text-sm">
-                        {getUserInitials()}
-                      </div>
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={avatarUrl || undefined} alt={getUserDisplayName()} />
+                        <AvatarFallback className="bg-gradient-to-r from-primary to-secondary text-primary-foreground font-medium text-sm">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      </Avatar>
                       <ChevronDown className="w-4 h-4 hidden sm:block" />
                     </button>
                   </DropdownMenuTrigger>

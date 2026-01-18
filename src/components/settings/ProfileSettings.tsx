@@ -133,22 +133,45 @@ export function ProfileSettings() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be less than 2MB');
+      return;
+    }
+
     setUploading(true);
     try {
       const fileExt = file.name.split(".").pop();
       const filePath = `${user.id}/avatar.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("brand-assets")
+        .from("avatars")
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from("brand-assets")
+        .from("avatars")
         .getPublicUrl(filePath);
 
-      setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
+      // Add cache buster to prevent stale images
+      const urlWithCacheBuster = `${publicUrl}?t=${Date.now()}`;
+
+      // Update profile in database
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: urlWithCacheBuster })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => ({ ...prev, avatar_url: urlWithCacheBuster }));
       toast.success("Avatar uploaded!");
     } catch (error) {
       console.error("Error uploading avatar:", error);
