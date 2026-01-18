@@ -6,7 +6,8 @@ import { HuddleIntelligenceCards } from '@/components/huddle/HuddleIntelligenceC
 import { HuddleGapCallout } from '@/components/huddle/HuddleGapCallout';
 import { HuddleCTAs } from '@/components/huddle/HuddleCTAs';
 import { updateFlowState } from '@/services/flowEngine';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface HuddleContent {
   recap: string;
@@ -384,20 +385,39 @@ export default function Huddle() {
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white">
       <div className="max-w-2xl mx-auto px-4 py-12">
+        {/* Navigation Header */}
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/')}
+            className="text-gray-400 hover:text-white -ml-2"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </div>
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-violet-600 flex items-center justify-center text-lg">
               🎯
             </div>
-            <h1 className="text-xl font-semibold">Strategy Huddle</h1>
+            <div>
+              <h1 className="text-xl font-semibold">
+                Strategy Huddle {consultation?.industry && <span className="text-gray-400 font-normal">for {consultation.industry}</span>}
+              </h1>
+            </div>
           </div>
-          <button
-            onClick={handleSkip}
-            className="text-sm text-gray-400 hover:text-white transition-colors"
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/')}
+            className="text-gray-400 hover:text-white"
           >
-            Skip →
-          </button>
+            Skip <X className="w-4 h-4 ml-1" />
+          </Button>
         </div>
 
         {/* Recap */}

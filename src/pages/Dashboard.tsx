@@ -11,21 +11,39 @@ import { TrialBanner } from '@/components/trial/TrialBanner';
 import { StrategyBrief } from '@/components/strategy-brief/StrategyBrief';
 import { QuickPivotModal } from '@/components/quick-pivot';
 import { 
-  Plus, Sparkles, Zap, Search, FileText, Clock, Edit3, ArrowRight
+  Plus, Sparkles, Search, FileText, Zap
 } from 'lucide-react';
-import { format, parseISO, startOfDay } from 'date-fns';
-import { DayAccordion } from '@/components/dashboard/DayAccordion';
-import { PageWithVersions, PageVersion } from '@/components/dashboard/PageCard';
+import { format, parseISO } from 'date-fns';
+import { StatusCard } from '@/components/dashboard/StatusCard';
+import { PageItem } from '@/components/dashboard/PageItem';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { PriorityAction } from '@/components/dashboard/PriorityAction';
 import { ActionCards } from '@/components/dashboard/ActionCards';
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 import { useCredits } from '@/hooks/useCredits';
 import { useToast } from '@/hooks/use-toast';
-interface DayGroup {
-  date: Date;
-  pages: PageWithVersions[];
-  totalVersions: number;
+interface PageVersion {
+  id: string;
+  updated_at: string;
+  is_current_version: boolean;
+  last_change_summary?: string | null;
+}
+
+interface PageWithVersions {
+  id: string;
+  title?: string;
+  slug: string;
+  status?: string;
+  updated_at: string;
+  view_count?: number;
+  published_url?: string;
+  sections?: any;
+  consultation_data?: any;
+  styles?: any;
+  parent_page_id?: string | null;
+  is_current_version?: boolean;
+  consultation_id?: string | null;
+  versions?: PageVersion[];
 }
 
 export default function Dashboard() {
@@ -128,38 +146,25 @@ export default function Dashboard() {
     }));
   }, [landingPages]);
 
-  // Group pages by day
-  const dayGroups = useMemo(() => {
-    const filtered = searchQuery
-      ? pagesWithVersions.filter(p => 
-          p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (p.consultation_data as any)?.industry?.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      : pagesWithVersions;
-
-    const groups: Map<string, DayGroup> = new Map();
-
-    filtered.forEach(page => {
-      const dayKey = format(parseISO(page.updated_at), 'yyyy-MM-dd');
-      
-      if (!groups.has(dayKey)) {
-        groups.set(dayKey, {
-          date: startOfDay(parseISO(page.updated_at)),
-          pages: [],
-          totalVersions: 0
-        });
-      }
-
-      const group = groups.get(dayKey)!;
-      group.pages.push(page);
-      group.totalVersions += page.versions?.length || 1;
-    });
-
-    // Sort by date descending
-    return Array.from(groups.values()).sort(
-      (a, b) => b.date.getTime() - a.date.getTime()
+  // Filter pages by search query
+  const filteredPages = useMemo(() => {
+    if (!searchQuery) return pagesWithVersions;
+    return pagesWithVersions.filter(p => 
+      p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.consultation_data as any)?.industry?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [pagesWithVersions, searchQuery]);
+
+  // Split pages by status
+  const inProgressPages = useMemo(() => {
+    return filteredPages.filter(p => 
+      !p.status || p.status === 'draft'
+    );
+  }, [filteredPages]);
+
+  const publishedPages = useMemo(() => {
+    return filteredPages.filter(p => p.status === 'published');
+  }, [filteredPages]);
 
   // Calculate actual page count (unique pages, not versions)
   const actualPageCount = pagesWithVersions.length;
@@ -400,27 +405,11 @@ export default function Dashboard() {
                   />
                 </div>
 
-                {/* Day Groups */}
+                {/* Status-Based Page Cards */}
                 {isLoading ? (
                   <div className="text-center py-16">
                     <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-muted-foreground">Loading your pages...</p>
-                  </div>
-                ) : dayGroups.length > 0 ? (
-                  <div className="space-y-4">
-                    {dayGroups.map((group, index) => (
-                      <DayAccordion
-                        key={format(group.date, 'yyyy-MM-dd')}
-                        date={group.date}
-                        pages={group.pages}
-                        totalVersions={group.totalVersions}
-                        defaultExpanded={index === 0}
-                        onEditPage={handleEditPage}
-                        onRestoreVersion={handleRestoreVersion}
-                        onDeletePage={handleDeletePage}
-                        onDuplicatePage={handleDuplicatePage}
-                      />
-                    ))}
                   </div>
                 ) : actualPageCount === 0 && !inProgressConsultation ? (
                   <div className="text-center py-16 border border-dashed border-border rounded-xl">
@@ -439,11 +428,58 @@ export default function Dashboard() {
                       Start Strategic Consultation
                     </Button>
                   </div>
-                ) : searchQuery ? (
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground">No pages found matching "{searchQuery}"</p>
+                ) : (
+                  <div className="space-y-4">
+                    {/* In Progress Section */}
+                    <StatusCard 
+                      title="In Progress" 
+                      count={inProgressPages.length} 
+                      status="in-progress"
+                      emptyMessage="No drafts in progress"
+                      defaultExpanded={true}
+                    >
+                      {inProgressPages.map(page => (
+                        <PageItem
+                          key={page.id}
+                          page={page}
+                          status={page.consultation_id ? 'mid-consultation' : 'draft'}
+                          onEdit={() => navigate(`/generate?id=${page.id}`)}
+                          onContinue={page.consultation_id ? () => navigate(`/huddle?type=pre_brief&consultationId=${page.consultation_id}`) : undefined}
+                          onDuplicate={() => handleDuplicatePage(page.id)}
+                          onArchive={() => handleDeletePage(page.id)}
+                        />
+                      ))}
+                    </StatusCard>
+
+                    {/* Published Section */}
+                    <StatusCard 
+                      title="Published" 
+                      count={publishedPages.length} 
+                      status="published"
+                      emptyMessage="No published pages yet"
+                      defaultExpanded={publishedPages.length > 0}
+                    >
+                      {publishedPages.map(page => (
+                        <PageItem
+                          key={page.id}
+                          page={page}
+                          status="published"
+                          onEdit={() => navigate(`/generate?id=${page.id}`)}
+                          onView={() => window.open(page.published_url || `/preview/${page.slug}`, '_blank')}
+                          onDuplicate={() => handleDuplicatePage(page.id)}
+                          onArchive={() => handleDeletePage(page.id)}
+                        />
+                      ))}
+                    </StatusCard>
+
+                    {/* No results from search */}
+                    {searchQuery && inProgressPages.length === 0 && publishedPages.length === 0 && (
+                      <div className="text-center py-12">
+                        <p className="text-muted-foreground">No pages found matching "{searchQuery}"</p>
+                      </div>
+                    )}
                   </div>
-                ) : null}
+                )}
               </div>
 
               {/* Completed Consultations with Strategy Briefs */}
