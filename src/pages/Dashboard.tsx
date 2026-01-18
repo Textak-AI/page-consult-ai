@@ -11,14 +11,17 @@ import { TrialBanner } from '@/components/trial/TrialBanner';
 import { StrategyBrief } from '@/components/strategy-brief/StrategyBrief';
 import { QuickPivotModal } from '@/components/quick-pivot';
 import { 
-  Plus, ArrowRight, Clock, Sparkles, 
-  Zap, Search, FileText, Edit3
+  Plus, Sparkles, Zap, Search, FileText, Clock, Edit3, ArrowRight
 } from 'lucide-react';
 import { format, parseISO, startOfDay } from 'date-fns';
 import { DayAccordion } from '@/components/dashboard/DayAccordion';
 import { PageWithVersions, PageVersion } from '@/components/dashboard/PageCard';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { PriorityAction } from '@/components/dashboard/PriorityAction';
+import { ActionCards } from '@/components/dashboard/ActionCards';
+import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
+import { useCredits } from '@/hooks/useCredits';
 import { useToast } from '@/hooks/use-toast';
-
 interface DayGroup {
   date: Date;
   pages: PageWithVersions[];
@@ -322,249 +325,182 @@ export default function Dashboard() {
     }
   };
 
+  // Get credits info
+  const { credits } = useCredits(user?.id ?? null);
+
+  // Calculate draft count (pages with status draft or no status)
+  const draftCount = useMemo(() => {
+    return pagesWithVersions.filter(p => !p.status || p.status === 'draft').length;
+  }, [pagesWithVersions]);
+
+  // Prepare in-progress consultation data for PriorityAction
+  const priorityConsultation = inProgressConsultation ? {
+    id: inProgressConsultation.id,
+    industry: inProgressConsultation.industry,
+    existingPage: inProgressConsultation.existingPage
+  } : null;
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <TrialBanner />
       
       <main className="pt-24 pb-16">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          {/* Welcome Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Welcome back{getUserDisplayName() ? `, ${getUserDisplayName()}` : ''}
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              {actualPageCount > 0 
-                ? `You have ${actualPageCount} landing page${actualPageCount > 1 ? 's' : ''}`
-                : "Let's build your first high-converting landing page"
-              }
-            </p>
-          </div>
+          {/* Smart Header */}
+          <DashboardHeader
+            userName={getUserDisplayName()}
+            pageCount={actualPageCount}
+            draftCount={draftCount}
+            credits={credits.available}
+          />
 
-          {/* In Progress Alert */}
-          {inProgressConsultation && (
-            <div className="mb-8">
-              <div className={`bg-card border border-border rounded-lg p-5 ${hasExistingPage ? 'border-l-4 border-l-success' : 'border-l-4 border-l-primary'}`}>
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-lg ${hasExistingPage ? 'bg-success/10' : 'bg-primary/10'}`}>
-                      {hasExistingPage ? (
-                        <Edit3 className={`w-6 h-6 text-success`} />
-                      ) : (
-                        <Clock className="w-6 h-6 text-primary" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-foreground font-semibold">
-                        {hasExistingPage ? 'Page Ready for Editing' : 'Consultation in Progress'}
-                      </p>
-                      <p className="text-muted-foreground text-sm">
-                        {hasExistingPage 
-                          ? `${existingPageTitle || inProgressConsultation.industry || 'Your Page'} — Continue editing your landing page`
-                          : `${inProgressConsultation.industry || 'Untitled'} — Continue where you left off`
-                        }
-                      </p>
-                    </div>
+          {/* Main Content + Sidebar Layout */}
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Main Content */}
+            <div className="flex-1 min-w-0">
+              {/* Priority Action */}
+              <PriorityAction
+                drafts={pagesWithVersions.filter(p => !p.status || p.status === 'draft')}
+                pages={pagesWithVersions}
+                inProgressConsultation={priorityConsultation}
+                onQuickPivot={() => setQuickPivotOpen(true)}
+              />
+
+              {/* Action Cards Grid */}
+              <ActionCards onQuickPivot={() => setQuickPivotOpen(true)} />
+
+              {/* Your Pages Section */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-foreground">Your Pages</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {actualPageCount} {actualPageCount === 1 ? 'page' : 'pages'}
+                    </p>
                   </div>
                   <Button 
-                    onClick={() => handleContinueConsultation(inProgressConsultation.id)}
-                    variant={hasExistingPage ? 'secondary' : 'default'}
+                    onClick={() => navigate('/new')}
+                    variant="premium"
                   >
-                    {hasExistingPage ? 'Edit Page' : 'Continue'}
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Page
                   </Button>
                 </div>
-              </div>
-            </div>
-          )}
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
-            <button
-              onClick={() => navigate('/new')}
-              className="p-6 bg-card border border-border rounded-lg 
-                         hover:border-primary/50 hover:bg-muted/30 transition-all duration-200 text-left group"
-            >
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                <Plus className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-foreground font-semibold mb-1">
-                New Landing Page
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                Start a strategic consultation
-              </p>
-            </button>
-
-            <button
-              onClick={() => setQuickPivotOpen(true)}
-              className="p-6 bg-card border border-primary/30 rounded-lg 
-                         hover:border-primary/60 hover:bg-primary/5 transition-all duration-200 text-left group"
-            >
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                <Zap className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-foreground font-semibold mb-1">
-                Quick Pivot
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                Personalized prospect pages
-              </p>
-            </button>
-            
-            <button
-              onClick={() => navigate('/brand-setup')}
-              className="p-6 bg-card border border-border rounded-lg 
-                         hover:border-secondary/50 hover:bg-muted/30 transition-all duration-200 text-left group"
-            >
-              <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors">
-                <Sparkles className="w-6 h-6 text-secondary" />
-              </div>
-              <h3 className="text-foreground font-semibold mb-1">
-                Brand Setup
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                Configure your brand identity
-              </p>
-            </button>
-            
-            <button
-              onClick={() => navigate('/settings')}
-              className="p-6 bg-card border border-border rounded-lg 
-                         hover:border-muted-foreground/30 hover:bg-muted/30 transition-all duration-200 text-left group"
-            >
-              <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center mb-4 group-hover:bg-muted/80 transition-colors">
-                <Zap className="w-6 h-6 text-muted-foreground" />
-              </div>
-              <h3 className="text-foreground font-semibold mb-1">
-                Account Settings
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                Manage your account & credits
-              </p>
-            </button>
-          </div>
-
-          {/* Your Pages Section */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold text-foreground">Your Pages</h2>
-                <p className="text-sm text-muted-foreground">
-                  {actualPageCount} {actualPageCount === 1 ? 'page' : 'pages'}
-                </p>
-              </div>
-              <Button 
-                onClick={() => navigate('/new')}
-                variant="premium"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New Page
-              </Button>
-            </div>
-
-            {/* Search */}
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search pages..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-card border-border"
-              />
-            </div>
-
-            {/* Day Groups */}
-            {isLoading ? (
-              <div className="text-center py-16">
-                <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-muted-foreground">Loading your pages...</p>
-              </div>
-            ) : dayGroups.length > 0 ? (
-              <div className="space-y-4">
-                {dayGroups.map((group, index) => (
-                  <DayAccordion
-                    key={format(group.date, 'yyyy-MM-dd')}
-                    date={group.date}
-                    pages={group.pages}
-                    totalVersions={group.totalVersions}
-                    defaultExpanded={index === 0}
-                    onEditPage={handleEditPage}
-                    onRestoreVersion={handleRestoreVersion}
-                    onDeletePage={handleDeletePage}
-                    onDuplicatePage={handleDuplicatePage}
+                {/* Search */}
+                <div className="relative max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search pages..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-card border-border"
                   />
-                ))}
-              </div>
-            ) : actualPageCount === 0 && !inProgressConsultation ? (
-              <div className="text-center py-16 border border-dashed border-border rounded-xl">
-                <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FileText className="w-10 h-10 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">No pages yet</h3>
-                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Start your first strategic consultation to create a high-converting landing page in minutes.
-                </p>
-                <Button 
-                  onClick={() => navigate('/new')}
-                  className="bg-gradient-to-r from-primary to-secondary"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Start Strategic Consultation
-                </Button>
-              </div>
-            ) : searchQuery ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">No pages found matching "{searchQuery}"</p>
-              </div>
-            ) : null}
-          </div>
 
-          {/* Completed Consultations with Strategy Briefs */}
-          {consultations && consultations.filter(c => 
-            c.consultation_status === 'proven' || c.status === 'completed'
-          ).length > 0 && (
-            <div className="mt-10 space-y-4">
-              <h2 className="text-xl font-semibold text-foreground">Strategy Briefs</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                Download your AI-generated strategy briefs from completed consultations
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {consultations
-                  .filter(c => c.consultation_status === 'proven' || c.status === 'completed')
-                  .map(consultation => (
-                    <div 
-                      key={consultation.id}
-                      className="p-4 bg-card border border-border rounded-xl flex items-center justify-between gap-4"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-foreground truncate">
-                          {consultation.business_name || consultation.industry || 'Strategy Brief'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {consultation.target_audience ? `For ${consultation.target_audience}` : 'Completed consultation'}
-                        </p>
-                      </div>
-                      <Button
-                        onClick={() => {
-                          setSelectedConsultation(consultation);
-                          setShowBrief(true);
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 shrink-0"
-                      >
-                        <FileText className="w-4 h-4 mr-2" />
-                        View Brief
-                      </Button>
+                {/* Day Groups */}
+                {isLoading ? (
+                  <div className="text-center py-16">
+                    <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-muted-foreground">Loading your pages...</p>
+                  </div>
+                ) : dayGroups.length > 0 ? (
+                  <div className="space-y-4">
+                    {dayGroups.map((group, index) => (
+                      <DayAccordion
+                        key={format(group.date, 'yyyy-MM-dd')}
+                        date={group.date}
+                        pages={group.pages}
+                        totalVersions={group.totalVersions}
+                        defaultExpanded={index === 0}
+                        onEditPage={handleEditPage}
+                        onRestoreVersion={handleRestoreVersion}
+                        onDeletePage={handleDeletePage}
+                        onDuplicatePage={handleDuplicatePage}
+                      />
+                    ))}
+                  </div>
+                ) : actualPageCount === 0 && !inProgressConsultation ? (
+                  <div className="text-center py-16 border border-dashed border-border rounded-xl">
+                    <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                      <FileText className="w-10 h-10 text-muted-foreground" />
                     </div>
-                  ))}
+                    <h3 className="text-xl font-semibold text-foreground mb-2">No pages yet</h3>
+                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                      Start your first strategic consultation to create a high-converting landing page in minutes.
+                    </p>
+                    <Button 
+                      onClick={() => navigate('/new')}
+                      className="bg-gradient-to-r from-primary to-secondary"
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Start Strategic Consultation
+                    </Button>
+                  </div>
+                ) : searchQuery ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No pages found matching "{searchQuery}"</p>
+                  </div>
+                ) : null}
               </div>
-            </div>
-          )}
 
+              {/* Completed Consultations with Strategy Briefs */}
+              {consultations && consultations.filter(c => 
+                c.consultation_status === 'proven' || c.status === 'completed'
+              ).length > 0 && (
+                <div className="mt-10 space-y-4">
+                  <h2 className="text-xl font-semibold text-foreground">Strategy Briefs</h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Download your AI-generated strategy briefs from completed consultations
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {consultations
+                      .filter(c => c.consultation_status === 'proven' || c.status === 'completed')
+                      .map(consultation => (
+                        <div 
+                          key={consultation.id}
+                          className="p-4 bg-card border border-border rounded-xl flex items-center justify-between gap-4"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-foreground truncate">
+                              {consultation.business_name || consultation.industry || 'Strategy Brief'}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {consultation.target_audience ? `For ${consultation.target_audience}` : 'Completed consultation'}
+                            </p>
+                          </div>
+                          <Button
+                            onClick={() => {
+                              setSelectedConsultation(consultation);
+                              setShowBrief(true);
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="border-primary/30 text-primary hover:bg-primary/10 shrink-0"
+                          >
+                            <FileText className="w-4 h-4 mr-2" />
+                            View Brief
+                          </Button>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar - Hidden on mobile */}
+            <aside className="hidden lg:block w-80 flex-shrink-0">
+              <div className="sticky top-28">
+                <DashboardSidebar
+                  credits={credits.available}
+                  totalCredits={credits.total}
+                  tier={credits.plan}
+                />
+              </div>
+            </aside>
+          </div>
         </div>
       </main>
       
