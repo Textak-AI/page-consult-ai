@@ -13,14 +13,32 @@ function TryDemoContent() {
   const { updateExtracted } = useIntelligence();
   
   const fromDashboard = searchParams.get('from') === 'dashboard';
-  const [brandCheckComplete, setBrandCheckComplete] = useState(!fromDashboard);
+  const [brandCheckComplete, setBrandCheckComplete] = useState(false);
   const [showBrandPrompt, setShowBrandPrompt] = useState(false);
+
+  // Debug logging
+  console.log('🏢 [TryDemo] Render state:', {
+    fromDashboard,
+    authLoading,
+    user: user?.id || null,
+    showBrandPrompt,
+    brandCheckComplete,
+  });
 
   // Only show brand detection for authenticated users coming from dashboard
   useEffect(() => {
-    if (fromDashboard && !authLoading && user) {
+    console.log('🏢 [TryDemo] Effect triggered:', { fromDashboard, authLoading, hasUser: !!user });
+    
+    if (authLoading) {
+      console.log('🏢 [TryDemo] Auth still loading, waiting...');
+      return;
+    }
+
+    if (fromDashboard && user) {
+      console.log('🏢 [TryDemo] Dashboard entry with user - showing brand prompt');
       setShowBrandPrompt(true);
-    } else if (!authLoading) {
+    } else {
+      console.log('🏢 [TryDemo] Non-dashboard entry or no user - skipping brand check');
       setBrandCheckComplete(true);
     }
   }, [fromDashboard, authLoading, user]);
@@ -34,6 +52,8 @@ function TryDemoContent() {
     brand_colors: { primary?: string; secondary?: string; accent?: string } | null;
     tone_profile: string[] | null;
   }) => {
+    console.log('🏢 [TryDemo] handleUseBrand called with:', brand.name);
+    
     // Prefill the intelligence with brand data
     updateExtracted({
       industry: brand.industry,
@@ -53,6 +73,7 @@ function TryDemoContent() {
   };
 
   const handleSkipBrand = () => {
+    console.log('🏢 [TryDemo] handleSkipBrand called');
     setShowBrandPrompt(false);
     setBrandCheckComplete(true);
   };
