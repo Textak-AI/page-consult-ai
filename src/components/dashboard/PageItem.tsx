@@ -1,4 +1,4 @@
-import { ArrowRight, ExternalLink, Edit3, MoreHorizontal } from 'lucide-react';
+import { ArrowRight, ExternalLink, Edit3, MoreHorizontal, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ interface PageItemProps {
     published_url?: string;
     slug?: string;
     consultation_id?: string;
+    target_market?: string;
   };
   status: PageStatus;
   onEdit: () => void;
@@ -47,6 +48,15 @@ export function PageItem({
       <div className="min-w-0 flex-1">
         <h4 className="font-medium text-foreground truncate">{title}</h4>
         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1 flex-wrap">
+          {page.target_market && (
+            <>
+              <span className="flex items-center gap-1 text-cyan-400">
+                <Target className="w-3 h-3" />
+                {page.target_market}
+              </span>
+              <span>·</span>
+            </>
+          )}
           {status === 'published' && (
             <>
               <span className="text-emerald-400 font-medium">Live</span>
