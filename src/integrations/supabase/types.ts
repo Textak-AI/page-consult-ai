@@ -219,6 +219,62 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_memory: {
+        Row: {
+          brand_id: string
+          case_studies: Json | null
+          client_logos: string[] | null
+          common_objections: string[] | null
+          conversation_insights: string[] | null
+          created_at: string | null
+          credentials: string[] | null
+          id: string
+          known_audiences: Json | null
+          objection_responses: Json | null
+          results: string[] | null
+          testimonials: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          brand_id: string
+          case_studies?: Json | null
+          client_logos?: string[] | null
+          common_objections?: string[] | null
+          conversation_insights?: string[] | null
+          created_at?: string | null
+          credentials?: string[] | null
+          id?: string
+          known_audiences?: Json | null
+          objection_responses?: Json | null
+          results?: string[] | null
+          testimonials?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          brand_id?: string
+          case_studies?: Json | null
+          client_logos?: string[] | null
+          common_objections?: string[] | null
+          conversation_insights?: string[] | null
+          created_at?: string | null
+          credentials?: string[] | null
+          id?: string
+          known_audiences?: Json | null
+          objection_responses?: Json | null
+          results?: string[] | null
+          testimonials?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_memory_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_scene_cache: {
         Row: {
           cache_key: string
@@ -279,6 +335,54 @@ export type Database = {
           id?: string
           scenes_count?: number | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      brands: {
+        Row: {
+          brand_colors: Json | null
+          color_mode: string | null
+          created_at: string | null
+          id: string
+          industry: string | null
+          industry_vertical: string | null
+          is_default: boolean | null
+          name: string
+          tone_profile: string[] | null
+          updated_at: string | null
+          user_id: string
+          vocabulary_notes: string | null
+          website: string | null
+        }
+        Insert: {
+          brand_colors?: Json | null
+          color_mode?: string | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          industry_vertical?: string | null
+          is_default?: boolean | null
+          name: string
+          tone_profile?: string[] | null
+          updated_at?: string | null
+          user_id: string
+          vocabulary_notes?: string | null
+          website?: string | null
+        }
+        Update: {
+          brand_colors?: Json | null
+          color_mode?: string | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          industry_vertical?: string | null
+          is_default?: boolean | null
+          name?: string
+          tone_profile?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+          vocabulary_notes?: string | null
+          website?: string | null
         }
         Relationships: []
       }
@@ -355,6 +459,7 @@ export type Database = {
           audience_goals: string[] | null
           audience_pain_points: string[] | null
           authority_markers: string[] | null
+          brand_id: string | null
           brief_versions: Json | null
           business_name: string | null
           calculator_config: Json | null
@@ -400,6 +505,7 @@ export type Database = {
           audience_goals?: string[] | null
           audience_pain_points?: string[] | null
           authority_markers?: string[] | null
+          brand_id?: string | null
           brief_versions?: Json | null
           business_name?: string | null
           calculator_config?: Json | null
@@ -445,6 +551,7 @@ export type Database = {
           audience_goals?: string[] | null
           audience_pain_points?: string[] | null
           authority_markers?: string[] | null
+          brand_id?: string | null
           brief_versions?: Json | null
           business_name?: string | null
           calculator_config?: Json | null
@@ -485,6 +592,13 @@ export type Database = {
           website_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "consultations_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "consultations_guest_session_id_fkey"
             columns: ["guest_session_id"]
@@ -803,6 +917,7 @@ export type Database = {
           ai_seo_last_calculated: string | null
           ai_seo_score: number | null
           analytics_enabled: boolean | null
+          brand_id: string | null
           consultation_data: Json | null
           consultation_id: string | null
           created_at: string
@@ -838,6 +953,7 @@ export type Database = {
           ai_seo_last_calculated?: string | null
           ai_seo_score?: number | null
           analytics_enabled?: boolean | null
+          brand_id?: string | null
           consultation_data?: Json | null
           consultation_id?: string | null
           created_at?: string
@@ -873,6 +989,7 @@ export type Database = {
           ai_seo_last_calculated?: string | null
           ai_seo_score?: number | null
           analytics_enabled?: boolean | null
+          brand_id?: string | null
           consultation_data?: Json | null
           consultation_id?: string | null
           created_at?: string
@@ -904,6 +1021,13 @@ export type Database = {
           website_intelligence?: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "landing_pages_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "landing_pages_consultation_id_fkey"
             columns: ["consultation_id"]
