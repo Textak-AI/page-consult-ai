@@ -414,7 +414,7 @@ export default function Dashboard() {
                     </p>
                   </div>
                   <Button 
-                    onClick={() => navigate('/new')}
+                    onClick={() => navigate('/try?from=dashboard')}
                     variant="premium"
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -467,7 +467,7 @@ export default function Dashboard() {
                       Start your first strategic consultation to create a high-converting landing page in minutes.
                     </p>
                     <Button 
-                      onClick={() => navigate('/new')}
+                      onClick={() => navigate('/try?from=dashboard')}
                       className="bg-gradient-to-r from-primary to-secondary"
                     >
                       <Sparkles className="w-4 h-4 mr-2" />
