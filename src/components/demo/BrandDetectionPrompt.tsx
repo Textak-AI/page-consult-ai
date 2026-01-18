@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, Check, X, Loader2, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,20 +25,44 @@ interface BrandDetectionPromptProps {
 }
 
 export function BrandDetectionPrompt({ onUseBrand, onSkip }: BrandDetectionPromptProps) {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [brand, setBrand] = useState<BrandData | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const hasChecked = useRef(false);
+  const onSkipRef = useRef(onSkip);
+  
+  // Keep ref updated
+  onSkipRef.current = onSkip;
 
   useEffect(() => {
+    // Wait for auth to finish loading
+    if (authLoading) {
+      console.log('🔍 [BrandDetection] Waiting for auth to load...');
+      return;
+    }
+
+    // Prevent double execution
+    if (hasChecked.current) {
+      console.log('🔍 [BrandDetection] Already checked, skipping...');
+      return;
+    }
+
     const checkForBrand = async () => {
+      hasChecked.current = true;
+      console.log('🔍 [BrandDetection] Starting brand check...');
+      console.log('🔍 [BrandDetection] User:', user?.id || 'null');
+
       if (!user) {
+        console.log('⏭️ [BrandDetection] No user, skipping to consultation');
         setIsLoading(false);
-        onSkip();
+        onSkipRef.current();
         return;
       }
 
       try {
+        console.log('🔍 [BrandDetection] Querying brands table for user:', user.id);
+        
         // Fetch user's default or most recent brand
         const { data, error } = await supabase
           .from('brands')
@@ -49,47 +73,54 @@ export function BrandDetectionPrompt({ onUseBrand, onSkip }: BrandDetectionPromp
           .limit(1)
           .maybeSingle();
 
+        console.log('🔍 [BrandDetection] Query result:', { data, error });
+
         if (error) {
-          console.error('Error fetching brand:', error);
+          console.error('❌ [BrandDetection] Error fetching brand:', error);
           setIsLoading(false);
-          onSkip();
+          onSkipRef.current();
           return;
         }
 
         if (data && data.name) {
+          console.log('✅ [BrandDetection] Brand found:', data.name);
           setBrand(data as BrandData);
           setIsLoading(false);
           setIsVisible(true);
         } else {
+          console.log('⏭️ [BrandDetection] No brand found, skipping to consultation');
           setIsLoading(false);
-          onSkip();
+          onSkipRef.current();
         }
       } catch (err) {
-        console.error('Failed to check for brand:', err);
+        console.error('❌ [BrandDetection] Failed to check for brand:', err);
         setIsLoading(false);
-        onSkip();
+        onSkipRef.current();
       }
     };
 
     checkForBrand();
-  }, [user, onSkip]);
+  }, [user, authLoading]);
 
   const handleUseBrand = () => {
     if (brand) {
+      console.log('🏢 [BrandDetection] User chose to use brand:', brand.name);
       setIsVisible(false);
       setTimeout(() => onUseBrand(brand), 300);
     }
   };
 
   const handleSkip = () => {
+    console.log('⏭️ [BrandDetection] User chose to start fresh');
     setIsVisible(false);
     setTimeout(() => onSkip(), 300);
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-4">
-        <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+      <div className="flex flex-col items-center justify-center py-8 gap-3">
+        <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
+        <p className="text-slate-400 text-sm">Checking for your brand setup...</p>
       </div>
     );
   }
