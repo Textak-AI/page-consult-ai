@@ -134,6 +134,57 @@ All colors MUST be HSL.
     --sidebar-border: 217 19% 27%;
     --sidebar-ring: 263 70% 65%;
   }
+
+  /* SDI Color Mode Variants - applied to generated page content */
+  /* Light mode variant for preview content */
+  [data-mode="light"] {
+    --background: 0 0% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --border: 214 32% 91%;
+    --input: 210 40% 96%;
+    --primary: 263 70% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 191 91% 37%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 191 91% 37%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --ring: 263 70% 50%;
+    --hero-gradient-start: 0 0% 98%;
+    --hero-gradient-end: 210 40% 96%;
+  }
+
+  /* Dark mode variant for preview content (explicit) */
+  [data-mode="dark"] {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 217 33% 17%;
+    --card-foreground: 210 40% 98%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 16% 57%;
+    --border: 217 19% 27%;
+    --input: 217 33% 17%;
+    --primary: 263 70% 65%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 191 91% 43%;
+    --secondary-foreground: 210 40% 98%;
+    --accent: 191 91% 43%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 263 70% 65%;
+    --hero-gradient-start: 222 47% 11%;
+    --hero-gradient-end: 222 47% 9%;
+  }
 }
 
 @layer base {

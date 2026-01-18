@@ -318,7 +318,7 @@ function GenerateContent() {
   
   // Strategic Design Intelligence - infers typography, colors, layout from conversation
   const [designIntelligence, setDesignIntelligence] = useState<DesignIntelligenceOutput | null>(null);
-
+  
 
 
   // Apply brand colors when nav state is available OR load from DB
@@ -3678,6 +3678,13 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           onSectionsChange={setSections} 
           cssVariables={cssVariables}
           iconStyle={designSystem?.components?.iconStyle}
+          colorMode={(() => {
+            const mode = consultation?.designIntelligence?.colors?.mode ||
+                        consultation?.colorMode ||
+                        strategicData?.consultationData?.colorMode ||
+                        'dark';
+            return (mode === 'light' || mode === 'warm') ? 'light' : 'dark';
+          })()}
           getSectionLockStatus={pageBuilder.getSectionLockStatus}
         />
       </div>
