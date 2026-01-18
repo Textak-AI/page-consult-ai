@@ -54,6 +54,7 @@ interface LivePreviewProps {
   iconStyle?: "outline" | "solid" | "duotone";
   strategyBrief?: any;
   seoData?: SEOHeadData;
+  colorMode?: 'light' | 'dark';
   getSectionLockStatus?: (sectionType: string) => {
     status: 'unlocked' | 'partial' | 'locked';
     isLocked: boolean;
@@ -63,7 +64,7 @@ interface LivePreviewProps {
   };
 }
 
-export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, getSectionLockStatus }: LivePreviewProps) {
+export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode = 'dark', getSectionLockStatus }: LivePreviewProps) {
   const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();
   const currentStyle = styleVariants[pageStyle];
   
@@ -569,7 +570,10 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
       
       {/* SEO Head - injects meta tags and schema markup */}
       {seoData && <SEOHead seo={seoData} />}
-      <div className="min-h-full bg-background live-preview-container">
+      <div 
+        data-mode={colorMode} 
+        className="min-h-full bg-background live-preview-container"
+      >
         {sections
           .sort((a, b) => a.order - b.order)
           .map((section, index) => renderSection(section, index))}
