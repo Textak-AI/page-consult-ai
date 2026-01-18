@@ -12,6 +12,7 @@ import { DemoPreviewWidget } from './DemoPreviewWidget';
 import { MutedCircuitBackground } from './MutedCircuitBackground';
 import { StrategistIcon } from '@/components/ui/StrategistIcon';
 import ReactMarkdown from 'react-markdown';
+import { PreviewModeModal } from './PreviewModeModal';
 
 // Circuit pattern SVG - extremely subtle for expanded view (2% opacity)
 const circuitPatternSvg = `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.02'%3E%3Cpath d='M0 40h20v-20h20v-20'/%3E%3Cpath d='M80 40h-20v20h-20v20'/%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='60' cy='60' r='2'/%3E%3C/g%3E%3C/svg%3E")`;
@@ -64,6 +65,9 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
   
   // Mobile intelligence drawer state
   const [showMobileIntelligence, setShowMobileIntelligence] = useState(false);
+  
+  // Preview mode modal state
+  const [showPreviewMode, setShowPreviewMode] = useState(false);
   
   // Session saving state
   const [isSavingSession, setIsSavingSession] = useState(false);
@@ -328,9 +332,35 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
               onActivate={activateLock}
               onInputFocus={activateLock}
             />
+            
+            {/* Preview Mode Test Entry Point */}
+            <div className="flex flex-col items-center gap-3 pb-8 -mt-4">
+              <div className="flex items-center gap-3 w-48">
+                <div className="flex-1 h-px bg-slate-700/50" />
+                <span className="text-slate-500 text-xs">or try</span>
+                <div className="flex-1 h-px bg-slate-700/50" />
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setShowPreviewMode(true)}
+                className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50"
+              >
+                Preview Mode →
+              </Button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Preview Mode Modal */}
+      <PreviewModeModal
+        isOpen={showPreviewMode}
+        onClose={() => setShowPreviewMode(false)}
+        onStartSession={() => {
+          setShowPreviewMode(false);
+          activateLock();
+        }}
+      />
 
       {/* Full Strategy Session - shows when locked */}
       <AnimatePresence>
