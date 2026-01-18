@@ -118,6 +118,65 @@ type Section = {
   content: any;
 };
 
+// Compute SDI decisions for persistence to landing_pages.design_intelligence
+// This ensures multi-user isolation - each page has its own design intelligence
+function computeSDIDecisions(
+  consultationData: any,
+  strategicData: any,
+  designIntelligence: DesignIntelligenceOutput | null
+): { colorMode: 'light' | 'dark'; cardStyle: string; industryVariant: string } | null {
+  // Priority 1: Use SDI from designIntelligence state (generated during this session)
+  if (designIntelligence?.colors?.mode) {
+    const mode = designIntelligence.colors.mode;
+    return {
+      colorMode: (mode === 'light' || mode === 'warm') ? 'light' : 'dark',
+      cardStyle: designIntelligence.pageStructure?.heroStyle || 'bordered',
+      industryVariant: designIntelligence.industry || 'default',
+    };
+  }
+  
+  // Priority 2: Use SDI from consultation data
+  if (consultationData?.designIntelligence?.colors?.mode) {
+    const mode = consultationData.designIntelligence.colors.mode;
+    return {
+      colorMode: (mode === 'light' || mode === 'warm') ? 'light' : 'dark',
+      cardStyle: consultationData.designIntelligence.pageStructure?.heroStyle || 'bordered',
+      industryVariant: consultationData.designIntelligence.industry || 'default',
+    };
+  }
+  
+  // Priority 3: Use market data design conventions from concierge
+  if (strategicData?.consultationData?.designConventions?.colorMode) {
+    const conventions = strategicData.consultationData.designConventions;
+    return {
+      colorMode: conventions.colorMode === 'light' ? 'light' : 'dark',
+      cardStyle: conventions.cardStyle || 'bordered',
+      industryVariant: strategicData.consultationData.industryCategory || 'default',
+    };
+  }
+  
+  // Priority 4: Derive from industry category
+  const industryCategory = consultationData?.industryCategory || 
+                          strategicData?.consultationData?.industryCategory ||
+                          null;
+  if (industryCategory) {
+    // Industry-based defaults
+    const lightModeIndustries = ['consulting', 'healthcare', 'finance', 'manufacturing', 'ecommerce', 'legal'];
+    return {
+      colorMode: lightModeIndustries.includes(industryCategory) ? 'light' : 'dark',
+      cardStyle: ['consulting', 'finance', 'legal'].includes(industryCategory) ? 'bordered' : 'flat',
+      industryVariant: industryCategory,
+    };
+  }
+  
+  // Fallback
+  return {
+    colorMode: 'dark',
+    cardStyle: 'bordered',
+    industryVariant: 'default',
+  };
+}
+
 // Patch sections with fresh consultation data (especially for final-cta)
 function patchSectionsWithConsultationData(
   sections: Section[],
@@ -1257,6 +1316,14 @@ function GenerateContent() {
         insertData.website_intelligence = strategicData.websiteIntelligence || null;
         insertData.strategy_brief = strategicData.strategyBrief || null;
         console.log("📋 Including strategic consultation data in page record");
+      }
+      
+      // Compute and persist SDI decisions (colorMode, cardStyle, etc.)
+      // This ensures multi-user isolation - each page has its own design intelligence
+      const sdiDecisions = computeSDIDecisions(consultationData, strategicData, designIntelligence);
+      if (sdiDecisions) {
+        insertData.design_intelligence = sdiDecisions;
+        console.log("🎨 Including SDI decisions in page record:", sdiDecisions);
       }
       
       const { data: pageData, error } = await supabase
@@ -3679,6 +3746,12 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           cssVariables={cssVariables}
           iconStyle={designSystem?.components?.iconStyle}
           colorMode={(() => {
+            // PRIORITY 1: Read from persisted pageData.design_intelligence (multi-user safe)
+            const persistedMode = (pageData?.design_intelligence as any)?.colorMode;
+            if (persistedMode) {
+              return (persistedMode === 'light' || persistedMode === 'warm') ? 'light' : 'dark';
+            }
+            // PRIORITY 2: Fallback to consultation/strategicData (during generation before save)
             const mode = consultation?.designIntelligence?.colors?.mode ||
                         consultation?.colorMode ||
                         strategicData?.consultationData?.colorMode ||

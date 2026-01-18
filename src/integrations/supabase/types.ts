@@ -806,6 +806,7 @@ export type Database = {
           consultation_data: Json | null
           consultation_id: string | null
           created_at: string
+          design_intelligence: Json | null
           hero_thumbnail_url: string | null
           id: string
           industry: string | null
@@ -840,6 +841,7 @@ export type Database = {
           consultation_data?: Json | null
           consultation_id?: string | null
           created_at?: string
+          design_intelligence?: Json | null
           hero_thumbnail_url?: string | null
           id?: string
           industry?: string | null
@@ -874,6 +876,7 @@ export type Database = {
           consultation_data?: Json | null
           consultation_id?: string | null
           created_at?: string
+          design_intelligence?: Json | null
           hero_thumbnail_url?: string | null
           id?: string
           industry?: string | null
