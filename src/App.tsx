@@ -54,6 +54,7 @@ import Dev from "./pages/Dev";
 import PublicPage from "./pages/PublicPage";
 import ProspectPage from "./pages/ProspectPage";
 import ProspectsDashboard from "./pages/ProspectsDashboard";
+import TryDemo from "./pages/TryDemo";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -159,6 +160,7 @@ const App = () => {
                 {/* Public page routes - accessible without authentication */}
                 <Route path="/page/:slug" element={<PublicPage />} />
                 <Route path="/p/:slug" element={<ProspectPage />} />
+                <Route path="/try" element={<TryDemo />} />
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
