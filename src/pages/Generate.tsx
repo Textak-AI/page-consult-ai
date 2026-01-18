@@ -69,6 +69,7 @@ import { SEOHead } from "@/components/seo/SEOHead";
 import { applyBrandColors } from "@/lib/colorUtils";
 import { generateDesignIntelligence, type DesignIntelligenceOutput } from "@/lib/designIntelligence";
 import { intelligenceConcierge } from "@/lib/intelligenceConcierge";
+import { getTargetMarketFromSources } from "@/lib/targetMarketExtractor";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -1324,6 +1325,13 @@ function GenerateContent() {
       if (sdiDecisions) {
         insertData.design_intelligence = sdiDecisions;
         console.log("🎨 Including SDI decisions in page record:", sdiDecisions);
+      }
+      
+      // Extract and set target_market from consultation data
+      const targetMarket = getTargetMarketFromSources(consultationData, strategicData, effectiveNavState);
+      if (targetMarket) {
+        insertData.target_market = targetMarket;
+        console.log("🎯 Including target_market in page record:", targetMarket);
       }
       
       const { data: pageData, error } = await supabase
