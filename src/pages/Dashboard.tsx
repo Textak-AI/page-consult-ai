@@ -11,8 +11,15 @@ import { TrialBanner } from '@/components/trial/TrialBanner';
 import { StrategyBrief } from '@/components/strategy-brief/StrategyBrief';
 import { QuickPivotModal } from '@/components/quick-pivot';
 import { 
-  Plus, Sparkles, Search, FileText, Zap
+  Plus, Sparkles, Search, FileText, Zap, Target
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { format, parseISO } from 'date-fns';
 import { StatusCard } from '@/components/dashboard/StatusCard';
 import { PageItem } from '@/components/dashboard/PageItem';
@@ -44,6 +51,7 @@ interface PageWithVersions {
   is_current_version?: boolean;
   consultation_id?: string | null;
   versions?: PageVersion[];
+  target_market?: string;
 }
 
 export default function Dashboard() {
@@ -54,6 +62,7 @@ export default function Dashboard() {
   const [showBrief, setShowBrief] = useState(false);
   const [selectedConsultation, setSelectedConsultation] = useState<any>(null);
   const [quickPivotOpen, setQuickPivotOpen] = useState(false);
+  const [targetFilter, setTargetFilter] = useState<string>('all');
   
   // Fetch user's landing pages
   const { data: landingPages, isLoading, refetch } = useQuery({
@@ -146,14 +155,33 @@ export default function Dashboard() {
     }));
   }, [landingPages]);
 
-  // Filter pages by search query
+  // Get unique target markets from pages
+  const targetMarkets = useMemo(() => {
+    const markets = new Set<string>();
+    pagesWithVersions.forEach(p => {
+      if (p.target_market) markets.add(p.target_market);
+    });
+    return Array.from(markets).sort();
+  }, [pagesWithVersions]);
+
+  // Filter pages by search query and target market
   const filteredPages = useMemo(() => {
-    if (!searchQuery) return pagesWithVersions;
-    return pagesWithVersions.filter(p => 
-      p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.consultation_data as any)?.industry?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [pagesWithVersions, searchQuery]);
+    let pages = pagesWithVersions;
+    
+    if (searchQuery) {
+      pages = pages.filter(p => 
+        p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.consultation_data as any)?.industry?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.target_market?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    if (targetFilter !== 'all') {
+      pages = pages.filter(p => p.target_market === targetFilter);
+    }
+    
+    return pages;
+  }, [pagesWithVersions, searchQuery, targetFilter]);
 
   // Split pages by status
   const inProgressPages = useMemo(() => {
@@ -394,15 +422,33 @@ export default function Dashboard() {
                   </Button>
                 </div>
 
-                {/* Search */}
-                <div className="relative max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search pages..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-card border-border"
-                  />
+                {/* Search and Filter */}
+                <div className="flex gap-3 flex-wrap">
+                  <div className="relative flex-1 min-w-[200px] max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search pages..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 bg-card border-border"
+                    />
+                  </div>
+                  
+                  {/* Target market filter */}
+                  {targetMarkets.length > 0 && (
+                    <Select value={targetFilter} onValueChange={setTargetFilter}>
+                      <SelectTrigger className="w-48 bg-card border-border">
+                        <Target className="w-4 h-4 mr-2 text-muted-foreground" />
+                        <SelectValue placeholder="All targets" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All targets</SelectItem>
+                        {targetMarkets.map(market => (
+                          <SelectItem key={market} value={market}>{market}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
 
                 {/* Status-Based Page Cards */}

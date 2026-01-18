@@ -941,6 +941,7 @@ export type Database = {
           status: string
           strategy_brief: string | null
           styles: Json | null
+          target_market: string | null
           title: string
           updated_at: string
           user_id: string
@@ -977,6 +978,7 @@ export type Database = {
           status?: string
           strategy_brief?: string | null
           styles?: Json | null
+          target_market?: string | null
           title: string
           updated_at?: string
           user_id: string
@@ -1013,6 +1015,7 @@ export type Database = {
           status?: string
           strategy_brief?: string | null
           styles?: Json | null
+          target_market?: string | null
           title?: string
           updated_at?: string
           user_id?: string
