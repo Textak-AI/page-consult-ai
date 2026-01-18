@@ -89,7 +89,7 @@ export function PriorityAction({
               <p className="text-muted-foreground text-sm">Start a strategy session — takes about 10 minutes</p>
             </div>
           </div>
-          <Button variant="premium" onClick={() => navigate('/new')}>
+          <Button variant="premium" onClick={() => navigate('/try?from=dashboard')}>
             Start Strategy Session <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
@@ -112,7 +112,7 @@ export function PriorityAction({
         </div>
         <div className="flex gap-3">
           <Button variant="outline" onClick={onQuickPivot}>Quick Pivot</Button>
-          <Button onClick={() => navigate('/new')}>New Page</Button>
+          <Button onClick={() => navigate('/try?from=dashboard')}>New Page</Button>
         </div>
       </div>
     </div>
