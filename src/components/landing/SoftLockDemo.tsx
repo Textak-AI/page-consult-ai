@@ -534,8 +534,8 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm px-4 py-3">
                   {/* Input preview for long messages */}
                   {showInputPreview && inputValue.trim() && (
-                    <div className="mb-3 px-4 py-2 rounded-lg bg-slate-800/50 border border-slate-700/30">
-                      <p className="text-sm text-slate-400/70 italic whitespace-pre-wrap line-clamp-3">
+                    <div className="mb-3 px-4 py-3 rounded-xl bg-slate-800/40 border border-slate-700/50 max-h-32 overflow-y-auto">
+                      <p className="text-sm text-slate-300/70 italic whitespace-pre-wrap break-words">
                         {inputValue}
                       </p>
                     </div>
