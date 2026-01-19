@@ -215,6 +215,9 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
     // This ensures the exact same session ID is used after signup
     sessionStorage.setItem('demo_session_id_for_migration', sessionId);
     
+    // Check if user is already authenticated - skip signup if so
+    const { data: { user } } = await supabase.auth.getUser();
+    
     const demoIntelligence = {
       sessionId,
       source: 'demo',
@@ -304,11 +307,46 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
       
       localStorage.setItem('pageconsult_session_id', sessionId);
       
-      const signupUrl = isReady 
-        ? `/signup?from=demo&session=${sessionId}&ready=true`
-        : `/signup?from=demo&session=${sessionId}`;
-      
-      navigate(signupUrl);
+      // If authenticated, skip signup and go directly to brand-setup
+      if (user) {
+        console.log('[Auth Check] User is authenticated, skipping signup:', user.email);
+        
+        // Create or update consultation for the authenticated user
+        const consultationData = {
+          user_id: user.id,
+          guest_session_id: sessionId,
+          flow_state: 'brand_setup',
+          extracted_intelligence: demoIntelligence,
+          readiness_score: state.readiness,
+          status: 'active',
+        };
+        
+        const { data: consultation, error: consultationError } = await supabase
+          .from('consultations')
+          .upsert([consultationData], { onConflict: 'guest_session_id' })
+          .select('id')
+          .single();
+        
+        if (consultationError) {
+          console.error('[Consultation] Failed to create/update:', consultationError);
+        }
+        
+        const consultationId = consultation?.id;
+        const brandSetupUrl = consultationId 
+          ? `/brand-setup?consultationId=${consultationId}`
+          : `/brand-setup?session=${sessionId}`;
+        
+        console.log('[Auth Check] Redirecting authenticated user to:', brandSetupUrl);
+        navigate(brandSetupUrl);
+      } else {
+        // Not authenticated - redirect to signup (existing flow)
+        const signupUrl = isReady 
+          ? `/signup?from=demo&session=${sessionId}&ready=true`
+          : `/signup?from=demo&session=${sessionId}`;
+        
+        console.log('[Auth Check] User not authenticated, redirecting to signup');
+        navigate(signupUrl);
+      }
     } catch (err) {
       console.error('Error saving demo session:', err);
       navigate('/signup?from=demo');
