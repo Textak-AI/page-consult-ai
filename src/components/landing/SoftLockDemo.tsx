@@ -580,7 +580,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
               </main>
               
               {/* Intel Sidebar - Desktop only, with proper right margin */}
-              <aside className="hidden lg:flex w-[420px] flex-shrink-0 bg-slate-900/40 border border-slate-800/30 rounded-2xl flex-col overflow-hidden">
+              <aside className="hidden lg:flex w-[480px] flex-shrink-0 bg-slate-900/40 border border-slate-800/30 rounded-2xl flex-col overflow-hidden">
                 <div className="p-5 flex-1 overflow-hidden">
                   <IntelligenceTabs 
                     onContinue={handleGenerateClick}
