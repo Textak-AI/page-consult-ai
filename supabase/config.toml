@@ -191,3 +191,6 @@ verify_jwt = false
 
 [functions.validate-brief-intelligence]
 verify_jwt = false
+
+[functions.reset-user-data]
+verify_jwt = true
