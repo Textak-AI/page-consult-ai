@@ -9,7 +9,10 @@ import {
   Users, 
   TrendingUp,
   Sparkles,
-  Search
+  Search,
+  CheckCircle2,
+  Circle,
+  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -55,14 +58,14 @@ interface IntelligencePanelProps {
   tiles: IntelligenceTile[];
   overallReadiness: number;
   onBeginResearch: () => void;
-  isResearchReady?: boolean; // Optional - we determine internally now
+  isResearchReady?: boolean;
 }
 
 function getTileStyles(state: TileState) {
   switch (state) {
     case "empty":
       return {
-        border: "border-dashed border-white/20",
+        border: "border-white/10",
         bg: "bg-white/[0.02]",
         iconOpacity: "opacity-30",
         glow: ""
@@ -83,35 +86,47 @@ function getTileStyles(state: TileState) {
       };
     case "confirmed":
       return {
-        border: "border-cyan-500/50",
+        border: "border-cyan-500/40",
         bg: "bg-gradient-to-br from-cyan-500/10 to-purple-500/10",
         iconOpacity: "opacity-100",
-        glow: "shadow-[0_0_25px_rgba(6,182,212,0.25)]"
+        glow: "shadow-[0_0_25px_rgba(6,182,212,0.2)]"
       };
   }
+}
+
+function getProgressGradient(fill: number) {
+  if (fill >= 80) return "from-emerald-400 via-cyan-400 to-cyan-500";
+  if (fill >= 50) return "from-cyan-500 via-cyan-400 to-purple-400";
+  if (fill >= 25) return "from-amber-400 via-orange-400 to-rose-400";
+  return "from-white/30 to-white/20";
 }
 
 function IntelligenceTileCard({ tile, index }: { tile: IntelligenceTile; index: number }) {
   const Icon = iconMap[tile.icon];
   const styles = getTileStyles(tile.state);
+  const isComplete = tile.fill >= 80;
+  const isPartial = tile.fill >= 25 && tile.fill < 80;
   
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.1, duration: 0.3 }}
+      transition={{ delay: index * 0.08, duration: 0.3 }}
       className={cn(
-        "relative p-4 rounded-xl border backdrop-blur-sm transition-all duration-500",
+        "relative p-4 rounded-2xl border backdrop-blur-sm transition-all duration-500",
         styles.border,
         styles.bg,
         styles.glow
       )}
     >
-      <div className="flex items-start gap-3">
-        {/* Icon */}
+      {/* Category Header */}
+      <div className="flex items-center gap-3 mb-3">
+        {/* Icon Container */}
         <div className={cn(
-          "flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-opacity duration-500",
-          tile.state === "confirmed" ? "bg-gradient-to-br from-cyan-500/20 to-purple-500/20" : "bg-white/5",
+          "relative flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500",
+          tile.state === "confirmed" 
+            ? "bg-gradient-to-br from-cyan-500/25 to-purple-500/25 ring-1 ring-cyan-400/30" 
+            : "bg-white/5",
           styles.iconOpacity
         )}>
           <Icon 
@@ -123,47 +138,85 @@ function IntelligenceTileCard({ tile, index }: { tile: IntelligenceTile; index: 
           />
           {tile.state === "confirmed" && (
             <motion.div
-              className="absolute inset-0 rounded-lg bg-cyan-400/10"
+              className="absolute inset-0 rounded-xl bg-cyan-400/10"
               animate={{ opacity: [0.3, 0.6, 0.3] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
           )}
         </div>
         
-        {/* Content */}
+        {/* Category Title & Status */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1">
-            <h4 className="text-xs font-medium text-white/60 uppercase tracking-wide">
-              {tile.category}
-            </h4>
+          <h4 className={cn(
+            "text-sm font-semibold tracking-wide transition-colors duration-300",
+            tile.state === "confirmed" ? "text-white" : 
+            tile.state === "developing" ? "text-white/90" :
+            "text-white/70"
+          )}>
+            {tile.category}
+          </h4>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {isComplete ? (
+              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+            ) : isPartial ? (
+              <Circle className="w-3 h-3 text-amber-400" />
+            ) : (
+              <Circle className="w-3 h-3 text-white/30" />
+            )}
             <span className={cn(
               "text-xs font-medium",
-              tile.fill >= 80 ? "text-cyan-400" : 
-              tile.fill >= 40 ? "text-white/60" : 
-              "text-white/30"
+              isComplete ? "text-emerald-400" : 
+              isPartial ? "text-amber-400" : 
+              "text-white/40"
             )}>
-              {tile.fill}%
+              {isComplete ? "Complete" : isPartial ? "In Progress" : "Awaiting Info"}
             </span>
           </div>
-          
-          {/* Fill meter */}
-          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden mb-2">
-            <motion.div
-              className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${tile.fill}%` }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-            />
-          </div>
-          
-          {/* Insight */}
-          <p className={cn(
-            "text-sm leading-relaxed transition-colors duration-300",
-            tile.state === "empty" ? "text-white/30 italic" : "text-white/80"
-          )}>
-            {tile.insight}
-          </p>
         </div>
+        
+        {/* Percentage Badge */}
+        <div className={cn(
+          "flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-bold transition-all duration-300",
+          isComplete 
+            ? "bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/30" 
+            : isPartial 
+              ? "bg-amber-500/15 text-amber-400" 
+              : "bg-white/5 text-white/40"
+        )}>
+          {tile.fill}%
+        </div>
+      </div>
+      
+      {/* Progress Bar */}
+      <div className="h-2 bg-white/5 rounded-full overflow-hidden mb-3 ring-1 ring-white/5">
+        <motion.div
+          className={cn(
+            "h-full rounded-full bg-gradient-to-r",
+            getProgressGradient(tile.fill)
+          )}
+          initial={{ width: 0 }}
+          animate={{ width: `${tile.fill}%` }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        />
+      </div>
+      
+      {/* Insight Content */}
+      <div className={cn(
+        "rounded-xl p-3 transition-all duration-300",
+        tile.state === "empty" 
+          ? "bg-white/[0.02] border border-dashed border-white/10" 
+          : "bg-white/[0.04]"
+      )}>
+        <p className={cn(
+          "text-sm leading-relaxed transition-colors duration-300",
+          tile.state === "empty" 
+            ? "text-white/30 italic" 
+            : tile.state === "confirmed" 
+              ? "text-white/90" 
+              : "text-white/70"
+        )}>
+          {tile.insight}
+        </p>
       </div>
       
       {/* Update pulse animation */}
@@ -172,10 +225,10 @@ function IntelligenceTileCard({ tile, index }: { tile: IntelligenceTile; index: 
           <motion.div
             key={`pulse-${tile.fill}`}
             initial={{ opacity: 0.5, scale: 1 }}
-            animate={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 0, scale: 1.02 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
-            className="absolute inset-0 rounded-xl border-2 border-cyan-400/50 pointer-events-none"
+            className="absolute inset-0 rounded-2xl border-2 border-cyan-400/50 pointer-events-none"
           />
         )}
       </AnimatePresence>
@@ -188,20 +241,127 @@ export function IntelligencePanel({
   overallReadiness, 
   onBeginResearch
 }: IntelligencePanelProps) {
+  const completedTiles = tiles.filter(t => t.fill >= 80).length;
+  const totalTiles = tiles.length;
+  const isReady = overallReadiness >= 70;
+  
   return (
-    <div className="h-full flex flex-col bg-black/30 backdrop-blur-xl border-l border-white/10">
-      {/* Header */}
-      <div className="p-6 border-b border-white/10">
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-cyan-400" />
-          Intelligence Profile
-        </h2>
-        <p className="text-sm text-white/50 mt-1">
-          Building your business profile in real-time
-        </p>
+    <div className="h-full flex flex-col bg-black/40 backdrop-blur-xl border-l border-white/10">
+      {/* Header with Prominent Score */}
+      <div className="p-5 border-b border-white/10">
+        {/* Title Row */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20 ring-1 ring-cyan-400/20">
+            <Sparkles className="w-4 h-4 text-cyan-400" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-white">
+              Intelligence Profile
+            </h2>
+            <p className="text-xs text-white/50">
+              Real-time business analysis
+            </p>
+          </div>
+        </div>
+        
+        {/* Score Card */}
+        <div className={cn(
+          "p-4 rounded-2xl transition-all duration-500",
+          isReady 
+            ? "bg-gradient-to-br from-cyan-500/15 to-purple-500/15 ring-1 ring-cyan-400/30" 
+            : "bg-white/[0.04] ring-1 ring-white/10"
+        )}>
+          {/* Score Display */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-baseline gap-1">
+              <motion.span 
+                className={cn(
+                  "text-4xl font-bold tabular-nums",
+                  isReady ? "text-cyan-400" : "text-white/80"
+                )}
+                key={overallReadiness}
+                initial={{ scale: 1.1, opacity: 0.5 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                {overallReadiness}
+              </motion.span>
+              <span className="text-lg text-white/40">/100</span>
+            </div>
+            
+            {/* Completion Badge */}
+            <div className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5",
+              isReady 
+                ? "bg-emerald-500/20 text-emerald-400" 
+                : "bg-white/10 text-white/60"
+            )}>
+              {isReady ? (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Ready
+                </>
+              ) : (
+                <>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                  {70 - overallReadiness} pts to go
+                </>
+              )}
+            </div>
+          </div>
+          
+          {/* Main Progress Bar */}
+          <div className="relative h-3 bg-white/10 rounded-full overflow-hidden ring-1 ring-white/5">
+            {/* 70% Threshold Marker */}
+            <div 
+              className="absolute top-0 bottom-0 w-0.5 bg-white/40 z-10"
+              style={{ left: '70%' }}
+            />
+            <div 
+              className="absolute -top-5 text-[10px] text-white/50 font-medium"
+              style={{ left: '70%', transform: 'translateX(-50%)' }}
+            >
+              70
+            </div>
+            
+            <motion.div
+              className={cn(
+                "h-full rounded-full transition-all duration-500 bg-gradient-to-r",
+                isReady 
+                  ? "from-emerald-400 via-cyan-400 to-purple-400" 
+                  : "from-cyan-500/70 via-cyan-400/60 to-purple-500/50"
+              )}
+              animate={{ width: `${overallReadiness}%` }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            />
+          </div>
+          
+          {/* Category Completion Summary */}
+          <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
+            <span className="text-xs text-white/50">Categories completed</span>
+            <div className="flex items-center gap-1">
+              {tiles.map((tile, i) => (
+                <div
+                  key={tile.id}
+                  className={cn(
+                    "w-2 h-2 rounded-full transition-all duration-300",
+                    tile.fill >= 80 
+                      ? "bg-emerald-400" 
+                      : tile.fill >= 25 
+                        ? "bg-amber-400/60" 
+                        : "bg-white/20"
+                  )}
+                />
+              ))}
+              <span className="text-xs text-white/60 ml-2 font-medium">
+                {completedTiles}/{totalTiles}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
       
-      {/* Tiles */}
+      {/* Category Tiles */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         <AnimatePresence mode="popLayout">
           {tiles.map((tile, index) => (
@@ -210,48 +370,9 @@ export function IntelligencePanel({
         </AnimatePresence>
       </div>
       
-      {/* Readiness Footer */}
-      <div className="p-4 border-t border-white/10 space-y-4">
-        {/* Overall readiness meter - now shows X/100 */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-white/60">Intelligence Score</span>
-            <span className={cn(
-              "text-sm font-semibold",
-              overallReadiness >= 70 ? "text-cyan-400" : "text-white/60"
-            )}>
-              {overallReadiness}/100
-            </span>
-          </div>
-          <div className="h-2 bg-white/10 rounded-full overflow-hidden relative">
-            {/* 70 threshold marker */}
-            <div 
-              className="absolute top-0 bottom-0 w-0.5 bg-white/30 z-10"
-              style={{ left: '70%' }}
-            />
-            <motion.div
-              className={cn(
-                "h-full rounded-full transition-all duration-500",
-                overallReadiness >= 70 
-                  ? "bg-gradient-to-r from-cyan-400 to-purple-400" 
-                  : "bg-gradient-to-r from-cyan-500/50 to-purple-500/50"
-              )}
-              animate={{ width: `${overallReadiness}%` }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-            />
-          </div>
-          {/* Status message */}
-          <div className="text-xs mt-1.5">
-            {overallReadiness >= 70 ? (
-              <span className="text-emerald-400">Ready to generate</span>
-            ) : (
-              <span className="text-white/40">Generation unlocks at 70</span>
-            )}
-          </div>
-        </div>
-        
-        {/* Research button - show at 70%+ */}
-        {overallReadiness >= 70 ? (
+      {/* Action Footer */}
+      <div className="p-4 border-t border-white/10">
+        {isReady ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -259,8 +380,9 @@ export function IntelligencePanel({
             <Button
               onClick={onBeginResearch}
               className={cn(
-                "w-full py-6 text-base font-semibold gap-2",
-                "bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500"
+                "w-full py-6 text-base font-semibold gap-2 rounded-xl",
+                "bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500",
+                "shadow-[0_0_30px_rgba(6,182,212,0.3)]"
               )}
             >
               <motion.div
@@ -273,16 +395,17 @@ export function IntelligencePanel({
               <Rocket className="w-5 h-5" />
             </Button>
             <p className="text-center text-white/40 text-xs mt-2">
-              We'll analyze your competitive landscape
+              Analyze your competitive landscape
             </p>
           </motion.div>
         ) : (
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-2 py-2">
+            <div className="flex items-center justify-center gap-2 text-white/60">
+              <div className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-sm font-medium">Keep sharing...</span>
+            </div>
             <p className="text-xs text-white/40">
-              Tell me more about your business to unlock research
-            </p>
-            <p className="text-[10px] text-white/30">
-              {tiles.filter(t => t.fill < 50).map(t => t.category).slice(0, 3).join(', ')} needed
+              Need: {tiles.filter(t => t.fill < 50).map(t => t.category).slice(0, 2).join(', ')}
             </p>
           </div>
         )}
