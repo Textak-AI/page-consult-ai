@@ -12,6 +12,7 @@ import { DemoPreviewWidget } from './DemoPreviewWidget';
 import { MutedCircuitBackground } from './MutedCircuitBackground';
 import { StrategistIcon } from '@/components/ui/StrategistIcon';
 import ReactMarkdown from 'react-markdown';
+import tealLogo from '@/assets/iconmark-teal.svg';
 
 // Circuit pattern SVG - extremely subtle for expanded view (2% opacity)
 const circuitPatternSvg = `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.02'%3E%3Cpath d='M0 40h20v-20h20v-20'/%3E%3Cpath d='M80 40h-20v20h-20v20'/%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='60' cy='60' r='2'/%3E%3C/g%3E%3C/svg%3E")`;
@@ -367,7 +368,7 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
                 {/* Left: Logo + Brand */}
                 <div className="flex items-center gap-2">
                   <img 
-                    src="/pageconsult-logo.png" 
+                    src={tealLogo} 
                     className="w-6 h-6" 
                     alt="" 
                   />
