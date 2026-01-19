@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, LogOut, Settings, ChevronDown, Zap, LayoutDashboard, Users } from "lucide-react";
+import { Plus, LogOut, Settings, ChevronDown, Zap, LayoutDashboard, Users, AlertTriangle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -225,6 +225,18 @@ const Header = () => {
                       <Settings className="w-4 h-4 mr-2" />
                       Settings
                     </DropdownMenuItem>
+                    {/* Dev option - visible in development/preview */}
+                    {(window.location.hostname.includes('localhost') || 
+                      window.location.hostname.includes('preview') ||
+                      window.location.hostname.includes('lovable.app')) && (
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/admin/reset-data')}
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                      >
+                        <AlertTriangle className="w-4 h-4 mr-2" />
+                        Reset Data (Dev)
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator className="bg-border" />
                     <DropdownMenuItem 
                       onClick={handleSignOut}

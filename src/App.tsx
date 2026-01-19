@@ -55,6 +55,7 @@ import PublicPage from "./pages/PublicPage";
 import ProspectPage from "./pages/ProspectPage";
 import ProspectsDashboard from "./pages/ProspectsDashboard";
 import TryDemo from "./pages/TryDemo";
+import AdminResetData from "./pages/AdminResetData";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -161,6 +162,7 @@ const App = () => {
                 <Route path="/page/:slug" element={<PublicPage />} />
                 <Route path="/p/:slug" element={<ProspectPage />} />
                 <Route path="/try" element={<TryDemo />} />
+                <Route path="/admin/reset-data" element={<AdminResetData />} />
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
