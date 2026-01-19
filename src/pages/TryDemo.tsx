@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { IntelligenceProvider, useIntelligence } from "@/contexts/IntelligenceContext";
-import LiveDemoSection from "@/components/landing/LiveDemoSection";
+import SoftLockDemo from "@/components/landing/SoftLockDemo";
 import { BrandDetectionPrompt } from "@/components/demo/BrandDetectionPrompt";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 // Inner component that has access to IntelligenceContext
 function TryDemoContent() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
   const { updateExtracted } = useIntelligence();
   
@@ -78,55 +79,66 @@ function TryDemoContent() {
     setBrandCheckComplete(true);
   };
 
+  const handleClose = () => {
+    // Navigate based on auth state
+    if (user) {
+      navigate('/');
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Minimal header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-primary-foreground" />
+      {/* Show brand prompt if needed */}
+      {showBrandPrompt && !brandCheckComplete ? (
+        <>
+          {/* Minimal header for brand prompt */}
+          <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
+            <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+              <Link to="/" className="flex items-center gap-2 group">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-primary-foreground" />
+                </div>
+                <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                  PageConsult
+                </span>
+              </Link>
+              {user ? (
+                <Link
+                  to="/"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <Link
+                  to="/signup"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Sign In
+                </Link>
+              )}
             </div>
-            <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
-              PageConsult
-            </span>
-          </Link>
-
-          {/* Sign In / Dashboard link */}
-          {user ? (
-            <Link
-              to="/"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Dashboard
-            </Link>
-          ) : (
-            <Link
-              to="/signup"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Sign In
-            </Link>
-          )}
-        </div>
-      </header>
-
-      {/* Full-page demo */}
-      <main className="flex-1 pt-14">
-        {showBrandPrompt && !brandCheckComplete ? (
-          <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
-            <div className="max-w-xl w-full">
-              <BrandDetectionPrompt 
-                onUseBrand={handleUseBrand}
-                onSkip={handleSkipBrand}
-              />
+          </header>
+          <main className="flex-1 pt-14">
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+              <div className="max-w-xl w-full">
+                <BrandDetectionPrompt 
+                  onUseBrand={handleUseBrand}
+                  onSkip={handleSkipBrand}
+                />
+              </div>
             </div>
-          </div>
-        ) : brandCheckComplete ? (
-          <LiveDemoSection />
-        ) : null}
-      </main>
+          </main>
+        </>
+      ) : brandCheckComplete ? (
+        // Use SoftLockDemo with autoLock to start expanded
+        <SoftLockDemo 
+          autoLock={true}
+          onClose={handleClose}
+        />
+      ) : null}
     </div>
   );
 }

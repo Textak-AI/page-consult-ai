@@ -39,9 +39,11 @@ const TypingIndicator = () => (
 
 interface SoftLockDemoProps {
   onLockChange?: (isLocked: boolean) => void;
+  autoLock?: boolean;
+  onClose?: () => void;
 }
 
-export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
+export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }: SoftLockDemoProps) {
   const navigate = useNavigate();
   const { state, processUserMessage, submitBusinessCard, dismissEmailGate, reopenEmailGate } = useIntelligence();
   const [inputValue, setInputValue] = useState('');
@@ -56,8 +58,8 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
     setShowInputPreview(inputValue.length > 80 || inputValue.includes('\n'));
   }, [inputValue]);
   
-  // Soft lock state
-  const [isLocked, setIsLocked] = useState(false);
+  // Soft lock state - initialize based on autoLock prop
+  const [isLocked, setIsLocked] = useState(autoLock);
   const [hasInteracted, setHasInteracted] = useState(false);
   
   // Ghost text activation state - tracks when user engages with input
@@ -84,6 +86,13 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
   // Deactivate soft lock
   const deactivateLock = useCallback(() => {
     if (!isLocked) return;
+    
+    // If onClose is provided (e.g., /try page), use that instead
+    if (onClose) {
+      onClose();
+      return;
+    }
+    
     setIsLocked(false);
     onLockChange?.(false);
     
@@ -95,7 +104,14 @@ export default function SoftLockDemo({ onLockChange }: SoftLockDemoProps) {
     setTimeout(() => {
       sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
-  }, [isLocked, onLockChange]);
+  }, [isLocked, onLockChange, onClose]);
+
+  // Auto-lock effect for autoLock prop
+  useEffect(() => {
+    if (autoLock && !isLocked) {
+      activateLock();
+    }
+  }, [autoLock]);
 
   // Handle escape key
   useEffect(() => {
