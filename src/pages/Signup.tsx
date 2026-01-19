@@ -298,231 +298,179 @@ export default function Signup() {
       // Check for pending session from Brand Intake flow
       const pendingSessionId = sessionStorage.getItem('pendingSessionId');
       
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (error) throw error;
-
-        // Migrate anonymous session if exists
-        if (sessionToken) {
-          await migrateAnonymousSession(sessionToken);
-        }
+      // STREAMLINED FLOW: Try sign-in first, then signup if user doesn't exist
+      // This eliminates the need for users to click twice
+      
+      // Step 1: Try to sign in
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      let authenticatedUser = signInData?.user;
+      let isNewUser = false;
+      
+      // Step 2: Handle sign-in result
+      if (signInError) {
+        const errorMsg = signInError.message?.toLowerCase() || '';
         
-        // Migrate guest session if exists
-        const { data: { user: loggedInUser } } = await supabase.auth.getUser();
-        if (loggedInUser && hasGuestSession()) {
-          const migrationResult = await handlePostAuthMigration(loggedInUser.id);
-          if (migrationResult?.success) {
-            console.log('✅ [Signup] Guest session migrated on login');
-          }
-        }
-
-        toast({
-          title: "Welcome back!",
-          description: "Redirecting..."
-        });
-        
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          navigate(redirectTo, { replace: true });
-          return;
-        }
-        
-        // PRIORITY 1: If we have a session from URL or stored, use it (don't check for old sessions!)
-        if (sessionIdFromUrl) {
-          console.log('🚀 [Login] Session found - loading demo session:', sessionIdFromUrl);
+        // If user doesn't exist, automatically try signup
+        if (errorMsg.includes('invalid login credentials') || 
+            errorMsg.includes('invalid credentials') ||
+            errorMsg.includes('user not found') ||
+            errorMsg.includes('no user found')) {
           
-          // Clear the stored session ID since we're using it now
-          sessionStorage.removeItem('demo_session_id_for_migration');
+          console.log('👤 [Auth] User not found, attempting signup...');
           
-          // Try sessionStorage first, then database
-          let intel = demoIntelligence;
-          if (!intel) {
-            intel = await loadDemoSessionFromDatabase(sessionIdFromUrl);
-          }
-          
-          if (intel) {
-            const consultationId = await createConsultationFromIntelligence(user.id, intel);
-            if (consultationId) {
-              // Store consultation ID for brand-setup to find
-              sessionStorage.setItem('pendingConsultationId', consultationId);
-              console.log('🚀 [Login] Redirecting to brand-setup with consultation:', consultationId);
-              navigate(`/brand-setup?consultationId=${consultationId}`, { replace: true });
-              return;
+          // Try signup
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/wizard`
             }
-          }
-          
-          // Fallback: go to brand-setup with session
-          console.log('⚠️ [Login] No intelligence found, going to brand-setup with session');
-          navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
-          return;
-        }
-        
-        // PRIORITY 2: Handle demo intelligence transfer (from sessionStorage)
-        if (isFromDemo && demoIntelligence) {
-          await createConsultationFromDemo(user.id);
-          return;
-        }
-        
-        // PRIORITY 3: Check for pending session from Brand Intake flow
-        if (pendingSessionId) {
-          console.log('🚀 Login: Found pending session, redirecting to /generate?session=', pendingSessionId);
-          sessionStorage.removeItem('pendingSessionId');
-          navigate(`/generate?session=${pendingSessionId}`, { replace: true });
-          return;
-        }
-        
-        // PRIORITY 4: If we have consultation data from state, use it
-        if (consultationData) {
-          await saveConsultationData(user.id);
-          console.log('🚀 Login: Redirecting to', redirectTo, 'with consultation data');
-          navigate(redirectTo, { state: { consultationData }, replace: true });
-          return;
-        }
-        
-        // PRIORITY 5: Check for existing completed consultation (only if no session param)
-        const { data: existingConsultation } = await supabase
-          .from("consultations")
-          .select("id")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        // Always go to dashboard after login - don't auto-redirect to mid-flow pages
-        // User can choose to continue their work from the dashboard
-        console.log('🚀 Login: Going to dashboard (user can continue from there)');
-        navigate('/', { replace: true });
-      } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/wizard`
-          }
-        });
-
-        // Handle signup errors
-        if (error) {
-          console.log('[Signup] Error details:', {
-            message: error.message,
-            status: error.status,
-            name: error.name,
-            fullError: JSON.stringify(error, null, 2)
           });
           
-          // ONLY switch to login mode if error explicitly says user exists
-          // Supabase returns "User already registered" for existing users
-          const errorMsg = error.message?.toLowerCase() || '';
-          if (errorMsg.includes('already registered') || 
-              errorMsg.includes('already exists') ||
-              errorMsg.includes('user already registered')) {
-            console.log('👤 [Signup] User already exists, switching to login mode');
+          if (signUpError) {
+            // Handle signup-specific errors
+            const signUpErrorMsg = signUpError.message?.toLowerCase() || '';
             
-            // Show friendly message
+            if (signUpErrorMsg.includes('already registered') || 
+                signUpErrorMsg.includes('already exists')) {
+              // User exists but password was wrong
+              toast({
+                title: "Incorrect password",
+                description: "This email is registered but the password is incorrect. Please try again.",
+                variant: "destructive"
+              });
+              setLoading(false);
+              return;
+            }
+            
+            // Other signup error
             toast({
-              title: "Welcome back!",
-              description: "You already have an account. Please log in instead.",
+              title: "Account creation failed",
+              description: signUpError.message || "Please check your email and password and try again.",
+              variant: "destructive"
             });
-            
-            // Switch to login mode (preserves demo data in sessionStorage)
-            setIsLogin(true);
             setLoading(false);
             return;
           }
           
-          // For other errors (validation, rate limiting, etc.), show the actual error
-          console.log('[Signup] Other signup error - NOT switching to login mode:', error.message);
+          authenticatedUser = signUpData?.user;
+          isNewUser = true;
+          
           toast({
-            title: "Signup failed",
-            description: error.message || "Please check your email and password and try again.",
+            title: isFromDemo ? "Trial started!" : "Account created!",
+            description: isFromDemo ? "Your strategy profile is ready." : "Welcome to PageConsult!"
+          });
+          
+        } else if (errorMsg.includes('email not confirmed')) {
+          toast({
+            title: "Email not confirmed",
+            description: "Please check your inbox and confirm your email address.",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        } else {
+          // Wrong password or other error
+          toast({
+            title: "Sign in failed",
+            description: signInError.message || "Please check your credentials and try again.",
             variant: "destructive"
           });
           setLoading(false);
           return;
         }
-
-        // Migrate anonymous session if exists
-        if (sessionToken && data.user) {
-          await migrateAnonymousSession(sessionToken);
-        }
-        
-        // Migrate guest session if exists
-        if (data.user && hasGuestSession()) {
-          const migrationResult = await handlePostAuthMigration(data.user.id);
-          if (migrationResult?.success) {
-            console.log('✅ [Signup] Guest session migrated on signup');
-          }
-        }
-
+      } else {
+        // Sign-in successful
         toast({
-          title: isFromDemo ? "Trial started!" : "Account created!",
-          description: isFromDemo ? "Your strategy profile is ready." : "Redirecting..."
+          title: "Welcome back!",
+          description: "Redirecting..."
         });
-        
-        if (!data.user) {
-          navigate(redirectTo, { replace: true });
-          return;
-        }
-        
-        // PRIORITY 1: If we have a session from URL or stored, use it (don't check for old sessions!)
-        if (sessionIdFromUrl) {
-          console.log('🚀 [Signup] Session found - loading demo session:', sessionIdFromUrl);
-          
-          // Clear the stored session ID since we're using it now
-          sessionStorage.removeItem('demo_session_id_for_migration');
-          
-          // Try sessionStorage first, then database
-          let intel = demoIntelligence;
-          if (!intel) {
-            intel = await loadDemoSessionFromDatabase(sessionIdFromUrl);
-          }
-          
-          if (intel) {
-            const consultationId = await createConsultationFromIntelligence(data.user.id, intel);
-            if (consultationId) {
-              // Store consultation ID for brand-setup to find
-              sessionStorage.setItem('pendingConsultationId', consultationId);
-              console.log('🚀 [Signup] Redirecting to brand-setup with consultation:', consultationId);
-              navigate(`/brand-setup?consultationId=${consultationId}`, { replace: true });
-              return;
-            }
-          }
-          
-          // Fallback: go to brand-setup with session
-          console.log('⚠️ [Signup] No intelligence found, going to brand-setup with session');
-          navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
-          return;
-        }
-        
-        // PRIORITY 2: Handle demo intelligence transfer (from sessionStorage only, no URL session)
-        if (isFromDemo && demoIntelligence) {
-          await createConsultationFromDemo(data.user.id);
-          return;
-        }
-        
-        // PRIORITY 3: Check for pending session from Brand Intake flow
-        if (pendingSessionId) {
-          console.log('🚀 Signup: Found pending session, redirecting to /generate?session=', pendingSessionId);
-          sessionStorage.removeItem('pendingSessionId');
-          navigate(`/generate?session=${pendingSessionId}`, { replace: true });
-          return;
-        }
-        
-        // PRIORITY 4: If we have consultation data from state, use it
-        if (consultationData) {
-          await saveConsultationData(data.user.id);
-          console.log('🚀 Signup: Redirecting to', redirectTo, 'with consultation data');
-          navigate(redirectTo, { state: { consultationData }, replace: true });
-          return;
-        }
-        
-        // No session, no consultation - go to default redirect
-        navigate(redirectTo, { replace: true });
       }
+      
+      // Migrate anonymous session if exists
+      if (sessionToken && authenticatedUser) {
+        await migrateAnonymousSession(sessionToken);
+      }
+      
+      // Migrate guest session if exists
+      if (authenticatedUser && hasGuestSession()) {
+        const migrationResult = await handlePostAuthMigration(authenticatedUser.id);
+        if (migrationResult?.success) {
+          console.log('✅ [Auth] Guest session migrated');
+        }
+      }
+      
+      if (!authenticatedUser) {
+        navigate(redirectTo, { replace: true });
+        return;
+      }
+      
+      // PRIORITY 1: If we have a session from URL or stored, use it
+      if (sessionIdFromUrl) {
+        console.log('🚀 [Auth] Session found - loading demo session:', sessionIdFromUrl);
+        
+        // Clear the stored session ID since we're using it now
+        sessionStorage.removeItem('demo_session_id_for_migration');
+        
+        // Try sessionStorage first, then database
+        let intel = demoIntelligence;
+        if (!intel) {
+          intel = await loadDemoSessionFromDatabase(sessionIdFromUrl);
+        }
+        
+        if (intel) {
+          const consultationId = await createConsultationFromIntelligence(authenticatedUser.id, intel);
+          if (consultationId) {
+            // Store consultation ID for brand-setup to find
+            sessionStorage.setItem('pendingConsultationId', consultationId);
+            console.log('🚀 [Auth] Redirecting to brand-setup with consultation:', consultationId);
+            navigate(`/brand-setup?consultationId=${consultationId}`, { replace: true });
+            return;
+          }
+        }
+        
+        // Fallback: go to brand-setup with session
+        console.log('⚠️ [Auth] No intelligence found, going to brand-setup with session');
+        navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
+        return;
+      }
+      
+      // PRIORITY 2: Handle demo intelligence transfer (from sessionStorage only)
+      if (isFromDemo && demoIntelligence) {
+        await createConsultationFromDemo(authenticatedUser.id);
+        return;
+      }
+      
+      // PRIORITY 3: Check for pending session from Brand Intake flow
+      if (pendingSessionId) {
+        console.log('🚀 [Auth] Found pending session, redirecting to /generate?session=', pendingSessionId);
+        sessionStorage.removeItem('pendingSessionId');
+        navigate(`/generate?session=${pendingSessionId}`, { replace: true });
+        return;
+      }
+      
+      // PRIORITY 4: If we have consultation data from state, use it
+      if (consultationData) {
+        await saveConsultationData(authenticatedUser.id);
+        console.log('🚀 [Auth] Redirecting to', redirectTo, 'with consultation data');
+        navigate(redirectTo, { state: { consultationData }, replace: true });
+        return;
+      }
+      
+      // PRIORITY 5: For returning users, go to dashboard
+      if (!isNewUser) {
+        console.log('🚀 [Auth] Returning user - going to dashboard');
+        navigate('/', { replace: true });
+        return;
+      }
+      
+      // New user with no session - go to default redirect (wizard)
+      navigate(redirectTo, { replace: true });
+      
     } catch (error: any) {
       toast({
         title: "Error",
@@ -933,11 +881,9 @@ export default function Signup() {
                     minLength={6}
                     className="bg-slate-800/60 border-white/10 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-amber-500/20 transition-all"
                   />
-                  {!isLogin && (
-                    <p className="text-xs text-gray-400">
-                      Must be at least 6 characters
-                    </p>
-                  )}
+                  <p className="text-xs text-gray-400">
+                    Must be at least 6 characters
+                  </p>
                 </div>
 
                 <Button
@@ -948,10 +894,10 @@ export default function Signup() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      {isLogin ? "Signing in..." : "Starting trial..."}
+                      Continuing...
                     </>
                   ) : (
-                    <>{isLogin ? "Sign In" : "Start Free Trial →"}</>
+                    <>Continue to Brand Setup →</>
                   )}
                 </Button>
               </form>
@@ -960,15 +906,9 @@ export default function Signup() {
                 No credit card required • Cancel anytime
               </p>
 
-              <div className="mt-4 text-center">
-                <button
-                  onClick={() => setIsLogin(!isLogin)}
-                  className="text-sm text-gray-400 hover:text-amber-400 transition-colors font-medium"
-                  disabled={loading}
-                >
-                  {isLogin ? "Don't have an account? Start trial" : "Already have an account? Sign in"}
-                </button>
-              </div>
+              <p className="text-center text-xs text-gray-400 mt-3">
+                New or returning? We'll figure it out automatically.
+              </p>
 
               <div className="mt-4 pt-4 border-t border-white/10">
                 <button
@@ -1047,11 +987,9 @@ export default function Signup() {
                   minLength={6}
                   className="bg-slate-800/60 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 transition-all"
                 />
-                {!isLogin && (
-                  <p className="text-xs text-gray-400">
-                    Must be at least 6 characters
-                  </p>
-                )}
+                <p className="text-xs text-gray-400">
+                  Must be at least 6 characters
+                </p>
               </div>
 
               <Button
@@ -1062,23 +1000,17 @@ export default function Signup() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    {isLogin ? "Signing in..." : "Creating account..."}
+                    Continuing...
                   </>
                 ) : (
-                  <>{isLogin ? "Sign In" : "Create Account"}</>
+                  <>Continue →</>
                 )}
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
-              <button
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-sm text-gray-400 hover:text-cyan-400 transition-colors font-medium"
-                disabled={loading}
-              >
-                {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-              </button>
-            </div>
+            <p className="text-center text-xs text-gray-400 mt-4">
+              New or returning? We'll figure it out automatically.
+            </p>
 
             <div className="mt-6 pt-6 border-t border-white/10">
               <button
