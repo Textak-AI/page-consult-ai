@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronUp, ChevronDown, FileText, ArrowRight, BarChart3, Check, Circle, Lock, Unlock } from 'lucide-react';
+import { ChevronUp, ChevronDown, FileText, ArrowRight, BarChart3, Check, Circle } from 'lucide-react';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
-import { cn } from '@/lib/utils';
 
 interface ExtractedIntelligence {
   industry?: string;
@@ -19,7 +18,7 @@ interface MobileIntelligencePanelProps {
   onToggle: () => void;
   onGenerateClick: () => void;
   onReviewBrief: () => void;
-  marketResearchComplete?: boolean;
+  marketResearchComplete?: boolean; // Optional prop for research bonus
 }
 
 export function MobileIntelligencePanel({
@@ -30,60 +29,41 @@ export function MobileIntelligencePanel({
   onReviewBrief,
   marketResearchComplete = false,
 }: MobileIntelligencePanelProps) {
+  // Pass research bonus to score calculator
   const score = calculateIntelligenceScore(extracted, {
     marketResearchComplete,
   });
   const canGenerate = score.totalScore >= 70;
-  const pointsToUnlock = Math.max(0, 70 - score.totalScore);
   
-  // Calculate filled/total for quick view
   const categories = [
     {
-      label: 'Identity',
-      color: 'cyan',
+      label: 'WHO YOU ARE',
       items: [
         { name: 'Industry', value: extracted.industry },
-        { name: 'Audience', value: extracted.audience },
+        { name: 'Business Type', value: extracted.businessType },
       ],
     },
     {
-      label: 'Value',
-      color: 'green',
+      label: 'WHAT YOU OFFER',
       items: [
         { name: 'Value Prop', value: extracted.valueProp },
         { name: 'Edge', value: extracted.competitorDifferentiator },
       ],
     },
     {
-      label: 'Buyer',
-      color: 'purple',
+      label: 'WHO YOU SERVE',
       items: [
+        { name: 'Audience', value: extracted.audience },
         { name: 'Pain Points', value: extracted.painPoints },
       ],
     },
     {
-      label: 'Proof',
-      color: 'amber',
+      label: 'YOUR PROOF',
       items: [
         { name: 'Evidence', value: extracted.proofElements },
       ],
     },
   ];
-  
-  const totalFilled = categories.reduce((acc, cat) => 
-    acc + cat.items.filter(i => i.value).length, 0
-  );
-  const totalFields = categories.reduce((acc, cat) => acc + cat.items.length, 0);
-  
-  // Find next missing field for guidance
-  const getNextField = () => {
-    for (const cat of categories) {
-      for (const item of cat.items) {
-        if (!item.value) return item.name;
-      }
-    }
-    return null;
-  };
   
   return (
     <div className="bg-slate-900 border-t border-slate-700/50 lg:hidden">
@@ -93,45 +73,18 @@ export function MobileIntelligencePanel({
         className="w-full px-4 py-3 flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
-          {/* Status icon */}
-          <div className={cn(
-            "w-8 h-8 rounded-lg flex items-center justify-center",
-            canGenerate 
-              ? "bg-emerald-500/20" 
-              : "bg-gradient-to-br from-cyan-500/20 to-purple-500/20"
-          )}>
-            {canGenerate ? (
-              <Unlock className="w-4 h-4 text-emerald-400" />
-            ) : (
-              <BarChart3 className="w-4 h-4 text-cyan-400" />
-            )}
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center">
+            <BarChart3 className="w-4 h-4 text-cyan-400" />
           </div>
-          
-          {/* Score display */}
-          <div className="text-left">
-            <div className="flex items-baseline gap-1">
-              <span className={cn(
-                "text-lg font-bold",
-                canGenerate ? "text-emerald-400" : "text-cyan-400"
-              )}>
-                {score.totalScore}
-              </span>
-              <span className="text-xs text-slate-500">/100</span>
-            </div>
-            <p className="text-[10px] text-slate-500">
-              {canGenerate ? 'Ready to generate' : `${pointsToUnlock} pts to unlock`}
-            </p>
-          </div>
+          <span className="text-sm font-medium text-slate-300">
+            Intelligence Profile
+          </span>
+          <span className="text-sm font-bold text-cyan-400">
+            {score.totalScore}/100
+          </span>
         </div>
         
-        {/* Right side */}
         <div className="flex items-center gap-2">
-          {/* Quick field count */}
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700">
-            <span className="text-xs font-mono text-cyan-400">{totalFilled}</span>
-            <span className="text-[10px] text-slate-500">/{totalFields}</span>
-          </div>
-          
           {canGenerate && (
             <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
               Ready
@@ -145,21 +98,11 @@ export function MobileIntelligencePanel({
         </div>
       </button>
       
-      {/* Progress bar mini - always visible */}
+      {/* Progress bar mini */}
       <div className="px-4 pb-2">
-        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden relative">
-          {/* 70 threshold marker */}
-          <div 
-            className="absolute top-0 bottom-0 w-0.5 bg-slate-600 z-10"
-            style={{ left: '70%' }}
-          />
+        <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
           <motion.div
-            className={cn(
-              "h-full rounded-full",
-              canGenerate 
-                ? "bg-gradient-to-r from-emerald-500 to-cyan-500"
-                : "bg-gradient-to-r from-cyan-500 to-purple-500"
-            )}
+            className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-purple-500"
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(score.totalScore, 100)}%` }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -178,33 +121,15 @@ export function MobileIntelligencePanel({
             className="overflow-hidden"
           >
             <div className="px-4 pb-4 space-y-4">
-              {/* Next step guidance */}
-              {!canGenerate && getNextField() && (
-                <div className="flex items-center justify-between p-2 bg-slate-800/50 rounded-lg border border-slate-700/30">
-                  <span className="text-[10px] text-slate-500 uppercase">Next needed</span>
-                  <span className="text-xs text-cyan-400 font-medium">{getNextField()}</span>
-                </div>
-              )}
-              
-              {/* Category breakdown - compact grid */}
-              <div className="grid grid-cols-2 gap-2">
-                {categories.map((category) => {
-                  const filled = category.items.filter(i => i.value).length;
-                  const total = category.items.length;
-                  const isComplete = filled === total;
-                  
-                  return (
-                    <CategoryCard 
-                      key={category.label}
-                      label={category.label}
-                      color={category.color}
-                      items={category.items}
-                      filled={filled}
-                      total={total}
-                      isComplete={isComplete}
-                    />
-                  );
-                })}
+              {/* Category breakdown */}
+              <div className="space-y-3">
+                {categories.map((category) => (
+                  <CategoryRow 
+                    key={category.label}
+                    label={category.label} 
+                    items={category.items} 
+                  />
+                ))}
               </div>
               
               {/* Action buttons */}
@@ -220,25 +145,26 @@ export function MobileIntelligencePanel({
                 <button
                   onClick={onGenerateClick}
                   disabled={!canGenerate}
-                  className={cn(
-                    "w-full py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2 text-sm transition-all",
-                    canGenerate 
-                      ? "bg-gradient-to-r from-emerald-500 to-cyan-500 text-white hover:from-emerald-400 hover:to-cyan-400"
-                      : "bg-slate-800 text-slate-500 cursor-not-allowed"
-                  )}
+                  className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                 >
-                  {canGenerate ? (
-                    <>
-                      Generate Your Page
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-4 h-4" />
-                      {pointsToUnlock} pts to unlock
-                    </>
-                  )}
+                  Generate Your Page
+                  <ArrowRight className="w-4 h-4" />
                 </button>
+                
+                {!canGenerate && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400">Progress</span>
+                      <span className="text-cyan-400 font-medium">{score.totalScore}/70</span>
+                    </div>
+                    <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (score.totalScore / 70) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -248,69 +174,42 @@ export function MobileIntelligencePanel({
   );
 }
 
-// Compact category card for mobile grid
-function CategoryCard({ 
+// Helper component for category rows
+function CategoryRow({ 
   label, 
-  color,
-  items,
-  filled,
-  total,
-  isComplete,
+  items 
 }: { 
   label: string; 
-  color: string;
-  items: { name: string; value?: string }[];
-  filled: number;
-  total: number;
-  isComplete: boolean;
+  items: { name: string; value?: string }[] 
 }) {
-  const colorClasses = {
-    cyan: { bg: 'bg-cyan-500/10', border: 'border-cyan-500/30', text: 'text-cyan-400' },
-    green: { bg: 'bg-green-500/10', border: 'border-green-500/30', text: 'text-green-400' },
-    purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400' },
-    amber: { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-400' },
-  }[color] || { bg: 'bg-slate-500/10', border: 'border-slate-500/30', text: 'text-slate-400' };
+  const filledCount = items.filter(i => i.value).length;
   
   return (
-    <div className={cn(
-      "p-2.5 rounded-lg border transition-all",
-      isComplete 
-        ? `${colorClasses.bg} ${colorClasses.border}` 
-        : "bg-slate-800/30 border-slate-700/30"
-    )}>
-      {/* Header */}
+    <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700/30">
       <div className="flex items-center justify-between mb-2">
-        <span className={cn(
-          "text-[10px] font-medium uppercase tracking-wide",
-          isComplete ? colorClasses.text : "text-slate-400"
-        )}>
+        <span className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">
           {label}
         </span>
-        <div className={cn(
-          "w-4 h-4 rounded-full flex items-center justify-center text-[10px]",
-          isComplete 
-            ? `${colorClasses.bg} ${colorClasses.text}` 
-            : "bg-slate-700 text-slate-400"
-        )}>
-          {isComplete ? <Check className="w-2.5 h-2.5" /> : filled}
-        </div>
+        <span className="text-xs text-slate-400">
+          {filledCount}/{items.length}
+        </span>
       </div>
-      
-      {/* Items */}
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         {items.map((item) => (
-          <div key={item.name} className="flex items-center gap-1.5">
+          <div key={item.name} className="flex items-start gap-2">
             {item.value ? (
-              <Check className={cn("w-3 h-3 flex-shrink-0", colorClasses.text)} />
+              <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
             ) : (
-              <Circle className="w-3 h-3 text-slate-600 flex-shrink-0" />
+              <Circle className="w-3.5 h-3.5 text-slate-600 mt-0.5 flex-shrink-0" />
             )}
-            <span className={cn(
-              "text-[11px] truncate",
-              item.value ? "text-slate-300" : "text-slate-600"
-            )}>
+            <span className={`text-xs ${item.value ? 'text-slate-300' : 'text-slate-600'}`}>
               {item.name}
             </span>
+            {item.value && (
+              <span className="text-xs text-slate-400 truncate ml-auto max-w-[120px]">
+                {item.value}
+              </span>
+            )}
           </div>
         ))}
       </div>
