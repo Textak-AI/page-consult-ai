@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { ChevronDown, AlertCircle, Check, Loader2, Sparkles } from 'lucide-react';
+import { ChevronDown, AlertCircle, Check, Loader2, Sparkles, Circle, ChevronRight, Lock, Unlock } from 'lucide-react';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import type { IntelligenceScore, StrategicLevel, FieldScore } from '@/types/intelligenceScore';
-import { CATEGORY_COLORS, LEVEL_COLORS } from '@/types/intelligenceScore';
+import { CATEGORY_COLORS, LEVEL_COLORS, LEVEL_THRESHOLDS } from '@/types/intelligenceScore';
 import {
   Tooltip,
   TooltipContent,
@@ -26,6 +26,7 @@ const DEMO_CATEGORIES = [
   {
     key: 'whoYouAre' as const,
     label: 'Who You Are',
+    shortLabel: 'Identity',
     fields: [
       { key: 'industry' as const, label: 'Industry' },
       { key: 'audience' as const, label: 'Audience' },
@@ -34,6 +35,7 @@ const DEMO_CATEGORIES = [
   {
     key: 'whatYouOffer' as const,
     label: 'What You Offer',
+    shortLabel: 'Value',
     fields: [
       { key: 'valueProp' as const, label: 'Value Prop' },
       { key: 'edge' as const, label: 'Edge' },
@@ -42,6 +44,7 @@ const DEMO_CATEGORIES = [
   {
     key: 'buyerReality' as const,
     label: 'Buyer Reality',
+    shortLabel: 'Buyer',
     fields: [
       { key: 'painPoints' as const, label: 'Pain Points' },
       { key: 'objections' as const, label: 'Objections' },
@@ -50,11 +53,21 @@ const DEMO_CATEGORIES = [
   {
     key: 'proofCredibility' as const,
     label: 'Proof & Credibility',
+    shortLabel: 'Proof',
     fields: [
       { key: 'results' as const, label: 'Results' },
       { key: 'socialProof' as const, label: 'Social Proof' },
     ],
   },
+];
+
+// Progress milestones for clear understanding
+const PROGRESS_MILESTONES = [
+  { score: 0, label: 'Getting Started', sublabel: 'Tell me about your business' },
+  { score: 25, label: 'Identified', sublabel: 'Basic profile established' },
+  { score: 50, label: 'Positioned', sublabel: 'Clear positioning emerging' },
+  { score: 70, label: 'Armed', sublabel: 'Ready to generate' },
+  { score: 85, label: 'Proven', sublabel: 'Maximum conversion power' },
 ];
 
 const LEVEL_CONFIG: Record<StrategicLevel, { label: string; sublabel?: string }> = {
@@ -410,69 +423,159 @@ export function IntelligenceProfileDemo({
           className
         )}
       >
-        {/* Header - Fixed at top */}
-        <div className="flex-shrink-0 p-4 border-b border-slate-800/50">
+        {/* Header - Enhanced with clear progress visualization */}
+        <div className="flex-shrink-0 p-4 border-b border-slate-800/50 space-y-4">
+          {/* Title and Score */}
           <div className="flex items-center justify-between">
             <h2 className="text-base font-light tracking-wide text-white">
               Intelligence Profile
             </h2>
-            <motion.span
-              key={score.totalScore}
-              initial={{ scale: 1.2, color: 'rgb(34, 211, 238)' }}
-              animate={{ scale: 1, color: 'rgb(148, 163, 184)' }}
-              className="text-sm font-mono"
-            >
-              {score.totalScore}/100
-            </motion.span>
+            <div className="flex items-center gap-2">
+              <motion.span
+                key={score.totalScore}
+                initial={{ scale: 1.2, color: 'rgb(34, 211, 238)' }}
+                animate={{ scale: 1, color: levelColors.text.includes('cyan') ? 'rgb(34, 211, 238)' : levelColors.text.includes('green') ? 'rgb(74, 222, 128)' : levelColors.text.includes('purple') ? 'rgb(192, 132, 252)' : levelColors.text.includes('amber') ? 'rgb(251, 191, 36)' : 'rgb(148, 163, 184)' }}
+                className="text-lg font-bold font-mono"
+              >
+                {score.totalScore}
+              </motion.span>
+              <span className="text-xs text-slate-500">/100</span>
+            </div>
           </div>
           
-          {/* Total Progress Bar */}
-          <div className="mt-2 h-1.5 bg-slate-700/50 rounded-full overflow-hidden">
-            <motion.div
-              className={cn("h-full rounded-full bg-gradient-to-r", levelColors.gradient)}
-              initial={{ width: 0 }}
-              animate={{ width: `${score.totalPercentage}%` }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-            />
+          {/* Progress Milestones Visual */}
+          <div className="relative">
+            {/* Main progress bar */}
+            <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden relative">
+              {/* Milestone markers */}
+              {[25, 50, 70, 85].map((milestone) => (
+                <div 
+                  key={milestone}
+                  className="absolute top-0 bottom-0 w-0.5 bg-slate-600/50 z-10"
+                  style={{ left: `${milestone}%` }}
+                />
+              ))}
+              <motion.div
+                className={cn("h-full rounded-full bg-gradient-to-r relative z-0", levelColors.gradient)}
+                initial={{ width: 0 }}
+                animate={{ width: `${score.totalPercentage}%` }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+              />
+            </div>
+            
+            {/* Milestone labels */}
+            <div className="flex justify-between mt-1.5 px-1">
+              <span className="text-[9px] text-slate-600">0</span>
+              <span className={cn("text-[9px]", score.totalScore >= 70 ? "text-cyan-400" : "text-slate-500")}>70 = Ready</span>
+              <span className="text-[9px] text-slate-600">100</span>
+            </div>
           </div>
           
-          {/* Level Badge */}
-          <motion.p
-            key={score.level}
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className={cn("text-xs mt-2 font-medium tracking-wider", levelColors.text)}
-          >
-            {levelConfig.label}
-            {levelConfig.sublabel && (
-              <span className="font-normal opacity-80"> — {levelConfig.sublabel}</span>
+          {/* Current Status with Next Action */}
+          <div className="flex items-center justify-between bg-slate-800/30 rounded-lg p-2.5">
+            <div className="flex items-center gap-2">
+              {score.totalScore >= 70 ? (
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <Unlock className="w-3.5 h-3.5 text-emerald-400" />
+                </div>
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center">
+                  <Lock className="w-3.5 h-3.5 text-slate-500" />
+                </div>
+              )}
+              <div>
+                <motion.p
+                  key={score.level}
+                  initial={{ opacity: 0, x: -5 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className={cn("text-xs font-semibold", levelColors.text)}
+                >
+                  {levelConfig.label}
+                </motion.p>
+                <p className="text-[10px] text-slate-500">
+                  {levelConfig.sublabel || (score.totalScore < 70 ? `${70 - score.totalScore} pts to unlock generation` : '')}
+                </p>
+              </div>
+            </div>
+            {score.totalScore < 70 && (
+              <div className="text-right">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wide">Next</p>
+                <p className="text-xs text-cyan-400 font-medium">
+                  {!score.whoYouAre.industry.value ? 'Industry' :
+                   !score.whoYouAre.audience.value ? 'Audience' :
+                   !score.whatYouOffer.valueProp.value ? 'Value Prop' :
+                   !score.whatYouOffer.edge.value ? 'Your Edge' :
+                   !score.buyerReality.painPoints.value ? 'Pain Points' :
+                   !score.buyerReality.objections.value ? 'Objections' :
+                   !score.proofCredibility.results.value ? 'Results' : 'Details'}
+                </p>
+              </div>
             )}
-          </motion.p>
+          </div>
         </div>
         
         {/* Industry/Aesthetic Mode Display */}
         {renderDesignMode()}
-        {/* Scrollable Content Area */}
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 relative">
+        {/* Scrollable Content Area - Enhanced with clearer progress */}
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 relative">
           {DEMO_CATEGORIES.map((cat) => {
             const category = score[cat.key];
             const catColors = CATEGORY_COLORS[cat.key];
+            const filledFields = cat.fields.filter(f => (category[f.key] as FieldScore).value).length;
+            const totalFields = cat.fields.length;
+            const isComplete = filledFields === totalFields;
             
             return (
-              <div key={cat.key} className="space-y-1">
-                {/* Category Header */}
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">
-                    {cat.label}
-                  </span>
-                  <span className="text-[10px] text-slate-600 font-mono">
-                    {category.total}/{category.maxPoints}
-                  </span>
+              <motion.div 
+                key={cat.key} 
+                className={cn(
+                  "p-3 rounded-lg border transition-all duration-300",
+                  isComplete 
+                    ? `${catColors.bg} ${catColors.border}` 
+                    : "bg-slate-800/30 border-slate-700/30"
+                )}
+                layout
+              >
+                {/* Category Header with completion status */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {/* Completion indicator */}
+                    <div className={cn(
+                      "w-5 h-5 rounded-full flex items-center justify-center transition-all",
+                      isComplete 
+                        ? `${catColors.bg} border ${catColors.border}` 
+                        : "bg-slate-700/50 border border-slate-600/50"
+                    )}>
+                      {isComplete ? (
+                        <Check className={cn("w-3 h-3", catColors.text)} />
+                      ) : (
+                        <span className="text-[10px] font-mono text-slate-400">
+                          {filledFields}
+                        </span>
+                      )}
+                    </div>
+                    <span className={cn(
+                      "text-xs font-medium uppercase tracking-wide transition-colors",
+                      isComplete ? catColors.text : "text-slate-400"
+                    )}>
+                      {cat.label}
+                    </span>
+                  </div>
+                  
+                  {/* Points display */}
+                  <div className="flex items-center gap-1.5">
+                    <span className={cn(
+                      "text-xs font-mono",
+                      category.total > 0 ? catColors.text : "text-slate-600"
+                    )}>
+                      {category.total}
+                    </span>
+                    <span className="text-[10px] text-slate-600">/{category.maxPoints}</span>
+                  </div>
                 </div>
                 
-                {/* Category Progress */}
-                <div className="h-1 bg-slate-700/30 rounded-full overflow-hidden">
+                {/* Mini progress bar */}
+                <div className="h-1 bg-slate-700/50 rounded-full overflow-hidden mb-3">
                   <motion.div
                     className={cn("h-full rounded-full bg-gradient-to-r", catColors.gradient)}
                     initial={{ width: 0 }}
@@ -481,60 +584,69 @@ export function IntelligenceProfileDemo({
                   />
                 </div>
                 
-                {/* Fields */}
-                <div className="space-y-0.5">
+                {/* Fields - Enhanced with clearer filled/missing states */}
+                <div className="space-y-2">
                   {cat.fields.map((field) => {
                     const fieldData = category[field.key] as FieldScore;
                     const hasValue = !!fieldData.value;
                     const isAnimating = animatingFields.has(`${cat.key}-${field.key}`);
                     
                     const fieldContent = (
-                      <div className="flex items-center gap-2 py-0.5 group">
-                        {/* Vertical bar indicator */}
-                        <motion.div
-                          className={cn(
-                            "w-1 h-5 rounded-full flex-shrink-0 transition-all duration-300",
-                            hasValue
-                              ? `bg-gradient-to-b ${catColors.gradient}`
-                              : isThinking ? "bg-slate-600" : "bg-slate-700"
+                      <div className={cn(
+                        "flex items-center gap-2 py-1.5 px-2 rounded-md transition-all",
+                        hasValue ? "bg-slate-800/50" : "bg-transparent",
+                        isAnimating && "ring-1 ring-cyan-400/50"
+                      )}>
+                        {/* Status icon */}
+                        <div className="flex-shrink-0">
+                          {hasValue ? (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className={cn("w-4 h-4 rounded-full flex items-center justify-center", catColors.bg)}
+                            >
+                              <Check className={cn("w-2.5 h-2.5", catColors.text)} />
+                            </motion.div>
+                          ) : (
+                            <motion.div
+                              animate={isThinking ? { opacity: [0.5, 1, 0.5] } : {}}
+                              transition={{ duration: 1.5, repeat: Infinity }}
+                            >
+                              <Circle className="w-4 h-4 text-slate-600" />
+                            </motion.div>
                           )}
-                          animate={{
-                            scaleY: isAnimating ? [1, 1.3, 1] : 1,
-                            opacity: isThinking && !hasValue ? [0.5, 0.8, 0.5] : 1,
-                          }}
-                          transition={{
-                            scaleY: { duration: 0.4, ease: 'easeOut' },
-                            opacity: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' },
-                          }}
-                        />
+                        </div>
                         
                         {/* Label */}
                         <span className={cn(
-                          "text-xs min-w-[70px] flex-shrink-0 transition-colors",
-                          hasValue ? "text-slate-300" : "text-slate-600"
+                          "text-xs flex-shrink-0 transition-colors",
+                          hasValue ? "text-slate-300 font-medium" : "text-slate-500"
                         )}>
                           {field.label}
                         </span>
                         
-                        {/* Value - show full text or smart truncation with tooltip */}
+                        {/* Value or hint */}
                         <AnimatePresence mode="wait">
-                          {hasValue && (
+                          {hasValue ? (
                             <motion.span
                               initial={{ opacity: 0, x: 10 }}
                               animate={{ opacity: 1, x: 0 }}
                               exit={{ opacity: 0, x: -5 }}
                               className={cn(
-                                "text-xs ml-auto text-right",
+                                "text-xs ml-auto text-right truncate",
                                 catColors.text
                               )}
-                              style={{ maxWidth: '150px', wordBreak: 'break-word' }}
+                              style={{ maxWidth: '130px' }}
                               title={fieldData.value || undefined}
                             >
-                              {/* Smart truncation: show full text if short, word-boundary truncate if long */}
-                              {fieldData.value && fieldData.value.length > 25
-                                ? fieldData.value.slice(0, 25).replace(/\s+\S*$/, '') + '...'
+                              {fieldData.value && fieldData.value.length > 20
+                                ? fieldData.value.slice(0, 20).replace(/\s+\S*$/, '') + '...'
                                 : fieldData.value}
                             </motion.span>
+                          ) : (
+                            <span className="text-[10px] text-slate-600 ml-auto">
+                              Not yet captured
+                            </span>
                           )}
                         </AnimatePresence>
                       </div>
@@ -560,7 +672,7 @@ export function IntelligenceProfileDemo({
                     return <div key={field.key}>{fieldContent}</div>;
                   })}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
           
