@@ -148,9 +148,44 @@ export default function EnhancedBrandSetup() {
   // Intelligence Accumulator state
   const [accumulator, setAccumulator] = useState<IntelligenceAccumulator | null>(null);
   
+  // localStorage intelligence state (from demo session)
+  const [localStorageIntelligence, setLocalStorageIntelligence] = useState<{
+    industry: string | null;
+    audience: string | null;
+    valueProp: string | null;
+    competitorDifferentiator: string | null;
+    painPoints: string | null;
+    buyerObjections: string | null;
+    proofElements: string | null;
+    businessName?: string | null;
+    targetMarket?: string | null;
+  } | null>(null);
+  
   // Track if brand guide has set colors (takes priority over website extraction)
   const [colorsFromBrandGuide, setColorsFromBrandGuide] = useState(false);
 
+  // Load localStorage intelligence on mount
+  useEffect(() => {
+    try {
+      const storedData = localStorage.getItem('pageconsult_demo_extracted');
+      if (storedData) {
+        const parsed = JSON.parse(storedData);
+        console.log('🧠 [Brand Setup] Loaded localStorage intelligence:', parsed);
+        setLocalStorageIntelligence(parsed);
+        
+        // Also pre-fill company name and tagline from localStorage if not already set
+        if (parsed.businessName && companyName === 'Your Company') {
+          setCompanyName(parsed.businessName);
+        }
+        if (parsed.valueProp && tagline === 'Your compelling tagline goes here') {
+          setTagline(parsed.valueProp);
+        }
+      }
+    } catch (e) {
+      console.warn('🧠 [Brand Setup] Failed to parse localStorage intelligence:', e);
+    }
+  }, []);
+  
   // Load accumulator on mount
   useEffect(() => {
     const loadAccumulator = async () => {
@@ -1107,6 +1142,65 @@ export default function EnhancedBrandSetup() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* localStorage Intelligence Panel (from demo session) */}
+        {localStorageIntelligence && !accumulator && (
+          <div className="mb-8 bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 backdrop-blur-sm rounded-xl border border-emerald-500/20 p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                <Brain className="w-6 h-6 text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Intelligence Gathered</h3>
+                <p className="text-sm text-emerald-200">From your strategy conversation</p>
+              </div>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              {localStorageIntelligence.industry && (
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-emerald-300 uppercase tracking-wider">Industry</div>
+                  <p className="text-white font-medium">{localStorageIntelligence.industry}</p>
+                </div>
+              )}
+              
+              {localStorageIntelligence.audience && (
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-emerald-300 uppercase tracking-wider">Target Audience</div>
+                  <p className="text-white font-medium">{localStorageIntelligence.audience}</p>
+                </div>
+              )}
+              
+              {localStorageIntelligence.valueProp && (
+                <div className="md:col-span-2 space-y-1">
+                  <div className="text-xs font-medium text-emerald-300 uppercase tracking-wider">Value Proposition</div>
+                  <p className="text-white">{localStorageIntelligence.valueProp}</p>
+                </div>
+              )}
+              
+              {localStorageIntelligence.competitorDifferentiator && (
+                <div className="md:col-span-2 space-y-1">
+                  <div className="text-xs font-medium text-emerald-300 uppercase tracking-wider">Competitive Edge</div>
+                  <p className="text-white">{localStorageIntelligence.competitorDifferentiator}</p>
+                </div>
+              )}
+              
+              {localStorageIntelligence.painPoints && (
+                <div className="md:col-span-2 space-y-1">
+                  <div className="text-xs font-medium text-emerald-300 uppercase tracking-wider">Pain Points Addressed</div>
+                  <p className="text-white">{localStorageIntelligence.painPoints}</p>
+                </div>
+              )}
+              
+              {localStorageIntelligence.proofElements && (
+                <div className="md:col-span-2 space-y-1">
+                  <div className="text-xs font-medium text-emerald-300 uppercase tracking-wider">Proof Elements</div>
+                  <p className="text-white">{localStorageIntelligence.proofElements}</p>
+                </div>
+              )}
             </div>
           </div>
         )}
