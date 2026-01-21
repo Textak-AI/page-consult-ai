@@ -17,7 +17,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { SessionProvider } from "@/contexts/SessionContext";
 import { CompanionProvider } from "@/contexts/CompanionContext";
-import { CompanionBar } from "@/components/companion";
+
 import { DevFloatingButton } from "@/components/dev";
 import HomePage from "./pages/HomePage";
 import Wizard from "./pages/Wizard";
@@ -167,7 +167,7 @@ const App = () => {
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-              <CompanionBar />
+              
             </CompanionProvider>
           </BrowserRouter>
         </TooltipProvider>
