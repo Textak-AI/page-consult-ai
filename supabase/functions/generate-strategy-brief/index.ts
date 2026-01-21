@@ -23,17 +23,100 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    // Convert consultation to intelligence format
-    const intelligence = consultationToIntelligence(consultationData);
-
-    // Get layout recommendation
-    const layoutResult = getLayoutRecommendation(intelligence);
-
-    // Log for debugging
-    console.log('🏗️ [Layout Intelligence]', layoutResult.reasoning);
-    console.log('📊 [Confidence]', Math.round(layoutResult.confidence * 100) + '%');
-    console.log('📋 [Sections]', layoutResult.sections);
-    console.log('🎨 [Hero Style]', layoutResult.config.layout.heroStyle);
+    // Convert consultation to intelligence format and get layout recommendation
+    // With fallback handling in case the industry layouts system fails
+    let layoutResult: {
+      config: {
+        name: string;
+        description: string;
+        layout: {
+          heroStyle: string;
+          preferredFeatureLayout: string;
+          maxFeatureCards: number;
+          socialProofStyle: string;
+          ctaPlacement: string;
+          pageDensity: string;
+        };
+        contentGuidance: {
+          toneKeywords: string[];
+          avoidWords: string[];
+          ctaText: { primary: string[]; secondary: string[] };
+          proofEmphasis: string;
+        };
+        trustPriorities: string[];
+      };
+      confidence: number;
+      reasoning: string;
+      sections: string[];
+    };
+    
+    try {
+      const intelligence = consultationToIntelligence(consultationData);
+      const result = getLayoutRecommendation(intelligence);
+      
+      // Map to simplified structure for prompt injection
+      layoutResult = {
+        config: {
+          name: result.config.name,
+          description: result.config.description,
+          layout: {
+            heroStyle: result.config.layout.heroStyle,
+            preferredFeatureLayout: result.config.layout.preferredFeatureLayout,
+            maxFeatureCards: result.config.layout.maxFeatureCards,
+            socialProofStyle: result.config.layout.socialProofStyle,
+            ctaPlacement: result.config.layout.ctaPlacement,
+            pageDensity: result.config.layout.pageDensity,
+          },
+          contentGuidance: {
+            toneKeywords: result.config.contentGuidance.toneKeywords,
+            avoidWords: result.config.contentGuidance.avoidWords,
+            ctaText: result.config.contentGuidance.ctaText,
+            proofEmphasis: result.config.contentGuidance.proofEmphasis,
+          },
+          trustPriorities: result.config.trustPriorities,
+        },
+        confidence: result.confidence,
+        reasoning: result.reasoning,
+        sections: result.sections,
+      };
+      
+      // Log for debugging
+      console.log('🏗️ [Layout Intelligence]', layoutResult.reasoning);
+      console.log('📊 [Confidence]', Math.round(layoutResult.confidence * 100) + '%');
+      console.log('📋 [Sections]', layoutResult.sections);
+      console.log('🎨 [Hero Style]', layoutResult.config.layout.heroStyle);
+    } catch (layoutError) {
+      console.warn('⚠️ [Layout Intelligence] Failed to get recommendation, using defaults:', layoutError);
+      
+      // Provide sensible defaults so brief generation can continue
+      layoutResult = {
+        config: {
+          name: 'default',
+          description: 'Default layout configuration',
+          layout: {
+            heroStyle: 'bold-statement',
+            preferredFeatureLayout: '3-col',
+            maxFeatureCards: 6,
+            socialProofStyle: 'testimonials',
+            ctaPlacement: 'hero-and-final',
+            pageDensity: 'balanced',
+          },
+          contentGuidance: {
+            toneKeywords: ['professional', 'clear', 'confident'],
+            avoidWords: ['maybe', 'try', 'hope'],
+            ctaText: {
+              primary: ['Get Started', 'Learn More'],
+              secondary: ['Schedule a Call', 'Contact Us'],
+            },
+            proofEmphasis: 'results',
+          },
+          trustPriorities: ['testimonials', 'credentials', 'case-studies'],
+        },
+        confidence: 0.5,
+        reasoning: 'Using default layout due to configuration error',
+        sections: ['hero', 'features', 'social-proof', 'faq', 'cta-final'],
+      };
+    }
 
     const systemPrompt = `You are a strategic landing page consultant. Based on consultation data, you create focused strategy briefs that will guide landing page content generation.
 
