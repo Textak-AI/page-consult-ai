@@ -1,0 +1,2 @@
+// Healthcare industry layout
+export {};
