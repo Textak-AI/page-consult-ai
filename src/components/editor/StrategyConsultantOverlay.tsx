@@ -3,18 +3,24 @@ import { X, Send, Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
+
+export interface SuggestionData {
+  id: string;
+  type: 'headline' | 'subheadline' | 'cta' | 'feature' | 'proof' | 'description';
+  sectionId?: string;
+  field: string;
+  currentValue: string;
+  suggestedValue: string;
+  label: string;
+}
 
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
-  suggestion?: {
-    sectionId: string;
-    field: string;
-    currentValue: string;
-    suggestedValue: string;
-  };
+  suggestion?: SuggestionData;
 }
 
 interface StrategyConsultantOverlayProps {
@@ -23,8 +29,27 @@ interface StrategyConsultantOverlayProps {
   messages: ChatMessage[];
   onSendMessage: (message: string) => void;
   isLoading?: boolean;
-  onApplySuggestion?: (suggestion: ChatMessage["suggestion"]) => void;
+  onApplySuggestion?: (sectionId: string, field: string, value: string) => void;
 }
+
+// Helper to infer section from suggestion type
+const inferSectionFromType = (type: string): string => {
+  switch (type) {
+    case 'headline':
+    case 'subheadline':
+      return 'hero';
+    case 'cta':
+      return 'final-cta';
+    case 'proof':
+      return 'social-proof';
+    case 'feature':
+      return 'features';
+    case 'description':
+      return 'problem-solution';
+    default:
+      return 'hero';
+  }
+};
 
 export function StrategyConsultantOverlay({
   isOpen,
@@ -35,8 +60,10 @@ export function StrategyConsultantOverlay({
   onApplySuggestion,
 }: StrategyConsultantOverlayProps) {
   const [input, setInput] = useState("");
+  const [appliedSuggestions, setAppliedSuggestions] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -134,24 +161,54 @@ export function StrategyConsultantOverlay({
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   
                   {/* Suggestion Card */}
-                  {message.suggestion && (
-                    <div className="mt-3 p-3 bg-slate-700/50 rounded-lg border border-slate-600/50">
-                      <div className="text-xs text-slate-400 mb-1">
-                        Suggestion for {message.suggestion.field}:
-                      </div>
-                      <div className="text-sm text-purple-300 font-medium mb-2">
-                        "{message.suggestion.suggestedValue}"
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => onApplySuggestion?.(message.suggestion)}
-                        className="bg-purple-600 hover:bg-purple-700 text-white text-xs h-7"
+                  {message.suggestion && (() => {
+                    const suggestion = message.suggestion;
+                    const isApplied = appliedSuggestions.has(suggestion.id);
+                    const sectionId = suggestion.sectionId || inferSectionFromType(suggestion.type);
+                    
+                    const handleApply = () => {
+                      if (isApplied || !onApplySuggestion) return;
+                      
+                      // Call the apply handler
+                      onApplySuggestion(sectionId, suggestion.field, suggestion.suggestedValue);
+                      
+                      // Mark as applied
+                      setAppliedSuggestions(prev => new Set([...prev, suggestion.id]));
+                      
+                      // Show toast
+                      toast({
+                        title: "Applied!",
+                        description: `Updated ${suggestion.field} in ${sectionId}`,
+                      });
+                    };
+                    
+                    return (
+                      <div
+                        onClick={handleApply}
+                        className={cn(
+                          "mt-3 p-3 rounded-lg border cursor-pointer transition-all duration-200",
+                          isApplied 
+                            ? "bg-green-500/10 border-green-500/30"
+                            : "bg-slate-700/50 border-slate-600/50 hover:bg-slate-600/50 hover:border-purple-500/50 hover:scale-[1.01]"
+                        )}
                       >
-                        <Check className="w-3 h-3 mr-1" />
-                        Apply
-                      </Button>
-                    </div>
-                  )}
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-medium text-purple-400">
+                            {suggestion.label || `Improve ${suggestion.field}`}
+                          </span>
+                          {isApplied ? (
+                            <Check className="w-4 h-4 text-green-400" />
+                          ) : (
+                            <Sparkles className="w-4 h-4 text-purple-400" />
+                          )}
+                        </div>
+                        <p className="text-sm text-white">"{suggestion.suggestedValue}"</p>
+                        {isApplied && (
+                          <p className="text-xs text-green-400 mt-1">Applied ✓</p>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </motion.div>
             ))}
