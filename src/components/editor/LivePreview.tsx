@@ -660,6 +660,30 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
             { id: (Date.now() + 1).toString(), role: 'assistant', content: 'AI response coming in Phase 2...', timestamp: new Date() }
           ]);
         }}
+        onApplySuggestion={(sectionId, field, value) => {
+          // Find the section and update it
+          const sectionIndex = sections.findIndex(s => s.type === sectionId);
+          if (sectionIndex === -1) {
+            console.warn(`Section ${sectionId} not found`);
+            return;
+          }
+          
+          const updated = [...sections];
+          const content = { ...updated[sectionIndex].content };
+          
+          // Handle nested fields (e.g., 'headline' vs 'cta.text')
+          if (field.includes('.')) {
+            const [parent, child] = field.split('.');
+            content[parent] = { ...content[parent], [child]: value };
+          } else {
+            content[field] = value;
+          }
+          
+          updated[sectionIndex].content = content;
+          onSectionsChange(updated);
+          
+          console.log(`✅ Applied suggestion: ${field} in ${sectionId} updated to "${value}"`);
+        }}
       />
     </div>
   );
