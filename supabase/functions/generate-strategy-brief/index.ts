@@ -1,6 +1,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { getLayoutRecommendation } from '../../../src/lib/industryLayouts/index.ts';
+import { consultationToIntelligence } from '../../../src/lib/industryLayouts/adapter.ts';
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -21,7 +23,43 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
+    // Convert consultation to intelligence format
+    const intelligence = consultationToIntelligence(consultationData);
+
+    // Get layout recommendation
+    const layoutResult = getLayoutRecommendation(intelligence);
+
+    // Log for debugging
+    console.log('🏗️ [Layout Intelligence]', layoutResult.reasoning);
+    console.log('📊 [Confidence]', Math.round(layoutResult.confidence * 100) + '%');
+    console.log('📋 [Sections]', layoutResult.sections);
+    console.log('🎨 [Hero Style]', layoutResult.config.layout.heroStyle);
+
     const systemPrompt = `You are a strategic landing page consultant. Based on consultation data, you create focused strategy briefs that will guide landing page content generation.
+
+LAYOUT INTELLIGENCE:
+${layoutResult.reasoning}
+Confidence: ${Math.round(layoutResult.confidence * 100)}%
+
+SECTIONS TO GENERATE (in this exact order):
+${layoutResult.sections.map((s, i) => `${i+1}. ${s}`).join('\n')}
+
+LAYOUT RULES TO APPLY:
+- Hero style: ${layoutResult.config.layout.heroStyle}
+- Feature layout: ${layoutResult.config.layout.preferredFeatureLayout}
+- Max features: ${layoutResult.config.layout.maxFeatureCards}
+- Social proof style: ${layoutResult.config.layout.socialProofStyle}
+- CTA placement: ${layoutResult.config.layout.ctaPlacement}
+- Page density: ${layoutResult.config.layout.pageDensity}
+
+CONTENT GUIDANCE:
+- Tone keywords: ${layoutResult.config.contentGuidance.toneKeywords.slice(0, 5).join(', ')}
+- Avoid words: ${layoutResult.config.contentGuidance.avoidWords.slice(0, 3).join(', ')}
+- Primary CTA: ${layoutResult.config.contentGuidance.ctaText.primary[0]}
+- Proof emphasis: ${layoutResult.config.contentGuidance.proofEmphasis}
+
+TOP TRUST PRIORITIES:
+${layoutResult.config.trustPriorities.slice(0, 3).map((t, i) => `${i+1}. ${t}`).join('\n')}
 
 Your brief must be actionable, specific, and derived directly from the client's inputs. Never use generic placeholder text. If information is missing, acknowledge it and make strategic recommendations.
 
@@ -178,7 +216,15 @@ After the markdown brief, include a JSON block that the page generator will pars
       "title": "Role/Company or [Their Role]"
     }
   ],
-  "ctaText": "CTA button text"
+  "ctaText": "CTA button text",
+  "layoutIntelligence": {
+    "heroStyle": "${layoutResult.config.layout.heroStyle}",
+    "featureLayout": "${layoutResult.config.layout.preferredFeatureLayout}",
+    "socialProofStyle": "${layoutResult.config.layout.socialProofStyle}",
+    "pageDensity": "${layoutResult.config.layout.pageDensity}",
+    "recommendedSections": ${JSON.stringify(layoutResult.sections)},
+    "confidence": ${layoutResult.confidence}
+  }
 }
 \`\`\`
 
@@ -233,7 +279,19 @@ Be specific. No generic advice. Everything should tie back to the actual consult
     return new Response(JSON.stringify({
       success: true,
       strategyBrief,
-      structuredBrief
+      structuredBrief,
+      layoutIntelligence: {
+        reasoning: layoutResult.reasoning,
+        confidence: layoutResult.confidence,
+        sections: layoutResult.sections,
+        config: {
+          name: layoutResult.config.name,
+          heroStyle: layoutResult.config.layout.heroStyle,
+          featureLayout: layoutResult.config.layout.preferredFeatureLayout,
+          socialProofStyle: layoutResult.config.layout.socialProofStyle,
+          pageDensity: layoutResult.config.layout.pageDensity,
+        }
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
