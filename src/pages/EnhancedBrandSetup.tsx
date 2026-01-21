@@ -168,17 +168,19 @@ export default function EnhancedBrandSetup() {
   useEffect(() => {
     try {
       const storedData = localStorage.getItem('pageconsult_demo_extracted');
-      if (storedData) {
+      if (storedData && storedData !== 'undefined' && storedData !== 'null') {
         const parsed = JSON.parse(storedData);
-        console.log('🧠 [Brand Setup] Loaded localStorage intelligence:', parsed);
-        setLocalStorageIntelligence(parsed);
-        
-        // Also pre-fill company name and tagline from localStorage if not already set
-        if (parsed.businessName && companyName === 'Your Company') {
-          setCompanyName(parsed.businessName);
-        }
-        if (parsed.valueProp && tagline === 'Your compelling tagline goes here') {
-          setTagline(parsed.valueProp);
+        if (parsed && typeof parsed === 'object') {
+          console.log('🧠 [Brand Setup] Loaded localStorage intelligence:', parsed);
+          setLocalStorageIntelligence(parsed);
+          
+          // Also pre-fill company name and tagline from localStorage if not already set
+          if (parsed.businessName && companyName === 'Your Company') {
+            setCompanyName(parsed.businessName);
+          }
+          if (parsed.valueProp && tagline === 'Your compelling tagline goes here') {
+            setTagline(parsed.valueProp);
+          }
         }
       }
     } catch (e) {

@@ -40,8 +40,15 @@ export function EditingProvider({ children }: { children: ReactNode }) {
     setHistory(prev => {
       // Remove any "future" history if we're not at the end
       const newHistory = prev.slice(0, historyIndex + 1);
-      // Add new state, limit to 50 states
-      const updatedHistory = [...newHistory, JSON.parse(JSON.stringify(sections))];
+      // Add new state, limit to 50 states - use safe stringify/parse
+      let cloned: Section[];
+      try {
+        cloned = JSON.parse(JSON.stringify(sections));
+      } catch {
+        console.warn('[EditingContext] Failed to clone sections for history');
+        return prev;
+      }
+      const updatedHistory = [...newHistory, cloned];
       return updatedHistory.slice(-50);
     });
     setHistoryIndex(prev => Math.min(prev + 1, 49));
