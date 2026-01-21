@@ -39,6 +39,8 @@ import { SEOHead } from "@/components/seo/SEOHead";
 import type { SEOHeadData } from "@/lib/aiSeoIntegration";
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
+import { StrategyConsultantButton } from "@/components/editor/StrategyConsultantButton";
+import { StrategyConsultantOverlay, type ChatMessage } from "@/components/editor/StrategyConsultantOverlay";
 
 type Section = {
   type: string;
@@ -79,6 +81,17 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
   
   // Testimonial acquisition modal state
   const [testimonialModalOpen, setTestimonialModalOpen] = useState(false);
+  
+  // Strategy Consultant state
+  const [isConsultantOpen, setIsConsultantOpen] = useState(false);
+  const [consultantMessages, setConsultantMessages] = useState<ChatMessage[]>([
+    {
+      id: 'welcome',
+      role: 'assistant',
+      content: "I'm your AI strategy consultant. I can see your strategy brief and current page. Ask me anything—like 'make my headline more urgent' or 'why is my social proof score low?'",
+      timestamp: new Date(),
+    }
+  ]);
 
   const handleSaveEdit = () => {
     setEditingSection(null);
@@ -628,6 +641,25 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         industry={strategyBrief?.industry || 'consulting'}
         ownerName={strategyBrief?.ownerName}
         serviceDescription={strategyBrief?.serviceDescription}
+      />
+      
+      {/* Strategy Consultant */}
+      <StrategyConsultantButton 
+        onClick={() => setIsConsultantOpen(true)}
+        suggestionCount={0}
+      />
+      <StrategyConsultantOverlay
+        isOpen={isConsultantOpen}
+        onClose={() => setIsConsultantOpen(false)}
+        messages={consultantMessages}
+        onSendMessage={(msg) => {
+          // Phase 1: Just echo for now
+          setConsultantMessages(prev => [
+            ...prev,
+            { id: Date.now().toString(), role: 'user', content: msg, timestamp: new Date() },
+            { id: (Date.now() + 1).toString(), role: 'assistant', content: 'AI response coming in Phase 2...', timestamp: new Date() }
+          ]);
+        }}
       />
     </div>
   );
