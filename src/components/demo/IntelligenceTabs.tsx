@@ -19,6 +19,7 @@ import {
   FileText,
   ArrowRight
 } from 'lucide-react';
+import { IntelligenceGatedTab, getTabConfig } from '@/components/editor/IntelligenceGatedTab';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { IntelligenceProfileDemo } from '@/components/consultation/IntelligenceProfileDemo';
 import { ObjectionKillerPanel } from '@/components/consultation/ObjectionKillerPanel';
@@ -219,21 +220,23 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
           );
         })}
         
-        {/* Coming Soon tabs (grayed out) - only personas shows "Soon" */}
+        {/* Coming Soon tabs (grayed out) with intelligent tooltips */}
         {unavailableTabs.map((tab) => {
-          const Icon = tab.icon;
+          const tabConfig = getTabConfig(tab.id);
           const showSoonLabel = tab.id === 'personas'; // Only show "Soon" for personas
           return (
-            <div
+            <IntelligenceGatedTab
               key={tab.id}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 cursor-not-allowed whitespace-nowrap flex-shrink-0"
-            >
-              <Icon className="w-4 h-4" />
-              <span className="hidden sm:inline">{tab.shortLabel}</span>
-              {showSoonLabel && (
-                <span className="text-[10px] uppercase tracking-wide text-slate-700">Soon</span>
-              )}
-            </div>
+              tabName={tab.id}
+              unlockThreshold={tabConfig.threshold}
+              currentScore={score.totalScore}
+              description={tabConfig.description}
+              isActive={activeTab === tab.id}
+              onClick={() => handleTabClick(tab.id)}
+              icon={tab.icon}
+              shortLabel={tab.shortLabel}
+              showSoonLabel={showSoonLabel}
+            />
           );
         })}
       </div>
