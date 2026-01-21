@@ -511,7 +511,6 @@ export const archetypes: Record<string, ArchetypeConfig> = {
       "money-back-guarantee",
       "real-photos",
       "media-mentions",
-      "comparison",
     ],
 
     contentGuidance: {
