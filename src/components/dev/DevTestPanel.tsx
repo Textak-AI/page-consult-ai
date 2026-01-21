@@ -502,11 +502,16 @@ export function DevTestPanel({ isOpen, onClose }: DevTestPanelProps) {
   // Load from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('dev_test_panel_data');
-    if (saved) {
+    // Guard against undefined/null strings that would crash JSON.parse
+    if (saved && saved !== 'undefined' && saved !== 'null') {
       try {
         const parsed = JSON.parse(saved);
-        setTestData(parsed);
-        setJsonText(JSON.stringify(parsed, null, 2));
+        if (parsed && typeof parsed === 'object') {
+          setTestData(parsed);
+          setJsonText(JSON.stringify(parsed, null, 2));
+        } else {
+          throw new Error('Invalid data');
+        }
       } catch (e) {
         // Fall back to default preset on parse error
         const defaultPreset = PRESETS['consulting'];

@@ -59,9 +59,12 @@ export function extractTargetMarket(consultationData: any): string | null {
 export function getDemoTargetMarket(): string | null {
   try {
     const demoExtracted = localStorage.getItem('pageconsult_demo_extracted');
-    if (demoExtracted) {
+    // Guard against undefined/null strings
+    if (demoExtracted && demoExtracted !== 'undefined' && demoExtracted !== 'null') {
       const parsed = JSON.parse(demoExtracted);
-      return extractTargetMarket(parsed);
+      if (parsed && typeof parsed === 'object') {
+        return extractTargetMarket(parsed);
+      }
     }
   } catch (e) {
     console.error('Error reading demo extracted data:', e);

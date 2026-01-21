@@ -43,12 +43,15 @@ const CompanionContext = createContext<CompanionContextValue | undefined>(undefi
 function loadMessages(): CompanionMessage[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
+    // Guard against undefined/null strings that would crash JSON.parse
+    if (stored && stored !== 'undefined' && stored !== 'null') {
       const parsed = JSON.parse(stored);
-      return parsed.map((msg: any) => ({
-        ...msg,
-        timestamp: new Date(msg.timestamp)
-      }));
+      if (Array.isArray(parsed)) {
+        return parsed.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+      }
     }
   } catch (e) {
     console.error('Failed to load companion messages:', e);

@@ -110,10 +110,14 @@ export default function Signup() {
     
     if (isFromDemo) {
       const storedIntelligence = sessionStorage.getItem('demoIntelligence');
-      if (storedIntelligence) {
+      // Guard against undefined/null strings that would crash JSON.parse
+      if (storedIntelligence && storedIntelligence !== 'undefined' && storedIntelligence !== 'null') {
         try {
-          setDemoIntelligence(JSON.parse(storedIntelligence));
-          console.log('📋 [Signup] Loaded demo intelligence from sessionStorage');
+          const parsed = JSON.parse(storedIntelligence);
+          if (parsed && typeof parsed === 'object') {
+            setDemoIntelligence(parsed);
+            console.log('📋 [Signup] Loaded demo intelligence from sessionStorage');
+          }
         } catch (e) {
           console.error('Failed to parse demo intelligence:', e);
         }

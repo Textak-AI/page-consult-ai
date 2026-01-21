@@ -87,8 +87,22 @@ export function loadDemoHandoff(): DemoHandoffData | null {
     
     if (!extracted || !sessionId) return null;
 
-    const parsedExtracted = JSON.parse(extracted);
-    const parsedMarket = market ? JSON.parse(market) : {};
+    // Safe parse with fallbacks
+    let parsedExtracted: Record<string, any>;
+    let parsedMarket: Record<string, any>;
+    
+    try {
+      parsedExtracted = extracted ? JSON.parse(extracted) : {};
+    } catch {
+      console.warn('[Demo Handoff] Failed to parse extracted intelligence');
+      return null;
+    }
+    
+    try {
+      parsedMarket = market ? JSON.parse(market) : {};
+    } catch {
+      parsedMarket = {};
+    }
     
     // Calculate readiness from extracted data
     const readinessScore = calculateReadinessFromExtracted(parsedExtracted);
@@ -101,15 +115,21 @@ export function loadDemoHandoff(): DemoHandoffData | null {
       savedAt: timestamp,
     };
 
-    // Load optional data
-    const artifacts = localStorage.getItem(DEMO_STORAGE_KEYS.artifacts);
-    if (artifacts) result.artifacts = JSON.parse(artifacts);
+    // Load optional data with safe parsing
+    try {
+      const artifacts = localStorage.getItem(DEMO_STORAGE_KEYS.artifacts);
+      if (artifacts) result.artifacts = JSON.parse(artifacts);
+    } catch {}
     
-    const brief = localStorage.getItem(DEMO_STORAGE_KEYS.strategyBrief);
-    if (brief) result.strategyBrief = JSON.parse(brief);
+    try {
+      const brief = localStorage.getItem(DEMO_STORAGE_KEYS.strategyBrief);
+      if (brief) result.strategyBrief = JSON.parse(brief);
+    } catch {}
     
-    const brand = localStorage.getItem(DEMO_STORAGE_KEYS.brandData);
-    if (brand) result.brandData = JSON.parse(brand);
+    try {
+      const brand = localStorage.getItem(DEMO_STORAGE_KEYS.brandData);
+      if (brand) result.brandData = JSON.parse(brand);
+    } catch {}
 
     console.log('[Demo Handoff] Loaded data:', {
       sessionId: result.sessionId,

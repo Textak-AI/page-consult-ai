@@ -786,27 +786,31 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     }
     
     const saved = localStorage.getItem('pageconsult_consultation_draft');
-    if (saved) {
+    // Guard against undefined/null strings that would crash JSON.parse
+    if (saved && saved !== 'undefined' && saved !== 'null') {
       try {
-        const { currentStep: savedStep, data: savedData, timestamp } = JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          const { currentStep: savedStep, data: savedData, timestamp } = parsed;
         
-        // Only restore if less than 24 hours old and has meaningful data
-        const isRecent = Date.now() - timestamp < 24 * 60 * 60 * 1000;
-        const hasMeaningfulData = savedData.businessName || savedData.industry || savedData.idealClient;
-        
-        if (isRecent && hasMeaningfulData) {
-          // Get the correct STEPS based on saved pageType
-          const savedSteps = getStepsForPageType(savedData.pageType, hasBrandColors);
-          // Calculate best resume position (clamped to valid range)
-          const resumeStep = Math.min(
-            findFirstIncompleteStep(savedData, savedSteps),
-            savedSteps.length - 1
-          );
-          setShowRestorePrompt(true);
-          setPendingRestore({ savedStep: Math.max(0, resumeStep), savedData });
-        } else {
-          // Clear stale data
-          localStorage.removeItem('pageconsult_consultation_draft');
+          // Only restore if less than 24 hours old and has meaningful data
+          const isRecent = Date.now() - timestamp < 24 * 60 * 60 * 1000;
+          const hasMeaningfulData = savedData.businessName || savedData.industry || savedData.idealClient;
+          
+          if (isRecent && hasMeaningfulData) {
+            // Get the correct STEPS based on saved pageType
+            const savedSteps = getStepsForPageType(savedData.pageType, hasBrandColors);
+            // Calculate best resume position (clamped to valid range)
+            const resumeStep = Math.min(
+              findFirstIncompleteStep(savedData, savedSteps),
+              savedSteps.length - 1
+            );
+            setShowRestorePrompt(true);
+            setPendingRestore({ savedStep: Math.max(0, resumeStep), savedData });
+          } else {
+            // Clear stale data
+            localStorage.removeItem('pageconsult_consultation_draft');
+          }
         }
       } catch (e) {
         console.warn('Failed to parse saved consultation:', e);

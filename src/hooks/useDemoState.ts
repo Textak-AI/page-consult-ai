@@ -138,7 +138,8 @@ function getSavedContent(): PersonalizedContent | null {
   if (typeof window === 'undefined') return null;
   try {
     const saved = localStorage.getItem(CONTENT_KEY);
-    if (saved) {
+    // Guard against undefined/null strings that would crash JSON.parse
+    if (saved && saved !== 'undefined' && saved !== 'null') {
       const parsed = JSON.parse(saved);
       if (isValidPersonalizedContent(parsed)) {
         return parsed;
