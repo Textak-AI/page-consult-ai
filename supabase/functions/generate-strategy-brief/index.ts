@@ -1,8 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
-import { getLayoutRecommendation } from '../../../src/lib/industryLayouts/index.ts';
-import { consultationToIntelligence } from '../../../src/lib/industryLayouts/adapter.ts';
+import { getLayoutRecommendation, consultationToIntelligence } from '../_shared/industryLayouts/index.ts';
 
 serve(async (req) => {
   // Handle CORS preflight requests
