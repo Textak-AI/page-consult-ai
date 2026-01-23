@@ -44,10 +44,26 @@ serve(async (req) => {
       );
     }
 
+    // Security: Check if this session exists and validate IP hash to prevent session hijacking
+    const { data: existingSession } = await supabase
+      .from('demo_sessions')
+      .select('ip_hash')
+      .eq('session_id', sessionId)
+      .maybeSingle();
+
+    // If session exists, verify the IP hash matches (prevent session hijacking)
+    if (existingSession && existingSession.ip_hash && existingSession.ip_hash !== ipHash) {
+      console.warn(`[Security] Session hijacking attempt detected for session ${sessionId}. Expected IP hash: ${existingSession.ip_hash}, Got: ${ipHash}`);
+      return new Response(
+        JSON.stringify({ error: 'Session validation failed' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Calculate readiness score if not provided
     const calculatedReadiness = readiness ?? (extractedIntelligence ? calculateReadinessFromIntel(extractedIntelligence) : 0);
 
-    // Upsert session
+    // Upsert session (only if IP hash matches or session is new)
     const { error } = await supabase
       .from('demo_sessions')
       .upsert({
