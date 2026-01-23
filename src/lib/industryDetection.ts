@@ -1,3 +1,6 @@
+// Industry Detection v2.1 - Local Services Support (Jan 23, 2026)
+console.log('🏗️ [IndustryDetection] v2.1 loaded - local-services enabled');
+
 /**
  * Dynamic Industry Detection
  * 
