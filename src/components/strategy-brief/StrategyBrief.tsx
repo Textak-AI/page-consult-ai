@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, FileText, X, Loader2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
@@ -116,33 +116,57 @@ function extractObjections(
   return { objections: defaults, source: 'default' };
 }
 
-// Default fallback page structure when none provided from API
-const DEFAULT_PAGE_STRUCTURE: PageStructureItem[] = [
-  { section: 'Hero', guidance: 'Lead with transformation, not features' },
-  { section: 'Problem', guidance: 'Articulate the pain they\'re experiencing' },
-  { section: 'Solution', guidance: 'Your approach and methodology' },
-  { section: 'Proof', guidance: 'Credentials, results, testimonials' },
-  { section: 'CTA', guidance: 'Clear next step with urgency' },
-];
+import { getClientLayoutIntelligence } from '@/lib/layoutIntelligence';
 
 export function StrategyBrief({ 
   consultation, 
   artifacts,
   marketResearch: externalMarketResearch,
-  pageStructure,
-  layoutIntelligence,
+  pageStructure: propPageStructure,
+  layoutIntelligence: propLayoutIntelligence,
   onClose,
   onGeneratePage
 }: StrategyBriefProps) {
-  // Use API page structure if provided, otherwise use fallback
-  const displayPageStructure = pageStructure && pageStructure.length > 0 
-    ? pageStructure 
-    : DEFAULT_PAGE_STRUCTURE;
+  // Compute intelligent fallback if no props provided
+  const { pageStructure: fallbackStructure, layoutIntelligence: fallbackLayout } = useMemo(() => {
+    // Only compute if no props
+    if (propPageStructure && propPageStructure.length > 0) {
+      return { pageStructure: propPageStructure, layoutIntelligence: propLayoutIntelligence };
+    }
+    return getClientLayoutIntelligence(
+      consultation.industry || null,
+      consultation.target_audience || null
+    );
+  }, [propPageStructure, propLayoutIntelligence, consultation.industry, consultation.target_audience]);
+
+  // Use prop or computed fallback
+  const displayPageStructure = (propPageStructure && propPageStructure.length > 0) 
+    ? propPageStructure 
+    : fallbackStructure;
+  
+  const layoutIntelligence = (propLayoutIntelligence) 
+    ? propLayoutIntelligence 
+    : fallbackLayout;
   
   // Log to verify data flow
-  console.log('[StrategyBrief] pageStructure from API:', pageStructure);
-  console.log('[StrategyBrief] layoutIntelligence:', layoutIntelligence);
-  console.log('[StrategyBrief] using structure:', displayPageStructure);
+  console.log('[StrategyBrief Modal] Props received:', {
+    hasPageStructure: !!propPageStructure,
+    propLength: propPageStructure?.length,
+    industry: consultation.industry,
+    audience: consultation.target_audience,
+  });
+  console.log('[StrategyBrief Modal] Using structure:', displayPageStructure);
+  console.log('[StrategyBrief Modal] Layout intelligence:', layoutIntelligence);
+  
+  // Log to verify data flow
+  console.log('[StrategyBrief Modal] Props received:', {
+    hasPageStructure: !!propPageStructure,
+    propLength: propPageStructure?.length,
+    industry: consultation.industry,
+    audience: consultation.target_audience,
+  });
+  console.log('[StrategyBrief Modal] Using structure:', displayPageStructure);
+  console.log('[StrategyBrief Modal] Layout intelligence:', layoutIntelligence);
   const briefRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   
