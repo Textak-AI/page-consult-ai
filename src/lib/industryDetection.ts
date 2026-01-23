@@ -45,7 +45,52 @@ function containsAgencySignals(text: string): boolean {
 
 // Industry keyword patterns with weights
 // CREATIVE has highest weights to catch branding/design agencies before consulting
+// LOCAL-SERVICES catches local service businesses (plumbers, electricians, etc.)
 const INDUSTRY_PATTERNS: Record<IndustryVariant, { keywords: string[]; weight: number }[]> = {
+  'local-services': [
+    // Home services - HIGH weight for exact matches
+    { keywords: ['plumber', 'plumbing', 'plumb'], weight: 20 },
+    { keywords: ['electrician', 'electrical', 'electric'], weight: 20 },
+    { keywords: ['hvac', 'heating', 'cooling', 'air conditioning', 'ac repair'], weight: 20 },
+    { keywords: ['roofing', 'roofer', 'roof repair', 'roof'], weight: 20 },
+    { keywords: ['landscaping', 'landscaper', 'lawn care', 'lawn service', 'yard'], weight: 20 },
+    { keywords: ['cleaning service', 'cleaning company', 'maid service', 'janitorial'], weight: 20 },
+    { keywords: ['handyman', 'home repair', 'maintenance'], weight: 18 },
+    { keywords: ['pest control', 'exterminator', 'pest'], weight: 18 },
+    { keywords: ['moving company', 'mover', 'moving service'], weight: 18 },
+    { keywords: ['auto repair', 'mechanic', 'auto shop', 'garage'], weight: 18 },
+    { keywords: ['towing', 'tow truck', 'tow service'], weight: 18 },
+    { keywords: ['locksmith'], weight: 18 },
+    // Construction trades
+    { keywords: ['contractor', 'general contractor', 'construction'], weight: 18 },
+    { keywords: ['painter', 'painting', 'house painting'], weight: 18 },
+    { keywords: ['flooring', 'carpet', 'tile installer'], weight: 18 },
+    { keywords: ['window', 'glass', 'window repair'], weight: 16 },
+    { keywords: ['garage door', 'door repair'], weight: 16 },
+    { keywords: ['appliance repair'], weight: 16 },
+    { keywords: ['pool', 'pool service', 'pool cleaning', 'spa service'], weight: 16 },
+    { keywords: ['tree service', 'arborist', 'tree removal'], weight: 16 },
+    { keywords: ['gutter', 'gutter cleaning'], weight: 16 },
+    { keywords: ['pressure washing', 'power washing'], weight: 16 },
+    { keywords: ['junk removal', 'hauling'], weight: 16 },
+    { keywords: ['drywall'], weight: 14 },
+    { keywords: ['concrete', 'mason', 'masonry'], weight: 14 },
+    { keywords: ['fencing', 'fence'], weight: 14 },
+    { keywords: ['siding'], weight: 14 },
+    { keywords: ['insulation'], weight: 14 },
+    { keywords: ['solar', 'solar panel'], weight: 14 },
+    { keywords: ['septic', 'septic tank'], weight: 14 },
+    { keywords: ['well', 'water treatment', 'water softener'], weight: 14 },
+    // Personal services
+    { keywords: ['salon', 'hair salon', 'barber', 'barbershop'], weight: 16 },
+    { keywords: ['spa', 'massage', 'wellness center'], weight: 16 },
+    { keywords: ['restaurant', 'catering', 'food service'], weight: 14 },
+    // Location signals - boost for local audience
+    { keywords: ['homeowner', 'homeowners'], weight: 10 },
+    { keywords: ['local', 'neighborhood', 'community'], weight: 8 },
+    { keywords: ['metro area', 'county', 'city of', 'greater'], weight: 8 },
+    { keywords: ['residential', 'commercial'], weight: 6 },
+  ],
   creative: [
     // Creative/branding agency patterns - HIGHEST weight to catch before consulting
     { keywords: ['creative agency', 'branding agency', 'brand agency', 'design agency', 'strategic brand agency'], weight: 25 },
@@ -97,7 +142,7 @@ const INDUSTRY_PATTERNS: Record<IndustryVariant, { keywords: string[]; weight: n
   healthcare: [
     { keywords: ['healthcare', 'health care', 'medical'], weight: 10 },
     { keywords: ['clinic', 'hospital', 'practice'], weight: 9 },
-    { keywords: ['dental', 'therapy', 'therapist'], weight: 8 },
+    { keywords: ['dental', 'dentist', 'therapy', 'therapist'], weight: 8 },
     { keywords: ['wellness', 'mental health'], weight: 7 },
     { keywords: ['patient', 'telehealth'], weight: 6 },
   ],
@@ -124,10 +169,12 @@ const INDUSTRY_PATTERNS: Record<IndustryVariant, { keywords: string[]; weight: n
 };
 
 // Order matters - more specific industries should be checked first
-// CREATIVE goes first to catch branding/design agencies before generic consulting
+// LOCAL-SERVICES goes first to catch plumbers, electricians, etc.
+// CREATIVE goes before consulting to catch branding agencies
 const DETECTION_ORDER: IndustryVariant[] = [
-  'creative',     // Check BEFORE consulting to catch branding agencies
-  'consulting',   // Most common for B2B services
+  'local-services', // Check FIRST to catch plumbers, HVAC, etc.
+  'creative',       // Check BEFORE consulting to catch branding agencies
+  'consulting',     // Most common for B2B services
   'legal',
   'finance',
   'healthcare',
@@ -293,6 +340,7 @@ export function optionToVariant(option: string): IndustryVariant {
  */
 export function variantToDisplayName(variant: IndustryVariant): string {
   const mapping: Record<IndustryVariant, string> = {
+    'local-services': 'Local Services',
     consulting: 'Consulting / Services',
     creative: 'Creative Agency',
     saas: 'SaaS / Software',

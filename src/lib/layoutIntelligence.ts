@@ -24,10 +24,64 @@ export function getClientLayoutIntelligence(industry: string | null, audience: s
   const industryLower = (industry || '').toLowerCase();
   const audienceLower = (audience || '').toLowerCase();
   
-  // Detect local service business
-  const localKeywords = ['plumb', 'hvac', 'electric', 'roof', 'landscap', 'clean', 'repair', 'dentist', 'dental', 'salon', 'spa', 'restaurant', 'contractor', 'handyman', 'pest', 'moving', 'auto', 'mechanic'];
-  const localAudienceKeywords = ['homeowner', 'local', 'resident', 'neighborhood', 'community', 'metro area', 'county'];
-  const isLocal = localKeywords.some(k => industryLower.includes(k)) || localAudienceKeywords.some(k => audienceLower.includes(k));
+  // Comprehensive local service keywords (matches industryDetection.ts)
+  const localKeywords = [
+    // Home services
+    'plumb', 'plumber', 'plumbing',
+    'hvac', 'heating', 'cooling', 'air conditioning',
+    'electric', 'electrician', 'electrical',
+    'roof', 'roofing', 'roofer',
+    'landscap', 'lawn', 'yard',
+    'clean', 'cleaning', 'maid', 'janitorial',
+    'repair', 'handyman', 'maintenance',
+    'pest', 'exterminator',
+    'moving', 'mover',
+    'auto', 'mechanic', 'garage',
+    'tow', 'towing',
+    'locksmith',
+    // Construction trades
+    'contractor', 'construction',
+    'carpet', 'flooring', 'tile',
+    'paint', 'painter', 'painting',
+    'window', 'glass',
+    'garage door',
+    'appliance',
+    'pool', 'spa',
+    'tree', 'arborist',
+    'gutter',
+    'pressure wash', 'power wash',
+    'junk removal', 'hauling',
+    'drywall',
+    'concrete', 'mason', 'masonry',
+    'fencing', 'fence',
+    'siding',
+    'insulation',
+    'solar',
+    'septic',
+    'well', 'water treatment',
+    // Personal services
+    'salon', 'barber', 'barbershop',
+    'spa', 'massage', 'wellness',
+    'restaurant', 'catering',
+    'dentist', 'dental',
+  ];
+  const localAudienceKeywords = ['homeowner', 'local', 'resident', 'neighborhood', 'community', 'metro', 'county', 'city of', 'greater'];
+  
+  // Check for local match
+  const matchedLocalKeyword = localKeywords.find(k => industryLower.includes(k));
+  const matchedAudienceKeyword = localAudienceKeywords.find(k => audienceLower.includes(k));
+  const isLocal = !!matchedLocalKeyword || !!matchedAudienceKeyword;
+  
+  // Debug logging
+  if (matchedLocalKeyword || matchedAudienceKeyword) {
+    console.log(`🎯 [LayoutIntelligence] Local match found:`, { 
+      industry: matchedLocalKeyword, 
+      audience: matchedAudienceKeyword,
+      originalIndustry: industry 
+    });
+  } else if (industry) {
+    console.log(`🎯 [LayoutIntelligence] No local match for: "${industry}"`);
+  }
   
   // Detect SaaS/B2B
   const saasKeywords = ['saas', 'software', 'platform', 'app', 'tool', 'solution', 'cloud', 'api', 'automation', 'analytics'];
