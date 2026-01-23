@@ -126,43 +126,84 @@ function computeSDIDecisions(
   strategicData: any,
   designIntelligence: DesignIntelligenceOutput | null
 ): { colorMode: 'light' | 'dark'; cardStyle: string; industryVariant: string } | null {
+  // Helper: Read industry from localStorage (demo flow)
+  const getStoredIndustry = (): { variant: string; confidence: string } | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const stored = localStorage.getItem('pageconsult_demo_industry');
+      if (stored && stored !== 'undefined' && stored !== 'null') {
+        const parsed = JSON.parse(stored);
+        if (parsed.variant && parsed.variant !== 'default') {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('🎨 [SDI] Failed to read stored industry:', e);
+    }
+    return null;
+  };
+
   // Priority 1: Use SDI from designIntelligence state (generated during this session)
   if (designIntelligence?.colors?.mode) {
     const mode = designIntelligence.colors.mode;
+    // Prefer localStorage industry over SDI detected industry (more accurate)
+    const storedIndustry = getStoredIndustry();
+    const industryVariant = storedIndustry?.variant || designIntelligence.industry || 'default';
+    console.log('🎨 [computeSDI] Using designIntelligence with industryVariant:', industryVariant);
     return {
       colorMode: (mode === 'light' || mode === 'warm') ? 'light' : 'dark',
       cardStyle: designIntelligence.pageStructure?.heroStyle || 'bordered',
-      industryVariant: designIntelligence.industry || 'default',
+      industryVariant,
     };
   }
   
   // Priority 2: Use SDI from consultation data
   if (consultationData?.designIntelligence?.colors?.mode) {
     const mode = consultationData.designIntelligence.colors.mode;
+    const storedIndustry = getStoredIndustry();
+    const industryVariant = storedIndustry?.variant || consultationData.designIntelligence.industry || 'default';
+    console.log('🎨 [computeSDI] Using consultation designIntelligence with industryVariant:', industryVariant);
     return {
       colorMode: (mode === 'light' || mode === 'warm') ? 'light' : 'dark',
       cardStyle: consultationData.designIntelligence.pageStructure?.heroStyle || 'bordered',
-      industryVariant: consultationData.designIntelligence.industry || 'default',
+      industryVariant,
     };
   }
   
   // Priority 3: Use market data design conventions from concierge
   if (strategicData?.consultationData?.designConventions?.colorMode) {
     const conventions = strategicData.consultationData.designConventions;
+    const storedIndustry = getStoredIndustry();
+    const industryVariant = storedIndustry?.variant || strategicData.consultationData.industryCategory || 'default';
+    console.log('🎨 [computeSDI] Using design conventions with industryVariant:', industryVariant);
     return {
       colorMode: conventions.colorMode === 'light' ? 'light' : 'dark',
       cardStyle: conventions.cardStyle || 'bordered',
-      industryVariant: strategicData.consultationData.industryCategory || 'default',
+      industryVariant,
     };
   }
   
-  // Priority 4: Derive from industry category
+  // Priority 4: Use localStorage industry detection (from demo flow)
+  const storedIndustry = getStoredIndustry();
+  if (storedIndustry) {
+    console.log('🎨 [computeSDI] Using localStorage industry:', storedIndustry.variant);
+    // Industry-based defaults
+    const lightModeIndustries = ['local-services', 'consulting', 'healthcare', 'finance', 'manufacturing', 'ecommerce', 'legal'];
+    return {
+      colorMode: lightModeIndustries.includes(storedIndustry.variant) ? 'light' : 'dark',
+      cardStyle: ['consulting', 'finance', 'legal'].includes(storedIndustry.variant) ? 'bordered' : 'flat',
+      industryVariant: storedIndustry.variant,
+    };
+  }
+  
+  // Priority 5: Derive from industry category in consultation/strategic data
   const industryCategory = consultationData?.industryCategory || 
                           strategicData?.consultationData?.industryCategory ||
                           null;
-  if (industryCategory) {
+  if (industryCategory && industryCategory !== 'default') {
+    console.log('🎨 [computeSDI] Using consultation industryCategory:', industryCategory);
     // Industry-based defaults
-    const lightModeIndustries = ['consulting', 'healthcare', 'finance', 'manufacturing', 'ecommerce', 'legal'];
+    const lightModeIndustries = ['local-services', 'consulting', 'healthcare', 'finance', 'manufacturing', 'ecommerce', 'legal'];
     return {
       colorMode: lightModeIndustries.includes(industryCategory) ? 'light' : 'dark',
       cardStyle: ['consulting', 'finance', 'legal'].includes(industryCategory) ? 'bordered' : 'flat',
@@ -171,6 +212,7 @@ function computeSDIDecisions(
   }
   
   // Fallback
+  console.log('🎨 [computeSDI] Using fallback defaults');
   return {
     colorMode: 'dark',
     cardStyle: 'bordered',
@@ -1200,14 +1242,34 @@ function GenerateContent() {
           console.log('🗑️ Deleted stale page:', existingPage.id);
           // Continue to generation below (don't return)
         } else {
-          // CRITICAL: Use the NEW industry detection (more accurate, checks consulting first)
-          const industryVariant = detectIndustryVariantNew(
-            effectiveIndustry,
-            pageConsultationData.industryCategory,
-            pageConsultationData.industrySubcategory,
-            effectivePageType
-          );
-          console.log('🎨 [LoadExisting] Re-detected industryVariant:', industryVariant, 'from:', {
+          // CRITICAL: Use the NEW industry detection with localStorage priority
+          // Check localStorage first for demo flow industry detection
+          let industryVariant: IndustryVariant = 'default';
+          try {
+            const storedIndustry = typeof window !== 'undefined' 
+              ? localStorage.getItem('pageconsult_demo_industry') 
+              : null;
+            if (storedIndustry && storedIndustry !== 'undefined' && storedIndustry !== 'null') {
+              const parsed = JSON.parse(storedIndustry);
+              if (parsed.variant && parsed.variant !== 'default') {
+                industryVariant = parsed.variant as IndustryVariant;
+                console.log('🎨 [LoadExisting] Using localStorage industry:', industryVariant, '(confidence:', parsed.confidence, ')');
+              }
+            }
+          } catch (e) {
+            console.warn('🎨 [LoadExisting] Failed to read localStorage industry:', e);
+          }
+          
+          // Fallback to detectIndustryVariantNew if localStorage doesn't have it
+          if (industryVariant === 'default') {
+            industryVariant = detectIndustryVariantNew(
+              effectiveIndustry,
+              pageConsultationData.industryCategory,
+              pageConsultationData.industrySubcategory,
+              effectivePageType
+            );
+          }
+          console.log('🎨 [LoadExisting] Final industryVariant:', industryVariant, 'from:', {
             industry: effectiveIndustry,
             serviceType: effectiveServiceType,
             pageType: effectivePageType,

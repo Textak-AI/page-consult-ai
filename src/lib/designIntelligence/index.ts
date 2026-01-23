@@ -50,14 +50,19 @@ export function generateDesignIntelligence(input: DesignIntelligenceInput): Desi
   const tone = detectTone(conversationText);
   const typography = getTypographyRecommendation(tone);
   
-  // 2. Use pre-detected industry if available (already intelligently detected during consultation)
+  // 2. Use pre-detected industry - priority order:
+  // Priority 1: Passed-in industryCategory from consultation
+  // Priority 2: localStorage detection (from IntelligenceContext)
+  // Priority 3: Text-based detection (last resort)
   let industry: string;
-  if (industryCategory && industryConfidence !== 'low') {
+  
+  if (industryCategory && industryCategory !== 'default' && industryConfidence !== 'low') {
     industry = industryCategory;
-    console.log(`🎨 [SDI] Using pre-detected industry: ${industry} (confidence: ${industryConfidence})`);
+    console.log(`🎨 [SDI] Using pre-detected industry from params: ${industry} (confidence: ${industryConfidence})`);
   } else {
+    // detectIndustry now checks localStorage first before text detection
     industry = detectIndustry(conversationText);
-    console.log(`🎨 [SDI] Industry detected from text: ${industry}`);
+    console.log(`🎨 [SDI] Using industry from detection: ${industry}`);
   }
   
   const emotionalDrivers = detectEmotionalDrivers(conversationText);

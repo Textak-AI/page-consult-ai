@@ -64,18 +64,21 @@ serve(async (req) => {
     const calculatedReadiness = readiness ?? (extractedIntelligence ? calculateReadinessFromIntel(extractedIntelligence) : 0);
 
     // Upsert session (only if IP hash matches or session is new)
+    // Include industryCategory and industryConfidence from extractedIntelligence
+    const sessionData: Record<string, unknown> = {
+      session_id: sessionId,
+      messages: messages || [],
+      extracted_intelligence: extractedIntelligence || {},
+      market_research: marketResearch || {},
+      message_count: messageCount || 0,
+      ip_hash: ipHash,
+      readiness: calculatedReadiness,
+      completed: calculatedReadiness >= 70,
+    };
+
     const { error } = await supabase
       .from('demo_sessions')
-      .upsert({
-        session_id: sessionId,
-        messages: messages || [],
-        extracted_intelligence: extractedIntelligence || {},
-        market_research: marketResearch || {},
-        message_count: messageCount || 0,
-        ip_hash: ipHash,
-        readiness: calculatedReadiness,
-        completed: calculatedReadiness >= 70,
-      }, { onConflict: 'session_id' });
+      .upsert(sessionData, { onConflict: 'session_id' });
 
     if (error) {
       console.error('Error upserting session:', error);

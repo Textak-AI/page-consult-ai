@@ -22,6 +22,18 @@ export type EmotionalDriver = 'urgency' | 'protection' | 'growth' | 'transformat
 
 // Industry base palettes
 const INDUSTRY_PALETTES: Record<string, ColorPalette> = {
+  'local-services': {
+    mode: 'light',
+    primary: '#0066CC',      // Trustworthy blue
+    secondary: '#1E3A5F',    // Navy - stability
+    accent: '#FF6B00',       // Vibrant orange - action/CTA
+    background: '#FFFFFF',
+    foreground: '#0F172A',
+    muted: '#64748B',
+    ctaBackground: '#0066CC',
+    ctaText: '#FFFFFF',
+    reasoning: 'Light mode with trustworthy blue and action orange for local service businesses - inspires confidence and urgency'
+  },
   healthcare: {
     mode: 'light',
     primary: '#0D9488',      // Teal - clinical trust
@@ -180,9 +192,34 @@ const EMOTIONAL_PATTERNS: Record<EmotionalDriver, string[]> = {
 export function detectIndustry(text: string): string {
   const lowered = text.toLowerCase();
   
-  // Industry detection patterns - order matters! Check more specific first
+  // Priority 1: Check localStorage for pre-detected industry from IntelligenceContext
+  // This is the canonical source from the sophisticated industryDetection.ts system
+  if (typeof window !== 'undefined') {
+    try {
+      const storedIndustry = localStorage.getItem('pageconsult_demo_industry');
+      if (storedIndustry && storedIndustry !== 'undefined' && storedIndustry !== 'null') {
+        const parsed = JSON.parse(storedIndustry);
+        if (parsed.variant && parsed.variant !== 'default') {
+          console.log('🎨 [SDI] Using stored industry from localStorage:', parsed.variant, '(confidence:', parsed.confidence, ')');
+          return parsed.variant;
+        }
+      }
+    } catch (e) {
+      console.warn('🎨 [SDI] Failed to parse stored industry:', e);
+    }
+  }
+  
+  // Priority 2: Industry detection patterns - order matters! Check more specific first
+  // LOCAL-SERVICES must be first to catch plumbers, HVAC, etc.
   const patterns: Record<string, string[]> = {
-    // Creative/branding agencies - check FIRST (before consulting)
+    // Local services - check FIRST
+    'local-services': ['plumber', 'plumbing', 'electrician', 'electrical', 'hvac', 'heating', 'cooling',
+                       'roofing', 'roofer', 'landscaping', 'landscaper', 'cleaning service', 'handyman',
+                       'pest control', 'moving company', 'mover', 'auto repair', 'mechanic', 'towing',
+                       'locksmith', 'contractor', 'painter', 'painting', 'flooring', 'pool service',
+                       'tree service', 'pressure washing', 'garage door', 'appliance repair', 'salon',
+                       'barber', 'spa', 'massage', 'restaurant', 'catering', 'homeowner', 'residential'],
+    // Creative/branding agencies - check BEFORE consulting
     creative: ['branding', 'brand agency', 'creative agency', 'design agency', 'brand strategy', 
                'visual identity', 'brand identity', 'translate into brands', 'brand studio',
                'creative studio', 'brand design', 'brand consultancy', 'rebranding', 'rebrand'],
@@ -206,7 +243,7 @@ export function detectIndustry(text: string): string {
   const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
   const detected = sorted[0][1] > 0 ? sorted[0][0] : 'saas'; // Default to SaaS
   
-  console.log('🎨 [SDI] Industry detected:', detected, scores);
+  console.log('🎨 [SDI] Industry detected from text:', detected, scores);
   return detected;
 }
 
@@ -232,6 +269,12 @@ export function getColorPalette(
 ): ColorPalette {
   // Check for industry combination (e.g., healthcare + cybersecurity)
   let baseIndustry = industry;
+  
+  // Local services should use their specific light-mode palette
+  if (industry === 'local-services') {
+    console.log('🎨 [SDI] Color palette: local-services (light mode)');
+    return applyEmotionalOverrides(INDUSTRY_PALETTES['local-services'], emotionalDrivers);
+  }
   
   // Healthcare overrides dark mode for trust
   if (targetMarket?.toLowerCase().includes('healthcare') || industry === 'healthcare') {
