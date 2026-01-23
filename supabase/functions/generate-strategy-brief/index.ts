@@ -252,16 +252,11 @@ Generate a STRATEGY BRIEF with these sections:
 
 8. **Objection Handling** (3-5 common objections with rebuttals - these become FAQ items)
 
-9. **Recommended Page Structure** (EXACT sections in order with purpose)
-   List ONLY sections that make sense for this business. Choose from:
-   - hero: Opening with headline, subheadline, CTA
-   - stats-bar: Key numbers/proof points (only if we have real stats)
-   - problem-solution: Pain point → Our solution
-   - features: Service/benefit cards from messaging pillars
-   - how-it-works: Step-by-step process (only if process is defined)
-   - social-proof: Testimonial + trust signals (only if we have real testimonials)
-   - faq: Address objections
-   - final-cta: Closing call to action
+9. **Recommended Page Structure** (USE EXACTLY THE SECTIONS BELOW)
+   Based on layout intelligence, use THESE EXACT sections in this order:
+   ${layoutResult.sections.map(s => `- ${s}`).join('\n   ')}
+   
+   Provide a brief purpose statement for each section in the list.
 
 10. **Headline Recommendations** (3 options for the main headline, derived from the value prop)
     - Option A (Direct benefit)
