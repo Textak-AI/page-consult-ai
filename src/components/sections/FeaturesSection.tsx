@@ -72,7 +72,8 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
   const isConsulting = industryVariant === 'consulting';
   const isHealthcare = industryVariant === 'healthcare';
   const isSaas = industryVariant === 'saas';
-  console.log('🎨 [FeaturesSection] industryVariant:', industryVariant, 'isLightMode:', isLightMode);
+  const isLocalServices = industryVariant === 'local-services';
+  console.log('🎨 [FeaturesSection] industryVariant:', industryVariant, 'isLightMode:', isLightMode, 'isLocalServices:', isLocalServices);
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     if (!onUpdate) return;
@@ -102,6 +103,91 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
     if (features.length === 5) return "md:grid-cols-2 lg:grid-cols-3";
     return "md:grid-cols-2 lg:grid-cols-3";
   };
+
+  // Local Services variant: Light mode, trust-forward, service-focused
+  if (isLocalServices) {
+    return (
+      <section className={`py-20 bg-white ${isEditing ? 'relative' : ''}`}>
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+        <div className="max-w-6xl mx-auto px-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <span className="inline-block px-4 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full mb-4">
+              OUR SERVICES
+            </span>
+            <h2 
+              className={`text-3xl md:text-4xl font-bold text-slate-900 mb-4 ${
+                isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-2 inline-block" : ""
+              }`}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("title", e)}
+            >
+              {title}
+            </h2>
+            <p 
+              className={`text-lg text-slate-600 max-w-2xl mx-auto ${
+                isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-2" : ""
+              }`}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("subtitle", e)}
+            >
+              {subtitle}
+            </p>
+          </motion.div>
+
+          <div className={`grid gap-6 ${getGridClass()}`}>
+            {features.map((feature, i) => {
+              const Icon = getIconComponent(feature.icon);
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
+                >
+                  <div className="h-full p-6 bg-slate-50 rounded-xl border border-slate-200 hover:shadow-lg hover:border-blue-200 transition-all">
+                    <div className="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
+                      <Icon className="w-6 h-6 text-white" strokeWidth={2} />
+                    </div>
+                    <h3 
+                      className={`text-lg font-bold text-slate-900 mb-2 ${
+                        isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-1" : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleFeatureBlur(i, "title", e)}
+                    >
+                      {feature.title}
+                    </h3>
+                    <p 
+                      className={`text-slate-600 text-sm leading-relaxed ${
+                        isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-1" : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleFeatureBlur(i, "description", e)}
+                    >
+                      {feature.description}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   // SaaS variant
   if (isSaas) {

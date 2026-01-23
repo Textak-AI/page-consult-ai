@@ -503,6 +503,98 @@ export const defaultVariant: IndustryDesignTokens = {
 };
 
 /**
+ * Local Services Industry Variant
+ * 
+ * Design Intent: Trust, reliability, action-oriented.
+ * - Light mode for approachability and cleanliness
+ * - Trustworthy blue primary, action orange CTA
+ * - Simple, accessible design for local consumers
+ * - Phone-prominent CTAs, local trust signals
+ * 
+ * Layout characteristics:
+ * - Trust badges prominent (Licensed, Insured, Bonded)
+ * - Reviews and ratings emphasized
+ * - Service area visibility
+ * - Before/after gallery
+ * - Phone number in hero
+ */
+export const localServicesVariant: IndustryDesignTokens = {
+  mode: 'light',
+  
+  colors: {
+    // Clean, bright backgrounds
+    bgPrimary: '0 0% 100%',              // #FFFFFF - pure white
+    bgSecondary: '210 20% 98%',          // Warm white
+    bgCard: '0 0% 100%',                 // White cards
+    bgDark: '209 100% 40%',              // Trustworthy blue for dark sections
+    // Text
+    textPrimary: '222 47% 11%',          // #0F172A - slate-900
+    textSecondary: '215 16% 47%',        // #64748B - slate-500
+    textOnDark: '0 0% 100%',             // White on blue
+    // Accent (action orange for CTAs)
+    accent: '24 100% 50%',               // #FF6B00 - action orange
+    accentHover: '24 100% 45%',          // Darker orange
+    // Borders
+    border: '214 32% 91%',               // #E2E8F0 - slate-200
+    borderSubtle: '210 40% 96%',         // #F1F5F9 - slate-100
+  },
+  
+  typography: {
+    headingFont: 'Inter, system-ui, sans-serif',
+    bodyFont: 'Inter, system-ui, sans-serif',
+    headingWeight: 700,
+    letterSpacing: '-0.01em',
+    lineHeight: 1.5,
+  },
+  
+  shape: {
+    radiusCard: '0.75rem',        // 12px - rounded but practical
+    radiusButton: '0.5rem',       // 8px
+    shadowCard: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+    shadowButton: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    borderCard: '1px solid hsl(214 32% 91%)',
+    blur: 'none',
+    glow: 'none',
+  },
+  
+  spacing: {
+    sectionPadding: '80px',
+    contentWidth: '1200px',       // Wider for service listings
+    cardPadding: '1.5rem',
+    elementGap: '1.5rem',
+  },
+  
+  sectionHeaders: {
+    features: {
+      title: 'Our Services',
+      subtitle: 'Professional solutions for your home',
+      eyebrow: 'What We Do',
+    },
+    process: {
+      title: 'How It Works',
+      subtitle: 'Simple, hassle-free process',
+    },
+    proof: {
+      title: 'Trusted Locally',
+      subtitle: 'Serving our community with pride',
+    },
+    testimonials: {
+      title: 'What Our Customers Say',
+      subtitle: 'Real reviews from real neighbors',
+    },
+    cta: {
+      title: 'Ready to Get Started?',
+      ctaText: 'Call Now for Free Estimate',
+      subtext: 'Fast response • Licensed & Insured',
+    },
+    faq: {
+      title: 'Common Questions',
+      eyebrow: 'FAQ',
+    },
+  },
+};
+
+/**
  * Map of all industry variants
  */
 export const industryVariants: Record<IndustryVariant, IndustryDesignTokens> = {
@@ -514,7 +606,7 @@ export const industryVariants: Record<IndustryVariant, IndustryDesignTokens> = {
   manufacturing: defaultVariant,  // TODO: Implement manufacturing variant
   ecommerce: defaultVariant,      // TODO: Implement ecommerce variant
   legal: defaultVariant,          // TODO: Implement legal variant
-  'local-services': consultingVariant, // Uses consulting (light mode, trustworthy) as base
+  'local-services': localServicesVariant,
   default: defaultVariant,
 };
 
@@ -574,6 +666,47 @@ export function detectIndustryVariant(
     combined.includes('lawyer')
   ) {
     return 'legal';
+  }
+  
+  // Local Services detection (trades, home services, auto, etc.)
+  // IMPORTANT: Check BEFORE consulting to avoid misclassification
+  if (
+    combined.includes('plumb') ||
+    combined.includes('electric') ||
+    combined.includes('hvac') ||
+    combined.includes('heating') ||
+    combined.includes('cooling') ||
+    combined.includes('roofing') ||
+    combined.includes('roofer') ||
+    combined.includes('landscap') ||
+    combined.includes('cleaning service') ||
+    combined.includes('handyman') ||
+    combined.includes('pest control') ||
+    combined.includes('moving') ||
+    combined.includes('mover') ||
+    combined.includes('auto repair') ||
+    combined.includes('mechanic') ||
+    combined.includes('towing') ||
+    combined.includes('locksmith') ||
+    combined.includes('contractor') ||
+    combined.includes('painter') ||
+    combined.includes('painting') ||
+    combined.includes('flooring') ||
+    combined.includes('pool service') ||
+    combined.includes('tree service') ||
+    combined.includes('pressure wash') ||
+    combined.includes('garage door') ||
+    combined.includes('appliance repair') ||
+    combined.includes('salon') ||
+    combined.includes('barber') ||
+    combined.includes('spa') ||
+    combined.includes('massage') ||
+    combined.includes('restaurant') ||
+    combined.includes('catering') ||
+    combined.includes('homeowner') ||
+    combined.includes('residential')
+  ) {
+    return 'local-services';
   }
   
   // Finance detection

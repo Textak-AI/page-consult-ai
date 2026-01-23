@@ -107,6 +107,9 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   const isConsulting = industryVariant === 'consulting';
   const isHealthcare = industryVariant === 'healthcare';
   const isSaas = industryVariant === 'saas';
+  const isLocalServices = industryVariant === 'local-services';
+  
+  console.log('🎨 [HeroSection] industryVariant:', industryVariant, 'isLocalServices:', isLocalServices);
   
   // Determine if we should use light text (when dark overlay is active OR when not in light mode)
   const hasBackgroundImage = !!content.backgroundImage;
@@ -164,6 +167,131 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   
   // Single trust badge (credential) for consulting hero
   const trustBadge = content.trustBadge || content.fomo?.badge;
+
+  // Local Services variant: Light mode, trust-forward, phone-prominent
+  if (isLocalServices) {
+    return (
+      <section className="relative py-20 md:py-28 overflow-hidden bg-white">
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-20" />
+        )}
+        
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="text-center">
+            {/* Logo */}
+            {(content.logoUrl || isEditing) && (
+              <div className="mb-6">
+                {content.logoUrl ? (
+                  <div className="relative inline-block">
+                    <img src={content.logoUrl} alt="Logo" className={logoSizeClasses[logoSize] + " object-contain mx-auto"} />
+                    {isEditing && (
+                      <button
+                        onClick={() => setLogoUploaderOpen(true)}
+                        className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
+                      >
+                        <Camera className="w-2.5 h-2.5 text-white" />
+                      </button>
+                    )}
+                  </div>
+                ) : isEditing ? (
+                  <button
+                    onClick={() => setLogoUploaderOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 hover:bg-blue-100 transition-colors"
+                  >
+                    <Camera className="w-4 h-4" />
+                    Add Logo
+                  </button>
+                ) : null}
+              </div>
+            )}
+            
+            {/* Trust Badge */}
+            {trustBadge && (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-full text-sm font-medium text-blue-700 mb-6">
+                <Shield className="w-4 h-4" />
+                {trustBadge}
+              </div>
+            )}
+            
+            {/* Headline */}
+            <h1
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("headline", e)}
+              className={`text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight ${
+                isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-2 inline-block" : ""
+              }`}
+            >
+              {content.headline}
+            </h1>
+            
+            {/* Subheadline */}
+            <p
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("subheadline", e)}
+              className={`text-xl md:text-2xl text-slate-600 mb-8 max-w-3xl mx-auto ${
+                isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-2" : ""
+              }`}
+            >
+              {content.subheadline}
+            </p>
+            
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+              <Button 
+                size="lg"
+                className="px-10 py-6 text-lg font-bold bg-orange-500 text-white hover:bg-orange-600 rounded-lg shadow-lg"
+              >
+                <span
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleBlur("ctaText", e)}
+                >
+                  {content.ctaText}
+                </span>
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+              
+              {content.secondaryCTA && (
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="px-8 py-6 text-lg font-semibold border-2 border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg"
+                >
+                  {content.secondaryCTA.text}
+                </Button>
+              )}
+            </div>
+            
+            {/* Trust Indicators */}
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-600">
+              <span className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-blue-600" />
+                Licensed & Insured
+              </span>
+              <span className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-blue-600" />
+                Same-Day Service
+              </span>
+              <span className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-blue-600" />
+                5-Star Rated
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Logo Uploader Modal */}
+        <LogoUploader
+          isOpen={logoUploaderOpen}
+          onClose={() => setLogoUploaderOpen(false)}
+          onApplyLogo={handleLogoApply}
+          currentLogoUrl={content.logoUrl}
+        />
+      </section>
+    );
+  }
 
   // SaaS variant: Two-column layout with product screenshot area
   if (isSaas) {
