@@ -29,6 +29,9 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   const isConsulting = industryVariant === 'consulting';
   const isSaas = industryVariant === 'saas';
   const isHealthcare = industryVariant === 'healthcare';
+  const isLocalServices = industryVariant === 'local-services';
+  
+  console.log('🎨 [FinalCTASection] industryVariant:', industryVariant, 'isLocalServices:', isLocalServices);
   
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
@@ -39,6 +42,98 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
 
   const trustIndicators = content.trustIndicators || [];
   const { urgencyText, guaranteeText, secondaryCta } = content;
+
+  // Local Services variant - light mode with phone-prominent CTA
+  if (isLocalServices) {
+    return (
+      <section className="py-20 bg-blue-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-700" />
+        
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-blue-300/50 rounded-lg pointer-events-none z-10" />
+        )}
+        
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            contentEditable={isEditing}
+            suppressContentEditableWarning
+            onBlur={(e) => handleBlur("headline", e)}
+            className={`text-3xl md:text-4xl font-bold text-white mb-4 ${isEditing ? "cursor-text hover:ring-2 hover:ring-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 rounded px-2" : ""}`}
+          >
+            {content.headline || "Ready to Get Started?"}
+          </motion.h2>
+          
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-xl text-blue-100 mb-8"
+          >
+            {content.subtext || "Call now for a free estimate"}
+          </motion.p>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          >
+            <Button 
+              size="lg" 
+              className="px-10 py-6 text-lg font-bold bg-orange-500 text-white hover:bg-orange-600 rounded-lg shadow-lg"
+            >
+              <span
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("ctaText", e)}
+              >
+                {content.ctaText || "Call Now"}
+              </span>
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+            
+            {secondaryCta && (
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="px-8 py-6 text-lg font-semibold border-2 border-white text-white hover:bg-white/10 rounded-lg"
+              >
+                {secondaryCta}
+              </Button>
+            )}
+          </motion.div>
+          
+          {/* Trust Indicators */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex flex-wrap justify-center gap-6 mt-8 text-sm text-blue-100"
+          >
+            <span className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-white" />
+              Licensed & Insured
+            </span>
+            <span className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-white" />
+              Free Estimates
+            </span>
+            <span className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-white" />
+              Same-Day Service Available
+            </span>
+          </motion.div>
+        </div>
+      </section>
+    );
+  }
 
   // SaaS variant
   if (isSaas) {

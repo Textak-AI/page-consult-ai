@@ -28,7 +28,10 @@ export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditi
   const isConsulting = industryVariant === 'consulting';
   const isHealthcare = industryVariant === 'healthcare';
   const isSaas = industryVariant === 'saas';
-  const isLightMode = isConsulting || isHealthcare;
+  const isLocalServices = industryVariant === 'local-services';
+  const isLightMode = isConsulting || isHealthcare || isLocalServices;
+  
+  console.log('🎨 [StatsBarSection] industryVariant:', industryVariant, 'isLocalServices:', isLocalServices);
 
   const handleStatBlur = (index: number, field: 'value' | 'label', e: React.FocusEvent<HTMLElement>) => {
     if (!onUpdate) return;
@@ -55,6 +58,54 @@ export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditi
 
   if (cleanStats.length === 0) {
     return null;
+  }
+
+  // Local Services variant - light mode with trust-forward design
+  if (isLocalServices) {
+    return (
+      <section className={`relative py-16 bg-slate-50 border-y border-slate-200 ${isEditing ? 'relative' : ''}`}>
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+        
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {cleanStats.slice(0, 4).map((stat, index) => (
+              <motion.div 
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                className="text-center"
+              >
+                <div 
+                  className={`text-4xl md:text-5xl font-bold text-blue-600 ${
+                    isEditing ? "cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2 inline-block" : ""
+                  }`}
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleStatBlur(index, 'value', e)}
+                >
+                  {formatStatValue(stat.value)}
+                </div>
+                
+                <p 
+                  className={`mt-2 text-sm font-medium text-slate-600 ${
+                    isEditing ? "cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-1" : ""
+                  }`}
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleStatBlur(index, 'label', e)}
+                >
+                  {stat.label}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
   }
 
   // SaaS variant - gradient dark with cyan accents
