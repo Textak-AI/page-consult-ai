@@ -9,6 +9,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { TrialBanner } from '@/components/trial/TrialBanner';
 import { StrategyBrief } from '@/components/strategy-brief/StrategyBrief';
+import { getClientLayoutIntelligence } from '@/lib/layoutIntelligence';
 import { QuickPivotModal } from '@/components/quick-pivot';
 import { 
   Plus, Sparkles, Search, FileText, Zap, Target
@@ -589,15 +590,24 @@ export default function Dashboard() {
       <Footer />
 
       {/* Strategy Brief Modal */}
-      {showBrief && selectedConsultation && (
-        <StrategyBrief
-          consultation={selectedConsultation}
-          onClose={() => {
-            setShowBrief(false);
-            setSelectedConsultation(null);
-          }}
-        />
-      )}
+      {showBrief && selectedConsultation && (() => {
+        // Compute layout intelligence from consultation data
+        const { pageStructure, layoutIntelligence } = getClientLayoutIntelligence(
+          selectedConsultation.industry,
+          selectedConsultation.target_audience
+        );
+        return (
+          <StrategyBrief
+            consultation={selectedConsultation}
+            pageStructure={pageStructure}
+            layoutIntelligence={layoutIntelligence}
+            onClose={() => {
+              setShowBrief(false);
+              setSelectedConsultation(null);
+            }}
+          />
+        );
+      })()}
 
       {/* Quick Pivot Modal */}
       <QuickPivotModal 
