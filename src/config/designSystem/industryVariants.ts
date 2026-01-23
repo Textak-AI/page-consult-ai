@@ -22,6 +22,7 @@ export type IndustryVariant =
   | 'manufacturing'
   | 'ecommerce'
   | 'legal'
+  | 'local-services'
   | 'default';
 
 export interface IndustryDesignTokens {
@@ -509,10 +510,11 @@ export const industryVariants: Record<IndustryVariant, IndustryDesignTokens> = {
   creative: creativeVariant,
   saas: saasVariant,
   healthcare: healthcareVariant,
-  finance: defaultVariant,    // TODO: Implement finance variant
-  manufacturing: defaultVariant, // TODO: Implement manufacturing variant
-  ecommerce: defaultVariant,  // TODO: Implement ecommerce variant
-  legal: defaultVariant,      // TODO: Implement legal variant
+  finance: defaultVariant,        // TODO: Implement finance variant
+  manufacturing: defaultVariant,  // TODO: Implement manufacturing variant
+  ecommerce: defaultVariant,      // TODO: Implement ecommerce variant
+  legal: defaultVariant,          // TODO: Implement legal variant
+  'local-services': consultingVariant, // Uses consulting (light mode, trustworthy) as base
   default: defaultVariant,
 };
 

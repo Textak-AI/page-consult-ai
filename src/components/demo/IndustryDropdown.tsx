@@ -207,6 +207,7 @@ export const IndustryDropdown = ({
 // Helper to get design approach text based on variant
 export const getDesignApproachText = (variant: IndustryVariant, targetMarket?: string): string => {
   const approaches: Record<IndustryVariant, string> = {
+    'local-services': 'Trust-focused design with local presence and reviews',
     creative: 'Bold, expressive design with portfolio focus',
     consulting: 'Credible, authoritative design with expertise focus',
     saas: 'Clean, modern design optimized for conversions',
