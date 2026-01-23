@@ -15,6 +15,27 @@ interface MarketResearchData {
   industryInsights?: string[];
 }
 
+// Page structure item from API
+interface PageStructureItem {
+  section: string;
+  guidance: string;
+}
+
+// Layout intelligence from the industry system
+interface LayoutIntelligence {
+  archetype?: string;
+  archetypeName?: string;
+  confidence?: number;
+  reasoning?: string;
+  heroStyle?: string;
+  ctaStyle?: string;
+  trustPriorities?: string[];
+  ctaText?: {
+    primary?: string[];
+    secondary?: string[];
+  };
+}
+
 interface StrategyBriefProps {
   consultation: {
     id: string;
@@ -49,6 +70,10 @@ interface StrategyBriefProps {
   artifacts?: ConsultationArtifacts | null;
   // Optional: market research data passed separately
   marketResearch?: MarketResearchData | null;
+  // Dynamic page structure from API (industry-specific)
+  pageStructure?: PageStructureItem[];
+  // Layout intelligence from industry system
+  layoutIntelligence?: LayoutIntelligence | null;
   onClose?: () => void;
   // Optional: callback when user wants to generate their page (for demo flow)
   onGeneratePage?: () => void;
@@ -111,13 +136,33 @@ function extractObjections(
   return { objections: defaults, source: 'default' };
 }
 
+// Default fallback page structure when none provided from API
+const DEFAULT_PAGE_STRUCTURE: PageStructureItem[] = [
+  { section: 'Hero', guidance: 'Lead with transformation, not features' },
+  { section: 'Problem', guidance: 'Articulate the pain they\'re experiencing' },
+  { section: 'Solution', guidance: 'Your approach and methodology' },
+  { section: 'Proof', guidance: 'Credentials, results, testimonials' },
+  { section: 'CTA', guidance: 'Clear next step with urgency' },
+];
+
 export function StrategyBrief({ 
   consultation, 
   artifacts,
   marketResearch: externalMarketResearch,
+  pageStructure,
+  layoutIntelligence,
   onClose,
   onGeneratePage
 }: StrategyBriefProps) {
+  // Use API page structure if provided, otherwise use fallback
+  const displayPageStructure = pageStructure && pageStructure.length > 0 
+    ? pageStructure 
+    : DEFAULT_PAGE_STRUCTURE;
+  
+  // Log to verify data flow
+  console.log('[StrategyBrief] pageStructure from API:', pageStructure);
+  console.log('[StrategyBrief] layoutIntelligence:', layoutIntelligence);
+  console.log('[StrategyBrief] using structure:', displayPageStructure);
   const briefRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   
@@ -420,32 +465,63 @@ export function StrategyBrief({
             colorBg="bg-blue-500/20"
           >
             <div className="bg-slate-800/50 rounded-xl p-5">
+              {/* Layout Intelligence Badge */}
+              {layoutIntelligence && (
+                <div className="mb-4 p-3 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Layout Intelligence</span>
+                    {layoutIntelligence.confidence && (
+                      <span className="text-xs px-2 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full">
+                        {Math.round(layoutIntelligence.confidence * 100)}% match
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {layoutIntelligence.archetypeName && (
+                      <span className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded">
+                        {layoutIntelligence.archetypeName}
+                      </span>
+                    )}
+                    {layoutIntelligence.heroStyle && (
+                      <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded">
+                        Hero: {layoutIntelligence.heroStyle}
+                      </span>
+                    )}
+                    {layoutIntelligence.ctaStyle && (
+                      <span className="px-2 py-1 bg-green-500/20 text-green-300 rounded">
+                        CTA: {layoutIntelligence.ctaStyle}
+                      </span>
+                    )}
+                  </div>
+                  {layoutIntelligence.reasoning && (
+                    <p className="text-xs text-slate-400 mt-2 italic">{layoutIntelligence.reasoning}</p>
+                  )}
+                </div>
+              )}
+              
+              {/* Dynamic Page Structure */}
               <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg">
-                  <span className="text-cyan-400 font-medium">1</span>
-                  <span className="text-slate-200">Hero — Lead with transformation, not features</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg">
-                  <span className="text-cyan-400 font-medium">2</span>
-                  <span className="text-slate-200">Problem — Articulate the pain they're experiencing</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg">
-                  <span className="text-cyan-400 font-medium">3</span>
-                  <span className="text-slate-200">Solution — Your approach and methodology</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg">
-                  <span className="text-cyan-400 font-medium">4</span>
-                  <span className="text-slate-200">Proof — Credentials, results, testimonials</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg">
-                  <span className="text-cyan-400 font-medium">5</span>
-                  <span className="text-slate-200">ROI Calculator — Make the value tangible</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg">
-                  <span className="text-cyan-400 font-medium">6</span>
-                  <span className="text-slate-200">CTA — Clear next step with urgency</span>
-                </div>
+                {displayPageStructure.map((item, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 bg-slate-700/50 rounded-lg">
+                    <span className="text-cyan-400 font-medium">{index + 1}</span>
+                    <span className="text-slate-200">{item.section} — {item.guidance}</span>
+                  </div>
+                ))}
               </div>
+              
+              {/* CTA Recommendations */}
+              {layoutIntelligence?.ctaText && (
+                <div className="mt-4 pt-4 border-t border-slate-700">
+                  <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Recommended CTA Text</p>
+                  <div className="flex flex-wrap gap-2">
+                    {layoutIntelligence.ctaText.primary?.slice(0, 2).map((cta, i) => (
+                      <span key={i} className="px-3 py-1.5 bg-cyan-500/20 text-cyan-300 rounded-lg text-sm">
+                        {cta}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </CollapsibleBriefSection>
 
