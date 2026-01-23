@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Edit2, Check, X } from 'lucide-react';
+import { Loader2, Edit2, Check, X, Phone, MousePointer } from 'lucide-react';
 import { updateFlowState } from '@/services/flowEngine';
+import { getClientLayoutIntelligence, PageStructureItem, LayoutIntelligence } from '@/lib/layoutIntelligence';
+import type { Json } from '@/integrations/supabase/types';
 
 interface StrategyBriefData {
   positioning?: string;
@@ -20,6 +22,9 @@ interface StrategyBriefData {
     secondary?: string;
   };
   cardNotes?: Record<string, string>;
+  // These are stored as JSON so we use looser types here
+  pageStructure?: Array<{ section: string; guidance: string }>;
+  layoutIntelligence?: Record<string, unknown>;
 }
 
 interface ConsultationData {
@@ -36,6 +41,8 @@ export default function StrategyBrief() {
   const [consultation, setConsultation] = useState<ConsultationData | null>(null);
   const [brief, setBrief] = useState<StrategyBriefData | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
+  const [pageStructure, setPageStructure] = useState<PageStructureItem[]>([]);
+  const [layoutIntelligence, setLayoutIntelligence] = useState<LayoutIntelligence | null>(null);
   const [editValue, setEditValue] = useState('');
 
   const consultationId = searchParams.get('consultationId');
@@ -62,7 +69,22 @@ export default function StrategyBrief() {
     }
 
     setConsultation(data as ConsultationData);
-    setBrief(data.strategy_brief as StrategyBriefData);
+    const briefData = data.strategy_brief as StrategyBriefData;
+    setBrief(briefData);
+    
+    // Use stored layout intelligence or compute from industry
+    if (briefData?.pageStructure && briefData.pageStructure.length > 0) {
+      setPageStructure(briefData.pageStructure as PageStructureItem[]);
+      if (briefData.layoutIntelligence) {
+        setLayoutIntelligence(briefData.layoutIntelligence as LayoutIntelligence);
+      }
+    } else {
+      // Fallback to client-side detection
+      const computed = getClientLayoutIntelligence(data.industry, data.target_audience);
+      setPageStructure(computed.pageStructure);
+      setLayoutIntelligence(computed.layoutIntelligence);
+    }
+    
     setLoading(false);
   }
 
@@ -89,10 +111,10 @@ export default function StrategyBrief() {
 
     setBrief(updatedBrief);
 
-    // Save to database
+    // Save to database - cast to Json for Supabase compatibility
     await supabase
       .from('consultations')
-      .update({ strategy_brief: updatedBrief })
+      .update({ strategy_brief: updatedBrief as Json })
       .eq('id', consultationId);
 
     setEditingField(null);
@@ -196,6 +218,60 @@ export default function StrategyBrief() {
             <EditableField label="Secondary CTA" field="ctaStrategy.secondary" value={brief.ctaStrategy?.secondary || ''} />
           </div>
         </div>
+
+        {/* Layout Intelligence Badge */}
+        {layoutIntelligence && (
+          <div className="bg-[#1a1a2e] rounded-xl p-6 border border-gray-700/50 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">Layout Intelligence</h2>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm font-medium">
+                  {layoutIntelligence.archetypeName}
+                </span>
+                <span className="px-2 py-1 bg-green-500/20 text-green-300 rounded-full text-xs">
+                  {Math.round(layoutIntelligence.confidence * 100)}% match
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
+              <div className="flex items-center gap-2">
+                {layoutIntelligence.ctaStyle === 'phone' ? (
+                  <Phone className="w-4 h-4 text-green-400" />
+                ) : (
+                  <MousePointer className="w-4 h-4 text-blue-400" />
+                )}
+                <span>CTA: {layoutIntelligence.ctaStyle === 'phone' ? 'Phone-First' : 'Button'}</span>
+              </div>
+              <span>•</span>
+              <span>Hero: {layoutIntelligence.heroStyle}</span>
+            </div>
+            
+            {layoutIntelligence.reasoning && (
+              <p className="text-sm text-gray-500 italic">{layoutIntelligence.reasoning}</p>
+            )}
+          </div>
+        )}
+
+        {/* Recommended Page Structure */}
+        {pageStructure.length > 0 && (
+          <div className="bg-[#1a1a2e] rounded-xl p-6 border border-gray-700/50 mb-8">
+            <h2 className="text-lg font-semibold text-white mb-4">Recommended Page Structure</h2>
+            <div className="space-y-3">
+              {pageStructure.map((item, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-sm font-medium">
+                    {index + 1}
+                  </span>
+                  <div>
+                    <span className="text-white font-medium">{item.section}</span>
+                    <span className="text-gray-400"> — {item.guidance}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex items-center justify-between">
