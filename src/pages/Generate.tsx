@@ -3753,6 +3753,16 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           onSectionsChange={setSections} 
           cssVariables={cssVariables}
           iconStyle={designSystem?.components?.iconStyle}
+          industryVariant={
+            // PRIORITY 1: Read from persisted pageData.design_intelligence
+            (pageData?.design_intelligence as any)?.industryVariant ||
+            // PRIORITY 2: Derive from consultation industry
+            consultation?.industryCategory ||
+            consultation?.industry ||
+            strategicData?.consultationData?.industryCategory ||
+            strategicData?.consultationData?.industry ||
+            'default'
+          }
           colorMode={(() => {
             // PRIORITY 1: Read from persisted pageData.design_intelligence (multi-user safe)
             const persistedMode = (pageData?.design_intelligence as any)?.colorMode;

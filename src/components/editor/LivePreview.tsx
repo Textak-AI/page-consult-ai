@@ -57,6 +57,7 @@ interface LivePreviewProps {
   strategyBrief?: any;
   seoData?: SEOHeadData;
   colorMode?: 'light' | 'dark';
+  industryVariant?: string; // Industry variant for CSS custom properties
   getSectionLockStatus?: (sectionType: string) => {
     status: 'unlocked' | 'partial' | 'locked';
     isLocked: boolean;
@@ -66,7 +67,7 @@ interface LivePreviewProps {
   };
 }
 
-export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode = 'dark', getSectionLockStatus }: LivePreviewProps) {
+export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode = 'dark', industryVariant, getSectionLockStatus }: LivePreviewProps) {
   const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();
   const currentStyle = styleVariants[pageStyle];
   
@@ -585,6 +586,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
       {seoData && <SEOHead seo={seoData} />}
       <div 
         data-mode={colorMode} 
+        data-industry={industryVariant || 'default'}
         className="min-h-full bg-background live-preview-container"
       >
         {sections

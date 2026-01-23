@@ -3,7 +3,7 @@ import { motion, type HTMLMotionProps } from "framer-motion";
 import React from "react";
 
 interface PremiumCardProps extends Omit<HTMLMotionProps<"div">, "children"> {
-  variant?: 'glass' | 'solid' | 'outlined' | 'elevated';
+  variant?: 'glass' | 'solid' | 'outlined' | 'elevated' | 'industry-aware';
   glow?: boolean;
   glowColor?: 'cyan' | 'purple' | 'gradient';
   hover?: boolean;
@@ -32,6 +32,10 @@ const variantStyles = {
     shadow-[0_20px_50px_rgba(0,0,0,0.3)]
     border border-slate-700/30
   `,
+  // Industry-aware: Uses CSS custom properties from data-industry
+  'industry-aware': `
+    border border-border
+  `,
 };
 
 const glowStyles = {
@@ -59,16 +63,27 @@ export const PremiumCard = React.forwardRef<HTMLDivElement, PremiumCardProps>(({
   
   const hoverClasses = hover ? 'hover:-translate-y-1 hover:shadow-xl' : '';
   
+  // For industry-aware variant, use CSS custom properties
+  const isIndustryAware = variant === 'industry-aware';
+  const industryStyles = isIndustryAware ? {
+    borderRadius: 'var(--card-radius, 1rem)',
+    backdropFilter: 'blur(var(--card-blur, 0))',
+    backgroundColor: 'var(--card-bg, hsl(var(--card)))',
+  } : {};
+  
   return (
     <motion.div
       ref={ref}
       className={cn(
-        'rounded-2xl p-8 transition-all duration-300',
+        'p-8 transition-all duration-300',
+        // Use dynamic radius only for non-industry-aware variants
+        !isIndustryAware && 'rounded-2xl',
         variantStyles[variant],
         glowClasses,
         hoverClasses,
         className
       )}
+      style={industryStyles}
       {...props}
     >
       {children}
