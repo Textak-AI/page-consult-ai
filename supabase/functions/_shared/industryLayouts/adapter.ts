@@ -1,71 +1,174 @@
 /**
  * Adapter between PageConsult consultation schema and ExtractedIntelligence
+ * 
+ * Handles both snake_case (DB) and camelCase (frontend) field names
  */
 
 import { ExtractedIntelligence, BusinessCharacteristics } from "./types.ts";
 
-interface ConsultationData {
-  industry?: string;
-  business_name?: string;
-  target_audience?: string;
-  audience_description?: string;
-  value_proposition?: string;
-  offering?: string;
-  key_features?: string[];
-  differentiators?: string[];
-  pricing_model?: string;
-  pricing_value?: number;
-  show_pricing?: boolean;
-  testimonials?: any[];
-  case_studies?: any[];
-  client_count?: string;
-  years_experience?: string;
-  competitors?: string[];
-  competitive_angle?: string;
-  pain_points?: string[];
-  objections?: string[];
-  process_steps?: string[];
-  requires_onboarding?: boolean;
-  service_area?: string;
-  is_local?: boolean;
-  founder_story?: string;
-  compliance_requirements?: string[];
-  buyer_awareness?: "unaware" | "problemAware" | "solutionAware" | "productAware" | "mostAware";
+// Accept any consultation shape - we'll normalize it
+type ConsultationData = Record<string, any>;
+
+/**
+ * Detect if this is a local service business based on industry and audience keywords
+ */
+function detectLocalBusiness(consultation: ConsultationData): boolean {
+  const industryLower = (
+    consultation.industry || 
+    consultation.industryOther || 
+    ''
+  ).toLowerCase();
+  
+  const audienceLower = (
+    consultation.targetAudience || 
+    consultation.target_audience ||
+    consultation.idealClient ||
+    consultation.audience_description ||
+    ''
+  ).toLowerCase();
+  
+  const offeringLower = (
+    consultation.mainOffer ||
+    consultation.offering ||
+    consultation.value_proposition ||
+    ''
+  ).toLowerCase();
+
+  // Local service industry keywords
+  const localIndustryKeywords = [
+    'plumb', 'hvac', 'electric', 'roof', 'landscap', 'clean', 'repair',
+    'dentist', 'dental', 'salon', 'spa', 'restaurant', 'cafe', 'bakery',
+    'contractor', 'handyman', 'pest', 'moving', 'storage', 'auto', 'mechanic',
+    'flooring', 'painting', 'home services', 'local services', 'fence',
+    'garage door', 'locksmith', 'towing', 'pressure wash', 'gutter'
+  ];
+  
+  // Audience patterns that suggest local service
+  const localAudienceKeywords = [
+    'homeowner', 'local', 'resident', 'neighborhood', 'community',
+    'metro area', 'county', 'city of', 'greater', 'nearby',
+    'in the area', 'in my area', 'property owner'
+  ];
+
+  const hasLocalIndustry = localIndustryKeywords.some(k => industryLower.includes(k) || offeringLower.includes(k));
+  const hasLocalAudience = localAudienceKeywords.some(k => audienceLower.includes(k));
+
+  return hasLocalIndustry || hasLocalAudience;
 }
 
+/**
+ * Extract service area from audience or business description
+ */
+function extractServiceArea(consultation: ConsultationData): string | undefined {
+  const audience = consultation.targetAudience || 
+                   consultation.target_audience || 
+                   consultation.idealClient || 
+                   '';
+  
+  // Look for patterns like "Denver metro area", "Greater Chicago", "homeowners in Austin"
+  const areaPatterns = [
+    /(?:in|serving|around)\s+(?:the\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*(?:area|metro|region|county)?/i,
+    /(?:greater|the)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
+    /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:homeowners|residents|businesses)/i
+  ];
+
+  for (const pattern of areaPatterns) {
+    const match = audience.match(pattern);
+    if (match) {
+      return match[1];
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Convert consultation data to intelligence format
+ * Handles both snake_case and camelCase field names
+ */
 export function consultationToIntelligence(consultation: ConsultationData): ExtractedIntelligence {
-  return {
-    industry: consultation.industry || "general",
-    businessName: consultation.business_name || "",
-    audience: consultation.target_audience || consultation.audience_description || "",
-    audienceSize: consultation.client_count,
-    offering: consultation.offering || consultation.value_proposition || "",
-    features: consultation.key_features || [],
+  // Normalize industry - check multiple possible field names
+  const industry = consultation.industry || 
+                   consultation.industryOther || 
+                   'general';
+
+  // Normalize audience - check multiple possible field names
+  const audience = consultation.targetAudience || 
+                   consultation.target_audience || 
+                   consultation.idealClient ||
+                   consultation.audience_description || 
+                   '';
+
+  // Normalize offering
+  const offering = consultation.mainOffer ||
+                   consultation.offering || 
+                   consultation.value_proposition ||
+                   consultation.uniqueStrength ||
+                   '';
+
+  // Detect local business
+  const isLocal = consultation.is_local ?? 
+                  consultation.isLocal ?? 
+                  detectLocalBusiness(consultation);
+
+  // Extract service area
+  const serviceArea = consultation.service_area ?? 
+                      consultation.serviceArea ?? 
+                      extractServiceArea(consultation);
+
+  // Log for debugging
+  console.log('[consultationToIntelligence] Input fields:', {
+    industry,
+    audience: audience.substring(0, 50) + (audience.length > 50 ? '...' : ''),
+    offering: offering.substring(0, 50) + (offering.length > 50 ? '...' : ''),
+    isLocal,
+    serviceArea
+  });
+
+  const result: ExtractedIntelligence = {
+    industry,
+    businessName: consultation.businessName || consultation.business_name || '',
+    audience,
+    audienceSize: consultation.clientCount || consultation.client_count,
+    offering,
+    features: consultation.key_features || consultation.keyFeatures || [],
     differentiators: consultation.differentiators || [],
-    pricing: consultation.pricing_value
+    pricing: consultation.pricing_value || consultation.pricingValue || consultation.investmentRange
       ? {
-          model: consultation.pricing_model,
-          value: consultation.pricing_value,
-          showOnPage: consultation.show_pricing,
+          model: consultation.pricing_model || consultation.pricingModel,
+          value: consultation.pricing_value || consultation.pricingValue,
+          showOnPage: consultation.show_pricing ?? consultation.showPricing,
         }
       : undefined,
     testimonials: consultation.testimonials || [],
-    caseStudies: consultation.case_studies || [],
+    caseStudies: consultation.case_studies || consultation.caseStudies || [],
     metrics: [],
     logos: [],
     competitors: consultation.competitors || [],
-    competitiveAngle: consultation.competitive_angle,
-    painPoints: consultation.pain_points || [],
-    objections: consultation.objections || [],
-    process: consultation.process_steps,
-    requiresOnboarding: consultation.requires_onboarding,
-    serviceArea: consultation.service_area,
-    isLocal: consultation.is_local,
-    isPersonalBrand: !!consultation.founder_story,
-    founderStory: consultation.founder_story,
-    compliance: consultation.compliance_requirements,
-    buyerAwareness: consultation.buyer_awareness || "problemAware",
+    competitiveAngle: consultation.competitive_angle || consultation.competitiveAngle,
+    painPoints: consultation.pain_points || consultation.painPoints || consultation.clientFrustration ? [consultation.clientFrustration] : [],
+    objections: consultation.objections || 
+                (consultation.objectionsToOvercome ? consultation.objectionsToOvercome.split(',').map((s: string) => s.trim()) : []),
+    process: consultation.process_steps || consultation.processSteps || 
+             (consultation.processDescription ? [consultation.processDescription] : undefined),
+    requiresOnboarding: consultation.requires_onboarding ?? consultation.requiresOnboarding,
+    serviceArea,
+    isLocal,
+    isPersonalBrand: !!consultation.founder_story || !!consultation.founderStory,
+    founderStory: consultation.founder_story || consultation.founderStory,
+    compliance: consultation.compliance_requirements || consultation.complianceRequirements,
+    buyerAwareness: consultation.buyer_awareness || consultation.buyerAwareness || 'problemAware',
   };
+
+  console.log('[consultationToIntelligence] Result:', {
+    industry: result.industry,
+    isLocal: result.isLocal,
+    serviceArea: result.serviceArea,
+    hasAudience: !!result.audience,
+    hasOffering: !!result.offering
+  });
+
+  return result;
 }
 
 export function extractCharacteristics(intelligence: ExtractedIntelligence): Partial<BusinessCharacteristics> {

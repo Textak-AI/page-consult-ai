@@ -34,6 +34,7 @@ serve(async (req) => {
           maxFeatureCards: number;
           socialProofStyle: string;
           ctaPlacement: string;
+          ctaStyle: string;
           pageDensity: string;
         };
         contentGuidance: {
@@ -50,7 +51,21 @@ serve(async (req) => {
     };
     
     try {
+      // Log raw input for debugging
+      console.log('[generate-strategy-brief] Raw industry value:', consultationData.industry);
+      console.log('[generate-strategy-brief] Raw idealClient:', consultationData.idealClient?.substring(0, 100));
+      console.log('[generate-strategy-brief] Raw mainOffer:', consultationData.mainOffer?.substring(0, 100));
+      
       const intelligence = consultationToIntelligence(consultationData);
+      
+      // Log extracted intelligence
+      console.log('[generate-strategy-brief] 🔍 Intelligence extracted:', {
+        industry: intelligence.industry,
+        isLocal: intelligence.isLocal,
+        serviceArea: intelligence.serviceArea,
+        audience: intelligence.audience?.substring(0, 50)
+      });
+      
       const result = getLayoutRecommendation(intelligence);
       
       // Map to simplified structure for prompt injection
@@ -64,6 +79,7 @@ serve(async (req) => {
             maxFeatureCards: result.config.layout.maxFeatureCards,
             socialProofStyle: result.config.layout.socialProofStyle,
             ctaPlacement: result.config.layout.ctaPlacement,
+            ctaStyle: (result.config.layout as any).ctaStyle || 'button',
             pageDensity: result.config.layout.pageDensity,
           },
           contentGuidance: {
@@ -79,11 +95,17 @@ serve(async (req) => {
         sections: result.sections,
       };
       
-      // Log for debugging
-      console.log('🏗️ [Layout Intelligence]', layoutResult.reasoning);
+      // Detailed logging for debugging
+      console.log('🏗️ [Layout Intelligence] Result:', {
+        configName: layoutResult.config.name,
+        source: (result as any).source || 'unknown',
+        archetype: (result as any).archetype || 'none',
+        reasoning: layoutResult.reasoning
+      });
       console.log('📊 [Confidence]', Math.round(layoutResult.confidence * 100) + '%');
       console.log('📋 [Sections]', layoutResult.sections);
       console.log('🎨 [Hero Style]', layoutResult.config.layout.heroStyle);
+      console.log('📞 [CTA Style]', layoutResult.config.layout.ctaStyle);
     } catch (layoutError) {
       console.warn('⚠️ [Layout Intelligence] Failed to get recommendation, using defaults:', layoutError);
       
@@ -98,6 +120,7 @@ serve(async (req) => {
             maxFeatureCards: 6,
             socialProofStyle: 'testimonials',
             ctaPlacement: 'hero-and-final',
+            ctaStyle: 'button',
             pageDensity: 'balanced',
           },
           contentGuidance: {
@@ -366,12 +389,15 @@ Be specific. No generic advice. Everything should tie back to the actual consult
         reasoning: layoutResult.reasoning,
         confidence: layoutResult.confidence,
         sections: layoutResult.sections,
+        ctaStyle: layoutResult.config.layout.ctaStyle,
         config: {
           name: layoutResult.config.name,
           heroStyle: layoutResult.config.layout.heroStyle,
+          ctaStyle: layoutResult.config.layout.ctaStyle,
           featureLayout: layoutResult.config.layout.preferredFeatureLayout,
           socialProofStyle: layoutResult.config.layout.socialProofStyle,
           pageDensity: layoutResult.config.layout.pageDensity,
+          trustPriorities: layoutResult.config.trustPriorities,
         }
       }
     }), {
