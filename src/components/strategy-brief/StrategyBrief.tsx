@@ -7,33 +7,13 @@ import { CollapsibleBriefSection } from './CollapsibleBriefSection';
 import { CreativeDirectionSection } from './CreativeDirectionSection';
 import { MarketIntelligenceSection } from './MarketIntelligenceSection';
 import type { ConsultationArtifacts } from '@/lib/artifactDetection';
+import type { PageStructureItem, LayoutIntelligence } from '@/lib/layoutIntelligence';
 
 interface MarketResearchData {
   marketSize?: string | null;
   buyerPersona?: string | null;
   commonObjections?: string[];
   industryInsights?: string[];
-}
-
-// Page structure item from API
-interface PageStructureItem {
-  section: string;
-  guidance: string;
-}
-
-// Layout intelligence from the industry system
-interface LayoutIntelligence {
-  archetype?: string;
-  archetypeName?: string;
-  confidence?: number;
-  reasoning?: string;
-  heroStyle?: string;
-  ctaStyle?: string;
-  trustPriorities?: string[];
-  ctaText?: {
-    primary?: string[];
-    secondary?: string[];
-  };
 }
 
 interface StrategyBriefProps {
