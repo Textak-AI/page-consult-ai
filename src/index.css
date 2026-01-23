@@ -185,6 +185,248 @@ All colors MUST be HSL.
     --hero-gradient-start: 222 47% 11%;
     --hero-gradient-end: 222 47% 9%;
   }
+
+  /* ============================================
+   * INDUSTRY VARIANT CSS CUSTOM PROPERTIES
+   * Per design-spec-industry-variants.md Phase 2
+   * ============================================ */
+
+  /* Industry card and layout defaults */
+  :root {
+    --card-radius: 1rem;
+    --card-blur: 12px;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --shadow-style: glow;
+    --heading-weight: 600;
+    --section-spacing: 5rem;
+    --color-primary: 263 70% 65%;
+    --color-accent: 191 91% 43%;
+  }
+
+  /* Local Services: Light, trustworthy, elevated cards */
+  [data-industry="local-services"] {
+    --card-radius: 0.5rem;
+    --card-blur: 0;
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --shadow-style: elevated;
+    --heading-weight: 600;
+    --section-spacing: 4rem;
+    --color-primary: 209 100% 40%; /* #0066CC - trustworthy blue */
+    --color-accent: 24 100% 50%; /* #FF6B00 - action orange */
+    
+    /* Override core theme for light mode */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --border: 214 32% 91%;
+    --primary: 209 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 24 100% 50%;
+    --secondary-foreground: 0 0% 100%;
+  }
+
+  /* Tech / SaaS: Dark, glassmorphism, glow effects */
+  [data-industry="saas"],
+  [data-industry="tech"] {
+    --card-radius: 1rem;
+    --card-blur: 12px;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --shadow-style: glow;
+    --heading-weight: 600;
+    --section-spacing: 5rem;
+    --color-primary: 239 84% 67%; /* #6366F1 - indigo */
+    --color-accent: 191 91% 43%; /* #06B6D4 - cyan */
+    
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 217 33% 17%;
+    --card-foreground: 210 40% 98%;
+    --border: 217 19% 27%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 191 91% 43%;
+    --secondary-foreground: 0 0% 100%;
+  }
+
+  /* Healthcare: Light, calming, soft shadows */
+  [data-industry="healthcare"],
+  [data-industry="medical"] {
+    --card-radius: 0.75rem;
+    --card-blur: 0;
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --shadow-style: soft;
+    --heading-weight: 500;
+    --section-spacing: 4.5rem;
+    --color-primary: 168 76% 42%; /* #14B8A6 - teal */
+    --color-accent: 158 64% 40%; /* #10B981 - emerald */
+    
+    --background: 0 0% 99%;
+    --foreground: 222 47% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 15%;
+    --muted: 168 30% 96%;
+    --muted-foreground: 168 10% 40%;
+    --border: 168 20% 90%;
+    --primary: 168 76% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 158 64% 40%;
+    --secondary-foreground: 0 0% 100%;
+  }
+
+  /* Manufacturing: Light, solid, authoritative */
+  [data-industry="manufacturing"],
+  [data-industry="industrial"] {
+    --card-radius: 0.5rem;
+    --card-blur: 0;
+    --card-bg: rgba(30, 41, 59, 0.08);
+    --shadow-style: drop-shadow;
+    --heading-weight: 700;
+    --section-spacing: 4rem;
+    --color-primary: 213 47% 25%; /* #1E3A5F - navy */
+    --color-accent: 38 92% 50%; /* #F59E0B - amber */
+    
+    --background: 210 20% 98%;
+    --foreground: 213 47% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 213 47% 15%;
+    --muted: 210 20% 95%;
+    --muted-foreground: 213 20% 40%;
+    --border: 213 20% 88%;
+    --primary: 213 47% 25%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 38 92% 50%;
+    --secondary-foreground: 0 0% 0%;
+  }
+
+  /* Finance: Light, conservative, subtle */
+  [data-industry="finance"],
+  [data-industry="financial"] {
+    --card-radius: 0.25rem;
+    --card-blur: 0;
+    --card-bg: rgba(30, 58, 138, 0.05);
+    --shadow-style: subtle;
+    --heading-weight: 600;
+    --section-spacing: 4rem;
+    --color-primary: 226 71% 31%; /* #1E3A8A - deep blue */
+    --color-accent: 38 84% 44%; /* #D97706 - amber */
+    
+    --background: 0 0% 99%;
+    --foreground: 226 47% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 226 47% 15%;
+    --muted: 226 20% 97%;
+    --muted-foreground: 226 15% 45%;
+    --border: 226 15% 90%;
+    --primary: 226 71% 31%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 38 84% 44%;
+    --secondary-foreground: 0 0% 0%;
+  }
+
+  /* Creative / Agency: Dark or bold, no blur, dramatic */
+  [data-industry="creative"],
+  [data-industry="agency"],
+  [data-industry="design"] {
+    --card-radius: 0;
+    --card-blur: 0;
+    --card-bg: transparent;
+    --shadow-style: none;
+    --heading-weight: 800;
+    --section-spacing: 6rem;
+    --color-primary: 330 81% 60%; /* #EC4899 - pink */
+    --color-accent: 270 95% 60%; /* #A855F7 - purple */
+    
+    --background: 0 0% 3%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 98%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 60%;
+    --border: 0 0% 15%;
+    --primary: 330 81% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 270 95% 60%;
+    --secondary-foreground: 0 0% 100%;
+  }
+
+  /* Consulting: Light, professional, bordered cards */
+  [data-industry="consulting"],
+  [data-industry="professional"] {
+    --card-radius: 0.5rem;
+    --card-blur: 0;
+    --card-bg: rgba(255, 255, 255, 1);
+    --shadow-style: bordered;
+    --heading-weight: 600;
+    --section-spacing: 5rem;
+    --color-primary: 25 95% 53%; /* #F97316 - warm orange */
+    --color-accent: 220 14% 45%; /* #64748B - slate */
+    
+    --background: 30 20% 98%;
+    --foreground: 28 25% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 28 25% 15%;
+    --muted: 30 20% 96%;
+    --muted-foreground: 28 10% 45%;
+    --border: 28 15% 88%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 45%;
+    --secondary-foreground: 0 0% 100%;
+  }
+
+  /* Legal: Light, authoritative, minimal */
+  [data-industry="legal"],
+  [data-industry="law"] {
+    --card-radius: 0.25rem;
+    --card-blur: 0;
+    --card-bg: rgba(255, 255, 255, 1);
+    --shadow-style: subtle;
+    --heading-weight: 600;
+    --section-spacing: 4rem;
+    --color-primary: 222 47% 20%; /* Navy */
+    --color-accent: 38 70% 45%; /* Gold */
+    
+    --background: 0 0% 99%;
+    --foreground: 222 47% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 15%;
+    --muted: 220 20% 97%;
+    --muted-foreground: 220 15% 45%;
+    --border: 220 15% 88%;
+    --primary: 222 47% 20%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 38 70% 45%;
+    --secondary-foreground: 0 0% 0%;
+  }
+
+  /* E-commerce: Light, clean, action-oriented */
+  [data-industry="ecommerce"],
+  [data-industry="retail"],
+  [data-industry="shop"] {
+    --card-radius: 0.5rem;
+    --card-blur: 0;
+    --card-bg: rgba(255, 255, 255, 1);
+    --shadow-style: elevated;
+    --heading-weight: 600;
+    --section-spacing: 4rem;
+    --color-primary: 142 71% 45%; /* Green - action */
+    --color-accent: 262 83% 58%; /* Purple */
+    
+    --background: 0 0% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --border: 214 32% 91%;
+    --primary: 142 71% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 262 83% 58%;
+    --secondary-foreground: 0 0% 100%;
+  }
 }
 
 @layer base {
