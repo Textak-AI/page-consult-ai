@@ -47,6 +47,14 @@ interface BrandData {
   ogImage: string | null;
   domain: string;
   fonts: { heading: string | null; body: string | null };
+  isMinimalBrand: boolean;
+  extractionConfidence: 'high' | 'medium' | 'low';
+}
+
+interface ColorExtractionResult {
+  colors: string[];
+  isMinimalBrand: boolean;
+  allExtracted: string[]; // Colors before filtering
 }
 
 serve(async (req) => {
@@ -105,6 +113,8 @@ serve(async (req) => {
       ogImage: null,
       domain: baseUrl.hostname.replace('www.', ''),
       fonts: { heading: null, body: null },
+      isMinimalBrand: false,
+      extractionConfidence: 'low',
     };
 
     // Extract company name
@@ -127,17 +137,28 @@ serve(async (req) => {
       brand.tagline = ogDesc;
     }
 
-    // Extract colors (priority order)
-    const extractedColors = extractColors(html);
-    console.log('[Brand Extraction] Colors extracted:', extractedColors);
+    // Extract colors (priority order) - with minimal brand detection
+    const colorResult = extractColors(html);
+    console.log('[Brand Extraction] Colors extracted:', colorResult);
     
-    if (extractedColors.length > 0) {
-      brand.themeColor = extractedColors[0];
-      brand.secondaryColor = extractedColors[1] || null;
-      brand.accentColor = extractedColors[2] || null;
+    brand.isMinimalBrand = colorResult.isMinimalBrand;
+    
+    if (colorResult.colors.length > 0) {
+      brand.themeColor = colorResult.colors[0];
+      brand.secondaryColor = colorResult.colors[1] || null;
+      brand.accentColor = colorResult.colors[2] || null;
+      brand.extractionConfidence = 'high';
+    } else if (colorResult.isMinimalBrand && colorResult.allExtracted.length > 0) {
+      // Minimal brand - use their actual monochromatic colors
+      brand.themeColor = colorResult.allExtracted[0];
+      brand.secondaryColor = colorResult.allExtracted[1] || lightenColor(colorResult.allExtracted[0], 30);
+      brand.accentColor = null; // Let UI suggest an accent
+      brand.extractionConfidence = 'medium';
+      console.log('[Brand Extraction] Minimal brand detected, using monochromatic colors');
     } else {
       // Fallback to meta theme-color
       brand.themeColor = extractMeta(html, 'theme-color');
+      brand.extractionConfidence = brand.themeColor ? 'medium' : 'low';
     }
 
     // Extract fonts
@@ -173,18 +194,22 @@ serve(async (req) => {
   }
 });
 
-function extractColors(html: string): string[] {
+function extractColors(html: string): ColorExtractionResult {
   const collectedColors: string[] = [];
+  const allExtractedColors: string[] = []; // Track ALL colors before filtering
   
-  // Priority 1: Meta theme-color
+  // Priority 1: Meta theme-color (including black/white for minimal brands)
   const themeColorPatterns = [
     /<meta[^>]*name=["']theme-color["'][^>]*content=["']([^"']+)["']/i,
     /<meta[^>]*content=["']([^"']+)["'][^>]*name=["']theme-color["']/i,
   ];
   for (const pattern of themeColorPatterns) {
     const match = html.match(pattern);
-    if (match && !isExcludedColor(match[1])) {
-      collectedColors.push(match[1]);
+    if (match) {
+      allExtractedColors.push(match[1]);
+      if (!isExcludedColor(match[1])) {
+        collectedColors.push(match[1]);
+      }
       break;
     }
   }
@@ -197,6 +222,7 @@ function extractColors(html: string): string[] {
   for (const pattern of cssVarPatterns) {
     const matches = html.matchAll(pattern);
     for (const match of matches) {
+      allExtractedColors.push(match[1]);
       if (!isExcludedColor(match[1]) && !collectedColors.includes(match[1].toLowerCase())) {
         collectedColors.push(match[1]);
       }
@@ -211,6 +237,7 @@ function extractColors(html: string): string[] {
   for (const pattern of buttonPatterns) {
     const matches = html.matchAll(pattern);
     for (const match of matches) {
+      allExtractedColors.push(match[1]);
       if (!isExcludedColor(match[1]) && !collectedColors.includes(match[1].toLowerCase())) {
         collectedColors.push(match[1]);
       }
@@ -225,6 +252,7 @@ function extractColors(html: string): string[] {
   for (const pattern of inlinePatterns) {
     const matches = html.matchAll(pattern);
     for (const match of matches) {
+      allExtractedColors.push(match[1]);
       if (!isExcludedColor(match[1]) && !collectedColors.includes(match[1].toLowerCase())) {
         collectedColors.push(match[1]);
       }
@@ -240,6 +268,7 @@ function extractColors(html: string): string[] {
     const colorCounts: Record<string, number> = {};
     for (const match of matches) {
       const color = match[1].toLowerCase();
+      allExtractedColors.push(color);
       if (!isExcludedColor(color)) {
         colorCounts[color] = (colorCounts[color] || 0) + 1;
       }
@@ -257,7 +286,28 @@ function extractColors(html: string): string[] {
     }
   }
   
-  return [...new Set(collectedColors)].slice(0, 5);
+  // Detect minimal/monochromatic brand
+  const uniqueAll = [...new Set(allExtractedColors.map(c => c.toLowerCase()))];
+  const uniqueVibrant = [...new Set(collectedColors)].slice(0, 5);
+  
+  // A minimal brand has colors extracted, but they're all black/white/gray
+  const isMinimalBrand = uniqueAll.length > 0 && uniqueVibrant.length === 0;
+  
+  return {
+    colors: uniqueVibrant,
+    isMinimalBrand,
+    allExtracted: uniqueAll.slice(0, 5)
+  };
+}
+
+// Helper to lighten a color for secondary color generation
+function lightenColor(hex: string, percent: number): string {
+  const cleanHex = hex.replace('#', '');
+  const num = parseInt(cleanHex, 16);
+  const r = Math.min(255, Math.floor((num >> 16) + (255 - (num >> 16)) * (percent / 100)));
+  const g = Math.min(255, Math.floor(((num >> 8) & 0x00FF) + (255 - ((num >> 8) & 0x00FF)) * (percent / 100)));
+  const b = Math.min(255, Math.floor((num & 0x0000FF) + (255 - (num & 0x0000FF)) * (percent / 100)));
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
 function extractFonts(html: string): { heading: string | null; body: string | null } {

@@ -12,6 +12,8 @@ export interface ExtractedBrand {
   secondaryColor: string | null;
   accentColor: string | null;
   websiteUrl?: string | null;
+  isMinimalBrand?: boolean;
+  extractionConfidence?: 'high' | 'medium' | 'low';
 }
 
 export async function extractBrandFromUrl(url: string): Promise<{

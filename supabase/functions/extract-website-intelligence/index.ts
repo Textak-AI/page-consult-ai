@@ -96,7 +96,10 @@ serve(async (req) => {
       companyName: null as string | null,
       fonts: { heading: null as string | null, body: null as string | null },
       pageCopy: null as string | null,
-      sourceUrl: normalizedUrl
+      sourceUrl: normalizedUrl,
+      isMinimalBrand: false,
+      extractionConfidence: 'low' as 'high' | 'medium' | 'low',
+      allExtractedColors: [] as string[] // Track colors before filtering for minimal brand detection
     };
 
     // ============================================
@@ -165,13 +168,17 @@ serve(async (req) => {
     // 2. BRAND COLORS EXTRACTION (priority order)
     // ============================================
     const collectedColors: string[] = [];
+    const allExtractedColors: string[] = []; // Track ALL colors before filtering
     
-    // Priority 1: Meta theme-color
+    // Priority 1: Meta theme-color (track even if excluded for minimal brand detection)
     const themeColor = html.match(/<meta[^>]*name=["']theme-color["'][^>]*content=["']([^"']+)["']/i)
                     || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']theme-color["']/i);
-    if (themeColor && !isExcludedColor(themeColor[1])) {
-      collectedColors.push(themeColor[1]);
-      console.log('[extract] Color from theme-color:', themeColor[1]);
+    if (themeColor) {
+      allExtractedColors.push(themeColor[1]);
+      if (!isExcludedColor(themeColor[1])) {
+        collectedColors.push(themeColor[1]);
+        console.log('[extract] Color from theme-color:', themeColor[1]);
+      }
     }
     
     // Priority 2: CSS custom properties (--primary, --brand, --accent, etc.)
@@ -183,6 +190,7 @@ serve(async (req) => {
     for (const pattern of cssVarPatterns) {
       const matches = html.matchAll(pattern);
       for (const match of matches) {
+        allExtractedColors.push(match[1]);
         if (!isExcludedColor(match[1])) {
           collectedColors.push(match[1]);
           console.log('[extract] Color from CSS var:', match[1]);
@@ -198,6 +206,7 @@ serve(async (req) => {
     for (const pattern of buttonColorPatterns) {
       const matches = html.matchAll(pattern);
       for (const match of matches) {
+        allExtractedColors.push(match[1]);
         if (!isExcludedColor(match[1])) {
           collectedColors.push(match[1]);
         }
@@ -212,15 +221,31 @@ serve(async (req) => {
     for (const pattern of inlineColorPatterns) {
       const matches = html.matchAll(pattern);
       for (const match of matches) {
+        allExtractedColors.push(match[1]);
         if (!isExcludedColor(match[1])) {
           collectedColors.push(match[1]);
         }
       }
     }
     
-    // Deduplicate and take top 5
-    extractedData.brandColors = [...new Set(collectedColors)].slice(0, 5);
-    console.log('[extract] Final colors:', extractedData.brandColors);
+    // Deduplicate
+    const uniqueColors = [...new Set(collectedColors)].slice(0, 5);
+    const uniqueAllColors = [...new Set(allExtractedColors.map(c => c.toLowerCase()))].slice(0, 5);
+    
+    // Detect minimal/monochromatic brand - has colors but all were filtered out
+    if (uniqueAllColors.length > 0 && uniqueColors.length === 0) {
+      extractedData.isMinimalBrand = true;
+      // For minimal brands, use their actual monochromatic colors
+      extractedData.brandColors = uniqueAllColors;
+      extractedData.extractionConfidence = 'medium';
+      console.log('[extract] Minimal brand detected, using monochromatic colors:', uniqueAllColors);
+    } else {
+      extractedData.brandColors = uniqueColors;
+      extractedData.extractionConfidence = uniqueColors.length > 0 ? 'high' : 'low';
+    }
+    
+    extractedData.allExtractedColors = uniqueAllColors;
+    console.log('[extract] Final colors:', extractedData.brandColors, 'isMinimalBrand:', extractedData.isMinimalBrand);
 
     // ============================================
     // 3. FONT EXTRACTION
