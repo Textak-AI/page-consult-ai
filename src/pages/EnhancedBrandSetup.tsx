@@ -878,15 +878,9 @@ export default function EnhancedBrandSetup() {
       
       console.log('🚀 [EnhancedBrandSetup] Brand captured:', { consultationId, readinessScore });
       
-      // High readiness: show Strategy Document with complete blueprint
-      if (readinessScore >= 50) {
-        console.log('🚀 [EnhancedBrandSetup] High readiness - navigating to Strategy Document');
-        navigate(`/strategy-document?consultationId=${consultationId}`, { replace: true });
-      } else {
-        // Low readiness: go directly to wizard for more info
-        console.log('🚀 [EnhancedBrandSetup] Low readiness - navigating to wizard');
-        navigate(`/wizard?consultationId=${consultationId}`, { replace: true });
-      }
+      // Always navigate to Strategy Document - the "View Your Strategy Blueprint" destination
+      console.log('🚀 [EnhancedBrandSetup] Navigating to Strategy Document');
+      navigate(`/strategy-document?consultationId=${consultationId}`, { replace: true });
     } else if (demoSession && sessionId) {
       // Demo session flow - need to check if we should create consultation first
       console.log('🚀 [EnhancedBrandSetup] Demo user - checking for high-readiness flow');
