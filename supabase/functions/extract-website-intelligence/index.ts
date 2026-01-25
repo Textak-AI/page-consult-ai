@@ -462,11 +462,95 @@ serve(async (req) => {
     extractedData.pageCopy = extractPageCopy(html);
     console.log('[extract-website-intelligence] Page copy length:', extractedData.pageCopy?.length || 0);
 
-    console.log('[extract-website-intelligence] Final extracted data:', JSON.stringify(extractedData, null, 2));
+    // ============================================
+    // 8. INFER INDUSTRY FROM PAGE CONTENT
+    // ============================================
+    const inferIndustry = (pageCopy: string, description: string | null, heroText: string | null): string | null => {
+      const content = `${pageCopy} ${description || ''} ${heroText || ''}`.toLowerCase();
+      
+      // Industry keyword patterns (more specific = higher priority)
+      const industryPatterns: [RegExp, string][] = [
+        // Industrial/Commercial services
+        [/\b(water treatment|water purification|industrial water|wastewater)\b/i, 'Industrial Water Treatment'],
+        [/\b(commercial cleaning|janitorial|facility cleaning)\b/i, 'Commercial Cleaning Services'],
+        [/\b(hvac|heating.*cooling|air conditioning|climate control)\b/i, 'HVAC Services'],
+        [/\b(electrical contractor|commercial electrical|industrial electrical)\b/i, 'Electrical Contracting'],
+        [/\b(plumbing contractor|commercial plumbing|industrial plumbing)\b/i, 'Commercial Plumbing'],
+        [/\b(roofing|roof.*contractor|commercial roof)\b/i, 'Commercial Roofing'],
+        [/\b(landscaping|lawn care|grounds.*maintenance)\b/i, 'Commercial Landscaping'],
+        [/\b(construction|general contractor|building contractor)\b/i, 'Construction'],
+        [/\b(manufacturing|production|industrial manufacturing)\b/i, 'Manufacturing'],
+        
+        // Professional services
+        [/\b(law firm|attorney|legal services|lawyer)\b/i, 'Legal Services'],
+        [/\b(accounting|cpa|bookkeeping|tax.*service)\b/i, 'Accounting & Finance'],
+        [/\b(consulting|consultant|advisory|strategic advisor)\b/i, 'Consulting'],
+        [/\b(marketing agency|digital marketing|advertising agency)\b/i, 'Marketing & Advertising'],
+        [/\b(web.*design|website.*development|digital agency)\b/i, 'Web Development & Design'],
+        [/\b(it.*services|managed.*services|technology.*solutions)\b/i, 'IT Services'],
+        [/\b(cybersecurity|security.*services|information security)\b/i, 'Cybersecurity'],
+        [/\b(hr.*consulting|human resources|talent.*management)\b/i, 'HR Consulting'],
+        [/\b(real estate|property.*management|commercial.*real)\b/i, 'Real Estate'],
+        
+        // Healthcare/Medical
+        [/\b(healthcare|medical.*practice|clinic|hospital)\b/i, 'Healthcare'],
+        [/\b(dental|dentist|orthodont)\b/i, 'Dental Services'],
+        [/\b(wellness|fitness|gym|personal training)\b/i, 'Health & Wellness'],
+        
+        // SaaS/Tech
+        [/\b(saas|software.*as.*service|cloud.*platform)\b/i, 'SaaS'],
+        [/\b(platform|app|application|software)\b/i, 'Software/Tech'],
+        [/\b(fintech|financial.*technology)\b/i, 'FinTech'],
+        
+        // E-commerce/Retail
+        [/\b(e-?commerce|online.*store|shop)\b/i, 'E-commerce'],
+        [/\b(retail|store|boutique)\b/i, 'Retail'],
+        
+        // Other services
+        [/\b(insurance|insurance.*agency)\b/i, 'Insurance'],
+        [/\b(financial.*advisor|wealth.*management|investment)\b/i, 'Financial Services'],
+        [/\b(education|training|learning|academy)\b/i, 'Education & Training'],
+        [/\b(restaurant|catering|food.*service)\b/i, 'Food & Hospitality'],
+        [/\b(photography|videography|creative.*studio)\b/i, 'Creative Services'],
+      ];
+      
+      for (const [pattern, industry] of industryPatterns) {
+        if (pattern.test(content)) {
+          console.log('[extract] Inferred industry:', industry);
+          return industry;
+        }
+      }
+      
+      return null;
+    };
+    
+    const inferredIndustry = inferIndustry(extractedData.pageCopy || '', extractedData.description, extractedData.heroText);
+
+    console.log('[extract-website-intelligence] Final extracted data:', {
+      companyName: extractedData.companyName,
+      inferredIndustry,
+      hasLogo: !!extractedData.logoUrl,
+      colorCount: extractedData.brandColors.length,
+      isMinimalBrand: extractedData.isMinimalBrand,
+    });
 
     return new Response(JSON.stringify({
       success: true,
-      data: extractedData
+      // Flatten the response for easier consumption
+      companyName: extractedData.companyName,
+      logoUrl: extractedData.logoUrl,
+      brandColors: extractedData.brandColors,
+      fonts: extractedData.fonts,
+      title: extractedData.title,
+      tagline: extractedData.tagline,
+      description: extractedData.description,
+      heroText: extractedData.heroText,
+      testimonials: extractedData.testimonials,
+      pageCopy: extractedData.pageCopy?.slice(0, 1000), // Limit size
+      sourceUrl: extractedData.sourceUrl,
+      isMinimalBrand: extractedData.isMinimalBrand,
+      extractionConfidence: extractedData.extractionConfidence,
+      inferredIndustry, // Add inferred industry
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
