@@ -105,7 +105,8 @@ const buildSystemPrompt = (
   inputQuality: string, 
   consecutiveThinInputs: number,
   extractionTarget: 'industry' | 'audience' | 'valueProp' | 'proof',
-  hasAnyIntelligence: boolean
+  hasAnyIntelligence: boolean,
+  hasWebsiteIntelligence: boolean
 ) => {
   const basePrompt = `You are a senior strategist conducting a focused intake interview at PageConsult. This is a live demo — your job is to gather intelligence quickly and efficiently.
 
@@ -139,6 +140,31 @@ When user says "ok", "sure", "got it", "I see", "yes", etc.:
 Research informs your QUESTIONS, not separate deliverables.
 Wrong: "Research shows 67% of buyers want X..."
 Right: "You're in a crowded space — what actually makes you different?"`;
+
+  // Special handling when website was just analyzed
+  if (hasWebsiteIntelligence) {
+    return basePrompt + `
+
+## WEBSITE ANALYSIS (CRITICAL - A URL WAS JUST SHARED)
+The user just shared their website URL and we analyzed it.
+Your response MUST:
+1. Reference their company name and what they do (from websiteIntelligence)
+2. Show you understood their business from their actual site content
+3. Ask ONE strategic follow-up about their target audience or differentiation
+
+EXAMPLE with website data:
+Input: User shares "aquazenservices.com"
+websiteIntelligence: { companyName: "Aquazen Services", inferredIndustry: "Industrial Water Treatment", heroText: "Commercial & Industrial Water Solutions" }
+Output: "Aquazen Services — industrial water treatment for commercial and manufacturing facilities. That's a specialized space. Who's the typical decision-maker on your deals — operations, facilities, or the C-suite?"
+
+NEVER with website data:
+- Guess industry from URL text alone (aqua ≠ pools)
+- Give generic acknowledgments like "got it" when you have website data
+- Skip sharing what you learned — this is a "wow" moment for users
+- Say "I looked at your site" without specifics from websiteIntelligence
+
+USE the websiteIntelligence data to craft a personalized, specific response.`;
+  }
 
   // THIN INPUT HANDLING
   if (inputQuality === 'thin') {
@@ -280,7 +306,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { userMessage, extractedIntelligence, marketResearch, conversationHistory, messageCount, inputQuality } = body;
+    const { userMessage, extractedIntelligence, marketResearch, conversationHistory, messageCount, inputQuality, websiteIntelligence } = body;
 
     // Input validation
     if (!userMessage || typeof userMessage !== 'string') {
@@ -322,14 +348,33 @@ serve(async (req) => {
       extractedIntelligence.audience || 
       extractedIntelligence.valueProp
     );
+    
+    // Check if website intelligence was provided (user shared a URL)
+    const hasWebsiteIntelligence = websiteIntelligence && typeof websiteIntelligence === 'object' && (
+      websiteIntelligence.companyName || 
+      websiteIntelligence.tagline || 
+      websiteIntelligence.inferredIndustry
+    );
 
     console.log('🎯 Extraction target:', extractionTarget);
     console.log('📊 Input quality:', inputQuality);
     console.log('🔄 Consecutive thin inputs (from frontend):', thinCount);
     console.log('📈 Has any intelligence:', hasAnyIntelligence);
+    console.log('🌐 Has website intelligence:', hasWebsiteIntelligence);
 
     // Build context with sanitized data (only if we have real intelligence)
     let context = '';
+    
+    // Website intelligence takes priority - add it first
+    if (hasWebsiteIntelligence) {
+      context += '\n\n## WEBSITE INTELLIGENCE (from user\'s actual site):';
+      if (websiteIntelligence.companyName) context += `\n- Company Name: ${sanitizeAIInput(String(websiteIntelligence.companyName)).slice(0, 100)}`;
+      if (websiteIntelligence.inferredIndustry) context += `\n- Industry: ${sanitizeAIInput(String(websiteIntelligence.inferredIndustry)).slice(0, 100)}`;
+      if (websiteIntelligence.tagline) context += `\n- Tagline: ${sanitizeAIInput(String(websiteIntelligence.tagline)).slice(0, 200)}`;
+      if (websiteIntelligence.heroText) context += `\n- Hero Copy: ${sanitizeAIInput(String(websiteIntelligence.heroText)).slice(0, 200)}`;
+      if (websiteIntelligence.description) context += `\n- Description: ${sanitizeAIInput(String(websiteIntelligence.description)).slice(0, 300)}`;
+      context += '\n\nUSE THIS DATA to personalize your response. Reference their company name and what they do.';
+    }
     
     if (hasAnyIntelligence) {
       context += '\n\nEXTRACTED INTELLIGENCE:';
@@ -357,7 +402,8 @@ serve(async (req) => {
       currentInputQuality, 
       thinCount,
       extractionTarget,
-      hasAnyIntelligence
+      hasAnyIntelligence,
+      hasWebsiteIntelligence
     );
     
     const messages: Array<{ role: string; content: string }> = [

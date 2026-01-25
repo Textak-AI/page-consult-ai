@@ -290,7 +290,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { message, conversationHistory, existingIntelligence } = body;
+    const { message, conversationHistory, existingIntelligence, websiteIntelligence } = body;
 
     // Input validation
     if (!message || typeof message !== 'string') {
@@ -323,6 +323,44 @@ serve(async (req) => {
         role: m.role === 'assistant' ? 'assistant' : 'user',
         content: sanitizeAIInput(m.content),
       }));
+
+    // Build website intelligence context (HIGHEST PRIORITY - use actual scraped data, don't guess)
+    let websiteContext = '';
+    if (websiteIntelligence && typeof websiteIntelligence === 'object') {
+      websiteContext = '\n\n## WEBSITE INTELLIGENCE (AUTHORITATIVE - USE THIS DATA)\n';
+      websiteContext += 'The following was extracted from the user\'s actual website. Use this as the source of truth:\n';
+      
+      if (websiteIntelligence.companyName) {
+        websiteContext += `- Company Name: ${sanitizeAIInput(String(websiteIntelligence.companyName)).slice(0, 100)}\n`;
+      }
+      if (websiteIntelligence.tagline) {
+        websiteContext += `- Tagline: ${sanitizeAIInput(String(websiteIntelligence.tagline)).slice(0, 200)}\n`;
+      }
+      if (websiteIntelligence.description) {
+        websiteContext += `- Description: ${sanitizeAIInput(String(websiteIntelligence.description)).slice(0, 300)}\n`;
+      }
+      if (websiteIntelligence.heroText) {
+        websiteContext += `- Hero Copy: ${sanitizeAIInput(String(websiteIntelligence.heroText)).slice(0, 300)}\n`;
+      }
+      if (websiteIntelligence.inferredIndustry) {
+        websiteContext += `- Inferred Industry: ${sanitizeAIInput(String(websiteIntelligence.inferredIndustry)).slice(0, 100)}\n`;
+      }
+      if (websiteIntelligence.pageCopy) {
+        websiteContext += `- Page Content Summary: ${sanitizeAIInput(String(websiteIntelligence.pageCopy)).slice(0, 500)}\n`;
+      }
+      if (websiteIntelligence.testimonials && Array.isArray(websiteIntelligence.testimonials) && websiteIntelligence.testimonials.length > 0) {
+        websiteContext += `- Testimonials: ${websiteIntelligence.testimonials.slice(0, 3).map((t: string) => sanitizeAIInput(t).slice(0, 100)).join('; ')}\n`;
+      }
+      
+      websiteContext += '\nCRITICAL: Extract industry, audience, and value prop based on this ACTUAL website content, NOT from guessing based on the URL text alone.';
+      
+      console.log('[demo-extract-intelligence] Website intelligence provided:', {
+        companyName: websiteIntelligence.companyName,
+        hasTagline: !!websiteIntelligence.tagline,
+        hasDescription: !!websiteIntelligence.description,
+        inferredIndustry: websiteIntelligence.inferredIndustry,
+      });
+    }
 
     // Build existing intelligence context - only list what's already captured, but ENCOURAGE extraction of missing fields
     let existingContext = '';
@@ -362,6 +400,9 @@ serve(async (req) => {
       }
     }
 
+    // Combine contexts: website data takes priority
+    const fullContext = websiteContext + existingContext;
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -371,11 +412,11 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: systemPrompt + existingContext },
+          { role: 'system', content: systemPrompt + fullContext },
           ...contextMessages,
           { role: 'user', content: `User message: "${sanitizedMessage}"
 
-Extract only SPECIFIC information. If the input is vague, return null for those fields and set inputQuality to "thin".` },
+Extract only SPECIFIC information. If websiteIntelligence was provided, USE IT as the source of truth for company info. If the input is vague and no website data exists, return null for those fields and set inputQuality to "thin".` },
         ],
       }),
     });

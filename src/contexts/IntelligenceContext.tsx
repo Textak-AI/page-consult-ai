@@ -771,6 +771,15 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   }, []);
 
   // ----------------------------------------
+  // Helper to detect URLs in message
+  // ----------------------------------------
+  const extractUrls = (text: string): string[] => {
+    const urlRegex = /(https?:\/\/[^\s]+)|([a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/gi;
+    const matches = text.match(urlRegex) || [];
+    return matches.map(url => url.startsWith('http') ? url : `https://${url}`);
+  };
+
+  // ----------------------------------------
   // Process user message through the demo pipeline
   // ----------------------------------------
   const processUserMessage = useCallback(async (message: string) => {
@@ -822,12 +831,41 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     }));
 
     try {
-      // Step 1: Extract intelligence
+      // Step 0: Detect URLs in the message and extract website intelligence
+      const detectedUrls = extractUrls(message);
+      let websiteIntelligence: any = null;
+      
+      if (detectedUrls.length > 0) {
+        console.log('🌐 [IntelligenceContext] URL detected, extracting website intelligence:', detectedUrls[0]);
+        try {
+          const { data, error } = await supabase.functions.invoke('extract-website-intelligence', {
+            body: { url: detectedUrls[0] }
+          });
+          
+          if (!error && data) {
+            websiteIntelligence = data;
+            console.log('✅ [IntelligenceContext] Website intelligence extracted:', {
+              companyName: data.companyName,
+              industry: data.inferredIndustry,
+              tagline: data.tagline,
+              hasLogo: !!data.logoUrl,
+              colorCount: data.brandColors?.length || 0,
+            });
+          } else {
+            console.warn('⚠️ [IntelligenceContext] Website extraction failed:', error);
+          }
+        } catch (err) {
+          console.error('❌ [IntelligenceContext] Website extraction error:', err);
+        }
+      }
+
+      // Step 1: Extract intelligence - pass website data so AI doesn't guess
       const { data: extractedData, error: extractError } = await supabase.functions.invoke('demo-extract-intelligence', {
         body: {
           message,
           conversationHistory: state.conversation.map(m => ({ role: m.role, content: m.content })),
           existingIntelligence: state.extracted,
+          websiteIntelligence, // Pass website data so extraction is accurate
         },
       });
 
@@ -1022,6 +1060,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           messageCount: newMessageCount,
           inputQuality, // Pass the input quality for smarter response handling
           consecutiveThinInputs: newThinCount, // Pass the explicit count for PROBE→GUIDE logic
+          websiteIntelligence, // Pass website data so AI can acknowledge what it found
         },
       });
 
