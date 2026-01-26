@@ -991,9 +991,27 @@ export default function EnhancedBrandSetup() {
         }
       }
       
-      // Ultimate fallback: if not logged in or creation failed, go to wizard
-      console.log('🚀 [EnhancedBrandSetup] Fallback to wizard (no user or creation failed)');
-      navigate('/wizard');
+      // Ultimate fallback: go directly to generate with brand data in state
+      console.log('🚀 [EnhancedBrandSetup] Navigating to generate with brand data');
+      
+      // Save brand data to localStorage for generate page to pick up
+      const brandData = {
+        companyName,
+        websiteUrl,
+        colors,
+        extractionResults,
+        source: 'brand_setup',
+      };
+      localStorage.setItem('pageconsult_brand_data', JSON.stringify(brandData));
+      
+      // Navigate to generate with brand data in state (bypasses consultation)
+      navigate('/generate', {
+        replace: true,
+        state: {
+          fromBrandSetup: true,
+          brandData,
+        }
+      });
     }
   };
 
