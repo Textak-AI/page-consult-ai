@@ -942,6 +942,57 @@ export default function EnhancedBrandSetup() {
       // Fallback: navigate to generate with session
       navigate(`/generate?session=${sessionId}`);
     } else {
+      // No consultationId and no demo session - create consultation from brand data if we have extraction results
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user && (extractionResults || companyName)) {
+        console.log('🚀 [EnhancedBrandSetup] Creating consultation from brand setup data...');
+        
+        // Create a new consultation with the extracted brand data
+        const { data: newConsultation, error: createError } = await supabase
+          .from('consultations')
+          .insert({
+            user_id: user.id,
+            industry: (extractionResults as any)?.inferredIndustry || extractionResults?.industry || null,
+            business_name: companyName,
+            website_url: websiteUrl,
+            extracted_intelligence: {
+              ...extractionResults,
+              brandColors: colors,
+              source: 'brand_setup',
+              migratedAt: new Date().toISOString(),
+            },
+            consultation_status: 'not_started',
+            status: 'in_progress',
+            readiness_score: extractionResults ? 25 : 10, // Some readiness from brand extraction
+            flow_state: 'brand_captured',
+          })
+          .select()
+          .single();
+        
+        if (!createError && newConsultation) {
+          console.log('✅ [EnhancedBrandSetup] Created consultation:', newConsultation.id);
+          
+          // Save brand data to localStorage for consultation to pick up
+          const brandData = {
+            companyName,
+            websiteUrl,
+            colors,
+            extractionResults,
+            consultationId: newConsultation.id,
+          };
+          localStorage.setItem('pageconsult_brand_data', JSON.stringify(brandData));
+          
+          // Navigate to strategy document
+          navigate(`/strategy-document?consultationId=${newConsultation.id}`, { replace: true });
+          return;
+        } else {
+          console.error('❌ [EnhancedBrandSetup] Failed to create consultation:', createError);
+        }
+      }
+      
+      // Ultimate fallback: if not logged in or creation failed, go to wizard
+      console.log('🚀 [EnhancedBrandSetup] Fallback to wizard (no user or creation failed)');
       navigate('/wizard');
     }
   };
