@@ -469,65 +469,50 @@ export default function EnhancedBrandSetup() {
         body: { url: formattedUrl }
       });
 
-      console.log('Full response:', response);
-      console.log('Response data:', response.data);
+      console.log('[BrandSetup] Full extraction response:', response);
+      console.log('[BrandSetup] Response data:', response.data);
 
       if (response.error) throw response.error;
 
-      // Handle nested data structure: { success: true, data: { logoUrl, brandColors, ... } }
-      if (response.data?.success && response.data?.data) {
-        const extracted = response.data.data;
-        console.log('Extracted data:', extracted);
+      // Handle response - edge function returns { success: true, companyName, logoUrl, brandColors, primary, secondary, accent, ... }
+      // Also support legacy nested format: { success: true, data: { ... } }
+      const extracted = response.data?.data || response.data;
+      
+      if (extracted?.success !== false) {
+        console.log('[BrandSetup] Extracted data:', extracted);
+        console.log('[BrandSetup] Colors in response:', {
+          primary: extracted.primary,
+          secondary: extracted.secondary,
+          accent: extracted.accent,
+          brandColors: extracted.brandColors,
+          extractedFonts: extracted.extractedFonts,
+          fonts: extracted.fonts,
+        });
 
         // Set logo
         if (extracted.logoUrl) {
           setLogo(extracted.logoUrl);
-          console.log('Logo set:', extracted.logoUrl);
+          console.log('[BrandSetup] Logo set:', extracted.logoUrl);
         }
 
-        // Set colors - skip whites, near-whites, grays, and near-blacks
+        // Set colors - use the new enhanced primary/secondary/accent fields first
         // Only apply website colors if brand guide hasn't set them
-        if (!colorsFromBrandGuide && extracted.brandColors && extracted.brandColors.length > 0) {
-          const isUsableColor = (hex: string) => {
-            const h = hex.toLowerCase().replace('#', '');
-            
-            // Handle 3-char hex
-            const fullHex = h.length === 3 
-              ? h[0] + h[0] + h[1] + h[1] + h[2] + h[2] 
-              : h;
-            
-            if (fullHex.length !== 6) return false;
-            
-            // Convert to RGB
-            const r = parseInt(fullHex.substring(0, 2), 16);
-            const g = parseInt(fullHex.substring(2, 4), 16);
-            const b = parseInt(fullHex.substring(4, 6), 16);
-            
-            if (isNaN(r) || isNaN(g) || isNaN(b)) return false;
-            
-            // Calculate luminance (0 = black, 255 = white)
-            const luminance = (0.299 * r + 0.587 * g + 0.114 * b);
-            
-            // Skip if too light (> 240) or too dark (< 30)
-            if (luminance > 240 || luminance < 30) return false;
-            
-            // Skip grays (where R, G, B are very similar)
-            const max = Math.max(r, g, b);
-            const min = Math.min(r, g, b);
-            if (max - min < 30 && luminance > 100 && luminance < 200) return false;
-            
-            return true;
-          };
+        if (!colorsFromBrandGuide) {
+          // Priority: new direct fields > brandColors array > defaults
+          const primary = extracted.primary || (extracted.brandColors?.[0]) || null;
+          const secondary = extracted.secondary || (extracted.brandColors?.[1]) || null;
+          const accent = extracted.accent || (extracted.brandColors?.[2]) || null;
           
-          const filteredColors = extracted.brandColors.filter(isUsableColor);
-          console.log('Filtered brand colors:', filteredColors);
+          console.log('[BrandSetup] Applying extracted colors:', { primary, secondary, accent });
           
-          setColors({
-            primary: filteredColors[0] || DEFAULT_COLORS.primary,
-            secondary: filteredColors[1] || filteredColors[0] || DEFAULT_COLORS.secondary,
-            accent: filteredColors[2] || filteredColors[1] || DEFAULT_COLORS.accent,
-          });
-        } else if (colorsFromBrandGuide) {
+          if (primary || secondary || accent) {
+            setColors({
+              primary: primary || DEFAULT_COLORS.primary,
+              secondary: secondary || primary || DEFAULT_COLORS.secondary,
+              accent: accent || secondary || DEFAULT_COLORS.accent,
+            });
+          }
+        } else {
           console.log('[BrandSetup] Skipping website colors - brand guide takes priority');
         }
 
@@ -538,30 +523,34 @@ export default function EnhancedBrandSetup() {
         }
         if (name && name !== 'Home') {
           setCompanyName(name);
-          console.log('Company name set:', name);
+          console.log('[BrandSetup] Company name set:', name);
         }
 
         // Store tagline for use in preview
         if (extracted.tagline) {
           setTagline(extracted.tagline);
-          console.log('Tagline set:', extracted.tagline);
+          console.log('[BrandSetup] Tagline set:', extracted.tagline);
         }
 
         // Apply fonts if found - with intelligent matching
-        if (extracted.fonts) {
-          const headingMatch = extracted.fonts.heading ? findFontMatch(extracted.fonts.heading) : null;
-          const bodyMatch = extracted.fonts.body ? findFontMatch(extracted.fonts.body) : null;
+        // Support both new extractedFonts and legacy fonts structure
+        const fontsData = extracted.extractedFonts || extracted.fonts;
+        if (fontsData) {
+          console.log('[BrandSetup] Applying extracted fonts:', fontsData);
+          
+          const headingMatch = fontsData.heading ? findFontMatch(fontsData.heading) : null;
+          const bodyMatch = fontsData.body ? findFontMatch(fontsData.body) : null;
           
           setFontMatches({ heading: headingMatch, body: bodyMatch });
           
           setDetectedFonts({
-            heading: extracted.fonts.heading || null,
-            body: extracted.fonts.body || null
+            heading: fontsData.heading || null,
+            body: fontsData.body || null
           });
           
           // Use matched fonts (or detected if it's a known Google Font)
-          const headingFont = headingMatch?.match || (FONT_OPTIONS.includes(extracted.fonts.heading) ? extracted.fonts.heading : null);
-          const bodyFont = bodyMatch?.match || (FONT_OPTIONS.includes(extracted.fonts.body) ? extracted.fonts.body : null);
+          const headingFont = headingMatch?.match || (FONT_OPTIONS.includes(fontsData.heading) ? fontsData.heading : null);
+          const bodyFont = bodyMatch?.match || (FONT_OPTIONS.includes(fontsData.body) ? fontsData.body : null);
           
           setFontSettings(prev => ({
             ...prev,
@@ -569,15 +558,16 @@ export default function EnhancedBrandSetup() {
             ...(bodyFont && { body: bodyFont, small: bodyFont })
           }));
           
-          console.log('Font matches:', { headingMatch, bodyMatch });
+          console.log('[BrandSetup] Font matches:', { headingMatch, bodyMatch });
         }
 
         const results: ExtractionResults = {
           logoUrl: extracted.logoUrl || null,
-          colors: extracted.brandColors || [],
+          colors: extracted.brandColors || [extracted.primary, extracted.secondary, extracted.accent].filter(Boolean),
           companyName: name || null,
           tagline: extracted.tagline || extracted.description || null,
           pageCopy: extracted.pageCopy || null,
+          industry: extracted.inferredIndustry || null,
         };
         setExtractionResults(results);
         setExtractionSuccess(true);
@@ -587,7 +577,7 @@ export default function EnhancedBrandSetup() {
           extractCommunicationStyle(
             extracted.pageCopy,
             name || companyName,
-            (demoSession?.extracted_intelligence as any)?.industry || ''
+            extracted.inferredIndustry || (demoSession?.extracted_intelligence as any)?.industry || ''
           );
         }
 
