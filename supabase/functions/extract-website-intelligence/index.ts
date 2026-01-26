@@ -1,39 +1,103 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
-// Colors to filter out (whites, blacks, grays)
-const EXCLUDED_COLORS = new Set([
-  '#fff', '#ffffff', '#000', '#000000', 
-  '#eee', '#eeeeee', '#ddd', '#dddddd', '#ccc', '#cccccc', 
-  '#bbb', '#bbbbbb', '#aaa', '#aaaaaa', '#999', '#999999',
-  '#888', '#888888', '#777', '#777777', '#666', '#666666',
-  '#555', '#555555', '#444', '#444444', '#333', '#333333',
-  '#222', '#222222', '#111', '#111111', '#f5f5f5', '#fafafa',
-  '#e5e5e5', '#d4d4d4', '#a3a3a3', '#737373', '#525252',
-  '#404040', '#262626', '#171717', '#0a0a0a'
-]);
+// ============================================
+// COLOR UTILITY FUNCTIONS
+// ============================================
 
-function isExcludedColor(color: string): boolean {
-  const hex = color.toLowerCase().trim();
-  if (EXCLUDED_COLORS.has(hex)) return true;
+// Convert hex to RGB
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  // Normalize hex
+  let normalized = hex.replace('#', '').toUpperCase();
+  if (normalized.length === 3) {
+    normalized = normalized[0] + normalized[0] + normalized[1] + normalized[1] + normalized[2] + normalized[2];
+  }
+  if (normalized.length !== 6) return null;
   
-  // Check for short hex versions
-  if (hex.length === 4) {
-    const expanded = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
-    if (EXCLUDED_COLORS.has(expanded)) return true;
+  const result = /^([A-F\d]{2})([A-F\d]{2})([A-F\d]{2})$/i.exec(normalized);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
+// Convert RGB to hex
+function rgbToHex(r: number, g: number, b: number): string {
+  return '#' + [r, g, b]
+    .map(x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
+}
+
+// Normalize any color string to uppercase hex
+function normalizeColor(color: string): string | null {
+  const trimmed = color.trim().toLowerCase();
+  
+  // Handle rgb/rgba
+  const rgbMatch = trimmed.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+  if (rgbMatch) {
+    return rgbToHex(parseInt(rgbMatch[1]), parseInt(rgbMatch[2]), parseInt(rgbMatch[3]));
   }
   
-  // Check for rgb grays
-  const rgbMatch = hex.match(/rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
-  if (rgbMatch) {
-    const [, r, g, b] = rgbMatch.map(Number);
-    // If all channels are similar (gray) and very light or very dark
-    if (Math.abs(r - g) < 20 && Math.abs(g - b) < 20 && Math.abs(r - b) < 20) {
-      if (r > 200 || r < 50) return true;
+  // Handle hex
+  if (trimmed.startsWith('#')) {
+    let hex = trimmed.slice(1);
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    if (hex.length === 6 && /^[0-9a-f]{6}$/.test(hex)) {
+      return '#' + hex.toUpperCase();
     }
   }
   
+  return null;
+}
+
+// Check if color is near white
+function isNearWhite(hex: string): boolean {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return false;
+  return rgb.r > 240 && rgb.g > 240 && rgb.b > 240;
+}
+
+// Check if color is near black
+function isNearBlack(hex: string): boolean {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return false;
+  return rgb.r < 30 && rgb.g < 30 && rgb.b < 30;
+}
+
+// Check if color is a gray (low saturation)
+function isGray(hex: string): boolean {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return false;
+  const diff = Math.max(rgb.r, rgb.g, rgb.b) - Math.min(rgb.r, rgb.g, rgb.b);
+  return diff < 25;
+}
+
+// Check if a color should be excluded (white, black, or gray)
+function isExcludedColor(color: string): boolean {
+  const normalized = normalizeColor(color);
+  if (!normalized) return true;
+  
+  if (isNearWhite(normalized)) return true;
+  if (isNearBlack(normalized)) return true;
+  if (isGray(normalized)) return true;
+  
   return false;
+}
+
+// Calculate color vibrancy (higher = more vibrant/saturated)
+function getColorVibrancy(hex: string): number {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 0;
+  const max = Math.max(rgb.r, rgb.g, rgb.b);
+  const min = Math.min(rgb.r, rgb.g, rgb.b);
+  const delta = max - min;
+  // Simple saturation approximation
+  if (max === 0) return 0;
+  return delta / max;
 }
 
 serve(async (req) => {
@@ -84,7 +148,7 @@ serve(async (req) => {
     const html = await response.text();
     const baseUrl = new URL(normalizedUrl);
     
-    // Initialize extracted data
+    // Initialize extracted data with enhanced structure
     const extractedData = {
       logoUrl: null as string | null,
       brandColors: [] as string[],
@@ -99,7 +163,17 @@ serve(async (req) => {
       sourceUrl: normalizedUrl,
       isMinimalBrand: false,
       extractionConfidence: 'low' as 'high' | 'medium' | 'low',
-      allExtractedColors: [] as string[] // Track colors before filtering for minimal brand detection
+      allExtractedColors: [] as string[], // Track colors before filtering
+      // NEW: Enhanced color structure
+      colorsBySource: {
+        themeColor: [] as string[],
+        cssVars: [] as string[],
+        buttons: [] as string[],
+        inlineStyles: [] as string[],
+        styleTags: [] as string[],
+      },
+      // NEW: Enhanced font structure  
+      extractedFonts: { heading: 'Inter', body: 'Inter' },
     };
 
     // ============================================
@@ -165,127 +239,237 @@ serve(async (req) => {
     }
 
     // ============================================
-    // 2. BRAND COLORS EXTRACTION (priority order)
+    // 2. BRAND COLORS EXTRACTION (enhanced with source tracking)
     // ============================================
-    const collectedColors: string[] = [];
-    const allExtractedColors: string[] = []; // Track ALL colors before filtering
+    const collectedColors: Array<{ color: string; source: string; priority: number }> = [];
+    const allExtractedColors: string[] = [];
     
-    // Priority 1: Meta theme-color (track even if excluded for minimal brand detection)
-    const themeColor = html.match(/<meta[^>]*name=["']theme-color["'][^>]*content=["']([^"']+)["']/i)
-                    || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']theme-color["']/i);
-    if (themeColor) {
-      allExtractedColors.push(themeColor[1]);
-      if (!isExcludedColor(themeColor[1])) {
-        collectedColors.push(themeColor[1]);
-        console.log('[extract] Color from theme-color:', themeColor[1]);
+    // Helper to add color with source tracking
+    const addColor = (rawColor: string, source: string, priority: number) => {
+      const normalized = normalizeColor(rawColor);
+      if (!normalized) return;
+      
+      allExtractedColors.push(normalized);
+      
+      // Track by source
+      if (source === 'themeColor') extractedData.colorsBySource.themeColor.push(normalized);
+      else if (source === 'cssVar') extractedData.colorsBySource.cssVars.push(normalized);
+      else if (source === 'button') extractedData.colorsBySource.buttons.push(normalized);
+      else if (source === 'inline') extractedData.colorsBySource.inlineStyles.push(normalized);
+      else if (source === 'styleTag') extractedData.colorsBySource.styleTags.push(normalized);
+      
+      if (!isExcludedColor(normalized)) {
+        collectedColors.push({ color: normalized, source, priority });
+        console.log(`[extract] Color from ${source}:`, normalized);
       }
+    };
+    
+    // Priority 1: Meta theme-color (highest priority - explicit brand intent)
+    const themeColorMatch = html.match(/<meta[^>]*name=["']theme-color["'][^>]*content=["']([^"']+)["']/i)
+                    || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']theme-color["']/i);
+    if (themeColorMatch) {
+      addColor(themeColorMatch[1], 'themeColor', 1);
     }
     
     // Priority 2: CSS custom properties (--primary, --brand, --accent, etc.)
     const cssVarPatterns = [
-      /--(?:primary|brand|main|accent|theme)(?:-color)?:\s*(#[0-9a-fA-F]{3,6})/gi,
-      /--(?:primary|brand|main|accent|theme)(?:-color)?:\s*(rgb[a]?\([^)]+\))/gi,
-      /--(?:color-primary|color-brand|color-accent):\s*(#[0-9a-fA-F]{3,6})/gi
+      /--(?:primary|brand|main|accent|theme)(?:[-_]?color)?:\s*(#[0-9a-fA-F]{3,8})/gi,
+      /--(?:primary|brand|main|accent|theme)(?:[-_]?color)?:\s*(rgb[a]?\([^)]+\))/gi,
+      /--(?:color[-_]?(?:primary|brand|accent|main)|(?:primary|brand|accent|main)[-_]color):\s*(#[0-9a-fA-F]{3,8})/gi,
+      /--(?:bg|background)[-_]?(?:primary|brand|accent):\s*(#[0-9a-fA-F]{3,8})/gi,
+      /--(?:btn|button)[-_]?(?:primary|bg|background):\s*(#[0-9a-fA-F]{3,8})/gi,
     ];
     for (const pattern of cssVarPatterns) {
       const matches = html.matchAll(pattern);
       for (const match of matches) {
-        allExtractedColors.push(match[1]);
-        if (!isExcludedColor(match[1])) {
-          collectedColors.push(match[1]);
-          console.log('[extract] Color from CSS var:', match[1]);
-        }
+        addColor(match[1], 'cssVar', 2);
       }
     }
     
-    // Priority 3: Button and CTA colors
-    const buttonColorPatterns = [
-      /\.(?:btn|button|cta)[^{]*\{[^}]*background(?:-color)?:\s*(#[0-9a-fA-F]{3,6})/gi,
-      /button[^{]*\{[^}]*background(?:-color)?:\s*(#[0-9a-fA-F]{3,6})/gi
+    // Priority 3: Button/CTA inline styles (almost always brand colors!)
+    const buttonInlinePatterns = [
+      // Buttons with inline background
+      /<(?:button|a)[^>]*class=["'][^"']*(?:btn|button|cta|primary)[^"']*["'][^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/gi,
+      /<(?:button|a)[^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)[^"']*["'][^>]*class=["'][^"']*(?:btn|button|cta|primary)/gi,
+      // Any element with CTA-like classes and background
+      /<[^>]*class=["'][^"']*(?:cta|call-to-action|hero-btn|main-btn|action-btn)[^"']*["'][^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/gi,
     ];
-    for (const pattern of buttonColorPatterns) {
+    for (const pattern of buttonInlinePatterns) {
       const matches = html.matchAll(pattern);
       for (const match of matches) {
-        allExtractedColors.push(match[1]);
-        if (!isExcludedColor(match[1])) {
-          collectedColors.push(match[1]);
+        addColor(match[1], 'button', 3);
+      }
+    }
+    
+    // Priority 4: Style tags - button/CTA class definitions
+    const styleTagMatches = html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+    for (const styleMatch of styleTagMatches) {
+      const cssContent = styleMatch[1];
+      
+      // Button/CTA background colors
+      const buttonCssPatterns = [
+        /\.(?:btn|button|cta|primary-btn|main-btn|action-btn)[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
+        /button(?:\.[^\s{]+)?[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
+        /a\.(?:btn|button|cta)[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
+        // Hero section colors
+        /\.hero[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
+        // Primary/accent colors
+        /\.(?:primary|accent|brand)[^{]*\{[^}]*(?:background(?:-color)?|color):\s*([^;}]+)/gi,
+      ];
+      
+      for (const pattern of buttonCssPatterns) {
+        const matches = cssContent.matchAll(pattern);
+        for (const match of matches) {
+          addColor(match[1], 'styleTag', 4);
         }
       }
     }
     
-    // Priority 4: Inline styles on elements
+    // Priority 5: General inline styles (lower priority)
     const inlineColorPatterns = [
-      /style=["'][^"']*background(?:-color)?:\s*(#[0-9a-fA-F]{3,6})/gi,
-      /style=["'][^"']*(?:^|;\s*)color:\s*(#[0-9a-fA-F]{3,6})/gi
+      /style=["'][^"']*background(?:-color)?:\s*(#[0-9a-fA-F]{3,8})/gi,
+      /style=["'][^"']*background(?:-color)?:\s*(rgb[a]?\([^)]+\))/gi,
     ];
     for (const pattern of inlineColorPatterns) {
       const matches = html.matchAll(pattern);
       for (const match of matches) {
-        allExtractedColors.push(match[1]);
-        if (!isExcludedColor(match[1])) {
-          collectedColors.push(match[1]);
-        }
+        addColor(match[1], 'inline', 5);
       }
     }
     
-    // Deduplicate
-    const uniqueColors = [...new Set(collectedColors)].slice(0, 5);
-    const uniqueAllColors = [...new Set(allExtractedColors.map(c => c.toLowerCase()))].slice(0, 5);
+    // Sort by priority and vibrancy, deduplicate
+    const sortedColors = collectedColors
+      .sort((a, b) => {
+        // First by priority
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        // Then by vibrancy (more vibrant = better brand color)
+        return getColorVibrancy(b.color) - getColorVibrancy(a.color);
+      });
     
-    // Detect minimal/monochromatic brand - has colors but all were filtered out
+    // Deduplicate while preserving priority order
+    const seenColors = new Set<string>();
+    const uniqueColors: string[] = [];
+    for (const item of sortedColors) {
+      if (!seenColors.has(item.color)) {
+        seenColors.add(item.color);
+        uniqueColors.push(item.color);
+        if (uniqueColors.length >= 5) break;
+      }
+    }
+    
+    const uniqueAllColors = [...new Set(allExtractedColors)].slice(0, 10);
+    
+    // Detect minimal/monochromatic brand
     if (uniqueAllColors.length > 0 && uniqueColors.length === 0) {
       extractedData.isMinimalBrand = true;
-      // For minimal brands, use their actual monochromatic colors
-      extractedData.brandColors = uniqueAllColors;
+      extractedData.brandColors = uniqueAllColors.slice(0, 3);
       extractedData.extractionConfidence = 'medium';
-      console.log('[extract] Minimal brand detected, using monochromatic colors:', uniqueAllColors);
+      console.log('[extract] Minimal brand detected, using monochromatic colors:', extractedData.brandColors);
     } else {
       extractedData.brandColors = uniqueColors;
-      extractedData.extractionConfidence = uniqueColors.length > 0 ? 'high' : 'low';
+      // Confidence based on source quality
+      const hasHighQualitySource = collectedColors.some(c => c.priority <= 3);
+      extractedData.extractionConfidence = hasHighQualitySource ? 'high' : (uniqueColors.length > 0 ? 'medium' : 'low');
     }
     
     extractedData.allExtractedColors = uniqueAllColors;
-    console.log('[extract] Final colors:', extractedData.brandColors, 'isMinimalBrand:', extractedData.isMinimalBrand);
+    console.log('[extract] Final colors:', extractedData.brandColors, 'isMinimalBrand:', extractedData.isMinimalBrand, 'confidence:', extractedData.extractionConfidence);
 
     // ============================================
-    // 3. FONT EXTRACTION
+    // 3. FONT EXTRACTION (enhanced)
     // ============================================
+    const detectedFonts = {
+      fromGoogleFonts: [] as string[],
+      fromFontFace: [] as string[],
+      fromHeadings: [] as string[],
+      fromBody: [] as string[],
+    };
     
-    // Check Google Fonts
-    const googleFontsMatches = html.matchAll(/fonts\.googleapis\.com\/css2?\?[^"']*family=([^"'&]+)/gi);
-    const googleFontFamilies: string[] = [];
+    // Source 1: Google Fonts (highest priority - explicit choice)
+    const googleFontsMatches = html.matchAll(/fonts\.googleapis\.com\/css2?\?[^"']*family=([^"']+)/gi);
     for (const match of googleFontsMatches) {
-      const familyParam = match[1];
+      const familyParam = decodeURIComponent(match[1]);
       // Parse multiple families (family=Roboto:wght@400&family=Open+Sans)
       const families = familyParam.split(/[&|]/).map(f => {
         const familyMatch = f.match(/(?:family=)?([^:@]+)/);
-        return familyMatch ? familyMatch[1].replace(/\+/g, ' ').trim() : null;
-      }).filter(Boolean);
-      googleFontFamilies.push(...families as string[]);
+        if (familyMatch) {
+          // Clean up: "Roboto%3A100%2C200" -> "Roboto"
+          return familyMatch[1].replace(/\+/g, ' ').replace(/%[0-9A-F]{2}/gi, '').split(',')[0].trim();
+        }
+        return null;
+      }).filter(Boolean) as string[];
+      detectedFonts.fromGoogleFonts.push(...families);
     }
     
-    if (googleFontFamilies.length > 0) {
-      extractedData.fonts.heading = googleFontFamilies[0];
-      extractedData.fonts.body = googleFontFamilies[1] || googleFontFamilies[0];
-      console.log('[extract] Fonts from Google Fonts:', extractedData.fonts);
+    // Source 2: @font-face declarations
+    const fontFaceMatches = html.matchAll(/@font-face\s*\{[^}]*font-family:\s*["']?([^"';}]+)["']?/gi);
+    for (const match of fontFaceMatches) {
+      const family = match[1].trim();
+      if (family && !detectedFonts.fromFontFace.includes(family)) {
+        detectedFonts.fromFontFace.push(family);
+      }
     }
     
-    // Check @font-face declarations
-    if (!extractedData.fonts.heading) {
-      const fontFaceMatches = html.matchAll(/@font-face\s*\{[^}]*font-family:\s*["']?([^"';}]+)["']?/gi);
-      const fontFaceFamilies: string[] = [];
-      for (const match of fontFaceMatches) {
-        const family = match[1].trim();
-        if (family && !fontFaceFamilies.includes(family)) {
-          fontFaceFamilies.push(family);
+    // Source 3: Heading styles (h1, h2)
+    const headingFontPatterns = [
+      /h[12][^{]*\{[^}]*font-family:\s*["']?([^"';}]+)/gi,
+      /\.(?:heading|title|hero-title)[^{]*\{[^}]*font-family:\s*["']?([^"';}]+)/gi,
+    ];
+    for (const pattern of headingFontPatterns) {
+      const matches = html.matchAll(pattern);
+      for (const match of matches) {
+        const fontStack = match[1].split(',')[0].trim().replace(/["']/g, '');
+        if (fontStack && !detectedFonts.fromHeadings.includes(fontStack)) {
+          detectedFonts.fromHeadings.push(fontStack);
         }
       }
-      if (fontFaceFamilies.length > 0) {
-        extractedData.fonts.heading = fontFaceFamilies[0];
-        extractedData.fonts.body = fontFaceFamilies[1] || fontFaceFamilies[0];
-        console.log('[extract] Fonts from @font-face:', extractedData.fonts);
+    }
+    
+    // Source 4: Body styles
+    const bodyFontPatterns = [
+      /body[^{]*\{[^}]*font-family:\s*["']?([^"';}]+)/gi,
+      /html[^{]*\{[^}]*font-family:\s*["']?([^"';}]+)/gi,
+      /\.(?:body|content|text)[^{]*\{[^}]*font-family:\s*["']?([^"';}]+)/gi,
+      /p[^{]*\{[^}]*font-family:\s*["']?([^"';}]+)/gi,
+    ];
+    for (const pattern of bodyFontPatterns) {
+      const matches = html.matchAll(pattern);
+      for (const match of matches) {
+        const fontStack = match[1].split(',')[0].trim().replace(/["']/g, '');
+        if (fontStack && !detectedFonts.fromBody.includes(fontStack)) {
+          detectedFonts.fromBody.push(fontStack);
+        }
       }
     }
+    
+    // Determine best heading font (priority: Google > headings CSS > font-face)
+    const headingFont = detectedFonts.fromGoogleFonts[0] 
+      || detectedFonts.fromHeadings[0] 
+      || detectedFonts.fromFontFace[0] 
+      || 'Inter';
+    
+    // Determine best body font (priority: Google[1] > body CSS > Google[0] > font-face)  
+    const bodyFont = detectedFonts.fromGoogleFonts[1] 
+      || detectedFonts.fromBody[0] 
+      || detectedFonts.fromGoogleFonts[0] 
+      || detectedFonts.fromFontFace[1] 
+      || headingFont;
+    
+    // Set both legacy and new font structures
+    extractedData.fonts.heading = headingFont;
+    extractedData.fonts.body = bodyFont;
+    extractedData.extractedFonts = { heading: headingFont, body: bodyFont };
+    
+    console.log('[extract] Fonts detected:', { 
+      heading: headingFont, 
+      body: bodyFont,
+      sources: {
+        googleFonts: detectedFonts.fromGoogleFonts.length,
+        fontFace: detectedFonts.fromFontFace.length,
+        headingCSS: detectedFonts.fromHeadings.length,
+        bodyCSS: detectedFonts.fromBody.length,
+      }
+    });
 
     // ============================================
     // 4. LOGO EXTRACTION (priority order)
@@ -534,24 +718,53 @@ serve(async (req) => {
       isMinimalBrand: extractedData.isMinimalBrand,
     });
 
-    return new Response(JSON.stringify({
+    // Build enhanced response with backward compatibility
+    const responseData = {
       success: true,
-      // Flatten the response for easier consumption
+      // ===== BACKWARD COMPATIBLE FIELDS (keep exactly as before) =====
       companyName: extractedData.companyName,
       logoUrl: extractedData.logoUrl,
       brandColors: extractedData.brandColors,
-      fonts: extractedData.fonts,
+      fonts: extractedData.fonts, // { heading: string, body: string }
       title: extractedData.title,
       tagline: extractedData.tagline,
       description: extractedData.description,
       heroText: extractedData.heroText,
       testimonials: extractedData.testimonials,
-      pageCopy: extractedData.pageCopy?.slice(0, 1000), // Limit size
+      pageCopy: extractedData.pageCopy?.slice(0, 1000),
       sourceUrl: extractedData.sourceUrl,
       isMinimalBrand: extractedData.isMinimalBrand,
       extractionConfidence: extractedData.extractionConfidence,
-      inferredIndustry, // Add inferred industry
-    }), {
+      inferredIndustry,
+      
+      // ===== NEW ENHANCED FIELDS =====
+      // Primary/secondary/accent from brandColors for easy access
+      primary: extractedData.brandColors[0] || null,
+      secondary: extractedData.brandColors[1] || null,
+      accent: extractedData.brandColors[2] || null,
+      
+      // Extended color arrays
+      secondaryColors: extractedData.brandColors.slice(1, 3),
+      accentColors: extractedData.brandColors.slice(2, 5),
+      allColors: extractedData.allExtractedColors,
+      
+      // Color sources for debugging/transparency
+      colorsBySource: extractedData.colorsBySource,
+      
+      // Enhanced font structure
+      extractedFonts: extractedData.extractedFonts,
+    };
+    
+    console.log('[extract-website-intelligence] Response:', {
+      companyName: responseData.companyName,
+      primary: responseData.primary,
+      secondary: responseData.secondary,
+      accent: responseData.accent,
+      fonts: responseData.extractedFonts,
+      confidence: responseData.extractionConfidence,
+    });
+
+    return new Response(JSON.stringify(responseData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
