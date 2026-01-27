@@ -767,6 +767,18 @@ export default function Signup() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-3xl" />
         
         <div className="w-full max-w-md relative z-10">
+          {/* Progress breadcrumb */}
+          <div className="flex items-center justify-center gap-2 mb-6 text-sm">
+            <span className="flex items-center gap-1.5 text-green-400">
+              <Check className="w-4 h-4" />
+              Strategy Session
+            </span>
+            <span className="text-slate-600">→</span>
+            <span className="text-amber-400 font-medium">Account</span>
+            <span className="text-slate-600">→</span>
+            <span className="text-slate-500">Brand Setup</span>
+          </div>
+          
           {/* Header - Trial focused */}
           <div className="text-center mb-6">
             <div className="flex items-center justify-center mb-4">
@@ -916,12 +928,19 @@ export default function Signup() {
 
               <div className="mt-4 pt-4 border-t border-white/10">
                 <button
-                  onClick={() => navigate("/")}
+                  onClick={() => {
+                    // Preserve session by passing it back to homepage
+                    if (sessionIdFromUrl) {
+                      navigate(`/?session=${sessionIdFromUrl}&autoOpen=true`);
+                    } else {
+                      navigate('/');
+                    }
+                  }}
                   className="text-sm text-gray-400 hover:text-amber-400 transition-colors w-full font-medium flex items-center justify-center gap-2"
                   disabled={loading}
                 >
                   <span>←</span>
-                  <span>Back to demo</span>
+                  <span>I need more time to explore</span>
                 </button>
               </div>
             </div>
