@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import SoftLockDemo from "@/components/landing/SoftLockDemo";
@@ -15,14 +15,26 @@ import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import { IntelligenceProvider, useIntelligence } from "@/contexts/IntelligenceContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "@/hooks/use-toast";
 
 // Inner component that can access IntelligenceContext
-const IndexContent = () => {
+interface IndexContentProps {
+  autoOpen?: boolean;
+}
+
+const IndexContent = ({ autoOpen = false }: IndexContentProps) => {
   const { state } = useIntelligence();
-  const [isDemoLocked, setIsDemoLocked] = useState(false);
+  const [isDemoLocked, setIsDemoLocked] = useState(autoOpen);
   
   // Show WhyThisMatters only after user has interacted with demo
   const showWhyThisMatters = state.extracted.industry || state.readiness >= 30;
+
+  // Auto-open the demo if returning from signup
+  useEffect(() => {
+    if (autoOpen && !isDemoLocked) {
+      setIsDemoLocked(true);
+    }
+  }, [autoOpen]);
 
   return (
     <div className="min-h-screen">
@@ -52,7 +64,7 @@ const IndexContent = () => {
         </div>
         
         {/* Demo section with soft lock */}
-        <SoftLockDemo onLockChange={setIsDemoLocked} />
+        <SoftLockDemo onLockChange={setIsDemoLocked} autoLock={autoOpen} />
         
         {/* Content below demo - fade and blur when locked */}
         <div
@@ -104,6 +116,31 @@ const IndexContent = () => {
 
 const Index = () => {
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [autoOpenSession, setAutoOpenSession] = useState(false);
+
+  // Check for session restoration from signup page
+  useEffect(() => {
+    const sessionId = searchParams.get('session');
+    const autoOpen = searchParams.get('autoOpen');
+    
+    if (sessionId && autoOpen === 'true') {
+      console.log('[Index] Session restoration requested:', sessionId);
+      setAutoOpenSession(true);
+      
+      // Show welcome back toast
+      toast({
+        title: "👋 Welcome back!",
+        description: "Your conversation is right where you left it.",
+        duration: 3000,
+      });
+      
+      // Clean up URL params without triggering navigation (keep session for IntelligenceProvider)
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('autoOpen');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // Scroll to top on mount, or to #demo if hash is present
   useEffect(() => {
@@ -115,14 +152,15 @@ const Index = () => {
           demoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 100);
-    } else {
+    } else if (!autoOpenSession) {
+      // Only scroll to top if not restoring a session
       window.scrollTo(0, 0);
     }
-  }, [location.hash]);
+  }, [location.hash, autoOpenSession]);
 
   return (
     <IntelligenceProvider>
-      <IndexContent />
+      <IndexContent autoOpen={autoOpenSession} />
     </IntelligenceProvider>
   );
 };
