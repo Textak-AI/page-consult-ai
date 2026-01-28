@@ -9,6 +9,7 @@ import {
 import { motion } from "framer-motion";
 import { PremiumCard, GradientIcon, EyebrowBadge } from "@/components/ui/PremiumCard";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
+import { getSectionHeader } from "@/lib/industrySectionHeaders";
 
 interface FeaturesSectionProps {
   content: {
@@ -53,16 +54,19 @@ const getIconComponent = (iconName: string): LucideIcon => {
 
 export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "outline" }: FeaturesSectionProps) {
   const { 
-    title = "Why Choose Us", 
-    subtitle = "Everything you need to succeed",
-    eyebrow = "Features",
     features,
     industryVariant = 'default',
     businessName,
   } = content;
 
+  // Get industry-specific headers from centralized system
+  const sectionHeader = getSectionHeader(industryVariant, 'features');
+  const title = content.title || sectionHeader.title;
+  const subtitle = content.subtitle || sectionHeader.subtitle;
+  const eyebrow = content.eyebrow || sectionHeader.title.toUpperCase();
+
   // Debug logging
-  console.log('🎨 [FeaturesSection] content.industryVariant:', content.industryVariant, 'isEditing:', isEditing);
+  console.log('🎨 [FeaturesSection] industryVariant:', industryVariant, 'header:', sectionHeader);
 
   if (!features || features.length === 0) return null;
   
@@ -73,7 +77,6 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
   const isHealthcare = industryVariant === 'healthcare';
   const isSaas = industryVariant === 'saas';
   const isLocalServices = industryVariant === 'local-services';
-  console.log('🎨 [FeaturesSection] industryVariant:', industryVariant, 'isLightMode:', isLightMode, 'isLocalServices:', isLocalServices);
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     if (!onUpdate) return;
@@ -96,13 +99,18 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
     });
   };
 
+  // Smart grid that centers incomplete last rows
   const getGridClass = () => {
-    if (features.length <= 2) return "md:grid-cols-2";
-    if (features.length === 3) return "md:grid-cols-3";
-    if (features.length === 4) return "md:grid-cols-2";
-    if (features.length === 5) return "md:grid-cols-2 lg:grid-cols-3";
+    const count = features.length;
+    if (count <= 2) return "md:grid-cols-2 justify-items-center";
+    if (count === 3) return "md:grid-cols-3";
+    if (count === 4) return "md:grid-cols-2 lg:grid-cols-4";
+    // For 5+ items, use flex-based layout to center incomplete rows
     return "md:grid-cols-2 lg:grid-cols-3";
   };
+  
+  // Use flex layout for odd counts to center the last row
+  const useFlexLayout = features.length % 3 !== 0 && features.length > 3;
 
   // Local Services variant: Light mode, trust-forward, service-focused
   if (isLocalServices) {
@@ -120,7 +128,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
             className="text-center mb-12"
           >
             <span className="inline-block px-4 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full mb-4">
-              OUR SERVICES
+              {eyebrow}
             </span>
             <h2 
               className={`text-3xl md:text-4xl font-bold text-slate-900 mb-4 ${
@@ -144,7 +152,11 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
             </p>
           </motion.div>
 
-          <div className={`grid gap-6 ${getGridClass()}`}>
+          {/* Flex-based grid for balanced card layout */}
+          <div className={useFlexLayout 
+            ? "flex flex-wrap justify-center gap-6"
+            : `grid gap-6 ${getGridClass()}`
+          }>
             {features.map((feature, i) => {
               const Icon = getIconComponent(feature.icon);
               return (
@@ -154,6 +166,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1, duration: 0.5 }}
+                  className={useFlexLayout ? "w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]" : undefined}
                 >
                   <div className="h-full p-6 bg-slate-50 rounded-xl border border-slate-200 hover:shadow-lg hover:border-blue-200 transition-all">
                     <div className="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
@@ -206,7 +219,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
             className="text-center mb-16"
           >
             <span className="inline-block px-4 py-1 bg-purple-500/20 text-purple-400 text-sm font-semibold rounded-full mb-4">
-              FEATURES
+              {eyebrow}
             </span>
             <h2 
               className={`text-3xl md:text-4xl font-bold text-white mb-4 ${
@@ -231,7 +244,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
           </motion.div>
 
           {/* Features Grid */}
-          <div className={`grid gap-8 ${getGridClass()}`}>
+          <div className={useFlexLayout 
+            ? "flex flex-wrap justify-center gap-8"
+            : `grid gap-8 ${getGridClass()}`
+          }>
             {features.map((feature, i) => {
               const Icon = getIconComponent(feature.icon);
               return (
@@ -241,6 +257,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1, duration: 0.5 }}
+                  className={useFlexLayout ? "w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]" : undefined}
                 >
                   <div className="h-full p-8 bg-slate-800 border border-slate-700 rounded-2xl hover:border-purple-500/50 transition-colors">
                     <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-6">
@@ -296,7 +313,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
             className="text-center mb-16"
           >
             <span className={`inline-block px-4 py-1 text-sm font-semibold rounded-full mb-4 ${badgeBg}`}>
-              {isHealthcare ? 'OUR CAPABILITIES' : 'OUR EXPERTISE'}
+              {eyebrow}
             </span>
             <h2 
               className={`text-3xl md:text-4xl font-bold text-slate-900 mb-4 ${
@@ -320,7 +337,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
             </p>
           </motion.div>
 
-          <div className={`grid gap-8 ${getGridClass()}`}>
+          <div className={useFlexLayout 
+            ? "flex flex-wrap justify-center gap-8"
+            : `grid gap-8 ${getGridClass()}`
+          }>
             {features.map((feature, i) => {
               const Icon = getIconComponent(feature.icon);
               return (
@@ -330,6 +350,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1, duration: 0.5 }}
+                  className={useFlexLayout ? "w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]" : undefined}
                 >
                   <div className="h-full p-8 bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
                     <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 ${iconBg}`}>
@@ -365,97 +386,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
     );
   }
 
-  if (isConsulting) {
-    // Consulting layout: Light slate background, white cards
-    return (
-      <section className={`py-24 bg-slate-50 ${isEditing ? 'relative' : ''}`}>
-        {isEditing && (
-          <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
-        )}
-        <div className="max-w-6xl mx-auto px-6">
-          {/* Section Header */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-16"
-          >
-            <span className="inline-block px-4 py-1 bg-blue-100 text-blue-800 text-sm font-semibold rounded-full mb-4">
-              OUR EXPERTISE
-            </span>
-            <h2 
-              className={`text-3xl md:text-4xl font-bold text-slate-900 mb-4 ${
-                isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2 inline-block" : ""
-              }`}
-              contentEditable={isEditing}
-              suppressContentEditableWarning
-              onBlur={(e) => handleBlur("title", e)}
-            >
-              {title}
-            </h2>
-            <p 
-              className={`text-lg text-slate-600 max-w-2xl mx-auto ${
-                isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
-              }`}
-              contentEditable={isEditing}
-              suppressContentEditableWarning
-              onBlur={(e) => handleBlur("subtitle", e)}
-            >
-              {businessName ? `What sets ${businessName} apart` : subtitle}
-            </p>
-          </motion.div>
-
-          {/* Features Grid */}
-          <div className={`grid gap-8 ${getGridClass()}`}>
-            {features.map((feature, i) => {
-              const Icon = getIconComponent(feature.icon);
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, duration: 0.5 }}
-                >
-                  <div className="h-full p-8 bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-                    {/* Icon */}
-                    <div className="w-14 h-14 rounded-xl bg-blue-50 flex items-center justify-center mb-6">
-                      <Icon className="w-7 h-7 text-blue-600" strokeWidth={1.5} />
-                    </div>
-                    
-                    {/* Title */}
-                    <h3 
-                      className={`text-xl font-bold text-slate-900 mb-3 ${
-                        isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
-                      }`}
-                      contentEditable={isEditing}
-                      suppressContentEditableWarning
-                      onBlur={(e) => handleFeatureBlur(i, "title", e)}
-                    >
-                      {feature.title}
-                    </h3>
-                    
-                    {/* Description */}
-                    <p 
-                      className={`text-slate-600 leading-relaxed ${
-                        isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
-                      }`}
-                      contentEditable={isEditing}
-                      suppressContentEditableWarning
-                      onBlur={(e) => handleFeatureBlur(i, "description", e)}
-                    >
-                      {feature.description}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-    );
-  }
+  // This block removed - consulting is handled by the isHealthcare || isConsulting block above
 
   // Default dark mode layout
   return (
@@ -514,7 +445,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
         </motion.div>
 
         {/* Features Grid */}
-        <div className={`grid gap-6 ${getGridClass()}`}>
+        <div className={useFlexLayout 
+          ? "flex flex-wrap justify-center gap-6"
+          : `grid gap-6 ${getGridClass()}`
+        }>
           {features.map((feature, i) => {
             const Icon = getIconComponent(feature.icon);
             return (
@@ -524,6 +458,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
+                className={useFlexLayout ? "w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]" : undefined}
               >
                 <PremiumCard 
                   variant="glass" 

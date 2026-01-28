@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle, Shield } from "lucide-react";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
+import { getSectionHeader } from "@/lib/industrySectionHeaders";
 
 interface FinalCTASectionProps {
   content: {
@@ -31,7 +32,12 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   const isHealthcare = industryVariant === 'healthcare';
   const isLocalServices = industryVariant === 'local-services';
   
-  console.log('🎨 [FinalCTASection] industryVariant:', industryVariant, 'isLocalServices:', isLocalServices);
+  // Get industry-specific CTA headers
+  const ctaHeader = getSectionHeader(industryVariant, 'cta');
+  const headline = content.headline || ctaHeader.title;
+  const ctaText = content.ctaText || ctaHeader.subtitle || 'Get Started';
+  
+  console.log('🎨 [FinalCTASection] industryVariant:', industryVariant, 'ctaHeader:', ctaHeader);
   
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
@@ -64,7 +70,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             onBlur={(e) => handleBlur("headline", e)}
             className={`text-3xl md:text-4xl font-bold text-white mb-4 ${isEditing ? "cursor-text hover:ring-2 hover:ring-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 rounded px-2" : ""}`}
           >
-            {content.headline || "Ready to Get Started?"}
+            {headline}
           </motion.h2>
           
           <motion.p
@@ -93,7 +99,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
                 suppressContentEditableWarning
                 onBlur={(e) => handleBlur("ctaText", e)}
               >
-                {content.ctaText || "Call Now"}
+                {ctaText}
               </span>
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
@@ -156,7 +162,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             onBlur={(e) => handleBlur("headline", e)}
             className={`text-3xl md:text-4xl font-bold text-white mb-6 ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
           >
-            {content.headline || "Ready to get started?"}
+            {headline}
           </motion.h2>
           
           <motion.p
@@ -198,7 +204,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
                 suppressContentEditableWarning
                 onBlur={(e) => handleBlur("ctaText", e)}
               >
-                {content.ctaText || "Start your free trial"}
+                {ctaText}
               </span>
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
@@ -261,7 +267,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("headline", e)}
           >
-            {content.headline || "Protect Your Organization Today"}
+            {headline}
           </motion.h2>
           
           <motion.p 
@@ -308,7 +314,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
                 suppressContentEditableWarning
                 onBlur={(e) => handleBlur("ctaText", e)}
               >
-                {content.ctaText || "Schedule Your Assessment"}
+                {ctaText}
               </span>
               <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
             </Button>
@@ -382,7 +388,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("headline", e)}
           >
-            Let's Start a Conversation
+            {headline}
           </motion.h2>
           
           <motion.p 
@@ -429,7 +435,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
                 suppressContentEditableWarning
                 onBlur={(e) => handleBlur("ctaText", e)}
               >
-                {content.ctaText}
+                {ctaText}
               </span>
               <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
             </Button>
@@ -525,7 +531,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("headline", e)}
         >
-          {content.headline}
+          {headline}
         </motion.h2>
         
         {content.subtext && (
@@ -581,7 +587,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
                 onBlur={(e) => handleBlur("ctaText", e)}
                 className="relative z-10"
               >
-                {content.ctaText}
+                {ctaText}
               </span>
               <ArrowRight className="ml-3 w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-1 transition-transform relative z-10" strokeWidth={2} />
               

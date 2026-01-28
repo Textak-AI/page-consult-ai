@@ -301,8 +301,14 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
   }, [getSectionLockStatus, handleUnlockAction, editingSection, handleEditSection, handleAIAssist, handleImageGenerate, handleLogoEdit]);
 
   const renderSection = (section: Section, index: number) => {
+    // Inject industryVariant into section content if not already present
+    const sectionContent = {
+      ...section.content,
+      industryVariant: section.content?.industryVariant || industryVariant || 'default',
+    };
+    
     // Debug logging
-    console.log('🎨 [LivePreview] Rendering section:', section.type, 'industryVariant:', section.content?.industryVariant);
+    console.log('🎨 [LivePreview] Rendering section:', section.type, 'industryVariant:', sectionContent.industryVariant);
     
     if (!section.visible) return null;
 
@@ -318,19 +324,18 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <HeroSection
-            content={section.content}
+            content={sectionContent}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
         );
       case "stats-bar":
-        console.log('🎨 [LivePreview] Rendering stats-bar with industryVariant:', section.content.industryVariant);
         return renderSectionWithToolbar(
           section,
           index,
           <StatsBarSection 
-            statistics={section.content.statistics || []} 
-            industryVariant={section.content.industryVariant}
+            statistics={sectionContent.statistics || []} 
+            industryVariant={sectionContent.industryVariant}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
@@ -340,7 +345,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <ProblemSolutionSection
-            content={section.content}
+            content={sectionContent}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
@@ -349,14 +354,14 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         return renderSectionWithToolbar(
           section,
           index,
-          <CalculatorSection content={section.content} onUpdate={updateSection} />
+          <CalculatorSection content={sectionContent} onUpdate={updateSection} />
         );
       case "features":
         return renderSectionWithToolbar(
           section,
           index,
           <FeaturesSection
-            content={section.content}
+            content={sectionContent}
             onUpdate={updateSection}
             isEditing={editingSection === index}
             iconStyle={iconStyle}
@@ -367,7 +372,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <PhotoGallerySection
-            content={section.content}
+            content={sectionContent}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
@@ -377,23 +382,23 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <SocialProofSection 
-            content={section.content} 
+            content={sectionContent} 
             onUpdate={updateSection} 
             isEditing={editingSection === index}
           />
         );
       case "final-cta": {
         // Check if this is PageConsult's own marketing/demo page
-        const isPageConsultDemo = section.content?.isPageConsultDemo === true || 
-                                  section.content?.businessName?.toLowerCase() === 'pageconsult' ||
-                                  section.content?.showInteractiveDemo === true;
+        const isPageConsultDemo = sectionContent?.isPageConsultDemo === true || 
+                                  sectionContent?.businessName?.toLowerCase() === 'pageconsult' ||
+                                  sectionContent?.showInteractiveDemo === true;
         
         if (isPageConsultDemo) {
           // PageConsult marketing pages get the interactive demo
           return renderSectionWithToolbar(
             section,
             index,
-            <ThreeStageShowcase primaryColor={section.content?.primaryColor} />
+            <ThreeStageShowcase primaryColor={sectionContent?.primaryColor} />
           );
         }
         
@@ -402,7 +407,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <FinalCTASection
-            content={section.content}
+            content={sectionContent}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
@@ -413,7 +418,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <FAQSection
-            content={section.content}
+            content={sectionContent}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
@@ -423,7 +428,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <HowItWorksSection 
-            content={section.content} 
+            content={sectionContent} 
             onUpdate={updateSection} 
             isEditing={editingSection === index}
           />
@@ -434,7 +439,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <BetaHeroTeaserSection
-            content={section.content}
+            content={sectionContent}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
@@ -443,20 +448,20 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         return renderSectionWithToolbar(
           section,
           index,
-          <BetaPerksSection content={section.content} onUpdate={updateSection} />
+          <BetaPerksSection content={sectionContent} onUpdate={updateSection} />
         );
       case "waitlist-proof":
         return renderSectionWithToolbar(
           section,
           index,
-          <WaitlistProofSection content={section.content} />
+          <WaitlistProofSection content={sectionContent} />
         );
       case "beta-final-cta":
         return renderSectionWithToolbar(
           section,
           index,
           <BetaFinalCTASection
-            content={section.content}
+            content={sectionContent}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
@@ -465,14 +470,14 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         return renderSectionWithToolbar(
           section,
           index,
-          <DifferentiatorCalloutSection content={section.content} />
+          <DifferentiatorCalloutSection content={sectionContent} />
         );
       case "audience-fit":
         return renderSectionWithToolbar(
           section,
           index,
           <AudienceFitSection
-            content={section.content}
+            content={sectionContent}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
@@ -481,14 +486,14 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         return renderSectionWithToolbar(
           section,
           index,
-          <CredibilityStripSection content={section.content} />
+          <CredibilityStripSection content={sectionContent} />
         );
       case "founder":
         return renderSectionWithToolbar(
           section,
           index,
           <FounderCredibilitySection
-            content={section.content}
+            content={sectionContent}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
@@ -499,7 +504,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <StakesAmplifySection
-            content={section.content}
+            content={sectionContent}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
@@ -509,7 +514,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <RiskReversalSection
-            content={section.content}
+            content={sectionContent}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
@@ -519,7 +524,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           section,
           index,
           <ComparisonSection
-            content={section.content}
+            content={sectionContent}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
