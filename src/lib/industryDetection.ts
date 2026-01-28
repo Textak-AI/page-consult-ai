@@ -114,20 +114,25 @@ const INDUSTRY_PATTERNS: Record<IndustryVariant, { keywords: string[]; weight: n
     { keywords: ['design'], weight: 10 },
   ],
   consulting: [
-    // Traditional consulting patterns - lower weight than creative
-    // IMPORTANT: Avoid patterns that could match creative agencies (e.g., "strategy" alone)
-    { keywords: ['consulting', 'consultant', 'consultancy'], weight: 10 },
-    { keywords: ['advisory', 'advisor', 'advisors'], weight: 10 },
-    { keywords: ['professional services', 'b2b services'], weight: 9 },
-    { keywords: ['coaching', 'coach', 'executive coach', 'leadership coach'], weight: 10 },
-    { keywords: ['hr ', ' hr', 'human resources', 'talent', 'recruitment', 'staffing'], weight: 9 },
-    { keywords: ['leadership development', 'executive development', 'leadership training'], weight: 10 },
-    { keywords: ['management consulting', 'operations consulting', 'business strategy'], weight: 8 },
-    { keywords: ['training', 'facilitation', 'facilitator', 'workshop'], weight: 8 },
-    { keywords: ['workforce', 'organizational', 'organizational development'], weight: 7 },
-    { keywords: ['executive', 'leadership', 'c-suite', 'cfo', 'ceo', 'chro'], weight: 7 },
-    { keywords: ['succession', 'retention', 'turnover', 'engagement'], weight: 7 },
-    { keywords: ['services', 'service provider'], weight: 3 },
+    // SERVICE-TYPE keywords - HIGHEST weight to beat industry verticals
+    // When someone says "X consulting", the "consulting" should always win
+    { keywords: ['consulting', 'consultant', 'consultancy'], weight: 25 },
+    { keywords: ['advisory', 'advisor', 'advisors'], weight: 22 },
+    { keywords: ['professional services', 'b2b services'], weight: 20 },
+    // Specific consulting verticals - high weight
+    { keywords: ['cybersecurity consulting', 'security consulting', 'it consulting'], weight: 30 },
+    { keywords: ['compliance consulting', 'risk consulting', 'audit consulting'], weight: 28 },
+    { keywords: ['management consulting', 'operations consulting', 'business consulting'], weight: 28 },
+    { keywords: ['strategy consulting', 'digital consulting', 'technology consulting'], weight: 26 },
+    // Coaching patterns
+    { keywords: ['coaching', 'coach', 'executive coach', 'leadership coach'], weight: 22 },
+    { keywords: ['hr ', ' hr', 'human resources', 'talent', 'recruitment', 'staffing'], weight: 18 },
+    { keywords: ['leadership development', 'executive development', 'leadership training'], weight: 20 },
+    { keywords: ['training', 'facilitation', 'facilitator', 'workshop'], weight: 16 },
+    { keywords: ['workforce', 'organizational', 'organizational development'], weight: 14 },
+    { keywords: ['executive', 'leadership', 'c-suite', 'cfo', 'ceo', 'chro'], weight: 12 },
+    { keywords: ['succession', 'retention', 'turnover', 'engagement'], weight: 12 },
+    { keywords: ['services', 'service provider'], weight: 5 },
   ],
   legal: [
     { keywords: ['law firm', 'legal', 'attorney', 'lawyer'], weight: 10 },
@@ -162,11 +167,16 @@ const INDUSTRY_PATTERNS: Record<IndustryVariant, { keywords: string[]; weight: n
     { keywords: ['store', 'shop', 'products'], weight: 5 },
   ],
   saas: [
-    { keywords: ['saas', 'software as a service'], weight: 10 },
-    { keywords: ['software', 'platform', 'app'], weight: 7 },
-    { keywords: ['tech startup', 'startup'], weight: 7 },
-    { keywords: ['cloud', 'api'], weight: 6 },
-    { keywords: ['digital product', 'subscription'], weight: 5 },
+    // SaaS-specific keywords - should NOT match consulting firms
+    // "software" alone is weak - many consulting firms discuss software
+    { keywords: ['saas', 'software as a service'], weight: 18 },
+    { keywords: ['our platform', 'the platform', 'saas platform'], weight: 16 },
+    { keywords: ['tech startup', 'startup'], weight: 12 },
+    { keywords: ['cloud-based', 'cloud platform', 'api-first'], weight: 12 },
+    { keywords: ['digital product', 'subscription model', 'monthly subscription'], weight: 10 },
+    // Lower weight for generic terms that consulting firms also use
+    { keywords: ['software', 'platform', 'app'], weight: 5 },
+    { keywords: ['cloud', 'api'], weight: 4 },
   ],
   default: [],
 };
