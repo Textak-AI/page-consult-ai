@@ -124,11 +124,11 @@ export const SECTION_HEADERS: Record<string, Record<SectionHeaderType, SectionHe
 
   // Consulting: Professional, strategic, results-focused
   consulting: {
-    features: { title: 'How We Help', subtitle: 'Strategic expertise for complex challenges' },
-    process: { title: 'How We Work Together', subtitle: 'Collaborative partnership' },
+    features: { title: 'Areas of Practice', subtitle: 'Strategic expertise for complex challenges' },
+    process: { title: 'Our Engagement Model', subtitle: 'Collaborative partnership' },
     proof: { title: 'Results That Speak', subtitle: 'Measurable outcomes' },
     testimonials: { title: 'Client Impact', subtitle: 'Success stories' },
-    cta: { title: 'Start a Conversation', subtitle: 'Schedule your consultation' },
+    cta: { title: "Let's Start a Conversation", subtitle: 'Schedule your consultation' },
     gallery: { title: 'Case Studies', subtitle: 'Transformation in action' },
     serviceArea: { title: 'Industries We Serve', subtitle: 'Deep sector expertise' },
     faq: { title: 'Engagement FAQ', subtitle: 'Common questions' },
