@@ -58,6 +58,14 @@ interface LivePreviewProps {
   seoData?: SEOHeadData;
   colorMode?: 'light' | 'dark';
   industryVariant?: string; // Industry variant for CSS custom properties
+  // Brand customization props for footer/hero
+  brandSettings?: {
+    companyName?: string | null;
+    logoUrl?: string | null;
+    primaryColor?: string | null;
+    secondaryColor?: string | null;
+    accentColor?: string | null;
+  };
   getSectionLockStatus?: (sectionType: string) => {
     status: 'unlocked' | 'partial' | 'locked';
     isLocked: boolean;
@@ -67,7 +75,7 @@ interface LivePreviewProps {
   };
 }
 
-export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode = 'dark', industryVariant, getSectionLockStatus }: LivePreviewProps) {
+export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode = 'dark', industryVariant, brandSettings, getSectionLockStatus }: LivePreviewProps) {
   const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();
   const currentStyle = styleVariants[pageStyle];
   
@@ -588,13 +596,21 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         data-mode={colorMode} 
         data-industry={industryVariant || 'default'}
         className="min-h-full bg-background live-preview-container"
+        style={brandSettings?.primaryColor ? {
+          '--color-primary': brandSettings.primaryColor,
+          '--color-secondary': brandSettings.secondaryColor || brandSettings.primaryColor,
+          '--color-accent': brandSettings.accentColor || brandSettings.primaryColor,
+        } as React.CSSProperties : undefined}
       >
         {sections
           .sort((a, b) => a.order - b.order)
           .map((section, index) => renderSection(section, index))}
         
-        {/* Footer */}
-        <PageFooter />
+        {/* Footer with brand customization */}
+        <PageFooter 
+          companyName={brandSettings?.companyName}
+          logoUrl={brandSettings?.logoUrl}
+        />
       </div>
       
       {/* AI Chat Drawer */}

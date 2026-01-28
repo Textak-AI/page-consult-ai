@@ -677,6 +677,14 @@ function GenerateContent() {
           designIntelligence: sdiOutput || designIntelligence,
           // Communication style
           communicationStyle: consultationData.communication_style,
+          // Brand data from extracted_intelligence
+          websiteIntelligence: {
+            logoUrl: intel.logoUrl || null,
+            companyName: intel.companyName || consultationData.business_name,
+            primaryColor: intel.brandColors?.primary || null,
+            secondaryColor: intel.brandColors?.secondary || null,
+            accentColor: intel.brandColors?.accent || null,
+          },
         };
         
         console.log('📦 [Generate] Transformed consultation data:', transformedData);
@@ -3838,6 +3846,42 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
                         'dark';
             return (mode === 'light' || mode === 'warm') ? 'light' : 'dark';
           })()}
+          brandSettings={{
+            // PRIORITY: strategicData > pageData > consultation.websiteIntelligence > hero section
+            companyName: 
+              strategicData?.consultationData?.businessName ||
+              (pageData?.consultation_data as any)?.businessName ||
+              (pageData?.website_intelligence as any)?.companyName ||
+              consultation?.businessName ||
+              consultation?.business_name ||
+              (consultation?.websiteIntelligence as any)?.companyName ||
+              null,
+            logoUrl:
+              strategicData?.brandSettings?.logoUrl ||
+              strategicData?.consultationData?.websiteIntelligence?.logoUrl ||
+              (pageData?.website_intelligence as any)?.logoUrl ||
+              (pageData?.consultation_data as any)?.websiteIntelligence?.logoUrl ||
+              (consultation?.websiteIntelligence as any)?.logoUrl ||
+              sections.find(s => s.type === 'hero')?.content?.logoUrl ||
+              null,
+            primaryColor:
+              strategicData?.brandSettings?.primaryColor ||
+              (pageData?.design_intelligence as any)?.brandColors?.primary ||
+              (consultation?.websiteIntelligence as any)?.primaryColor ||
+              designSystem?.colors?.primary ||
+              null,
+            secondaryColor:
+              strategicData?.brandSettings?.secondaryColor ||
+              (pageData?.design_intelligence as any)?.brandColors?.secondary ||
+              (consultation?.websiteIntelligence as any)?.secondaryColor ||
+              designSystem?.colors?.secondary ||
+              null,
+            accentColor:
+              (pageData?.design_intelligence as any)?.brandColors?.accent ||
+              (consultation?.websiteIntelligence as any)?.accentColor ||
+              designSystem?.colors?.accent ||
+              null,
+          }}
           getSectionLockStatus={pageBuilder.getSectionLockStatus}
         />
       </div>

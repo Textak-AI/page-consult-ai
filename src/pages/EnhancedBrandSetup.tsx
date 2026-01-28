@@ -844,6 +844,33 @@ export default function EnhancedBrandSetup() {
     }
     
     if (consultationId) {
+      // Fetch existing extracted_intelligence to merge brand data
+      const { data: existingConsultation } = await supabase
+        .from('consultations')
+        .select('extracted_intelligence')
+        .eq('id', consultationId)
+        .single();
+      
+      const existingIntel = (existingConsultation?.extracted_intelligence as Record<string, any>) || {};
+      
+      // Merge brand data into extracted_intelligence
+      const updatedIntelligence = {
+        ...existingIntel,
+        logoUrl: logo,
+        companyName: companyName,
+        websiteUrl: websiteUrl,
+        brandColors: {
+          primary: colors.primary,
+          secondary: colors.secondary,
+          accent: colors.accent,
+        },
+        brandFonts: {
+          heading: fontSettings.h1,
+          body: fontSettings.body,
+        },
+        brandUpdatedAt: new Date().toISOString(),
+      };
+      
       // Save brand data and communication style to consultation
       await supabase
         .from('consultations')
@@ -851,6 +878,7 @@ export default function EnhancedBrandSetup() {
           communication_style: communicationStyle as any,
           business_name: companyName,
           website_url: websiteUrl,
+          extracted_intelligence: updatedIntelligence,
         })
         .eq('id', consultationId);
       
