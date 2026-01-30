@@ -1,8 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useRef, useEffect } from "react";
 import { ArrowRight, CheckCircle, Shield } from "lucide-react";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
 import { getSectionHeader } from "@/lib/industrySectionHeaders";
+import { getIndustryPattern } from "@/lib/industryPatterns";
+
+// Component to apply complex CSS background patterns via ref
+function IndustryBackgroundPattern({ css }: { css: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.cssText = css;
+    }
+  }, [css]);
+  return <div ref={ref} className="absolute inset-0 z-0" />;
+}
 
 interface FinalCTASectionProps {
   content: {
@@ -31,6 +44,9 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   const isSaas = industryVariant === 'saas';
   const isHealthcare = industryVariant === 'healthcare';
   const isLocalServices = industryVariant === 'local-services';
+  
+  // Get industry-aware CSS background pattern for CTA section
+  const industryPattern = getIndustryPattern(industryVariant as any, isLightMode ? 'light' : 'dark', 'final-cta');
   
   // Get industry-specific CTA headers
   const ctaHeader = getSectionHeader(industryVariant, 'cta');
@@ -488,26 +504,28 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
     );
   }
 
-  // Default dark mode layout with glows
+  // Default dark mode layout with industry-aware backgrounds
   return (
     <section 
       className="relative overflow-hidden pb-24"
       style={{
-        backgroundColor: `hsl(${tokens.colors.bgDark})`,
         padding: '128px 24px',
         paddingBottom: '128px',
       }}
     >
-      {/* Dramatic Background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-grid-pattern opacity-30" />
+      {/* Industry-Aware Background Pattern - using ref for complex CSS */}
+      <IndustryBackgroundPattern css={industryPattern.css} />
+      
+      {/* Floating Orbs for depth */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-grid-pattern opacity-20" />
         <div 
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[150px]"
-          style={{ background: 'radial-gradient(circle, hsla(189, 95%, 43%, 0.15) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, hsla(189, 95%, 43%, 0.1) 0%, transparent 70%)' }}
         />
         <div 
           className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px]"
-          style={{ backgroundColor: 'hsla(270, 95%, 60%, 0.08)' }}
+          style={{ backgroundColor: 'hsla(270, 95%, 60%, 0.06)' }}
         />
       </div>
       
