@@ -1,4 +1,4 @@
-import { useState, useCallback, memo, useEffect } from 'react';
+import { useState, useCallback, memo, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { ChevronDown, MessageSquare, Edit3, Trash2, GripVertical, Plus } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,8 +16,20 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import type { FAQItem } from '@/services/intelligence/types';
+import { getIndustryPattern } from '@/lib/industryPatterns';
 
 import type { IndustryVariant } from '@/config/designSystem/industryVariants';
+
+// Component to apply complex CSS background patterns via ref
+function IndustryBackgroundPattern({ css }: { css: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.cssText = css;
+    }
+  }, [css]);
+  return <div ref={ref} className="absolute inset-0 z-0" />;
+}
 
 interface FAQSectionProps {
   content: {
@@ -476,6 +488,12 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
   }));
   const isConsulting = content.industryVariant === 'consulting';
   const isHealthcare = content.industryVariant === 'healthcare';
+  
+  // Get industry-aware CSS background pattern
+  const industryPattern = useMemo(() => 
+    getIndustryPattern((content.industryVariant || 'default') as any, 'dark', 'faq'),
+    [content.industryVariant]
+  );
 
   // Don't render section at all if no FAQ items (unless editing)
   if (items.length === 0 && !isEditing) {
@@ -750,15 +768,17 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
     );
   }
 
-  // Default dark mode layout
+  // Default dark mode layout with industry-aware background
   return (
     <section 
       className="relative overflow-hidden"
-      style={{ backgroundColor: 'hsl(217, 33%, 6%)', padding: '96px 24px' }}
+      style={{ padding: '96px 24px' }}
       itemScope
       itemType="https://schema.org/FAQPage"
     >
-      <div className="absolute inset-0 bg-grid-pattern opacity-30" />
+      {/* Industry-aware background pattern */}
+      <IndustryBackgroundPattern css={industryPattern.css} />
+      <div className="absolute inset-0 bg-grid-pattern opacity-20 z-[1]" />
       
       {isEditing && (
         <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />

@@ -1,5 +1,18 @@
 import { motion } from "framer-motion";
+import { useMemo, useRef, useEffect } from "react";
 import { getTypography } from "@/lib/typographyScale";
+import { getIndustryPattern, type PatternConfig } from "@/lib/industryPatterns";
+
+// Component to apply complex CSS background patterns via ref
+function IndustryBackgroundPattern({ css }: { css: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.cssText = css;
+    }
+  }, [css]);
+  return <div ref={ref} className="absolute inset-0 z-0" />;
+}
 
 interface Step {
   number: number;
@@ -20,11 +33,16 @@ interface HowItWorksSectionProps {
 
 export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSectionProps) {
   const { title = "How It Works", subtitle = "Your path to results", steps } = content;
-  const isConsulting = content.industryVariant === 'consulting';
-  const isSaas = content.industryVariant === 'saas';
+  const industryVariant = content.industryVariant || 'default';
+  const isConsulting = industryVariant === 'consulting';
+  const isSaas = industryVariant === 'saas';
   const typography = getTypography(content.industryVariant);
   
-  
+  // Get industry-aware CSS background pattern
+  const industryPattern = useMemo(() => 
+    getIndustryPattern(industryVariant as any, 'dark', 'how-it-works'),
+    [industryVariant]
+  );
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     if (!onUpdate) return;
@@ -236,17 +254,19 @@ export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSe
     );
   }
 
-  // Default dark mode layout
+  // Default dark mode layout with industry-aware background
   return (
     <section 
-      className={isEditing ? 'relative' : ''}
+      className={`relative overflow-hidden ${isEditing ? '' : ''}`}
       style={{ 
-        backgroundColor: 'var(--color-surface)',
         padding: '96px 24px',
       }}
     >
+      {/* Industry-aware background pattern */}
+      <IndustryBackgroundPattern css={industryPattern.css} />
+      
       {isEditing && (
-        <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
+        <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-20" />
       )}
       <div className="container mx-auto max-w-6xl">
         <motion.div
