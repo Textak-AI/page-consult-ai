@@ -2939,16 +2939,73 @@ function GenerateContent() {
     return mappedSections;
   };
 
-  // Fetch hero image from Unsplash
-  const fetchHeroImage = async (query: string): Promise<string> => {
+  // Fetch hero image - PREFER AI generation over Unsplash stock photos
+  // Follows "minimal, intentional imagery" philosophy
+  const fetchHeroImage = async (query: string, industry?: string): Promise<string> => {
     try {
-      const { data } = await supabase.functions.invoke("unsplash-search", {
-        body: { query: `${query} professional`, count: 1 },
+      // Determine industry for AI prompt
+      const effectiveIndustry = industry || 
+        consultation?.industry || 
+        effectiveNavState?.strategicData?.consultationData?.industry ||
+        'professional services';
+      
+      // Build an industry-aware prompt for AI generation
+      const aiPrompt = buildHeroImagePrompt(effectiveIndustry, query);
+      
+      console.log('🖼️ [fetchHeroImage] Generating AI hero image for:', { query, industry: effectiveIndustry });
+      
+      // Try AI generation first (FLUX via Replicate)
+      const { data, error } = await supabase.functions.invoke('generate-hero-images', {
+        body: {
+          prompts: [aiPrompt],
+          cacheKey: `fallback::${effectiveIndustry.toLowerCase()}::${query.toLowerCase().replace(/\s+/g, '-').slice(0, 30)}`,
+        },
       });
-      return data?.results?.[0]?.urls?.regular || "";
-    } catch {
+      
+      if (!error && data?.images?.[0]?.url) {
+        console.log('✅ [fetchHeroImage] AI image generated successfully');
+        return data.images[0].url;
+      }
+      
+      console.warn('⚠️ [fetchHeroImage] AI generation failed, returning empty (no Unsplash fallback)');
+      // Return empty - sections will use industry-appropriate gradient/pattern fallback
+      return "";
+    } catch (err) {
+      console.error('❌ [fetchHeroImage] Error:', err);
       return "";
     }
+  };
+  
+  /**
+   * Build an industry-appropriate hero image prompt
+   * Creates professional, subtle images that support text overlay
+   */
+  const buildHeroImagePrompt = (industry: string, businessContext: string): string => {
+    const industryLower = industry.toLowerCase();
+    
+    // Industry-specific scene descriptions
+    const industryScenes: Record<string, string> = {
+      'manufacturing': 'Modern industrial facility with clean lines, precision machinery, soft ambient lighting, professional manufacturing environment',
+      'healthcare': 'Bright, clean medical environment with natural light, modern healthcare facility, calming atmosphere, white and teal tones',
+      'consulting': 'Professional executive office space with city skyline view, warm natural lighting, sophisticated business environment',
+      'coaching': 'Inspiring modern workspace with natural light, warm and inviting atmosphere, professional development setting',
+      'fintech': 'Sleek modern office with subtle blue accents, financial technology environment, sophisticated and trustworthy',
+      'saas': 'Modern tech workspace with ambient lighting, clean minimalist design, subtle purple and blue gradients in background',
+      'devtools': 'Developer workspace with subtle code elements, modern tech environment, dark theme with accent lighting',
+      'creative': 'Modern creative studio with dramatic lighting, artistic environment, bold and expressive atmosphere',
+      'ecommerce': 'Clean product photography style, minimalist backdrop, professional commercial setting',
+      'realestate': 'Beautiful architectural interior with natural light, modern luxury space, welcoming atmosphere',
+      'legal': 'Traditional professional office with warm wood tones, law library aesthetic, sophisticated and trustworthy',
+      'finance': 'Modern financial office with city views, clean lines, professional and secure atmosphere',
+    };
+    
+    // Find matching industry or use default
+    const baseScene = Object.entries(industryScenes).find(([key]) => 
+      industryLower.includes(key)
+    )?.[1] || 'Professional modern business environment with clean design and ambient lighting';
+    
+    // Build the final prompt
+    return `${baseScene}. Subtle, professional background suitable for text overlay. No people or faces. Soft focus on background elements. High quality photography style. 16:9 aspect ratio. Cinematic lighting. ${businessContext} industry context.`;
   };
 
   // Fetch gallery images from Unsplash
