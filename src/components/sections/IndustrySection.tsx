@@ -3,6 +3,8 @@
  * 
  * Wraps section content with industry-specific styling.
  * Applies design tokens (colors, typography, spacing, effects) based on industry variant.
+ * 
+ * Updated to use industry-aware patterns for "minimal, intentional imagery" aesthetic.
  */
 
 import React from 'react';
@@ -11,6 +13,27 @@ import {
   getIndustryTokens,
   industryTokensToCSS 
 } from '@/config/designSystem/industryVariants';
+import { getIndustryPattern, getAmbientHeroGradient, type PatternConfig } from '@/lib/industryPatterns';
+
+/**
+ * Pattern background component that applies CSS via ref
+ */
+function PatternBackground({ css }: { css: string }) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  
+  React.useEffect(() => {
+    if (ref.current) {
+      ref.current.style.cssText = css;
+    }
+  }, [css]);
+  
+  return (
+    <div 
+      ref={ref}
+      className="absolute inset-0 z-0 pointer-events-none"
+    />
+  );
+}
 
 interface IndustrySectionProps {
   children: React.ReactNode;
@@ -18,22 +41,35 @@ interface IndustrySectionProps {
   className?: string;
   isDarkSection?: boolean; // For contrast sections (testimonials, final CTA)
   brandColor?: string;
+  sectionType?: 'hero' | 'features' | 'how-it-works' | 'social-proof' | 'faq' | 'problem-solution' | 'final-cta';
+  useAmbientBackground?: boolean; // Use industry-aware pattern instead of solid color
 }
 
 /**
- * Get inline styles for industry variant
+ * Get inline styles for industry variant with optional pattern background
  */
 function getIndustryStyles(
   variant: IndustryVariant,
   isDark: boolean = false,
-  brandColor?: string
+  brandColor?: string,
+  sectionType?: string,
+  usePattern: boolean = false
 ): React.CSSProperties {
   const tokens = getIndustryTokens(variant);
   const isLightMode = tokens.mode === 'light';
   
+  // Get industry-specific pattern if requested
+  const pattern = usePattern 
+    ? getIndustryPattern(
+        variant as any, // Cast to industryDesignSystem variant type
+        isLightMode ? 'light' : 'dark',
+        sectionType as any
+      )
+    : null;
+  
   // For light mode industries (consulting), use appropriate backgrounds
   if (isLightMode && !isDark) {
-    return {
+    const baseStyles: React.CSSProperties = {
       backgroundColor: `hsl(${tokens.colors.bgPrimary})`,
       color: `hsl(${tokens.colors.textPrimary})`,
       fontFamily: tokens.typography.bodyFont,
@@ -52,6 +88,8 @@ function getIndustryStyles(
       ['--spacing-section-y' as any]: tokens.spacing.sectionPadding,
       ['--spacing-section-x' as any]: '24px',
     };
+    
+    return baseStyles;
   }
   
   // Dark contrast sections for light mode pages
@@ -90,9 +128,20 @@ export function IndustrySection({
   className = '',
   isDarkSection = false,
   brandColor,
+  sectionType,
+  useAmbientBackground = false,
 }: IndustrySectionProps) {
   const tokens = getIndustryTokens(industryVariant);
-  const styles = getIndustryStyles(industryVariant, isDarkSection, brandColor);
+  const styles = getIndustryStyles(industryVariant, isDarkSection, brandColor, sectionType, useAmbientBackground);
+  
+  // Get pattern for ambient background
+  const pattern = useAmbientBackground 
+    ? getIndustryPattern(
+        industryVariant as any,
+        tokens.mode,
+        sectionType as any
+      )
+    : null;
   
   return (
     <section 
@@ -104,7 +153,13 @@ export function IndustrySection({
       data-industry={industryVariant}
       data-mode={tokens.mode}
     >
-      {children}
+      {/* Industry-aware ambient pattern background */}
+      {pattern && (
+        <PatternBackground css={pattern.css} />
+      )}
+      <div className="relative z-10">
+        {children}
+      </div>
     </section>
   );
 }
@@ -124,4 +179,13 @@ export function isLightModeIndustry(variant?: IndustryVariant): boolean {
   if (!variant || variant === 'default') return false;
   const tokens = getIndustryTokens(variant);
   return tokens.mode === 'light';
+}
+
+/**
+ * Get ambient hero gradient for when no background image is available
+ * Follows "minimal, intentional imagery" philosophy
+ */
+export function getHeroAmbientGradient(variant?: IndustryVariant): string {
+  const tokens = getIndustryTokens(variant || 'default');
+  return getAmbientHeroGradient(variant as any || 'default', tokens.mode);
 }
