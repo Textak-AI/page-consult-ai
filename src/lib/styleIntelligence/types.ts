@@ -2,6 +2,7 @@
  * STYLE INTELLIGENCE TYPES
  * 
  * Defines the structure for website inspiration capture and style blending.
+ * Supports Vision AI analysis for enhanced pattern recognition.
  */
 
 export interface StyleInspiration {
@@ -58,8 +59,21 @@ export interface StyleInspiration {
     contrast: 'low' | 'medium' | 'high';
   };
   
+  // Vision AI enrichment (Phase 2)
+  visionAnalysis?: {
+    temperature?: 'neutral' | 'monochrome' | 'warm' | 'cool';
+    fontStyle?: 'bold' | 'light' | 'serif' | 'sans-serif' | 'display';
+    texture?: 'high' | 'medium' | 'subtle';
+    layout?: 'balanced' | 'information-rich';
+    imageStyle?: 'full-bleed' | 'contained' | 'mixed';
+    elements?: 'geometric' | 'organic' | 'abstract';
+    vibe?: 'luxurious' | 'minimalist' | 'playful' | 'professional' | 'tech' | 'creative';
+    patterns?: string[]; // e.g., ["Stripe", "Linear", "Apple"]
+  };
+  
   // Meta
   sourceUrl: string;
+  screenshotUrl?: string;
   extractionConfidence: 'high' | 'medium' | 'low';
 }
 
@@ -109,6 +123,8 @@ export interface StyleInspirationInput {
   brandColors?: BrandColors;
   // If true, use inspiration colors as primary (not just accents)
   prioritizeInspirationColors?: boolean;
+  // If true, use Vision AI for enhanced analysis
+  useVisionAI?: boolean;
 }
 
 export interface StyleInspirationResult {
@@ -116,4 +132,17 @@ export interface StyleInspirationResult {
   error?: string;
   inspiration?: StyleInspiration;
   blendedStyle?: BlendedStyle;
+}
+
+// Database model for persisted inspiration sites
+export interface InspirationSiteRecord {
+  id: string;
+  user_id: string;
+  brand_id?: string | null;
+  url: string;
+  screenshot_url?: string | null;
+  extracted_style: StyleInspiration | null;
+  extraction_confidence?: 'high' | 'medium' | 'low' | null;
+  created_at: string;
+  updated_at: string;
 }
