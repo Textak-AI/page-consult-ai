@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { getAmbientHeroGradient } from "@/lib/industryPatterns";
 import {
   Select,
   SelectContent,
@@ -710,42 +711,87 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
     );
   }
 
+  // Get industry-aware ambient gradient for when no background image is provided
+  const industryKey = String(industryVariant).toLowerCase();
+  const ambientGradient = useMemo(() => 
+    getAmbientHeroGradient(industryVariant as any, isLightMode ? 'light' : 'dark'),
+    [industryVariant, isLightMode]
+  );
+
+  // Industry-specific gradient mesh colors
+  const getIndustryMeshColors = () => {
+    if (industryKey.includes('manufactur')) {
+      return {
+        mesh: `radial-gradient(at 40% 20%, hsla(210, 80%, 35%, 0.15) 0px, transparent 50%),
+               radial-gradient(at 80% 0%, hsla(35, 90%, 50%, 0.08) 0px, transparent 50%),
+               radial-gradient(at 0% 50%, hsla(210, 80%, 35%, 0.08) 0px, transparent 50%)`,
+        orb1: 'hsla(210, 80%, 35%, 0.08)',
+        orb2: 'hsla(35, 90%, 50%, 0.06)',
+      };
+    }
+    if (industryKey.includes('health')) {
+      return {
+        mesh: `radial-gradient(at 40% 20%, hsla(175, 70%, 45%, 0.12) 0px, transparent 50%),
+               radial-gradient(at 80% 0%, hsla(195, 80%, 50%, 0.10) 0px, transparent 50%),
+               radial-gradient(at 0% 50%, hsla(175, 70%, 45%, 0.08) 0px, transparent 50%)`,
+        orb1: 'hsla(175, 70%, 45%, 0.08)',
+        orb2: 'hsla(195, 80%, 50%, 0.06)',
+      };
+    }
+    if (industryKey.includes('fintech') || industryKey.includes('finance')) {
+      return {
+        mesh: `radial-gradient(at 40% 20%, hsla(230, 70%, 60%, 0.15) 0px, transparent 50%),
+               radial-gradient(at 80% 0%, hsla(170, 60%, 50%, 0.08) 0px, transparent 50%),
+               radial-gradient(at 0% 50%, hsla(230, 70%, 60%, 0.10) 0px, transparent 50%)`,
+        orb1: 'hsla(230, 70%, 60%, 0.08)',
+        orb2: 'hsla(170, 60%, 50%, 0.06)',
+      };
+    }
+    // Default SaaS/tech colors
+    return {
+      mesh: `radial-gradient(at 40% 20%, hsla(189, 95%, 43%, 0.15) 0px, transparent 50%),
+             radial-gradient(at 80% 0%, hsla(270, 95%, 60%, 0.12) 0px, transparent 50%),
+             radial-gradient(at 0% 50%, hsla(189, 95%, 43%, 0.08) 0px, transparent 50%),
+             radial-gradient(at 100% 100%, hsla(270, 95%, 60%, 0.08) 0px, transparent 50%)`,
+      orb1: 'hsla(189, 95%, 43%, 0.08)',
+      orb2: 'hsla(270, 95%, 60%, 0.06)',
+    };
+  };
+
+  const meshColors = getIndustryMeshColors();
+
   return (
     <section 
       className={`relative overflow-hidden ${isEditing ? "" : ""}`}
       style={{
-        backgroundColor: 'hsl(217, 33%, 6%)',
+        // Use industry-aware base color when no background image
+        background: !hasBackgroundImage ? ambientGradient : 'hsl(217, 33%, 6%)',
         minHeight: '100vh',
       }}
     >
-      {/* Premium Background Layer */}
-      <div className="absolute inset-0 z-0">
-        {/* Gradient Mesh Background */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(at 40% 20%, hsla(189, 95%, 43%, 0.15) 0px, transparent 50%),
-              radial-gradient(at 80% 0%, hsla(270, 95%, 60%, 0.12) 0px, transparent 50%),
-              radial-gradient(at 0% 50%, hsla(189, 95%, 43%, 0.08) 0px, transparent 50%),
-              radial-gradient(at 100% 100%, hsla(270, 95%, 60%, 0.08) 0px, transparent 50%)
-            `,
-          }}
-        />
-        
-        {/* Subtle Grid Pattern */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-40" />
-        
-        {/* Floating Orbs */}
-        <div 
-          className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px] animate-float-slow"
-          style={{ backgroundColor: 'hsla(189, 95%, 43%, 0.08)' }}
-        />
-        <div 
-          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] animate-float-delayed"
-          style={{ backgroundColor: 'hsla(270, 95%, 60%, 0.06)' }}
-        />
-      </div>
+      {/* Premium Background Layer - only when no background image */}
+      {!hasBackgroundImage && (
+        <div className="absolute inset-0 z-0">
+          {/* Gradient Mesh Background - industry-aware */}
+          <div 
+            className="absolute inset-0"
+            style={{ background: meshColors.mesh }}
+          />
+          
+          {/* Subtle Grid Pattern */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-40" />
+          
+          {/* Floating Orbs - industry-aware colors */}
+          <div 
+            className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px] animate-float-slow"
+            style={{ backgroundColor: meshColors.orb1 }}
+          />
+          <div 
+            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] animate-float-delayed"
+            style={{ backgroundColor: meshColors.orb2 }}
+          />
+        </div>
+      )}
 
       {/* Background Image Layer (if provided) */}
       {content.backgroundImage && (

@@ -70,6 +70,7 @@ import { applyBrandColors } from "@/lib/colorUtils";
 import { generateDesignIntelligence, type DesignIntelligenceOutput } from "@/lib/designIntelligence";
 import { intelligenceConcierge } from "@/lib/intelligenceConcierge";
 import { getTargetMarketFromSources } from "@/lib/targetMarketExtractor";
+import { resolveHeroImageUrl } from "@/hooks/useHeroImageResolution";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -1529,12 +1530,26 @@ function GenerateContent() {
         console.log('🎨 Generated design system:', ds.id);
         console.log('🏭 Early industry variant:', earlyVariant);
         
-        // Use user-selected hero background from consultation OR fetch from Unsplash
+        // Use hero image resolution with caching and AI generation fallback
         const businessName = strategicData.consultationData?.businessName || consultationData.industry || 'Our Company';
         const userSelectedHeroImage = strategicData.heroBackgroundUrl || strategicData.consultationData?.heroBackgroundUrl;
-        console.log('🖼️ [Generate] User-selected heroBackgroundUrl:', userSelectedHeroImage);
-        const heroImageUrl = userSelectedHeroImage || await fetchHeroImage(businessName);
-        console.log('🖼️ [Generate] Final heroImageUrl:', heroImageUrl);
+        
+        // Resolve hero image with proper caching
+        const heroResolution = await resolveHeroImageUrl({
+          userSelectedUrl: userSelectedHeroImage,
+          consultationId: consultationData.id,
+          sessionId: consultationData.session_id,
+          businessName,
+          industry: consultationData.industry,
+          industryVariant: earlyVariant,
+          colorMode: earlyTokens.mode,
+        });
+        const heroImageUrl = heroResolution.imageUrl || '';
+        console.log('🖼️ [Generate] Hero resolved:', { 
+          url: heroImageUrl.slice(0, 80) + '...', 
+          fromCache: heroResolution.isFromCache,
+          hasAmbient: !!heroResolution.ambientGradient,
+        });
         
         // Get brand settings for passing to sections
         const logoUrl = brandSettings?.logoUrl || strategicData.consultationData?.websiteIntelligence?.logoUrl || null;
