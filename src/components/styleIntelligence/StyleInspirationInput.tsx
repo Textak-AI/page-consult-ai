@@ -3,6 +3,7 @@
  * 
  * A reusable component for capturing website inspiration URLs.
  * Used in consultation, brand setup, and editor sidebar.
+ * Supports Vision AI analysis and database persistence.
  */
 
 import { useState, useCallback } from 'react';
@@ -10,13 +11,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, Globe, Loader2, Check, X, 
   Palette, Type, Layout, ChevronDown, ChevronUp,
-  ExternalLink
+  ExternalLink, Eye, Save, Trash2
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { 
   extractStyleInspiration, 
-  saveInspirationUrl, 
+  saveInspirationUrl,
+  saveInspirationSite,
   getInspirationUrls 
 } from '@/lib/styleIntelligence';
 import type { StyleInspiration } from '@/lib/styleIntelligence';
@@ -27,6 +30,9 @@ interface StyleInspirationInputProps {
   compact?: boolean;
   showRecentUrls?: boolean;
   placeholder?: string;
+  brandId?: string;
+  enablePersistence?: boolean;
+  useVisionAI?: boolean;
 }
 
 export function StyleInspirationInput({
@@ -35,12 +41,17 @@ export function StyleInspirationInput({
   compact = false,
   showRecentUrls = true,
   placeholder = 'https://stripe.com, linear.app, etc.',
+  brandId,
+  enablePersistence = false,
+  useVisionAI = true,
 }: StyleInspirationInputProps) {
   const [url, setUrl] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [extractedStyle, setExtractedStyle] = useState<StyleInspiration | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(null);
   
   const recentUrls = showRecentUrls ? getInspirationUrls() : [];
 
@@ -50,8 +61,9 @@ export function StyleInspirationInput({
     setIsExtracting(true);
     setError(null);
     setExtractedStyle(null);
+    setSavedId(null);
     
-    const result = await extractStyleInspiration(url.trim());
+    const result = await extractStyleInspiration(url.trim(), { useVisionAI });
     
     setIsExtracting(false);
     
@@ -59,10 +71,32 @@ export function StyleInspirationInput({
       setExtractedStyle(result.inspiration);
       saveInspirationUrl(url.trim());
       onStyleExtracted(result.inspiration);
+      
+      // Show toast for Vision AI patterns if detected
+      if (result.inspiration.visionAnalysis?.patterns?.length) {
+        toast.success(
+          `Style captured! Detected patterns: ${result.inspiration.visionAnalysis.patterns.slice(0, 3).join(', ')}`
+        );
+      }
     } else {
       setError(result.error || 'Failed to analyze website');
     }
-  }, [url, onStyleExtracted]);
+  }, [url, onStyleExtracted, useVisionAI]);
+
+  const handleSave = useCallback(async () => {
+    if (!extractedStyle) return;
+    
+    setIsSaving(true);
+    const result = await saveInspirationSite(url.trim(), extractedStyle, brandId);
+    setIsSaving(false);
+    
+    if (result.success && result.id) {
+      setSavedId(result.id);
+      toast.success('Style saved to your collection');
+    } else {
+      toast.error(result.error || 'Failed to save style');
+    }
+  }, [url, extractedStyle, brandId]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !isExtracting) {
@@ -72,16 +106,12 @@ export function StyleInspirationInput({
 
   const handleRecentClick = (recentUrl: string) => {
     setUrl(recentUrl);
-    // Auto-extract when clicking recent
-    setTimeout(() => {
-      const input = document.querySelector<HTMLInputElement>('[data-inspiration-input]');
-      if (input) input.value = recentUrl;
-    }, 0);
   };
 
   const clearExtraction = () => {
     setExtractedStyle(null);
     setUrl('');
+    setSavedId(null);
   };
 
   if (compact) {
@@ -123,7 +153,9 @@ export function StyleInspirationInput({
         </div>
         <div>
           <h3 className="text-sm font-medium text-foreground">Style Inspiration</h3>
-          <p className="text-xs text-muted-foreground">Share a website you love the look of</p>
+          <p className="text-xs text-muted-foreground">
+            {useVisionAI ? 'AI-powered visual DNA extraction' : 'Share a website you love the look of'}
+          </p>
         </div>
       </div>
 
@@ -149,11 +181,11 @@ export function StyleInspirationInput({
           {isExtracting ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Analyzing...
+              {useVisionAI ? 'Analyzing...' : 'Extracting...'}
             </>
           ) : (
             <>
-              <Sparkles className="w-4 h-4 mr-2" />
+              {useVisionAI ? <Eye className="w-4 h-4 mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
               Extract Style
             </>
           )}
@@ -195,10 +227,46 @@ export function StyleInspirationInput({
                   ({extractedStyle.mood.primary} · {extractedStyle.extractionConfidence} confidence)
                 </span>
               </div>
-              <Button variant="ghost" size="sm" onClick={clearExtraction}>
-                <X className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                {enablePersistence && !savedId && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleSave}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )}
+                  </Button>
+                )}
+                {savedId && (
+                  <span className="text-xs text-primary flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Saved
+                  </span>
+                )}
+                <Button variant="ghost" size="sm" onClick={clearExtraction}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
+
+            {/* Vision AI Patterns */}
+            {extractedStyle.visionAnalysis?.patterns && extractedStyle.visionAnalysis.patterns.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-muted-foreground">Inspired by:</span>
+                {extractedStyle.visionAnalysis.patterns.map((pattern, i) => (
+                  <span 
+                    key={i} 
+                    className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full"
+                  >
+                    {pattern}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Quick Preview */}
             <div className="grid grid-cols-3 gap-3">
@@ -232,6 +300,27 @@ export function StyleInspirationInput({
                 </span>
               </div>
             </div>
+
+            {/* Vision Analysis Quick View */}
+            {extractedStyle.visionAnalysis && (
+              <div className="flex gap-2 flex-wrap">
+                {extractedStyle.visionAnalysis.vibe && (
+                  <span className="text-xs bg-secondary/20 text-secondary px-2 py-1 rounded capitalize">
+                    {extractedStyle.visionAnalysis.vibe}
+                  </span>
+                )}
+                {extractedStyle.visionAnalysis.temperature && (
+                  <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded capitalize">
+                    {extractedStyle.visionAnalysis.temperature}
+                  </span>
+                )}
+                {extractedStyle.visionAnalysis.elements && (
+                  <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded capitalize">
+                    {extractedStyle.visionAnalysis.elements}
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Expand/Collapse Details */}
             <button
@@ -332,7 +421,7 @@ export function StyleInspirationInput({
                   </div>
 
                   {/* Effects */}
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 flex-wrap">
                     {extractedStyle.effects.hasGradients && (
                       <span className="text-xs bg-secondary/20 text-secondary px-2 py-1 rounded">
                         Gradients
@@ -349,6 +438,39 @@ export function StyleInspirationInput({
                       </span>
                     )}
                   </div>
+
+                  {/* Vision AI Details */}
+                  {extractedStyle.visionAnalysis && (
+                    <div>
+                      <span className="text-xs text-muted-foreground">Vision AI Analysis</span>
+                      <div className="grid grid-cols-2 gap-2 mt-1 text-xs">
+                        {extractedStyle.visionAnalysis.layout && (
+                          <div>
+                            <span className="text-muted-foreground">Layout: </span>
+                            <span className="text-foreground capitalize">{extractedStyle.visionAnalysis.layout}</span>
+                          </div>
+                        )}
+                        {extractedStyle.visionAnalysis.texture && (
+                          <div>
+                            <span className="text-muted-foreground">Texture: </span>
+                            <span className="text-foreground capitalize">{extractedStyle.visionAnalysis.texture}</span>
+                          </div>
+                        )}
+                        {extractedStyle.visionAnalysis.imageStyle && (
+                          <div>
+                            <span className="text-muted-foreground">Images: </span>
+                            <span className="text-foreground capitalize">{extractedStyle.visionAnalysis.imageStyle}</span>
+                          </div>
+                        )}
+                        {extractedStyle.visionAnalysis.fontStyle && (
+                          <div>
+                            <span className="text-muted-foreground">Font Style: </span>
+                            <span className="text-foreground capitalize">{extractedStyle.visionAnalysis.fontStyle}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Source */}
                   <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border">

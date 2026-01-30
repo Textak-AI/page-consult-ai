@@ -869,6 +869,50 @@ export type Database = {
         }
         Relationships: []
       }
+      inspiration_sites: {
+        Row: {
+          brand_id: string | null
+          created_at: string
+          extracted_style: Json | null
+          extraction_confidence: string | null
+          id: string
+          screenshot_url: string | null
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          brand_id?: string | null
+          created_at?: string
+          extracted_style?: Json | null
+          extraction_confidence?: string | null
+          id?: string
+          screenshot_url?: string | null
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          brand_id?: string | null
+          created_at?: string
+          extracted_style?: Json | null
+          extraction_confidence?: string | null
+          id?: string
+          screenshot_url?: string | null
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspiration_sites_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       intelligence_accumulator: {
         Row: {
           brand_data: Json | null
