@@ -3,8 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Globe, Image, FileText, Palette, ArrowRight, 
   Upload, Check, Loader2, Monitor, Smartphone,
-  ChevronDown, ChevronUp, X, Sparkles, Brain
+  ChevronDown, ChevronUp, X, Sparkles, Brain, Eye
 } from 'lucide-react';
+import { StyleInspirationInput } from '@/components/styleIntelligence';
+import type { StyleInspiration } from '@/lib/styleIntelligence';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
@@ -163,6 +165,9 @@ export default function EnhancedBrandSetup() {
   
   // Track if brand guide has set colors (takes priority over website extraction)
   const [colorsFromBrandGuide, setColorsFromBrandGuide] = useState(false);
+  
+  // Style inspiration state (from reference websites)
+  const [styleInspiration, setStyleInspiration] = useState<StyleInspiration | null>(null);
 
   // Load localStorage intelligence on mount
   useEffect(() => {
@@ -811,6 +816,7 @@ export default function EnhancedBrandSetup() {
       fontSettings,
       extractionResults,
       communicationStyle,
+      styleInspiration, // Include extracted style inspiration
     };
     
     localStorage.setItem('pageconsult_brand_data', JSON.stringify(brandData));
@@ -1560,7 +1566,52 @@ export default function EnhancedBrandSetup() {
               </div>
             </div>
 
-            {/* 4. Colors and Typography Section */}
+            {/* 4. Style Inspiration Section */}
+            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
+                  <Eye className="w-6 h-6 text-indigo-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white">
+                    Style Inspiration <span className="text-slate-500 font-normal">(Optional)</span>
+                  </h2>
+                  <p className="text-sm text-slate-400">Share a website you love the look of</p>
+                </div>
+              </div>
+
+              <StyleInspirationInput
+                onStyleExtracted={(style) => {
+                  setStyleInspiration(style);
+                  // Optionally apply extracted colors if no brand guide colors
+                  if (!colorsFromBrandGuide && style.colors) {
+                    setColors(prev => ({
+                      primary: style.colors.primary || prev.primary,
+                      secondary: style.colors.secondary || prev.secondary,
+                      accent: style.colors.accent || prev.accent,
+                    }));
+                  }
+                }}
+                placeholder="stripe.com, linear.app, notion.so..."
+                showRecentUrls={true}
+                useVisionAI={true}
+              />
+
+              {styleInspiration && (
+                <div className="mt-4 p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-xl">
+                  <div className="flex items-center gap-2 text-indigo-400 mb-2">
+                    <Sparkles className="w-4 h-4" />
+                    <span className="text-sm font-medium">Style DNA captured</span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    {styleInspiration.mood.primary} design with {styleInspiration.spacing.density} spacing
+                    {styleInspiration.visionAnalysis?.patterns?.length ? ` • Inspired by: ${styleInspiration.visionAnalysis.patterns.slice(0, 2).join(', ')}` : ''}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* 5. Colors and Typography Section */}
             <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 relative overflow-hidden">
               {/* Loading overlay */}
               {(isExtractingBrief || isAnalyzing) && (
