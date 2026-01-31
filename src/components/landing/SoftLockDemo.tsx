@@ -456,23 +456,18 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
               </div>
             </motion.header>
 
-            {/* Progress Rail - full width on tablet/mobile (stacked layout) */}
-            <div className="lg:hidden">
-              <ProgressRail currentStep="consultation" flowState={flowState} />
-            </div>
-
-            {/* Main Content - Chat + Sidebar with proper padding on all sides */}
-            <div className="flex-1 flex overflow-hidden relative z-10 p-6 lg:p-8 gap-4">
+            {/* Main Content - Chat + Sidebar */}
+            <div className="flex-1 flex overflow-hidden relative z-10">
               
-              {/* Chat Column - Progress Rail + Chat Container */}
+              {/* Chat Column */}
               <div className="flex-1 flex flex-col min-w-0">
-                {/* Progress Rail - inside chat column on desktop (side-by-side layout) */}
-                <div className="hidden lg:block relative z-20">
+                {/* Progress Rail - full width on tablet/mobile, inside chat column on desktop */}
+                <div className="flex-shrink-0">
                   <ProgressRail currentStep="consultation" flowState={flowState} />
                 </div>
                 
-              {/* Chat Container with glass panel effect */}
-              <main className="flex-1 flex flex-col min-w-0 relative rounded-2xl overflow-hidden">
+                {/* Chat Container with glass panel effect */}
+                <main className="flex-1 flex flex-col min-w-0 relative overflow-hidden m-4 lg:m-6 lg:mr-3 rounded-2xl">
                 
                 {/* Muted circuitry background */}
                 <MutedCircuitBackground />
@@ -659,13 +654,15 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
               </main>
               </div>{/* End Chat Column wrapper */}
               
-              {/* Intel Sidebar - Desktop only, with proper right margin */}
-              <aside className="hidden lg:flex w-[480px] flex-shrink-0 bg-slate-900/40 border border-slate-800/30 rounded-2xl flex-col overflow-hidden">
-                <div className="p-5 flex-1 overflow-hidden">
-                  <IntelligenceTabs 
-                    onContinue={handleGenerateClick}
-                    onReopenEmailGate={reopenEmailGate}
-                  />
+              {/* Intel Sidebar - Desktop only */}
+              <aside className="hidden lg:flex w-[420px] flex-shrink-0 flex-col overflow-hidden m-6 ml-0">
+                <div className="flex-1 bg-slate-900/30 backdrop-blur-sm border border-slate-800/40 rounded-2xl overflow-hidden">
+                  <div className="p-5 flex-1 overflow-y-auto h-full">
+                    <IntelligenceTabs 
+                      onContinue={handleGenerateClick}
+                      onReopenEmailGate={reopenEmailGate}
+                    />
+                  </div>
                 </div>
               </aside>
               
