@@ -2,12 +2,12 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Loader2, X, BarChart3 } from 'lucide-react';
+import { Send, Loader2, X, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BusinessCardGateModal from './BusinessCardGateModal';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
-import { IntelligenceTabs, type Tab } from '@/components/demo/IntelligenceTabs';
+import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
 import { DemoPreviewWidget } from './DemoPreviewWidget';
 import { MutedCircuitBackground } from './MutedCircuitBackground';
 import { StrategistIcon } from '@/components/ui/StrategistIcon';
@@ -73,9 +73,10 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
   // Session saving state
   const [isSavingSession, setIsSavingSession] = useState(false);
   
-  // Unified nav bar state - intelligence tabs
-  const [activeIntelTab, setActiveIntelTab] = useState('intelligence');
-  const [availableIntelTabs, setAvailableIntelTabs] = useState<Tab[]>([]);
+  // Intelligence score state for unified action bar
+  const [intelScore, setIntelScore] = useState(0);
+  const [canGenerate, setCanGenerate] = useState(false);
+  
 
   // Activate soft lock
   const activateLock = useCallback(() => {
@@ -460,223 +461,256 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
               </div>
             </motion.header>
 
-            {/* Unified Navigation Bar - Progress Rail + Intel Tabs on same baseline */}
+            {/* Progress Navigation Bar - Flow steps only */}
             <div className="flex-shrink-0">
               <UnifiedNavBar 
                 currentStep="consultation" 
                 flowState={flowState}
-                activeTab={activeIntelTab}
-                onTabChange={setActiveIntelTab}
-                availableTabs={availableIntelTabs}
               />
             </div>
 
-            {/* Main Content - Chat + Sidebar */}
-            <div className="flex-1 flex overflow-hidden relative z-10 p-4 lg:p-6 gap-4">
-              
-              {/* Chat Container with glass panel effect */}
-              <main className="flex-1 flex flex-col min-w-0 relative overflow-hidden rounded-2xl">
+            {/* Main Content - Chat + Sidebar + Unified Action Bar */}
+            <div className="flex-1 flex flex-col overflow-hidden relative z-10">
+              {/* Top: Chat + Sidebar row */}
+              <div className="flex-1 flex overflow-hidden p-4 lg:p-6 gap-4 pb-0">
                 
-                {/* Muted circuitry background */}
-                <MutedCircuitBackground />
-                
-                {/* Glass panel overlay */}
-                <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
-                
-                {/* Border */}
-                <div className="absolute inset-0 rounded-2xl border border-slate-800/40 pointer-events-none" />
-                
-                {/* Content container - messages only */}
-                <div className="relative z-10 flex flex-col flex-1 overflow-hidden">
-                
-                {/* ============================================
-                    MESSAGES AREA - Scrollable container
-                    ============================================ */}
-                <div 
-                  ref={chatContainerRef} 
-                  className="flex-1 overflow-y-auto min-h-0"
-                >
-                  <div className="px-6 py-6 pb-20 space-y-2">
-                    <AnimatePresence mode="popLayout">
-                      {displayConversation.map((message, index) => {
-                        const isInitialGhostMessage = index === 0 && state.conversation.length === 0;
-                        const showAsGhost = isInitialGhostMessage && !isGhostActivated;
-                        
-                        return (
-                          <motion.div
-                            key={`msg-${index}`}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="w-full"
-                          >
-                            {message.role === 'assistant' ? (
-                              /* ======== AI MESSAGE - LEFT ALIGNED ======== */
-                              <div className="flex items-start gap-3 mb-8">
-                                {/* Avatar - just icon, no circle container */}
-                                <motion.div 
-                                  className="flex-shrink-0 text-cyan-400"
-                                  animate={{ opacity: showAsGhost ? 0.5 : 1 }}
-                                  transition={{ duration: 0.35 }}
-                                >
-                                  <StrategistIcon size={24} />
-                                </motion.div>
-                                
-                                {/* Message content - max 75% width */}
-                                <div className="max-w-[75%]">
+                {/* Chat Container with glass panel effect */}
+                <main className="flex-1 flex flex-col min-w-0 relative overflow-hidden rounded-t-2xl lg:rounded-2xl lg:rounded-b-none">
+                  
+                  {/* Muted circuitry background */}
+                  <MutedCircuitBackground />
+                  
+                  {/* Glass panel overlay */}
+                  <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+                  
+                  {/* Border */}
+                  <div className="absolute inset-0 rounded-t-2xl lg:rounded-2xl lg:rounded-b-none border border-slate-800/40 border-b-0 pointer-events-none" />
+                  
+                  {/* Content container - messages only */}
+                  <div className="relative z-10 flex flex-col flex-1 overflow-hidden">
+                  
+                  {/* ============================================
+                      MESSAGES AREA - Scrollable container
+                      ============================================ */}
+                  <div 
+                    ref={chatContainerRef} 
+                    className="flex-1 overflow-y-auto min-h-0"
+                  >
+                    <div className="px-6 py-6 pb-4 space-y-2">
+                      <AnimatePresence mode="popLayout">
+                        {displayConversation.map((message, index) => {
+                          const isInitialGhostMessage = index === 0 && state.conversation.length === 0;
+                          const showAsGhost = isInitialGhostMessage && !isGhostActivated;
+                          
+                          return (
+                            <motion.div
+                              key={`msg-${index}`}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="w-full"
+                            >
+                              {message.role === 'assistant' ? (
+                                /* ======== AI MESSAGE - LEFT ALIGNED ======== */
+                                <div className="flex items-start gap-3 mb-8">
+                                  {/* Avatar - just icon, no circle container */}
                                   <motion.div 
-                                    className="flex items-center gap-2 mb-1.5"
+                                    className="flex-shrink-0 text-cyan-400"
                                     animate={{ opacity: showAsGhost ? 0.5 : 1 }}
                                     transition={{ duration: 0.35 }}
                                   >
-                                    <span className="text-cyan-400 font-medium text-sm">PageConsult AI</span>
-                                    <span className="text-slate-500 text-xs">Strategy Consultant</span>
+                                    <StrategistIcon size={24} />
                                   </motion.div>
                                   
-                                  {/* Bubble - clean, no glow */}
-                                  <motion.div 
-                                    className="bg-slate-800/80 rounded-2xl px-4 py-3 border border-slate-700/50 shadow-sm"
-                                    animate={{ opacity: showAsGhost ? 0.55 : 1 }}
-                                    transition={{ duration: 0.35 }}
-                                  >
-                                    <motion.div
-                                      className="text-[15px] text-slate-100 leading-relaxed"
-                                      animate={{ fontStyle: showAsGhost ? 'italic' : 'normal' }}
+                                  {/* Message content - max 75% width */}
+                                  <div className="max-w-[75%]">
+                                    <motion.div 
+                                      className="flex items-center gap-2 mb-1.5"
+                                      animate={{ opacity: showAsGhost ? 0.5 : 1 }}
                                       transition={{ duration: 0.35 }}
                                     >
-                                      <ReactMarkdown
-                                        components={{
-                                          strong: ({ children }) => <span className="font-semibold text-white">{children}</span>,
-                                          em: ({ children }) => <span className="italic text-slate-200">{children}</span>,
-                                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                                          ul: ({ children }) => <ul className="my-2 ml-4 list-disc">{children}</ul>,
-                                          li: ({ children }) => <li className="text-slate-100">{children}</li>,
-                                        }}
-                                      >
-                                        {message.content}
-                                      </ReactMarkdown>
+                                      <span className="text-cyan-400 font-medium text-sm">PageConsult AI</span>
+                                      <span className="text-slate-500 text-xs">Strategy Consultant</span>
                                     </motion.div>
-                                  </motion.div>
-                                </div>
-                              </div>
-                            ) : (
-                              /* ======== USER MESSAGE - RIGHT ALIGNED ======== */
-                              <div className="flex justify-end mb-6">
-                                <div className="max-w-[65%]">
-                                  {/* Bubble - clean, no glow */}
-                                  <div className="bg-slate-700/60 rounded-2xl px-4 py-3 border border-slate-600/50 shadow-sm">
-                                    <div className="text-[15px] text-slate-200 leading-relaxed">
-                                      <ReactMarkdown
-                                        components={{
-                                          strong: ({ children }) => <span className="font-semibold text-white">{children}</span>,
-                                          em: ({ children }) => <span className="italic text-slate-300">{children}</span>,
-                                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                                        }}
+                                    
+                                    {/* Bubble - clean, no glow */}
+                                    <motion.div 
+                                      className="bg-slate-800/80 rounded-2xl px-4 py-3 border border-slate-700/50 shadow-sm"
+                                      animate={{ opacity: showAsGhost ? 0.55 : 1 }}
+                                      transition={{ duration: 0.35 }}
+                                    >
+                                      <motion.div
+                                        className="text-[15px] text-slate-100 leading-relaxed"
+                                        animate={{ fontStyle: showAsGhost ? 'italic' : 'normal' }}
+                                        transition={{ duration: 0.35 }}
                                       >
-                                        {message.content}
-                                      </ReactMarkdown>
+                                        <ReactMarkdown
+                                          components={{
+                                            strong: ({ children }) => <span className="font-semibold text-white">{children}</span>,
+                                            em: ({ children }) => <span className="italic text-slate-200">{children}</span>,
+                                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                            ul: ({ children }) => <ul className="my-2 ml-4 list-disc">{children}</ul>,
+                                            li: ({ children }) => <li className="text-slate-100">{children}</li>,
+                                          }}
+                                        >
+                                          {message.content}
+                                        </ReactMarkdown>
+                                      </motion.div>
+                                    </motion.div>
+                                  </div>
+                                </div>
+                              ) : (
+                                /* ======== USER MESSAGE - RIGHT ALIGNED ======== */
+                                <div className="flex justify-end mb-6">
+                                  <div className="max-w-[65%]">
+                                    {/* Bubble - clean, no glow */}
+                                    <div className="bg-slate-700/60 rounded-2xl px-4 py-3 border border-slate-600/50 shadow-sm">
+                                      <div className="text-[15px] text-slate-200 leading-relaxed">
+                                        <ReactMarkdown
+                                          components={{
+                                            strong: ({ children }) => <span className="font-semibold text-white">{children}</span>,
+                                            em: ({ children }) => <span className="italic text-slate-300">{children}</span>,
+                                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                          }}
+                                        >
+                                          {message.content}
+                                        </ReactMarkdown>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                            )}
-                          </motion.div>
-                        );
-                      })}
-                    </AnimatePresence>
-                    
-                    {/* Typing indicator */}
-                    {state.isProcessing && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-start gap-3 mb-8"
-                      >
-                        <div className="flex-shrink-0 text-cyan-400">
-                          <StrategistIcon size={24} />
-                        </div>
-                        <div className="bg-slate-800/80 rounded-2xl px-4 py-3 border border-slate-700/50 shadow-sm">
-                          <div className="flex gap-1">
-                            <span className="w-2 h-2 bg-cyan-400/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                            <span className="w-2 h-2 bg-cyan-400/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                            <span className="w-2 h-2 bg-cyan-400/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                    
-                    <div ref={messagesEndRef} />
-                  </div>
-                </div>
-                </div>
-
-                {/* ============================================
-                    INPUT AREA - Simple absolute positioning, no spacer
-                    ============================================ */}
-                <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-sm px-4 py-3">
-                  {/* Input preview for long messages */}
-                  {showInputPreview && inputValue.trim() && (
-                    <div className="mb-3 px-4 py-3 rounded-xl bg-slate-800/40 border border-slate-700/50 max-h-32 overflow-y-auto">
-                      <p className="text-sm text-slate-300/70 italic whitespace-pre-wrap break-words">
-                        {inputValue}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {/* Input field - h-[44px] matches Generate button */}
-                  <form onSubmit={handleSubmit}>
-                    <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 h-[44px]">
-                      <textarea
-                        ref={inputRef}
-                        value={inputValue}
-                        onChange={handleInputChange}
-                        onFocus={handleInputFocus}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSubmit(e);
-                          }
-                        }}
-                        placeholder="Tell me about your business..."
-                        disabled={state.isProcessing}
-                        rows={1}
-                        className="flex-1 bg-transparent text-slate-200 placeholder:text-slate-500 resize-none outline-none text-[15px] leading-tight overflow-hidden"
-                        style={{ height: '20px', minHeight: '20px', maxHeight: '20px' }}
-                      />
+                              )}
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
                       
-                      <button
-                        type="submit"
-                        disabled={state.isProcessing || !inputValue.trim()}
-                        className="flex-shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {state.isProcessing ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <Send className="w-5 h-5" />
-                        )}
-                      </button>
+                      {/* Typing indicator */}
+                      {state.isProcessing && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex items-start gap-3 mb-8"
+                        >
+                          <div className="flex-shrink-0 text-cyan-400">
+                            <StrategistIcon size={24} />
+                          </div>
+                          <div className="bg-slate-800/80 rounded-2xl px-4 py-3 border border-slate-700/50 shadow-sm">
+                            <div className="flex gap-1">
+                              <span className="w-2 h-2 bg-cyan-400/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                              <span className="w-2 h-2 bg-cyan-400/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                              <span className="w-2 h-2 bg-cyan-400/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                      
+                      <div ref={messagesEndRef} />
                     </div>
-                  </form>
-                </div>
-              </main>
-              
-              {/* Intel Sidebar - Desktop only */}
-              <aside className="hidden lg:flex w-[380px] flex-shrink-0 flex-col overflow-hidden">
-                <div className="flex-1 bg-slate-900/30 backdrop-blur-sm border border-slate-800/40 rounded-2xl overflow-hidden">
-                  <div className="p-4 flex-1 overflow-y-auto h-full">
+                  </div>
+                  </div>
+                </main>
+                
+                {/* Intel Sidebar - Desktop only */}
+                <aside className="hidden lg:flex w-[380px] flex-shrink-0 flex-col overflow-hidden">
+                  <div className="flex-1 bg-slate-900/30 backdrop-blur-sm border border-slate-800/40 rounded-t-2xl rounded-b-none border-b-0 overflow-hidden flex flex-col">
                     <IntelligenceTabs 
                       onContinue={handleGenerateClick}
                       onReopenEmailGate={reopenEmailGate}
-                      hideTabBar={true}
-                      externalActiveTab={activeIntelTab}
-                      onExternalTabChange={setActiveIntelTab}
-                      onTabsReady={setAvailableIntelTabs}
+                      hideBottomCTA={true}
+                      onScoreChange={(score, ready) => {
+                        setIntelScore(score);
+                        setCanGenerate(ready);
+                      }}
                     />
                   </div>
+                </aside>
+                
+              </div>
+
+              {/* ============================================
+                  UNIFIED BOTTOM ACTION BAR - Chat input + Generate button aligned
+                  ============================================ */}
+              <div className="flex-shrink-0 mx-4 lg:mx-6 mb-4 lg:mb-6">
+                <div className="flex gap-4 items-end">
+                  {/* Chat Input - Left side */}
+                  <div className="flex-1 bg-slate-900/95 backdrop-blur-sm border border-slate-800/40 rounded-2xl rounded-t-none border-t-slate-700/50 px-4 py-3">
+                    {/* Input preview for long messages */}
+                    {showInputPreview && inputValue.trim() && (
+                      <div className="mb-3 px-4 py-3 rounded-xl bg-slate-800/40 border border-slate-700/50 max-h-32 overflow-y-auto">
+                        <p className="text-sm text-slate-300/70 italic whitespace-pre-wrap break-words">
+                          {inputValue}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Input field - h-[44px] matches Generate button */}
+                    <form onSubmit={handleSubmit}>
+                      <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 hover:border-cyan-500/30 focus-within:border-cyan-500/40 transition-colors px-4 h-[44px]">
+                        <textarea
+                          ref={inputRef}
+                          value={inputValue}
+                          onChange={handleInputChange}
+                          onFocus={handleInputFocus}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSubmit(e);
+                            }
+                          }}
+                          placeholder="Tell me about your business..."
+                          disabled={state.isProcessing}
+                          rows={1}
+                          className="flex-1 bg-transparent text-slate-200 placeholder:text-slate-500 resize-none outline-none text-[15px] leading-tight overflow-hidden"
+                          style={{ height: '20px', minHeight: '20px', maxHeight: '20px' }}
+                        />
+                        
+                        <button
+                          type="submit"
+                          disabled={state.isProcessing || !inputValue.trim()}
+                          className="flex-shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {state.isProcessing ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <Send className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                  
+                  {/* Generate Button - Right side (desktop only) */}
+                  <div className="hidden lg:flex w-[380px] flex-shrink-0 flex-col bg-slate-900/95 backdrop-blur-sm border border-slate-800/40 rounded-2xl rounded-t-none border-t-slate-700/50 p-4">
+                    {/* Progress indicator when not ready */}
+                    {!canGenerate && (
+                      <div className="mb-3 space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-400">Progress to unlock</span>
+                          <span className="text-cyan-400 font-medium">{intelScore}/70</span>
+                        </div>
+                        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min(100, (intelScore / 70) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Generate Brief button - h-[44px] matches chat input */}
+                    <Button
+                      onClick={handleGenerateClick}
+                      disabled={!canGenerate}
+                      className="w-full h-[44px] bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      Generate Your Brief
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-              </aside>
-              
+              </div>
             </div>
           </motion.section>
         )}
