@@ -2,18 +2,18 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useIntelligence } from '@/contexts/IntelligenceContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Loader2, X } from 'lucide-react';
+import { Send, Loader2, X, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BusinessCardGateModal from './BusinessCardGateModal';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
-import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
+import { IntelligenceTabs, type Tab } from '@/components/demo/IntelligenceTabs';
 import { DemoPreviewWidget } from './DemoPreviewWidget';
 import { MutedCircuitBackground } from './MutedCircuitBackground';
 import { StrategistIcon } from '@/components/ui/StrategistIcon';
 import ReactMarkdown from 'react-markdown';
 import tealLogo from '@/assets/iconmark-teal.svg';
-import { ProgressRail } from '@/components/flow/ProgressRail';
+import { UnifiedNavBar } from '@/components/flow/UnifiedNavBar';
 import type { FlowState } from '@/hooks/useFlowNavigation';
 
 // Circuit pattern SVG - extremely subtle for expanded view (2% opacity)
@@ -72,6 +72,10 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
   
   // Session saving state
   const [isSavingSession, setIsSavingSession] = useState(false);
+  
+  // Unified nav bar state - intelligence tabs
+  const [activeIntelTab, setActiveIntelTab] = useState('intelligence');
+  const [availableIntelTabs, setAvailableIntelTabs] = useState<Tab[]>([]);
 
   // Activate soft lock
   const activateLock = useCallback(() => {
@@ -456,18 +460,22 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
               </div>
             </motion.header>
 
+            {/* Unified Navigation Bar - Progress Rail + Intel Tabs on same baseline */}
+            <div className="flex-shrink-0">
+              <UnifiedNavBar 
+                currentStep="consultation" 
+                flowState={flowState}
+                activeTab={activeIntelTab}
+                onTabChange={setActiveIntelTab}
+                availableTabs={availableIntelTabs}
+              />
+            </div>
+
             {/* Main Content - Chat + Sidebar */}
-            <div className="flex-1 flex overflow-hidden relative z-10">
+            <div className="flex-1 flex overflow-hidden relative z-10 p-4 lg:p-6 gap-4">
               
-              {/* Chat Column */}
-              <div className="flex-1 flex flex-col min-w-0">
-                {/* Progress Rail - full width on tablet/mobile, inside chat column on desktop */}
-                <div className="flex-shrink-0">
-                  <ProgressRail currentStep="consultation" flowState={flowState} />
-                </div>
-                
-                {/* Chat Container with glass panel effect */}
-                <main className="flex-1 flex flex-col min-w-0 relative overflow-hidden m-4 lg:m-6 lg:mr-3 rounded-2xl">
+              {/* Chat Container with glass panel effect */}
+              <main className="flex-1 flex flex-col min-w-0 relative overflow-hidden rounded-2xl">
                 
                 {/* Muted circuitry background */}
                 <MutedCircuitBackground />
@@ -652,15 +660,18 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
                   </form>
                 </div>
               </main>
-              </div>{/* End Chat Column wrapper */}
               
               {/* Intel Sidebar - Desktop only */}
-              <aside className="hidden lg:flex w-[420px] flex-shrink-0 flex-col overflow-hidden m-6 ml-0">
+              <aside className="hidden lg:flex w-[380px] flex-shrink-0 flex-col overflow-hidden">
                 <div className="flex-1 bg-slate-900/30 backdrop-blur-sm border border-slate-800/40 rounded-2xl overflow-hidden">
-                  <div className="p-5 flex-1 overflow-y-auto h-full">
+                  <div className="p-4 flex-1 overflow-y-auto h-full">
                     <IntelligenceTabs 
                       onContinue={handleGenerateClick}
                       onReopenEmailGate={reopenEmailGate}
+                      hideTabBar={true}
+                      externalActiveTab={activeIntelTab}
+                      onExternalTabChange={setActiveIntelTab}
+                      onTabsReady={setAvailableIntelTabs}
                     />
                   </div>
                 </div>
