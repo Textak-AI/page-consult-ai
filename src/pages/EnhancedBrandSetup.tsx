@@ -1134,6 +1134,7 @@ export default function EnhancedBrandSetup() {
     
     return {
       consultationScore,
+      briefGenerated: true, // Brief was generated to reach brand setup
       brandVisited: true, // We're on brand setup
       strategyVisited: false,
       sessionId: sessionId || searchParams.get('consultationId'),
