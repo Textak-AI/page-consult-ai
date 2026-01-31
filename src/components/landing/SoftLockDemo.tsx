@@ -456,14 +456,21 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
               </div>
             </motion.header>
 
-            {/* Progress Rail */}
-            <ProgressRail currentStep="consultation" flowState={flowState} />
+            {/* Progress Rail - full width on tablet/mobile (stacked layout) */}
+            <div className="lg:hidden">
+              <ProgressRail currentStep="consultation" flowState={flowState} />
+            </div>
 
             {/* Main Content - Chat + Sidebar with proper padding on all sides */}
             <div className="flex-1 flex overflow-hidden relative z-10 p-6 lg:p-8 gap-4">
               
               {/* Chat Container with glass panel effect */}
               <main className="flex-1 flex flex-col min-w-0 relative rounded-2xl overflow-hidden">
+                {/* Progress Rail - inside chat column on desktop (side-by-side layout) */}
+                <div className="hidden lg:block">
+                  <ProgressRail currentStep="consultation" flowState={flowState} />
+                </div>
+                
                 {/* Muted circuitry background */}
                 <MutedCircuitBackground />
                 
