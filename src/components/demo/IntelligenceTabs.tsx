@@ -44,20 +44,26 @@ interface IntelligenceTabsProps {
   onReopenEmailGate: () => void;
   // When true, hides the internal tab bar (for use with external unified nav)
   hideTabBar?: boolean;
+  // When true, hides the bottom CTA section (for external rendering)
+  hideBottomCTA?: boolean;
   // External tab control (when hideTabBar is true)
   externalActiveTab?: string;
   onExternalTabChange?: (tabId: string) => void;
   // Expose available tabs for external rendering
   onTabsReady?: (tabs: Tab[]) => void;
+  // Expose score for external CTA rendering
+  onScoreChange?: (score: number, canGenerate: boolean) => void;
 }
 
 export function IntelligenceTabs({ 
   onContinue, 
   onReopenEmailGate,
   hideTabBar = false,
+  hideBottomCTA = false,
   externalActiveTab,
   onExternalTabChange,
-  onTabsReady
+  onTabsReady,
+  onScoreChange
 }: IntelligenceTabsProps) {
   const { 
     state, 
@@ -181,6 +187,13 @@ export function IntelligenceTabs({
       onTabsReady(availableTabs);
     }
   }, [availableTabs.length, onTabsReady]);
+
+  // Notify parent of score changes for external CTA rendering
+  useEffect(() => {
+    if (onScoreChange) {
+      onScoreChange(score.totalScore, canGenerate);
+    }
+  }, [score.totalScore, canGenerate, onScoreChange]);
 
   return (
     <div className="flex flex-col h-full relative">
@@ -542,34 +555,36 @@ export function IntelligenceTabs({
         </AnimatePresence>
       </div>
 
-      {/* Sticky CTA area */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 space-y-3">
-        {/* Progress indicator when not ready */}
-        {!canGenerate && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400">Progress to unlock</span>
-              <span className="text-cyan-400 font-medium">{score.totalScore}/70</span>
+      {/* Sticky CTA area - only show when not using external CTA */}
+      {!hideBottomCTA && (
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 space-y-3">
+          {/* Progress indicator when not ready */}
+          {!canGenerate && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">Progress to unlock</span>
+                <span className="text-cyan-400 font-medium">{score.totalScore}/70</span>
+              </div>
+              <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, (score.totalScore / 70) * 100)}%` }}
+                />
+              </div>
             </div>
-            <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, (score.totalScore / 70) * 100)}%` }}
-              />
-            </div>
-          </div>
-        )}
-        
-        {/* Generate Brief button */}
-        <Button
-          onClick={() => setShowBriefReview(true)}
-          disabled={!canGenerate}
-          className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          Generate Your Brief
-          <ArrowRight className="w-4 h-4" />
-        </Button>
-      </div>
+          )}
+          
+          {/* Generate Brief button */}
+          <Button
+            onClick={() => setShowBriefReview(true)}
+            disabled={!canGenerate}
+            className="w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            Generate Your Brief
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
 
       {/* Enhanced Strategy Brief Modal */}
       {showBriefReview && (

@@ -1,8 +1,7 @@
-import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquare, FileText, Palette, Map, Rocket, Lock, Check, BarChart3, Target, Search, Users } from 'lucide-react';
+import { MessageSquare, FileText, Palette, Map, Rocket, Lock, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useFlowNavigation, type FlowStep, type FlowState, FLOW_STEPS } from '@/hooks/useFlowNavigation';
+import { useFlowNavigation, type FlowStep, type FlowState } from '@/hooks/useFlowNavigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -10,16 +9,6 @@ interface UnifiedNavBarProps {
   currentStep: FlowStep;
   flowState: FlowState;
   className?: string;
-  // Intelligence tabs state
-  activeTab: string;
-  onTabChange: (tabId: string) => void;
-  availableTabs: Array<{
-    id: string;
-    label: string;
-    shortLabel: string;
-    icon: React.ElementType;
-    hasNewData: boolean;
-  }>;
 }
 
 const STEP_ICONS: Record<FlowStep, React.ComponentType<{ className?: string }>> = {
@@ -38,10 +27,7 @@ const prefersReducedMotion = typeof window !== 'undefined'
 export function UnifiedNavBar({ 
   currentStep, 
   flowState, 
-  className,
-  activeTab,
-  onTabChange,
-  availableTabs 
+  className
 }: UnifiedNavBarProps) {
   const { steps, stepStatuses, navigateToStep } = useFlowNavigation(currentStep, flowState);
   const isMobile = useIsMobile();
@@ -53,8 +39,8 @@ export function UnifiedNavBar({
         'h-14', // 56px height for unified bar
         className
       )}>
-        <div className="h-full flex items-center">
-          {/* Left side: Progress Rail nodes */}
+        <div className="h-full flex items-center justify-center">
+          {/* Progress Rail nodes - centered */}
           <div className="flex items-center h-full px-4 lg:px-6 gap-2 lg:gap-3">
             {steps.map((step, index) => {
               const status = stepStatuses[step.id];
@@ -129,68 +115,6 @@ export function UnifiedNavBar({
                     </div>
                   )}
                 </div>
-              );
-            })}
-          </div>
-
-          {/* Center separator */}
-          <div className="hidden lg:block h-6 w-px bg-slate-700/50 mx-2" />
-
-          {/* Right side: Intelligence tabs - desktop only */}
-          <div className="hidden lg:flex items-center h-full flex-1 px-4 gap-1.5 overflow-x-auto">
-            {availableTabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              const hasNew = tab.hasNewData;
-              
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => onTabChange(tab.id)}
-                  className={cn(
-                    'relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium',
-                    'transition-all duration-200 whitespace-nowrap flex-shrink-0',
-                    isActive 
-                      ? 'bg-slate-700/80 text-white' 
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-                  )}
-                >
-                  {/* Glow effect for new data */}
-                  {hasNew && (
-                    <motion.div
-                      className="absolute inset-0 rounded-lg bg-cyan-500/15"
-                      animate={{ 
-                        opacity: [0.3, 0.5, 0.3],
-                      }}
-                      transition={{ 
-                        duration: 2, 
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    />
-                  )}
-                  
-                  {/* Icon */}
-                  <Icon className="w-3.5 h-3.5 relative z-10" />
-                  
-                  {/* Label */}
-                  <span className="relative z-10">{tab.shortLabel}</span>
-                  
-                  {/* "New" indicator dot */}
-                  {hasNew && (
-                    <motion.span
-                      className="w-1.5 h-1.5 bg-cyan-400 rounded-full relative z-10"
-                      animate={{ 
-                        scale: [1, 1.2, 1],
-                        opacity: [1, 0.7, 1]
-                      }}
-                      transition={{ 
-                        duration: 1.5, 
-                        repeat: Infinity 
-                      }}
-                    />
-                  )}
-                </button>
               );
             })}
           </div>
