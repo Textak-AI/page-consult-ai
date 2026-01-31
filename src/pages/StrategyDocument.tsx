@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, Download, Edit, ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowRight, Download, Edit, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore, type GenericIntelligence } from '@/lib/intelligenceScoreCalculator';
 import { intelligenceConcierge, type IntelligenceAccumulator, type MarketData as ConciergeMarketData } from '@/lib/intelligenceConcierge';
+import { ProgressRail } from '@/components/flow/ProgressRail';
+import { useFlowNavigation, type FlowState } from '@/hooks/useFlowNavigation';
 
 // Color scheme matching Intelligence Profile
 const SECTION_COLORS = {
@@ -210,19 +212,32 @@ export default function StrategyDocument() {
     );
   }
 
+  // Build flow state for ProgressRail
+  const flowState: FlowState = useMemo(() => ({
+    consultationScore: score.totalScore,
+    brandVisited: true, // We're in strategy, so brand was visited
+    strategyVisited: true, // We're on strategy
+    sessionId: consultationId,
+    consultationId: consultationId,
+  }), [score.totalScore, consultationId]);
+
+  const { goBack } = useFlowNavigation('strategy', flowState);
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
+      {/* Progress Rail */}
+      <ProgressRail currentStep="strategy" flowState={flowState} />
+      
       {/* Header Section */}
       <header className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-b border-purple-500/20 p-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <Button 
               variant="ghost" 
-              onClick={() => navigate(-1)}
+              onClick={goBack}
               className="text-gray-400 hover:text-white"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+              ← Back to Brand
             </Button>
             <Button variant="outline" className="border-purple-500/30 text-purple-300 hover:bg-purple-500/10">
               <Download className="w-4 h-4 mr-2" />
