@@ -920,13 +920,40 @@ export default function EnhancedBrandSetup() {
         route: readiness >= 50 ? 'create consultation then huddle' : 'generate with session',
       });
       
-      // If high readiness, create a consultation first and route to huddle
+      // If high readiness, create a consultation first and route to strategy document
       if (readiness >= 50 && hasIntelligence) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const intel = demoSession.extracted_intelligence as any;
+          const marketResearch = demoSession.market_research as any;
           
-          // Create consultation from demo intelligence
+          // Merge market research into extracted intelligence for complete data handoff
+          const mergedIntelligence = {
+            ...intel,
+            // Include market research data in extracted_intelligence for Strategy Document
+            marketResearch: marketResearch,
+            positioning: marketResearch?.positioning,
+            audiencePainPoints: marketResearch?.audiencePainPoints,
+            keyDifferentiators: marketResearch?.keyDifferentiators,
+            industryInsights: marketResearch?.industryInsights,
+            messagingDirection: marketResearch?.messagingDirection,
+            competitiveAngle: marketResearch?.competitiveAngle,
+            // Brand data captured in this step
+            logoUrl: logo,
+            brandColors: {
+              primary: colors.primary,
+              secondary: colors.secondary,
+              accent: colors.accent,
+            },
+            brandFonts: {
+              heading: fontSettings.h1,
+              body: fontSettings.body,
+            },
+            source: 'demo',
+            migratedAt: new Date().toISOString(),
+          };
+          
+          // Create consultation from demo intelligence with ALL data
           const { data: newConsultation, error: createError } = await supabase
             .from('consultations')
             .insert({
@@ -935,17 +962,23 @@ export default function EnhancedBrandSetup() {
               target_audience: intel.audience,
               unique_value: intel.valueProp,
               competitor_differentiator: intel.competitorDifferentiator,
-              audience_pain_points: intel.painPoints ? [intel.painPoints] : [],
+              audience_pain_points: marketResearch?.audiencePainPoints || (intel.painPoints ? [intel.painPoints] : []),
+              key_benefits: marketResearch?.keyDifferentiators || [],
               authority_markers: intel.proofElements ? [intel.proofElements] : [],
-              extracted_intelligence: {
-                ...intel,
-                source: 'demo',
-                migratedAt: new Date().toISOString(),
-              },
+              extracted_intelligence: mergedIntelligence,
+              // Store market research in strategy_brief for Strategy Document to access
+              strategy_brief: marketResearch ? {
+                positioning: marketResearch.positioning,
+                messagingDirection: marketResearch.messagingDirection,
+                competitiveAngle: marketResearch.competitiveAngle,
+                audiencePainPoints: marketResearch.audiencePainPoints,
+                keyDifferentiators: marketResearch.keyDifferentiators,
+                industryInsights: marketResearch.industryInsights,
+              } : null,
               business_name: companyName,
               website_url: websiteUrl,
               communication_style: communicationStyle as any,
-              consultation_status: 'not_started',
+              consultation_status: 'brief_generated',
               status: 'in_progress',
               readiness_score: readiness,
               flow_state: 'brand_captured',
@@ -960,11 +993,13 @@ export default function EnhancedBrandSetup() {
               .update({
                 claimed_by: user.id,
                 claimed_at: new Date().toISOString(),
+                continued_to_consultation: true,
               })
               .eq('session_id', sessionId)
               .is('claimed_by', null);
             
-            console.log('✅ [EnhancedBrandSetup] Created consultation from demo:', newConsultation.id);
+            console.log('✅ [EnhancedBrandSetup] Created consultation from demo with full intelligence:', newConsultation.id);
+            console.log('✅ [EnhancedBrandSetup] Readiness score:', readiness, 'Market research included:', !!marketResearch);
             navigate(`/strategy-document?consultationId=${newConsultation.id}`, { replace: true });
             return;
           } else {

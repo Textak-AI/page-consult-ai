@@ -143,31 +143,49 @@ export default function StrategyDocument() {
   }, [consultation, accumulator]);
 
   const score = useMemo(() => {
+    // Check for market research in multiple locations (could be in extracted_intelligence from demo migration)
+    const hasMarketResearch = !!accumulator?.marketData || 
+      !!(intelligence as any)?.marketResearch ||
+      !!(consultation?.strategy_brief);
+    
     const calculatedScore = calculateIntelligenceScore(intelligence, {
-      marketResearchComplete: !!accumulator?.marketData,
+      marketResearchComplete: hasMarketResearch,
     });
-    console.log('📄 [Strategy] Intelligence score:', calculatedScore.totalScore);
+    console.log('📄 [Strategy] Intelligence score:', calculatedScore.totalScore, '| Market research:', hasMarketResearch);
     return calculatedScore;
-  }, [intelligence, accumulator]);
+  }, [intelligence, accumulator, consultation]);
 
-  // Get strategy data
+  // Get strategy data - check multiple sources for migrated demo data
   const strategyData = useMemo((): Record<string, any> => {
-    const brief = consultation?.strategy_brief || accumulator?.strategyData;
+    const brief = consultation?.strategy_brief || 
+      (intelligence as any)?.marketResearch ||
+      accumulator?.strategyData;
     return brief || {};
-  }, [consultation, accumulator]);
+  }, [consultation, accumulator, intelligence]);
 
-  // Get market data with proper typing
+  // Get market data with proper typing - check extracted_intelligence for migrated demo data
   const marketData = useMemo((): Partial<ConciergeMarketData> => {
-    return accumulator?.marketData || {};
-  }, [accumulator]);
+    const fromAccumulator = accumulator?.marketData;
+    const fromIntelligence = (intelligence as any)?.marketResearch;
+    return fromAccumulator || fromIntelligence || {};
+  }, [accumulator, intelligence]);
 
-  // Extract pain points as array
+  // Extract pain points as array - check multiple sources
   const painPointsArray = useMemo(() => {
+    // Check strategy_brief first (from demo migration)
+    const briefPainPoints = (consultation?.strategy_brief as any)?.audiencePainPoints;
+    if (Array.isArray(briefPainPoints) && briefPainPoints.length > 0) return briefPainPoints;
+    
+    // Check extracted_intelligence marketResearch (from demo migration)
+    const intelPainPoints = (intelligence as any)?.audiencePainPoints;
+    if (Array.isArray(intelPainPoints) && intelPainPoints.length > 0) return intelPainPoints;
+    
+    // Fallback to original locations
     const painPoints = intelligence?.painPoints || accumulator?.consultationData?.painPoints;
     if (Array.isArray(painPoints)) return painPoints;
     if (typeof painPoints === 'string') return painPoints.split(',').map(p => p.trim()).filter(Boolean);
     return [];
-  }, [intelligence, accumulator]);
+  }, [intelligence, accumulator, consultation]);
 
   if (loading) {
     return (
