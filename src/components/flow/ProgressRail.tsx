@@ -96,11 +96,11 @@ export function ProgressRail({ currentStep, flowState, className, onMilestone }:
   return (
     <TooltipProvider delayDuration={200}>
       <div className={cn(
-        'w-full bg-slate-900 border-b border-slate-700/50 flex-shrink-0',
+        'w-full bg-gradient-to-b from-slate-900/80 to-transparent flex-shrink-0',
         railHeight,
         className
       )}>
-        <div className="h-full max-w-5xl mx-auto px-4 flex items-center">
+        <div className="h-full max-w-4xl mx-auto px-6 flex items-center">
           <div className="flex items-center justify-between w-full">
             {steps.map((step, index) => {
               const status = stepStatuses[step.id];
@@ -116,13 +116,13 @@ export function ProgressRail({ currentStep, flowState, className, onMilestone }:
                 <div key={step.id} className="flex items-center flex-1">
                   {/* Connecting Line (before node, except first) */}
                   {!isFirst && (
-                    <div className="flex-1 mx-1 md:mx-2 lg:mx-3 relative h-1">
-                      {/* Background line */}
-                      <div className="absolute inset-0 bg-slate-700 rounded-full" />
+                    <div className="flex-1 mx-2 md:mx-3 lg:mx-4 relative h-0.5">
+                      {/* Background line - subtle */}
+                      <div className="absolute inset-0 bg-slate-700/40 rounded-full" />
                       
                       {/* Progress fill - animates when previous step is completed */}
                       <motion.div
-                        className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500 to-cyan-400"
+                        className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/80 to-cyan-400/80"
                         initial={{ scaleX: 0 }}
                         animate={{ 
                           scaleX: prevStatus?.completed ? 1 : 0,
@@ -269,13 +269,13 @@ export function ProgressRail({ currentStep, flowState, className, onMilestone }:
 
                   {/* Connecting Line (after node, except last) */}
                   {!isLast && (
-                    <div className="flex-1 mx-1 md:mx-2 lg:mx-3 relative h-1">
-                      {/* Background line */}
-                      <div className="absolute inset-0 bg-slate-700 rounded-full" />
+                    <div className="flex-1 mx-2 md:mx-3 lg:mx-4 relative h-0.5">
+                      {/* Background line - subtle */}
+                      <div className="absolute inset-0 bg-slate-700/40 rounded-full" />
                       
                       {/* Progress fill */}
                       <motion.div
-                        className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500"
+                        className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/80 to-cyan-500/80"
                         initial={{ scaleX: 0 }}
                         animate={{ 
                           scaleX: status.completed ? 1 : 0,
