@@ -30,7 +30,7 @@ import { StrategyBrief } from '@/components/strategy-brief/StrategyBrief';
 import { getClientLayoutIntelligence, type PageStructureItem, type LayoutIntelligence } from '@/lib/layoutIntelligence';
 import type { ConsultationArtifacts } from '@/lib/artifactDetection';
 
-interface Tab {
+export interface Tab {
   id: string;
   label: string;
   shortLabel: string;
@@ -42,9 +42,23 @@ interface Tab {
 interface IntelligenceTabsProps {
   onContinue: () => void;
   onReopenEmailGate: () => void;
+  // When true, hides the internal tab bar (for use with external unified nav)
+  hideTabBar?: boolean;
+  // External tab control (when hideTabBar is true)
+  externalActiveTab?: string;
+  onExternalTabChange?: (tabId: string) => void;
+  // Expose available tabs for external rendering
+  onTabsReady?: (tabs: Tab[]) => void;
 }
 
-export function IntelligenceTabs({ onContinue, onReopenEmailGate }: IntelligenceTabsProps) {
+export function IntelligenceTabs({ 
+  onContinue, 
+  onReopenEmailGate,
+  hideTabBar = false,
+  externalActiveTab,
+  onExternalTabChange,
+  onTabsReady
+}: IntelligenceTabsProps) {
   const { 
     state, 
     shouldShowObjectionPanel, 
@@ -52,8 +66,12 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
     confirmIndustrySelection
   } = useIntelligence();
   
-  const [activeTab, setActiveTab] = useState('intelligence');
+  const [internalActiveTab, setInternalActiveTab] = useState('intelligence');
   const [seenTabs, setSeenTabs] = useState<Set<string>>(new Set(['intelligence']));
+  
+  // Use external tab control if provided, otherwise use internal state
+  const activeTab = externalActiveTab ?? internalActiveTab;
+  const setActiveTab = onExternalTabChange ?? setInternalActiveTab;
   const [newDataTabs, setNewDataTabs] = useState<Set<string>>(new Set());
   const [showBriefReview, setShowBriefReview] = useState(false);
 
@@ -157,9 +175,17 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
 
   const canGenerate = score.totalScore >= 70;
 
+  // Notify parent of available tabs for external rendering
+  useEffect(() => {
+    if (onTabsReady) {
+      onTabsReady(availableTabs);
+    }
+  }, [availableTabs.length, onTabsReady]);
+
   return (
     <div className="flex flex-col h-full relative">
-      {/* Tab Bar - more breathing room */}
+      {/* Tab Bar - only show when not using external tab bar */}
+      {!hideTabBar && (
       <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-white/5 bg-slate-900/50 overflow-x-auto">
         {availableTabs.map((tab) => {
           const Icon = tab.icon;
@@ -241,6 +267,7 @@ export function IntelligenceTabs({ onContinue, onReopenEmailGate }: Intelligence
           );
         })}
       </div>
+      )}
 
       {/* Tab Content - single scroll container */}
       <div className="flex-1 overflow-y-auto pb-28">
