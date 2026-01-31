@@ -24,6 +24,8 @@ import { toast } from 'sonner';
 import { getNextStep, updateFlowState } from '@/services/flowEngine';
 import { CommunicationStyleCard } from '@/components/brand/CommunicationStyleCard';
 import { intelligenceConcierge, type IntelligenceAccumulator, type BrandData } from '@/lib/intelligenceConcierge';
+import { ProgressRail } from '@/components/flow/ProgressRail';
+import type { FlowState } from '@/hooks/useFlowNavigation';
 
 interface CommunicationStyle {
   tone: { descriptors: string[]; primary: string };
@@ -1123,8 +1125,27 @@ export default function EnhancedBrandSetup() {
     );
   }
 
+  // Build flow state for ProgressRail
+  const flowState: FlowState = useMemo(() => {
+    // Get consultation score from demo session or consultation
+    const consultationScore = demoSession?.readiness || 
+                              (demoSession?.extracted_intelligence as any)?.readinessScore ||
+                              70; // Default to 70 if we're on brand setup (means consultation passed)
+    
+    return {
+      consultationScore,
+      brandVisited: true, // We're on brand setup
+      strategyVisited: false,
+      sessionId: sessionId || searchParams.get('consultationId'),
+      consultationId: searchParams.get('consultationId'),
+    };
+  }, [demoSession, sessionId, searchParams]);
+
   return (
     <div className="min-h-screen bg-slate-900">
+      {/* Progress Rail */}
+      <ProgressRail currentStep="brand" flowState={flowState} />
+      
       {/* Header */}
       <div className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-6">

@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { IntelligenceProvider, useIntelligence } from "@/contexts/IntelligenceContext";
 import SoftLockDemo from "@/components/landing/SoftLockDemo";
 import { BrandDetectionPrompt } from "@/components/demo/BrandDetectionPrompt";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { ProgressRail } from "@/components/flow/ProgressRail";
+import type { FlowState } from "@/hooks/useFlowNavigation";
 
 // Inner component that has access to IntelligenceContext
 function TryDemoContent() {
