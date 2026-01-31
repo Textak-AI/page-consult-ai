@@ -464,12 +464,15 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
             {/* Main Content - Chat + Sidebar with proper padding on all sides */}
             <div className="flex-1 flex overflow-hidden relative z-10 p-6 lg:p-8 gap-4">
               
-              {/* Chat Container with glass panel effect */}
-              <main className="flex-1 flex flex-col min-w-0 relative rounded-2xl overflow-hidden">
+              {/* Chat Column - Progress Rail + Chat Container */}
+              <div className="flex-1 flex flex-col min-w-0">
                 {/* Progress Rail - inside chat column on desktop (side-by-side layout) */}
-                <div className="hidden lg:block">
+                <div className="hidden lg:block relative z-20">
                   <ProgressRail currentStep="consultation" flowState={flowState} />
                 </div>
+                
+              {/* Chat Container with glass panel effect */}
+              <main className="flex-1 flex flex-col min-w-0 relative rounded-2xl overflow-hidden">
                 
                 {/* Muted circuitry background */}
                 <MutedCircuitBackground />
@@ -654,6 +657,7 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
                   </form>
                 </div>
               </main>
+              </div>{/* End Chat Column wrapper */}
               
               {/* Intel Sidebar - Desktop only, with proper right margin */}
               <aside className="hidden lg:flex w-[480px] flex-shrink-0 bg-slate-900/40 border border-slate-800/30 rounded-2xl flex-col overflow-hidden">
