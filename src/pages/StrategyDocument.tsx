@@ -215,6 +215,7 @@ export default function StrategyDocument() {
   // Build flow state for ProgressRail
   const flowState: FlowState = useMemo(() => ({
     consultationScore: score.totalScore,
+    briefGenerated: true, // Brief was generated to reach strategy
     brandVisited: true, // We're in strategy, so brand was visited
     strategyVisited: true, // We're on strategy
     sessionId: consultationId,

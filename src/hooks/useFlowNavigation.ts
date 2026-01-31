@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-export type FlowStep = 'consultation' | 'brand' | 'strategy' | 'generate';
+export type FlowStep = 'consultation' | 'brief' | 'brand' | 'strategy' | 'generate';
 
 export interface FlowStepInfo {
   id: FlowStep;
@@ -13,6 +13,7 @@ export interface FlowStepInfo {
 
 export const FLOW_STEPS: FlowStepInfo[] = [
   { id: 'consultation', label: 'Consultation', shortLabel: 'Consult', path: '/try', icon: '💬' },
+  { id: 'brief', label: 'Brief', shortLabel: 'Brief', path: '/brief', icon: '📋' },
   { id: 'brand', label: 'Brand Setup', shortLabel: 'Brand', path: '/brand-setup', icon: '🎨' },
   { id: 'strategy', label: 'Strategy', shortLabel: 'Strategy', path: '/strategy-document', icon: '📋' },
   { id: 'generate', label: 'Generate', shortLabel: 'Generate', path: '/generate', icon: '🚀' },
@@ -20,6 +21,7 @@ export const FLOW_STEPS: FlowStepInfo[] = [
 
 export interface FlowState {
   consultationScore: number;
+  briefGenerated: boolean;
   brandVisited: boolean;
   strategyVisited: boolean;
   sessionId: string | null;
@@ -53,13 +55,17 @@ export function useFlowNavigation(
 
   // Calculate step statuses
   const stepStatuses = useMemo((): Record<FlowStep, StepStatus> => {
-    const { consultationScore, brandVisited, strategyVisited } = flowState;
+    const { consultationScore, briefGenerated, brandVisited, strategyVisited } = flowState;
     
     // Consultation is always available
     const consultationCompleted = consultationScore >= 70;
     
-    // Brand unlocked when consultation score >= 70
-    const brandUnlocked = consultationScore >= 70;
+    // Brief unlocked when consultation score >= 70
+    const briefUnlocked = consultationScore >= 70;
+    const briefCompleted = briefGenerated;
+    
+    // Brand unlocked when brief is complete
+    const brandUnlocked = briefCompleted;
     const brandCompleted = brandVisited;
     
     // Strategy unlocked when brand step visited
@@ -77,12 +83,19 @@ export function useFlowNavigation(
         locked: false,
         score: consultationScore > 0 ? `${consultationScore} pts` : undefined,
       },
+      brief: {
+        completed: briefCompleted,
+        current: currentStep === 'brief',
+        available: briefUnlocked,
+        locked: !briefUnlocked,
+        lockReason: 'Reach 70 pts to unlock',
+      },
       brand: {
         completed: brandCompleted,
         current: currentStep === 'brand',
         available: brandUnlocked,
         locked: !brandUnlocked,
-        lockReason: 'Complete consultation to unlock',
+        lockReason: 'Generate brief to unlock',
       },
       strategy: {
         completed: strategyCompleted,

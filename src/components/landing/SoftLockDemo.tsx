@@ -373,6 +373,7 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
   // Build flow state for ProgressRail
   const flowState: FlowState = useMemo(() => ({
     consultationScore: score.totalScore,
+    briefGenerated: false, // Brief not generated yet during consultation
     brandVisited: false,
     strategyVisited: false,
     sessionId: state.sessionId || null,
