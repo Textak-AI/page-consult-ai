@@ -1137,6 +1137,26 @@ export default function EnhancedBrandSetup() {
     </div>
   );
 
+  // Build flow state for ProgressRail - MUST be before any conditional returns (Rules of Hooks)
+  // Extract primitive values for stable dependencies to avoid infinite re-renders
+  const demoReadiness = demoSession?.readiness;
+  const demoIntelReadiness = (demoSession?.extracted_intelligence as any)?.readinessScore;
+  const consultationIdFromParams = searchParams.get('consultationId');
+  
+  const flowState: FlowState = useMemo(() => {
+    // Get consultation score from demo session or consultation
+    const consultationScore = demoReadiness || demoIntelReadiness || 70; // Default to 70 if we're on brand setup (means consultation passed)
+    
+    return {
+      consultationScore,
+      briefGenerated: true, // Brief was generated to reach brand setup
+      brandVisited: true, // We're on brand setup
+      strategyVisited: false,
+      sessionId: sessionId || consultationIdFromParams,
+      consultationId: consultationIdFromParams,
+    };
+  }, [demoReadiness, demoIntelReadiness, sessionId, consultationIdFromParams]);
+
   // Show loading state while fetching session
   if (isLoadingSession) {
     return (
@@ -1180,23 +1200,6 @@ export default function EnhancedBrandSetup() {
       </div>
     );
   }
-
-  // Build flow state for ProgressRail
-  const flowState: FlowState = useMemo(() => {
-    // Get consultation score from demo session or consultation
-    const consultationScore = demoSession?.readiness || 
-                              (demoSession?.extracted_intelligence as any)?.readinessScore ||
-                              70; // Default to 70 if we're on brand setup (means consultation passed)
-    
-    return {
-      consultationScore,
-      briefGenerated: true, // Brief was generated to reach brand setup
-      brandVisited: true, // We're on brand setup
-      strategyVisited: false,
-      sessionId: sessionId || searchParams.get('consultationId'),
-      consultationId: searchParams.get('consultationId'),
-    };
-  }, [demoSession, sessionId, searchParams]);
 
   return (
     <div className="min-h-screen bg-slate-900">
