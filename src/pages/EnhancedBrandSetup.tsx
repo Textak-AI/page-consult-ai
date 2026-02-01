@@ -357,7 +357,8 @@ export default function EnhancedBrandSetup() {
     };
 
     loadSessionData();
-  }, [sessionId, searchParams, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
   
   // Font matching states
   const [fontMatches, setFontMatches] = useState<{
