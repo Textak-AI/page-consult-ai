@@ -478,6 +478,22 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
     }
   }, [score.totalScore]);
 
+  // Handle Brand step click from Progress Rail
+  const handleBrandClick = useCallback(() => {
+    // Only allow Brand step if Brief is complete (score >= 70)
+    if (score.totalScore >= 70) {
+      const currentSessionId = state.sessionId || localStorage.getItem('pageconsult_session_id');
+      if (currentSessionId) {
+        navigate(`/brand-setup?session=${currentSessionId}`);
+      } else {
+        // Fallback: trigger the normal flow which will handle session creation
+        handleGenerateClick();
+      }
+    } else {
+      console.log('[Brand Click] Brief not complete yet');
+    }
+  }, [score.totalScore, state.sessionId, navigate]);
+
   return (
     <div id="demo">
       {/* Preview Widget - shows when unlocked */}
@@ -560,6 +576,8 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
                 currentStep="consultation" 
                 flowState={flowState}
                 onBriefClick={handleBriefClick}
+                onBrandClick={handleBrandClick}
+                briefComplete={score.totalScore >= 70}
               />
             </div>
 
