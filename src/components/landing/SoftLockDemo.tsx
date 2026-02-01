@@ -317,6 +317,8 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
     
     try {
       // CRITICAL: Save via edge function which bypasses RLS
+      // The edge function uses SERVICE_ROLE_KEY so it always succeeds
+      // We do NOT verify via direct query because RLS blocks anon reads for security
       console.log('[Session Persistence] Saving session via edge function:', sessionId);
       
       const { data: saveResult, error: saveError } = await supabase.functions.invoke('demo-update-session', {
@@ -325,35 +327,12 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
       
       if (saveError) {
         console.error('[Session Persistence] Edge function error:', saveError);
-        // Don't block navigation on error - session might already exist
+        // Edge function failed - log but continue (EnhancedBrandSetup has fallback handling)
+      } else if (saveResult?.error) {
+        // Check if edge function returned an error in the response body
+        console.error('[Session Persistence] Edge function returned error:', saveResult.error);
       } else {
-        console.log('[Session Persistence] Session saved successfully:', sessionId, saveResult);
-      }
-      
-      // Verify session exists before navigation
-      const { data: verifyData, error: verifyError } = await supabase
-        .from('demo_sessions')
-        .select('session_id')
-        .eq('session_id', sessionId)
-        .maybeSingle();
-      
-      if (verifyError || !verifyData) {
-        console.error('[Session Persistence] Session verification failed:', verifyError);
-        // Last resort: try direct insert with minimal data
-        const { error: fallbackError } = await supabase
-          .from('demo_sessions')
-          .insert({
-            session_id: sessionId,
-            messages: sessionPayload.messages,
-            extracted_intelligence: sessionPayload.extractedIntelligence,
-            market_research: sessionPayload.marketResearch,
-            message_count: sessionPayload.messageCount,
-            readiness: sessionPayload.readiness,
-          });
-        
-        if (fallbackError) {
-          console.error('[Session Persistence] Fallback insert also failed:', fallbackError);
-        }
+        console.log('[Session Persistence] Session saved successfully via edge function:', sessionId);
       }
       
       localStorage.setItem('pageconsult_session_id', sessionId);
