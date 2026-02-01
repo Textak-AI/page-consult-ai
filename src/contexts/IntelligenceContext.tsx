@@ -99,6 +99,12 @@ export interface ExtractedIntelligence {
   targetMarket: string | null;    // Industry of their BUYERS (if different from provider)
   businessType: 'B2B' | 'B2C' | 'Both' | null;
   
+  // Website & Brand data (extracted from URL detection)
+  websiteUrl: string | null;
+  companyName: string | null;
+  logoUrl: string | null;
+  colors: string[] | null;
+  
   // Full values (for Hero/CTA generation - max 150 chars)
   industryFull: string | null;
   audienceFull: string | null;
@@ -274,6 +280,11 @@ const initialState: IntelligenceState = {
     // Target Aesthetic System
     targetMarket: null,
     businessType: null,
+    // Website & Brand data
+    websiteUrl: null,
+    companyName: null,
+    logoUrl: null,
+    colors: null,
     // Full values (for Hero/CTA generation)
     industryFull: null,
     audienceFull: null,
@@ -467,6 +478,11 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
             valuePropSummary: intel.valuePropSummary || null,
             edgeSummary: intel.edgeSummary || null,
             painSummary: intel.painSummary || null,
+            // Website & Brand data
+            websiteUrl: intel.websiteUrl || null,
+            companyName: intel.companyName || null,
+            logoUrl: intel.logoUrl || null,
+            colors: intel.colors || null,
           } : prev.extracted,
           conversation: messages.map((m: any) => ({
             role: m.role,
@@ -893,6 +909,11 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           // Target Aesthetic System
           targetMarket: extractedData.targetMarket || state.extracted.targetMarket,
           businessType: extractedData.businessType || state.extracted.businessType,
+          // Website & Brand data (from URL detection)
+          websiteUrl: websiteIntelligence?.url || detectedUrls[0] || state.extracted.websiteUrl,
+          companyName: websiteIntelligence?.companyName || state.extracted.companyName,
+          logoUrl: websiteIntelligence?.logoUrl || state.extracted.logoUrl,
+          colors: websiteIntelligence?.brandColors || state.extracted.colors,
           // Full values (for Hero/CTA generation)
           industryFull: extractedData.industryFull || state.extracted.industryFull,
           audienceFull: extractedData.audienceFull || state.extracted.audienceFull,
@@ -939,6 +960,11 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
             // Target Aesthetic System
             targetMarket: extractedData.targetMarket || prev.extracted.targetMarket,
             businessType: extractedData.businessType || prev.extracted.businessType,
+            // Website & Brand data (from URL detection)
+            websiteUrl: websiteIntelligence?.url || detectedUrls[0] || prev.extracted.websiteUrl,
+            companyName: websiteIntelligence?.companyName || prev.extracted.companyName,
+            logoUrl: websiteIntelligence?.logoUrl || prev.extracted.logoUrl,
+            colors: websiteIntelligence?.brandColors || prev.extracted.colors,
             // Full values (for Hero/CTA generation)
             industryFull: extractedData.industryFull || prev.extracted.industryFull,
             audienceFull: extractedData.audienceFull || prev.extracted.audienceFull,
