@@ -1024,7 +1024,7 @@ function GenerateContent() {
         .from("consultations")
         .select("*")
         .eq("user_id", user.id)
-        .in("status", ["completed", "imported_from_demo"])
+        .in("status", ["completed", "in_progress"]) // Valid: 'in_progress' or 'completed'
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();

@@ -228,8 +228,8 @@ export default function Wizard() {
           goal: mapped.competitorDifferentiator || 'Generate leads',
           extracted_intelligence: JSON.parse(JSON.stringify(mapped)), // Ensure it's valid JSON
           readiness_score: readiness,
-          status: 'imported_from_demo' as const,
-          consultation_status: 'in_progress' as const,
+          status: 'in_progress' as const, // Valid: 'in_progress' or 'completed'
+          consultation_status: 'wizard_in_progress' as const, // Valid: not_started, demo_started, demo_complete, wizard_in_progress, wizard_complete, generation_ready
         };
         
         const { data: savedConsultation, error: saveError } = await supabase
@@ -1243,8 +1243,8 @@ Ready to build this? Or want to adjust the approach first?`,
           goal: extractedData.goal || null,
           extracted_intelligence: JSON.parse(JSON.stringify(extractedIntelligence || extractedData)),
           readiness_score: overallReadiness,
-          status: 'completed' as const,
-          consultation_status: 'completed' as const,
+          status: 'completed' as const, // Valid: 'in_progress' or 'completed'
+          consultation_status: 'wizard_complete' as const, // Valid: not_started, demo_started, demo_complete, wizard_in_progress, wizard_complete, generation_ready
           strategy_brief: strategyBrief || null,
           business_name: extractedData.businessName || null,
         };

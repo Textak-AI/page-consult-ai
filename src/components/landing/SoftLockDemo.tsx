@@ -348,7 +348,8 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
           flow_state: 'brand_setup',
           extracted_intelligence: demoIntelligence,
           readiness_score: state.readiness,
-          status: 'active',
+          status: 'in_progress', // Valid: 'in_progress' or 'completed'
+          consultation_status: 'demo_complete', // Valid: not_started, demo_started, demo_complete, wizard_in_progress, wizard_complete, generation_ready
         };
         
         const { data: consultation, error: consultationError } = await supabase

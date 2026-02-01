@@ -1004,7 +1004,7 @@ export default function EnhancedBrandSetup() {
               business_name: companyName,
               website_url: websiteUrl,
               communication_style: communicationStyle as any,
-              consultation_status: 'brief_generated',
+              consultation_status: 'demo_complete', // Valid: not_started, demo_started, demo_complete, wizard_in_progress, wizard_complete, generation_ready
               status: 'in_progress',
               readiness_score: readiness,
               flow_state: 'brand_captured',
