@@ -352,113 +352,40 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
       if (user) {
         console.log('[Auth Check] User is authenticated, skipping signup:', user.email);
         
-        // Create or update consultation for the authenticated user
-        // CRITICAL FIX: Use two-step approach to avoid 409 conflicts
-        // First check if consultation exists, then update or insert
+        // Create or update consultation using upsert
+        // Uses guest_session_id UNIQUE constraint for conflict resolution
+        console.log('[Consultation] Saving via upsert, session:', sessionId);
+        
+        const consultationData = {
+          user_id: user.id,
+          guest_session_id: sessionId,
+          flow_state: 'brand_setup',
+          extracted_intelligence: demoIntelligence,
+          readiness_score: state.readiness,
+          status: 'in_progress',
+          consultation_status: 'demo_complete',
+        };
+        
+        const { data: upsertResult, error: upsertError } = await supabase
+          .from('consultations')
+          .upsert(consultationData, { 
+            onConflict: 'guest_session_id',
+            ignoreDuplicates: false 
+          })
+          .select('id')
+          .single();
+        
         let consultationId: string | null = null;
         
-        // Step 1: Check for existing consultation with this guest_session_id
-        const { data: existingConsultation } = await supabase
-          .from('consultations')
-          .select('id, user_id')
-          .eq('guest_session_id', sessionId)
-          .maybeSingle();
-        
-        if (existingConsultation) {
-          // Update existing consultation if we own it or it's unclaimed
-          if (!existingConsultation.user_id || existingConsultation.user_id === user.id) {
-            const { error: updateError } = await supabase
-              .from('consultations')
-              .update({
-                user_id: user.id,
-                flow_state: 'brand_setup',
-                extracted_intelligence: demoIntelligence,
-                readiness_score: state.readiness,
-                status: 'in_progress',
-                consultation_status: 'demo_complete',
-              })
-              .eq('id', existingConsultation.id);
-            
-            if (updateError) {
-              console.error('[Consultation] Failed to update:', updateError);
-            } else {
-              consultationId = existingConsultation.id;
-              console.log('[Consultation] Updated existing:', consultationId);
-            }
-          } else {
-            // Consultation belongs to another user - create a new one without the guest_session_id
-            console.warn('[Consultation] Existing consultation belongs to another user, creating new');
-            const { data: newConsultation, error: insertError } = await supabase
-              .from('consultations')
-              .insert({
-                user_id: user.id,
-                flow_state: 'brand_setup',
-                extracted_intelligence: demoIntelligence,
-                readiness_score: state.readiness,
-                status: 'in_progress',
-                consultation_status: 'demo_complete',
-              })
-              .select('id')
-              .single();
-            
-            if (insertError) {
-              console.error('[Consultation] Failed to insert new:', insertError);
-            } else {
-              consultationId = newConsultation?.id || null;
-            }
-          }
+        if (upsertError) {
+          console.error('[Consultation] Upsert failed:', {
+            code: upsertError.code,
+            message: upsertError.message,
+            details: (upsertError as any).details
+          });
         } else {
-          // No existing consultation found via SELECT - try insert
-          const consultationData = {
-            user_id: user.id,
-            guest_session_id: sessionId,
-            flow_state: 'brand_setup',
-            extracted_intelligence: demoIntelligence,
-            readiness_score: state.readiness,
-            status: 'in_progress',
-            consultation_status: 'demo_complete',
-          };
-          
-          const { data: newConsultation, error: insertError } = await supabase
-            .from('consultations')
-            .insert(consultationData)
-            .select('id')
-            .single();
-          
-          if (insertError) {
-            // Log detailed error info for debugging
-            console.log('[Consultation] Insert failed, error details:', {
-              code: insertError.code,
-              message: insertError.message,
-              status: (insertError as any).status,
-              details: (insertError as any).details,
-              hint: (insertError as any).hint
-            });
-            
-            // ANY insert failure should trigger fallback update
-            // This handles 409 conflict, RLS issues, duplicate keys, etc.
-            console.log('[Consultation] Attempting fallback update by guest_session_id');
-            
-            const { data: updatedConsultation, error: updateError } = await supabase
-              .from('consultations')
-              .update({
-                ...consultationData,
-                user_id: user.id  // Ensure we claim the consultation
-              })
-              .eq('guest_session_id', sessionId)
-              .select('id')
-              .single();
-            
-            if (updateError) {
-              console.error('[Consultation] Fallback update also failed:', updateError);
-            } else {
-              consultationId = updatedConsultation?.id || null;
-              console.log('[Consultation] Fallback update succeeded - consultation claimed:', consultationId);
-            }
-          } else {
-            consultationId = newConsultation?.id || null;
-            console.log('[Consultation] Created new:', consultationId);
-          }
+          consultationId = upsertResult?.id || null;
+          console.log('[Consultation] Upsert succeeded, id:', consultationId);
         }
         
         // Use the consultationId that was set above
