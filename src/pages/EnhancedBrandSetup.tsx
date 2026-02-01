@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Globe, Image, FileText, Palette, ArrowRight, 
@@ -334,11 +334,40 @@ export default function EnhancedBrandSetup() {
         if (intel?.valueProp || intel?.uniqueValue) {
           setTagline(intel.valueProp || intel.uniqueValue);
         }
-        if (intel?.websiteUrl) {
-          setWebsiteUrl(intel.websiteUrl);
+        
+        // Pre-fill website URL - check intelligence first, then extract from conversation
+        let extractedUrl = intel?.websiteUrl;
+        if (!extractedUrl && demoData.messages && Array.isArray(demoData.messages)) {
+          // Extract URL from conversation messages as fallback
+          const urlRegex = /(https?:\/\/[^\s]+)|([a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/gi;
+          for (const msg of demoData.messages as any[]) {
+            if (msg.role === 'user' && msg.content) {
+              const matches = msg.content.match(urlRegex);
+              if (matches && matches.length > 0) {
+                extractedUrl = matches[0].startsWith('http') ? matches[0] : `https://${matches[0]}`;
+                console.log('🔗 [EnhancedBrandSetup] Extracted URL from conversation:', extractedUrl);
+                break;
+              }
+            }
+          }
         }
+        if (extractedUrl) {
+          setWebsiteUrl(extractedUrl);
+        }
+        
+        // Pre-fill logo if available
         if (intel?.logoUrl) {
           setLogo(intel.logoUrl);
+        }
+        
+        // Pre-fill colors if available
+        if (intel?.colors && Array.isArray(intel.colors) && intel.colors.length > 0) {
+          setColors({
+            primary: intel.colors[0] || DEFAULT_COLORS.primary,
+            secondary: intel.colors[1] || intel.colors[0] || DEFAULT_COLORS.secondary,
+            accent: intel.colors[2] || intel.colors[1] || DEFAULT_COLORS.accent,
+          });
+          console.log('🎨 [EnhancedBrandSetup] Pre-filled colors from intelligence:', intel.colors);
         }
       } else {
         console.error('❌ [EnhancedBrandSetup] Not found in either table:', { 
@@ -462,6 +491,30 @@ export default function EnhancedBrandSetup() {
       document.head.appendChild(link);
     }
   }, [detectedFonts, customFonts]);
+
+  // Track if auto-extraction has been triggered
+  const [autoExtractTriggered, setAutoExtractTriggered] = useState(false);
+  
+  // Store pending URL for auto-extraction (will be processed after handleAnalyzeWebsite is defined)
+  const pendingAutoExtractRef = useRef<string | null>(null);
+
+  // Check if we should queue auto-extraction
+  useEffect(() => {
+    // Only run once per session and when data is ready
+    if (autoExtractTriggered || isLoadingSession || isAnalyzing) return;
+    
+    // Check if we have a URL but no brand data
+    const hasUrl = websiteUrl && websiteUrl.trim().length > 0;
+    const hasLogo = logo && logo !== '';
+    const hasCustomColors = colors.primary !== DEFAULT_COLORS.primary;
+    
+    // If we have a URL but no logo or custom colors, queue extraction
+    if (hasUrl && !hasLogo && !hasCustomColors) {
+      console.log('🚀 [EnhancedBrandSetup] Queuing auto-extraction for:', websiteUrl);
+      pendingAutoExtractRef.current = websiteUrl;
+      setAutoExtractTriggered(true);
+    }
+  }, [websiteUrl, logo, colors, isLoadingSession, autoExtractTriggered, isAnalyzing]);
 
   // Calculate brand completeness
   const brandCompleteness = useMemo(() => {
@@ -621,6 +674,20 @@ export default function EnhancedBrandSetup() {
       setIsAnalyzing(false);
     }
   };
+
+  // Effect to trigger auto-extraction after handleAnalyzeWebsite is defined
+  useEffect(() => {
+    if (pendingAutoExtractRef.current && !isAnalyzing) {
+      console.log('🚀 [EnhancedBrandSetup] Executing queued auto-extraction for:', pendingAutoExtractRef.current);
+      pendingAutoExtractRef.current = null;
+      
+      // Delay slightly to ensure UI is ready
+      setTimeout(() => {
+        handleAnalyzeWebsite();
+      }, 500);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoExtractTriggered]);
 
   // Extract communication style from website copy
   const extractCommunicationStyle = async (pageCopy: string, company: string, industry: string) => {
