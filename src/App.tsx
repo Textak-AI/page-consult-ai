@@ -162,6 +162,7 @@ const App = () => {
                 <Route path="/page/:slug" element={<PublicPage />} />
                 <Route path="/p/:slug" element={<ProspectPage />} />
                 <Route path="/try" element={<TryDemo />} />
+                <Route path="/demo" element={<Navigate to="/try" replace />} />
                 <Route path="/admin/reset-data" element={<AdminResetData />} />
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -73,6 +73,10 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
   // Session saving state
   const [isSavingSession, setIsSavingSession] = useState(false);
   
+  // Track last persisted state to avoid duplicate saves
+  const lastPersistedScoreRef = useRef(0);
+  const persistenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Intelligence score state for unified action bar
   const [intelScore, setIntelScore] = useState(0);
   const [canGenerate, setCanGenerate] = useState(false);
@@ -385,6 +389,95 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
     consultationId: null,
   }), [score.totalScore, state.sessionId]);
 
+  // ============================================
+  // PERSIST SESSION TO SUPABASE ON PROGRESS
+  // ============================================
+  // Debounced persistence: saves session after score changes or conversation updates
+  useEffect(() => {
+    // Skip if no meaningful data yet
+    if (state.conversation.length === 0) return;
+    
+    // Skip if score hasn't changed significantly (within 5 points)
+    const scoreDiff = Math.abs(score.totalScore - lastPersistedScoreRef.current);
+    if (scoreDiff < 5 && state.conversation.length < 3) return;
+    
+    // Clear any pending save
+    if (persistenceTimeoutRef.current) {
+      clearTimeout(persistenceTimeoutRef.current);
+    }
+    
+    // Debounce: save after 2 seconds of inactivity
+    persistenceTimeoutRef.current = setTimeout(async () => {
+      const sessionId = state.sessionId || localStorage.getItem('pageconsult_session_id') || crypto.randomUUID();
+      
+      // Store session ID for future use
+      if (!localStorage.getItem('pageconsult_session_id')) {
+        localStorage.setItem('pageconsult_session_id', sessionId);
+      }
+      
+      const sessionData = {
+        sessionId,
+        messages: state.conversation.map(msg => ({
+          role: msg.role,
+          content: msg.content,
+        })),
+        extractedIntelligence: {
+          industry: state.extracted.industry || null,
+          audience: state.extracted.audience || null,
+          valueProp: state.extracted.valueProp || null,
+          competitorDifferentiator: state.extracted.competitorDifferentiator || null,
+          painPoints: state.extracted.painPoints || null,
+          buyerObjections: state.extracted.buyerObjections || null,
+          proofElements: state.extracted.proofElements || null,
+          companyName: state.businessCard?.companyName || state.companyResearch?.companyName || null,
+          websiteUrl: state.businessCard?.website || null,
+          logoUrl: state.extractedLogo || null,
+          colors: state.extractedBrand?.colors?.all || [],
+        },
+        marketResearch: {
+          marketSize: state.market.marketSize || null,
+          buyerPersona: state.market.buyerPersona || null,
+          commonObjections: state.market.commonObjections || [],
+          industryInsights: state.market.industryInsights || [],
+        },
+        messageCount: state.conversation.length,
+        readiness: score.totalScore,
+      };
+      
+      try {
+        const { error } = await supabase.functions.invoke('demo-update-session', {
+          body: sessionData,
+        });
+        
+        if (error) {
+          console.error('[Session Persist] Edge function error:', error);
+        } else {
+          console.log('[Session Persist] Session saved, score:', score.totalScore);
+          lastPersistedScoreRef.current = score.totalScore;
+        }
+      } catch (err) {
+        console.error('[Session Persist] Failed to save session:', err);
+      }
+    }, 2000);
+    
+    return () => {
+      if (persistenceTimeoutRef.current) {
+        clearTimeout(persistenceTimeoutRef.current);
+      }
+    };
+  }, [state.conversation.length, score.totalScore, state.extracted, state.market]);
+
+  // Handle Brief step click from Progress Rail
+  const handleBriefClick = useCallback(() => {
+    // Brief click should trigger the same action as "Generate Your Brief" button
+    if (score.totalScore >= 70) {
+      handleGenerateClick();
+    } else {
+      // If not ready, show a toast or feedback
+      console.log('[Brief Click] Score too low:', score.totalScore);
+    }
+  }, [score.totalScore]);
+
   return (
     <div id="demo">
       {/* Preview Widget - shows when unlocked */}
@@ -466,6 +559,7 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
               <UnifiedNavBar 
                 currentStep="consultation" 
                 flowState={flowState}
+                onBriefClick={handleBriefClick}
               />
             </div>
 
