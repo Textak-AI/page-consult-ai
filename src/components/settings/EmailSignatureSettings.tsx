@@ -11,6 +11,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Mail, Phone, Globe, User, Briefcase, Loader2, Image, Code } from "lucide-react";
+import DOMPurify from "dompurify";
+
+// Configure DOMPurify for email signature HTML - allow safe tags/attributes only
+const sanitizeSignatureHtml = (html: string): string => {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['div', 'p', 'span', 'a', 'img', 'br', 'strong', 'em', 'b', 'i', 'u', 
+                   'table', 'tr', 'td', 'th', 'tbody', 'thead', 'tfoot', 'font', 'hr'],
+    ALLOWED_ATTR: ['href', 'src', 'alt', 'style', 'class', 'width', 'height', 'border', 
+                   'cellpadding', 'cellspacing', 'align', 'valign', 'bgcolor', 'color', 
+                   'face', 'size', 'target', 'rel'],
+    ALLOW_DATA_ATTR: false,
+    FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur']
+  });
+};
 
 interface SignatureData {
   signature_name: string;
@@ -309,7 +324,7 @@ export function EmailSignatureSettings() {
             {!signature.signature_enabled ? (
               <span className="text-muted-foreground italic">Signature disabled</span>
             ) : signature.signature_type === "html" && signature.signature_html ? (
-              <div dangerouslySetInnerHTML={{ __html: signature.signature_html }} />
+              <div dangerouslySetInnerHTML={{ __html: sanitizeSignatureHtml(signature.signature_html) }} />
             ) : (
               renderSimplePreview()
             )}
