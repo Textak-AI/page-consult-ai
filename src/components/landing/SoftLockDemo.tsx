@@ -287,33 +287,73 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
       sessionStorage.setItem('demoEmail', state.email);
     }
     
-    const sessionData = {
-      session_id: sessionId,
-      extracted_intelligence: demoIntelligence,
-      market_research: demoIntelligence.marketResearch,
+    // CRITICAL FIX: Use edge function instead of direct upsert
+    // The edge function uses SERVICE_ROLE_KEY to bypass RLS
+    const sessionPayload = {
+      sessionId,
       messages: state.conversation.map(msg => ({
         role: msg.role,
         content: msg.content,
       })),
+      extractedIntelligence: {
+        industry: state.extracted.industry || null,
+        audience: state.extracted.audience || null,
+        valueProp: state.extracted.valueProp || null,
+        competitorDifferentiator: state.extracted.competitorDifferentiator || null,
+        painPoints: state.extracted.painPoints || null,
+        buyerObjections: state.extracted.buyerObjections || null,
+        proofElements: state.extracted.proofElements || null,
+        companyName: state.businessCard?.companyName || state.companyResearch?.companyName || null,
+        websiteUrl: state.businessCard?.website || null,
+        logoUrl: state.extractedLogo || null,
+        colors: state.extractedBrand?.colors?.all || [],
+        // Include full intelligence data
+        ...demoIntelligence,
+      },
+      marketResearch: demoIntelligence.marketResearch,
+      messageCount: state.conversation.length,
       readiness: state.readiness,
-      completed: isReady,
-      continued_to_consultation: true,
     };
     
     try {
-      // Use upsert in case session already exists from earlier interaction
-      const { error } = await supabase
-        .from('demo_sessions')
-        .upsert([sessionData], { onConflict: 'session_id' });
+      // CRITICAL: Save via edge function which bypasses RLS
+      console.log('[Session Persistence] Saving session via edge function:', sessionId);
       
-      if (error) {
-        console.error('[Session Persistence] Failed to save demo session:', {
-          message: error.message,
-          details: error.details,
-          code: error.code,
-        });
+      const { data: saveResult, error: saveError } = await supabase.functions.invoke('demo-update-session', {
+        body: sessionPayload,
+      });
+      
+      if (saveError) {
+        console.error('[Session Persistence] Edge function error:', saveError);
+        // Don't block navigation on error - session might already exist
       } else {
-        console.log('[Session Persistence] Demo session saved successfully:', sessionId);
+        console.log('[Session Persistence] Session saved successfully:', sessionId, saveResult);
+      }
+      
+      // Verify session exists before navigation
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('demo_sessions')
+        .select('session_id')
+        .eq('session_id', sessionId)
+        .maybeSingle();
+      
+      if (verifyError || !verifyData) {
+        console.error('[Session Persistence] Session verification failed:', verifyError);
+        // Last resort: try direct insert with minimal data
+        const { error: fallbackError } = await supabase
+          .from('demo_sessions')
+          .insert({
+            session_id: sessionId,
+            messages: sessionPayload.messages,
+            extracted_intelligence: sessionPayload.extractedIntelligence,
+            market_research: sessionPayload.marketResearch,
+            message_count: sessionPayload.messageCount,
+            readiness: sessionPayload.readiness,
+          });
+        
+        if (fallbackError) {
+          console.error('[Session Persistence] Fallback insert also failed:', fallbackError);
+        }
       }
       
       localStorage.setItem('pageconsult_session_id', sessionId);
