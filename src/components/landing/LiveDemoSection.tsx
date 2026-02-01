@@ -206,6 +206,11 @@ export default function LiveDemoSection() {
       objectionsSummary: state.extracted.objectionsSummary || null,
       proofElements: state.extracted.proofElements || null,
       proofSummary: state.extracted.proofSummary || null,
+      // Website & Brand data (from business card or extraction)
+      websiteUrl: state.businessCard?.website || state.extracted.websiteUrl || null,
+      companyName: state.businessCard?.companyName || state.companyResearch?.companyName || state.extracted.companyName || null,
+      logoUrl: state.extractedLogo || state.extracted.logoUrl || null,
+      colors: state.extractedBrand?.colors?.all || state.extracted.colors || null,
       marketResearch: {
         marketSize: state.market.marketSize || null,
         buyerPersona: state.market.buyerPersona || null,

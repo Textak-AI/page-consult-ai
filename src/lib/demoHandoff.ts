@@ -217,11 +217,19 @@ export async function migrateDemoToUser(userId: string): Promise<{
         authority_markers: handoff.extracted.proofElements ? [handoff.extracted.proofElements] : [],
         extracted_intelligence: {
           ...handoff.extracted,
+          // Include website/brand data if available
+          websiteUrl: handoff.extracted.websiteUrl || handoff.brandData?.websiteUrl || null,
+          companyName: handoff.extracted.companyName || handoff.brandData?.companyName || null,
+          logoUrl: handoff.extracted.logoUrl || handoff.brandData?.logoUrl || null,
+          colors: handoff.extracted.colors || handoff.brandData?.colors || null,
           marketResearch: handoff.market,
           artifacts: handoff.artifacts,
           source: 'demo',
           migratedAt: new Date().toISOString(),
         },
+        // Also store website_url at top level for easy access
+        website_url: handoff.extracted.websiteUrl || handoff.brandData?.websiteUrl || null,
+        business_name: handoff.extracted.companyName || handoff.brandData?.companyName || handoff.extracted.businessName || null,
         strategy_brief: handoff.strategyBrief || null,
         consultation_status: 'not_started',
         status: 'in_progress',

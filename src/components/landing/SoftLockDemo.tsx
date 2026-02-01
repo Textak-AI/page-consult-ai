@@ -267,6 +267,11 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
       painPointsFull: state.extracted.painPointsFull || state.extracted.painPoints || null,
       buyerObjectionsFull: state.extracted.buyerObjectionsFull || state.extracted.buyerObjections || null,
       proofElementsFull: state.extracted.proofElementsFull || state.extracted.proofElements || null,
+      // Website & Brand data (from business card or extraction)
+      websiteUrl: state.businessCard?.website || state.extracted.websiteUrl || null,
+      companyName: state.businessCard?.companyName || state.companyResearch?.companyName || state.extracted.companyName || null,
+      logoUrl: state.extractedLogo || state.extracted.logoUrl || null,
+      colors: state.extractedBrand?.colors?.all || state.extracted.colors || null,
       marketResearch: {
         marketSize: state.market.marketSize || null,
         buyerPersona: state.market.buyerPersona || null,

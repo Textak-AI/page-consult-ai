@@ -273,11 +273,7 @@ export default function EnhancedBrandSetup() {
         }
         
         // Pre-fill website URL if available
-        if (consultationData.website_url) {
-          setWebsiteUrl(consultationData.website_url);
-        } else if (intel?.websiteUrl) {
-          setWebsiteUrl(intel.websiteUrl);
-        }
+        let foundWebsiteUrl = consultationData.website_url || intel?.websiteUrl;
         
         // Pre-fill logo if available
         if (intel?.logoUrl) {
@@ -291,6 +287,63 @@ export default function EnhancedBrandSetup() {
             secondary: intel.colors[1] || intel.colors[0] || DEFAULT_COLORS.secondary,
             accent: intel.colors[2] || intel.colors[1] || DEFAULT_COLORS.accent,
           });
+        }
+        
+        // FALLBACK: If no websiteUrl found but consultation has guest_session_id, 
+        // try to load demo_sessions record to extract URL from conversation
+        if (!foundWebsiteUrl && consultationData.guest_session_id) {
+          console.log('📂 [EnhancedBrandSetup] No websiteUrl in consultation, checking demo_sessions via guest_session_id...');
+          
+          const { data: demoFallback } = await supabase
+            .from('demo_sessions')
+            .select('messages, extracted_intelligence')
+            .eq('id', consultationData.guest_session_id)
+            .maybeSingle();
+          
+          if (demoFallback) {
+            const demoIntel = demoFallback.extracted_intelligence as any;
+            foundWebsiteUrl = demoIntel?.websiteUrl;
+            
+            // Extract URL from conversation messages as last resort
+            if (!foundWebsiteUrl && demoFallback.messages && Array.isArray(demoFallback.messages)) {
+              const urlRegex = /(https?:\/\/[^\s]+)|([a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/gi;
+              for (const msg of demoFallback.messages as any[]) {
+                if (msg.role === 'user' && msg.content) {
+                  const matches = msg.content.match(urlRegex);
+                  if (matches && matches.length > 0) {
+                    foundWebsiteUrl = matches[0].startsWith('http') ? matches[0] : `https://${matches[0]}`;
+                    console.log('🔗 [EnhancedBrandSetup] Extracted URL from demo conversation:', foundWebsiteUrl);
+                    break;
+                  }
+                }
+              }
+            }
+            
+            // Pre-fill logo from demo if not already set
+            if (!logo && demoIntel?.logoUrl) {
+              setLogo(demoIntel.logoUrl);
+            }
+            
+            // Pre-fill colors from demo if still defaults
+            if (demoIntel?.colors && Array.isArray(demoIntel.colors) && demoIntel.colors.length > 0) {
+              if (colors.primary === DEFAULT_COLORS.primary) {
+                setColors({
+                  primary: demoIntel.colors[0] || DEFAULT_COLORS.primary,
+                  secondary: demoIntel.colors[1] || demoIntel.colors[0] || DEFAULT_COLORS.secondary,
+                  accent: demoIntel.colors[2] || demoIntel.colors[1] || DEFAULT_COLORS.accent,
+                });
+              }
+            }
+            
+            // Pre-fill company name from demo if not set
+            if (!companyFromData && (demoIntel?.companyName || demoIntel?.businessName)) {
+              setCompanyName(demoIntel.companyName || demoIntel.businessName);
+            }
+          }
+        }
+        
+        if (foundWebsiteUrl) {
+          setWebsiteUrl(foundWebsiteUrl);
         }
         
         setIsLoadingSession(false);

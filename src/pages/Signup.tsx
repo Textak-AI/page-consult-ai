@@ -432,7 +432,8 @@ export default function Signup() {
             // Store consultation ID for brand-setup to find
             sessionStorage.setItem('pendingConsultationId', consultationId);
             console.log('🚀 [Auth] Redirecting to brand-setup with consultation:', consultationId);
-            navigate(`/brand-setup?consultationId=${consultationId}`, { replace: true });
+            // Include session param as fallback for demo_sessions data access
+            navigate(`/brand-setup?consultationId=${consultationId}&session=${sessionIdFromUrl}`, { replace: true });
             return;
           }
         }
