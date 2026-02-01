@@ -1,10 +1,100 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Sanitize HTML signature to prevent XSS - server-side validation
+function sanitizeHtmlSignature(html: string): string {
+  // List of allowed tags for email signatures
+  const allowedTags = new Set([
+    'div', 'p', 'span', 'a', 'img', 'br', 'strong', 'em', 'b', 'i', 'u',
+    'table', 'tr', 'td', 'th', 'tbody', 'thead', 'tfoot', 'font', 'hr'
+  ]);
+  
+  // List of allowed attributes
+  const allowedAttrs = new Set([
+    'href', 'src', 'alt', 'style', 'class', 'width', 'height', 'border',
+    'cellpadding', 'cellspacing', 'align', 'valign', 'bgcolor', 'color',
+    'face', 'size', 'target', 'rel'
+  ]);
+  
+  // Dangerous patterns to remove
+  const dangerousPatterns = [
+    /<script[\s\S]*?<\/script>/gi,
+    /<iframe[\s\S]*?<\/iframe>/gi,
+    /<object[\s\S]*?<\/object>/gi,
+    /<embed[\s\S]*?>/gi,
+    /<form[\s\S]*?<\/form>/gi,
+    /javascript:/gi,
+    /vbscript:/gi,
+    /on\w+\s*=/gi,  // Event handlers like onerror=, onload=, onclick=
+    /data:/gi,      // Data URLs can contain scripts
+  ];
+  
+  let sanitized = html;
+  
+  // Remove dangerous patterns
+  for (const pattern of dangerousPatterns) {
+    sanitized = sanitized.replace(pattern, '');
+  }
+  
+  // Parse and filter using DOM
+  try {
+    const doc = new DOMParser().parseFromString(sanitized, 'text/html');
+    if (!doc || !doc.body) return sanitized; // Return regex-cleaned version if parse fails
+    
+    const docRef = doc; // Capture for closure
+    
+    // Recursively clean nodes
+    function cleanNode(node: any): void {
+      if (!node) return;
+      
+      // Remove disallowed elements
+      if (node.nodeType === 1) { // Element node
+        const tagName = node.tagName?.toLowerCase();
+        
+        // Remove script, iframe, etc. entirely
+        if (tagName && !allowedTags.has(tagName)) {
+          // Keep text content but remove the tag
+          const textContent = node.textContent || '';
+          const textNode = docRef.createTextNode(textContent);
+          node.parentNode?.replaceChild(textNode, node);
+          return;
+        }
+        
+        // Remove dangerous attributes
+        const attrs = Array.from(node.attributes || []);
+        for (const attr of attrs) {
+          const attrName = (attr as any).name?.toLowerCase();
+          if (!allowedAttrs.has(attrName) || attrName.startsWith('on')) {
+            node.removeAttribute(attrName);
+          }
+          // Check for javascript: in href/src
+          const attrValue = ((attr as any).value || '').toLowerCase();
+          if (attrValue.includes('javascript:') || attrValue.includes('vbscript:')) {
+            node.removeAttribute(attrName);
+          }
+        }
+      }
+      
+      // Recursively clean children
+      const children = Array.from(node.childNodes || []);
+      for (const child of children) {
+        cleanNode(child);
+      }
+    }
+    
+    cleanNode(doc.body);
+    return doc.body.innerHTML || '';
+  } catch (e) {
+    console.error('[sanitizeHtmlSignature] Parse error, falling back to regex only:', e);
+    return sanitized;
+  }
+}
 
 interface SendEmailRequest {
   prospectId: string;
@@ -198,9 +288,11 @@ serve(async (req) => {
     // Replace line breaks with <br> tags
     let htmlEmailBody = emailBody.replace(/\n/g, "<br>");
     
-    // Add HTML signature if using HTML type
+    // Add HTML signature if using HTML type - SANITIZE to prevent XSS
     if (signatureType === "html" && signatureHtml && profile?.signature_enabled !== false) {
-      htmlEmailBody += "<br><br>" + signatureHtml;
+      const sanitizedSignature = sanitizeHtmlSignature(signatureHtml);
+      console.log("[send-prospect-email] Sanitized HTML signature for email");
+      htmlEmailBody += "<br><br>" + sanitizedSignature;
     }
     
     const loopsPayload = {
