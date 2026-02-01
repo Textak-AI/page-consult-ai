@@ -13,6 +13,8 @@ interface UnifiedNavBarProps {
   onBriefClick?: () => void;
   /** Custom handler for Brand step click - if provided, will be called instead of navigation */
   onBrandClick?: () => void;
+  /** If true, Brief step is marked as complete */
+  briefComplete?: boolean;
 }
 
 const STEP_ICONS: Record<FlowStep, React.ComponentType<{ className?: string }>> = {
@@ -34,9 +36,29 @@ export function UnifiedNavBar({
   className,
   onBriefClick,
   onBrandClick,
+  briefComplete = false,
 }: UnifiedNavBarProps) {
   const { steps, stepStatuses, navigateToStep } = useFlowNavigation(currentStep, flowState);
   const isMobile = useIsMobile();
+  
+  // Override Brief step status if briefComplete is passed
+  const adjustedStepStatuses = { ...stepStatuses };
+  if (briefComplete && adjustedStepStatuses.brief) {
+    adjustedStepStatuses.brief = {
+      ...adjustedStepStatuses.brief,
+      completed: true,
+      available: true,
+      locked: false,
+    };
+    // Also unlock Brand step when Brief is complete
+    if (adjustedStepStatuses.brand) {
+      adjustedStepStatuses.brand = {
+        ...adjustedStepStatuses.brand,
+        available: true,
+        locked: false,
+      };
+    }
+  }
 
   // Handle step click with custom handlers for Brief and Brand
   const handleStepClick = (step: FlowStep) => {
@@ -70,7 +92,7 @@ export function UnifiedNavBar({
           {/* Progress Rail nodes - centered */}
           <div className="flex items-center h-full px-4 lg:px-6 gap-2 lg:gap-3">
             {steps.map((step, index) => {
-              const status = stepStatuses[step.id];
+              const status = adjustedStepStatuses[step.id];
               const Icon = STEP_ICONS[step.id];
               const isLast = index === steps.length - 1;
 

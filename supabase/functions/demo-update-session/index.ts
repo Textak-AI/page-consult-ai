@@ -24,57 +24,58 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get IP hash from request (for rate limiting)
+    // Get IP hash from request (for rate limiting only, NOT for session validation)
     const forwarded = req.headers.get('x-forwarded-for');
     const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
     const ipHash = await hashString(ip);
 
-    // Check rate limit (5 sessions per IP per hour)
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const { count } = await supabase
-      .from('demo_sessions')
-      .select('*', { count: 'exact', head: true })
-      .eq('ip_hash', ipHash)
-      .gte('created_at', oneHourAgo);
-
-    if (count && count >= 5) {
-      return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded', rateLimited: true }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Security: Check if this session exists and validate IP hash to prevent session hijacking
+    // Check rate limit (5 NEW sessions per IP per hour)
+    // Only apply rate limit to new session creation, not updates
     const { data: existingSession } = await supabase
       .from('demo_sessions')
-      .select('ip_hash')
+      .select('id, ip_hash, session_id')
       .eq('session_id', sessionId)
       .maybeSingle();
 
-    // If session exists, verify the IP hash matches (prevent session hijacking)
-    if (existingSession && existingSession.ip_hash && existingSession.ip_hash !== ipHash) {
-      console.warn(`[Security] Session hijacking attempt detected for session ${sessionId}. Expected IP hash: ${existingSession.ip_hash}, Got: ${ipHash}`);
-      return new Response(
-        JSON.stringify({ error: 'Session validation failed' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // If session doesn't exist, check rate limit for new session creation
+    if (!existingSession) {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count } = await supabase
+        .from('demo_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('ip_hash', ipHash)
+        .gte('created_at', oneHourAgo);
+
+      if (count && count >= 5) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded', rateLimited: true }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
+
+    // NOTE: Removed strict IP hash validation for session updates
+    // Users' IPs can change (mobile networks, VPNs, etc.) which was causing
+    // false "session hijacking" errors. Rate limiting is still applied.
 
     // Calculate readiness score if not provided
     const calculatedReadiness = readiness ?? (extractedIntelligence ? calculateReadinessFromIntel(extractedIntelligence) : 0);
 
-    // Upsert session (only if IP hash matches or session is new)
-    // Include industryCategory and industryConfidence from extractedIntelligence
+    // Upsert session data
     const sessionData: Record<string, unknown> = {
       session_id: sessionId,
       messages: messages || [],
       extracted_intelligence: extractedIntelligence || {},
       market_research: marketResearch || {},
       message_count: messageCount || 0,
-      ip_hash: ipHash,
       readiness: calculatedReadiness,
       completed: calculatedReadiness >= 70,
     };
+
+    // Only set ip_hash on new sessions
+    if (!existingSession) {
+      sessionData.ip_hash = ipHash;
+    }
 
     const { error } = await supabase
       .from('demo_sessions')
@@ -84,6 +85,8 @@ serve(async (req) => {
       console.error('Error upserting session:', error);
       throw error;
     }
+
+    console.log(`✅ Session ${sessionId} saved, readiness: ${calculatedReadiness}`);
 
     return new Response(
       JSON.stringify({ success: true }),
