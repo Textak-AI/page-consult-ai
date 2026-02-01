@@ -287,7 +287,8 @@ export default function LiveDemoSection() {
           flow_state: 'brand_setup',
           extracted_intelligence: demoIntelligence,
           readiness_score: state.readiness,
-          status: 'active',
+          status: 'in_progress', // Must match CHECK constraint: 'in_progress' or 'completed'
+          consultation_status: 'demo_complete', // Must match CHECK constraint
         };
         
         const { data: consultation, error: consultationError } = await supabase

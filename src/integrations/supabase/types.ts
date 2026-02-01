@@ -602,7 +602,7 @@ export type Database = {
           {
             foreignKeyName: "consultations_guest_session_id_fkey"
             columns: ["guest_session_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "guest_sessions"
             referencedColumns: ["id"]
           },
