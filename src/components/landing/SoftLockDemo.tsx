@@ -426,39 +426,34 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
             .single();
           
           if (insertError) {
-            // Check if this is a conflict error (409 or duplicate key)
-            // This happens when RLS blocked the SELECT but the row exists
-            const isConflict = insertError.code === '23505' || 
-                               insertError.message?.includes('duplicate') ||
-                               insertError.code === '409' ||
-                               (insertError as any).status === 409;
+            // Log detailed error info for debugging
+            console.log('[Consultation] Insert failed, error details:', {
+              code: insertError.code,
+              message: insertError.message,
+              status: (insertError as any).status,
+              details: (insertError as any).details,
+              hint: (insertError as any).hint
+            });
             
-            if (isConflict) {
-              console.log('[Consultation] Insert conflict detected, attempting update by guest_session_id');
-              
-              // Try to update the orphan consultation
-              const { data: updatedConsultation, error: updateError } = await supabase
-                .from('consultations')
-                .update({
-                  user_id: user.id,
-                  flow_state: 'brand_setup',
-                  extracted_intelligence: demoIntelligence,
-                  readiness_score: state.readiness,
-                  status: 'in_progress',
-                  consultation_status: 'demo_complete',
-                })
-                .eq('guest_session_id', sessionId)
-                .select('id')
-                .single();
-              
-              if (updateError) {
-                console.error('[Consultation] Update also failed:', updateError);
-              } else {
-                consultationId = updatedConsultation?.id || null;
-                console.log('[Consultation] Claimed orphan consultation:', consultationId);
-              }
+            // ANY insert failure should trigger fallback update
+            // This handles 409 conflict, RLS issues, duplicate keys, etc.
+            console.log('[Consultation] Attempting fallback update by guest_session_id');
+            
+            const { data: updatedConsultation, error: updateError } = await supabase
+              .from('consultations')
+              .update({
+                ...consultationData,
+                user_id: user.id  // Ensure we claim the consultation
+              })
+              .eq('guest_session_id', sessionId)
+              .select('id')
+              .single();
+            
+            if (updateError) {
+              console.error('[Consultation] Fallback update also failed:', updateError);
             } else {
-              console.error('[Consultation] Failed to insert:', insertError);
+              consultationId = updatedConsultation?.id || null;
+              console.log('[Consultation] Fallback update succeeded - consultation claimed:', consultationId);
             }
           } else {
             consultationId = newConsultation?.id || null;
