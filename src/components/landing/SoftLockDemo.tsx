@@ -408,23 +408,58 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
             }
           }
         } else {
-          // No existing consultation - insert new one
+          // No existing consultation found via SELECT - try insert
+          const consultationData = {
+            user_id: user.id,
+            guest_session_id: sessionId,
+            flow_state: 'brand_setup',
+            extracted_intelligence: demoIntelligence,
+            readiness_score: state.readiness,
+            status: 'in_progress',
+            consultation_status: 'demo_complete',
+          };
+          
           const { data: newConsultation, error: insertError } = await supabase
             .from('consultations')
-            .insert({
-              user_id: user.id,
-              guest_session_id: sessionId,
-              flow_state: 'brand_setup',
-              extracted_intelligence: demoIntelligence,
-              readiness_score: state.readiness,
-              status: 'in_progress',
-              consultation_status: 'demo_complete',
-            })
+            .insert(consultationData)
             .select('id')
             .single();
           
           if (insertError) {
-            console.error('[Consultation] Failed to insert:', insertError);
+            // Check if this is a conflict error (409 or duplicate key)
+            // This happens when RLS blocked the SELECT but the row exists
+            const isConflict = insertError.code === '23505' || 
+                               insertError.message?.includes('duplicate') ||
+                               insertError.code === '409' ||
+                               (insertError as any).status === 409;
+            
+            if (isConflict) {
+              console.log('[Consultation] Insert conflict detected, attempting update by guest_session_id');
+              
+              // Try to update the orphan consultation
+              const { data: updatedConsultation, error: updateError } = await supabase
+                .from('consultations')
+                .update({
+                  user_id: user.id,
+                  flow_state: 'brand_setup',
+                  extracted_intelligence: demoIntelligence,
+                  readiness_score: state.readiness,
+                  status: 'in_progress',
+                  consultation_status: 'demo_complete',
+                })
+                .eq('guest_session_id', sessionId)
+                .select('id')
+                .single();
+              
+              if (updateError) {
+                console.error('[Consultation] Update also failed:', updateError);
+              } else {
+                consultationId = updatedConsultation?.id || null;
+                console.log('[Consultation] Claimed orphan consultation:', consultationId);
+              }
+            } else {
+              console.error('[Consultation] Failed to insert:', insertError);
+            }
           } else {
             consultationId = newConsultation?.id || null;
             console.log('[Consultation] Created new:', consultationId);
