@@ -298,12 +298,25 @@ export default function EnhancedBrandSetup() {
       }
       
       // Fallback: check demo_sessions table
-      console.log('📂 [EnhancedBrandSetup] Not in consultations, checking demo_sessions...');
+      console.log('📂 [EnhancedBrandSetup] Not in consultations, checking demo_sessions...', {
+        idToLoad,
+        sessionIdFromUrl: sessionId,
+        consultationIdFromUrl: searchParams.get('consultationId'),
+      });
+      
       const { data: demoData, error: demoError } = await supabase
         .from('demo_sessions')
         .select('*')
         .eq('session_id', idToLoad)
         .maybeSingle();
+
+      // Log the query result for debugging
+      console.log('📂 [EnhancedBrandSetup] Demo query result:', {
+        hasData: !!demoData,
+        error: demoError?.message || null,
+        errorCode: demoError?.code || null,
+        dataId: demoData?.id || null,
+      });
 
       if (demoData) {
         console.log('✅ [EnhancedBrandSetup] Demo session loaded:', {
@@ -328,7 +341,12 @@ export default function EnhancedBrandSetup() {
           setLogo(intel.logoUrl);
         }
       } else {
-        console.error('❌ [EnhancedBrandSetup] Not found in either table:', { consultationError, demoError });
+        console.error('❌ [EnhancedBrandSetup] Not found in either table:', { 
+          consultationError: consultationError?.message, 
+          demoError: demoError?.message,
+          demoErrorCode: demoError?.code,
+          idToLoad,
+        });
         // Only set sessionNotFound if we were explicitly given a session ID to load
         if (sessionId || searchParams.get('consultationId')) {
           setSessionNotFound(true);
