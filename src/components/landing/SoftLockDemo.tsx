@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Loader2, X, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BusinessCardGateModal from './BusinessCardGateModal';
+import { BriefReviewModal } from '@/components/consultation/BriefReviewModal';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore } from '@/lib/intelligenceScoreCalculator';
 import { IntelligenceTabs } from '@/components/demo/IntelligenceTabs';
@@ -72,6 +73,9 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
   
   // Session saving state
   const [isSavingSession, setIsSavingSession] = useState(false);
+  
+  // Brief review modal state
+  const [showBriefReview, setShowBriefReview] = useState(false);
   
   // Track last persisted state to avoid duplicate saves
   const lastPersistedScoreRef = useRef(0);
@@ -203,7 +207,14 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
     });
   };
 
+  // Show Brief Review modal when user clicks "Generate Your Brief"
   const handleGenerateClick = () => {
+    setShowBriefReview(true);
+  };
+  
+  // Handle continuing from Brief Review modal to Brand Setup
+  const handleBriefReviewContinue = () => {
+    setShowBriefReview(false);
     handleContinueToWizard('wizard');
   };
 
@@ -342,27 +353,85 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
         console.log('[Auth Check] User is authenticated, skipping signup:', user.email);
         
         // Create or update consultation for the authenticated user
-        const consultationData = {
-          user_id: user.id,
-          guest_session_id: sessionId,
-          flow_state: 'brand_setup',
-          extracted_intelligence: demoIntelligence,
-          readiness_score: state.readiness,
-          status: 'in_progress', // Valid: 'in_progress' or 'completed'
-          consultation_status: 'demo_complete', // Valid: not_started, demo_started, demo_complete, wizard_in_progress, wizard_complete, generation_ready
-        };
+        // CRITICAL FIX: Use two-step approach to avoid 409 conflicts
+        // First check if consultation exists, then update or insert
+        let consultationId: string | null = null;
         
-        const { data: consultation, error: consultationError } = await supabase
+        // Step 1: Check for existing consultation with this guest_session_id
+        const { data: existingConsultation } = await supabase
           .from('consultations')
-          .upsert([consultationData], { onConflict: 'guest_session_id' })
-          .select('id')
-          .single();
+          .select('id, user_id')
+          .eq('guest_session_id', sessionId)
+          .maybeSingle();
         
-        if (consultationError) {
-          console.error('[Consultation] Failed to create/update:', consultationError);
+        if (existingConsultation) {
+          // Update existing consultation if we own it or it's unclaimed
+          if (!existingConsultation.user_id || existingConsultation.user_id === user.id) {
+            const { error: updateError } = await supabase
+              .from('consultations')
+              .update({
+                user_id: user.id,
+                flow_state: 'brand_setup',
+                extracted_intelligence: demoIntelligence,
+                readiness_score: state.readiness,
+                status: 'in_progress',
+                consultation_status: 'demo_complete',
+              })
+              .eq('id', existingConsultation.id);
+            
+            if (updateError) {
+              console.error('[Consultation] Failed to update:', updateError);
+            } else {
+              consultationId = existingConsultation.id;
+              console.log('[Consultation] Updated existing:', consultationId);
+            }
+          } else {
+            // Consultation belongs to another user - create a new one without the guest_session_id
+            console.warn('[Consultation] Existing consultation belongs to another user, creating new');
+            const { data: newConsultation, error: insertError } = await supabase
+              .from('consultations')
+              .insert({
+                user_id: user.id,
+                flow_state: 'brand_setup',
+                extracted_intelligence: demoIntelligence,
+                readiness_score: state.readiness,
+                status: 'in_progress',
+                consultation_status: 'demo_complete',
+              })
+              .select('id')
+              .single();
+            
+            if (insertError) {
+              console.error('[Consultation] Failed to insert new:', insertError);
+            } else {
+              consultationId = newConsultation?.id || null;
+            }
+          }
+        } else {
+          // No existing consultation - insert new one
+          const { data: newConsultation, error: insertError } = await supabase
+            .from('consultations')
+            .insert({
+              user_id: user.id,
+              guest_session_id: sessionId,
+              flow_state: 'brand_setup',
+              extracted_intelligence: demoIntelligence,
+              readiness_score: state.readiness,
+              status: 'in_progress',
+              consultation_status: 'demo_complete',
+            })
+            .select('id')
+            .single();
+          
+          if (insertError) {
+            console.error('[Consultation] Failed to insert:', insertError);
+          } else {
+            consultationId = newConsultation?.id || null;
+            console.log('[Consultation] Created new:', consultationId);
+          }
         }
         
-        const consultationId = consultation?.id;
+        // Use the consultationId that was set above
         const brandSetupUrl = consultationId 
           ? `/brand-setup?consultationId=${consultationId}`
           : `/brand-setup?session=${sessionId}`;
@@ -930,6 +999,15 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Brief Review Modal - shows before navigating to Brand Setup */}
+      <BriefReviewModal
+        isOpen={showBriefReview}
+        onClose={() => setShowBriefReview(false)}
+        onContinue={handleBriefReviewContinue}
+        intelligence={state.extracted}
+        readinessScore={state.readiness}
+      />
     </div>
   );
 }
