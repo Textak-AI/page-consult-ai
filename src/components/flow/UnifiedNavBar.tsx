@@ -9,6 +9,10 @@ interface UnifiedNavBarProps {
   currentStep: FlowStep;
   flowState: FlowState;
   className?: string;
+  /** Custom handler for Brief step click - if provided, will be called instead of navigation */
+  onBriefClick?: () => void;
+  /** Custom handler for Brand step click - if provided, will be called instead of navigation */
+  onBrandClick?: () => void;
 }
 
 const STEP_ICONS: Record<FlowStep, React.ComponentType<{ className?: string }>> = {
@@ -27,10 +31,33 @@ const prefersReducedMotion = typeof window !== 'undefined'
 export function UnifiedNavBar({ 
   currentStep, 
   flowState, 
-  className
+  className,
+  onBriefClick,
+  onBrandClick,
 }: UnifiedNavBarProps) {
   const { steps, stepStatuses, navigateToStep } = useFlowNavigation(currentStep, flowState);
   const isMobile = useIsMobile();
+
+  // Handle step click with custom handlers for Brief and Brand
+  const handleStepClick = (step: FlowStep) => {
+    const status = stepStatuses[step];
+    if (status.locked) return;
+
+    // Brief step: use custom handler if provided
+    if (step === 'brief' && onBriefClick) {
+      onBriefClick();
+      return;
+    }
+
+    // Brand step: use custom handler if provided
+    if (step === 'brand' && onBrandClick) {
+      onBrandClick();
+      return;
+    }
+
+    // Default navigation
+    navigateToStep(step);
+  };
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -53,7 +80,7 @@ export function UnifiedNavBar({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
-                        onClick={() => !status.locked && navigateToStep(step.id)}
+                        onClick={() => handleStepClick(step.id)}
                         disabled={status.locked}
                         className={cn(
                           'relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium',

@@ -121,6 +121,7 @@ export default function EnhancedBrandSetup() {
   // Demo session state
   const [demoSession, setDemoSession] = useState<any>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(!!sessionId);
+  const [sessionNotFound, setSessionNotFound] = useState(false);
   
   // State
   const [websiteUrl, setWebsiteUrl] = useState('');
@@ -328,6 +329,10 @@ export default function EnhancedBrandSetup() {
         }
       } else {
         console.error('❌ [EnhancedBrandSetup] Not found in either table:', { consultationError, demoError });
+        // Only set sessionNotFound if we were explicitly given a session ID to load
+        if (sessionId || searchParams.get('consultationId')) {
+          setSessionNotFound(true);
+        }
       }
       
       setIsLoadingSession(false);
@@ -1120,6 +1125,38 @@ export default function EnhancedBrandSetup() {
         <div className="text-center">
           <Loader2 className="w-8 h-8 text-purple-500 animate-spin mx-auto mb-4" />
           <p className="text-slate-400">Loading your session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if session not found
+  if (sessionNotFound) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6">
+            <X className="w-8 h-8 text-red-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">Session Not Found</h2>
+          <p className="text-slate-400 mb-6">
+            We couldn't find your consultation session. This can happen if the session expired or the link is invalid.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              onClick={() => navigate('/try')}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              Start New Consultation
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/')}
+              className="border-slate-600 text-slate-300 hover:bg-slate-800"
+            >
+              Go Home
+            </Button>
+          </div>
         </div>
       </div>
     );
