@@ -337,6 +337,85 @@ serve(async (req) => {
       }
     }
     
+    // Priority 6: Fetch and parse external CSS stylesheets for brand colors
+    // (Especially important for Webflow, Squarespace, and other CMS sites)
+    // Match both `rel=... href=...` and `href=... rel=...` patterns
+    const cssLinkPatterns = [
+      /<link[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["']/gi,
+      /<link[^>]*href=["']([^"']+\.css[^"']*)["'][^>]*rel=["']stylesheet["']/gi,
+      /<link[^>]*href=["']([^"']+\.css[^"']*)["'][^>]*>/gi, // Fallback: any .css file
+    ];
+    const cssLinks: string[] = [];
+    for (const pattern of cssLinkPatterns) {
+      const matches = html.matchAll(pattern);
+      for (const match of matches) {
+        const href = match[1];
+        if (!href.includes('googleapis.com/css') && !href.includes('fonts.') && !href.includes('icon') && !cssLinks.includes(href)) {
+          try {
+            const cssUrl = href.startsWith('http') ? href : new URL(href, baseUrl).href;
+            if (!cssLinks.includes(cssUrl)) {
+              cssLinks.push(cssUrl);
+            }
+          } catch (e) { /* ignore invalid URLs */ }
+        }
+      }
+    }
+    
+    console.log('[extract] Found CSS links:', cssLinks.length, cssLinks.slice(0, 2).map(u => u.slice(0, 60)));
+    
+    // Fetch first 2 CSS files (limit to avoid timeout)
+    for (const cssUrl of cssLinks.slice(0, 2)) {
+      try {
+        console.log('[extract] Fetching external CSS:', cssUrl.slice(0, 80));
+        const cssResponse = await fetch(cssUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PageConsultBot/1.0)' }
+        });
+        if (cssResponse.ok) {
+          const cssContent = await cssResponse.text();
+          console.log('[extract] CSS content length:', cssContent.length);
+          
+          // Extract colors from CSS classes that indicate brand colors
+          const externalCssPatterns = [
+            // Primary/brand color classes
+            /\.(?:primary|brand|accent|main|theme)[-_]?(?:color|bg|background)?[^{]*\{[^}]*(?:background(?:-color)?|color):\s*([^;}]+)/gi,
+            // Button/CTA classes  
+            /\.(?:btn|button|cta)(?:[-_]primary|[-_]main)?[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
+            // Color utility classes (common in Tailwind, Bootstrap, Webflow)
+            /\.(?:bg|background)[-_](?:primary|brand|accent|main)[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
+            /\.(?:text|font|color)[-_](?:primary|brand|accent|main)[^{]*\{[^}]*color:\s*([^;}]+)/gi,
+            // Link colors
+            /a(?:\:[a-z]+)?[^{]*\{[^}]*color:\s*(#[0-9a-fA-F]{3,8})/gi,
+            // Webflow-specific patterns
+            /\.w-button[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
+            /\.is[-_]?primary[^{]*\{[^}]*(?:background(?:-color)?|color|border-color):\s*([^;}]+)/gi,
+            /\.primary[-_]?(?:blue|color|bg)[^{]*\{[^}]*(?:background(?:-color)?|color):\s*([^;}]+)/gi,
+            // Root/body colors
+            /:root[^{]*\{[^}]*--(?:primary|brand|accent|main)(?:[-_]color)?:\s*([^;}]+)/gi,
+            /body[^{]*\{[^}]*(?:--(?:primary|brand|accent)|background(?:-color)?|color):\s*([^;}]+)/gi,
+          ];
+          
+          for (const pattern of externalCssPatterns) {
+            const matches = cssContent.matchAll(pattern);
+            for (const match of matches) {
+              addColor(match[1], 'cssVar', 3); // Treat external CSS brand classes as priority 3
+            }
+          }
+          
+          // Also look for CSS variables in external stylesheets
+          for (const pattern of cssVarPatterns) {
+            const matches = cssContent.matchAll(pattern);
+            for (const match of matches) {
+              addColor(match[1], 'cssVar', 2);
+            }
+          }
+          
+          console.log('[extract] Colors after external CSS:', collectedColors.length);
+        }
+      } catch (e) {
+        console.log('[extract] Failed to fetch CSS:', cssUrl.slice(0, 50));
+      }
+    }
+    
     // Sort by priority and vibrancy, deduplicate
     const sortedColors = collectedColors
       .sort((a, b) => {
@@ -472,61 +551,196 @@ serve(async (req) => {
     });
 
     // ============================================
-    // 4. LOGO EXTRACTION (priority order)
+    // 4. LOGO EXTRACTION (priority order with filtering)
     // ============================================
     
-    // Priority 1: Logo in header/nav
-    const headerLogoPatterns = [
-      /<(?:header|nav)[^>]*>[\s\S]*?<img[^>]*src=["']([^"']+)["'][^>]*(?:class|alt)=["'][^"']*logo/i,
-      /<(?:header|nav)[^>]*>[\s\S]*?<img[^>]*(?:class|alt)=["'][^"']*logo[^"']*["'][^>]*src=["']([^"']+)["']/i,
-      /<(?:header|nav)[^>]*>[\s\S]*?<img[^>]*src=["']([^"']*logo[^"']*)["']/i
-    ];
-    
-    for (const pattern of headerLogoPatterns) {
-      const match = html.match(pattern);
-      if (match && match[1] && !match[1].startsWith('data:')) {
-        extractedData.logoUrl = match[1];
-        console.log('[extract] Logo from header:', extractedData.logoUrl);
-        break;
-      }
-    }
-    
-    // Priority 2: Any img with "logo" in class, alt, or filename
-    if (!extractedData.logoUrl) {
-      const logoImgPatterns = [
-        /<img[^>]*class=["'][^"']*logo[^"']*["'][^>]*src=["']([^"']+)["']/i,
-        /<img[^>]*src=["']([^"']+)["'][^>]*class=["'][^"']*logo[^"']*["']/i,
-        /<img[^>]*alt=["'][^"']*logo[^"']*["'][^>]*src=["']([^"']+)["']/i,
-        /<img[^>]*src=["']([^"']*logo[^"']*)["']/i
+    // Helper: Check if URL/context seems to be from partner/investor sections
+    const isExcludedLogoContext = (imgTag: string, url: string): boolean => {
+      const lowerTag = imgTag.toLowerCase();
+      const lowerUrl = url.toLowerCase();
+      
+      // Exclude images from partner/investor/portfolio sections
+      const excludedPatterns = [
+        /investor/i, /portfolio/i, /partner/i, /backed/i, /funded/i,
+        /client/i, /customer/i, /testimonial/i, /press/i, /media/i,
+        /award/i, /badge/i, /certification/i, /trust/i,
+        /sponsor/i, /supporter/i, /featured/i, /as-seen/i,
       ];
       
-      for (const pattern of logoImgPatterns) {
-        const match = html.match(pattern);
-        if (match && match[1] && !match[1].startsWith('data:') && !match[1].includes('1x1') && !match[1].includes('pixel')) {
-          extractedData.logoUrl = match[1];
-          console.log('[extract] Logo from img:', extractedData.logoUrl);
+      for (const pattern of excludedPatterns) {
+        if (pattern.test(lowerTag) || pattern.test(lowerUrl)) {
+          console.log('[extract] Excluding logo (partner/investor context):', url.slice(0, 80));
+          return true;
+        }
+      }
+      
+      // Check if URL contains other company names (VC firms, etc.)
+      const vcFirmPatterns = [
+        /8vc/i, /a16z/i, /andreessen/i, /sequoia/i, /benchmark/i,
+        /greylock/i, /accel/i, /general-catalyst/i, /insight/i,
+        /kleiner/i, /khosla/i, /index-ventures/i, /founders-fund/i,
+        /tiger-global/i, /softbank/i, /ycombinator/i, /y-combinator/i,
+      ];
+      
+      for (const pattern of vcFirmPatterns) {
+        if (pattern.test(lowerUrl)) {
+          console.log('[extract] Excluding logo (VC firm detected):', url.slice(0, 80));
+          return true;
+        }
+      }
+      
+      return false;
+    };
+    
+    // Helper: Check if company name matches alt text
+    const companyNameForLogoMatching = extractedData.companyName?.toLowerCase().replace(/[^a-z0-9]/g, '') || '';
+    
+    const altMatchesCompany = (imgTag: string): boolean => {
+      if (!companyNameForLogoMatching) return false;
+      const altMatch = imgTag.match(/alt=["']([^"']+)["']/i);
+      if (!altMatch) return false;
+      const altText = altMatch[1].toLowerCase().replace(/[^a-z0-9]/g, '');
+      return altText.includes(companyNameForLogoMatching) || companyNameForLogoMatching.includes(altText);
+    };
+    
+    // Priority 1: Favicon/Apple touch icon (strongest signal - set by site owner)
+    const faviconPatterns = [
+      /<link[^>]*rel=["'](?:icon|shortcut icon)["'][^>]*href=["']([^"']+)["']/i,
+      /<link[^>]*href=["']([^"']+)["'][^>]*rel=["'](?:icon|shortcut icon)["']/i,
+      /<link[^>]*rel=["']apple-touch-icon[^"']*["'][^>]*href=["']([^"']+)["']/i,
+      /<link[^>]*href=["']([^"']+)["'][^>]*rel=["']apple-touch-icon[^"']*["']/i,
+    ];
+    
+    for (const pattern of faviconPatterns) {
+      const match = html.match(pattern);
+      if (match && match[1] && !match[1].startsWith('data:') && !match[1].includes('favicon.ico')) {
+        // Prefer larger icons (apple-touch-icon, etc.) over tiny favicons
+        const url = match[1];
+        if (url.includes('apple-touch') || url.includes('180x180') || url.includes('192x192') || url.includes('512x512')) {
+          extractedData.logoUrl = url;
+          console.log('[extract] Logo from favicon/apple-touch-icon:', extractedData.logoUrl);
           break;
         }
       }
     }
     
-    // Priority 3: Apple touch icon
-    if (!extractedData.logoUrl) {
-      const appleTouchIcon = html.match(/<link[^>]*rel=["']apple-touch-icon["'][^>]*href=["']([^"']+)["']/i)
-                          || html.match(/<link[^>]*href=["']([^"']+)["'][^>]*rel=["']apple-touch-icon["']/i);
-      if (appleTouchIcon) {
-        extractedData.logoUrl = appleTouchIcon[1];
-        console.log('[extract] Logo from apple-touch-icon:', extractedData.logoUrl);
+    // Priority 2: Extract header/nav section first for targeted search
+    const headerMatch = html.match(/<header[^>]*>([\s\S]*?)<\/header>/i);
+    const navMatch = html.match(/<nav[^>]*>([\s\S]*?)<\/nav>/i);
+    const headerContent = (headerMatch?.[0] || '') + (navMatch?.[0] || '');
+    
+    if (!extractedData.logoUrl && headerContent) {
+      // Look for images in header/nav with logo-related attributes
+      const headerImgMatches = headerContent.matchAll(/<img[^>]+>/gi);
+      
+      for (const imgMatch of headerImgMatches) {
+        const imgTag = imgMatch[0];
+        const srcMatch = imgTag.match(/src=["']([^"']+)["']/i);
+        if (!srcMatch) continue;
+        
+        const src = srcMatch[1];
+        if (src.startsWith('data:') || src.includes('1x1') || src.includes('pixel')) continue;
+        if (isExcludedLogoContext(imgTag, src)) continue;
+        
+        // Check if this looks like a logo
+        const isLogoCandidate = 
+          /class=["'][^"']*logo/i.test(imgTag) ||
+          /alt=["'][^"']*logo/i.test(imgTag) ||
+          /logo/i.test(src) ||
+          altMatchesCompany(imgTag) ||
+          /id=["'][^"']*logo/i.test(imgTag);
+        
+        if (isLogoCandidate) {
+          extractedData.logoUrl = src;
+          console.log('[extract] Logo from header (class/alt/src):', extractedData.logoUrl);
+          break;
+        }
+      }
+      
+      // If no explicit logo found in header, try first reasonable image in header
+      if (!extractedData.logoUrl) {
+        for (const imgMatch of headerContent.matchAll(/<img[^>]+>/gi)) {
+          const imgTag = imgMatch[0];
+          const srcMatch = imgTag.match(/src=["']([^"']+)["']/i);
+          if (!srcMatch) continue;
+          
+          const src = srcMatch[1];
+          if (src.startsWith('data:') || src.includes('1x1') || src.includes('pixel')) continue;
+          if (isExcludedLogoContext(imgTag, src)) continue;
+          
+          // Skip images that are clearly not logos (large dimensions, etc.)
+          const widthMatch = imgTag.match(/width=["']?(\d+)/i);
+          const heightMatch = imgTag.match(/height=["']?(\d+)/i);
+          const width = widthMatch ? parseInt(widthMatch[1]) : 0;
+          const height = heightMatch ? parseInt(heightMatch[1]) : 0;
+          
+          // Skip if dimensions suggest it's not a logo (too large)
+          if (width > 500 || height > 200) continue;
+          
+          extractedData.logoUrl = src;
+          console.log('[extract] Logo from header (first image):', extractedData.logoUrl);
+          break;
+        }
+      }
+      
+      // Priority 2b: SVG in header (often inline logos)
+      if (!extractedData.logoUrl) {
+        const svgInHeader = headerContent.match(/<svg[^>]*class=["'][^"']*logo[^"']*["'][^>]*>[\s\S]*?<\/svg>/i);
+        if (svgInHeader) {
+          // We found an SVG logo but can't extract it as URL, continue to other methods
+          console.log('[extract] Found SVG logo in header (cannot extract as URL)');
+        }
       }
     }
     
-    // Priority 4: og:image (last resort)
+    // Priority 3: Any img with alt text matching company name
+    if (!extractedData.logoUrl && companyNameForLogoMatching) {
+      const allImgTags = html.matchAll(/<img[^>]+>/gi);
+      for (const imgMatch of allImgTags) {
+        const imgTag = imgMatch[0];
+        if (altMatchesCompany(imgTag)) {
+          const srcMatch = imgTag.match(/src=["']([^"']+)["']/i);
+          if (srcMatch && !srcMatch[1].startsWith('data:') && !isExcludedLogoContext(imgTag, srcMatch[1])) {
+            extractedData.logoUrl = srcMatch[1];
+            console.log('[extract] Logo from alt matching company name:', extractedData.logoUrl);
+            break;
+          }
+        }
+      }
+    }
+    
+    // Priority 4: Any img with "logo" in class/id (NOT in URL to avoid partner logos)
+    if (!extractedData.logoUrl) {
+      const allImgTags = html.matchAll(/<img[^>]+>/gi);
+      for (const imgMatch of allImgTags) {
+        const imgTag = imgMatch[0];
+        const srcMatch = imgTag.match(/src=["']([^"']+)["']/i);
+        if (!srcMatch) continue;
+        
+        const src = srcMatch[1];
+        if (src.startsWith('data:') || src.includes('1x1') || src.includes('pixel')) continue;
+        if (isExcludedLogoContext(imgTag, src)) continue;
+        
+        // Only match class/id containing logo, NOT filename
+        const hasLogoClass = /class=["'][^"']*\blogo\b[^"']*["']/i.test(imgTag);
+        const hasLogoId = /id=["'][^"']*\blogo\b[^"']*["']/i.test(imgTag);
+        
+        if (hasLogoClass || hasLogoId) {
+          extractedData.logoUrl = src;
+          console.log('[extract] Logo from class/id containing "logo":', extractedData.logoUrl);
+          break;
+        }
+      }
+    }
+    
+    // Priority 5: og:image (only as last resort, often not the logo)
     if (!extractedData.logoUrl) {
       const ogImage = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
                    || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
-      if (ogImage) {
+      if (ogImage && !isExcludedLogoContext('', ogImage[1])) {
+        // og:image is usually a social share image, not the logo, so mark as low confidence
         extractedData.logoUrl = ogImage[1];
-        console.log('[extract] Logo from og:image:', extractedData.logoUrl);
+        console.log('[extract] Logo from og:image (fallback):', extractedData.logoUrl);
       }
     }
     
