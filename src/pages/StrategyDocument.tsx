@@ -137,7 +137,7 @@ export default function StrategyDocument() {
     loadData();
   }, [consultationId]);
 
-  // Calculate intelligence score
+  // Calculate intelligence score - MUST be before any conditional returns
   const intelligence = useMemo(() => {
     const intel = consultation?.extracted_intelligence || 
       (accumulator?.consultationData as unknown as GenericIntelligence | undefined);
@@ -189,6 +189,20 @@ export default function StrategyDocument() {
     return [];
   }, [intelligence, accumulator, consultation]);
 
+  // Build flow state for ProgressRail - MUST be before conditional returns
+  const flowState: FlowState = useMemo(() => ({
+    consultationScore: score.totalScore,
+    briefGenerated: true, // Brief was generated to reach strategy
+    brandVisited: true, // We're in strategy, so brand was visited
+    strategyVisited: true, // We're on strategy
+    sessionId: consultationId || undefined,
+    consultationId: consultationId || undefined,
+  }), [score.totalScore, consultationId]);
+
+  // Hook must be called before conditional returns
+  const { goBack } = useFlowNavigation('strategy', flowState);
+
+  // Conditional returns AFTER all hooks
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -211,18 +225,6 @@ export default function StrategyDocument() {
       </div>
     );
   }
-
-  // Build flow state for ProgressRail
-  const flowState: FlowState = useMemo(() => ({
-    consultationScore: score.totalScore,
-    briefGenerated: true, // Brief was generated to reach strategy
-    brandVisited: true, // We're in strategy, so brand was visited
-    strategyVisited: true, // We're on strategy
-    sessionId: consultationId,
-    consultationId: consultationId,
-  }), [score.totalScore, consultationId]);
-
-  const { goBack } = useFlowNavigation('strategy', flowState);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
