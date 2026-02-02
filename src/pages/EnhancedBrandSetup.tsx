@@ -8,6 +8,7 @@ import {
 import { StyleInspirationInput } from '@/components/styleIntelligence';
 import type { StyleInspiration } from '@/lib/styleIntelligence';
 import { Button } from '@/components/ui/button';
+import { CuratedFontSelect, CURATED_HEADING_FONTS, CURATED_BODY_FONTS, loadCuratedFonts, type CuratedFontOption } from '@/components/brand/CuratedFontSelect';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -458,30 +459,64 @@ export default function EnhancedBrandSetup() {
     body: { name: string; url: string } | null;
   }>({ heading: null, body: null });
 
-  // Standard font options
-  const STANDARD_HEADING_FONTS = ['Inter', 'Plus Jakarta Sans', 'DM Sans', 'Outfit', 'Space Grotesk', 'Sora', 'Playfair Display', 'Montserrat', 'Nunito Sans'];
-  const STANDARD_BODY_FONTS = ['Inter', 'Plus Jakarta Sans', 'DM Sans', 'IBM Plex Sans', 'Source Sans Pro', 'Lato', 'Nunito Sans'];
+  // Standard font options from curated lists
+  const STANDARD_HEADING_FONTS = CURATED_HEADING_FONTS.map(f => f.value);
+  const STANDARD_BODY_FONTS = CURATED_BODY_FONTS.map(f => f.value);
+  
+  // Load curated fonts on mount
+  useEffect(() => {
+    loadCuratedFonts();
+  }, []);
 
-  // Dynamic font options that include detected/matched/custom fonts
+  // Dynamic custom font options (for detected/matched/uploaded fonts)
+  const customHeadingFonts = useMemo((): CuratedFontOption[] => {
+    const options: CuratedFontOption[] = [];
+    
+    // Add custom uploaded font first
+    if (customFonts.heading) {
+      options.push({ 
+        value: customFonts.heading.name, 
+        label: customFonts.heading.name,
+        description: 'Your uploaded font',
+        category: 'uploaded'
+      });
+    }
+    
+    return options;
+  }, [customFonts.heading]);
+
+  const customBodyFonts = useMemo((): CuratedFontOption[] => {
+    const options: CuratedFontOption[] = [];
+    
+    // Add custom uploaded font first
+    if (customFonts.body) {
+      options.push({ 
+        value: customFonts.body.name, 
+        label: customFonts.body.name,
+        description: 'Your uploaded font',
+        category: 'uploaded'
+      });
+    }
+    
+    return options;
+  }, [customFonts.body]);
+
+  // Keep legacy headingFontOptions/bodyFontOptions for compatibility with existing code paths
   const headingFontOptions = useMemo(() => {
     const options: { value: string; label: string }[] = [];
     
-    // Add custom uploaded font first
     if (customFonts.heading) {
       options.push({ value: customFonts.heading.name, label: `${customFonts.heading.name} (uploaded)` });
     }
     
-    // Add matched font
     if (fontMatches.heading && !options.some(o => o.value === fontMatches.heading?.match)) {
       options.push({ value: fontMatches.heading.match, label: `${fontMatches.heading.match} (matches ${fontMatches.heading.original})` });
     }
     
-    // Add detected font if not in standard list
     if (detectedFonts.heading && !STANDARD_HEADING_FONTS.includes(detectedFonts.heading) && !options.some(o => o.value === detectedFonts.heading)) {
       options.push({ value: detectedFonts.heading, label: `${detectedFonts.heading} (detected)` });
     }
     
-    // Add standard fonts
     STANDARD_HEADING_FONTS.forEach(font => {
       if (!options.some(o => o.value === font)) {
         options.push({ value: font, label: font });
@@ -489,27 +524,23 @@ export default function EnhancedBrandSetup() {
     });
     
     return options;
-  }, [customFonts.heading, fontMatches.heading, detectedFonts.heading]);
+  }, [customFonts.heading, fontMatches.heading, detectedFonts.heading, STANDARD_HEADING_FONTS]);
 
   const bodyFontOptions = useMemo(() => {
     const options: { value: string; label: string }[] = [];
     
-    // Add custom uploaded font first
     if (customFonts.body) {
       options.push({ value: customFonts.body.name, label: `${customFonts.body.name} (uploaded)` });
     }
     
-    // Add matched font
     if (fontMatches.body && !options.some(o => o.value === fontMatches.body?.match)) {
       options.push({ value: fontMatches.body.match, label: `${fontMatches.body.match} (matches ${fontMatches.body.original})` });
     }
     
-    // Add detected font if not in standard list
     if (detectedFonts.body && !STANDARD_BODY_FONTS.includes(detectedFonts.body) && !options.some(o => o.value === detectedFonts.body)) {
       options.push({ value: detectedFonts.body, label: `${detectedFonts.body} (detected)` });
     }
     
-    // Add standard fonts
     STANDARD_BODY_FONTS.forEach(font => {
       if (!options.some(o => o.value === font)) {
         options.push({ value: font, label: font });
@@ -517,7 +548,7 @@ export default function EnhancedBrandSetup() {
     });
     
     return options;
-  }, [customFonts.body, fontMatches.body, detectedFonts.body]);
+  }, [customFonts.body, fontMatches.body, detectedFonts.body, STANDARD_BODY_FONTS]);
 
   // Load detected fonts from Google Fonts
   useEffect(() => {
@@ -1918,46 +1949,37 @@ export default function EnhancedBrandSetup() {
                 
                 <div className="grid grid-cols-3 gap-4">
                   {/* H1 */}
-                  <div>
-                    <label className="text-xs text-slate-500 mb-1 block">H1 / Hero</label>
-                    <select
-                      value={fontSettings.h1}
-                      onChange={(e) => setFontSettings({...fontSettings, h1: e.target.value})}
-                      className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
-                    >
-                      {headingFontOptions.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <CuratedFontSelect
+                    label="H1 / Hero"
+                    type="heading"
+                    value={fontSettings.h1}
+                    onChange={(v) => setFontSettings({...fontSettings, h1: v})}
+                    customFonts={customHeadingFonts}
+                    matchedFont={fontMatches.heading}
+                    detectedFont={detectedFonts.heading}
+                  />
                   
                   {/* H2 */}
-                  <div>
-                    <label className="text-xs text-slate-500 mb-1 block">H2 / Section</label>
-                    <select
-                      value={fontSettings.h2}
-                      onChange={(e) => setFontSettings({...fontSettings, h2: e.target.value})}
-                      className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
-                    >
-                      {headingFontOptions.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <CuratedFontSelect
+                    label="H2 / Section"
+                    type="heading"
+                    value={fontSettings.h2}
+                    onChange={(v) => setFontSettings({...fontSettings, h2: v})}
+                    customFonts={customHeadingFonts}
+                    matchedFont={fontMatches.heading}
+                    detectedFont={detectedFonts.heading}
+                  />
                   
                   {/* H3 */}
-                  <div>
-                    <label className="text-xs text-slate-500 mb-1 block">H3 / Card</label>
-                    <select
-                      value={fontSettings.h3}
-                      onChange={(e) => setFontSettings({...fontSettings, h3: e.target.value})}
-                      className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
-                    >
-                      {headingFontOptions.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <CuratedFontSelect
+                    label="H3 / Card"
+                    type="heading"
+                    value={fontSettings.h3}
+                    onChange={(v) => setFontSettings({...fontSettings, h3: v})}
+                    customFonts={customHeadingFonts}
+                    matchedFont={fontMatches.heading}
+                    detectedFont={detectedFonts.heading}
+                  />
                 </div>
                 
                 {/* Custom heading font upload */}
@@ -1987,32 +2009,26 @@ export default function EnhancedBrandSetup() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   {/* Body */}
-                  <div>
-                    <label className="text-xs text-slate-500 mb-1 block">Body Text</label>
-                    <select
-                      value={fontSettings.body}
-                      onChange={(e) => setFontSettings({...fontSettings, body: e.target.value})}
-                      className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
-                    >
-                      {bodyFontOptions.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <CuratedFontSelect
+                    label="Body Text"
+                    type="body"
+                    value={fontSettings.body}
+                    onChange={(v) => setFontSettings({...fontSettings, body: v})}
+                    customFonts={customBodyFonts}
+                    matchedFont={fontMatches.body}
+                    detectedFont={detectedFonts.body}
+                  />
                   
                   {/* Small/Caption */}
-                  <div>
-                    <label className="text-xs text-slate-500 mb-1 block">Small / Caption</label>
-                    <select
-                      value={fontSettings.small}
-                      onChange={(e) => setFontSettings({...fontSettings, small: e.target.value})}
-                      className="w-full bg-slate-900/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm"
-                    >
-                      {bodyFontOptions.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <CuratedFontSelect
+                    label="Small / Caption"
+                    type="body"
+                    value={fontSettings.small}
+                    onChange={(v) => setFontSettings({...fontSettings, small: v})}
+                    customFonts={customBodyFonts}
+                    matchedFont={fontMatches.body}
+                    detectedFont={detectedFonts.body}
+                  />
                 </div>
                 
                 {/* Custom body font upload */}
