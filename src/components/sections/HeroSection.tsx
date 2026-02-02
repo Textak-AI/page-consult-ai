@@ -85,6 +85,8 @@ interface HeroSectionProps {
       text: string;
     } | null;
     industryVariant?: IndustryVariant;
+    // SDI mode override - takes precedence over industry token mode
+    mode?: 'light' | 'dark' | 'warm' | 'cold';
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -104,20 +106,23 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   // Get industry tokens
   const industryVariant = content.industryVariant || 'default';
   const tokens = getIndustryTokens(industryVariant);
-  const isLightMode = tokens.mode === 'light';
+  // PRIORITY: SDI mode prop > industry token mode
+  const isLightMode = content.mode 
+    ? (content.mode === 'light' || content.mode === 'warm')
+    : tokens.mode === 'light';
   const isConsulting = industryVariant === 'consulting';
   const isHealthcare = industryVariant === 'healthcare';
   const isSaas = industryVariant === 'saas';
   const isLocalServices = industryVariant === 'local-services';
   
-  console.log('🎨 [HeroSection] industryVariant:', industryVariant, 'isLocalServices:', isLocalServices);
+  console.log('🎨 [HeroSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant);
   
   // Determine if we should use light text (when dark overlay is active OR when not in light mode)
   const hasBackgroundImage = !!content.backgroundImage;
   const showDarkOverlay = hasBackgroundImage && (content.darkOverlay !== false); // Default to true when bg image exists
   // Use light text when: overlay is active on bg image, or when in dark mode
   const useLightText = showDarkOverlay || !isLightMode;
-  
+
   // Logo size with default
   const logoSize = content.logoSize || 'medium';
   

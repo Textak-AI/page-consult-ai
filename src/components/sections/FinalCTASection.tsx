@@ -27,6 +27,8 @@ interface FinalCTASectionProps {
     trustIndicators?: Array<{ text: string }>;
     primaryColor?: string;
     industryVariant?: IndustryVariant;
+    // SDI mode override - takes precedence over industry token mode
+    mode?: 'light' | 'dark' | 'warm' | 'cold';
     // New fields for richer CTA
     secondaryCta?: string;
     urgencyText?: string;
@@ -39,11 +41,16 @@ interface FinalCTASectionProps {
 export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectionProps) {
   const industryVariant = content.industryVariant || 'default';
   const tokens = getIndustryTokens(industryVariant);
-  const isLightMode = tokens.mode === 'light';
+  // PRIORITY: SDI mode prop > industry token mode
+  const isLightMode = content.mode 
+    ? (content.mode === 'light' || content.mode === 'warm')
+    : tokens.mode === 'light';
   const isConsulting = industryVariant === 'consulting';
   const isSaas = industryVariant === 'saas';
   const isHealthcare = industryVariant === 'healthcare';
   const isLocalServices = industryVariant === 'local-services';
+  
+  console.log('🎨 [FinalCTASection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant);
   
   // Get industry-aware CSS background pattern for CTA section
   const industryPattern = getIndustryPattern(industryVariant as any, isLightMode ? 'light' : 'dark', 'final-cta');

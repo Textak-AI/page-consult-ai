@@ -37,6 +37,8 @@ interface FAQSectionProps {
     eyebrow?: string;
     items: FAQItem[];
     industryVariant?: IndustryVariant;
+    // SDI mode override - takes precedence over industry detection
+    mode?: 'light' | 'dark' | 'warm' | 'cold';
   };
   onUpdate: (content: FAQSectionProps['content']) => void;
   isEditing?: boolean;
@@ -488,12 +490,20 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
   }));
   const isConsulting = content.industryVariant === 'consulting';
   const isHealthcare = content.industryVariant === 'healthcare';
+  const isLocalServices = content.industryVariant === 'local-services';
   
-  // Get industry-aware CSS background pattern
+  // PRIORITY: SDI mode prop > industry-based detection
+  const isLightMode = content.mode 
+    ? (content.mode === 'light' || content.mode === 'warm')
+    : (isConsulting || isHealthcare || isLocalServices);
+  
+  // Get industry-aware CSS background pattern - use light or dark based on mode
   const industryPattern = useMemo(() => 
-    getIndustryPattern((content.industryVariant || 'default') as any, 'dark', 'faq'),
-    [content.industryVariant]
+    getIndustryPattern((content.industryVariant || 'default') as any, isLightMode ? 'light' : 'dark', 'faq'),
+    [content.industryVariant, isLightMode]
   );
+  
+  console.log('🎨 [FAQSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', content.industryVariant);
 
   // Don't render section at all if no FAQ items (unless editing)
   if (items.length === 0 && !isEditing) {

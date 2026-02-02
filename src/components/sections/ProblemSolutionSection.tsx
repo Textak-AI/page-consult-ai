@@ -19,6 +19,8 @@ interface ProblemSolutionSectionProps {
     solutionStat?: CitedStat;
     industryVariant?: string;
     sectionTitle?: string;
+    // SDI mode override - takes precedence over industry detection
+    mode?: 'light' | 'dark' | 'warm' | 'cold';
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -28,9 +30,15 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
   const isConsulting = content.industryVariant === 'consulting';
   const isSaas = content.industryVariant === 'saas';
   const isHealthcare = content.industryVariant === 'healthcare';
+  const isLocalServices = content.industryVariant === 'local-services';
   const typography = getTypography(content.industryVariant);
   
-  console.log('🎨 [ProblemSolutionSection] industryVariant:', content.industryVariant, 'isConsulting:', isConsulting, 'isSaas:', isSaas, 'isHealthcare:', isHealthcare);
+  // PRIORITY: SDI mode prop > industry-based detection
+  const isLightMode = content.mode 
+    ? (content.mode === 'light' || content.mode === 'warm')
+    : (isConsulting || isHealthcare || isLocalServices);
+  
+  console.log('🎨 [ProblemSolutionSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', content.industryVariant);
   
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
