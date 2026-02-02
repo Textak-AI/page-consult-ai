@@ -847,9 +847,31 @@ function GenerateContent() {
 
         console.log("✅ Loaded existing page:", existingPage.id, "with", (existingPage.sections as any[])?.length, "sections");
         
+        // DEBUG: Log design_intelligence from database
+        console.log('🎨 [LoadExisting] design_intelligence from DB:', existingPage.design_intelligence);
+        console.log('🎨 [LoadExisting] colorMode:', (existingPage.design_intelligence as any)?.colorMode);
+        console.log('🎨 [LoadExisting] industryVariant:', (existingPage.design_intelligence as any)?.industryVariant);
+        
         // Get consultation data for patching sections
         const consultationData = existingPage.consultation_data as any || {};
         console.log('🔄 [Patch] Consultation data from page:', consultationData);
+        
+        // Reconstruct consultation state from existing page data for use in LivePreview
+        // This ensures colorMode and brand settings are available even for existing pages
+        const reconstructedConsultation = {
+          id: existingPage.consultation_id,
+          industry: existingPage.industry || consultationData.industry,
+          businessName: consultationData.businessName,
+          // Extract brand data from websiteIntelligence if available
+          websiteIntelligence: existingPage.website_intelligence || consultationData.websiteIntelligence,
+          // Extract extracted_intelligence for brand colors
+          extracted_intelligence: consultationData.extractedIntelligence || consultationData.extracted_intelligence || {
+            colors: consultationData.colors || [],
+            logoUrl: consultationData.logoUrl || (existingPage.website_intelligence as any)?.logoUrl,
+            companyName: consultationData.companyName || consultationData.businessName,
+          },
+        };
+        setConsultation(reconstructedConsultation);
         
         // Patch sections with fresh consultation data (especially final-cta)
         const patchedSections = patchSectionsWithConsultationData(

@@ -180,8 +180,11 @@ function sectionHasContent(section: { type: string; content: any }): boolean {
     
     case 'social-proof':
     case 'waitlist-proof':
+      // Check multiple possible testimonial formats
       return (Array.isArray(content.testimonials) && content.testimonials.length > 0) ||
-             (content.testimonial && content.testimonial.quote);
+             (content.testimonial && content.testimonial.quote) ||
+             // Also check if stats exist (AI-generated social proof often has stats)
+             (Array.isArray(content.stats) && content.stats.length > 0);
     
     case 'faq':
       return Array.isArray(content.items) && content.items.length > 0;
@@ -193,9 +196,27 @@ function sectionHasContent(section: { type: string; content: any }): boolean {
     case 'how-it-works':
       return Array.isArray(content.steps) && content.steps.length > 0;
     
-    default:
-      // For unknown section types, assume they have content if content object exists
+    case 'stakes-amplify':
+      // Stakes amplify has content if headline, stakes, or consequences exist
+      return !!(content.headline?.trim()) || 
+             !!(content.stakes?.trim()) || 
+             !!(content.consequences?.trim()) ||
+             !!(content.problem?.trim());
+    
+    case 'risk-reversal':
+    case 'comparison':
+    case 'differentiator-callout':
+    case 'audience-fit':
+    case 'credibility-strip':
+      // These SDI sections always have content when they exist
       return Object.keys(content).length > 0;
+    
+    default:
+      // For unknown section types, assume they have content if content object has meaningful data
+      const contentKeys = Object.keys(content).filter(k => 
+        k !== 'mode' && k !== 'industryVariant' && k !== 'primaryColor' && k !== 'logoUrl'
+      );
+      return contentKeys.length > 0;
   }
 }
 
@@ -225,6 +246,23 @@ export function getSectionStatus(
   sectionType: string, 
   completeness: CompletenessState
 ): 'unlocked' | 'locked' | 'partial' {
+  // SDI-driven sections are ALWAYS unlocked - they have AI-generated content
+  const alwaysUnlockedSections = [
+    'stakes-amplify',
+    'risk-reversal', 
+    'comparison',
+    'differentiator-callout',
+    'audience-fit',
+    'credibility-strip',
+    'how-it-works',
+    'photo-gallery',
+    'three-stage-showcase',
+  ];
+  
+  if (alwaysUnlockedSections.includes(sectionType)) {
+    return 'unlocked';
+  }
+  
   // Map section types to unlock keys
   const sectionToUnlock: Record<string, string[]> = {
     'hero': ['hero-text', 'hero-headline', 'hero-brand', 'hero-differentiator'],
@@ -241,6 +279,12 @@ export function getSectionStatus(
   
   if (unlockedCount === unlockKeys.length) return 'unlocked';
   if (unlockedCount > 0) return 'partial';
+  
+  // For unmapped sections, default to unlocked (they likely have AI content)
+  if (!sectionToUnlock[sectionType]) {
+    return 'unlocked';
+  }
+  
   return 'locked';
 }
 
