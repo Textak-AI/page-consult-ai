@@ -1381,38 +1381,65 @@ function GenerateContent() {
           const consultationBrandSettings = consultationData.brand_settings as any || 
                                              pageConsultationData.brand_settings as any || {};
           
+          // localStorage fallback - read pageconsult_brand_data for brand data not yet in Supabase
+          const localBrandData = (() => {
+            try {
+              const stored = localStorage.getItem('pageconsult_brand_data');
+              if (stored) {
+                const parsed = JSON.parse(stored);
+                return {
+                  primaryColor: parsed.colors?.primary || null,
+                  secondaryColor: parsed.colors?.secondary || null,
+                  accentColor: parsed.colors?.accent || null,
+                  logoUrl: parsed.logo || null,
+                  companyName: parsed.companyName || null,
+                };
+              }
+            } catch {
+              // localStorage may be disabled
+            }
+            return null;
+          })();
+          
           // Resolve brand data with CLEAR PRIORITY:
           // 1. pageWebsiteIntel (from website extraction)
           // 2. consultationBrandSettings (explicit brand setup)
           // 3. extracted_intelligence colors array
-          // 4. pageConsultationData.websiteIntelligence (legacy)
+          // 4. intel.brandColors (from extracted_intelligence)
+          // 5. localStorage (pageconsult_brand_data - fallback for data not yet persisted)
+          // 6. pageConsultationData.websiteIntelligence (legacy)
           const resolvedBrand = {
             primaryColor: pageWebsiteIntel.primaryColor ||
                           consultationBrandSettings.primaryColor ||
                           colorsArray[0] ||
                           intel.brandColors?.primary ||
+                          localBrandData?.primaryColor ||
                           pageConsultationData.websiteIntelligence?.primaryColor ||
                           null,
             secondaryColor: pageWebsiteIntel.secondaryColor ||
                             consultationBrandSettings.secondaryColor ||
                             colorsArray[1] ||
                             intel.brandColors?.secondary ||
+                            localBrandData?.secondaryColor ||
                             pageConsultationData.websiteIntelligence?.secondaryColor ||
                             null,
             accentColor: pageWebsiteIntel.accentColor ||
                          consultationBrandSettings.accentColor ||
                          colorsArray[2] ||
                          intel.brandColors?.accent ||
+                         localBrandData?.accentColor ||
                          pageConsultationData.websiteIntelligence?.accentColor ||
                          null,
             logoUrl: pageWebsiteIntel.logoUrl ||
                      consultationBrandSettings.logoUrl ||
                      intel.logoUrl ||
+                     localBrandData?.logoUrl ||
                      pageConsultationData.websiteIntelligence?.logoUrl ||
                      null,
             companyName: pageWebsiteIntel.companyName ||
                          intel.companyName ||
                          consultationData.business_name ||
+                         localBrandData?.companyName ||
                          pageConsultationData.businessName ||
                          null,
           };
@@ -1422,6 +1449,7 @@ function GenerateContent() {
             fromPageWebsiteIntel: !!pageWebsiteIntel.primaryColor,
             fromConsultationBrandSettings: !!consultationBrandSettings.primaryColor,
             fromExtractedIntel: colorsArray.length > 0,
+            fromLocalStorage: !!localBrandData?.primaryColor,
             fromLegacy: !!pageConsultationData.websiteIntelligence?.primaryColor,
             resolved: {
               primaryColor: resolvedBrand.primaryColor,
