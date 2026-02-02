@@ -79,6 +79,15 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
   const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();
   const currentStyle = styleVariants[pageStyle];
   
+  // Debug logging for brand handoff - confirms data flow from Generate.tsx
+  console.log('🎨 [LivePreview] Received props:', {
+    colorMode,
+    industryVariant,
+    logoUrl: brandSettings?.logoUrl,
+    primaryColor: brandSettings?.primaryColor,
+    companyName: brandSettings?.companyName,
+  });
+  
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [aiChatSection, setAiChatSection] = useState<{ index: number; type: string; content: any } | null>(null);
   
