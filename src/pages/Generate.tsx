@@ -1638,7 +1638,28 @@ function GenerateContent() {
             designIntelligence: { ...pageDesignIntel, colorMode: resolvedColorMode },
           });
           
-          setPageData(existingPage);
+          // CRITICAL FIX: Set pageData with CORRECTED design_intelligence
+          // This ensures LivePreview container reads the resolved colorMode/industryVariant
+          const correctedPageData = {
+            ...existingPage,
+            design_intelligence: {
+              ...pageDesignIntel,
+              colorMode: resolvedColorMode,
+              industryVariant: industryVariant,
+              brandColors: {
+                primary: resolvedBrand.primaryColor,
+                secondary: resolvedBrand.secondaryColor,
+              },
+              logoUrl: resolvedBrand.logoUrl,
+            },
+          };
+          console.log('🎨 [LoadExisting] Setting pageData with corrected design_intelligence:', {
+            colorMode: resolvedColorMode,
+            industryVariant: industryVariant,
+            primaryColor: resolvedBrand.primaryColor,
+          });
+          
+          setPageData(correctedPageData);
           setSections(sectionsWithVariant);
           // Mark generation complete for immediate editor transition
           setIsGenerating(false);
