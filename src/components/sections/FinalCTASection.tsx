@@ -593,6 +593,10 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
           className="flex flex-col sm:flex-row gap-4 pt-4"
         >
           <div className="relative group">
+            {(() => {
+              console.log('🎨 [FinalCTASection] primaryColor:', content.primaryColor);
+              return null;
+            })()}
             <Button 
               size="lg" 
               className={`relative overflow-hidden text-lg md:text-xl px-12 md:px-16 py-7 md:py-8 h-auto font-semibold transition-all duration-300 hover:scale-[1.02] animate-pulse-glow ${
@@ -604,6 +608,9 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
                   : 'linear-gradient(135deg, hsl(189, 95%, 43%), hsl(200, 95%, 50%))',
                 color: 'white',
                 borderRadius: tokens.shape.radiusButton,
+                boxShadow: content.primaryColor 
+                  ? `0 10px 40px -10px ${content.primaryColor}88`
+                  : '0 10px 40px -10px hsla(189, 95%, 43%, 0.5)',
               }}
             >
               <span

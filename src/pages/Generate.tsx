@@ -1311,18 +1311,13 @@ function GenerateContent() {
           setIndustryVariantState(industryVariant);
           setIndustryTokens(tokens);
           
-          const sectionsWithVariant = existingSections.map(section => ({
-            ...section,
-            content: {
-              ...section.content,
-              industryVariant: industryVariant,
-            }
-          }));
-          
           // CRITICAL FIX: Read brand data from extracted_intelligence for existing pages
           // The console shows "No brand color found" because we weren't reading this data
           const intel = consultationData.extracted_intelligence as any || {};
           const pageDesignIntel = existingPage.design_intelligence as any || {};
+          
+          // DEBUG: Log raw design_intelligence from database
+          console.log('🎨 [DB] Raw design_intelligence from database:', JSON.stringify(pageDesignIntel));
           
           // Build websiteIntelligence from extracted_intelligence colors array
           const colorsArray = intel.colors || [];
@@ -1335,13 +1330,31 @@ function GenerateContent() {
             accentColor: colorsArray[2] || intel.brandColors?.accent || pageConsultationData.websiteIntelligence?.accentColor || null,
           };
           
+          // Resolve colorMode from design_intelligence (fallback to 'dark')
+          const resolvedColorMode = pageDesignIntel.colorMode || pageDesignIntel.colors?.mode || 'dark';
+          console.log('🎨 [LoadExisting] Resolved colorMode:', resolvedColorMode, 'from designIntelligence');
+          
           console.log('🎨 [LoadExisting] Resolved brand data:', {
-            colorMode: pageDesignIntel.colorMode,
+            colorMode: resolvedColorMode,
             logoUrl: websiteIntelligence.logoUrl,
             primaryColor: websiteIntelligence.primaryColor,
             secondaryColor: websiteIntelligence.secondaryColor,
             colorsArray: colorsArray.slice(0, 3),
           });
+          
+          // CRITICAL: Inject colorMode, primaryColor, and industryVariant into each section
+          const sectionsWithVariant = existingSections.map(section => ({
+            ...section,
+            content: {
+              ...section.content,
+              industryVariant: industryVariant,
+              mode: resolvedColorMode, // Inject colorMode into each section
+              primaryColor: websiteIntelligence.primaryColor, // Inject primary color for CTA buttons
+              logoUrl: section.type === 'hero' ? websiteIntelligence.logoUrl : section.content?.logoUrl, // Inject logo for hero
+            }
+          }));
+          
+          console.log('🎨 [LoadExisting] Injected into sections: mode=' + resolvedColorMode + ', primaryColor=' + websiteIntelligence.primaryColor);
           
           // Store consultation data for potential regeneration WITH websiteIntelligence
           setConsultation({
