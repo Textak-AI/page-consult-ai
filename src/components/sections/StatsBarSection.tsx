@@ -10,6 +10,8 @@ interface Statistic {
 interface StatsBarSectionProps {
   statistics: Statistic[];
   industryVariant?: string;
+  // SDI mode override - takes precedence over industry detection
+  mode?: 'light' | 'dark' | 'warm' | 'cold';
   onUpdate?: (content: any) => void;
   isEditing?: boolean;
 }
@@ -23,15 +25,18 @@ interface StatsBarSectionProps {
  * - Staggered hover animations
  * - Industry-specific color accents
  */
-export function StatsBarSection({ statistics, industryVariant, onUpdate, isEditing }: StatsBarSectionProps) {
+export function StatsBarSection({ statistics, industryVariant, mode, onUpdate, isEditing }: StatsBarSectionProps) {
   const typography = getTypography(industryVariant);
   const isConsulting = industryVariant === 'consulting';
   const isHealthcare = industryVariant === 'healthcare';
   const isSaas = industryVariant === 'saas';
   const isLocalServices = industryVariant === 'local-services';
-  const isLightMode = isConsulting || isHealthcare || isLocalServices;
+  // PRIORITY: SDI mode prop > industry-based detection
+  const isLightMode = mode 
+    ? (mode === 'light' || mode === 'warm')
+    : (isConsulting || isHealthcare || isLocalServices);
   
-  console.log('🎨 [StatsBarSection] industryVariant:', industryVariant, 'isLocalServices:', isLocalServices);
+  console.log('🎨 [StatsBarSection] Mode:', mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant);
 
   const handleStatBlur = (index: number, field: 'value' | 'label', e: React.FocusEvent<HTMLElement>) => {
     if (!onUpdate) return;

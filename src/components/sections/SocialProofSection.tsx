@@ -42,6 +42,8 @@ interface SocialProofSectionProps {
     // NEW: Proof story from wizard
     proofStory?: string | null;
     proofStoryContext?: string | null;
+    // SDI mode override - takes precedence over industry detection
+    mode?: 'light' | 'dark' | 'warm' | 'cold';
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -92,9 +94,17 @@ function getSocialProofHeader(industry?: string, isConsulting?: boolean): { titl
 export function SocialProofSection({ content, onUpdate, isEditing }: SocialProofSectionProps) {
   const isConsulting = content.industryVariant === 'consulting';
   const isSaas = content.industryVariant === 'saas';
+  const isHealthcare = content.industryVariant === 'healthcare';
+  const isLocalServices = content.industryVariant === 'local-services';
   const header = getSocialProofHeader(content.industry, isConsulting);
   
+  // PRIORITY: SDI mode prop > industry-based detection
+  const isLightMode = content.mode 
+    ? (content.mode === 'light' || content.mode === 'warm')
+    : (isConsulting || isHealthcare || isLocalServices);
   
+  console.log('🎨 [SocialProofSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', content.industryVariant);
+
   
   const testimonial = content.testimonial || {
     quote: header.placeholderQuote,

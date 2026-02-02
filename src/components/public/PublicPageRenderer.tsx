@@ -39,14 +39,36 @@ interface PublicPageRendererProps {
   styles?: any;
   metaTitle?: string | null;
   metaDescription?: string | null;
+  // Design intelligence for color mode and brand colors
+  designIntelligence?: {
+    colorMode?: 'light' | 'dark';
+    industryVariant?: string;
+    brandColors?: {
+      primary?: string;
+      secondary?: string;
+      accent?: string;
+    };
+  } | null;
+  // Brand settings fallback
+  brandSettings?: {
+    companyName?: string | null;
+    logoUrl?: string | null;
+    primaryColor?: string | null;
+  } | null;
 }
 
 export function PublicPageRenderer({ 
   sections, 
   styles,
   metaTitle,
-  metaDescription 
+  metaDescription,
+  designIntelligence,
+  brandSettings
 }: PublicPageRendererProps) {
+  
+  // Derive colorMode from design intelligence
+  const colorMode = designIntelligence?.colorMode || 'dark';
+  const industryVariant = designIntelligence?.industryVariant || 'default';
   
   // Sort sections by order
   const sortedSections = useMemo(() => {
@@ -75,6 +97,7 @@ export function PublicPageRenderer({
             key={index}
             statistics={section.content.statistics || []} 
             industryVariant={section.content.industryVariant}
+            mode={section.content.mode}
             onUpdate={noOp}
             isEditing={false}
           />
@@ -261,12 +284,35 @@ export function PublicPageRenderer({
         <style dangerouslySetInnerHTML={{ __html: styles.cssVariables }} />
       )}
 
-      <div className="min-h-screen bg-background">
+      <div 
+        data-mode={colorMode}
+        data-industry={industryVariant}
+        className={colorMode === 'light' ? 'min-h-screen bg-white' : 'min-h-screen bg-slate-950'}
+        style={(() => {
+          const styles: React.CSSProperties = {};
+          // Apply brand colors as CSS custom properties
+          const primaryColor = designIntelligence?.brandColors?.primary || brandSettings?.primaryColor;
+          if (primaryColor) {
+            styles['--color-brand' as any] = primaryColor;
+            styles['--color-primary' as any] = primaryColor;
+            styles['--brand-primary' as any] = primaryColor;
+          }
+          const secondaryColor = designIntelligence?.brandColors?.secondary;
+          if (secondaryColor) {
+            styles['--color-secondary' as any] = secondaryColor;
+            styles['--brand-secondary' as any] = secondaryColor;
+          }
+          return Object.keys(styles).length > 0 ? styles : undefined;
+        })()}
+      >
         {/* Render all visible sections */}
         {sortedSections.map((section, index) => renderSection(section, index))}
         
-        {/* Footer */}
-        <PageFooter />
+        {/* Footer with brand info */}
+        <PageFooter 
+          companyName={brandSettings?.companyName}
+          logoUrl={brandSettings?.logoUrl}
+        />
       </div>
     </>
   );

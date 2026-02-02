@@ -23,6 +23,9 @@ interface FeaturesSectionProps {
     }>;
     industryVariant?: IndustryVariant;
     businessName?: string;
+    // SDI mode override - takes precedence over industry token mode
+    mode?: 'light' | 'dark' | 'warm' | 'cold';
+    primaryColor?: string;
   };
   onUpdate?: (content: any) => void;
   isEditing?: boolean;
@@ -65,18 +68,21 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
   const subtitle = content.subtitle || sectionHeader.subtitle;
   const eyebrow = content.eyebrow || sectionHeader.title.toUpperCase();
 
-  // Debug logging
-  console.log('🎨 [FeaturesSection] industryVariant:', industryVariant, 'header:', sectionHeader);
-
   if (!features || features.length === 0) return null;
   
   // Get industry-specific tokens
   const tokens = getIndustryTokens(industryVariant);
-  const isLightMode = tokens.mode === 'light';
+  // PRIORITY: SDI mode prop > industry token mode
+  const isLightMode = content.mode 
+    ? (content.mode === 'light' || content.mode === 'warm')
+    : tokens.mode === 'light';
   const isConsulting = industryVariant === 'consulting';
   const isHealthcare = industryVariant === 'healthcare';
   const isSaas = industryVariant === 'saas';
   const isLocalServices = industryVariant === 'local-services';
+
+  // Debug logging
+  console.log('🎨 [FeaturesSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant);
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     if (!onUpdate) return;

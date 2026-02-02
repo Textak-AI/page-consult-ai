@@ -301,14 +301,18 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
   }, [getSectionLockStatus, handleUnlockAction, editingSection, handleEditSection, handleAIAssist, handleImageGenerate, handleLogoEdit]);
 
   const renderSection = (section: Section, index: number) => {
-    // Inject industryVariant into section content if not already present
+    // Inject industryVariant, colorMode, and brand colors into section content if not already present
     const sectionContent = {
       ...section.content,
       industryVariant: section.content?.industryVariant || industryVariant || 'default',
+      mode: section.content?.mode || colorMode || 'dark',
+      // Inject brand colors so section components can use them for CTAs/buttons
+      primaryColor: section.content?.primaryColor || brandSettings?.primaryColor || null,
+      logoUrl: section.content?.logoUrl || brandSettings?.logoUrl || null,
     };
     
     // Debug logging
-    console.log('🎨 [LivePreview] Rendering section:', section.type, 'industryVariant:', sectionContent.industryVariant);
+    console.log('🎨 [LivePreview] Rendering section:', section.type, 'industryVariant:', sectionContent.industryVariant, 'mode:', sectionContent.mode);
     
     if (!section.visible) return null;
 
@@ -336,6 +340,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           <StatsBarSection 
             statistics={sectionContent.statistics || []} 
             industryVariant={sectionContent.industryVariant}
+            mode={sectionContent.mode}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
@@ -600,12 +605,29 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
       <div 
         data-mode={colorMode} 
         data-industry={industryVariant || 'default'}
-        className="min-h-full bg-background live-preview-container"
-        style={brandSettings?.primaryColor ? {
-          '--color-primary': brandSettings.primaryColor,
-          '--color-secondary': brandSettings.secondaryColor || brandSettings.primaryColor,
-          '--color-accent': brandSettings.accentColor || brandSettings.primaryColor,
-        } as React.CSSProperties : undefined}
+        className={cn(
+          "min-h-full live-preview-container",
+          colorMode === 'light' ? 'bg-white' : 'bg-slate-950'
+        )}
+        style={(() => {
+          const styles: React.CSSProperties = {};
+          // Apply brand colors as CSS custom properties
+          if (brandSettings?.primaryColor) {
+            styles['--color-brand' as any] = brandSettings.primaryColor;
+            styles['--color-primary' as any] = brandSettings.primaryColor;
+            // Also set button/accent colors for CTAs
+            styles['--brand-primary' as any] = brandSettings.primaryColor;
+          }
+          if (brandSettings?.secondaryColor) {
+            styles['--color-secondary' as any] = brandSettings.secondaryColor;
+            styles['--brand-secondary' as any] = brandSettings.secondaryColor;
+          }
+          if (brandSettings?.accentColor) {
+            styles['--color-accent' as any] = brandSettings.accentColor;
+            styles['--brand-accent' as any] = brandSettings.accentColor;
+          }
+          return Object.keys(styles).length > 0 ? styles : undefined;
+        })()}
       >
         {sections
           .sort((a, b) => a.order - b.order)
