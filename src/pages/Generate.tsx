@@ -1297,10 +1297,37 @@ function GenerateContent() {
             }
           }));
           
-          // Store consultation data for potential regeneration
+          // CRITICAL FIX: Read brand data from extracted_intelligence for existing pages
+          // The console shows "No brand color found" because we weren't reading this data
+          const intel = consultationData.extracted_intelligence as any || {};
+          const pageDesignIntel = existingPage.design_intelligence as any || {};
+          
+          // Build websiteIntelligence from extracted_intelligence colors array
+          const colorsArray = intel.colors || [];
+          const websiteIntelligence = {
+            logoUrl: intel.logoUrl || pageConsultationData.websiteIntelligence?.logoUrl || null,
+            companyName: intel.companyName || consultationData.business_name || pageConsultationData.businessName || null,
+            // colors[0] is primary, colors[1] is secondary, colors[2] is accent
+            primaryColor: colorsArray[0] || intel.brandColors?.primary || pageConsultationData.websiteIntelligence?.primaryColor || null,
+            secondaryColor: colorsArray[1] || intel.brandColors?.secondary || pageConsultationData.websiteIntelligence?.secondaryColor || null,
+            accentColor: colorsArray[2] || intel.brandColors?.accent || pageConsultationData.websiteIntelligence?.accentColor || null,
+          };
+          
+          console.log('🎨 [LoadExisting] Resolved brand data:', {
+            colorMode: pageDesignIntel.colorMode,
+            logoUrl: websiteIntelligence.logoUrl,
+            primaryColor: websiteIntelligence.primaryColor,
+            secondaryColor: websiteIntelligence.secondaryColor,
+            colorsArray: colorsArray.slice(0, 3),
+          });
+          
+          // Store consultation data for potential regeneration WITH websiteIntelligence
           setConsultation({
             ...consultationData,
             ...pageConsultationData,
+            websiteIntelligence,
+            // Also preserve designIntelligence for colorMode resolution
+            designIntelligence: pageDesignIntel.colors ? pageDesignIntel : consultationData.designIntelligence,
           });
           
           setPageData(existingPage);
@@ -3918,42 +3945,65 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
                         'dark';
             return (mode === 'light' || mode === 'warm') ? 'light' : 'dark';
           })()}
-          brandSettings={{
-            // PRIORITY: strategicData > pageData > consultation.websiteIntelligence > hero section
-            companyName: 
-              strategicData?.consultationData?.businessName ||
-              (pageData?.consultation_data as any)?.businessName ||
-              (pageData?.website_intelligence as any)?.companyName ||
-              consultation?.businessName ||
-              consultation?.business_name ||
-              (consultation?.websiteIntelligence as any)?.companyName ||
-              null,
-            logoUrl:
-              strategicData?.brandSettings?.logoUrl ||
-              strategicData?.consultationData?.websiteIntelligence?.logoUrl ||
-              (pageData?.website_intelligence as any)?.logoUrl ||
-              (pageData?.consultation_data as any)?.websiteIntelligence?.logoUrl ||
-              (consultation?.websiteIntelligence as any)?.logoUrl ||
-              sections.find(s => s.type === 'hero')?.content?.logoUrl ||
-              null,
-            primaryColor:
-              strategicData?.brandSettings?.primaryColor ||
-              (pageData?.design_intelligence as any)?.brandColors?.primary ||
-              (consultation?.websiteIntelligence as any)?.primaryColor ||
-              designSystem?.colors?.primary ||
-              null,
-            secondaryColor:
-              strategicData?.brandSettings?.secondaryColor ||
-              (pageData?.design_intelligence as any)?.brandColors?.secondary ||
-              (consultation?.websiteIntelligence as any)?.secondaryColor ||
-              designSystem?.colors?.secondary ||
-              null,
-            accentColor:
-              (pageData?.design_intelligence as any)?.brandColors?.accent ||
-              (consultation?.websiteIntelligence as any)?.accentColor ||
-              designSystem?.colors?.accent ||
-              null,
-          }}
+          brandSettings={(() => {
+            // Helper to get extracted_intelligence colors array
+            const extractedIntel = consultation?.extracted_intelligence as any || {};
+            const colorsArray = extractedIntel.colors || [];
+            
+            const resolved = {
+              // PRIORITY: strategicData > pageData > consultation.websiteIntelligence > extracted_intelligence > hero section
+              companyName: 
+                strategicData?.consultationData?.businessName ||
+                (pageData?.consultation_data as any)?.businessName ||
+                (pageData?.website_intelligence as any)?.companyName ||
+                consultation?.businessName ||
+                consultation?.business_name ||
+                (consultation?.websiteIntelligence as any)?.companyName ||
+                extractedIntel.companyName ||
+                null,
+              logoUrl:
+                strategicData?.brandSettings?.logoUrl ||
+                strategicData?.consultationData?.websiteIntelligence?.logoUrl ||
+                (pageData?.website_intelligence as any)?.logoUrl ||
+                (pageData?.consultation_data as any)?.websiteIntelligence?.logoUrl ||
+                (consultation?.websiteIntelligence as any)?.logoUrl ||
+                extractedIntel.logoUrl ||
+                sections.find(s => s.type === 'hero')?.content?.logoUrl ||
+                null,
+              primaryColor:
+                strategicData?.brandSettings?.primaryColor ||
+                (pageData?.design_intelligence as any)?.brandColors?.primary ||
+                (consultation?.websiteIntelligence as any)?.primaryColor ||
+                colorsArray[0] || // extracted_intelligence.colors[0]
+                extractedIntel.brandColors?.primary ||
+                designSystem?.colors?.primary ||
+                null,
+              secondaryColor:
+                strategicData?.brandSettings?.secondaryColor ||
+                (pageData?.design_intelligence as any)?.brandColors?.secondary ||
+                (consultation?.websiteIntelligence as any)?.secondaryColor ||
+                colorsArray[1] || // extracted_intelligence.colors[1]
+                extractedIntel.brandColors?.secondary ||
+                designSystem?.colors?.secondary ||
+                null,
+              accentColor:
+                (pageData?.design_intelligence as any)?.brandColors?.accent ||
+                (consultation?.websiteIntelligence as any)?.accentColor ||
+                colorsArray[2] || // extracted_intelligence.colors[2]
+                extractedIntel.brandColors?.accent ||
+                designSystem?.colors?.accent ||
+                null,
+            };
+            
+            console.log('🎨 [LivePreview] Resolved brandSettings:', {
+              logoUrl: resolved.logoUrl,
+              primaryColor: resolved.primaryColor,
+              secondaryColor: resolved.secondaryColor,
+              hasColorsArray: colorsArray.length > 0,
+            });
+            
+            return resolved;
+          })()}
           getSectionLockStatus={pageBuilder.getSectionLockStatus}
         />
       </div>
