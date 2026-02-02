@@ -96,7 +96,7 @@ export function ProgressRail({ currentStep, flowState, className, onMilestone }:
   return (
     <TooltipProvider delayDuration={200}>
       <div className={cn(
-        'w-full bg-gradient-to-b from-slate-900/80 to-transparent flex-shrink-0',
+        'w-full bg-gradient-to-b from-slate-900/80 to-transparent flex-shrink-0 pt-4 md:pt-5 lg:pt-6',
         railHeight,
         className
       )}>
