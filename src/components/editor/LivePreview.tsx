@@ -697,7 +697,12 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         serviceDescription={strategyBrief?.serviceDescription}
       />
       
-      {/* Strategy Consultant */}
+      {/* Strategy Consultant - Hidden in editor phase, only for consultation */}
+      {/* NOTE: Strategy Consultant should only appear during consultation, not in editor view 
+          Since LivePreview is only used in the editor context, we hide these widgets entirely.
+          The consultation chat is handled separately in the Generate page via ConsultantChat. */}
+      {/* Commenting out Strategy Consultant in editor - use ConsultantChat in Generate.tsx instead */}
+      {/* 
       <StrategyConsultantButton 
         onClick={() => setIsConsultantOpen(true)}
         suggestionCount={0}
@@ -707,7 +712,6 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         onClose={() => setIsConsultantOpen(false)}
         messages={consultantMessages}
         onSendMessage={(msg) => {
-          // Phase 1: Just echo for now
           setConsultantMessages(prev => [
             ...prev,
             { id: Date.now().toString(), role: 'user', content: msg, timestamp: new Date() },
@@ -715,7 +719,6 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           ]);
         }}
         onApplySuggestion={(sectionId, field, value) => {
-          // Find the section and update it
           const sectionIndex = sections.findIndex(s => s.type === sectionId);
           if (sectionIndex === -1) {
             console.warn(`Section ${sectionId} not found`);
@@ -725,7 +728,6 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           const updated = [...sections];
           const content = { ...updated[sectionIndex].content };
           
-          // Handle nested fields (e.g., 'headline' vs 'cta.text')
           if (field.includes('.')) {
             const [parent, child] = field.split('.');
             content[parent] = { ...content[parent], [child]: value };
@@ -739,6 +741,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           console.log(`✅ Applied suggestion: ${field} in ${sectionId} updated to "${value}"`);
         }}
       />
+      */}
     </div>
   );
 }
