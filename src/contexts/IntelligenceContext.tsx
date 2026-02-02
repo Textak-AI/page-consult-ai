@@ -1492,13 +1492,21 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         }
       }
 
-      // Process logo
+      // Process logo - ONLY if website intelligence didn't already extract one
+      // Website intelligence uses smarter logo detection (header-first, partner filtering)
       if (logoResult.status === 'fulfilled' && logoResult.value.data?.success) {
-        setState(prev => ({
-          ...prev,
-          extractedLogo: logoResult.value.data.logoUrl,
-        }));
-        console.log('🖼️ [Research] Logo extracted:', logoResult.value.data.logoUrl);
+        setState(prev => {
+          // Guard: Don't overwrite existing logo from website intelligence
+          if (prev.extractedLogo || prev.extracted.logoUrl) {
+            console.log('🖼️ [Research] Logo skipped - website intelligence already has:', prev.extractedLogo || prev.extracted.logoUrl);
+            return prev;
+          }
+          console.log('🖼️ [Research] Logo extracted (fallback):', logoResult.value.data.logoUrl);
+          return {
+            ...prev,
+            extractedLogo: logoResult.value.data.logoUrl,
+          };
+        });
       }
 
       // Process brand assets (colors, fonts)
