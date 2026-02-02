@@ -589,6 +589,15 @@ export function detectIndustryVariant(
   // Check consulting/professional services FIRST (before SaaS) to avoid misclassification
   // e.g., "HR consulting" should NOT match "software" or generic tech terms
   
+  // BUG 3 FIX: "venture studio" MUST be checked as a compound term BEFORE generic SaaS detection
+  // This prevents "venture studio" from being misclassified as "saas" due to tech keywords
+  if (searchString.includes('venture studio') || 
+      searchString.includes('professional services') ||
+      searchString.includes('studio')) {
+    console.log('🎨 [IndustryDetect] "venture studio" mapped to consulting');
+    return 'consulting';
+  }
+  
   // Consulting detection - MUST come before SaaS
   if (searchString.includes('consult') || 
       searchString.includes('agency') ||
