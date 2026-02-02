@@ -88,6 +88,10 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     companyName: brandSettings?.companyName,
   });
   
+  // DIAGNOSTIC: Log what container will render (helps debug stale data-mode/data-industry)
+  console.log('🎨 [LivePreview Container] data-mode:', colorMode, 'data-industry:', industryVariant || 'default', 
+    'bgClass:', colorMode === 'light' ? 'bg-white' : 'bg-slate-950');
+  
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [aiChatSection, setAiChatSection] = useState<{ index: number; type: string; content: any } | null>(null);
   
