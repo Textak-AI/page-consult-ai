@@ -1115,8 +1115,10 @@ export default function EnhancedBrandSetup() {
             industryInsights: marketResearch?.industryInsights,
             messagingDirection: marketResearch?.messagingDirection,
             competitiveAngle: marketResearch?.competitiveAngle,
-            // Brand data captured in this step
+            // Brand data captured in this step - include at TOP LEVEL for Generate.tsx hydration
             logoUrl: logo,
+            companyName: companyName,
+            websiteUrl: websiteUrl,
             brandColors: {
               primary: colors.primary,
               secondary: colors.secondary,
@@ -1129,6 +1131,12 @@ export default function EnhancedBrandSetup() {
             source: 'demo',
             migratedAt: new Date().toISOString(),
           };
+          
+          console.log('🎨 [BrandExtraction] Persisting brand data from demo:', {
+            companyName,
+            primaryColor: colors.primary,
+            logoUrl: logo ? '(present)' : null,
+          });
           
           // Create consultation from demo intelligence with ALL data
           const { data: newConsultation, error: createError } = await supabase
@@ -1195,6 +1203,21 @@ export default function EnhancedBrandSetup() {
         console.log('🚀 [EnhancedBrandSetup] Creating consultation from brand setup data...');
         
         // Create a new consultation with the extracted brand data
+        // Include all brand fields at top level for Generate.tsx hydration to find
+        const brandIntelligence = {
+          ...extractionResults,
+          brandColors: {
+            primary: colors.primary,
+            secondary: colors.secondary,
+            accent: colors.accent,
+          },
+          logoUrl: logo || (extractionResults as any)?.logoUrl || null,
+          companyName: companyName,
+          websiteUrl: websiteUrl,
+          source: 'brand_setup',
+          migratedAt: new Date().toISOString(),
+        };
+        
         const { data: newConsultation, error: createError } = await supabase
           .from('consultations')
           .insert({
@@ -1202,12 +1225,7 @@ export default function EnhancedBrandSetup() {
             industry: (extractionResults as any)?.inferredIndustry || extractionResults?.industry || null,
             business_name: companyName,
             website_url: websiteUrl,
-            extracted_intelligence: {
-              ...extractionResults,
-              brandColors: colors,
-              source: 'brand_setup',
-              migratedAt: new Date().toISOString(),
-            },
+            extracted_intelligence: brandIntelligence,
             consultation_status: 'not_started',
             status: 'in_progress',
             readiness_score: extractionResults ? 25 : 10, // Some readiness from brand extraction
@@ -1218,12 +1236,18 @@ export default function EnhancedBrandSetup() {
         
         if (!createError && newConsultation) {
           console.log('✅ [EnhancedBrandSetup] Created consultation:', newConsultation.id);
+          console.log('🎨 [BrandExtraction] Persisted brand data to consultation:', newConsultation.id, {
+            primaryColor: colors.primary,
+            logoUrl: logo ? '(present)' : null,
+            companyName,
+          });
           
           // Save brand data to localStorage for consultation to pick up
           const brandData = {
             companyName,
             websiteUrl,
             colors,
+            logo, // Include logo URL
             extractionResults,
             consultationId: newConsultation.id,
           };
@@ -1245,6 +1269,7 @@ export default function EnhancedBrandSetup() {
         companyName,
         websiteUrl,
         colors,
+        logo, // Include logo URL
         extractionResults,
         source: 'brand_setup',
       };
