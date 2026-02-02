@@ -74,6 +74,19 @@ export default function Huddle() {
     setLoading(true);
     setError(null);
 
+    // ISSUE 1 FIX: Check if a generated page already exists for this consultation
+    const { data: existingPage } = await supabase
+      .from('landing_pages')
+      .select('id')
+      .eq('consultation_id', consultationId)
+      .maybeSingle();
+
+    if (existingPage) {
+      console.log('✅ [Huddle] Page already exists, routing directly to editor:', existingPage.id);
+      navigate(`/generate?consultationId=${consultationId}`);
+      return;
+    }
+
     // First try consultations table
     let { data, error: consultationError } = await supabase
       .from('consultations')
@@ -197,15 +210,34 @@ export default function Huddle() {
       }
     ];
 
-    // Find the weakest card for gap callout
-    const weakestCard = cards.find(c => c.confidence === 'low') || 
-                        cards.find(c => c.confidence === 'medium');
-
-    const gap = weakestCard && weakestCard.confidence !== 'high' ? {
-      field: weakestCard.id,
-      prompt: `What's ${weakestCard.label.toLowerCase().replace('your ', '')}?`,
-      placeholder: weakestCard.notePrompt
-    } : null;
+    // ISSUE 2 FIX: Only show gap callout if we have genuinely missing data
+    // Don't ask redundant questions about fields that already have data displayed in cards
+    const cardsWithData = cards.filter(c => c.confidence === 'high' || (c.value && c.value.length > 3));
+    const allCardsHaveData = cardsWithData.length >= 3; // At least 3 of 4 cards have good data
+    
+    // Find a card that's truly empty (not just low confidence with existing data)
+    const trulyEmptyCard = cards.find(c => c.confidence === 'low' && (!c.value || c.value.length < 3));
+    
+    // Only show gap if there's a truly empty field AND not all cards have data
+    let gap: { field: string; prompt: string; placeholder: string } | null = null;
+    
+    if (!allCardsHaveData && trulyEmptyCard) {
+      // Ask about the genuinely missing field
+      gap = {
+        field: trulyEmptyCard.id,
+        prompt: `What's ${trulyEmptyCard.label.toLowerCase().replace('your ', '')}?`,
+        placeholder: trulyEmptyCard.notePrompt
+      };
+    } else if (!allCardsHaveData) {
+      // All visible cards have some data, but brief could still be strengthened
+      // Ask a more strategic question instead of repeating what's shown
+      gap = {
+        field: 'conversion_goal',
+        prompt: 'What action do you want visitors to take?',
+        placeholder: 'e.g., Book a call, Start free trial, Request a quote'
+      };
+    }
+    // If allCardsHaveData is true, gap stays null and section won't show
 
     // Build recap based on type
     let recap = '';
