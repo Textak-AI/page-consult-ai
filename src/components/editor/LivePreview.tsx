@@ -620,7 +620,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         data-industry={industryVariant || 'default'}
         className={cn(
           "min-h-full live-preview-container",
-          colorMode === 'light' ? 'bg-white' : 'bg-slate-950'
+          colorMode === 'light' ? 'bg-white text-slate-900' : 'bg-slate-950 text-slate-50'
         )}
         style={(() => {
           const styles: React.CSSProperties = {};
