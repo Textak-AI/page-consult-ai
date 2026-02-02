@@ -447,21 +447,35 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <Button 
-              size="lg" 
-              className={`px-12 py-6 text-lg font-semibold bg-white text-slate-900 hover:bg-slate-100 rounded-xl shadow-lg ${
-                isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""
-              }`}
-            >
-              <span
-                contentEditable={isEditing}
-                suppressContentEditableWarning
-                onBlur={(e) => handleBlur("ctaText", e)}
-              >
-                {ctaText}
-              </span>
-              <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
-            </Button>
+            {(() => {
+              // Use brand color if available, otherwise white button on dark background
+              const hasBrandColor = !!content.primaryColor;
+              const ctaStyle = hasBrandColor 
+                ? { backgroundColor: content.primaryColor, boxShadow: `0 10px 30px -10px ${content.primaryColor}66`, color: 'white' }
+                : undefined;
+              const ctaClassName = hasBrandColor
+                ? `px-12 py-6 text-lg font-semibold rounded-xl shadow-lg hover:opacity-90 transition-opacity ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`
+                : `px-12 py-6 text-lg font-semibold bg-white text-slate-900 hover:bg-slate-100 rounded-xl shadow-lg ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`;
+              
+              console.log('🎨 [FinalCTASection Consulting] primaryColor:', content.primaryColor);
+              
+              return (
+                <Button 
+                  size="lg" 
+                  className={ctaClassName}
+                  style={ctaStyle}
+                >
+                  <span
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleBlur("ctaText", e)}
+                  >
+                    {ctaText}
+                  </span>
+                  <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
+                </Button>
+              );
+            })()}
           </motion.div>
 
           {/* Guarantee */}

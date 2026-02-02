@@ -627,23 +627,39 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 transition={{ duration: 0.5, delay: 0.4 }}
                 className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pt-4"
               >
-                <Button 
-                  size="lg" 
-                  className={`group px-8 py-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:-translate-y-0.5 ${
-                    isHealthcare 
-                      ? 'bg-teal-600 hover:bg-teal-500 text-white shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40' 
-                      : 'bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40'
-                  } ${isEditing ? `outline-dashed outline-2 outline-${accentColor}-500/30` : ""}`}
-                >
-                  <span
-                    contentEditable={isEditing}
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleBlur("ctaText", e)}
-                  >
-                    {content.ctaText}
-                  </span>
-                  <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </Button>
+                {(() => {
+                  // Use brand color if available, otherwise fall back to industry color
+                  const hasBrandColor = !!content.primaryColor;
+                  const ctaStyle = hasBrandColor 
+                    ? { backgroundColor: content.primaryColor, boxShadow: `0 10px 30px -10px ${content.primaryColor}66` }
+                    : undefined;
+                  const ctaClassName = hasBrandColor
+                    ? `group px-8 py-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:-translate-y-0.5 text-white ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`
+                    : `group px-8 py-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:-translate-y-0.5 ${
+                        isHealthcare 
+                          ? 'bg-teal-600 hover:bg-teal-500 text-white shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40' 
+                          : 'bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40'
+                      } ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`;
+                  
+                  console.log('🎨 [HeroSection Consulting] primaryColor:', content.primaryColor);
+                  
+                  return (
+                    <Button 
+                      size="lg" 
+                      className={ctaClassName}
+                      style={ctaStyle}
+                    >
+                      <span
+                        contentEditable={isEditing}
+                        suppressContentEditableWarning
+                        onBlur={(e) => handleBlur("ctaText", e)}
+                      >
+                        {content.ctaText}
+                      </span>
+                      <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  );
+                })()}
                 
                 {/* Secondary action */}
                 <a 
