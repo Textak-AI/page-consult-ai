@@ -850,13 +850,124 @@ function GenerateContent() {
 
         console.log("✅ Loaded existing page:", existingPage.id, "with", (existingPage.sections as any[])?.length, "sections");
         
-        // DEBUG: Log design_intelligence from database
-        console.log('🎨 [LoadExisting] design_intelligence from DB:', existingPage.design_intelligence);
-        console.log('🎨 [LoadExisting] colorMode:', (existingPage.design_intelligence as any)?.colorMode);
-        console.log('🎨 [LoadExisting] industryVariant:', (existingPage.design_intelligence as any)?.industryVariant);
-        
         // Get consultation data for patching sections
         const consultationData = existingPage.consultation_data as any || {};
+        
+        // DEBUG: Log design_intelligence from database
+        const dbDesignIntel = existingPage.design_intelligence as any || {};
+        const dbColorMode = dbDesignIntel.colorMode;
+        const dbIndustryVariant = dbDesignIntel.industryVariant;
+        console.log('🎨 [LoadExisting] design_intelligence from DB:', existingPage.design_intelligence);
+        console.log('🎨 [LoadExisting] DB colorMode:', dbColorMode);
+        console.log('🎨 [LoadExisting] DB industryVariant:', dbIndustryVariant);
+        
+        // BUG 1 FIX: Resolve colorMode from Strategy Blueprint (fresh) over stale DB value
+        // Priority: Strategy Blueprint > brand settings override > database fallback
+        const strategyBlueprintColorMode = strategicData?.consultationData?.designConventions?.colorMode ||
+                                            consultationData?.designConventions?.colorMode;
+        const resolvedColorMode = strategyBlueprintColorMode || dbColorMode || 'dark';
+        console.log(`🎨 [LoadExisting] colorMode resolution: strategy='${strategyBlueprintColorMode || 'none'}', db='${dbColorMode || 'none'}', resolved='${resolvedColorMode}' (strategy wins)`);
+        
+        // BUG 3 FIX: Resolve industryVariant from consultation industry over stale DB value
+        // Priority: consultation.industry > DB fallback > 'default'
+        const consultationIndustry = existingPage.industry || 
+                                      consultationData.industry || 
+                                      consultationData.industryCategory;
+        // Map "venture studio" and similar compound terms to 'consulting'
+        const mapIndustryToVariant = (industry: string | null): string => {
+          if (!industry) return dbIndustryVariant || 'default';
+          const search = industry.toLowerCase();
+          // Consulting/professional services compound terms
+          if (search.includes('venture studio') || 
+              search.includes('professional services') || 
+              search.includes('advisory') ||
+              search.includes('consulting') ||
+              search.includes('strategy')) {
+            return 'consulting';
+          }
+          // Healthcare
+          if (search.includes('health') || search.includes('medical') || search.includes('wellness')) {
+            return 'healthcare';
+          }
+          // Finance
+          if (search.includes('finance') || search.includes('fintech') || search.includes('banking') || search.includes('insurance')) {
+            return 'finance';
+          }
+          // Local services
+          if (search.includes('plumb') || search.includes('hvac') || search.includes('electric') || 
+              search.includes('roofing') || search.includes('landscap') || search.includes('cleaning')) {
+            return 'local-services';
+          }
+          // SaaS
+          if (search.includes('saas') || search.includes('software') || search.includes('app')) {
+            return 'saas';
+          }
+          return dbIndustryVariant || 'default';
+        };
+        const resolvedIndustryVariant = mapIndustryToVariant(consultationIndustry);
+        console.log(`🎨 [LoadExisting] industryVariant resolution: consultation='${consultationIndustry || 'none'}', db='${dbIndustryVariant || 'none'}', resolved='${resolvedIndustryVariant}'`);
+        
+        // BUG 2 FIX: Brand data hydration from multiple sources
+        const pageWebsiteIntel = existingPage.website_intelligence as any || {};
+        const consultationBrandSettings = consultationData?.brand_settings || consultationData?.brandSettings || {};
+        const extractedIntelColors = consultationData?.extracted_intelligence?.colors || 
+                                      consultationData?.extractedIntelligence?.colors || [];
+        const legacyWebsiteIntel = consultationData?.websiteIntelligence || {};
+        
+        // Try localStorage as fallback
+        let localBrandData: any = null;
+        try {
+          const stored = localStorage.getItem('pageconsult_brand_data');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            localBrandData = {
+              primaryColor: parsed.colors?.primary || null,
+              secondaryColor: parsed.colors?.secondary || null,
+              accentColor: parsed.colors?.accent || null,
+              logoUrl: parsed.logo || null,
+              companyName: parsed.companyName || null,
+            };
+          }
+        } catch (e) {
+          // Storage disabled or parse failed
+        }
+        
+        const resolvedBrand = {
+          primaryColor: pageWebsiteIntel.primaryColor ||
+                        consultationBrandSettings.primaryColor ||
+                        extractedIntelColors[0] ||
+                        dbDesignIntel.brandColors?.primary ||
+                        localBrandData?.primaryColor ||
+                        legacyWebsiteIntel.primaryColor ||
+                        null,
+          secondaryColor: pageWebsiteIntel.secondaryColor ||
+                          consultationBrandSettings.secondaryColor ||
+                          extractedIntelColors[1] ||
+                          dbDesignIntel.brandColors?.secondary ||
+                          localBrandData?.secondaryColor ||
+                          legacyWebsiteIntel.secondaryColor ||
+                          null,
+          logoUrl: pageWebsiteIntel.logoUrl ||
+                   consultationBrandSettings.logoUrl ||
+                   dbDesignIntel.logoUrl ||
+                   localBrandData?.logoUrl ||
+                   legacyWebsiteIntel.logoUrl ||
+                   null,
+          companyName: pageWebsiteIntel.companyName ||
+                       consultationBrandSettings.companyName ||
+                       consultationData.businessName ||
+                       localBrandData?.companyName ||
+                       legacyWebsiteIntel.companyName ||
+                       null,
+        };
+        console.log('🎨 [LoadExisting] Brand hydration:', {
+          fromPageWebsiteIntel: !!pageWebsiteIntel.primaryColor,
+          fromConsultationBrand: !!consultationBrandSettings.primaryColor,
+          fromExtractedIntel: extractedIntelColors.length > 0,
+          fromLocalStorage: !!localBrandData?.primaryColor,
+          resolved: resolvedBrand,
+        });
+        
         console.log('🔄 [Patch] Consultation data from page:', consultationData);
         
         // Reconstruct consultation state from existing page data for use in LivePreview
@@ -864,25 +975,62 @@ function GenerateContent() {
         const reconstructedConsultation = {
           id: existingPage.consultation_id,
           industry: existingPage.industry || consultationData.industry,
-          businessName: consultationData.businessName,
+          industryCategory: resolvedIndustryVariant, // Use resolved variant
+          businessName: consultationData.businessName || resolvedBrand.companyName,
+          colorMode: resolvedColorMode, // Inject resolved colorMode
           // Extract brand data from websiteIntelligence if available
-          websiteIntelligence: existingPage.website_intelligence || consultationData.websiteIntelligence,
+          websiteIntelligence: {
+            ...(existingPage.website_intelligence || consultationData.websiteIntelligence || {}),
+            primaryColor: resolvedBrand.primaryColor,
+            secondaryColor: resolvedBrand.secondaryColor,
+            logoUrl: resolvedBrand.logoUrl,
+            companyName: resolvedBrand.companyName,
+          },
           // Extract extracted_intelligence for brand colors
-          extracted_intelligence: consultationData.extractedIntelligence || consultationData.extracted_intelligence || {
-            colors: consultationData.colors || [],
-            logoUrl: consultationData.logoUrl || (existingPage.website_intelligence as any)?.logoUrl,
-            companyName: consultationData.companyName || consultationData.businessName,
+          extracted_intelligence: {
+            ...(consultationData.extractedIntelligence || consultationData.extracted_intelligence || {}),
+            colors: [resolvedBrand.primaryColor, resolvedBrand.secondaryColor].filter(Boolean),
+            logoUrl: resolvedBrand.logoUrl,
+            companyName: resolvedBrand.companyName,
           },
         };
         setConsultation(reconstructedConsultation);
         
         // Patch sections with fresh consultation data (especially final-cta)
-        const patchedSections = patchSectionsWithConsultationData(
+        // Also inject resolved design values into each section
+        let patchedSections = patchSectionsWithConsultationData(
           (existingPage.sections as Section[]) || [],
           consultationData
         );
         
-        setPageData(existingPage);
+        // Inject resolved design intelligence into section content
+        patchedSections = patchedSections.map(section => ({
+          ...section,
+          content: {
+            ...section.content,
+            mode: resolvedColorMode === 'light' ? 'light' : 'dark',
+            industryVariant: resolvedIndustryVariant,
+            primaryColor: section.content?.primaryColor || resolvedBrand.primaryColor,
+            logoUrl: section.content?.logoUrl || resolvedBrand.logoUrl,
+          },
+        }));
+        
+        // BUG 1 FIX: Override stale design_intelligence in pageData with resolved values
+        const correctedDesignIntelligence = {
+          ...dbDesignIntel,
+          colorMode: resolvedColorMode,
+          industryVariant: resolvedIndustryVariant,
+          brandColors: {
+            primary: resolvedBrand.primaryColor,
+            secondary: resolvedBrand.secondaryColor,
+          },
+          logoUrl: resolvedBrand.logoUrl,
+        };
+        
+        setPageData({
+          ...existingPage,
+          design_intelligence: correctedDesignIntelligence,
+        });
         setSections(patchedSections);
         setPhase("editor");
         return;
