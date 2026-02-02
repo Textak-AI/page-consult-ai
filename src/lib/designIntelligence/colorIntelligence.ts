@@ -211,6 +211,15 @@ export function detectIndustry(text: string): string {
   
   // Priority 2: Industry detection patterns - order matters! Check more specific first
   // LOCAL-SERVICES must be first to catch plumbers, HVAC, etc.
+  // BUG 3 FIX: Check compound terms BEFORE generic terms to avoid misclassification
+  
+  // BUG 3 FIX: "venture studio" is professional services, NOT SaaS
+  // Check compound terms first before keyword-based pattern matching
+  if (lowered.includes('venture studio')) {
+    console.log('🎨 [SDI] "venture studio" detected as consulting (professional services)');
+    return 'consulting';
+  }
+  
   const patterns: Record<string, string[]> = {
     // Local services - check FIRST
     'local-services': ['plumber', 'plumbing', 'electrician', 'electrical', 'hvac', 'heating', 'cooling',
@@ -227,8 +236,10 @@ export function detectIndustry(text: string): string {
     healthcare: ['healthcare', 'hospital', 'clinic', 'patient', 'medical', 'HIPAA', 'health', 'clinical', 'physician'],
     cybersecurity: ['cybersecurity', 'security', 'penetration', 'vulnerability', 'breach', 'hacker', 'threat', 'SOC'],
     finance: ['finance', 'financial', 'bank', 'investment', 'wealth', 'insurance', 'fintech', 'trading'],
+    // BUG 3 FIX: consulting must include "venture studio" compound term (already caught above)
+    consulting: ['consulting', 'consultant', 'advisory', 'management consulting', 'venture studio'],
+    // NOTE: SaaS keywords should NOT override consulting-detected industries
     saas: ['SaaS', 'software', 'platform', 'app', 'subscription', 'cloud', 'API'],
-    consulting: ['consulting', 'consultant', 'advisory', 'management consulting'],
     manufacturing: ['manufacturing', 'factory', 'production', 'supply chain', 'industrial', 'warehouse'],
     coaching: ['coaching', 'coach', 'mentor', 'training', 'development', 'leadership'],
     technology: ['tech', 'developer', 'devops', 'engineering', 'startup']

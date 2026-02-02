@@ -17,6 +17,9 @@ export interface DesignIntelligenceInput {
   // Pre-detected industry from consultation (avoids re-detection)
   industryCategory?: string;
   industryConfidence?: 'high' | 'medium' | 'low';
+  // BUG 3 FIX: Consultation industry field takes PRIORITY over text detection
+  // This is the explicit industry field from consultation (e.g., "venture studio")
+  consultationIndustry?: string;
 }
 
 export interface DesignIntelligenceOutput {
@@ -44,25 +47,31 @@ export interface DesignIntelligenceOutput {
 export function generateDesignIntelligence(input: DesignIntelligenceInput): DesignIntelligenceOutput {
   console.log('🎨 [SDI] Starting design intelligence analysis...');
   
-  const { conversationText, extractedIntelligence, targetMarket, industryCategory, industryConfidence } = input;
+  const { conversationText, extractedIntelligence, targetMarket, industryCategory, industryConfidence, consultationIndustry } = input;
   
   // 1. Detect tone from conversation
   const tone = detectTone(conversationText);
   const typography = getTypographyRecommendation(tone);
   
-  // 2. Use pre-detected industry - priority order:
-  // Priority 1: Passed-in industryCategory from consultation
-  // Priority 2: localStorage detection (from IntelligenceContext)
-  // Priority 3: Text-based detection (last resort)
+  // 2. Industry resolution with CLEAR PRIORITY ORDER:
+  // Priority 1: consultationIndustry (explicit field from consultation - user confirmed)
+  // Priority 2: industryCategory from extraction (with confidence check)
+  // Priority 3: localStorage detection (from IntelligenceContext)
+  // Priority 4: Text-based detection (last resort)
   let industry: string;
+  const textDetectedIndustry = detectIndustry(conversationText); // Always compute for logging
   
-  if (industryCategory && industryCategory !== 'default' && industryConfidence !== 'low') {
+  if (consultationIndustry && consultationIndustry !== 'default' && consultationIndustry.length > 2) {
+    // BUG 3 FIX: Consultation industry ALWAYS takes priority
+    industry = consultationIndustry;
+    console.log(`🎨 [SDI] Industry resolution: {fromConsultation: '${consultationIndustry}', fromTextDetection: '${textDetectedIndustry}', resolved: '${industry}'}`);
+  } else if (industryCategory && industryCategory !== 'default' && industryConfidence !== 'low') {
     industry = industryCategory;
-    console.log(`🎨 [SDI] Using pre-detected industry from params: ${industry} (confidence: ${industryConfidence})`);
+    console.log(`🎨 [SDI] Industry resolution: {fromConsultation: null, fromIndustryCategory: '${industryCategory}', fromTextDetection: '${textDetectedIndustry}', resolved: '${industry}'}`);
   } else {
     // detectIndustry now checks localStorage first before text detection
-    industry = detectIndustry(conversationText);
-    console.log(`🎨 [SDI] Using industry from detection: ${industry}`);
+    industry = textDetectedIndustry;
+    console.log(`🎨 [SDI] Industry resolution: {fromConsultation: null, fromTextDetection: '${textDetectedIndustry}', resolved: '${industry}'}`);
   }
   
   const emotionalDrivers = detectEmotionalDrivers(conversationText);

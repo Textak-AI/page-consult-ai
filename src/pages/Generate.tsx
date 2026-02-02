@@ -737,6 +737,8 @@ function GenerateContent() {
           // Get pre-detected industry category if available
           const industryCategory = (intel as any).industryCategory || null;
           const industryConfidence = (intel as any).industryConfidence || null;
+          // BUG 3 FIX: Pass explicit industry field from consultation as highest priority
+          const consultationIndustry = intel.industry || (intel as any).industry || null;
           
           sdiOutput = generateDesignIntelligence({
             conversationText,
@@ -744,6 +746,7 @@ function GenerateContent() {
             targetMarket: intel.audience || (intel as any).targetMarket,
             industryCategory: industryCategory || undefined,
             industryConfidence: industryConfidence || undefined,
+            consultationIndustry: consultationIndustry || undefined, // BUG 3 FIX
           });
           setDesignIntelligence(sdiOutput);
           console.log('🎨 [SDI] Design intelligence generated:', sdiOutput.summary);
@@ -920,6 +923,8 @@ function GenerateContent() {
             // Get pre-detected industry category if available
             const industryCategory = demoData.industryCategory || null;
             const industryConfidence = demoData.industryConfidence || null;
+            // BUG 3 FIX: Pass explicit industry field from consultation as highest priority
+            const consultationIndustry = demoData.industry || null;
             
             sdiOutput = generateDesignIntelligence({
               conversationText,
@@ -927,6 +932,7 @@ function GenerateContent() {
               targetMarket: demoData.targetAudience || demoData.target_audience,
               industryCategory: industryCategory || undefined,
               industryConfidence: industryConfidence || undefined,
+              consultationIndustry: consultationIndustry || undefined, // BUG 3 FIX
             });
             setDesignIntelligence(sdiOutput);
             console.log('🎨 [SDI] Design intelligence generated:', sdiOutput.summary);
@@ -1293,12 +1299,22 @@ function GenerateContent() {
           
           // Fallback to detectIndustryVariantNew if localStorage doesn't have it
           if (industryVariant === 'default') {
-            industryVariant = detectIndustryVariantNew(
-              effectiveIndustry,
-              pageConsultationData.industryCategory,
-              pageConsultationData.industrySubcategory,
-              effectivePageType
-            );
+            // BUG 3 FIX: Check for compound terms BEFORE calling detection function
+            // This ensures "venture studio" doesn't get misclassified as "saas"
+            const industrySearchString = [effectiveIndustry, pageConsultationData.industryCategory, pageConsultationData.industrySubcategory]
+              .filter(Boolean).join(' ').toLowerCase();
+            
+            if (industrySearchString.includes('venture studio')) {
+              industryVariant = 'consulting' as IndustryVariant;
+              console.log('🎨 [LoadExisting] "venture studio" mapped to consulting');
+            } else {
+              industryVariant = detectIndustryVariantNew(
+                effectiveIndustry,
+                pageConsultationData.industryCategory,
+                pageConsultationData.industrySubcategory,
+                effectivePageType
+              );
+            }
           }
           console.log('🎨 [LoadExisting] Final industryVariant:', industryVariant, 'from:', {
             industry: effectiveIndustry,
@@ -1319,26 +1335,106 @@ function GenerateContent() {
           // DEBUG: Log raw design_intelligence from database
           console.log('🎨 [DB] Raw design_intelligence from database:', JSON.stringify(pageDesignIntel));
           
+          // ============================================
+          // BUG 1 FIX: colorMode Resolution with CLEAR PRIORITY
+          // Strategy Blueprint (fresh) > Brand Settings > DB design_intelligence (stale)
+          // ============================================
+          
+          // Check for fresh Strategy Blueprint from designConventions (computed this session)
+          const strategyBlueprintColorMode = consultationData.designConventions?.colorMode || 
+                                              pageConsultationData.designConventions?.colorMode || 
+                                              null;
+          const dbColorMode = pageDesignIntel.colorMode || pageDesignIntel.colors?.mode || null;
+          
+          let resolvedColorMode: 'light' | 'dark';
+          if (strategyBlueprintColorMode) {
+            // Strategy Blueprint takes priority - it's freshly computed
+            resolvedColorMode = strategyBlueprintColorMode === 'light' ? 'light' : 'dark';
+            console.log(`🎨 [LoadExisting] colorMode resolution: strategy='${strategyBlueprintColorMode}', db='${dbColorMode}', resolved='${resolvedColorMode}' (strategy wins)`);
+            
+            // Update DB design_intelligence to stay in sync
+            if (dbColorMode !== resolvedColorMode) {
+              console.log('🎨 [LoadExisting] Updating DB design_intelligence with new colorMode');
+              const updatedDesignIntel = { ...pageDesignIntel, colorMode: resolvedColorMode };
+              supabase.from('landing_pages').update({ design_intelligence: updatedDesignIntel }).eq('id', existingPage.id);
+            }
+          } else if (dbColorMode) {
+            resolvedColorMode = dbColorMode === 'light' ? 'light' : 'dark';
+            console.log(`🎨 [LoadExisting] colorMode resolution: strategy=null, db='${dbColorMode}', resolved='${resolvedColorMode}' (db used)`);
+          } else {
+            // Use industry tokens mode as fallback
+            resolvedColorMode = tokens.mode || 'dark';
+            console.log(`🎨 [LoadExisting] colorMode resolution: strategy=null, db=null, resolved='${resolvedColorMode}' (industry tokens fallback)`);
+          }
+          
+          // ============================================
+          // BUG 2 FIX: Brand Data Hydration from Multiple Sources
+          // ============================================
+          
           // Build websiteIntelligence from extracted_intelligence colors array
           const colorsArray = intel.colors || [];
-          const websiteIntelligence = {
-            logoUrl: intel.logoUrl || pageConsultationData.websiteIntelligence?.logoUrl || null,
-            companyName: intel.companyName || consultationData.business_name || pageConsultationData.businessName || null,
-            // colors[0] is primary, colors[1] is secondary, colors[2] is accent
-            primaryColor: colorsArray[0] || intel.brandColors?.primary || pageConsultationData.websiteIntelligence?.primaryColor || null,
-            secondaryColor: colorsArray[1] || intel.brandColors?.secondary || pageConsultationData.websiteIntelligence?.secondaryColor || null,
-            accentColor: colorsArray[2] || intel.brandColors?.accent || pageConsultationData.websiteIntelligence?.accentColor || null,
+          
+          // Check website_intelligence on the page for extracted brand data
+          const pageWebsiteIntel = existingPage.website_intelligence as any || {};
+          
+          // Try consultation.brand_settings JSONB column
+          const consultationBrandSettings = consultationData.brand_settings as any || 
+                                             pageConsultationData.brand_settings as any || {};
+          
+          // Resolve brand data with CLEAR PRIORITY:
+          // 1. pageWebsiteIntel (from website extraction)
+          // 2. consultationBrandSettings (explicit brand setup)
+          // 3. extracted_intelligence colors array
+          // 4. pageConsultationData.websiteIntelligence (legacy)
+          const resolvedBrand = {
+            primaryColor: pageWebsiteIntel.primaryColor ||
+                          consultationBrandSettings.primaryColor ||
+                          colorsArray[0] ||
+                          intel.brandColors?.primary ||
+                          pageConsultationData.websiteIntelligence?.primaryColor ||
+                          null,
+            secondaryColor: pageWebsiteIntel.secondaryColor ||
+                            consultationBrandSettings.secondaryColor ||
+                            colorsArray[1] ||
+                            intel.brandColors?.secondary ||
+                            pageConsultationData.websiteIntelligence?.secondaryColor ||
+                            null,
+            accentColor: pageWebsiteIntel.accentColor ||
+                         consultationBrandSettings.accentColor ||
+                         colorsArray[2] ||
+                         intel.brandColors?.accent ||
+                         pageConsultationData.websiteIntelligence?.accentColor ||
+                         null,
+            logoUrl: pageWebsiteIntel.logoUrl ||
+                     consultationBrandSettings.logoUrl ||
+                     intel.logoUrl ||
+                     pageConsultationData.websiteIntelligence?.logoUrl ||
+                     null,
+            companyName: pageWebsiteIntel.companyName ||
+                         intel.companyName ||
+                         consultationData.business_name ||
+                         pageConsultationData.businessName ||
+                         null,
           };
           
-          // Resolve colorMode from design_intelligence (fallback to 'dark')
-          const resolvedColorMode = pageDesignIntel.colorMode || pageDesignIntel.colors?.mode || 'dark';
-          console.log('🎨 [LoadExisting] Resolved colorMode:', resolvedColorMode, 'from designIntelligence');
+          // Log brand hydration sources
+          console.log('🎨 [LoadExisting] Brand hydration:', {
+            fromPageWebsiteIntel: !!pageWebsiteIntel.primaryColor,
+            fromConsultationBrandSettings: !!consultationBrandSettings.primaryColor,
+            fromExtractedIntel: colorsArray.length > 0,
+            fromLegacy: !!pageConsultationData.websiteIntelligence?.primaryColor,
+            resolved: {
+              primaryColor: resolvedBrand.primaryColor,
+              secondaryColor: resolvedBrand.secondaryColor,
+              logoUrl: resolvedBrand.logoUrl ? '(present)' : null,
+            }
+          });
           
           console.log('🎨 [LoadExisting] Resolved brand data:', {
             colorMode: resolvedColorMode,
-            logoUrl: websiteIntelligence.logoUrl,
-            primaryColor: websiteIntelligence.primaryColor,
-            secondaryColor: websiteIntelligence.secondaryColor,
+            logoUrl: resolvedBrand.logoUrl,
+            primaryColor: resolvedBrand.primaryColor,
+            secondaryColor: resolvedBrand.secondaryColor,
             colorsArray: colorsArray.slice(0, 3),
           });
           
@@ -1349,20 +1445,21 @@ function GenerateContent() {
               ...section.content,
               industryVariant: industryVariant,
               mode: resolvedColorMode, // Inject colorMode into each section
-              primaryColor: websiteIntelligence.primaryColor, // Inject primary color for CTA buttons
-              logoUrl: section.type === 'hero' ? websiteIntelligence.logoUrl : section.content?.logoUrl, // Inject logo for hero
+              primaryColor: resolvedBrand.primaryColor, // Inject primary color for CTA buttons
+              secondaryColor: resolvedBrand.secondaryColor,
+              logoUrl: section.type === 'hero' ? resolvedBrand.logoUrl : section.content?.logoUrl, // Inject logo for hero
             }
           }));
           
-          console.log('🎨 [LoadExisting] Injected into sections: mode=' + resolvedColorMode + ', primaryColor=' + websiteIntelligence.primaryColor);
+          console.log('🎨 [LoadExisting] Injected into sections: mode=' + resolvedColorMode + ', primaryColor=' + resolvedBrand.primaryColor);
           
           // Store consultation data for potential regeneration WITH websiteIntelligence
           setConsultation({
             ...consultationData,
             ...pageConsultationData,
-            websiteIntelligence,
+            websiteIntelligence: resolvedBrand,
             // Also preserve designIntelligence for colorMode resolution
-            designIntelligence: pageDesignIntel.colors ? pageDesignIntel : consultationData.designIntelligence,
+            designIntelligence: { ...pageDesignIntel, colorMode: resolvedColorMode },
           });
           
           setPageData(existingPage);
