@@ -1698,9 +1698,23 @@ function GenerateContent() {
       
       // Get aiSeoData for meta tags optimization
       const aiSeoData = consultationData.aiSeoData || consultationData.ai_seo_data;
+      
+      // Resolve company name with proper fallback chain
+      const companyName = strategicData?.consultationData?.businessName 
+        || consultationData.business_name 
+        || consultationData.businessName
+        || (consultationData.extracted_intelligence as any)?.companyName
+        || null;
+      
+      // Build meta title with proper fallbacks to avoid "undefined"
+      const offerText = consultationData.offer || consultationData.service_type || consultationData.industry || 'Landing Page';
+      const industryText = consultationData.industry || '';
+      
       let optimizedMeta = {
-        title: `${consultationData.offer} - ${consultationData.industry}`,
-        description: consultationData.unique_value || '',
+        title: companyName 
+          ? `${companyName} | ${offerText}`
+          : (industryText ? `${offerText} - ${industryText}` : offerText),
+        description: consultationData.unique_value || consultationData.uniqueValue || '',
       };
       
       // Use AI SEO optimized meta tags if available
@@ -1729,18 +1743,36 @@ function GenerateContent() {
         consultation_id: isDemoSessionInsert ? null : consultationData.id,
         // Store session_id for demo flows (added via migration, no FK constraint)
         session_id: isDemoSessionInsert ? consultationData.session_id : null,
-        title: strategicData?.consultationData?.businessName 
-          ? `${strategicData.consultationData.businessName} Landing Page`
-          : `${consultationData.industry} Landing Page`,
+        title: companyName 
+          ? `${companyName} Landing Page`
+          : `${consultationData.industry || 'New'} Landing Page`,
         slug,
         sections: generatedSections,
         meta_title: optimizedMeta.title,
         meta_description: optimizedMeta.description,
+        // Always populate consultation_data with available intelligence and brand context
+        consultation_data: {
+          ...(strategicData?.consultationData || {}),
+          industry: consultationData.industry,
+          offer: consultationData.offer,
+          uniqueValue: consultationData.unique_value || consultationData.uniqueValue,
+          targetAudience: consultationData.target_audience || consultationData.targetAudience,
+          businessName: companyName,
+          extracted_intelligence: consultationData.extracted_intelligence,
+          brandColors: {
+            primary: strategicData?.brandSettings?.primaryColor || consultationData.primaryColor,
+            secondary: strategicData?.brandSettings?.secondaryColor || consultationData.secondaryColor,
+          },
+          logoUrl: strategicData?.brandSettings?.logoUrl || consultationData.logoUrl,
+        },
       };
       
-      // Add strategic data if from new consultation flow
+      // Add strategic data if from new consultation flow (merge with existing consultation_data)
       if (fromStrategicConsultation && strategicData) {
-        insertData.consultation_data = strategicData.consultationData || {};
+        insertData.consultation_data = {
+          ...insertData.consultation_data,
+          ...strategicData.consultationData,
+        };
         insertData.website_intelligence = strategicData.websiteIntelligence || null;
         insertData.strategy_brief = strategicData.strategyBrief || null;
         console.log("📋 Including strategic consultation data in page record");

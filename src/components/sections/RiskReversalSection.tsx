@@ -14,6 +14,7 @@ interface RiskReversalContent {
   guaranteeDetails?: string[];
   industryVariant?: string;
   mode?: 'light' | 'dark';
+  primaryColor?: string;
 }
 
 interface RiskReversalSectionProps {
