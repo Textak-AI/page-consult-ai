@@ -118,6 +118,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
   // Use flex layout for odd counts to center the last row
   const useFlexLayout = features.length % 3 !== 0 && features.length > 3;
 
+  // Brand color priority: use content.primaryColor if available, else industry default
+  const brandPrimaryColor = content.primaryColor;
+  const hasBrandColor = brandPrimaryColor && brandPrimaryColor !== '#' && brandPrimaryColor.length > 3;
+
   // Local Services variant: Light mode, trust-forward, service-focused
   if (isLocalServices) {
     return (
@@ -133,7 +137,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
             transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
-            <span className="inline-block px-4 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full mb-4">
+            <span 
+              className={hasBrandColor ? 'inline-block px-4 py-1 text-sm font-semibold rounded-full mb-4' : 'inline-block px-4 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full mb-4'}
+              style={hasBrandColor ? { backgroundColor: `${brandPrimaryColor}15`, color: brandPrimaryColor } : undefined}
+            >
               {eyebrow}
             </span>
             <h2 
@@ -175,7 +182,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                   className={useFlexLayout ? "w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]" : undefined}
                 >
                   <div className="h-full p-6 bg-slate-50 rounded-xl border border-slate-200 hover:shadow-lg hover:border-blue-200 transition-all">
-                    <div className="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
+                    <div 
+                      className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
+                      style={{ backgroundColor: hasBrandColor ? brandPrimaryColor : '#2563eb' }}
+                    >
                       <Icon className="w-6 h-6 text-white" strokeWidth={2} />
                     </div>
                     <h3 
@@ -301,9 +311,16 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
 
   // Healthcare or Consulting: Light mode layout
   if (isHealthcare || isConsulting) {
-    const iconBg = isHealthcare ? 'bg-teal-50' : 'bg-blue-50';
-    const iconColor = isHealthcare ? 'text-teal-600' : 'text-blue-600';
-    const badgeBg = isHealthcare ? 'bg-teal-100 text-teal-800' : 'bg-blue-100 text-blue-800';
+    // Brand color overrides industry defaults
+    const iconBgStyle = hasBrandColor ? { backgroundColor: `${brandPrimaryColor}15` } : undefined;
+    const iconColorStyle = hasBrandColor ? { color: brandPrimaryColor } : undefined;
+    const iconBg = hasBrandColor ? '' : (isHealthcare ? 'bg-teal-50' : 'bg-blue-50');
+    const iconColor = hasBrandColor ? '' : (isHealthcare ? 'text-teal-600' : 'text-blue-600');
+    
+    const badgeStyle = hasBrandColor 
+      ? { backgroundColor: `${brandPrimaryColor}15`, color: brandPrimaryColor }
+      : undefined;
+    const badgeBg = hasBrandColor ? '' : (isHealthcare ? 'bg-teal-100 text-teal-800' : 'bg-blue-100 text-blue-800');
     
     return (
       <section className={`py-24 bg-slate-50 ${isEditing ? 'relative' : ''}`}>
@@ -318,7 +335,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
             transition={{ duration: 0.5 }}
             className="text-center mb-16"
           >
-            <span className={`inline-block px-4 py-1 text-sm font-semibold rounded-full mb-4 ${badgeBg}`}>
+            <span 
+              className={`inline-block px-4 py-1 text-sm font-semibold rounded-full mb-4 ${badgeBg}`}
+              style={badgeStyle}
+            >
               {eyebrow}
             </span>
             <h2 
@@ -359,8 +379,11 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                   className={useFlexLayout ? "w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]" : undefined}
                 >
                   <div className="h-full p-8 bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 ${iconBg}`}>
-                      <Icon className={`w-7 h-7 ${iconColor}`} strokeWidth={1.5} />
+                    <div 
+                      className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 ${iconBg}`}
+                      style={iconBgStyle}
+                    >
+                      <Icon className={`w-7 h-7 ${iconColor}`} style={iconColorStyle} strokeWidth={1.5} />
                     </div>
                     <h3 
                       className={`text-xl font-bold text-slate-900 mb-3 ${

@@ -14,6 +14,7 @@ interface StakesAmplifyContent {
   consequences?: string;
   industryVariant?: string;
   mode?: 'light' | 'dark';
+  primaryColor?: string;
 }
 
 interface StakesAmplifySectionProps {
