@@ -394,6 +394,12 @@ Be specific. No generic advice. Everything should tie back to the actual consult
           pageDensity: layoutResult.config.layout.pageDensity,
           trustPriorities: layoutResult.config.trustPriorities,
         }
+      },
+      // Industry classification can be enhanced client-side with AI when keyword matching fails
+      industryClassificationHint: {
+        detectedFromKeyword: layoutResult.config.name !== 'default',
+        suggestAIClassification: layoutResult.config.name === 'default',
+        rawIndustry: consultationData.industry || 'Unknown'
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
