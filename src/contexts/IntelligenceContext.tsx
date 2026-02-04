@@ -935,12 +935,18 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         };
 
         // Re-run industry detection with all conversation messages
+        // Pass the stated industry from extraction to detect conflicts
         const allUserMessages = [...state.conversation, userMessage]
           .filter(m => m.role === 'user')
           .map(m => m.content);
+        
+        // Get the stated industry from the extraction (what user explicitly said they are)
+        const statedIndustry = extractedData?.industry || state.extracted.industry;
+        
         const updatedIndustryDetection = detectIndustryFromConversation(
           allUserMessages,
-          state.industryDetection
+          state.industryDetection,
+          statedIndustry // NEW: Pass stated industry for conflict detection
         );
 
         // Use functional setState to ensure we merge with the LATEST state

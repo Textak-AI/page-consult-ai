@@ -195,13 +195,19 @@ export function IntelligenceProfileDemo({
     // Get confirmation state from industryDetection
     const isConfirmed = industryDetection?.manuallyConfirmed === true;
     
+    // Check for classification conflict (stated industry needs AI classification)
+    const hasConflict = industryDetection?.hasClassificationConflict === true;
+    
     // Debug: Log what we're rendering with
     console.log('🔍 [Profile] renderDesignMode:', {
       hasHybridMode,
       isConfirmed,
+      hasConflict,
       industryDetection: industryDetection ? {
         variant: industryDetection.variant,
         manuallyConfirmed: industryDetection.manuallyConfirmed,
+        hasClassificationConflict: industryDetection.hasClassificationConflict,
+        statedIndustry: industryDetection.statedIndustry,
       } : null,
       aestheticMode: aestheticMode ? {
         primary: aestheticMode.primary,
@@ -282,6 +288,20 @@ export function IntelligenceProfileDemo({
               </span>
             </div>
             
+            {/* Classification Conflict Warning - AI will resolve at generation */}
+            {hasConflict && industryDetection?.statedIndustry && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 mt-2"
+              >
+                <p className="text-[11px] text-amber-300 leading-relaxed">
+                  <AlertCircle className="w-3 h-3 inline mr-1" />
+                  <span className="font-medium">"{industryDetection.statedIndustry}"</span> will be analyzed by AI at page generation for optimal design treatment.
+                </p>
+              </motion.div>
+            )}
+            
             {/* Blend explanation - uses YOUR industry for design approach */}
             <motion.div 
               initial={{ opacity: 0, height: 0 }}
@@ -290,7 +310,7 @@ export function IntelligenceProfileDemo({
             >
               <p className="text-[11px] text-slate-300 leading-relaxed">
                 <span className="text-cyan-400 font-medium">Design approach:</span>{' '}
-                {designApproach}
+                {hasConflict ? `Pending AI classification for "${industryDetection?.statedIndustry}"...` : designApproach}
               </p>
             </motion.div>
             
