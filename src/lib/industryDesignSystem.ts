@@ -949,3 +949,18 @@ export function generateIndustryCSSString(
     .map(([key, value]) => `${key}: ${value};`)
     .join('\n  ');
 }
+
+// ============================================
+// RE-EXPORTS FROM INTELLIGENT CLASSIFICATION
+// ============================================
+
+export {
+  classifyIndustry,
+  classifyIndustrySync,
+  keywordMatch,
+  storeClassificationOnConsultation,
+  getStoredClassification,
+  generateDesignIntelligenceReport,
+  type IndustryClassification,
+  type ConsultationContext,
+} from './industryClassification';
