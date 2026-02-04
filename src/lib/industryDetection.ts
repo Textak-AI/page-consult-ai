@@ -1,14 +1,19 @@
-// Industry Detection v2.1 - Local Services Support (Jan 23, 2026)
-console.log('🏗️ [IndustryDetection] v2.1 loaded - local-services enabled');
+// Industry Detection v2.2 - Intelligent Classification Integration (Feb 4, 2026)
+console.log('🏗️ [IndustryDetection] v2.2 loaded - intelligent classification enabled');
 
 /**
  * Dynamic Industry Detection
  * 
  * Re-evaluates industry variant as conversation builds, weighting recent messages
  * more heavily. Provides confidence levels and keyword tracking for transparency.
+ * 
+ * v2.2 ENHANCEMENT: Detects conflicts between stated industry (from extraction)
+ * and scored industry (from keyword matching). When stated industry has no keyword 
+ * match, flags for AI classification at consultation completion.
  */
 
 import type { IndustryVariant } from '@/config/designSystem/industryVariants';
+import { classifyIndustrySync } from '@/lib/industryClassification';
 export type { IndustryVariant };
 
 export interface IndustryDetection {
@@ -18,6 +23,10 @@ export interface IndustryDetection {
   score: number;
   manuallyConfirmed: boolean;
   displayName?: string; // User-selected display name (e.g., "Marketing Agency" instead of generic "General")
+  // NEW: Conflict detection fields for intelligent classification
+  statedIndustry?: string; // The user's self-described industry from extraction
+  hasClassificationConflict?: boolean; // True if stated industry needs AI classification
+  conflictReason?: string; // Explanation of the conflict
 }
 
 // Agency signal patterns - if these appear, the person is likely an agency/consultant
@@ -200,10 +209,15 @@ const DETECTION_ORDER: IndustryVariant[] = [
 /**
  * Detect industry from conversation messages
  * Weights recent messages more heavily (last 3 get 2x weight)
+ * 
+ * v2.2: Now accepts statedIndustry from extraction to detect conflicts.
+ * When stated industry doesn't match scored industry AND stated has no keyword match,
+ * flags for AI classification at consultation completion.
  */
 export function detectIndustryFromConversation(
   messages: string[],
-  existingDetection?: IndustryDetection | null
+  existingDetection?: IndustryDetection | null,
+  statedIndustry?: string | null
 ): IndustryDetection {
   // If manually confirmed, don't re-detect
   if (existingDetection?.manuallyConfirmed) {
@@ -293,26 +307,59 @@ export function detectIndustryFromConversation(
     confidence = 'low';
   }
 
+  // Log final decision
+  console.log(`🎯 [Industry] FINAL (scored): ${bestVariant} (score=${bestScore}, confidence=${confidence})`);
+  console.log(`🎯 [Industry] All scores:`, Array.from(scores.entries()).map(([v, s]) => `${v}=${s.score}`).join(', '));
+
+  // ============================================
+  // CONFLICT DETECTION: Stated vs Scored Industry
+  // ============================================
+  let hasClassificationConflict = false;
+  let conflictReason: string | undefined;
+  let finalVariant = bestVariant;
+  
+  if (statedIndustry) {
+    // Check what the stated industry would produce via keyword matching
+    const statedResult = classifyIndustrySync(statedIndustry);
+    
+    if (statedResult.variant === 'default' || statedResult.source === 'fallback') {
+      // Stated industry has no keyword match - this is when AI classification adds value
+      hasClassificationConflict = true;
+      conflictReason = `Stated industry "${statedIndustry}" has no keyword match. Scored: ${bestVariant}. Will defer to AI classification at consultation completion.`;
+      console.log(`⚠️ [Industry] ${conflictReason}`);
+      // Don't override the scored result yet - the demo needs SOMETHING to show
+      // But flag it as tentative
+    } else if (statedResult.variant !== bestVariant) {
+      // Stated industry matches a DIFFERENT variant than scored
+      // Trust the user's stated industry
+      console.log(`🔄 [Industry] Stated industry "${statedIndustry}" → ${statedResult.variant} conflicts with scored "${bestVariant}". Using stated.`);
+      finalVariant = statedResult.variant as IndustryVariant;
+      // Adjust confidence since we're overriding the scored result
+      if (statedResult.confidence === 'high') {
+        confidence = 'high';
+      }
+    }
+  }
+
   // If score changed significantly, return new detection
   const existingScore = existingDetection?.score || 0;
   const scoreChanged = Math.abs(bestScore - existingScore) >= 5;
-  const variantChanged = existingDetection?.variant !== bestVariant;
-
-  // Log final decision
-  console.log(`🎯 [Industry] FINAL: ${bestVariant} (score=${bestScore}, confidence=${confidence})`);
-  console.log(`🎯 [Industry] All scores:`, Array.from(scores.entries()).map(([v, s]) => `${v}=${s.score}`).join(', '));
+  const variantChanged = existingDetection?.variant !== finalVariant;
 
   // Keep existing if no significant change and existing had higher confidence
-  if (!variantChanged && !scoreChanged && existingDetection) {
+  if (!variantChanged && !scoreChanged && existingDetection && !hasClassificationConflict) {
     return existingDetection;
   }
 
   return {
-    variant: bestVariant,
+    variant: finalVariant,
     confidence,
     keywords: bestKeywords.slice(0, 5), // Limit to top 5 keywords
     score: bestScore,
     manuallyConfirmed: false,
+    statedIndustry: statedIndustry || undefined,
+    hasClassificationConflict,
+    conflictReason,
   };
 }
 

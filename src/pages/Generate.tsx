@@ -876,44 +876,58 @@ function GenerateContent() {
         const resolvedColorMode = strategyBlueprintColorMode || dbColorMode || 'dark';
         console.log(`🎨 [LoadExisting] colorMode resolution: strategy='${strategyBlueprintColorMode || 'none'}', db='${dbColorMode || 'none'}', resolved='${resolvedColorMode}' (strategy wins)`);
         
-        // BUG 3 FIX: Resolve industryVariant from consultation industry over stale DB value
-        // Priority: consultation.industry > DB fallback > 'default'
-        const consultationIndustry = existingPage.industry || 
-                                      consultationData.industry || 
-                                      consultationData.industryCategory;
-        // Map "venture studio" and similar compound terms to 'consulting'
-        const mapIndustryToVariant = (industry: string | null): string => {
-          if (!industry) return dbIndustryVariant || 'default';
-          const search = industry.toLowerCase();
-          // Consulting/professional services compound terms
-          if (search.includes('venture studio') || 
-              search.includes('professional services') || 
-              search.includes('advisory') ||
-              search.includes('consulting') ||
-              search.includes('strategy')) {
-            return 'consulting';
-          }
-          // Healthcare
-          if (search.includes('health') || search.includes('medical') || search.includes('wellness')) {
-            return 'healthcare';
-          }
-          // Finance
-          if (search.includes('finance') || search.includes('fintech') || search.includes('banking') || search.includes('insurance')) {
-            return 'finance';
-          }
-          // Local services
-          if (search.includes('plumb') || search.includes('hvac') || search.includes('electric') || 
-              search.includes('roofing') || search.includes('landscap') || search.includes('cleaning')) {
-            return 'local-services';
-          }
-          // SaaS
-          if (search.includes('saas') || search.includes('software') || search.includes('app')) {
-            return 'saas';
-          }
-          return dbIndustryVariant || 'default';
-        };
-        const resolvedIndustryVariant = mapIndustryToVariant(consultationIndustry);
-        console.log(`🎨 [LoadExisting] industryVariant resolution: consultation='${consultationIndustry || 'none'}', db='${dbIndustryVariant || 'none'}', resolved='${resolvedIndustryVariant}'`);
+        // BUG 3 FIX + AI CLASSIFICATION: Resolve industryVariant with proper priority
+        // Priority: stored AI classification > consultation.industry > DB fallback > 'default'
+        
+        // Check for stored AI classification first (most accurate)
+        const intel = consultationData.extracted_intelligence as any || {};
+        const storedClassification = intel.industryClassification;
+        
+        let resolvedIndustryVariant: string = 'default';
+        
+        if (storedClassification?.variant && storedClassification.variant !== 'default') {
+          resolvedIndustryVariant = storedClassification.variant;
+          console.log(`🎨 [LoadExisting] Using stored AI classification: ${resolvedIndustryVariant} (source: ${storedClassification.source})`);
+        } else {
+          // Fallback to existing logic
+          const consultationIndustry = existingPage.industry || 
+                                        consultationData.industry || 
+                                        consultationData.industryCategory;
+          
+          // Map "venture studio" and similar compound terms to 'consulting'
+          const mapIndustryToVariant = (industry: string | null): string => {
+            if (!industry) return dbIndustryVariant || 'default';
+            const search = industry.toLowerCase();
+            // Consulting/professional services compound terms
+            if (search.includes('venture studio') || 
+                search.includes('professional services') || 
+                search.includes('advisory') ||
+                search.includes('consulting') ||
+                search.includes('strategy')) {
+              return 'consulting';
+            }
+            // Healthcare
+            if (search.includes('health') || search.includes('medical') || search.includes('wellness')) {
+              return 'healthcare';
+            }
+            // Finance
+            if (search.includes('finance') || search.includes('fintech') || search.includes('banking') || search.includes('insurance')) {
+              return 'finance';
+            }
+            // Local services
+            if (search.includes('plumb') || search.includes('hvac') || search.includes('electric') || 
+                search.includes('roofing') || search.includes('landscap') || search.includes('cleaning')) {
+              return 'local-services';
+            }
+            // SaaS
+            if (search.includes('saas') || search.includes('software') || search.includes('app')) {
+              return 'saas';
+            }
+            return dbIndustryVariant || 'default';
+          };
+          resolvedIndustryVariant = mapIndustryToVariant(consultationIndustry);
+          console.log(`🎨 [LoadExisting] industryVariant resolution: consultation='${consultationIndustry || 'none'}', db='${dbIndustryVariant || 'none'}', resolved='${resolvedIndustryVariant}'`);
+        }
         
         // BUG 2 FIX: Brand data hydration from multiple sources
         const pageWebsiteIntel = existingPage.website_intelligence as any || {};
@@ -1435,44 +1449,67 @@ function GenerateContent() {
           console.log('🗑️ Deleted stale page:', existingPage.id);
           // Continue to generation below (don't return)
         } else {
-          // CRITICAL: Use the NEW industry detection with localStorage priority
-          // Check localStorage first for demo flow industry detection
+          // ============================================
+          // PRIORITY 1: Check for stored AI classification on consultation
+          // This is the intelligent classification result from consultation completion
+          // ============================================
+          const intel = consultationData.extracted_intelligence as any || {};
+          const storedClassification = intel.industryClassification;
+          
           let industryVariant: IndustryVariant = 'default';
-          try {
-            const storedIndustry = typeof window !== 'undefined' 
-              ? localStorage.getItem('pageconsult_demo_industry') 
-              : null;
-            if (storedIndustry && storedIndustry !== 'undefined' && storedIndustry !== 'null') {
-              const parsed = JSON.parse(storedIndustry);
-              if (parsed.variant && parsed.variant !== 'default') {
-                industryVariant = parsed.variant as IndustryVariant;
-                console.log('🎨 [LoadExisting] Using localStorage industry:', industryVariant, '(confidence:', parsed.confidence, ')');
-              }
-            }
-          } catch (e) {
-            console.warn('🎨 [LoadExisting] Failed to read localStorage industry:', e);
+          let classificationSource = 'none';
+          
+          if (storedClassification?.variant && storedClassification.variant !== 'default') {
+            industryVariant = storedClassification.variant as IndustryVariant;
+            classificationSource = storedClassification.source || 'ai';
+            console.log(`🎨 [LoadExisting] Using stored AI classification: ${industryVariant} (source: ${classificationSource}, reasoning: ${storedClassification.reasoning?.substring(0, 50)}...)`);
           }
           
-          // Fallback to detectIndustryVariantNew if localStorage doesn't have it
+          // ============================================
+          // PRIORITY 2: Check localStorage (demo flow detection)
+          // ============================================
           if (industryVariant === 'default') {
-            // BUG 3 FIX: Check for compound terms BEFORE calling detection function
-            // This ensures "venture studio" doesn't get misclassified as "saas"
+            try {
+              const storedIndustry = typeof window !== 'undefined' 
+                ? localStorage.getItem('pageconsult_demo_industry') 
+                : null;
+              if (storedIndustry && storedIndustry !== 'undefined' && storedIndustry !== 'null') {
+                const parsed = JSON.parse(storedIndustry);
+                if (parsed.variant && parsed.variant !== 'default') {
+                  industryVariant = parsed.variant as IndustryVariant;
+                  classificationSource = 'localStorage';
+                  console.log('🎨 [LoadExisting] Using localStorage industry:', industryVariant, '(confidence:', parsed.confidence, ')');
+                }
+              }
+            } catch (e) {
+              console.warn('🎨 [LoadExisting] Failed to read localStorage industry:', e);
+            }
+          }
+          
+          // ============================================
+          // PRIORITY 3: Sync keyword detection fallback
+          // ============================================
+          if (industryVariant === 'default') {
+            // Import classifyIndustrySync for consistent detection
+            const { classifyIndustrySync } = await import('@/lib/industryClassification');
+            
             const industrySearchString = [effectiveIndustry, pageConsultationData.industryCategory, pageConsultationData.industrySubcategory]
               .filter(Boolean).join(' ').toLowerCase();
             
-            if (industrySearchString.includes('venture studio')) {
-              industryVariant = 'consulting' as IndustryVariant;
-              console.log('🎨 [LoadExisting] "venture studio" mapped to consulting');
-            } else {
-              industryVariant = detectIndustryVariantNew(
-                effectiveIndustry,
-                pageConsultationData.industryCategory,
-                pageConsultationData.industrySubcategory,
-                effectivePageType
-              );
-            }
+            // Use the unified classification system
+            const syncResult = classifyIndustrySync(effectiveIndustry, {
+              industryCategory: pageConsultationData.industryCategory,
+              industrySubcategory: pageConsultationData.industrySubcategory,
+              pageType: effectivePageType,
+            });
+            
+            industryVariant = syncResult.variant as IndustryVariant;
+            classificationSource = syncResult.source;
+            console.log(`🎨 [LoadExisting] Using sync classification: ${industryVariant} (source: ${classificationSource})`);
           }
+          
           console.log('🎨 [LoadExisting] Final industryVariant:', industryVariant, 'from:', {
+            source: classificationSource,
             industry: effectiveIndustry,
             serviceType: effectiveServiceType,
             pageType: effectivePageType,
@@ -1485,7 +1522,6 @@ function GenerateContent() {
           
           // CRITICAL FIX: Read brand data from extracted_intelligence for existing pages
           // The console shows "No brand color found" because we weren't reading this data
-          const intel = consultationData.extracted_intelligence as any || {};
           const pageDesignIntel = existingPage.design_intelligence as any || {};
           
           // DEBUG: Log raw design_intelligence from database
