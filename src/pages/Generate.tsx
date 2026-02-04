@@ -347,6 +347,14 @@ function GenerateContent() {
         bodyFont: string;
         modified: boolean;
       };
+      // NEW: AI-powered industry classification from consultation completion
+      industryClassification?: {
+        variant: string;
+        confidence: 'high' | 'medium' | 'low';
+        reasoning: string;
+        source: 'keyword' | 'ai' | 'fallback';
+        classifiedAt?: string;
+      } | null;
     };
     fromStrategicConsultation?: boolean;
   } | null;
@@ -1899,12 +1907,21 @@ function GenerateContent() {
         const legacyCssVars = designSystemToCSSVariables(ds);
         
         // Detect industry variant early to generate industry-specific CSS
-        const earlyVariant = detectIndustryVariantNew(
-          consultationData.industry,
-          strategicData.consultationData?.industryCategory,
-          strategicData.consultationData?.industrySubcategory,
-          strategicData.consultationData?.pageType || undefined
-        );
+        // PREFER stored classification from consultation
+        let earlyVariant: IndustryVariant;
+        const storedClassificationEarly = strategicData.industryClassification;
+        if (storedClassificationEarly?.variant && storedClassificationEarly.variant !== 'default') {
+          earlyVariant = storedClassificationEarly.variant as IndustryVariant;
+          console.log('🧠 [Generate-Early] Using stored classification:', earlyVariant);
+        } else {
+          earlyVariant = detectIndustryVariantNew(
+            consultationData.industry,
+            strategicData.consultationData?.industryCategory,
+            strategicData.consultationData?.industrySubcategory,
+            strategicData.consultationData?.pageType || undefined
+          );
+          console.log('🏭 [Generate-Early] Using sync detection:', earlyVariant);
+        }
         const earlyTokens = getIndustryTokens(earlyVariant);
         const industryCssVars = generateIndustryCSSString(earlyTokens, {
           primaryColor: brandSettings?.primaryColor,
@@ -1975,13 +1992,23 @@ function GenerateContent() {
         });
         console.log('📋 Full structuredBrief object:', structuredBrief);
         
-        // Detect industry variant using new system with subcategory support
-        const detectedVariant = detectIndustryVariantNew(
-          consultationData.industry,
-          strategicData.consultationData?.industryCategory,
-          strategicData.consultationData?.industrySubcategory,
-          pageType || undefined
-        );
+        // Detect industry variant - PREFER stored classification from consultation
+        const storedClassification = strategicData.industryClassification;
+        let detectedVariant: IndustryVariant;
+        
+        if (storedClassification?.variant && storedClassification.variant !== 'default') {
+          detectedVariant = storedClassification.variant as IndustryVariant;
+          console.log('🧠 [Generate] Using stored classification:', detectedVariant, '| Source:', storedClassification.source, '| Reasoning:', storedClassification.reasoning);
+        } else {
+          detectedVariant = detectIndustryVariantNew(
+            consultationData.industry,
+            strategicData.consultationData?.industryCategory,
+            strategicData.consultationData?.industrySubcategory,
+            pageType || undefined
+          );
+          console.log('🏭 [Generate] Using sync detection:', detectedVariant);
+        }
+        
         const tokens = getIndustryTokens(detectedVariant);
         
         // Set industry state for use in render
@@ -2022,6 +2049,8 @@ function GenerateContent() {
           aiSearchOptimization: strategicData.aiSeoData || strategicData.consultationData?.ai_seo_data || strategicData.consultationData?.aiSeoData || null,
           // Pass available proof for intelligent section building
           availableProof,
+          // CRITICAL: Pass stored AI classification for accurate industry styling
+          industryClassification: storedClassification,
         });
         
         console.log('📊 aiSearchOptimization passed to mapper:', strategicData.aiSeoData ? 'from strategicData.aiSeoData' : strategicData.consultationData?.ai_seo_data ? 'from consultationData.ai_seo_data' : 'null');
@@ -2441,13 +2470,21 @@ function GenerateContent() {
       });
     }
     
-    // PRIORITY 1: Use SDI industry if available
+    // PRIORITY ORDER for industry variant:
+    // 1. Stored AI classification (from consultation completion)
+    // 2. SDI industry
+    // 3. Sync keyword detection
     let industryVariant: IndustryVariant;
-    if (sdi?.industry) {
+    const storedClassificationSDI = effectiveNavState?.strategicData?.industryClassification;
+    
+    if (storedClassificationSDI?.variant && storedClassificationSDI.variant !== 'default') {
+      industryVariant = storedClassificationSDI.variant as IndustryVariant;
+      console.log('🧠 [Generate-SDI] Using stored classification:', industryVariant, '| Source:', storedClassificationSDI.source);
+    } else if (sdi?.industry) {
       industryVariant = sdi.industry as IndustryVariant;
       console.log('🎨 [SDI] Using industry from SDI:', industryVariant);
     } else {
-      // Fallback to legacy detection
+      // Fallback to sync detection
       industryVariant = detectIndustryVariantNew(
         consultationData?.industry || strategicConsultation?.industry,
         strategicConsultation?.industryCategory,

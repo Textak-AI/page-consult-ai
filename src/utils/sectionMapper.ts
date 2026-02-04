@@ -25,6 +25,7 @@ import {
   type IndustryVariant,
   type IndustryTokens,
 } from '@/lib/industryDesignSystem';
+import { classifyIndustrySync, type IndustryClassification } from '@/lib/industryClassification';
 import {
   generateSchemaOrg,
   generateAISEOMetaTags,
@@ -132,6 +133,15 @@ export interface MapBriefOptions {
   };
   // Strategic Design Intelligence from Phase 1
   designIntelligence?: DesignIntelligenceOutput;
+  // NEW: Stored AI-powered industry classification (from consultation completion)
+  // Uses a compatible type that accepts navigation state format
+  industryClassification?: {
+    variant: string;
+    confidence?: 'high' | 'medium' | 'low';
+    reasoning?: string;
+    source?: 'keyword' | 'ai' | 'fallback' | string;
+    classifiedAt?: string;
+  } | null;
 }
 
 // Enhanced return type for full page mapping
@@ -235,15 +245,33 @@ export function mapBriefToSections(
   // Get SDI from options if available
   const sdi = options.designIntelligence;
   
-  // Detect industry variant - PRIORITIZE SDI over legacy detection
+  // Detect industry variant - PRIORITY ORDER:
+  // 1. Stored AI-powered classification (from consultation completion)
+  // 2. SDI-detected industry
+  // 3. Sync keyword fallback
   let industryVariant: IndustryVariant;
-  if (sdi?.industry) {
+  let classificationSource: string = 'unknown';
+  
+  if (options.industryClassification?.variant && options.industryClassification.variant !== 'default') {
+    // HIGHEST PRIORITY: Use stored AI-powered classification
+    industryVariant = options.industryClassification.variant as IndustryVariant;
+    classificationSource = options.industryClassification.source || 'stored';
+    console.log('🧠 [sectionMapper] Using stored classification:', industryVariant, '| Source:', classificationSource, '| Reasoning:', options.industryClassification.reasoning);
+  } else if (sdi?.industry) {
     // SDI detected industry - use it directly
     industryVariant = sdi.industry as IndustryVariant;
+    classificationSource = 'sdi';
     console.log('🎨 [SDI] Using industry variant from SDI:', industryVariant);
   } else {
-    // Fall back to legacy detection
-    industryVariant = detectIndustryVariantNew(industry, options.industryCategory, options.industrySubcategory, pageType || undefined);
+    // Fall back to sync keyword detection
+    const syncClassification = classifyIndustrySync(industry, {
+      industryCategory: options.industryCategory,
+      industrySubcategory: options.industrySubcategory,
+      pageType: pageType || undefined,
+    });
+    industryVariant = syncClassification.variant;
+    classificationSource = 'sync-fallback';
+    console.log('🏭 [sectionMapper] Using sync classification:', industryVariant, '| Source:', syncClassification.source);
   }
   
   // Determine mode from SDI colors
