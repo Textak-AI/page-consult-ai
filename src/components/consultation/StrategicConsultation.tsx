@@ -18,6 +18,12 @@ import { useBrandBrief } from '@/hooks/useBrandBrief';
 import { AmbientHeroBackground } from './AmbientHeroBackground';
 import { generateHeroImages, regenerateHeroImages, generateCombinedHeroImages, regenerateCombinedHeroImages, type HeroImage } from '@/lib/heroImages';
 import { 
+  classifyIndustry, 
+  storeClassificationOnConsultation, 
+  type IndustryClassification, 
+  type ConsultationContext 
+} from '@/lib/industryClassification';
+import { 
   PageTypeStep, 
   PAGE_TYPES, 
   type PageTypeId,
@@ -346,7 +352,13 @@ interface WebsiteAnalysis {
 }
 
 interface Props {
-  onComplete: (data: ConsultationData, strategyBrief: string, aiSeoData?: AISeoData | null, structuredBrief?: any) => void;
+  onComplete: (
+    data: ConsultationData, 
+    strategyBrief: string, 
+    aiSeoData?: AISeoData | null, 
+    structuredBrief?: any,
+    industryClassification?: IndustryClassification | null
+  ) => void;
   onBack?: () => void;
   prefillData?: PrefillData | null;
   extractedBrand?: ExtractedBrandData | null;
@@ -1024,10 +1036,43 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     setIsGeneratingBrief(true);
     
     try {
-      // Generate strategy brief and extract AI SEO data in parallel
+      // === STEP 1: Run intelligent industry classification FIRST ===
+      // This runs BEFORE brief generation so classification is available for the brief
+      const classificationContext: ConsultationContext = {
+        businessName: data.businessName,
+        industry: data.industry,
+        industryCategory: data.industryCategory,
+        industrySubcategory: data.industrySubcategory,
+        idealClient: data.idealClient,
+        uniqueStrength: data.uniqueStrength,
+        mainOffer: data.mainOffer,
+        identitySentence: data.identitySentence,
+        targetAudience: data.idealClient,
+        serviceType: data.mainOffer,
+        challenge: data.clientFrustration,
+        goal: data.primaryGoal,
+      };
+      
+      console.log('🧠 [consultation-complete] Running industry classification...');
+      const classification = await classifyIndustry(
+        data.industry,
+        classificationContext,
+        {
+          industryCategory: data.industryCategory,
+          industrySubcategory: data.industrySubcategory,
+          pageType: data.pageType,
+        }
+      );
+      
+      console.log('🧠 [consultation-complete] Industry classified:', classification.variant, '| Source:', classification.source, '| Reasoning:', classification.reasoning);
+      
+      // === STEP 2: Generate strategy brief and extract AI SEO data in parallel ===
       const [briefResult, seoResult] = await Promise.all([
         supabase.functions.invoke('generate-strategy-brief', {
-          body: { consultationData: data }
+          body: { 
+            consultationData: data,
+            industryClassification: classification // Pass classification to brief generation
+          }
         }),
         supabase.functions.invoke('extract-ai-seo-data', {
           body: { consultationId: 'temp-' + Date.now(), consultationData: data }
@@ -1052,8 +1097,8 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       // Clear the draft since consultation is complete
       localStorage.removeItem('pageconsult_consultation_draft');
       
-      // Pass BOTH the text brief AND the structured JSON brief
-      onComplete(data as ConsultationData, strategyBriefText, aiSeoData, structuredBrief);
+      // Pass BOTH the text brief AND the structured JSON brief AND the classification
+      onComplete(data as ConsultationData, strategyBriefText, aiSeoData, structuredBrief, classification);
     } catch (err) {
       console.error('Strategy brief generation error:', err);
       // Fallback: proceed with basic brief (no structured brief available)
@@ -1063,7 +1108,16 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       localStorage.removeItem('pageconsult_consultation_draft');
       console.log('🗑️ Cleared consultation draft');
       
-      onComplete(data as ConsultationData, fallbackBrief, null, null);
+      // Fallback classification - use sync keyword match
+      const fallbackClassification: IndustryClassification = {
+        variant: 'consulting',
+        confidence: 'low',
+        reasoning: 'Fallback during error - using safest default',
+        source: 'fallback',
+        classifiedAt: new Date().toISOString()
+      };
+      
+      onComplete(data as ConsultationData, fallbackBrief, null, null, fallbackClassification);
     } finally {
       setIsGeneratingBrief(false);
     }

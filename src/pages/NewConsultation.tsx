@@ -15,6 +15,7 @@ import { BrandExtractor } from "@/components/consultation/BrandExtractor";
 import { WebsiteAnalyzer } from "@/components/consultation/WebsiteAnalyzer";
 import { ExtractedBrand } from "@/lib/brandExtraction";
 import type { AISeoData } from "@/services/intelligence/types";
+import type { IndustryClassification } from "@/lib/industryClassification";
 import { DraftRecoveryModal } from "@/components/consultation/DraftRecoveryModal";
 
 type Stage = 'loading' | 'checking-draft' | 'brand-extractor' | 'website-analyzer' | 'intro' | 'consultation' | 'brief-review' | 'generating' | 'dev-loading';
@@ -76,6 +77,7 @@ export default function NewConsultation() {
   const [strategyBrief, setStrategyBrief] = useState<string>('');
   const [structuredBrief, setStructuredBrief] = useState<any>(null);
   const [aiSeoData, setAiSeoData] = useState<AISeoData | null>(null);
+  const [industryClassification, setIndustryClassification] = useState<IndustryClassification | null>(null);
   const [consultationStep, setConsultationStep] = useState(1);
   const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
   const [extractedBrand, setExtractedBrand] = useState<ExtractedBrand | null>(null);
@@ -391,8 +393,14 @@ export default function NewConsultation() {
     setStage('consultation');
   };
 
-  // Handle consultation completion - now includes structuredBrief JSON
-  const handleConsultationComplete = (data: ConsultationData, brief: string, seoData?: AISeoData | null, structuredBriefData?: any) => {
+  // Handle consultation completion - now includes structuredBrief JSON and industryClassification
+  const handleConsultationComplete = (
+    data: ConsultationData, 
+    brief: string, 
+    seoData?: AISeoData | null, 
+    structuredBriefData?: any,
+    classification?: IndustryClassification | null
+  ) => {
     console.log('📋 Consultation complete:', data);
     console.log('📝 Strategy brief generated');
     console.log('📊 structuredBrief present:', !!structuredBriefData);
@@ -400,10 +408,13 @@ export default function NewConsultation() {
       console.log('📊 structuredBrief keys:', Object.keys(structuredBriefData));
     }
     if (seoData) console.log('🔍 AI SEO data available:', seoData.entity?.type);
+    if (classification) console.log('🧠 Industry classification:', classification.variant, '| Source:', classification.source);
+    
     setConsultationData(data);
     setStrategyBrief(brief);
     setStructuredBrief(structuredBriefData || null);
     setAiSeoData(seoData || null);
+    setIndustryClassification(classification || null);
     console.log('🔄 setStage called:', 'brief-review', 'from: handleConsultationComplete');
     setStage('brief-review');
   };
@@ -490,6 +501,8 @@ export default function NewConsultation() {
             brandSettings: consultationData.brandSettings,
             // CRITICAL: Include hero background URL for direct use
             heroBackgroundUrl: consultationData.heroBackgroundUrl,
+            // CRITICAL: Include the AI-powered industry classification
+            industryClassification,
           },
           fromStrategicConsultation: true,
         },
