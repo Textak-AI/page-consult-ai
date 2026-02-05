@@ -1921,9 +1921,20 @@ function GenerateContent() {
         
         // Generate design system from industry + tone + brand colors
         const structuredBrief = strategicData.structuredBrief;
-        const brandSettings = strategicData.brandSettings || strategicData.consultationData?.brandSettings;
+        // BRAND DATA PIPELINE: Extract from multiple possible paths
+        // Priority: strategicData.brandSettings > consultationData.brandSettings > websiteIntelligence
+        const brandSettings = strategicData.brandSettings 
+          || strategicData.consultationData?.brandSettings
+          || (strategicData.consultationData?.websiteIntelligence ? {
+            logoUrl: strategicData.consultationData.websiteIntelligence.logoUrl,
+            primaryColor: strategicData.consultationData.websiteIntelligence.primaryColor,
+            secondaryColor: strategicData.consultationData.websiteIntelligence.secondaryColor,
+          } : null);
         
-        console.log('🎨 Brand settings:', brandSettings);
+        console.log('🔍 [Brand Pipeline] strategicData.brandSettings:', strategicData.brandSettings);
+        console.log('🔍 [Brand Pipeline] strategicData.consultationData?.brandSettings:', strategicData.consultationData?.brandSettings);
+        console.log('🔍 [Brand Pipeline] strategicData.consultationData?.websiteIntelligence:', strategicData.consultationData?.websiteIntelligence);
+        console.log('🔍 [Brand Pipeline] Resolved brandSettings:', brandSettings);
         
         const ds = generateDesignSystem({
           industry: consultationData.industry || 'default',
@@ -1993,13 +2004,21 @@ function GenerateContent() {
         });
         
         // Get brand settings for passing to sections
-        const logoUrl = brandSettings?.logoUrl || strategicData.consultationData?.websiteIntelligence?.logoUrl || null;
-        const primaryColor = brandSettings?.primaryColor || ds.colors?.primary || null;
+        // BRAND DATA PIPELINE: Check all possible paths for logoUrl and primaryColor
+        const logoUrl = brandSettings?.logoUrl 
+          || strategicData.consultationData?.websiteIntelligence?.logoUrl 
+          || strategicData.websiteIntelligence?.logoUrl
+          || null;
+        const primaryColor = brandSettings?.primaryColor 
+          || strategicData.consultationData?.websiteIntelligence?.primaryColor
+          || strategicData.websiteIntelligence?.primaryColor
+          || ds.colors?.primary 
+          || null;
         const pageType = strategicData.consultationData?.pageType || null;
         const pageGoal = strategicData.consultationData?.goal || consultationData.goal || 'generate-leads';
         
-        console.log('🖼️ Logo URL:', logoUrl);
-        console.log('🎨 Primary color:', primaryColor);
+        console.log('🖼️ [Brand Pipeline] Logo URL for sections:', logoUrl);
+        console.log('🎨 [Brand Pipeline] Primary color for sections:', primaryColor);
         console.log('📄 Page type:', pageType);
         console.log('🎯 Page goal:', pageGoal);
         
@@ -2405,12 +2424,24 @@ function GenerateContent() {
     const heroImageUrl = await fetchHeroImage(businessName);
 
     // Get brand settings for passing to sections
-    const brandSettings = strategicConsultation?.brandSettings || effectiveNavState?.strategicData?.brandSettings;
-    const logoUrl = brandSettings?.logoUrl || strategicConsultation?.websiteIntelligence?.logoUrl || null;
-    const primaryColor = brandSettings?.primaryColor || designSystem?.colors?.primary || null;
+    // BRAND DATA PIPELINE: Check all possible paths
+    const brandSettings = strategicConsultation?.brandSettings 
+      || effectiveNavState?.strategicData?.brandSettings
+      || effectiveNavState?.strategicData?.consultationData?.brandSettings
+      || null;
+    const logoUrl = brandSettings?.logoUrl 
+      || strategicConsultation?.websiteIntelligence?.logoUrl 
+      || effectiveNavState?.strategicData?.consultationData?.websiteIntelligence?.logoUrl
+      || effectiveNavState?.strategicData?.websiteIntelligence?.logoUrl
+      || null;
+    const primaryColor = brandSettings?.primaryColor 
+      || strategicConsultation?.websiteIntelligence?.primaryColor
+      || effectiveNavState?.strategicData?.consultationData?.websiteIntelligence?.primaryColor
+      || designSystem?.colors?.primary 
+      || null;
     
-    console.log('🖼️ Logo URL for sections:', logoUrl);
-    console.log('🎨 Primary color for sections:', primaryColor);
+    console.log('🖼️ [Brand Pipeline] mapStrategyBriefContentToSections logoUrl:', logoUrl);
+    console.log('🎨 [Brand Pipeline] mapStrategyBriefContentToSections primaryColor:', primaryColor);
 
     // Check if content is a valid structured brief
     if (isStructuredBriefContent(content)) {
@@ -2535,9 +2566,21 @@ function GenerateContent() {
     console.log('🎨 [SDI] Mode:', sdiMode);
     
     // Get brand settings for passing to sections
-    const brandSettings = strategicConsultation?.brandSettings || effectiveNavState?.strategicData?.brandSettings;
-    const logoUrl = brandSettings?.logoUrl || strategicConsultation?.websiteIntelligence?.logoUrl || null;
-    const primaryColor = brandSettings?.primaryColor || designSystem?.colors?.primary || null;
+    // BRAND DATA PIPELINE: Check all possible paths
+    const brandSettings = strategicConsultation?.brandSettings 
+      || effectiveNavState?.strategicData?.brandSettings
+      || effectiveNavState?.strategicData?.consultationData?.brandSettings
+      || null;
+    const logoUrl = brandSettings?.logoUrl 
+      || strategicConsultation?.websiteIntelligence?.logoUrl 
+      || effectiveNavState?.strategicData?.consultationData?.websiteIntelligence?.logoUrl
+      || effectiveNavState?.strategicData?.websiteIntelligence?.logoUrl
+      || null;
+    const primaryColor = brandSettings?.primaryColor 
+      || strategicConsultation?.websiteIntelligence?.primaryColor
+      || effectiveNavState?.strategicData?.consultationData?.websiteIntelligence?.primaryColor
+      || designSystem?.colors?.primary 
+      || null;
 
     // SDI-DRIVEN SECTION SELECTION (replaces hardcoded structure)
     const sdiSelectionResult = selectSectionsFromSDI(sdi, { isBetaPage });

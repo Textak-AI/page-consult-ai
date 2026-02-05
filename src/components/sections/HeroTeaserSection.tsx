@@ -5,6 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
+// Helper to check if logo should be inverted for dark mode
+function shouldInvertLogo(logoUrl: string | undefined): boolean {
+  if (!logoUrl) return false;
+  const lowerUrl = logoUrl.toLowerCase();
+  return lowerUrl.includes('dark') || lowerUrl.includes('-dark') || lowerUrl.includes('_dark') || lowerUrl.endsWith('.svg');
+}
+
 interface HeroTeaserContent {
   headline: string;
   subheadline: string;
@@ -115,7 +122,7 @@ export function HeroTeaserSection({ content, onEmailSubmit, styles }: Props) {
           <motion.img
             src={content.logoUrl}
             alt="Logo"
-            className="h-12 mx-auto mb-8"
+            className={`h-12 mx-auto mb-8${shouldInvertLogo(content.logoUrl) ? ' brightness-0 invert' : ''}`}
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}

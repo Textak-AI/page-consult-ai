@@ -54,6 +54,52 @@ interface CitedStat {
 
 type LogoSize = 'small' | 'medium' | 'large';
 
+// Helper to check if logo appears to be a dark logo that needs inversion on dark backgrounds
+// Looks for "dark" in the filename OR assumes dark if mode is dark and we don't know
+function shouldInvertLogoForDarkMode(logoUrl: string | null | undefined, isDarkMode: boolean): boolean {
+  if (!isDarkMode || !logoUrl) return false;
+  
+  // Check if the logo URL contains 'dark' - these definitely need inversion
+  const lowerUrl = logoUrl.toLowerCase();
+  if (lowerUrl.includes('dark') || lowerUrl.includes('-dark') || lowerUrl.includes('_dark')) {
+    return true;
+  }
+  
+  // For SVGs on dark backgrounds, default to inverting since most logos are designed for light backgrounds
+  // This is a heuristic - users can manually replace with light versions in the editor
+  if (lowerUrl.endsWith('.svg')) {
+    return true;
+  }
+  
+  return false;
+}
+
+// Logo image component with dark mode support
+function LogoImage({ 
+  src, 
+  alt, 
+  className, 
+  isDarkMode,
+  onError 
+}: { 
+  src: string; 
+  alt: string; 
+  className: string; 
+  isDarkMode: boolean;
+  onError?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
+}) {
+  const shouldInvert = shouldInvertLogoForDarkMode(src, isDarkMode);
+  
+  return (
+    <img 
+      src={src} 
+      alt={alt} 
+      className={`${className}${shouldInvert ? ' brightness-0 invert' : ''}`}
+      onError={onError}
+    />
+  );
+}
+
 interface HeroSectionProps {
   content: {
     headline: string;
@@ -189,7 +235,12 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               <div className="mb-6">
                 {content.logoUrl ? (
                   <div className="relative inline-block">
-                    <img src={content.logoUrl} alt="Logo" className={logoSizeClasses[logoSize] + " object-contain mx-auto"} />
+                    <LogoImage 
+                      src={content.logoUrl} 
+                      alt="Logo" 
+                      className={logoSizeClasses[logoSize] + " object-contain mx-auto"} 
+                      isDarkMode={!isLightMode}
+                    />
                     {isEditing && (
                       <button
                         onClick={() => setLogoUploaderOpen(true)}
@@ -366,7 +417,12 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             <div className="mb-8">
               {content.logoUrl ? (
                 <div className="relative inline-block">
-                  <img src={content.logoUrl} alt="Logo" className={`${logoSizeClasses[logoSize]} object-contain mx-auto`} />
+                  <LogoImage 
+                    src={content.logoUrl} 
+                    alt="Logo" 
+                    className={`${logoSizeClasses[logoSize]} object-contain mx-auto`}
+                    isDarkMode={!isLightMode}
+                  />
                   {isEditing && (
                     <button
                       onClick={() => setLogoUploaderOpen(true)}
@@ -541,10 +597,11 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 >
                   {content.logoUrl ? (
                     <div className="relative inline-block">
-                      <img 
+                      <LogoImage 
                         src={content.logoUrl} 
                         alt="Logo" 
-                        className={`${logoSizeClasses[logoSize]} object-contain`}
+                        className={`${logoSizeClasses[logoSize]} object-contain`} 
+                        isDarkMode={!isLightMode}
                       />
                       {isEditing && (
                         <button
@@ -896,10 +953,11 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             >
               {content.logoUrl ? (
                 <div className="relative inline-flex flex-col items-center gap-2">
-                  <img 
+                  <LogoImage 
                     src={content.logoUrl} 
                     alt="Logo" 
-                    className={`${logoSizeClasses[logoSize]} mx-auto object-contain`}
+                    className={`${logoSizeClasses[logoSize]} mx-auto object-contain`} 
+                    isDarkMode={!isLightMode}
                     onError={(e) => {
                       console.log('Logo failed to load:', content.logoUrl);
                       (e.target as HTMLImageElement).style.display = 'none';
