@@ -28,6 +28,111 @@ import { intelligenceConcierge, type IntelligenceAccumulator, type BrandData } f
 import { ProgressRail } from '@/components/flow/ProgressRail';
 import type { FlowState } from '@/hooks/useFlowNavigation';
 
+// ===== Helper: Persist brand data to all storage locations =====
+function persistBrandDataToStorage(brandData: {
+  logo: string | null;
+  colors: { primary: string; secondary: string; accent: string };
+  companyName: string;
+  tagline: string;
+  websiteUrl: string;
+  fontSettings?: Record<string, string>;
+  extractionResults?: any;
+  communicationStyle?: any;
+  styleInspiration?: any;
+}) {
+  console.log('💾 [BrandSetup] Persisting brand data to storage:', {
+    logo: brandData.logo ? '(present)' : null,
+    primary: brandData.colors.primary,
+    companyName: brandData.companyName,
+  });
+
+  // 1. Save to pageconsult_brand_data
+  const dataToSave = {
+    websiteUrl: brandData.websiteUrl,
+    logo: brandData.logo,
+    companyName: brandData.companyName,
+    tagline: brandData.tagline,
+    colors: brandData.colors,
+    fontSettings: brandData.fontSettings,
+    extractionResults: brandData.extractionResults,
+    communicationStyle: brandData.communicationStyle,
+    styleInspiration: brandData.styleInspiration,
+    savedAt: new Date().toISOString(),
+  };
+  localStorage.setItem('pageconsult_brand_data', JSON.stringify(dataToSave));
+
+  // 2. Update pageconsult_intelligence_accumulator with brand data
+  try {
+    const existingAccumulator = JSON.parse(
+      localStorage.getItem('pageconsult_intelligence_accumulator') || '{}'
+    );
+    
+    const updatedAccumulator = {
+      ...existingAccumulator,
+      brandSettings: {
+        ...(existingAccumulator.brandSettings || {}),
+        logoUrl: brandData.logo || null,
+        primaryColor: brandData.colors.primary,
+        secondaryColor: brandData.colors.secondary,
+        accentColor: brandData.colors.accent,
+        companyName: brandData.companyName,
+      },
+      websiteIntelligence: {
+        ...(existingAccumulator.websiteIntelligence || {}),
+        logo: brandData.logo || null,
+        logoUrl: brandData.logo || null,
+        colors: {
+          primary: brandData.colors.primary,
+          secondary: brandData.colors.secondary,
+          accent: brandData.colors.accent,
+        },
+        companyName: brandData.companyName,
+        tagline: brandData.tagline,
+      },
+      updatedAt: new Date().toISOString(),
+    };
+    
+    console.log('🧠 [BrandSetup] Updating accumulator brandSettings:', {
+      logoUrl: updatedAccumulator.brandSettings.logoUrl ? '(present)' : null,
+      primaryColor: updatedAccumulator.brandSettings.primaryColor,
+    });
+    
+    localStorage.setItem('pageconsult_intelligence_accumulator', JSON.stringify(updatedAccumulator));
+  } catch (accError) {
+    console.warn('🧠 [BrandSetup] Failed to update accumulator:', accError);
+  }
+
+  // 3. Update pageconsult_consultation_data if it exists
+  try {
+    const existingConsultation = JSON.parse(
+      localStorage.getItem('pageconsult_consultation_data') || '{}'
+    );
+    
+    if (Object.keys(existingConsultation).length > 0) {
+      existingConsultation.brandSettings = {
+        ...(existingConsultation.brandSettings || {}),
+        logoUrl: brandData.logo || null,
+        primaryColor: brandData.colors.primary,
+        secondaryColor: brandData.colors.secondary,
+        accentColor: brandData.colors.accent,
+        companyName: brandData.companyName,
+      };
+      existingConsultation.websiteIntelligence = {
+        ...(existingConsultation.websiteIntelligence || {}),
+        logo: brandData.logo || null,
+        logoUrl: brandData.logo || null,
+        primaryColor: brandData.colors.primary,
+        secondaryColor: brandData.colors.secondary,
+        companyName: brandData.companyName,
+      };
+      localStorage.setItem('pageconsult_consultation_data', JSON.stringify(existingConsultation));
+      console.log('📋 [BrandSetup] Updated pageconsult_consultation_data with brand settings');
+    }
+  } catch (consultError) {
+    console.warn('📋 [BrandSetup] Failed to update consultation data:', consultError);
+  }
+}
+
 interface CommunicationStyle {
   tone: { descriptors: string[]; primary: string };
   voice: { pov: string; addressesReader: boolean; sentenceStyle: string };
@@ -173,7 +278,55 @@ export default function EnhancedBrandSetup() {
   // Style inspiration state (from reference websites)
   const [styleInspiration, setStyleInspiration] = useState<StyleInspiration | null>(null);
 
-  // Load localStorage intelligence on mount
+  // ===== CRITICAL: Restore saved brand data on mount =====
+  useEffect(() => {
+    try {
+      const savedBrand = localStorage.getItem('pageconsult_brand_data');
+      if (savedBrand && savedBrand !== 'undefined' && savedBrand !== 'null') {
+        const parsed = JSON.parse(savedBrand);
+        console.log('📂 [BrandSetup] Restoring saved brand data:', {
+          logo: parsed.logo ? '(present)' : null,
+          primary: parsed.colors?.primary,
+          companyName: parsed.companyName,
+          hasExtraction: !!parsed.extractionResults
+        });
+        
+        // Only restore if we have actual brand data (not defaults)
+        if (parsed.logo) {
+          setLogo(parsed.logo);
+        }
+        if (parsed.colors?.primary && parsed.colors.primary !== DEFAULT_COLORS.primary) {
+          setColors(parsed.colors);
+        }
+        if (parsed.companyName && parsed.companyName !== 'Your Company') {
+          setCompanyName(parsed.companyName);
+        }
+        if (parsed.tagline && parsed.tagline !== 'Your compelling tagline goes here') {
+          setTagline(parsed.tagline);
+        }
+        if (parsed.extractionResults) {
+          setExtractionResults(parsed.extractionResults);
+          setExtractionSuccess(true);
+        }
+        if (parsed.communicationStyle) {
+          setCommunicationStyle(parsed.communicationStyle);
+        }
+        if (parsed.fontSettings) {
+          setFontSettings(parsed.fontSettings);
+        }
+        if (parsed.websiteUrl) {
+          setWebsiteUrl(parsed.websiteUrl);
+        }
+        if (parsed.styleInspiration) {
+          setStyleInspiration(parsed.styleInspiration);
+        }
+      }
+    } catch (e) {
+      console.warn('📂 [BrandSetup] Failed to restore saved brand data:', e);
+    }
+  }, []);
+
+  // Load localStorage intelligence on mount (demo session data)
   useEffect(() => {
     try {
       const storedData = localStorage.getItem('pageconsult_demo_extracted');
@@ -211,6 +364,35 @@ export default function EnhancedBrandSetup() {
     };
     loadAccumulator();
   }, [searchParams]);
+
+  // ===== CRITICAL: Save brand data on unmount to prevent data loss =====
+  useEffect(() => {
+    return () => {
+      const data = brandDataRef.current;
+      // Check if we have any non-default data worth saving using ref
+      const hasLogo = data.logo && data.logo.length > 0;
+      const hasCustomColors = data.colors.primary !== DEFAULT_COLORS.primary || 
+                              data.colors.secondary !== DEFAULT_COLORS.secondary;
+      const hasCustomCompanyName = data.companyName !== 'Your Company';
+      const hasWebsite = data.websiteUrl && data.websiteUrl.length > 0;
+      
+      if (hasLogo || hasCustomColors || hasCustomCompanyName || hasWebsite) {
+        console.log('🚪 [BrandSetup] Component unmounting, saving brand data...');
+        persistBrandDataToStorage({
+          logo: data.logo,
+          colors: data.colors,
+          companyName: data.companyName,
+          tagline: data.tagline,
+          websiteUrl: data.websiteUrl,
+          fontSettings: data.fontSettings,
+          extractionResults: data.extractionResults || undefined,
+          communicationStyle: data.communicationStyle || undefined,
+          styleInspiration: data.styleInspiration || undefined,
+        });
+      }
+    };
+    // Empty deps is correct - we use ref to capture latest state
+  }, []);
 
   // Load demo session if session param exists, OR load consultation data
   // Also check if brand setup should be skipped (user already has brand data + brief generated)
@@ -581,6 +763,44 @@ export default function EnhancedBrandSetup() {
   
   // Store pending URL for auto-extraction (will be processed after handleAnalyzeWebsite is defined)
   const pendingAutoExtractRef = useRef<string | null>(null);
+  
+  // Ref to capture latest brand data for save-on-unmount (avoids stale closure issue)
+  const brandDataRef = useRef<{
+    logo: string | null;
+    colors: typeof DEFAULT_COLORS;
+    companyName: string;
+    tagline: string;
+    websiteUrl: string;
+    fontSettings: typeof fontSettings;
+    extractionResults: ExtractionResults | null;
+    communicationStyle: CommunicationStyle | null;
+    styleInspiration: StyleInspiration | null;
+  }>({
+    logo: null,
+    colors: DEFAULT_COLORS,
+    companyName: 'Your Company',
+    tagline: 'Your compelling tagline goes here',
+    websiteUrl: '',
+    fontSettings: { h1: 'Inter', h2: 'Inter', h3: 'Inter', body: 'Inter', small: 'Inter' },
+    extractionResults: null,
+    communicationStyle: null,
+    styleInspiration: null,
+  });
+  
+  // Keep brandDataRef in sync with state
+  useEffect(() => {
+    brandDataRef.current = {
+      logo,
+      colors,
+      companyName,
+      tagline,
+      websiteUrl,
+      fontSettings,
+      extractionResults,
+      communicationStyle,
+      styleInspiration,
+    };
+  }, [logo, colors, companyName, tagline, websiteUrl, fontSettings, extractionResults, communicationStyle, styleInspiration]);
 
   // Check if we should queue auto-extraction
   useEffect(() => {
@@ -750,6 +970,24 @@ export default function EnhancedBrandSetup() {
         }
 
         toast.success('Website analyzed successfully!');
+
+        // ===== CRITICAL: Persist brand data immediately after extraction =====
+        // This ensures data survives navigation before handleContinue is called
+        persistBrandDataToStorage({
+          logo: extracted.logoUrl || logo,
+          colors: {
+            primary: extracted.primary || results.colors?.[0] || colors.primary,
+            secondary: extracted.secondary || results.colors?.[1] || colors.secondary,
+            accent: extracted.accent || results.colors?.[2] || colors.accent,
+          },
+          companyName: name || companyName,
+          tagline: extracted.tagline || tagline,
+          websiteUrl: formattedUrl,
+          fontSettings,
+          extractionResults: results,
+          communicationStyle,
+        });
+        console.log('✅ [BrandSetup] Brand data persisted after extraction');
       }
     } catch (error) {
       console.error('Analysis error:', error);
@@ -2242,14 +2480,12 @@ export default function EnhancedBrandSetup() {
                         </button>
                       </div>
 
-                      {/* Stats Row */}
-                      <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
-                        <span>500+ Clients</span>
-                        <span className="w-1 h-1 bg-slate-600 rounded-full" />
-                        <span>98% Satisfaction</span>
-                        <span className="w-1 h-1 bg-slate-600 rounded-full" />
-                        <span>24/7 Support</span>
-                      </div>
+                      {/* Stats Row - Only show if we have real proof elements from consultation */}
+                      {localStorageIntelligence?.proofElements && (
+                        <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
+                          <span>{localStorageIntelligence.proofElements}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Color Legend */}
