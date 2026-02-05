@@ -7,6 +7,8 @@ import { calculateIntelligenceScore, type GenericIntelligence } from '@/lib/inte
 import { intelligenceConcierge, type IntelligenceAccumulator, type MarketData as ConciergeMarketData } from '@/lib/intelligenceConcierge';
 import { ProgressRail } from '@/components/flow/ProgressRail';
 import { useFlowNavigation, type FlowState } from '@/hooks/useFlowNavigation';
+ import { exportStrategyBriefPdf } from '@/utils/exportStrategyPdf';
+ import { toast } from 'sonner';
 
 // Color scheme matching Intelligence Profile
 const SECTION_COLORS = {
@@ -94,6 +96,41 @@ export default function StrategyDocument() {
   const [loading, setLoading] = useState(true);
   const [consultation, setConsultation] = useState<ConsultationData | null>(null);
   const [accumulator, setAccumulator] = useState<IntelligenceAccumulator | null>(null);
+   const [isExporting, setIsExporting] = useState(false);
+   
+   // Get company name for PDF export
+   const companyName = useMemo(() => {
+    return (consultation?.extracted_intelligence as any)?.companyName || 
+           (consultation?.extracted_intelligence as any)?.businessName ||
+            (accumulator?.consultationData as any)?.businessName ||
+            (accumulator?.brandData as any)?.name ||
+            consultation?.industry || 
+            'Strategy Brief';
+   }, [consultation, accumulator]);
+ 
+   const handleExportPdf = async () => {
+     setIsExporting(true);
+     try {
+       const filename = await exportStrategyBriefPdf(
+         'strategy-brief-content',
+         {
+           companyName,
+           intelligenceScore: score.totalScore,
+           exportDate: new Date().toLocaleDateString('en-US', {
+             year: 'numeric',
+             month: 'long',
+             day: 'numeric'
+           })
+         }
+       );
+       toast.success(`Strategy Blueprint exported as ${filename}`);
+     } catch (error) {
+       console.error('PDF export failed:', error);
+       toast.error('Failed to export PDF. Please try again.');
+     } finally {
+       setIsExporting(false);
+     }
+   };
 
   // Load consultation and accumulator data
   useEffect(() => {
@@ -229,22 +266,38 @@ export default function StrategyDocument() {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       {/* Progress Rail */}
-      <ProgressRail currentStep="strategy" flowState={flowState} />
+      <ProgressRail currentStep="strategy" flowState={flowState} data-pdf-ignore="true" />
       
       {/* Header Section */}
-      <header className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-b border-purple-500/20 p-8">
+      <header className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-b border-purple-500/20 p-8" data-pdf-ignore="true">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <Button 
               variant="ghost" 
               onClick={goBack}
               className="text-gray-400 hover:text-white"
+               data-pdf-ignore="true"
             >
               ← Back to Brand
             </Button>
-            <Button variant="outline" className="border-purple-500/30 text-purple-300 hover:bg-purple-500/10">
-              <Download className="w-4 h-4 mr-2" />
-              Export PDF
+            <Button 
+              variant="outline" 
+              className="border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
+              onClick={handleExportPdf}
+              disabled={isExporting}
+              data-pdf-ignore="true"
+            >
+              {isExporting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Export PDF
+                </>
+              )}
             </Button>
           </div>
           
@@ -295,7 +348,7 @@ export default function StrategyDocument() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto p-8 space-y-12">
+      <main id="strategy-brief-content" className="max-w-6xl mx-auto p-8 space-y-12">
         
         {/* Section 1: Executive Summary (WHO YOU ARE - Cyan) */}
         <section className="mb-12">
@@ -694,7 +747,7 @@ export default function StrategyDocument() {
         </section>
 
         {/* Section 7: Next Steps */}
-        <section className="mb-12">
+        <section className="mb-12" data-pdf-ignore="true">
           <div className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 border border-purple-500/20 rounded-2xl p-8 text-center">
             <h2 className="text-2xl font-bold mb-4">Ready to Build Your Page?</h2>
             <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
