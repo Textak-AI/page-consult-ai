@@ -2712,24 +2712,11 @@ function GenerateContent() {
         return [];
       }
       
-      // LAST RESORT: Industry fallback (only if no SDI)
-      if (stats.length === 0 && !sdi) {
-        const industry = consultationData?.industry || '';
-        const isConsulting = industry.toLowerCase().includes('consulting') || 
-                             industry.toLowerCase().includes('professional');
-        
-        if (isConsulting) {
-          stats.push({ value: '15+', label: 'Years Experience' });
-          stats.push({ value: '500+', label: 'Clients Served' });
-          stats.push({ value: '98%', label: 'Client Satisfaction' });
-          stats.push({ value: '4.9', label: 'Average Rating' });
-        } else {
-          stats.push({ value: '10+', label: 'Years in Business' });
-          stats.push({ value: '1000+', label: 'Projects Completed' });
-          stats.push({ value: '99%', label: 'On-Time Delivery' });
-          stats.push({ value: '24/7', label: 'Support Available' });
-        }
-        console.log('⚠️ [buildStatistics] Using fallback stats for industry:', industry);
+      // NO FABRICATION: If no real proof data exists, return empty array
+      // Stats bar will be hidden rather than showing fake data
+      if (stats.length === 0) {
+        console.log('🚫 [buildStatistics] No real proof data found - stats bar will be hidden (zero-fabrication policy)');
+        return [];
       }
       
       console.log('🔍 [buildStatistics] Built stats:', stats.length);
@@ -2940,15 +2927,11 @@ function GenerateContent() {
             faqData = parseObjectionsString(consultationData.objections);
           }
           
-          // If still no FAQ items, use fallback FAQs
+          // ZERO-FABRICATION: If no real FAQ data exists, skip the section entirely
           if (faqData.length === 0) {
-            faqData = [
-              { question: 'How quickly can we get started?', answer: 'We can typically begin within 1-2 weeks of our initial consultation.' },
-              { question: 'What makes your approach different?', answer: 'We combine proven methodology with personalized attention to deliver measurable results.' },
-              { question: 'Do you offer ongoing support?', answer: 'Yes, we provide continuous support to ensure long-term success.' },
-              { question: 'How do you measure results?', answer: 'We establish clear KPIs at the start and track progress throughout our engagement.' },
-            ];
-            console.log('[buildStatistics] Using fallback FAQs');
+            console.log('🚫 [mapLegacyStrategyContent] faq: No real FAQ data found - section will be hidden (zero-fabrication policy)');
+            // Don't push the section - it won't render
+            break;
           }
           
           console.log('🔍 [mapLegacyStrategyContent] faq: found', faqData.length, 'items');
@@ -2967,8 +2950,6 @@ function GenerateContent() {
                 mode: sdiMode,
               },
             });
-          } else {
-            console.log('⚠️ [mapLegacyStrategyContent] faq skipped: no items found');
           }
           break;
 

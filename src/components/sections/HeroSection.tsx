@@ -122,6 +122,13 @@ interface HeroSectionProps {
       icon?: string;
       text: string;
     }>;
+    proofPoints?: {
+      rating?: string;
+      clientCount?: string;
+      achievements?: string[];
+      revenue?: string;
+      satisfaction?: string;
+    };
     primaryColor?: string;
     logoUrl?: string | null;
     logoSize?: LogoSize;
@@ -489,16 +496,31 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           </div>
           
           {/* Social proof strip */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
-            <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+          {/* Social proof strip - ONLY render if proof data exists */}
+          {(content.proofPoints?.rating || content.proofPoints?.clientCount || content.proofPoints?.achievements?.length) && (
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
+              {content.proofPoints?.rating && (
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                  <span className="ml-2">{content.proofPoints.rating}</span>
+                </div>
+              )}
+              {content.proofPoints?.clientCount && (
+                <>
+                  {content.proofPoints?.rating && <span className="hidden sm:inline">•</span>}
+                  <span>{content.proofPoints.clientCount}</span>
+                </>
+              )}
+              {content.proofPoints?.achievements?.map((achievement: string, i: number) => (
+                <span key={i} className="flex items-center gap-1">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  {achievement}
+                </span>
               ))}
-              <span className="ml-2">4.9/5 rating</span>
             </div>
-            <span className="hidden sm:inline">•</span>
-            <span>Trusted by 10,000+ teams</span>
-          </div>
+          )}
         </div>
 
         <ImagePicker

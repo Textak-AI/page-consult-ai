@@ -15,6 +15,7 @@ interface RiskReversalContent {
   industryVariant?: string;
   mode?: 'light' | 'dark';
   primaryColor?: string;
+  trustBadgeText?: string;
 }
 
 interface RiskReversalSectionProps {
@@ -142,7 +143,7 @@ export function RiskReversalSection({
               >
                 <BadgeCheck className={`w-5 h-5 ${isLightMode ? 'text-emerald-500' : 'text-emerald-400'}`} />
                 <span className={`text-sm font-medium ${isLightMode ? 'text-emerald-600' : 'text-emerald-400'}`}>
-                  Trusted by thousands of satisfied clients
+                  {content.trustBadgeText || "Your satisfaction is our commitment"}
                 </span>
               </motion.div>
             </div>

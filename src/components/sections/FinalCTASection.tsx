@@ -195,7 +195,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-xl text-slate-300 mb-6"
           >
-            {content.subtext || "Join thousands of teams already using us"}
+            {content.subtext || "Take the next step toward your goals"}
           </motion.p>
 
           {/* Urgency Banner */}

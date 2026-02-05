@@ -39,10 +39,10 @@ export const AVAILABLE_TRUST_BADGES: TrustBadge[] = [
   { id: 'support', icon: 'Clock', label: '24/7 Support', description: 'Always here to help' },
   { id: 'money-back', icon: 'RefreshCw', label: 'Money-Back Guarantee', description: 'No questions asked' },
   { id: 'certified', icon: 'Award', label: 'Industry Certified', description: 'Recognized expertise' },
-  { id: 'trusted', icon: 'Star', label: 'Trusted by 10,000+', description: 'Join our community' },
+  { id: 'trusted', icon: 'Star', label: 'Trusted Partner', description: 'Proven reliability' },
   { id: 'verified', icon: 'Verified', label: 'Verified Business', description: 'Legitimacy confirmed' },
   { id: 'insured', icon: 'Shield', label: 'Fully Insured', description: 'Peace of mind' },
-  { id: 'quality', icon: 'BadgeCheck', label: 'Quality Guaranteed', description: 'We stand behind our work' },
+  { id: 'quality', icon: 'BadgeCheck', label: 'Quality Commitment', description: 'We stand behind our work' },
   { id: 'care', icon: 'Heart', label: 'Customer First', description: 'Your success is our priority' },
 ];
 
