@@ -54,7 +54,7 @@ function getSocialProofHeader(industry?: string, isConsulting?: boolean): { titl
     return {
       title: 'Client Results',
       subtitle: 'What our clients say about working with us',
-      placeholderQuote: 'Working with this team has been transformative. Their expertise and dedication to client success is unmatched in the industry.'
+      placeholderQuote: ''
     };
   }
   
@@ -62,32 +62,32 @@ function getSocialProofHeader(industry?: string, isConsulting?: boolean): { titl
   
   if (industryLower.includes('wedding') || industryLower.includes('dj')) {
     return { 
-      title: 'Trusted by Happy Couples', 
-      subtitle: 'See what couples are saying',
-      placeholderQuote: 'Wedding planners across the region trust us for their most important events. Our commitment to excellence has made us the go-to choice for unforgettable celebrations.'
+      title: 'Client Success Stories', 
+      subtitle: 'Real experiences from our clients',
+      placeholderQuote: ''
     };
   }
   
   if (industryLower.includes('b2b') || industryLower.includes('saas') || industryLower.includes('software')) {
     return { 
-      title: 'Trusted by Companies', 
-      subtitle: 'Join leading teams',
-      placeholderQuote: 'Teams across the industry rely on our solutions to streamline their operations and drive growth. The results speak for themselves.'
+      title: 'Client Success Stories', 
+      subtitle: 'Real experiences from our clients',
+      placeholderQuote: ''
     };
   }
   
   if (industryLower.includes('ecommerce') || industryLower.includes('shop') || industryLower.includes('store')) {
     return { 
       title: 'What Customers Are Saying', 
-      subtitle: 'Join thousands of satisfied shoppers',
-      placeholderQuote: 'Shopping with us has been an absolute pleasure. From selection to delivery, every step exceeded my expectations.'
+      subtitle: 'Real experiences from our customers',
+      placeholderQuote: ''
     };
   }
   
   return { 
     title: 'What Our Clients Say', 
-    subtitle: 'Join hundreds of satisfied customers',
-    placeholderQuote: 'Working with this team has been transformative. Their expertise and dedication to client success is unmatched in the industry.'
+    subtitle: 'Real experiences from our clients',
+    placeholderQuote: ''
   };
 }
 

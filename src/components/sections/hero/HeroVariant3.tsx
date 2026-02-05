@@ -7,9 +7,10 @@ interface HeroVariant3Props {
   ctaText: string;
   ctaLink: string;
   backgroundImage?: string;
+  trustSignals?: Array<{ icon: 'calendar' | 'award'; text: string }>;
 }
 
-export function HeroVariant3({ headline, subheadline, ctaText, ctaLink, backgroundImage }: HeroVariant3Props) {
+export function HeroVariant3({ headline, subheadline, ctaText, ctaLink, backgroundImage, trustSignals }: HeroVariant3Props) {
   const backgroundStyle = backgroundImage
     ? {
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url(${backgroundImage})`,
@@ -19,6 +20,8 @@ export function HeroVariant3({ headline, subheadline, ctaText, ctaLink, backgrou
     : {
         background: 'linear-gradient(135deg, hsl(var(--primary)/0.15) 0%, hsl(var(--secondary)/0.15) 100%)',
       };
+
+  const IconMap = { calendar: Calendar, award: Award };
 
   return (
     <section 
@@ -43,20 +46,22 @@ export function HeroVariant3({ headline, subheadline, ctaText, ctaLink, backgrou
           </p>
 
           {/* Trust Signals */}
-          <div className="flex flex-wrap gap-6 text-white/95">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              <span className="text-sm font-medium" style={{ textShadow: '2px 2px 12px rgba(0,0,0,0.9)' }}>
-                15+ Years Experience
-              </span>
+          {/* Trust Signals - Only render if real data provided */}
+          {trustSignals && trustSignals.length > 0 && (
+            <div className="flex flex-wrap gap-6 text-white/95">
+              {trustSignals.map((signal, i) => {
+                const Icon = IconMap[signal.icon] || Calendar;
+                return (
+                  <div key={i} className="flex items-center gap-2">
+                    <Icon className="w-5 h-5" />
+                    <span className="text-sm font-medium" style={{ textShadow: '2px 2px 12px rgba(0,0,0,0.9)' }}>
+                      {signal.text}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex items-center gap-2">
-              <Award className="w-5 h-5" />
-              <span className="text-sm font-medium" style={{ textShadow: '2px 2px 12px rgba(0,0,0,0.9)' }}>
-                Award-Winning Portfolio
-              </span>
-            </div>
-          </div>
+          )}
 
           {/* Subtle CTA */}
           <div className="pt-4">

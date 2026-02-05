@@ -828,34 +828,32 @@ export function buildStatistics(sources: any, industryVariant: string): Array<{v
   
   // Only use fallback if we found nothing
   if (stats.length < 2) {
-    console.log('⚠️ [buildStatistics] Using fallback - only found', stats.length, 'stats');
-    return getIndustryFallbackStats(industryVariant);
+    console.log('🚫 [buildStatistics] Only found', stats.length, 'stats - returning empty (zero-fabrication policy)');
+    return [];
   }
   
-  console.log('✅ [buildStatistics] Extracted', stats.length, 'stats from consultation data');
-  return stats;
+  // Deduplicate by value to prevent showing "94%" twice
+  const deduplicatedStats = deduplicateStats(stats);
+  
+  console.log('✅ [buildStatistics] Extracted', deduplicatedStats.length, 'unique stats from consultation data');
+  return deduplicatedStats;
 }
 
-function getIndustryFallbackStats(industryVariant: string): Array<{value: string, label: string}> {
-  const fallbacks: Record<string, Array<{value: string, label: string}>> = {
-    consulting: [
-      { value: '10+', label: 'Years Experience' },
-      { value: '100+', label: 'Clients Served' },
-    ],
-    manufacturing: [
-      { value: '25+', label: 'Years in Industry' },
-      { value: '500+', label: 'Projects Completed' },
-    ],
-    healthcare: [
-      { value: '15+', label: 'Years Serving Patients' },
-      { value: '10,000+', label: 'Patients Treated' },
-    ],
-    default: [
-      { value: '5+', label: 'Years Experience' },
-      { value: '50+', label: 'Happy Clients' },
-    ],
-  };
-  return fallbacks[industryVariant] || fallbacks.default;
+/**
+ * Deduplicate stats by normalized value to prevent duplicate display
+ */
+function deduplicateStats(stats: Array<{value: string, label: string}>): Array<{value: string, label: string}> {
+  const seen = new Set<string>();
+  return stats.filter(stat => {
+    // Normalize value: strip formatting, lowercase
+    const normalizedValue = stat.value.replace(/[^0-9a-z%$+]/gi, '').toLowerCase();
+    if (seen.has(normalizedValue)) {
+      console.log('🔄 [deduplicateStats] Removing duplicate:', stat.value, stat.label);
+      return false;
+    }
+    seen.add(normalizedValue);
+    return true;
+  });
 }
 
 /**
@@ -898,15 +896,20 @@ export function buildFAQs(sources: any, industryVariant: string): Array<{questio
   }
   
   if (faqs.length < 2) {
-    console.log('⚠️ [buildFAQs] Using fallback - only found', faqs.length, 'FAQs');
-    return getIndustryFallbackFAQs(industryVariant);
+    console.log('🚫 [buildFAQs] Only found', faqs.length, 'FAQs - returning empty (zero-fabrication policy)');
+    return [];
   }
   
   console.log('✅ [buildFAQs] Extracted', faqs.length, 'FAQs from consultation data');
   return faqs;
 }
 
+/**
+ * Convert objection statement to question format
+ */
 function convertToQuestion(objection: string): string {
+  if (!objection || typeof objection !== 'string') return '';
+  
   // Convert statement objections to questions
   const conversions: Record<string, string> = {
     'expensive': 'What kind of ROI can we expect?',
@@ -922,25 +925,13 @@ function convertToQuestion(objection: string): string {
     if (lower.includes(keyword)) return question;
   }
   
+  // If it's already a question-like statement, use it
+  if (objection.includes('?') || objection.toLowerCase().startsWith('how') || 
+      objection.toLowerCase().startsWith('what') || objection.toLowerCase().startsWith('why')) {
+    return objection;
+  }
+  
   return `What about "${objection}"?`;
-}
-
-function getIndustryFallbackFAQs(industryVariant: string): Array<{question: string, answer: string}> {
-  const fallbacks: Record<string, Array<{question: string, answer: string}>> = {
-    consulting: [
-      { question: 'How do you work with clients?', answer: 'We start with a discovery call to understand your needs, then develop a customized approach tailored to your goals.' },
-      { question: 'What results can we expect?', answer: 'Results vary by engagement, but our clients typically see measurable improvements within the first 90 days.' },
-    ],
-    manufacturing: [
-      { question: 'What industries do you serve?', answer: 'We work across multiple industries including aerospace, automotive, and industrial manufacturing.' },
-      { question: 'How do you ensure quality?', answer: 'We follow rigorous quality management processes and hold relevant certifications.' },
-    ],
-    default: [
-      { question: 'How do I get started?', answer: 'Simply reach out through our contact form and we\'ll schedule a free consultation.' },
-      { question: 'What makes you different?', answer: 'We focus on delivering measurable results with a personalized approach.' },
-    ],
-  };
-  return fallbacks[industryVariant] || fallbacks.default;
 }
 
 /**
