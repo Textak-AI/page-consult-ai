@@ -6,6 +6,13 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { WaitlistConfirmation } from './WaitlistConfirmation';
 
+// Helper to check if logo should be inverted for dark mode
+function shouldInvertLogo(logoUrl: string | undefined): boolean {
+  if (!logoUrl) return false;
+  const lowerUrl = logoUrl.toLowerCase();
+  return lowerUrl.includes('dark') || lowerUrl.includes('-dark') || lowerUrl.includes('_dark') || lowerUrl.endsWith('.svg');
+}
+
 interface SignupResponse {
   position: number;
   referralCode: string;
@@ -125,7 +132,7 @@ export const HeroTeaserSection: React.FC<Props> = ({
             <motion.img
               src={content.logoUrl}
               alt="Logo"
-              className="h-12 md:h-16 mx-auto mb-8"
+              className={`h-12 md:h-16 mx-auto mb-8${shouldInvertLogo(content.logoUrl) ? ' brightness-0 invert' : ''}`}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}

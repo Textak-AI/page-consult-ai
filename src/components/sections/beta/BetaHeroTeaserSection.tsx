@@ -4,6 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sparkles, ArrowRight, Users, Calendar, Loader2 } from "lucide-react";
 
+// Helper to check if logo should be inverted for dark mode (beta pages are typically dark)
+function shouldInvertLogo(logoUrl: string | null | undefined): boolean {
+  if (!logoUrl) return false;
+  
+  const lowerUrl = logoUrl.toLowerCase();
+  // Invert if it's a dark logo variant or an SVG (most logos are designed for light backgrounds)
+  return lowerUrl.includes('dark') || lowerUrl.includes('-dark') || lowerUrl.includes('_dark') || lowerUrl.endsWith('.svg');
+}
+
 interface BetaHeroTeaserSectionProps {
   content: {
     headline: string;
@@ -110,7 +119,7 @@ export function BetaHeroTeaserSection({
               <img 
                 src={content.logoUrl} 
                 alt="Company logo" 
-                className="h-12 md:h-16 object-contain"
+                className={`h-12 md:h-16 object-contain${shouldInvertLogo(content.logoUrl) ? ' brightness-0 invert' : ''}`}
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
