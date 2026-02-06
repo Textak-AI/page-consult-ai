@@ -39,6 +39,7 @@ interface PublicPageRendererProps {
   styles?: any;
   metaTitle?: string | null;
   metaDescription?: string | null;
+  heroThumbnailUrl?: string | null;
   // Design intelligence for color mode and brand colors
   designIntelligence?: {
     colorMode?: 'light' | 'dark';
@@ -55,6 +56,8 @@ interface PublicPageRendererProps {
     logoUrl?: string | null;
     primaryColor?: string | null;
   } | null;
+  // Show "Built with PageConsult" badge
+  showPoweredBy?: boolean;
 }
 
 export function PublicPageRenderer({ 
@@ -62,8 +65,10 @@ export function PublicPageRenderer({
   styles,
   metaTitle,
   metaDescription,
+  heroThumbnailUrl,
   designIntelligence,
-  brandSettings
+  brandSettings,
+  showPoweredBy = false
 }: PublicPageRendererProps) {
   
   // Derive colorMode from design intelligence
@@ -277,6 +282,16 @@ export function PublicPageRenderer({
       <Helmet>
         {metaTitle && <title>{metaTitle}</title>}
         {metaDescription && <meta name="description" content={metaDescription} />}
+        {/* Open Graph tags */}
+        {metaTitle && <meta property="og:title" content={metaTitle} />}
+        {metaDescription && <meta property="og:description" content={metaDescription} />}
+        {heroThumbnailUrl && <meta property="og:image" content={heroThumbnailUrl} />}
+        <meta property="og:type" content="website" />
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        {metaTitle && <meta name="twitter:title" content={metaTitle} />}
+        {metaDescription && <meta name="twitter:description" content={metaDescription} />}
+        {heroThumbnailUrl && <meta name="twitter:image" content={heroThumbnailUrl} />}
       </Helmet>
 
       {/* Apply custom styles if provided */}
@@ -313,6 +328,21 @@ export function PublicPageRenderer({
           companyName={brandSettings?.companyName}
           logoUrl={brandSettings?.logoUrl}
         />
+        
+        {/* "Built with PageConsult" badge */}
+        {showPoweredBy && (
+          <a 
+            href="https://pageconsult.ai" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-slate-900/90 backdrop-blur-sm border border-slate-700/50 rounded-full text-xs text-slate-400 hover:text-white hover:border-purple-500/50 transition-all duration-200 shadow-lg"
+          >
+            <svg className="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M13.5 2c-5.621 0-10.211 4.443-10.475 10h-3.025l5 6.625 5-6.625h-2.975c.257-3.351 3.06-6 6.475-6 3.584 0 6.5 2.916 6.5 6.5s-2.916 6.5-6.5 6.5c-1.863 0-3.542-.793-4.728-2.053l-2.427 3.216c1.877 1.754 4.389 2.837 7.155 2.837 5.79 0 10.5-4.71 10.5-10.5s-4.71-10.5-10.5-10.5z"/>
+            </svg>
+            <span>Built with PageConsult</span>
+          </a>
+        )}
       </div>
     </>
   );

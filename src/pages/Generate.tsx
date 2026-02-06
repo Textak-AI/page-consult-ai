@@ -71,6 +71,8 @@ import { generateDesignIntelligence, type DesignIntelligenceOutput } from "@/lib
 import { intelligenceConcierge } from "@/lib/intelligenceConcierge";
 import { getTargetMarketFromSources } from "@/lib/targetMarketExtractor";
 import { resolveHeroImageUrl } from "@/hooks/useHeroImageResolution";
+import { generateUniqueSlug } from "@/utils/slugUtils";
+import { PublishToolbar } from "@/components/editor/PublishToolbar";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -1731,13 +1733,15 @@ function GenerateContent() {
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
-      // Create NEW page in database with guaranteed unique slug
-      const industrySlug = (consultationData.industry || 'page')
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
-      const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const slug = `${industrySlug}-${uniqueId}`;
+      // Create NEW page in database with clean, company-name-based slug
+      // Priority: businessName > companyName > industry > 'page'
+      const slugSource = strategicData?.consultationData?.businessName 
+        || consultationData.business_name 
+        || consultationData.businessName
+        || (consultationData.extracted_intelligence as any)?.companyName
+        || consultationData.industry
+        || 'page';
+      const slug = await generateUniqueSlug(slugSource);
       console.log("💾 Creating new page in database with slug:", slug);
       
       // Get aiSeoData for meta tags optimization
@@ -1837,7 +1841,7 @@ function GenerateContent() {
         console.log("🎯 Including target_market in page record:", targetMarket);
       }
       
-      const { data: pageData, error } = await supabase
+      const { data: savedPageData, error } = await supabase
         .from("landing_pages")
         .insert(insertData)
         .select()
@@ -1848,9 +1852,9 @@ function GenerateContent() {
         throw error;
       }
 
-      if (pageData) {
-        console.log("✅ Page saved successfully:", pageData.id);
-        setPageData(pageData);
+      if (savedPageData) {
+        console.log("✅ Page saved successfully:", savedPageData.id);
+        setPageData(savedPageData);
         setSections(generatedSections);
       }
 
@@ -4283,14 +4287,27 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             <span className="absolute left-0 top-0 w-1 h-full bg-cyan-500 rounded-l"></span>
             Preview
           </Button>
-          <Button
-            size="sm"
-            onClick={() => setPublishModalOpen(true)}
-            className="relative pl-5 builder-button publish-btn bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white border-0"
-          >
-            <span className="absolute left-0 top-0 w-1 h-full bg-green-500 rounded-l"></span>
-            Publish
-          </Button>
+          {/* Publish Toolbar - shows publish state and controls */}
+          {pageData?.id && (
+            <PublishToolbar
+              pageId={pageData.id}
+              slug={pageData.slug}
+              isPublished={pageData.status === 'published' || pageData.is_published}
+              publishedAt={pageData.published_at}
+            />
+          )}
+          
+          {/* Fallback Publish button when page not yet saved */}
+          {!pageData?.id && (
+            <Button
+              size="sm"
+              onClick={() => setPublishModalOpen(true)}
+              className="relative pl-5 builder-button publish-btn bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white border-0"
+            >
+              <span className="absolute left-0 top-0 w-1 h-full bg-green-500 rounded-l"></span>
+              Publish
+            </Button>
+          )}
         </div>
       </header>
 

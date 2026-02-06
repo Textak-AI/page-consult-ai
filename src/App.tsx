@@ -160,7 +160,10 @@ const App = () => {
                 
                 {/* Public page routes - accessible without authentication */}
                 <Route path="/page/:slug" element={<PublicPage />} />
-                <Route path="/p/:slug" element={<ProspectPage />} />
+                {/* Main public page URL - clean, shareable URLs */}
+                <Route path="/p/:slug" element={<PublicPage />} />
+                {/* Prospect personalized pages */}
+                <Route path="/for/:slug" element={<ProspectPage />} />
                 <Route path="/try" element={<TryDemo />} />
                 <Route path="/demo" element={<Navigate to="/try" replace />} />
                 <Route path="/admin/reset-data" element={<AdminResetData />} />
