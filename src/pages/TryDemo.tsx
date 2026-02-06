@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { IntelligenceProvider, useIntelligence } from "@/contexts/IntelligenceContext";
 import SoftLockDemo from "@/components/landing/SoftLockDemo";
@@ -15,36 +15,52 @@ function TryDemoContent() {
   const { user, isLoading: authLoading } = useAuth();
   const { updateExtracted } = useIntelligence();
   
+  // Extract primitive values for stable dependencies
   const fromDashboard = searchParams.get('from') === 'dashboard';
+  const userId = user?.id || null;
+  
   const [brandCheckComplete, setBrandCheckComplete] = useState(false);
   const [showBrandPrompt, setShowBrandPrompt] = useState(false);
+  
+  // Ref to track if effect has already run (prevents infinite loop)
+  const effectRanRef = useRef(false);
 
-  // Debug logging
-  console.log('🏢 [TryDemo] Render state:', {
-    fromDashboard,
-    authLoading,
-    user: user?.id || null,
-    showBrandPrompt,
-    brandCheckComplete,
-  });
+  // Debug logging (only on first render or significant state changes)
+  useEffect(() => {
+    console.log('🏢 [TryDemo] Render state:', {
+      fromDashboard,
+      authLoading,
+      user: userId,
+      showBrandPrompt,
+      brandCheckComplete,
+    });
+  }, [fromDashboard, authLoading, userId, showBrandPrompt, brandCheckComplete]);
 
   // Only show brand detection for authenticated users coming from dashboard
+  // Use primitive dependencies to prevent infinite re-renders
   useEffect(() => {
-    console.log('🏢 [TryDemo] Effect triggered:', { fromDashboard, authLoading, hasUser: !!user });
+    // Prevent running multiple times
+    if (effectRanRef.current) return;
     
+    // Wait for auth to finish loading
     if (authLoading) {
       console.log('🏢 [TryDemo] Auth still loading, waiting...');
       return;
     }
+    
+    // Mark as ran to prevent future executions
+    effectRanRef.current = true;
+    
+    console.log('🏢 [TryDemo] Effect triggered:', { fromDashboard, authLoading, hasUser: !!userId });
 
-    if (fromDashboard && user) {
+    if (fromDashboard && userId) {
       console.log('🏢 [TryDemo] Dashboard entry with user - showing brand prompt');
       setShowBrandPrompt(true);
     } else {
       console.log('🏢 [TryDemo] Non-dashboard entry or no user - skipping brand check');
       setBrandCheckComplete(true);
     }
-  }, [fromDashboard, authLoading, user]);
+  }, [fromDashboard, authLoading, userId]);
 
   const handleUseBrand = (brand: {
     id: string;
