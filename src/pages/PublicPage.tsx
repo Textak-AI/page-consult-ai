@@ -5,7 +5,7 @@ import { Loader2, Home, FileX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PublicPageRenderer } from '@/components/public/PublicPageRenderer';
 
-// Only include fields returned by the secure get_public_landing_page RPC
+// Interface for public page data from get_public_landing_page RPC
 interface PublicLandingPage {
   id: string;
   title: string;
@@ -21,9 +21,39 @@ interface PublicLandingPage {
   status: string;
 }
 
+// Extended interface for direct query (includes design_intelligence)
+interface ExtendedPublicPage extends PublicLandingPage {
+  design_intelligence?: {
+    colorMode?: 'light' | 'dark';
+    industryVariant?: string;
+    cardStyle?: string;
+  } | null;
+  consultation_data?: {
+    businessName?: string;
+    brandColors?: {
+      primary?: string;
+      secondary?: string;
+      accent?: string;
+    };
+    logoUrl?: string;
+    websiteIntelligence?: {
+      companyName?: string;
+      logoUrl?: string;
+      primaryColor?: string;
+      secondaryColor?: string;
+    };
+  } | null;
+  website_intelligence?: {
+    companyName?: string;
+    logoUrl?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+  } | null;
+}
+
 export default function PublicPage() {
   const { slug } = useParams<{ slug: string }>();
-  const [page, setPage] = useState<PublicLandingPage | null>(null);
+  const [page, setPage] = useState<ExtendedPublicPage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,19 +66,43 @@ export default function PublicPage() {
       }
 
       try {
-        // Use secure RPC function that only returns safe fields (no user_id, consultation_data, etc.)
-        const { data, error: fetchError } = await supabase
+        // First try direct query to get full data including design_intelligence
+        // This works because we have an RLS policy for published pages
+        const { data: directData, error: directError } = await supabase
+          .from('landing_pages')
+          .select('id, title, slug, sections, styles, is_published, published_at, published_url, meta_title, meta_description, hero_thumbnail_url, status, design_intelligence, consultation_data, website_intelligence')
+          .eq('slug', slug)
+          .eq('status', 'published')
+          .maybeSingle();
+
+        if (!directError && directData) {
+          console.log('📄 [PublicPage] Loaded via direct query:', {
+            slug: directData.slug,
+            status: directData.status,
+            hasDesignIntelligence: !!directData.design_intelligence,
+            colorMode: (directData.design_intelligence as any)?.colorMode,
+          });
+          setPage(directData as ExtendedPublicPage);
+          
+          // Track the view (fire and forget)
+          trackPageView(directData.id);
+          setIsLoading(false);
+          return;
+        }
+
+        // Fallback to secure RPC function (doesn't include design_intelligence)
+        const { data: rpcData, error: rpcError } = await supabase
           .rpc('get_public_landing_page', { page_slug: slug });
 
-        if (fetchError || !data) {
+        if (rpcError || !rpcData) {
+          console.log('📄 [PublicPage] Page not found for slug:', slug);
           setError('Page not found or not published');
           setIsLoading(false);
           return;
         }
 
-        // Cast through unknown since RPC returns Json type
-        const pageData = data as unknown as PublicLandingPage;
-        setPage(pageData);
+        const pageData = rpcData as unknown as PublicLandingPage;
+        setPage(pageData as ExtendedPublicPage);
 
         // Track the view (fire and forget)
         if (pageData.id) {
@@ -78,39 +132,63 @@ export default function PublicPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <div className="text-center space-y-4">
-          <Loader2 className="w-10 h-10 animate-spin text-purple-600 mx-auto" />
-          <p className="text-slate-500">Loading...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-purple-500 mx-auto" />
+          <p className="text-slate-400">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Error state
+  // Error / 404 state
   if (error || !page) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <div className="text-center space-y-6 p-8 max-w-md">
-          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto">
-            <FileX className="w-8 h-8 text-slate-400" />
+          <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mx-auto">
+            <FileX className="w-8 h-8 text-slate-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">Page Not Found</h1>
-            <p className="text-slate-500">
-              This page doesn't exist or hasn't been published yet.
+            <h1 className="text-2xl font-bold text-white mb-2">Page Not Found</h1>
+            <p className="text-slate-400">
+              This page doesn't exist or is no longer available.
             </p>
           </div>
           <Link to="/">
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 border-slate-700 text-slate-300 hover:bg-slate-800">
               <Home className="w-4 h-4" />
-              Go Home
+              Go to PageConsult
             </Button>
           </Link>
         </div>
       </div>
     );
   }
+
+  // Extract design intelligence from page data
+  const designIntelligence = page.design_intelligence ? {
+    colorMode: page.design_intelligence.colorMode || 'dark',
+    industryVariant: page.design_intelligence.industryVariant || 'default',
+    brandColors: page.consultation_data?.brandColors || {
+      primary: page.website_intelligence?.primaryColor || page.consultation_data?.websiteIntelligence?.primaryColor,
+      secondary: page.website_intelligence?.secondaryColor || page.consultation_data?.websiteIntelligence?.secondaryColor,
+    },
+  } : null;
+
+  // Extract brand settings
+  const brandSettings = {
+    companyName: page.consultation_data?.businessName || 
+                 page.website_intelligence?.companyName || 
+                 page.consultation_data?.websiteIntelligence?.companyName ||
+                 page.title?.replace(' Landing Page', '') ||
+                 null,
+    logoUrl: page.consultation_data?.logoUrl || 
+             page.website_intelligence?.logoUrl || 
+             page.consultation_data?.websiteIntelligence?.logoUrl ||
+             null,
+    primaryColor: designIntelligence?.brandColors?.primary || null,
+  };
 
   // Render the page
   return (
@@ -119,6 +197,10 @@ export default function PublicPage() {
       styles={page.styles}
       metaTitle={page.meta_title}
       metaDescription={page.meta_description}
+      heroThumbnailUrl={page.hero_thumbnail_url}
+      designIntelligence={designIntelligence as any}
+      brandSettings={brandSettings}
+      showPoweredBy={true}
     />
   );
 }
