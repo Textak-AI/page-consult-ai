@@ -418,6 +418,19 @@ const PRECOMPUTED_OBJECTIONS: Record<string, Record<string, PredictedObjection[]
  * This ensures objection lookup works regardless of how specific the detection is
  */
 const INDUSTRY_ALIASES: Record<string, string> = {
+  // Venture / Incubator / Accelerator → consulting (strategic partnership businesses)
+  'venturestudio': 'consulting',
+  'venturebuilder': 'consulting',
+  'incubator': 'consulting',
+  'accelerator': 'consulting',
+  'startupstudio': 'consulting',
+  'venturecapital': 'consulting',
+  'vcfirm': 'consulting',
+  'investmentfirm': 'consulting',
+  'privateequity': 'consulting',
+  'holdingcompany': 'consulting',
+  'venturefund': 'consulting',
+  
   // Cybersecurity aliases
   'penetrationtesting': 'cybersecurity',
   'pentesting': 'cybersecurity',
