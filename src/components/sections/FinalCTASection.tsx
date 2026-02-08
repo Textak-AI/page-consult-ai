@@ -41,16 +41,19 @@ interface FinalCTASectionProps {
 export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectionProps) {
   const industryVariant = content.industryVariant || 'default';
   const tokens = getIndustryTokens(industryVariant);
-  // PRIORITY: SDI mode prop > industry token mode
-  const isLightMode = content.mode 
-    ? (content.mode === 'light' || content.mode === 'warm')
-    : tokens.mode === 'light';
   const isConsulting = industryVariant === 'consulting';
   const isSaas = industryVariant === 'saas';
   const isHealthcare = industryVariant === 'healthcare';
   const isLocalServices = industryVariant === 'local-services';
   
-  console.log('🎨 [FinalCTASection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant);
+  // PRIORITY: Consulting ALWAYS light mode, then SDI mode prop > industry token mode
+  const isLightMode = isConsulting 
+    ? true 
+    : (content.mode 
+      ? (content.mode === 'light' || content.mode === 'warm')
+      : tokens.mode === 'light');
+  
+  console.log('🎨 [FinalCTASection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant, 'forcedLight:', isConsulting);
   
   // Get industry-aware CSS background pattern for CTA section
   const industryPattern = getIndustryPattern(industryVariant as any, isLightMode ? 'light' : 'dark', 'final-cta');
@@ -391,21 +394,38 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   }
 
   if (isConsulting) {
-    // Consulting layout: Dark slate-900 background for contrast
+    // Consulting layout: Light mode with subtle navy accent band - warm, credible, professional
+    const hasBrandColor = !!content.primaryColor;
+    
     return (
-      <section className="py-32 pb-48 bg-slate-900 relative overflow-hidden">
+      <section className="py-24 bg-slate-50 relative overflow-hidden">
+        {/* Subtle decorative element */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-slate-300 via-slate-400 to-slate-300" />
+        
         {isEditing && (
-          <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
+          <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-10" />
         )}
         
         <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
-          <motion.h2 
+          <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className={`text-3xl md:text-4xl font-bold text-white mb-6 ${
-              isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
+            className="mb-4"
+          >
+            <span className="inline-block px-4 py-1 bg-slate-200 text-slate-700 text-sm font-semibold rounded-full">
+              GET STARTED
+            </span>
+          </motion.div>
+          
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className={`text-3xl md:text-4xl font-bold text-slate-900 mb-4 ${
+              isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-2" : ""
             }`}
             contentEditable={isEditing}
             suppressContentEditableWarning
@@ -418,13 +438,13 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className={`text-xl text-slate-300 mb-6 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}`}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className={`text-lg text-slate-600 mb-8 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-1' : ''}`}
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("subtext", e)}
           >
-            {content.subtext || "Free consultation • No obligation"}
+            {content.subtext || "No commitment required • Response within 24 hours"}
           </motion.p>
 
           {/* Urgency Banner */}
@@ -433,8 +453,8 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/40 text-amber-300 px-5 py-2.5 rounded-full text-sm font-medium mb-8"
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="inline-flex items-center gap-2 bg-amber-100 border border-amber-300 text-amber-800 px-5 py-2.5 rounded-full text-sm font-medium mb-8"
             >
               <span>⏰</span>
               <span>{urgencyText}</span>
@@ -445,37 +465,27 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
           >
-            {(() => {
-              // Use brand color if available, otherwise white button on dark background
-              const hasBrandColor = !!content.primaryColor;
-              const ctaStyle = hasBrandColor 
-                ? { backgroundColor: content.primaryColor, boxShadow: `0 10px 30px -10px ${content.primaryColor}66`, color: 'white' }
-                : undefined;
-              const ctaClassName = hasBrandColor
-                ? `px-12 py-6 text-lg font-semibold rounded-xl shadow-lg hover:opacity-90 transition-opacity ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`
-                : `px-12 py-6 text-lg font-semibold bg-white text-slate-900 hover:bg-slate-100 rounded-xl shadow-lg ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`;
-              
-              console.log('🎨 [FinalCTASection Consulting] primaryColor:', content.primaryColor);
-              
-              return (
-                <Button 
-                  size="lg" 
-                  className={ctaClassName}
-                  style={ctaStyle}
-                >
-                  <span
-                    contentEditable={isEditing}
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleBlur("ctaText", e)}
-                  >
-                    {ctaText}
-                  </span>
-                  <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
-                </Button>
-              );
-            })()}
+            <Button 
+              size="lg" 
+              className={`px-12 py-6 text-lg font-semibold rounded-lg shadow-md hover:shadow-lg transition-all ${
+                isEditing ? "outline-dashed outline-2 outline-blue-500/30" : ""
+              }`}
+              style={hasBrandColor 
+                ? { backgroundColor: content.primaryColor, color: 'white' }
+                : { backgroundColor: '#1E3A5F', color: 'white' } // Warm navy default
+              }
+            >
+              <span
+                contentEditable={isEditing}
+                suppressContentEditableWarning
+                onBlur={(e) => handleBlur("ctaText", e)}
+              >
+                {ctaText}
+              </span>
+              <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
+            </Button>
           </motion.div>
 
           {/* Guarantee */}
@@ -484,8 +494,8 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.25 }}
-              className="flex items-center justify-center gap-2 text-green-400 mt-6 mb-4"
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex items-center justify-center gap-2 text-green-700 mt-6 mb-4"
             >
               <Shield className="w-5 h-5" />
               <span className="text-sm font-medium">{guaranteeText}</span>
@@ -498,14 +508,14 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex flex-wrap justify-center gap-6 mt-10"
+              transition={{ duration: 0.5, delay: 0.35 }}
+              className="flex flex-wrap justify-center gap-6 mt-8"
             >
               {trustIndicators.map((item, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-slate-400">
-                  <CheckCircle className="w-4 h-4 text-emerald-500" strokeWidth={1.5} />
+                <div key={i} className="flex items-center gap-2 text-sm text-slate-600">
+                  <CheckCircle className="w-4 h-4 text-green-600" strokeWidth={1.5} />
                   <span
-                    className={isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}
+                    className={isEditing ? 'cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-1' : ''}
                     contentEditable={isEditing}
                     suppressContentEditableWarning
                     onBlur={(e) => {

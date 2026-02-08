@@ -159,16 +159,20 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   // Get industry tokens
   const industryVariant = content.industryVariant || 'default';
   const tokens = getIndustryTokens(industryVariant);
-  // PRIORITY: SDI mode prop > industry token mode
-  const isLightMode = content.mode 
-    ? (content.mode === 'light' || content.mode === 'warm')
-    : tokens.mode === 'light';
+  // PRIORITY: Consulting ALWAYS light mode, then SDI mode prop > industry token mode
   const isConsulting = industryVariant === 'consulting';
   const isHealthcare = industryVariant === 'healthcare';
   const isSaas = industryVariant === 'saas';
   const isLocalServices = industryVariant === 'local-services';
   
-  console.log('🎨 [HeroSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant);
+  // Force light mode for consulting - this is a design requirement
+  const isLightMode = isConsulting 
+    ? true 
+    : (content.mode 
+      ? (content.mode === 'light' || content.mode === 'warm')
+      : tokens.mode === 'light');
+  
+  console.log('🎨 [HeroSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant, 'forcedLight:', isConsulting);
   
   // Determine if we should use light text (when dark overlay is active OR when not in light mode)
   const hasBackgroundImage = !!content.backgroundImage;
@@ -540,10 +544,240 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
     );
   }
 
-  // Healthcare or Consulting: PREMIUM Light mode layout
-  if (isHealthcare || isConsulting) {
-    const accentColor = isHealthcare ? 'teal' : 'violet';
+  // Consulting: Warm, credible, authority-first light mode layout
+  if (isConsulting) {
+    const hasBrandColor = !!content.primaryColor;
     
+    return (
+      <section 
+        className={`relative min-h-[85vh] flex items-center overflow-hidden ${
+          content.backgroundImage 
+            ? '' 
+            : 'bg-gradient-to-br from-white via-slate-50 to-white'
+        }`}
+      >
+        {/* Background Image Layer (if provided) */}
+        {content.backgroundImage && (
+          <div 
+            className="absolute inset-0 z-0"
+            style={{
+              backgroundImage: `url(${content.backgroundImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            {showDarkOverlay && (
+              <div className="absolute inset-0 bg-black/50" />
+            )}
+          </div>
+        )}
+        
+        {/* Subtle warm gradient orbs - no glassmorphism */}
+        {!content.backgroundImage && (
+          <>
+            <div className="absolute top-20 right-[10%] w-[400px] h-[400px] rounded-full blur-3xl opacity-10 bg-slate-300" />
+            <div className="absolute bottom-20 left-[5%] w-[250px] h-[250px] rounded-full blur-3xl opacity-10 bg-slate-400" />
+          </>
+        )}
+        
+        {isEditing && (
+          <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
+            <Button size="sm" onClick={() => setImagePickerOpen(true)}>
+              <ImagePlus className="h-4 w-4 mr-2" />
+              {content.backgroundImage ? 'Change' : 'Add'} Background
+            </Button>
+            {hasBackgroundImage && (
+              <div className="flex items-center gap-2 bg-white/90 rounded-lg px-3 py-2 shadow-md">
+                <Layers className="h-4 w-4 text-slate-600" />
+                <Label htmlFor="overlay-toggle" className="text-sm text-slate-700 whitespace-nowrap">Dark Overlay</Label>
+                <Switch
+                  id="overlay-toggle"
+                  checked={showDarkOverlay}
+                  onCheckedChange={handleToggleOverlay}
+                />
+              </div>
+            )}
+          </div>
+        )}
+        
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+
+        <div className="max-w-6xl mx-auto px-6 lg:px-12 relative z-10">
+          <div className="max-w-3xl">
+            {/* Logo */}
+            {(content.logoUrl || isEditing) && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="mb-8"
+              >
+                {content.logoUrl ? (
+                  <div className="relative inline-block">
+                    <LogoImage 
+                      src={content.logoUrl} 
+                      alt="Logo" 
+                      className={`${logoSizeClasses[logoSize]} object-contain`} 
+                      isDarkMode={hasBackgroundImage && showDarkOverlay}
+                    />
+                    {isEditing && (
+                      <button
+                        onClick={() => setLogoUploaderOpen(true)}
+                        className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center transition-colors shadow-md"
+                      >
+                        <Camera className="w-3 h-3 text-white" />
+                      </button>
+                    )}
+                  </div>
+                ) : isEditing ? (
+                  <button
+                    onClick={() => setLogoUploaderOpen(true)}
+                    className="w-[120px] h-[48px] flex flex-col items-center justify-center gap-1 border-2 border-dashed rounded-lg transition-all border-slate-300 hover:border-blue-400 hover:bg-blue-50/50 text-slate-400 hover:text-blue-600"
+                  >
+                    <Image className="w-5 h-5" />
+                    <span className="text-xs font-medium">Add Logo</span>
+                  </button>
+                ) : null}
+              </motion.div>
+            )}
+            
+            {/* Trust Badge */}
+            {trustBadge && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="mb-6"
+              >
+                <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
+                  hasBackgroundImage && showDarkOverlay 
+                    ? 'bg-white/10 text-white border border-white/20' 
+                    : 'bg-slate-100 text-slate-700 border border-slate-200'
+                }`}>
+                  <Award className="w-4 h-4" />
+                  {trustBadge}
+                </span>
+              </motion.div>
+            )}
+            
+            {/* Headline */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("headline", e)}
+              className={`text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight mb-6 ${
+                hasBackgroundImage && showDarkOverlay ? 'text-white' : 'text-slate-900'
+              } ${isEditing ? "cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2" : ""}`}
+            >
+              {content.headline}
+            </motion.h1>
+            
+            {/* Subheadline */}
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("subheadline", e)}
+              className={`text-xl lg:text-2xl leading-relaxed mb-8 max-w-2xl ${
+                hasBackgroundImage && showDarkOverlay ? 'text-slate-200' : 'text-slate-600'
+              } ${isEditing ? "cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2" : ""}`}
+            >
+              {content.subheadline}
+            </motion.p>
+            
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8"
+            >
+              <Button 
+                size="lg" 
+                className={`group px-8 py-6 rounded-lg font-semibold text-lg transition-all shadow-md hover:shadow-lg ${
+                  isEditing ? "outline-dashed outline-2 outline-blue-500/30" : ""
+                }`}
+                style={hasBrandColor 
+                  ? { backgroundColor: content.primaryColor, color: 'white' }
+                  : { backgroundColor: '#1E3A5F', color: 'white' }
+                }
+              >
+                <span
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleBlur("ctaText", e)}
+                >
+                  {content.ctaText}
+                </span>
+                <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+              </Button>
+              
+              {content.secondaryCTA && (
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className={`px-8 py-6 text-lg font-semibold rounded-lg ${
+                    hasBackgroundImage && showDarkOverlay 
+                      ? 'border-white text-white hover:bg-white/10' 
+                      : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  {content.secondaryCTA.text}
+                </Button>
+              )}
+            </motion.div>
+            
+            {/* Trust micro-copy */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className={`flex flex-wrap items-center gap-6 text-sm ${
+                hasBackgroundImage && showDarkOverlay ? 'text-slate-300' : 'text-slate-500'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                Free consultation
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                No commitment required
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                Response within 24 hours
+              </span>
+            </motion.div>
+          </div>
+        </div>
+
+        <ImagePicker
+          open={imagePickerOpen}
+          onClose={() => setImagePickerOpen(false)}
+          onSelect={handleImageSelect}
+          defaultQuery="professional business consulting"
+        />
+
+        <LogoUploader
+          isOpen={logoUploaderOpen}
+          onClose={() => setLogoUploaderOpen(false)}
+          currentLogoUrl={content.logoUrl || undefined}
+          onApplyLogo={handleLogoApply}
+        />
+      </section>
+    );
+  }
+
+  // Healthcare: PREMIUM Light mode layout with teal accents
+  if (isHealthcare) {
     return (
       <section 
         className={`relative min-h-[85vh] flex items-center overflow-hidden ${
@@ -571,12 +805,8 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         {/* Subtle gradient orbs - visual anchors (only when no bg image) */}
         {!content.backgroundImage && (
           <>
-            <div className={`absolute top-20 right-[10%] w-[500px] h-[500px] rounded-full blur-3xl opacity-20 ${
-              isHealthcare ? 'bg-teal-400' : 'bg-violet-500'
-            }`} />
-            <div className={`absolute bottom-10 left-[5%] w-[300px] h-[300px] rounded-full blur-3xl opacity-10 ${
-              isHealthcare ? 'bg-cyan-400' : 'bg-indigo-500'
-            }`} />
+            <div className="absolute top-20 right-[10%] w-[500px] h-[500px] rounded-full blur-3xl opacity-20 bg-teal-400" />
+            <div className="absolute bottom-10 left-[5%] w-[300px] h-[300px] rounded-full blur-3xl opacity-10 bg-cyan-400" />
           </>
         )}
         
@@ -601,7 +831,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         )}
         
         {isEditing && (
-          <div className={`absolute inset-0 border-2 ${isHealthcare ? 'border-teal-500/50' : 'border-violet-500/50'} rounded-lg pointer-events-none z-10`} />
+          <div className="absolute inset-0 border-2 border-teal-500/50 rounded-lg pointer-events-none z-10" />
         )}
 
         <div className="container mx-auto px-6 lg:px-12 relative z-10">
@@ -628,7 +858,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                       {isEditing && (
                         <button
                           onClick={() => setLogoUploaderOpen(true)}
-                          className={`absolute -bottom-1 -right-1 w-6 h-6 ${isHealthcare ? 'bg-teal-500 hover:bg-teal-600' : 'bg-violet-500 hover:bg-violet-600'} rounded-full flex items-center justify-center transition-colors shadow-md`}
+                          className="absolute -bottom-1 -right-1 w-6 h-6 bg-teal-500 hover:bg-teal-600 rounded-full flex items-center justify-center transition-colors shadow-md"
                         >
                           <Camera className="w-3 h-3 text-white" />
                         </button>
@@ -637,11 +867,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                   ) : isEditing ? (
                     <button
                       onClick={() => setLogoUploaderOpen(true)}
-                      className={`w-[120px] h-[48px] flex flex-col items-center justify-center gap-1 border-2 border-dashed rounded-lg transition-all ${
-                        isHealthcare 
-                          ? 'border-slate-300 hover:border-teal-400 hover:bg-teal-50/50 text-slate-400 hover:text-teal-600'
-                          : 'border-slate-300 hover:border-violet-400 hover:bg-violet-50/50 text-slate-400 hover:text-violet-600'
-                      }`}
+                      className="w-[120px] h-[48px] flex flex-col items-center justify-center gap-1 border-2 border-dashed rounded-lg transition-all border-slate-300 hover:border-teal-400 hover:bg-teal-50/50 text-slate-400 hover:text-teal-600"
                     >
                       <Image className="w-5 h-5" />
                       <span className="text-xs font-medium">Add Logo</span>
@@ -657,11 +883,11 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="flex items-center gap-3"
               >
-                <div className={`h-px w-12 ${isHealthcare ? 'bg-teal-500' : 'bg-violet-500'}`} />
+                <div className="h-px w-12 bg-teal-500" />
                 <span className={`text-sm font-medium tracking-wide uppercase ${
                   hasBackgroundImage && showDarkOverlay ? 'text-slate-300' : 'text-slate-500'
                 }`}>
-                  {isHealthcare ? 'Healthcare Cybersecurity' : 'Strategic Solutions'}
+                  Healthcare Cybersecurity
                 </span>
               </motion.div>
               
@@ -675,11 +901,11 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 onBlur={(e) => handleBlur("headline", e)}
                 className={`text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight ${
                   hasBackgroundImage && showDarkOverlay ? 'text-white' : 'text-slate-900'
-                } ${isEditing ? `cursor-text hover:ring-2 hover:ring-${accentColor}-400 focus:outline-none focus:ring-2 focus:ring-${accentColor}-400 rounded px-2` : ""}`}
+                } ${isEditing ? "cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2" : ""}`}
               >
                 <HeadlineWithHighlight 
                   text={content.headline}
-                  highlightColor={accentColor}
+                  highlightColor="teal"
                   mode={hasBackgroundImage && showDarkOverlay ? 'dark' : 'light'}
                 />
               </motion.h1>
@@ -694,7 +920,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 onBlur={(e) => handleBlur("subheadline", e)}
                 className={`text-xl lg:text-2xl leading-relaxed max-w-xl ${
                   hasBackgroundImage && showDarkOverlay ? 'text-slate-300' : 'text-slate-600'
-                } ${isEditing ? `cursor-text hover:ring-2 hover:ring-${accentColor}-400 focus:outline-none focus:ring-2 focus:ring-${accentColor}-400 rounded px-2` : ""}`}
+                } ${isEditing ? "cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2" : ""}`}
               >
                 {content.subheadline}
               </motion.p>
@@ -707,20 +933,13 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pt-4"
               >
                 {(() => {
-                  // Use brand color if available, otherwise fall back to industry color
                   const hasBrandColor = !!content.primaryColor;
                   const ctaStyle = hasBrandColor 
                     ? { backgroundColor: content.primaryColor, boxShadow: `0 10px 30px -10px ${content.primaryColor}66` }
                     : undefined;
                   const ctaClassName = hasBrandColor
                     ? `group px-8 py-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:-translate-y-0.5 text-white ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`
-                    : `group px-8 py-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:-translate-y-0.5 ${
-                        isHealthcare 
-                          ? 'bg-teal-600 hover:bg-teal-500 text-white shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40' 
-                          : 'bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40'
-                      } ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`;
-                  
-                  console.log('🎨 [HeroSection Consulting] primaryColor:', content.primaryColor);
+                    : `group px-8 py-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:-translate-y-0.5 bg-teal-600 hover:bg-teal-500 text-white shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`;
                   
                   return (
                     <Button 
@@ -788,26 +1007,16 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               >
                 {/* Abstract representation - sophisticated placeholder */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className={`w-40 h-40 rounded-full border-4 ${
-                    isHealthcare ? 'border-teal-500/30' : 'border-violet-500/30'
-                  } flex items-center justify-center animate-pulse`}>
-                    <div className={`w-28 h-28 rounded-full ${
-                      isHealthcare ? 'bg-teal-500/20' : 'bg-violet-500/20'
-                    } flex items-center justify-center`}>
-                      <Shield className={`w-14 h-14 ${
-                        isHealthcare ? 'text-teal-500' : 'text-violet-500'
-                      }`} />
+                  <div className="w-40 h-40 rounded-full border-4 border-teal-500/30 flex items-center justify-center animate-pulse">
+                    <div className="w-28 h-28 rounded-full bg-teal-500/20 flex items-center justify-center">
+                      <Shield className="w-14 h-14 text-teal-500" />
                     </div>
                   </div>
                 </div>
                 
                 {/* Decorative rings */}
-                <div className={`absolute inset-8 rounded-full border ${
-                  isHealthcare ? 'border-teal-500/10' : 'border-violet-500/10'
-                }`} />
-                <div className={`absolute inset-16 rounded-full border ${
-                  isHealthcare ? 'border-teal-500/5' : 'border-violet-500/5'
-                }`} />
+                <div className="absolute inset-8 rounded-full border border-teal-500/10" />
+                <div className="absolute inset-16 rounded-full border border-teal-500/5" />
               </motion.div>
             </div>
           </div>
@@ -817,7 +1026,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           open={imagePickerOpen}
           onClose={() => setImagePickerOpen(false)}
           onSelect={handleImageSelect}
-          defaultQuery={isHealthcare ? "healthcare security" : "professional consulting"}
+          defaultQuery="healthcare security"
         />
 
         <LogoUploader

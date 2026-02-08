@@ -123,19 +123,20 @@ export const SECTION_HEADERS: Record<string, Record<SectionHeaderType, SectionHe
   },
 
   // Consulting: Professional, strategic, results-focused
+  // Design Intent: Warmth, credibility, relationship-building
   consulting: {
-    features: { title: 'Areas of Practice', subtitle: 'Strategic expertise for complex challenges' },
-    process: { title: 'Our Engagement Model', subtitle: 'Collaborative partnership' },
-    proof: { title: 'Results That Speak', subtitle: 'Measurable outcomes' },
-    testimonials: { title: 'Client Impact', subtitle: 'Success stories' },
-    cta: { title: "Let's Start a Conversation", subtitle: 'Schedule your consultation' },
+    features: { title: 'Areas of Practice', subtitle: 'Expertise that drives real results' },
+    process: { title: 'Our Engagement Model', subtitle: 'A collaborative path to success' },
+    proof: { title: 'Client Success', subtitle: 'Measurable impact across industries' },
+    testimonials: { title: 'What Clients Say', subtitle: 'Real results from real partnerships' },
+    cta: { title: 'Schedule a Conversation', subtitle: 'No commitment required' },
     gallery: { title: 'Case Studies', subtitle: 'Transformation in action' },
     serviceArea: { title: 'Industries We Serve', subtitle: 'Deep sector expertise' },
-    faq: { title: 'Engagement FAQ', subtitle: 'Common questions' },
+    faq: { title: 'Common Questions', subtitle: 'What you need to know' },
     benefits: { title: 'Our Approach', subtitle: 'Strategy meets execution' },
     pricing: { title: 'Engagement Models', subtitle: 'Flexible structures' },
-    team: { title: 'Our Consultants', subtitle: 'Senior practitioners' },
-    credentials: { title: 'Credentials', subtitle: 'Trusted by leaders' },
+    team: { title: 'Our Team', subtitle: 'Experienced practitioners' },
+    credentials: { title: 'Credentials', subtitle: 'Trusted by industry leaders' },
   },
 
   // Legal: Authority, precision, discretion
