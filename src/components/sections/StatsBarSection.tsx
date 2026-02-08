@@ -53,13 +53,52 @@ export function StatsBarSection({ statistics, industryVariant, mode, onUpdate, i
     return null;
   }
 
-  // Clean the stats (remove any that are clearly malformed)
-  const cleanStats = statistics.filter(stat => {
+  /**
+   * Validate stat for display:
+   * - Has non-empty value and label
+   * - Value is reasonable length (not a sentence)
+   * - Label doesn't contain JSON field name patterns
+   * - Label isn't truncated mid-word
+   */
+  const isValidStat = (stat: Statistic): boolean => {
     if (!stat.value || !stat.label) return false;
-    if (stat.value.length > 15) return false;
-    if (stat.label.length > 50) return false;
+    if (stat.value.length > 15) return false;  // Values like "94%" or "$1.5M"
+    if (stat.label.length > 50) return false;  // Reasonable label length
+    if (stat.label.length < 3) return false;   // Too short
+    
+    // Reject JSON field name patterns
+    if (/^[a-z]+[A-Z]/.test(stat.label)) return false; // camelCase
+    if (/^[a-z_]+$/i.test(stat.label)) return false; // single identifier
+    if (/^(valueprop|buyerobject|painpoint|proofelem|percent|dollar)/i.test(stat.label)) return false;
+    
+    // Reject labels that look truncated (ends with lowercase, no spaces, short)
+    if (/[a-z]$/i.test(stat.label) && stat.label.length < 15 && !/\s/.test(stat.label)) {
+      // Could be truncated - check for common truncation patterns
+      if (/tim$|obj$|ful$|ent$|ion$|ers$/i.test(stat.label)) return false;
+    }
+    
+    return true;
+  };
+
+  // Clean and deduplicate stats
+  const seenValues = new Set<string>();
+  const cleanStats = statistics.filter(stat => {
+    if (!isValidStat(stat)) {
+      console.log('⚠️ [StatsBarSection] Rejected invalid stat:', stat);
+      return false;
+    }
+    
+    // Deduplicate by normalized value
+    const normalizedValue = stat.value.replace(/[^0-9a-z%$+]/gi, '').toLowerCase();
+    if (seenValues.has(normalizedValue)) {
+      console.log('🔄 [StatsBarSection] Skipping duplicate stat:', stat.value);
+      return false;
+    }
+    seenValues.add(normalizedValue);
     return true;
   });
+
+  console.log('📊 [StatsBarSection] Rendering', cleanStats.length, 'valid stats from', statistics.length, 'input');
 
   if (cleanStats.length === 0) {
     return null;

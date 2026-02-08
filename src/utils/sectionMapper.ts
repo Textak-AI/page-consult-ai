@@ -688,40 +688,93 @@ export function isStructuredBriefContent(content: any): content is StructuredBri
 // ============================================
 
 /**
+ * Validate and clean a stat label for display
+ * Returns null if the label is invalid or contains JSON artifacts
+ */
+function validateStatLabel(label: string): string | null {
+  if (!label || label.length < 3) return null;
+  
+  // Reject labels that look like JSON field names
+  if (/^[a-z]+[A-Z]/.test(label)) return null; // camelCase
+  if (/^[a-z_]+$/i.test(label)) return null; // snake_case or single word identifier
+  if (/^(valueprop|buyerobject|painpoint|proofelem|percent|dollar)/i.test(label)) return null;
+  
+  // Reject truncated words (ending mid-word without punctuation)
+  if (/[a-z]$/i.test(label) && label.length < 10 && !/\s/.test(label)) return null;
+  
+  // Clean up the label
+  let cleaned = label
+    .replace(/[{}[\]"':,]/g, ' ')  // Remove JSON syntax
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  // Ensure it starts with uppercase
+  if (cleaned.length > 0) {
+    cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }
+  
+  return cleaned.length >= 3 ? cleaned : null;
+}
+
+/**
  * Build statistics from SDI proof points
  * PRIORITY: Use real extracted data, never fabricate
+ * Deduplicates by numeric value and validates labels
  */
 function buildStatsFromSDI(sdi: DesignIntelligenceOutput): Array<{value: string, label: string}> {
   const proof = sdi.proofPoints;
   if (!proof) return [];
   
   const stats: Array<{value: string, label: string}> = [];
+  const seenValues = new Set<string>();
+  
+  /**
+   * Helper to add stat only if value is unique and label is valid
+   */
+  function addStat(value: string, rawLabel: string, fallbackLabel: string) {
+    // Normalize value for deduplication (e.g., "94%" and "94 %" become "94%")
+    const normalizedValue = value.replace(/\s+/g, '').toLowerCase();
+    
+    if (seenValues.has(normalizedValue)) {
+      console.log('🔄 [buildStatsFromSDI] Skipping duplicate value:', value);
+      return false;
+    }
+    
+    const validLabel = validateStatLabel(rawLabel) || fallbackLabel;
+    if (!validLabel) {
+      console.log('⚠️ [buildStatsFromSDI] Invalid label for value:', value, 'raw:', rawLabel);
+      return false;
+    }
+    
+    seenValues.add(normalizedValue);
+    stats.push({ value, label: validLabel });
+    return true;
+  }
   
   // Add percentage stats (e.g., "94% pass rate")
   if (proof.percentageStats && proof.percentageStats.length > 0) {
-    proof.percentageStats.slice(0, 4).forEach(stat => {
-      // Parse "94% of our healthcare clients pass" into { value: "94%", label: "..." }
+    for (const stat of proof.percentageStats) {
+      if (stats.length >= 4) break;
+      
       const match = stat.match(/(\d+%)/);
       if (match) {
-        // Extract meaningful label from the rest of the stat
         let label = stat.replace(match[1], '').trim();
-        // Clean up common words
         label = label
           .replace(/^of\s+(our\s+)?/i, '')
           .replace(/^we\s+/i, '')
           .replace(/\s+$/g, '')
           .slice(0, 40);
-        if (label.length < 3) label = 'Success Rate';
-        // Capitalize first letter
-        label = label.charAt(0).toUpperCase() + label.slice(1);
-        stats.push({ value: match[1], label });
+        
+        addStat(match[1], label, 'Success Rate');
       }
-    });
+    }
   }
   
   // Add dollar stats (e.g., "$1.5M in fines avoided")
-  if (proof.dollarStats && proof.dollarStats.length > 0 && stats.length < 4) {
-    proof.dollarStats.slice(0, 4 - stats.length).forEach(stat => {
+  if (proof.dollarStats && proof.dollarStats.length > 0) {
+    for (const stat of proof.dollarStats) {
+      if (stats.length >= 4) break;
+      
       const match = stat.match(/(\$[\d,.]+[kmb]?)/i);
       if (match) {
         let label = stat.replace(match[1], '').trim();
@@ -729,18 +782,17 @@ function buildStatsFromSDI(sdi: DesignIntelligenceOutput): Array<{value: string,
           .replace(/^in\s+/i, '')
           .replace(/\s+$/g, '')
           .slice(0, 40);
-        if (label.length < 3) label = 'Value Delivered';
-        label = label.charAt(0).toUpperCase() + label.slice(1);
-        stats.push({ value: match[1], label });
+        
+        addStat(match[1], label, 'Value Delivered');
       }
-    });
+    }
   }
   
   // Add client count if available
   if (proof.clientCount && stats.length < 4) {
     const match = proof.clientCount.match(/(\d+\+?)/);
     if (match) {
-      stats.push({ value: match[1] + '+', label: 'Clients Served' });
+      addStat(match[1] + '+', 'Clients Served', 'Clients Served');
     }
   }
   
@@ -748,10 +800,11 @@ function buildStatsFromSDI(sdi: DesignIntelligenceOutput): Array<{value: string,
   if (proof.yearsInBusiness && stats.length < 4) {
     const match = proof.yearsInBusiness.match(/(\d+\+?)/);
     if (match) {
-      stats.push({ value: match[1] + '+', label: 'Years Experience' });
+      addStat(match[1] + '+', 'Years Experience', 'Years Experience');
     }
   }
   
+  console.log('📊 [buildStatsFromSDI] Built', stats.length, 'unique stats:', stats);
   return stats;
 }
 
