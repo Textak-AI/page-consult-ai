@@ -2716,6 +2716,274 @@ function GenerateContent() {
       }).filter(item => item.question.length > 5);
     };
 
+    // ========== CONSULTING SECTION DATA EXTRACTION HELPERS ==========
+    
+    // Extract credentials from proof points and consultation data
+    const extractCredentials = (): Array<{icon: string, value: string, label: string}> => {
+      const credentials: Array<{icon: string, value: string, label: string}> = [];
+      
+      // PRIORITY 1: Use SDI proof points (extracted during design intelligence phase)
+      if (sdi?.proofPoints) {
+        const proof = sdi.proofPoints;
+        
+        // Years in business
+        if (proof.yearsInBusiness) {
+          const match = proof.yearsInBusiness.match(/(\d+)\+?/);
+          if (match) {
+            credentials.push({ icon: 'award', value: `${match[1]}+`, label: 'Years Experience' });
+          }
+        }
+        
+        // Client count
+        if (proof.clientCount) {
+          const match = proof.clientCount.match(/(\d+[\d,]*)\+?/);
+          if (match) {
+            credentials.push({ icon: 'users', value: `${match[1].replace(',', '')}+`, label: 'Clients Served' });
+          }
+        }
+        
+        // Industry awards/recognition from raw text
+        if (proof.rawProofText) {
+          const rawText = proof.rawProofText.toLowerCase();
+          if (rawText.includes('forrester') || rawText.includes('gartner')) {
+            credentials.push({ icon: 'badge', value: 'Leader', label: 'Analyst Recognition' });
+          }
+          if (rawText.includes('fortune 500') || rawText.includes('fortune500')) {
+            credentials.push({ icon: 'shield', value: 'Trusted', label: 'By Fortune 500' });
+          }
+          // Countries/offices
+          const countryMatch = rawText.match(/(\d+)\+?\s*(countries|offices|locations|global offices)/i);
+          if (countryMatch) {
+            credentials.push({ icon: 'globe', value: `${countryMatch[1]}+`, label: countryMatch[2].charAt(0).toUpperCase() + countryMatch[2].slice(1) });
+          }
+        }
+      }
+      
+      // PRIORITY 2: Extract from strategicConsultation proof text
+      const proofText = strategicConsultation?.proofPoints || consultationData?.proofPoints || '';
+      if (typeof proofText === 'string' && proofText.length > 0 && credentials.length < 3) {
+        // Years
+        const yearsMatch = proofText.match(/(\d+)\+?\s*years?/i);
+        if (yearsMatch && !credentials.some(c => c.label.includes('Years'))) {
+          credentials.push({ icon: 'award', value: `${yearsMatch[1]}+`, label: 'Years Experience' });
+        }
+        
+        // Clients
+        const clientsMatch = proofText.match(/(\d+[\d,]*)\+?\s*(clients?|companies|organizations|businesses)/i);
+        if (clientsMatch && !credentials.some(c => c.label.includes('Clients'))) {
+          credentials.push({ icon: 'users', value: `${clientsMatch[1].replace(',', '')}+`, label: 'Clients Served' });
+        }
+      }
+      
+      console.log('📊 [extractCredentials] Found:', credentials.length, 'credentials');
+      return credentials.slice(0, 4);
+    };
+
+    // Extract challenges from pain points, objections, and problem statements
+    const extractChallenges = (): Array<{title: string, description: string, impact: string}> => {
+      const challenges: Array<{title: string, description: string, impact: string}> = [];
+      
+      // PRIORITY 1: Use SDI pain spikes if available
+      if (sdi?.audienceAnalysis?.painSpikes) {
+        sdi.audienceAnalysis.painSpikes.slice(0, 3).forEach((pain: string, idx: number) => {
+          const titles = ['Strategic Uncertainty', 'Execution Gaps', 'Market Pressure'];
+          const impacts = ['Delays critical decisions', 'Slows growth trajectory', 'Creates competitive risk'];
+          challenges.push({
+            title: titles[idx] || 'Business Challenge',
+            description: pain,
+            impact: impacts[idx] || 'Impacts bottom line',
+          });
+        });
+      }
+      
+      // PRIORITY 2: Use objections as challenges
+      const objections = strategicConsultation?.buyerObjections || consultationData?.buyerObjections;
+      if (objections && typeof objections === 'string' && challenges.length < 3) {
+        const objList = objections.split(',').map((o: string) => o.trim()).filter((o: string) => o.length > 5);
+        objList.slice(0, 3 - challenges.length).forEach((obj: string) => {
+          challenges.push({
+            title: 'Common Concern',
+            description: obj,
+            impact: 'Stalls decision-making',
+          });
+        });
+      }
+      
+      // PRIORITY 3: Use pain points
+      const painPoints = strategicConsultation?.painPoints || consultationData?.painPoints || content.problemStatement;
+      if (painPoints && typeof painPoints === 'string' && challenges.length < 3) {
+        challenges.push({
+          title: 'Core Challenge',
+          description: painPoints.slice(0, 200),
+          impact: 'Requires expert guidance',
+        });
+      }
+      
+      console.log('📊 [extractChallenges] Found:', challenges.length, 'challenges');
+      return challenges.slice(0, 3);
+    };
+
+    // Extract approach principles from value prop, methodology, features
+    const extractApproachPrinciples = (): Array<{title: string, description: string, icon: string}> => {
+      const principles: Array<{title: string, description: string, icon: string}> = [];
+      
+      // PRIORITY 1: Use methodology steps if available
+      const methodologySteps = strategicConsultation?.methodologySteps || consultationData?.methodologySteps;
+      if (methodologySteps && Array.isArray(methodologySteps) && methodologySteps.length > 0) {
+        methodologySteps.slice(0, 3).forEach((step: any, idx: number) => {
+          const icons = ['lightbulb', 'target', 'rocket'];
+          principles.push({
+            title: step.title || step.name || `Step ${idx + 1}`,
+            description: step.description || step.content || '',
+            icon: icons[idx] || 'check',
+          });
+        });
+      }
+      
+      // PRIORITY 2: Extract from features
+      if (principles.length < 3 && content.features && content.features.length > 0) {
+        content.features.slice(0, 3 - principles.length).forEach((f: any, idx: number) => {
+          const icons = ['lightbulb', 'target', 'rocket'];
+          principles.push({
+            title: f.title || 'Our Approach',
+            description: f.description || '',
+            icon: icons[principles.length + idx] || 'check',
+          });
+        });
+      }
+      
+      // PRIORITY 3: Use value proposition
+      if (principles.length < 1) {
+        const valueProp = strategicConsultation?.uniqueValue || content.solutionStatement || consultationData?.uniqueValue;
+        if (valueProp) {
+          principles.push({
+            title: 'Value-Driven Results',
+            description: valueProp.slice(0, 200),
+            icon: 'target',
+          });
+        }
+      }
+      
+      console.log('📊 [extractApproachPrinciples] Found:', principles.length, 'principles');
+      return principles.slice(0, 3);
+    };
+
+    // Extract expertise areas from features
+    const extractExpertiseAreas = (): Array<{title: string, description: string, icon: string, examples: string[]}> => {
+      const areas: Array<{title: string, description: string, icon: string, examples: string[]}> = [];
+      const icons = ['briefcase', 'chart', 'users', 'layers'];
+      
+      // Use features as expertise areas
+      if (content.features && content.features.length > 0) {
+        content.features.slice(0, 4).forEach((f: any, idx: number) => {
+          areas.push({
+            title: f.title || 'Expertise Area',
+            description: f.description || '',
+            icon: icons[idx] || 'briefcase',
+            examples: f.examples || f.bulletPoints || [],
+          });
+        });
+      }
+      
+      console.log('📊 [extractExpertiseAreas] Found:', areas.length, 'areas');
+      return areas;
+    };
+
+    // Extract client results from proof points and testimonials
+    const extractClientResults = (): Array<{metric: string, description: string, client?: string, industry?: string}> => {
+      const results: Array<{metric: string, description: string, client?: string, industry?: string}> = [];
+      
+      // PRIORITY 1: Use SDI proof point stats
+      if (sdi?.proofPoints) {
+        const proof = sdi.proofPoints;
+        
+        // Percentage stats
+        if (proof.percentageStats && proof.percentageStats.length > 0) {
+          proof.percentageStats.slice(0, 3).forEach((stat: string) => {
+            const match = stat.match(/(\d+%)/);
+            if (match) {
+              let description = stat.replace(match[1], '').trim();
+              description = description.replace(/^of\s+/i, '').replace(/^our\s+/i, '').trim();
+              if (description.length > 5) {
+                results.push({
+                  metric: match[1],
+                  description: description.charAt(0).toUpperCase() + description.slice(1),
+                  industry: industryVariant,
+                });
+              }
+            }
+          });
+        }
+        
+        // Dollar stats
+        if (proof.dollarStats && proof.dollarStats.length > 0 && results.length < 3) {
+          proof.dollarStats.slice(0, 3 - results.length).forEach((stat: string) => {
+            const match = stat.match(/(\$[\d,.]+[kmb]?)/i);
+            if (match) {
+              let description = stat.replace(match[1], '').trim();
+              description = description.replace(/^in\s+/i, '').trim();
+              if (description.length > 3) {
+                results.push({
+                  metric: match[1],
+                  description: description.charAt(0).toUpperCase() + description.slice(1),
+                  industry: industryVariant,
+                });
+              }
+            }
+          });
+        }
+      }
+      
+      // PRIORITY 2: Use case study highlight
+      const caseStudy = strategicConsultation?.caseStudyHighlight || consultationData?.caseStudyHighlight;
+      if (caseStudy && typeof caseStudy === 'string' && results.length < 3) {
+        // Try to extract a metric
+        const metricMatch = caseStudy.match(/(\d+%|\$[\d,.]+[kmb]?|\d+x)/i);
+        results.push({
+          metric: metricMatch ? metricMatch[1] : 'Success',
+          description: caseStudy.slice(0, 150),
+          client: 'Client Case Study',
+        });
+      }
+      
+      console.log('📊 [extractClientResults] Found:', results.length, 'results');
+      return results.slice(0, 3);
+    };
+
+    // Extract engagement model steps from process steps
+    const extractEngagementSteps = (): Array<{number: number, title: string, description: string, duration?: string}> => {
+      const steps: Array<{number: number, title: string, description: string, duration?: string}> = [];
+      
+      // PRIORITY 1: Use process steps from content
+      const processSteps = content.processSteps || strategicConsultation?.processSteps || consultationData?.processSteps;
+      if (processSteps && Array.isArray(processSteps) && processSteps.length > 0) {
+        processSteps.slice(0, 4).forEach((step: any, idx: number) => {
+          steps.push({
+            number: idx + 1,
+            title: step.title || step.name || `Step ${idx + 1}`,
+            description: step.description || step.content || '',
+            duration: step.duration || step.timeline,
+          });
+        });
+      }
+      
+      // PRIORITY 2: Use methodology steps
+      const methodologySteps = strategicConsultation?.methodologySteps || consultationData?.methodologySteps;
+      if (steps.length < 3 && methodologySteps && Array.isArray(methodologySteps)) {
+        methodologySteps.slice(0, 4 - steps.length).forEach((step: any, idx: number) => {
+          steps.push({
+            number: steps.length + 1,
+            title: step.title || step.name || `Phase ${steps.length + 1}`,
+            description: step.description || '',
+            duration: step.duration,
+          });
+        });
+      }
+      
+      console.log('📊 [extractEngagementSteps] Found:', steps.length, 'steps');
+      return steps;
+    };
+
     // Build statistics from SDI proof points FIRST, then fallback to legacy logic
     const buildStatistics = (): Array<{ value: string; label: string }> => {
       const stats: Array<{ value: string; label: string }> = [];
@@ -3203,6 +3471,8 @@ function GenerateContent() {
         // CONSULTING-SPECIFIC SECTION TYPES (from layout templates)
         case 'credentials-bar':
           console.log(`📐 [mapLegacyStrategyContent] Creating consulting section: credentials-bar`);
+          const extractedCredentials = extractCredentials();
+          console.log(`📊 [credentials-bar] Passing ${extractedCredentials.length} credentials to component`);
           sections.push({
             type: "credentials-bar",
             order: order++,
@@ -3211,13 +3481,15 @@ function GenerateContent() {
               industryVariant,
               mode: sdiMode,
               businessName,
-              credentials: consultationData?.credentials || strategicConsultation?.credentials || [],
+              credentials: extractedCredentials,
             },
           });
           break;
           
         case 'the-real-challenge':
           console.log(`📐 [mapLegacyStrategyContent] Creating consulting section: the-real-challenge`);
+          const extractedChallenges = extractChallenges();
+          console.log(`📊 [the-real-challenge] Passing ${extractedChallenges.length} challenges to component`);
           sections.push({
             type: "the-real-challenge",
             order: order++,
@@ -3226,14 +3498,16 @@ function GenerateContent() {
               industryVariant,
               mode: sdiMode,
               businessName,
-              problemStatement: content.problemStatement || consultationData?.challenge,
-              challenges: content.faqItems?.slice(0, 3) || [],
+              headline: content.problemStatement ? "The Challenges You're Facing" : undefined,
+              challenges: extractedChallenges,
             },
           });
           break;
           
         case 'our-approach':
           console.log(`📐 [mapLegacyStrategyContent] Creating consulting section: our-approach`);
+          const extractedPrinciples = extractApproachPrinciples();
+          console.log(`📊 [our-approach] Passing ${extractedPrinciples.length} principles to component`);
           sections.push({
             type: "our-approach",
             order: order++,
@@ -3242,18 +3516,17 @@ function GenerateContent() {
               industryVariant,
               mode: sdiMode,
               businessName,
-              solutionStatement: content.solutionStatement || consultationData?.uniqueValue,
-              principles: content.features?.slice(0, 3).map((f: any) => ({
-                title: f.title,
-                description: f.description,
-                icon: f.icon,
-              })) || [],
+              headline: "Our Approach",
+              subtitle: strategicConsultation?.uniqueValue || content.solutionStatement || "A proven methodology that delivers results",
+              principles: extractedPrinciples,
             },
           });
           break;
           
         case 'expertise-areas':
           console.log(`📐 [mapLegacyStrategyContent] Creating consulting section: expertise-areas`);
+          const extractedAreas = extractExpertiseAreas();
+          console.log(`📊 [expertise-areas] Passing ${extractedAreas.length} areas to component`);
           sections.push({
             type: "expertise-areas",
             order: order++,
@@ -3262,18 +3535,17 @@ function GenerateContent() {
               industryVariant,
               mode: sdiMode,
               businessName,
-              areas: content.features?.slice(0, 4).map((f: any) => ({
-                title: f.title,
-                description: f.description,
-                icon: f.icon,
-                examples: f.examples || [],
-              })) || [],
+              headline: "Areas of Practice",
+              subtitle: `Deep expertise across critical business domains`,
+              areas: extractedAreas,
             },
           });
           break;
           
         case 'engagement-model':
           console.log(`📐 [mapLegacyStrategyContent] Creating consulting section: engagement-model`);
+          const extractedSteps = extractEngagementSteps();
+          console.log(`📊 [engagement-model] Passing ${extractedSteps.length} steps to component`);
           sections.push({
             type: "engagement-model",
             order: order++,
@@ -3282,13 +3554,17 @@ function GenerateContent() {
               industryVariant,
               mode: sdiMode,
               businessName,
-              steps: content.processSteps || content.steps || [],
+              headline: "Our Engagement Model",
+              subtitle: "A structured approach designed for your success",
+              steps: extractedSteps,
             },
           });
           break;
           
         case 'client-results':
           console.log(`📐 [mapLegacyStrategyContent] Creating consulting section: client-results`);
+          const extractedResults = extractClientResults();
+          console.log(`📊 [client-results] Passing ${extractedResults.length} results to component`);
           sections.push({
             type: "client-results",
             order: order++,
@@ -3297,8 +3573,10 @@ function GenerateContent() {
               industryVariant,
               mode: sdiMode,
               businessName,
+              headline: "Client Success Stories",
+              subtitle: "Measurable results that speak for themselves",
+              results: extractedResults,
               testimonials: content.testimonials || [],
-              caseStudies: content.caseStudies || [],
             },
           });
           break;
