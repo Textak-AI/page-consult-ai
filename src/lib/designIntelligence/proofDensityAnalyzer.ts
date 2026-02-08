@@ -83,6 +83,55 @@ export function getVisualWeightConfig(density: ProofDensity): VisualWeightConfig
 /**
  * Extract proof points from conversation/intelligence data
  */
+/**
+ * Extract only string VALUES from intelligence object, ignoring JSON keys
+ * This prevents field names like "valuePropFull" from leaking into extracted text
+ */
+function extractTextValuesOnly(obj: any): string[] {
+  const values: string[] = [];
+  
+  function recurse(item: any) {
+    if (typeof item === 'string') {
+      // Only include substantial strings that look like real content
+      if (item.length > 10 && !/^[a-z_]+$/i.test(item)) {
+        values.push(item);
+      }
+    } else if (Array.isArray(item)) {
+      item.forEach(recurse);
+    } else if (item && typeof item === 'object') {
+      Object.values(item).forEach(recurse);
+    }
+  }
+  
+  recurse(obj);
+  return values;
+}
+
+/**
+ * Clean and validate a stat label to ensure it's display-ready
+ */
+function cleanStatLabel(rawLabel: string): string | null {
+  if (!rawLabel) return null;
+  
+  // Remove JSON field name patterns (camelCase, snake_case identifiers)
+  let cleaned = rawLabel
+    .replace(/[a-z]+[A-Z][a-zA-Z]*/g, ' ')  // Remove camelCase words
+    .replace(/[a-z_]+(?:full|summary|data|info|points?|stats?|elements?)/gi, ' ') // Remove field name suffixes
+    .replace(/["{}[\]:,]/g, ' ')  // Remove JSON syntax chars
+    .replace(/\s+/g, ' ')  // Collapse whitespace
+    .trim();
+  
+  // Must have at least 3 real characters and not be a field name fragment
+  if (cleaned.length < 3) return null;
+  if (/^(of|in|the|and|or|for|with|our|we|to|a|an)$/i.test(cleaned)) return null;
+  if (/^[a-z]+$/i.test(cleaned) && cleaned.length < 6) return null;
+  
+  // Capitalize first letter
+  cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  
+  return cleaned;
+}
+
 export function extractProofPoints(intelligence: any): ProofPoints {
   const proof: ProofPoints = {};
 
@@ -91,10 +140,13 @@ export function extractProofPoints(intelligence: any): ProofPoints {
     return proof;
   }
 
-  // Extract from various possible field locations
-  const text = JSON.stringify(intelligence).toLowerCase();
+  // Extract only text VALUES (not JSON keys) to avoid field name pollution
+  const textValues = extractTextValuesOnly(intelligence);
+  const text = textValues.join(' ');
   
-  // Client count patterns
+  console.log('🎨 [SDI] Extracted text for proof analysis (length):', text.length);
+  
+  // Client count patterns - match from clean text
   const clientMatch = text.match(/(\d+)\+?\s*(clients?|customers?|organizations?|companies)/i);
   if (clientMatch) {
     proof.clientCount = clientMatch[0];
@@ -106,16 +158,36 @@ export function extractProofPoints(intelligence: any): ProofPoints {
     proof.yearsInBusiness = yearsMatch[0];
   }
 
-  // Percentage stats (e.g., "94% pass rate", "70% find vulnerabilities")
-  const percentMatches = text.match(/\d+%[^.]*[a-z]+/gi);
-  if (percentMatches) {
-    proof.percentageStats = percentMatches.slice(0, 4);
+  // Percentage stats - extract with surrounding context, then clean
+  const percentMatches: string[] = [];
+  const percentRegex = /(\d+%)\s+([^.!?\n]{3,50})/g;
+  let match;
+  while ((match = percentRegex.exec(text)) !== null) {
+    const value = match[1];
+    const context = match[2].trim();
+    // Validate context doesn't contain field names
+    const cleanContext = cleanStatLabel(context);
+    if (cleanContext && cleanContext.length >= 3) {
+      percentMatches.push(`${value} ${cleanContext}`);
+    }
+  }
+  if (percentMatches.length > 0) {
+    proof.percentageStats = [...new Set(percentMatches)].slice(0, 4); // Dedupe
   }
 
-  // Dollar stats (e.g., "$31K savings", "$1.5 million fines")
-  const dollarMatches = text.match(/\$[\d,.]+[kmb]?\s*[^.]*[a-z]+/gi);
-  if (dollarMatches) {
-    proof.dollarStats = dollarMatches.slice(0, 3);
+  // Dollar stats with clean context
+  const dollarMatches: string[] = [];
+  const dollarRegex = /(\$[\d,.]+[kmb]?)\s+([^.!?\n]{3,50})/gi;
+  while ((match = dollarRegex.exec(text)) !== null) {
+    const value = match[1];
+    const context = match[2].trim();
+    const cleanContext = cleanStatLabel(context);
+    if (cleanContext && cleanContext.length >= 3) {
+      dollarMatches.push(`${value} ${cleanContext}`);
+    }
+  }
+  if (dollarMatches.length > 0) {
+    proof.dollarStats = [...new Set(dollarMatches)].slice(0, 3); // Dedupe
   }
 
   // Look for specific results in intelligence fields
