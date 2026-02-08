@@ -1,17 +1,13 @@
 /**
- * The Real Challenge Section (Stub)
+ * The Real Challenge Section
  * 
  * A problem-agitation section that deeply explores the client's challenges
- * before presenting solutions. Designed for consulting and professional services.
- * 
- * TODO: Implement full version with:
- * - Emotional hooks
- * - Problem escalation narrative
- * - Industry-specific pain points
- * - Animated reveal effects
+ * before presenting solutions. Now uses SDI dynamic design system for
+ * automatic styling based on industry and brand colors.
  */
 
 import { AlertTriangle, TrendingDown, Clock } from 'lucide-react';
+import type { SDIPalette, SDISectionThemes, SDITypography } from '@/lib/designIntelligence/types';
 
 interface TheRealChallengeSectionProps {
   content: {
@@ -23,6 +19,11 @@ interface TheRealChallengeSectionProps {
     }>;
     industryVariant?: string;
     mode?: string;
+    // SDI Dynamic Design System
+    primaryColor?: string;
+    palette?: SDIPalette;
+    sectionThemes?: SDISectionThemes;
+    sdiTypography?: SDITypography;
   };
 }
 
@@ -30,14 +31,58 @@ export function TheRealChallengeSection({ content }: TheRealChallengeSectionProp
   const { 
     headline = "The Challenges You're Facing",
     challenges = [],
-    mode = 'light'
   } = content;
   
-  const isConsulting = content.industryVariant === 'consulting';
-  const isLightMode = mode === 'light' || mode === 'warm';
-  
-  // Get brand color for consulting variant
-  const primaryColor = (content as any).primaryColor;
+  // SDI theme resolution
+  const theme = content.sectionThemes?.['the-real-challenge'] || 'tinted';
+  const palette = content.palette;
+  const typography = content.sdiTypography;
+
+  // Helper: Get section background styles from SDI
+  const getSectionStyles = (): React.CSSProperties => {
+    if (!palette) {
+      // Fallback for non-SDI pages
+      return { backgroundColor: theme === 'dark' ? '#0f172a' : '#f8fafc' };
+    }
+    
+    switch (theme) {
+      case 'dark':
+        return { backgroundColor: palette.darkSection };
+      case 'tinted':
+        return { backgroundColor: palette.primaryTint };
+      default:
+        return { backgroundColor: palette.lightSection };
+    }
+  };
+
+  // Helper: Get text color class based on theme
+  const getTextColorClass = (): string => {
+    return theme === 'dark' ? 'text-white' : 'text-slate-900';
+  };
+
+  // Helper: Get muted text color class based on theme
+  const getMutedTextColorClass = (): string => {
+    return theme === 'dark' ? 'text-white/70' : 'text-slate-600';
+  };
+
+  // Helper: Get card styles based on theme
+  const getCardStyles = (): string => {
+    if (theme === 'dark') {
+      return 'bg-white/10 border-white/20 backdrop-blur-sm';
+    }
+    return 'bg-white border-slate-200 shadow-sm';
+  };
+
+  // Helper: Get icon container styles from SDI palette
+  const getIconStyles = (): React.CSSProperties => {
+    if (theme === 'dark') {
+      return { backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff' };
+    }
+    if (palette) {
+      return { backgroundColor: palette.iconBg, color: palette.iconColor };
+    }
+    return { backgroundColor: '#f1f5f9', color: '#475569' };
+  };
 
   // Default challenges if none provided
   const displayChallenges = challenges.length > 0 ? challenges : [
@@ -60,62 +105,43 @@ export function TheRealChallengeSection({ content }: TheRealChallengeSectionProp
 
   const icons = [AlertTriangle, TrendingDown, Clock];
 
-  // Consulting gets subtle brand color background
-  const sectionBg = isConsulting && primaryColor 
-    ? { backgroundColor: `${primaryColor}08` } // 5% opacity
-    : undefined;
-
   return (
     <section 
-      className={`py-24 md:py-32 ${!sectionBg ? (isLightMode ? 'bg-slate-50' : 'bg-slate-900') : ''}`}
-      style={sectionBg}
+      className="py-24 md:py-32"
+      style={getSectionStyles()}
     >
-      <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto text-center mb-12">
-          <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 ${
-            isLightMode ? 'text-slate-900' : 'text-white'
-          }`}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className={`${typography?.sectionTitle || 'text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight'} ${getTextColorClass()}`}>
             {headline}
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8">
           {displayChallenges.slice(0, 3).map((challenge, index) => {
             const Icon = icons[index % icons.length];
             return (
               <div 
                 key={index} 
-                className={`p-8 rounded-lg ${
-                  isLightMode 
-                    ? 'bg-white border border-slate-200' 
-                    : 'bg-white/5 border-white/10'
-                }`}
+                className={`rounded-lg border p-8 ${getCardStyles()}`}
               >
                 <div 
-                  className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${
-                    isConsulting ? '' : (isLightMode ? 'bg-slate-100' : 'bg-slate-700')
-                  }`}
-                  style={isConsulting && primaryColor ? { backgroundColor: `${primaryColor}15` } : undefined}
+                  className="w-12 h-12 rounded-lg flex items-center justify-center mb-6"
+                  style={getIconStyles()}
                 >
-                  <Icon 
-                    className={`w-6 h-6 ${isConsulting ? '' : (isLightMode ? 'text-slate-700' : 'text-slate-300')}`}
-                    style={isConsulting && primaryColor ? { color: primaryColor } : undefined}
-                  />
+                  <Icon className="w-6 h-6" />
                 </div>
-                <h3 className={`text-xl font-semibold mb-2 ${
-                  isLightMode ? 'text-slate-900' : 'text-white'
-                }`}>
+                <h3 className={`${typography?.cardTitle || 'text-xl font-semibold'} mb-3 ${getTextColorClass()}`}>
                   {challenge.title}
                 </h3>
-                <p className={`text-base mb-3 ${
-                  isLightMode ? 'text-slate-600' : 'text-white/70'
-                }`}>
+                <p className={`${typography?.body || 'text-base leading-relaxed'} mb-4 ${getMutedTextColorClass()}`}>
                   {challenge.description}
                 </p>
                 {challenge.impact && (
-                  <p className={`text-sm font-medium ${
-                    isLightMode ? 'text-slate-600' : 'text-slate-400'
-                  }`}>
+                  <p 
+                    className={`text-sm font-medium ${theme === 'dark' ? 'text-white/60' : ''}`}
+                    style={theme !== 'dark' && palette ? { color: palette.iconColor } : undefined}
+                  >
                     {challenge.impact}
                   </p>
                 )}
