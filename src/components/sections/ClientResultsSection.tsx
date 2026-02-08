@@ -1,17 +1,11 @@
 /**
- * Client Results Section (Stub)
+ * Client Results Section
  * 
- * Showcases client outcomes, case studies, and measurable results
- * for consulting and professional services.
- * 
- * TODO: Implement full version with:
- * - Full case study cards
- * - Before/after metrics
- * - Client logos
- * - Video testimonials
+ * Showcases client outcomes and measurable results using SDI dynamic design system.
  */
 
 import { TrendingUp, Award, Users, CheckCircle2 } from 'lucide-react';
+import type { SDIPalette, SDISectionThemes, SDITypography } from '@/lib/designIntelligence/types';
 
 interface ClientResultsSectionProps {
   content: {
@@ -25,6 +19,11 @@ interface ClientResultsSectionProps {
     }>;
     industryVariant?: string;
     mode?: string;
+    // SDI Design System
+    primaryColor?: string;
+    palette?: SDIPalette;
+    sectionThemes?: SDISectionThemes;
+    sdiTypography?: SDITypography;
   };
 }
 
@@ -33,14 +32,68 @@ export function ClientResultsSection({ content }: ClientResultsSectionProps) {
     headline = "Client Success Stories",
     subtitle = "Measurable results that speak for themselves",
     results = [],
-    mode = 'light'
   } = content;
   
-  const isConsulting = content.industryVariant === 'consulting';
-  const isLightMode = mode === 'light' || mode === 'warm';
-  
-  // Get brand color for consulting variant
-  const primaryColor = (content as any).primaryColor;
+  // SDI Design System
+  const theme = content.sectionThemes?.['client-results'] || 'tinted';
+  const palette = content.palette;
+  const typography = content.sdiTypography;
+
+  // Helper functions for SDI-driven styling
+  const getSectionStyles = (): React.CSSProperties => {
+    if (!palette) {
+      return { backgroundColor: theme === 'dark' ? '#0f172a' : '#f8fafc' };
+    }
+    switch (theme) {
+      case 'dark':
+        return { backgroundColor: palette.darkSection };
+      case 'tinted':
+        return { backgroundColor: palette.primaryTint };
+      default:
+        return { backgroundColor: palette.lightSection };
+    }
+  };
+
+  const getTextColorClass = () => {
+    return theme === 'dark' ? 'text-white' : 'text-slate-900';
+  };
+
+  const getMutedTextColorClass = () => {
+    return theme === 'dark' ? 'text-white/70' : 'text-slate-600';
+  };
+
+  const getCardStyles = () => {
+    if (theme === 'dark') {
+      return 'bg-white/5 border border-white/10';
+    }
+    return 'bg-white border border-slate-200';
+  };
+
+  const getIconStyles = (): React.CSSProperties => {
+    if (theme === 'dark') {
+      return { backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff' };
+    }
+    if (palette) {
+      return { backgroundColor: palette.iconBg, color: palette.iconColor };
+    }
+    return { backgroundColor: '#f1f5f9', color: '#475569' };
+  };
+
+  const getMetricStyles = (): React.CSSProperties => {
+    // Use primary color for metrics on light themes
+    if (theme !== 'dark' && palette) {
+      return { color: palette.primary };
+    }
+    return {};
+  };
+
+  const getMetricColorClass = () => {
+    if (theme === 'dark') {
+      return 'text-white';
+    }
+    // If no palette, use a default accent color
+    return palette ? '' : 'text-slate-900';
+  };
 
   // Default results if none provided
   const displayResults = results.length > 0 ? results : [
@@ -66,24 +119,17 @@ export function ClientResultsSection({ content }: ClientResultsSectionProps) {
 
   const icons = [TrendingUp, Award, Users, CheckCircle2];
 
-  // Consulting gets subtle brand color background
-  const sectionBg = isConsulting && primaryColor 
-    ? { backgroundColor: `${primaryColor}08` } // 5% opacity
-    : undefined;
-
   return (
     <section 
-      className={`py-24 md:py-32 ${!sectionBg ? (isLightMode ? 'bg-slate-50' : 'bg-slate-900') : ''}`}
-      style={sectionBg}
+      className="py-24 md:py-32"
+      style={getSectionStyles()}
     >
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-12">
-          <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 ${
-            isLightMode ? 'text-slate-900' : 'text-white'
-          }`}>
+          <h2 className={`${typography?.sectionTitle || 'text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight'} mb-4 ${getTextColorClass()}`}>
             {headline}
           </h2>
-          <p className={`text-lg md:text-xl ${isLightMode ? 'text-slate-600' : 'text-white/70'}`}>
+          <p className={`${typography?.sectionSubtitle || 'text-lg md:text-xl'} ${getMutedTextColorClass()}`}>
             {subtitle}
           </p>
         </div>
@@ -94,38 +140,25 @@ export function ClientResultsSection({ content }: ClientResultsSectionProps) {
             return (
               <div 
                 key={index} 
-                className={`p-8 rounded-lg ${
-                  isLightMode 
-                    ? 'bg-white border border-slate-200' 
-                    : 'bg-white/5 border-white/10'
-                }`}
+                className={`p-8 rounded-lg ${getCardStyles()}`}
               >
                 <div 
-                  className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${
-                    isConsulting ? '' : (isLightMode ? 'bg-slate-100' : 'bg-slate-700')
-                  }`}
-                  style={isConsulting && primaryColor ? { backgroundColor: `${primaryColor}15` } : undefined}
+                  className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
+                  style={getIconStyles()}
                 >
-                  <Icon 
-                    className={`w-6 h-6 ${isConsulting ? '' : (isLightMode ? 'text-slate-700' : 'text-slate-300')}`}
-                    style={isConsulting && primaryColor ? { color: primaryColor } : undefined}
-                  />
+                  <Icon className="w-6 h-6" />
                 </div>
                 <h3 
-                  className="text-2xl font-bold mb-2"
-                  style={primaryColor ? { color: primaryColor } : undefined}
+                  className={`text-2xl font-bold mb-2 ${getMetricColorClass()}`}
+                  style={getMetricStyles()}
                 >
                   {result.metric}
                 </h3>
-                <p className={`text-base mb-4 ${
-                  isLightMode ? 'text-slate-600' : 'text-white/70'
-                }`}>
+                <p className={`${typography?.body || 'text-base'} mb-4 ${getMutedTextColorClass()}`}>
                   {result.description}
                 </p>
                 {(result.client || result.industry) && (
-                  <div className={`text-sm font-medium ${
-                    isLightMode ? 'text-slate-500' : 'text-white/50'
-                  }`}>
+                  <div className={`text-sm font-medium ${theme === 'dark' ? 'text-white/50' : 'text-slate-500'}`}>
                     {result.client && <span>{result.client}</span>}
                     {result.client && result.industry && <span> • </span>}
                     {result.industry && <span>{result.industry}</span>}

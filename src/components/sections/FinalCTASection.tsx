@@ -1,21 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { useRef, useEffect } from "react";
 import { ArrowRight, CheckCircle, Shield } from "lucide-react";
-import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
-import { getSectionHeader } from "@/lib/industrySectionHeaders";
-import { getIndustryPattern } from "@/lib/industryPatterns";
-
-// Component to apply complex CSS background patterns via ref
-function IndustryBackgroundPattern({ css }: { css: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.style.cssText = css;
-    }
-  }, [css]);
-  return <div ref={ref} className="absolute inset-0 z-0" />;
-}
+import type { SDIPalette, SDISectionThemes, SDITypography } from '@/lib/designIntelligence/types';
 
 interface FinalCTASectionProps {
   content: {
@@ -25,46 +11,99 @@ interface FinalCTASectionProps {
     subtext?: string;
     trustText?: string;
     trustIndicators?: Array<{ text: string }>;
-    primaryColor?: string;
-    industryVariant?: IndustryVariant;
-    // SDI mode override - takes precedence over industry token mode
+    industryVariant?: string;
     mode?: 'light' | 'dark' | 'warm' | 'cold';
-    // New fields for richer CTA
     secondaryCta?: string;
     urgencyText?: string;
     guaranteeText?: string;
+    // SDI Design System
+    primaryColor?: string;
+    palette?: SDIPalette;
+    sectionThemes?: SDISectionThemes;
+    sdiTypography?: SDITypography;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
 }
 
 export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectionProps) {
-  const industryVariant = content.industryVariant || 'default';
-  const tokens = getIndustryTokens(industryVariant);
-  const isConsulting = industryVariant === 'consulting';
-  const isSaas = industryVariant === 'saas';
-  const isHealthcare = industryVariant === 'healthcare';
-  const isLocalServices = industryVariant === 'local-services';
-  
-  // PRIORITY: Consulting ALWAYS light mode, then SDI mode prop > industry token mode
-  const isLightMode = isConsulting 
-    ? true 
-    : (content.mode 
-      ? (content.mode === 'light' || content.mode === 'warm')
-      : tokens.mode === 'light');
-  
-  console.log('🎨 [FinalCTASection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant, 'forcedLight:', isConsulting);
-  
-  // Get industry-aware CSS background pattern for CTA section
-  const industryPattern = getIndustryPattern(industryVariant as any, isLightMode ? 'light' : 'dark', 'final-cta');
-  
-  // Get industry-specific CTA headers
-  const ctaHeader = getSectionHeader(industryVariant, 'cta');
-  const headline = content.headline || ctaHeader.title;
-  const ctaText = content.ctaText || ctaHeader.subtitle || 'Get Started';
-  
-  console.log('🎨 [FinalCTASection] industryVariant:', industryVariant, 'ctaHeader:', ctaHeader);
-  
+  // SDI Design System
+  const theme = content.sectionThemes?.['final-cta'] || 'dark';
+  const palette = content.palette;
+  const typography = content.sdiTypography;
+
+  const headline = content.headline || "Ready to Get Started?";
+  const ctaText = content.ctaText || "Get Started";
+  const trustIndicators = content.trustIndicators || [];
+  const { urgencyText, guaranteeText, secondaryCta } = content;
+
+  // Helper functions for SDI-driven styling
+  const getSectionStyles = (): React.CSSProperties => {
+    if (!palette) {
+      return { 
+        backgroundColor: '#0f172a',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
+      };
+    }
+    if (theme === 'dark') {
+      return { backgroundColor: palette.darkSection };
+    }
+    if (theme === 'tinted') {
+      return { backgroundColor: palette.primaryTint };
+    }
+    return { backgroundColor: palette.lightSection };
+  };
+
+  const getTextColorClass = () => {
+    return theme === 'dark' ? 'text-white' : 'text-slate-900';
+  };
+
+  const getMutedTextColorClass = () => {
+    return theme === 'dark' ? 'text-white/80' : 'text-slate-600';
+  };
+
+  const getSubtleTextColorClass = () => {
+    return theme === 'dark' ? 'text-white/60' : 'text-slate-500';
+  };
+
+  const getButtonStyles = (): React.CSSProperties => {
+    if (theme === 'dark') {
+      // White button on dark bg
+      return {};
+    }
+    // Colored button on light bg
+    if (palette) {
+      return { 
+        backgroundColor: palette.primary, 
+        color: '#ffffff',
+        boxShadow: `0 10px 40px -10px ${palette.primary}88`
+      };
+    }
+    return {};
+  };
+
+  const getButtonClassName = () => {
+    if (theme === 'dark') {
+      return 'bg-white text-slate-900 hover:bg-slate-100';
+    }
+    return 'text-white hover:opacity-90';
+  };
+
+  const getUrgencyBannerStyles = () => {
+    if (theme === 'dark') {
+      return 'bg-amber-500/20 border border-amber-500/40 text-amber-300';
+    }
+    return 'bg-amber-100 border border-amber-200 text-amber-700';
+  };
+
+  const getGuaranteeColorClass = () => {
+    return theme === 'dark' ? 'text-green-400' : 'text-green-600';
+  };
+
+  const getCheckIconColorClass = () => {
+    return theme === 'dark' ? 'text-white/60' : 'text-slate-400';
+  };
+
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
       ...content,
@@ -72,506 +111,56 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
     });
   };
 
-  const trustIndicators = content.trustIndicators || [];
-  const { urgencyText, guaranteeText, secondaryCta } = content;
-
-  // Local Services variant - light mode with phone-prominent CTA
-  if (isLocalServices) {
-    return (
-      <section className="py-20 bg-blue-600 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-blue-700" />
-        
-        {isEditing && (
-          <div className="absolute inset-0 border-2 border-blue-300/50 rounded-lg pointer-events-none z-10" />
-        )}
-        
-        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            contentEditable={isEditing}
-            suppressContentEditableWarning
-            onBlur={(e) => handleBlur("headline", e)}
-            className={`text-3xl md:text-4xl font-bold text-white mb-4 ${isEditing ? "cursor-text hover:ring-2 hover:ring-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 rounded px-2" : ""}`}
-          >
-            {headline}
-          </motion.h2>
-          
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-xl text-blue-100 mb-8"
-          >
-            {content.subtext || "Call now for a free estimate"}
-          </motion.p>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-          >
-            <Button 
-              size="lg" 
-              className="px-10 py-6 text-lg font-bold bg-orange-500 text-white hover:bg-orange-600 rounded-lg shadow-lg"
-            >
-              <span
-                contentEditable={isEditing}
-                suppressContentEditableWarning
-                onBlur={(e) => handleBlur("ctaText", e)}
-              >
-                {ctaText}
-              </span>
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-            
-            {secondaryCta && (
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="px-8 py-6 text-lg font-semibold border-2 border-white text-white hover:bg-white/10 rounded-lg"
-              >
-                {secondaryCta}
-              </Button>
-            )}
-          </motion.div>
-          
-          {/* Trust Indicators */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-wrap justify-center gap-6 mt-8 text-sm text-blue-100"
-          >
-            <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-white" />
-              Licensed & Insured
-            </span>
-            <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-white" />
-              Free Estimates
-            </span>
-            <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-white" />
-              Same-Day Service Available
-            </span>
-          </motion.div>
-        </div>
-      </section>
-    );
-  }
-
-  // SaaS variant
-  if (isSaas) {
-    return (
-      <section className="py-32 pb-48 bg-gradient-to-br from-purple-900 via-slate-900 to-blue-900 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-600/20 via-transparent to-transparent" />
-        
-        {isEditing && (
-          <div className="absolute inset-0 border-2 border-purple-500/50 rounded-lg pointer-events-none z-10" />
-        )}
-        
-        <div className="relative max-w-3xl mx-auto px-6 text-center z-10">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            contentEditable={isEditing}
-            suppressContentEditableWarning
-            onBlur={(e) => handleBlur("headline", e)}
-            className={`text-3xl md:text-4xl font-bold text-white mb-6 ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
-          >
-            {headline}
-          </motion.h2>
-          
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-xl text-slate-300 mb-6"
-          >
-            {content.subtext || "Take the next step toward your goals"}
-          </motion.p>
-
-          {/* Urgency Banner */}
-          {urgencyText && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/40 text-amber-300 px-5 py-2.5 rounded-full text-sm font-medium mb-8"
-            >
-              <span>⏰</span>
-              <span>{urgencyText}</span>
-            </motion.div>
-          )}
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <Button 
-              size="lg" 
-              className="px-12 py-6 text-lg font-semibold bg-white text-slate-900 hover:bg-slate-100 rounded-xl shadow-lg"
-            >
-              <span
-                contentEditable={isEditing}
-                suppressContentEditableWarning
-                onBlur={(e) => handleBlur("ctaText", e)}
-              >
-                {ctaText}
-              </span>
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-          </motion.div>
-
-          {/* Guarantee */}
-          {guaranteeText && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.25 }}
-              className="flex items-center justify-center gap-2 text-green-400 mt-6"
-            >
-              <Shield className="w-5 h-5" />
-              <span className="text-sm font-medium">{guaranteeText}</span>
-            </motion.div>
-          )}
-          
-          <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm text-slate-400">
-            <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-400" />
-              No credit card required
-            </span>
-            <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-400" />
-              14-day free trial
-            </span>
-            <span className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-400" />
-              Cancel anytime
-            </span>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // Healthcare variant: Light mode with teal CTA
-  if (isHealthcare) {
-    return (
-      <section className="py-32 pb-48 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 relative overflow-hidden">
-        {/* Subtle teal glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-3xl" />
-        
-        {isEditing && (
-          <div className="absolute inset-0 border-2 border-teal-500/50 rounded-lg pointer-events-none z-10" />
-        )}
-        
-        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className={`text-3xl md:text-4xl font-bold text-white mb-6 ${
-              isEditing ? "outline-dashed outline-2 outline-teal-500/30 rounded px-2" : ""
-            }`}
-            contentEditable={isEditing}
-            suppressContentEditableWarning
-            onBlur={(e) => handleBlur("headline", e)}
-          >
-            {headline}
-          </motion.h2>
-          
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className={`text-xl text-slate-300 mb-6 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-1' : ''}`}
-            contentEditable={isEditing}
-            suppressContentEditableWarning
-            onBlur={(e) => handleBlur("subtext", e)}
-          >
-            {content.subtext || "Free assessment • No obligation"}
-          </motion.p>
-
-          {/* Urgency Banner */}
-          {urgencyText && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/40 text-amber-300 px-5 py-2.5 rounded-full text-sm font-medium mb-8"
-            >
-              <span>⏰</span>
-              <span>{urgencyText}</span>
-            </motion.div>
-          )}
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <Button 
-              size="lg" 
-              className={`px-12 py-6 text-lg font-semibold bg-teal-600 text-white hover:bg-teal-700 rounded-xl shadow-lg shadow-teal-600/30 ${
-                isEditing ? "outline-dashed outline-2 outline-teal-500/30" : ""
-              }`}
-            >
-              <span
-                contentEditable={isEditing}
-                suppressContentEditableWarning
-                onBlur={(e) => handleBlur("ctaText", e)}
-              >
-                {ctaText}
-              </span>
-              <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
-            </Button>
-          </motion.div>
-
-          {/* Guarantee */}
-          {guaranteeText && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.25 }}
-              className="flex items-center justify-center gap-2 text-teal-400 mt-6 mb-4"
-            >
-              <Shield className="w-5 h-5" />
-              <span className="text-sm font-medium">{guaranteeText}</span>
-            </motion.div>
-          )}
-
-          {/* Trust Indicators */}
-          {trustIndicators.length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex flex-wrap justify-center gap-6 mt-10"
-            >
-              {trustIndicators.map((item, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-slate-400">
-                  <CheckCircle className="w-4 h-4 text-teal-500" strokeWidth={1.5} />
-                  <span
-                    className={isEditing ? 'cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-1' : ''}
-                    contentEditable={isEditing}
-                    suppressContentEditableWarning
-                    onBlur={(e) => {
-                      const newIndicators = [...trustIndicators];
-                      newIndicators[i] = { ...newIndicators[i], text: e.currentTarget.textContent || item.text };
-                      onUpdate({ ...content, trustIndicators: newIndicators });
-                    }}
-                  >
-                    {item.text}
-                  </span>
-                </div>
-              ))}
-            </motion.div>
-          )}
-        </div>
-      </section>
-    );
-  }
-
-  if (isConsulting) {
-    // Consulting layout: Brand-colored dark section for maximum impact
-    const bgColor = content.primaryColor || '#32373C';
-    
-    return (
-      <section 
-        className="py-24 md:py-32 relative overflow-hidden"
-        style={{ backgroundColor: bgColor }}
-      >
-        {isEditing && (
-          <div className="absolute inset-0 border-2 border-white/30 rounded-lg pointer-events-none z-10" />
-        )}
-        
-        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-4"
-          >
-            <span className="inline-block px-4 py-1 bg-white/20 text-white text-sm font-semibold rounded-full">
-              GET STARTED
-            </span>
-          </motion.div>
-          
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mb-4 ${
-              isEditing ? "outline-dashed outline-2 outline-white/30 rounded px-2" : ""
-            }`}
-            contentEditable={isEditing}
-            suppressContentEditableWarning
-            onBlur={(e) => handleBlur("headline", e)}
-          >
-            {headline}
-          </motion.h2>
-          
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className={`text-lg text-white/80 mb-8 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-white/40 focus:outline-none focus:ring-2 focus:ring-white/40 rounded px-1' : ''}`}
-            contentEditable={isEditing}
-            suppressContentEditableWarning
-            onBlur={(e) => handleBlur("subtext", e)}
-          >
-            {content.subtext || "No commitment required • Response within 24 hours"}
-          </motion.p>
-
-          {/* Urgency Banner */}
-          {urgencyText && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="inline-flex items-center gap-2 bg-white/20 border border-white/30 text-white px-5 py-2.5 rounded-full text-sm font-medium mb-8"
-            >
-              <span>⏰</span>
-              <span>{urgencyText}</span>
-            </motion.div>
-          )}
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-          >
-            <Button 
-              size="lg" 
-              className={`px-12 py-6 text-lg font-semibold bg-white text-slate-900 hover:bg-slate-100 rounded-lg shadow-lg transition-all ${
-                isEditing ? "outline-dashed outline-2 outline-white/30" : ""
-              }`}
-            >
-              <span
-                contentEditable={isEditing}
-                suppressContentEditableWarning
-                onBlur={(e) => handleBlur("ctaText", e)}
-              >
-                {ctaText}
-              </span>
-              <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
-            </Button>
-          </motion.div>
-
-          {/* Guarantee */}
-          {guaranteeText && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex items-center justify-center gap-2 text-white/90 mt-6 mb-4"
-            >
-              <Shield className="w-5 h-5" />
-              <span className="text-sm font-medium">{guaranteeText}</span>
-            </motion.div>
-          )}
-
-          {/* Trust Indicators */}
-          {trustIndicators.length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.35 }}
-              className="flex flex-wrap justify-center gap-6 mt-8"
-            >
-              {trustIndicators.map((item, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-white/80">
-                  <CheckCircle className="w-4 h-4 text-white" strokeWidth={1.5} />
-                  <span
-                    className={isEditing ? 'cursor-text hover:ring-2 hover:ring-white/40 focus:outline-none focus:ring-2 focus:ring-white/40 rounded px-1' : ''}
-                    contentEditable={isEditing}
-                    suppressContentEditableWarning
-                    onBlur={(e) => {
-                      const newIndicators = [...trustIndicators];
-                      newIndicators[i] = { ...newIndicators[i], text: e.currentTarget.textContent || item.text };
-                      onUpdate({ ...content, trustIndicators: newIndicators });
-                    }}
-                  >
-                    {item.text}
-                  </span>
-                </div>
-              ))}
-            </motion.div>
-          )}
-        </div>
-      </section>
-    );
-  }
-
-  // Default dark mode layout with industry-aware backgrounds
   return (
     <section 
-      className="relative overflow-hidden pb-24"
-      style={{
-        padding: '128px 24px',
-        paddingBottom: '128px',
-      }}
+      className="py-24 md:py-32 relative overflow-hidden"
+      style={getSectionStyles()}
     >
-      {/* Industry-Aware Background Pattern - using ref for complex CSS */}
-      <IndustryBackgroundPattern css={industryPattern.css} />
-      
-      {/* Floating Orbs for depth */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-grid-pattern opacity-20" />
-        <div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[150px]"
-          style={{ background: 'radial-gradient(circle, hsla(189, 95%, 43%, 0.1) 0%, transparent 70%)' }}
-        />
-        <div 
-          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px]"
-          style={{ backgroundColor: 'hsla(270, 95%, 60%, 0.06)' }}
-        />
-      </div>
-      
+      {/* Decorative glow for dark sections */}
+      {theme === 'dark' && (
+        <div className="absolute inset-0 pointer-events-none">
+          <div 
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl"
+            style={{ 
+              backgroundColor: palette?.primary 
+                ? `${palette.primary}20` 
+                : 'rgba(56, 189, 248, 0.1)' 
+            }}
+          />
+        </div>
+      )}
+
       {isEditing && (
-        <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
+        <div className="absolute inset-0 border-2 border-white/30 rounded-lg pointer-events-none z-10" />
       )}
       
-      <div className="container mx-auto max-w-4xl text-center relative z-10 flex flex-col items-center gap-8">
-        <motion.h2 
+      <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
+        {/* Badge */}
+        <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight max-w-3xl ${
-            isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
+          className="mb-4"
+        >
+          <span className={`inline-block px-4 py-1 text-sm font-semibold rounded-full ${
+            theme === 'dark' 
+              ? 'bg-white/20 text-white' 
+              : 'bg-slate-100 text-slate-700'
+          }`}>
+            GET STARTED
+          </span>
+        </motion.div>
+        
+        {/* Headline */}
+        <motion.h2 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className={`${typography?.sectionTitle || 'text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight'} mb-4 ${getTextColorClass()} ${
+            isEditing ? "outline-dashed outline-2 outline-white/30 rounded px-2" : ""
           }`}
-          style={{
-            color: `hsl(${tokens.colors.textOnDark})`,
-          }}
           contentEditable={isEditing}
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("headline", e)}
@@ -579,17 +168,21 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
           {headline}
         </motion.h2>
         
-        {content.subtext && (
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-lg md:text-xl max-w-2xl leading-relaxed text-slate-400"
-          >
-            {content.subtext}
-          </motion.p>
-        )}
+        {/* Subtext */}
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className={`${typography?.body || 'text-lg'} mb-8 ${getMutedTextColorClass()} ${
+            isEditing ? 'cursor-text hover:ring-2 hover:ring-white/40 focus:outline-none focus:ring-2 focus:ring-white/40 rounded px-1' : ''
+          }`}
+          contentEditable={isEditing}
+          suppressContentEditableWarning
+          onBlur={(e) => handleBlur("subtext", e)}
+        >
+          {content.subtext || "No commitment required • Response within 24 hours"}
+        </motion.p>
 
         {/* Urgency Banner */}
         {urgencyText && (
@@ -597,69 +190,48 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="inline-block bg-amber-500/20 border border-amber-500/40 text-amber-300 px-4 py-2 rounded-full text-sm font-medium"
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium mb-8 ${getUrgencyBannerStyles()}`}
           >
-            ⏰ {urgencyText}
+            <span>⏰</span>
+            <span>{urgencyText}</span>
           </motion.div>
         )}
         
-        {/* CTA Buttons */}
+        {/* CTA Button */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="flex flex-col sm:flex-row gap-4 pt-4"
+          transition={{ duration: 0.5, delay: 0.25 }}
+          className="flex flex-col sm:flex-row gap-4 justify-center"
         >
-          <div className="relative group">
-            {(() => {
-              console.log('🎨 [FinalCTASection] primaryColor:', content.primaryColor);
-              return null;
-            })()}
+          <Button 
+            size="lg" 
+            className={`px-12 py-6 text-lg font-semibold rounded-lg shadow-lg transition-all ${getButtonClassName()} ${
+              isEditing ? "outline-dashed outline-2 outline-white/30" : ""
+            }`}
+            style={getButtonStyles()}
+          >
+            <span
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("ctaText", e)}
+            >
+              {ctaText}
+            </span>
+            <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
+          </Button>
+
+          {secondaryCta && (
             <Button 
               size="lg" 
-              className={`relative overflow-hidden text-lg md:text-xl px-12 md:px-16 py-7 md:py-8 h-auto font-semibold transition-all duration-300 hover:scale-[1.02] animate-pulse-glow ${
-                isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""
-              }`}
-              style={{
-                background: content.primaryColor 
-                  ? content.primaryColor 
-                  : 'linear-gradient(135deg, hsl(189, 95%, 43%), hsl(200, 95%, 50%))',
-                color: 'white',
-                borderRadius: tokens.shape.radiusButton,
-                boxShadow: content.primaryColor 
-                  ? `0 10px 40px -10px ${content.primaryColor}88`
-                  : '0 10px 40px -10px hsla(189, 95%, 43%, 0.5)',
-              }}
-            >
-              <span
-                contentEditable={isEditing}
-                suppressContentEditableWarning
-                onBlur={(e) => handleBlur("ctaText", e)}
-                className="relative z-10"
-              >
-                {ctaText}
-              </span>
-              <ArrowRight className="ml-3 w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-1 transition-transform relative z-10" strokeWidth={2} />
-              
-              {/* Animated Gradient */}
-              <div 
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                style={{ background: 'linear-gradient(135deg, hsl(200, 95%, 50%), hsl(270, 95%, 60%))' }}
-              />
-              
-              {/* Shimmer */}
-              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
-            </Button>
-          </div>
-
-          {/* Secondary CTA */}
-          {secondaryCta && (
-            <Button
               variant="outline"
-              size="lg"
-              className="text-lg px-8 py-7 md:py-8 h-auto border-white/30 text-white hover:bg-white/10"
+              className={`px-8 py-6 text-lg font-semibold rounded-lg ${
+                theme === 'dark' 
+                  ? 'border-white/30 text-white hover:bg-white/10' 
+                  : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+              }`}
             >
               {secondaryCta}
             </Button>
@@ -672,28 +244,28 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-            className="flex items-center justify-center gap-2 text-green-400"
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className={`flex items-center justify-center gap-2 mt-6 mb-4 ${getGuaranteeColorClass()}`}
           >
             <Shield className="w-5 h-5" />
-            <span>{guaranteeText}</span>
+            <span className="text-sm font-medium">{guaranteeText}</span>
           </motion.div>
         )}
 
-        {/* Micro-trust below CTA */}
-        {!guaranteeText && trustIndicators.length > 0 ? (
+        {/* Trust Indicators */}
+        {trustIndicators.length > 0 && (
           <motion.div 
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-wrap justify-center gap-6 pt-4"
+            transition={{ duration: 0.5, delay: 0.35 }}
+            className="flex flex-wrap justify-center gap-6 mt-8"
           >
             {trustIndicators.map((item, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm text-slate-400">
-                <CheckCircle className="w-4 h-4 text-white/60" strokeWidth={1.5} />
+              <div key={i} className={`flex items-center gap-2 text-sm ${getSubtleTextColorClass()}`}>
+                <CheckCircle className={`w-4 h-4 ${getCheckIconColorClass()}`} strokeWidth={1.5} />
                 <span
-                  className={isEditing ? 'cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1' : ''}
+                  className={isEditing ? 'cursor-text hover:ring-2 hover:ring-white/40 focus:outline-none focus:ring-2 focus:ring-white/40 rounded px-1' : ''}
                   contentEditable={isEditing}
                   suppressContentEditableWarning
                   onBlur={(e) => {
@@ -707,18 +279,23 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               </div>
             ))}
           </motion.div>
-        ) : !guaranteeText ? (
+        )}
+
+        {/* Default trust text if no indicators */}
+        {trustIndicators.length === 0 && !guaranteeText && (
           <motion.p 
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="text-sm text-slate-500"
+            className={`text-sm mt-6 ${getSubtleTextColorClass()}`}
           >
-            {content.trustText || tokens.sectionHeaders.cta.subtext}
+            {content.trustText || "No credit card required • 14-day trial"}
           </motion.p>
-        ) : null}
+        )}
       </div>
     </section>
   );
 }
+
+export default FinalCTASection;
