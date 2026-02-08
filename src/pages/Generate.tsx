@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check, Sparkles, Wand2, Undo2, Redo2, Brain, Rocket, Zap, AlertTriangle } from "lucide-react";
+import { Loader2, Check, Sparkles, Wand2, Undo2, Redo2, Brain, Rocket, Zap, AlertTriangle, RefreshCw } from "lucide-react";
 import { calculateStrategicLevel } from "@/lib/strategicLevelCalculator";
 import type { ExtractedIntelligence, ConsultationStatus } from "@/types/consultationReadiness";
 import { PersonaInsightsPanel } from "@/components/editor/PersonaInsightsPanel";
@@ -325,6 +325,7 @@ function GenerateContent() {
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedSectionsRef = useRef<string>('');
   const [isSaving, setIsSaving] = useState(false);
+  const [existingPageLoaded, setExistingPageLoaded] = useState(false);
   
   // Intelligence data from wizard or strategic consultation - type definition
   type NavigationStateType = {
@@ -1056,6 +1057,9 @@ function GenerateContent() {
           design_intelligence: correctedDesignIntelligence,
         });
         setSections(patchedSections);
+        setExistingPageLoaded(true);
+        console.log('📦 [Generate] Loaded existing page:', existingPage.id);
+        console.log('💡 [Generate] Use Regenerate button to create fresh page with latest layout logic');
         setPhase("editor");
         return;
       } else if (forceRegenerate) {
@@ -1707,6 +1711,9 @@ function GenerateContent() {
           
           setPageData(correctedPageData);
           setSections(sectionsWithVariant);
+          setExistingPageLoaded(true);
+          console.log('📦 [Generate] Loaded existing page for consultation:', existingPage.id);
+          console.log('💡 [Generate] Use Regenerate button to create fresh page with latest layout logic');
           // Mark generation complete for immediate editor transition
           setIsGenerating(false);
           setPhase("editor");
@@ -3915,6 +3922,64 @@ function GenerateContent() {
     }
   };
 
+  // Handle full page regeneration - deletes existing page and triggers fresh generation
+  const handleRegeneratePage = async () => {
+    if (!pageData?.id) {
+      console.log('🔄 [Generate] No existing page to regenerate');
+      return;
+    }
+    
+    const confirmed = window.confirm(
+      'This will delete the current page and generate a fresh one with the latest layout logic. Continue?'
+    );
+    if (!confirmed) return;
+    
+    setIsRegenerating(true);
+    console.log('🔄 [Generate] User requested page regeneration');
+    console.log('🗑️ [Generate] Deleting page:', pageData.id);
+    
+    try {
+      // Delete existing page
+      const { error } = await supabase
+        .from('landing_pages')
+        .delete()
+        .eq('id', pageData.id);
+      
+      if (error) throw error;
+      
+      console.log('✅ [Generate] Deleted existing page, triggering fresh generation');
+      console.log('🚀 [Generate] Starting fresh generation...');
+      
+      // Clear page data to trigger fresh generation
+      setPageData(null);
+      setExistingPageLoaded(false);
+      setSections([]);
+      
+      // Reset phase to generating
+      setPhase("generating");
+      setIsGenerating(true);
+      setProgress(0);
+      
+      // Re-navigate with force regenerate to trigger the generation flow
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set('regenerate', 'true');
+      window.history.replaceState({}, '', currentUrl.toString());
+      
+      // Force reload the component to trigger generation with new layout templates
+      window.location.reload();
+      
+    } catch (err) {
+      console.error('❌ [Generate] Failed to delete page:', err);
+      toast({
+        title: "Failed to regenerate page",
+        description: "Could not delete existing page. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
   // Handle regeneration of a single section
   const handleRegenerateSection = async (sectionType: string) => {
     setIsRegenerating(true);
@@ -4477,6 +4542,20 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             <span className="absolute left-0 top-0 w-1 h-full bg-yellow-500 rounded-l"></span>
             {isSaving ? "Saving..." : "Save Draft"}
           </Button>
+          {/* Regenerate button - only shows for existing loaded pages */}
+          {existingPageLoaded && pageData?.id && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRegeneratePage}
+              disabled={isRegenerating}
+              className="relative pl-5 builder-button bg-white/5 border-white/10 text-white hover:bg-white/10 gap-2"
+            >
+              <span className="absolute left-0 top-0 w-1 h-full bg-amber-500 rounded-l"></span>
+              <RefreshCw className={cn("h-4 w-4", isRegenerating && "animate-spin")} />
+              {isRegenerating ? 'Regenerating...' : 'Regenerate'}
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
