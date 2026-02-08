@@ -670,7 +670,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("headline", e)}
-              className={`text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight mb-6 ${
+              className={`text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-8 ${
                 hasBackgroundImage && showDarkOverlay ? 'text-white' : 'text-slate-900'
               } ${isEditing ? "cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2" : ""}`}
             >

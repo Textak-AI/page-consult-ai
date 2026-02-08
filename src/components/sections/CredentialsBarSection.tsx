@@ -37,9 +37,9 @@ export function CredentialsBarSection({ content }: CredentialsBarSectionProps) {
   ];
 
   return (
-    <section className={`py-6 border-y ${
+    <section className={`py-8 border-t ${
       isLightMode 
-        ? 'bg-slate-50 border-slate-200' 
+        ? 'bg-white border-slate-100' 
         : 'bg-white/5 border-white/10'
     }`}>
       <div className="container mx-auto px-6">
@@ -47,14 +47,14 @@ export function CredentialsBarSection({ content }: CredentialsBarSectionProps) {
           {displayCredentials.slice(0, 4).map((cred, index) => (
             <div key={index} className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${
-                isLightMode ? 'bg-slate-200/50' : 'bg-white/10'
+                isLightMode ? 'bg-slate-50' : 'bg-white/10'
               }`}>
                 {cred.icon === 'badge' ? (
-                  <BadgeCheck className={`w-5 h-5 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`} />
+                  <BadgeCheck className={`w-5 h-5 ${isLightMode ? 'text-slate-400' : 'text-white/60'}`} />
                 ) : cred.icon === 'shield' ? (
-                  <Shield className={`w-5 h-5 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`} />
+                  <Shield className={`w-5 h-5 ${isLightMode ? 'text-slate-400' : 'text-white/60'}`} />
                 ) : (
-                  <Award className={`w-5 h-5 ${isLightMode ? 'text-slate-700' : 'text-white/80'}`} />
+                  <Award className={`w-5 h-5 ${isLightMode ? 'text-slate-400' : 'text-white/60'}`} />
                 )}
               </div>
               <div>

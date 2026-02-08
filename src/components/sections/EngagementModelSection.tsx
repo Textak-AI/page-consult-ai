@@ -69,7 +69,7 @@ export function EngagementModelSection({ content }: EngagementModelSectionProps)
   const icons = [MessageSquare, ClipboardList, Rocket, RefreshCw];
 
   return (
-    <section className={`py-20 ${isLightMode ? 'bg-white' : 'bg-slate-950'}`}>
+    <section className={`py-24 md:py-32 ${isLightMode ? 'bg-white' : 'bg-slate-950'}`}>
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-12">
           <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 ${
@@ -96,21 +96,21 @@ export function EngagementModelSection({ content }: EngagementModelSectionProps)
                   {/* Step number circle */}
                   <div className={`w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 z-10 ${
                     isLightMode 
-                      ? 'bg-primary text-white' 
-                      : 'bg-primary text-white'
+                      ? 'bg-slate-800 text-white' 
+                      : 'bg-slate-700 text-white'
                   }`}>
                     <Icon className="w-7 h-7" />
                   </div>
 
                   {/* Step content */}
-                  <div className={`flex-1 p-6 rounded-xl border ${
+                  <div className={`flex-1 p-8 rounded-lg ${
                     isLightMode 
-                      ? 'bg-slate-50 border-slate-200' 
+                      ? 'bg-slate-50 border border-slate-200' 
                       : 'bg-white/5 border-white/10'
                   }`}>
                     <div className="flex items-center gap-3 mb-2">
                       <span className={`text-sm font-medium px-2 py-0.5 rounded ${
-                        isLightMode ? 'bg-primary/10 text-primary' : 'bg-primary/20 text-primary'
+                        isLightMode ? 'bg-slate-200 text-slate-700' : 'bg-slate-700 text-slate-300'
                       }`}>
                         Step {step.number}
                       </span>

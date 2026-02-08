@@ -64,7 +64,7 @@ export function OurApproachSection({ content }: OurApproachSectionProps) {
   };
 
   return (
-    <section className={`py-20 ${isLightMode ? 'bg-white' : 'bg-slate-950'}`}>
+    <section className={`py-24 md:py-32 ${isLightMode ? 'bg-white' : 'bg-slate-950'}`}>
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-12">
           <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 ${
@@ -83,16 +83,16 @@ export function OurApproachSection({ content }: OurApproachSectionProps) {
             return (
               <div 
                 key={index} 
-                className={`p-8 rounded-xl border text-center ${
+                className={`p-8 rounded-lg text-center ${
                   isLightMode 
-                    ? 'bg-slate-50 border-slate-200' 
+                    ? 'bg-slate-50 border border-slate-200' 
                     : 'bg-white/5 border-white/10'
                 }`}
               >
                 <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5 ${
-                  isLightMode ? 'bg-primary/10' : 'bg-primary/20'
+                  isLightMode ? 'bg-slate-100' : 'bg-slate-700'
                 }`}>
-                  <Icon className="w-7 h-7 text-primary" />
+                  <Icon className={`w-7 h-7 ${isLightMode ? 'text-slate-700' : 'text-slate-300'}`} />
                 </div>
                 <h3 className={`text-xl font-semibold mb-3 ${
                   isLightMode ? 'text-slate-900' : 'text-white'
