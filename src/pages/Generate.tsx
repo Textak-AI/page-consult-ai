@@ -2925,6 +2925,18 @@ function GenerateContent() {
     // Extract client results from proof points and testimonials
     const extractClientResults = (): Array<{metric: string, description: string, client?: string, industry?: string}> => {
       const results: Array<{metric: string, description: string, client?: string, industry?: string}> = [];
+      const seenMetrics = new Set<string>(); // Track metrics we've already added
+      
+      // Helper to add result only if metric is unique
+      const addUniqueResult = (result: {metric: string, description: string, client?: string, industry?: string}) => {
+        const normalizedMetric = result.metric.toLowerCase().trim();
+        if (!seenMetrics.has(normalizedMetric) && results.length < 3) {
+          seenMetrics.add(normalizedMetric);
+          results.push(result);
+          return true;
+        }
+        return false;
+      };
       
       // PRIORITY 1: Use SDI proof point stats
       if (sdi?.proofPoints) {
@@ -2932,13 +2944,13 @@ function GenerateContent() {
         
         // Percentage stats
         if (proof.percentageStats && proof.percentageStats.length > 0) {
-          proof.percentageStats.slice(0, 3).forEach((stat: string) => {
+          proof.percentageStats.forEach((stat: string) => {
             const match = stat.match(/(\d+%)/);
             if (match) {
               let description = stat.replace(match[1], '').trim();
               description = description.replace(/^of\s+/i, '').replace(/^our\s+/i, '').trim();
               if (description.length > 5) {
-                results.push({
+                addUniqueResult({
                   metric: match[1],
                   description: description.charAt(0).toUpperCase() + description.slice(1),
                   industry: industryVariant,
@@ -2949,14 +2961,14 @@ function GenerateContent() {
         }
         
         // Dollar stats
-        if (proof.dollarStats && proof.dollarStats.length > 0 && results.length < 3) {
-          proof.dollarStats.slice(0, 3 - results.length).forEach((stat: string) => {
+        if (proof.dollarStats && proof.dollarStats.length > 0) {
+          proof.dollarStats.forEach((stat: string) => {
             const match = stat.match(/(\$[\d,.]+[kmb]?)/i);
             if (match) {
               let description = stat.replace(match[1], '').trim();
               description = description.replace(/^in\s+/i, '').trim();
               if (description.length > 3) {
-                results.push({
+                addUniqueResult({
                   metric: match[1],
                   description: description.charAt(0).toUpperCase() + description.slice(1),
                   industry: industryVariant,
@@ -2965,22 +2977,40 @@ function GenerateContent() {
             }
           });
         }
+        
+        // Multiplier stats (3x, 10x, etc.)
+        if (proof.rawProofText) {
+          const multiplierMatches = proof.rawProofText.match(/(\d+x)\s+([^,.]+)/gi);
+          if (multiplierMatches) {
+            multiplierMatches.forEach((match: string) => {
+              const parts = match.match(/(\d+x)\s+(.+)/i);
+              if (parts) {
+                addUniqueResult({
+                  metric: parts[1],
+                  description: parts[2].charAt(0).toUpperCase() + parts[2].slice(1),
+                  industry: industryVariant,
+                });
+              }
+            });
+          }
+        }
       }
       
-      // PRIORITY 2: Use case study highlight
-      const caseStudy = strategicConsultation?.caseStudyHighlight || consultationData?.caseStudyHighlight;
-      if (caseStudy && typeof caseStudy === 'string' && results.length < 3) {
-        // Try to extract a metric
-        const metricMatch = caseStudy.match(/(\d+%|\$[\d,.]+[kmb]?|\d+x)/i);
-        results.push({
-          metric: metricMatch ? metricMatch[1] : 'Success',
-          description: caseStudy.slice(0, 150),
-          client: 'Client Case Study',
-        });
+      // PRIORITY 2: Use case study highlight if still need more
+      if (results.length < 3) {
+        const caseStudy = strategicConsultation?.caseStudyHighlight || consultationData?.caseStudyHighlight;
+        if (caseStudy && typeof caseStudy === 'string') {
+          const metricMatch = caseStudy.match(/(\d+%|\$[\d,.]+[kmb]?|\d+x)/i);
+          addUniqueResult({
+            metric: metricMatch ? metricMatch[1] : 'Success',
+            description: caseStudy.slice(0, 150),
+            client: 'Client Case Study',
+          });
+        }
       }
       
-      console.log('📊 [extractClientResults] Found:', results.length, 'results');
-      return results.slice(0, 3);
+      console.log('📊 [extractClientResults] Found:', results.length, 'unique results');
+      return results;
     };
 
     // Extract engagement model steps from process steps
