@@ -2783,34 +2783,62 @@ function GenerateContent() {
     const extractChallenges = (): Array<{title: string, description: string, impact: string}> => {
       const challenges: Array<{title: string, description: string, impact: string}> = [];
       
-      // PRIORITY 1: Use SDI pain spikes if available
-      if (sdi?.audienceAnalysis?.painSpikes) {
-        sdi.audienceAnalysis.painSpikes.slice(0, 3).forEach((pain: string, idx: number) => {
-          const titles = ['Strategic Uncertainty', 'Execution Gaps', 'Market Pressure'];
-          const impacts = ['Delays critical decisions', 'Slows growth trajectory', 'Creates competitive risk'];
-          challenges.push({
-            title: titles[idx] || 'Business Challenge',
-            description: pain,
-            impact: impacts[idx] || 'Impacts bottom line',
-          });
+      // PRIORITY 1: Use problem statement as primary challenge
+      if (content.problemStatement) {
+        challenges.push({
+          title: 'Strategic Uncertainty',
+          description: content.problemStatement,
+          impact: 'Delays critical decisions',
         });
       }
       
-      // PRIORITY 2: Use objections as challenges
-      const objections = strategicConsultation?.buyerObjections || consultationData?.buyerObjections;
-      if (objections && typeof objections === 'string' && challenges.length < 3) {
-        const objList = objections.split(',').map((o: string) => o.trim()).filter((o: string) => o.length > 5);
-        objList.slice(0, 3 - challenges.length).forEach((obj: string) => {
-          challenges.push({
-            title: 'Common Concern',
-            description: obj,
-            impact: 'Stalls decision-making',
-          });
+      // PRIORITY 2: Invert features into implied challenges
+      // If feature is "ROI-Focused Strategy" → challenge is "Unclear ROI"
+      if (content.features && content.features.length > 0 && challenges.length < 3) {
+        const featureToChallengeMap = [
+          { keyword: 'roi', title: 'Unclear ROI', impact: 'Stalls executive buy-in' },
+          { keyword: 'implementation', title: 'Execution Gaps', impact: 'Slows growth trajectory' },
+          { keyword: 'market', title: 'Market Uncertainty', impact: 'Creates competitive risk' },
+          { keyword: 'c-suite', title: 'Alignment Issues', impact: 'Fragments leadership focus' },
+          { keyword: 'performance', title: 'Accountability Gaps', impact: 'Undermines results tracking' },
+          { keyword: 'partnership', title: 'Collaboration Gaps', impact: 'Limits strategic outcomes' },
+          { keyword: 'expansion', title: 'Growth Barriers', impact: 'Constrains market reach' },
+          { keyword: 'strategy', title: 'Strategic Drift', impact: 'Misaligns organizational focus' },
+        ];
+        
+        content.features.slice(0, 5).forEach((feature: any) => {
+          if (challenges.length >= 3) return;
+          
+          const featureText = (feature.title + ' ' + feature.description).toLowerCase();
+          const matchedChallenge = featureToChallengeMap.find(m => featureText.includes(m.keyword));
+          
+          if (matchedChallenge && !challenges.some(c => c.title === matchedChallenge.title)) {
+            challenges.push({
+              title: matchedChallenge.title,
+              description: `Without ${feature.title.toLowerCase()}, organizations struggle to achieve sustainable growth.`,
+              impact: matchedChallenge.impact,
+            });
+          }
         });
       }
       
-      // PRIORITY 3: Use pain points
-      const painPoints = strategicConsultation?.painPoints || consultationData?.painPoints || content.problemStatement;
+      // PRIORITY 3: Use SDI pain spikes if still need more
+      if (sdi?.audienceAnalysis?.painSpikes && challenges.length < 3) {
+        sdi.audienceAnalysis.painSpikes.slice(0, 3 - challenges.length).forEach((pain: string, idx: number) => {
+          const titles = ['Execution Gaps', 'Market Pressure', 'Resource Constraints'];
+          const impacts = ['Slows growth trajectory', 'Creates competitive risk', 'Limits capability'];
+          if (!challenges.some(c => c.title === titles[idx])) {
+            challenges.push({
+              title: titles[idx] || 'Business Challenge',
+              description: pain,
+              impact: impacts[idx] || 'Impacts bottom line',
+            });
+          }
+        });
+      }
+      
+      // PRIORITY 4: Use pain points / objections as fallback
+      const painPoints = strategicConsultation?.painPoints || consultationData?.painPoints;
       if (painPoints && typeof painPoints === 'string' && challenges.length < 3) {
         challenges.push({
           title: 'Core Challenge',
@@ -2819,7 +2847,12 @@ function GenerateContent() {
         });
       }
       
-      console.log('📊 [extractChallenges] Found:', challenges.length, 'challenges');
+      console.log('📊 [extractChallenges] Found:', challenges.length, 'challenges from sources:', {
+        problemStatement: !!content.problemStatement,
+        features: content.features?.length || 0,
+        painSpikes: sdi?.audienceAnalysis?.painSpikes?.length || 0,
+        painPoints: !!painPoints
+      });
       return challenges.slice(0, 3);
     };
 
