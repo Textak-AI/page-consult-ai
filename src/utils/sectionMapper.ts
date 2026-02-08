@@ -233,17 +233,37 @@ export function mapBriefToSections(
   
   const { businessName, heroImageUrl, logoUrl, primaryColor, pageType, pageGoal, industry, serviceType, aiSearchOptimization } = options;
   const sections: Section[] = [];
-  // Use brief's page structure or fall back to default structure with all sections
-  const pageStructure = (brief.pageStructure && brief.pageStructure.length > 0) 
-    ? brief.pageStructure 
-    : DEFAULT_PAGE_STRUCTURE;
-  
-  console.log('🧠 [sectionMapper] Using page structure:', pageStructure, '(default:', !brief.pageStructure || brief.pageStructure.length === 0, ')');
-  
-  const isBetaPage = pageType === 'beta-prelaunch';
   
   // Get SDI from options if available
   const sdi = options.designIntelligence;
+  
+  // LAYOUT TEMPLATE INTEGRATION:
+  // Priority 1: Use layoutSections from SDI (if available)
+  // Priority 2: Use brief.pageStructure (from strategy brief generation)
+  // Priority 3: Fallback to DEFAULT_PAGE_STRUCTURE
+  let pageStructure: string[];
+  let layoutSource: string = 'unknown';
+  
+  if (sdi?.layoutSections && sdi.layoutSections.length > 0) {
+    // Use layout template sections from SDI
+    pageStructure = sdi.layoutSections;
+    layoutSource = `layout-template:${sdi.layoutId}`;
+    console.log(`📐 [sectionMapper] Using layout template "${sdi.layoutId}" with ${pageStructure.length} sections:`, pageStructure);
+    console.log(`📐 [sectionMapper] Layout reasoning: ${sdi.layoutReasoning}`);
+    console.log(`📐 [sectionMapper] Layout confidence: ${sdi.layoutConfidence}`);
+  } else if (brief.pageStructure && brief.pageStructure.length > 0) {
+    pageStructure = brief.pageStructure;
+    layoutSource = 'strategy-brief';
+    console.log('🧠 [sectionMapper] Using page structure from strategy brief:', pageStructure);
+  } else {
+    pageStructure = DEFAULT_PAGE_STRUCTURE;
+    layoutSource = 'default-fallback';
+    console.log('🧠 [sectionMapper] Using DEFAULT page structure (no brief/layout):', pageStructure);
+  }
+  
+  console.log('🧠 [sectionMapper] Final page structure source:', layoutSource);
+  
+  const isBetaPage = pageType === 'beta-prelaunch';
   
   // Detect industry variant - PRIORITY ORDER:
   // 1. Stored AI-powered classification (from consultation completion)
@@ -300,6 +320,7 @@ export function mapBriefToSections(
   console.log('🧠 [sectionMapper] Page structure:', pageStructure);
   console.log('🧠 [sectionMapper] isBetaPage:', isBetaPage);
   console.log('🎨 [SDI] Proof density:', sdi?.proofDensity);
+  console.log('📐 [sectionMapper] Layout ID:', sdi?.layoutId || 'none');
 
   // Iterate through pageStructure and build sections in EXACT order
   for (const sectionType of pageStructure) {
@@ -651,6 +672,44 @@ export function mapBriefToSections(
           order,
           visible: true,
           content: ctaContent,
+        });
+        break;
+      }
+
+      // NEW: Consulting-specific section types (from layout templates)
+      case 'credentials-bar':
+      case 'the-real-challenge':
+      case 'our-approach':
+      case 'expertise-areas':
+      case 'engagement-model':
+      case 'client-results': {
+        // These sections use stub components - pass through minimal content
+        // The components will render with sensible defaults if data is missing
+        console.log(`📐 [sectionMapper] Creating consulting section: ${sectionType}`);
+        sections.push({
+          type: sectionType,
+          order,
+          visible: true,
+          content: {
+            industryVariant: industryVariant,
+            mode: sdiMode,
+            businessName,
+            // Pass any relevant extracted data
+            challenges: brief.objections?.slice(0, 3).map(o => ({
+              title: o.question,
+              description: o.answer,
+            })),
+            principles: brief.messagingPillars?.slice(0, 3).map(p => ({
+              title: p.title,
+              description: p.description,
+              icon: p.icon,
+            })),
+            steps: brief.processSteps?.map(s => ({
+              number: s.step,
+              title: s.title,
+              description: s.description,
+            })),
+          },
         });
         break;
       }

@@ -973,6 +973,7 @@ export type Database = {
           is_published: boolean | null
           last_change_summary: string | null
           last_viewed_at: string | null
+          layout_id: string | null
           meta_description: string | null
           meta_title: string | null
           parent_page_id: string | null
@@ -1010,6 +1011,7 @@ export type Database = {
           is_published?: boolean | null
           last_change_summary?: string | null
           last_viewed_at?: string | null
+          layout_id?: string | null
           meta_description?: string | null
           meta_title?: string | null
           parent_page_id?: string | null
@@ -1047,6 +1049,7 @@ export type Database = {
           is_published?: boolean | null
           last_change_summary?: string | null
           last_viewed_at?: string | null
+          layout_id?: string | null
           meta_description?: string | null
           meta_title?: string | null
           parent_page_id?: string | null
