@@ -360,6 +360,23 @@ export function generateDesignIntelligence(input: DesignIntelligenceInput): Desi
     `Visual Weight: ${visualWeight.statsBar} stats, ${visualWeight.testimonialStyle} testimonials - ${visualWeight.reasoning}`
   ];
   
+  // 7. NEW: Generate dynamic SDI design system
+  const brandColor = extractedIntelligence?.brandSettings?.primaryColor || 
+                     extractedIntelligence?.primaryColor || 
+                     null;
+  
+  const palette = generateSDIPalette(brandColor, industry);
+  const sectionThemes = computeSectionThemes(industry);
+  const sdiTypographyConfig = computeSDITypography(industry);
+  
+  console.log('🎨 [SDI] Dynamic design system generated:', {
+    brandColor,
+    industry,
+    paletteGenerated: !!palette,
+    themesGenerated: !!sectionThemes,
+    typographyGenerated: !!sdiTypographyConfig,
+  });
+  
   const output: DesignIntelligenceOutput = {
     tone,
     industry,
@@ -371,11 +388,15 @@ export function generateDesignIntelligence(input: DesignIntelligenceInput): Desi
     colors,
     pageStructure,
     visualWeight,
-    // NEW: Layout template fields
+    // Layout template fields
     layoutId: layoutResult.layoutId,
     layoutSections: layoutResult.sections as string[],
     layoutConfidence: layoutResult.confidence,
     layoutReasoning: layoutResult.reasoning,
+    // NEW: SDI Dynamic Design System
+    palette,
+    sectionThemes,
+    sdiTypography: sdiTypographyConfig,
     summary: {
       designRationale: `Detected ${tone.primary} tone in ${industry} context with ${awarenessLevel} buyer awareness. ${proofDensity} proof density. Using ${layoutResult.layoutId} layout.`,
       keyDecisions
