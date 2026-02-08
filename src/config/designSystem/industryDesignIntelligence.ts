@@ -1571,6 +1571,202 @@ export const industryDesignIntelligence: Record<IndustryType, DesignIntelligence
       differentiationOpportunities: ["Niche down", "Better content", "Superior experience"],
     },
   },
+  
+  // ============================================================================
+  // INDUSTRY VARIANT ALIASES (map to professional-services design system)
+  // ============================================================================
+  "consulting": {
+    industry: "Professional Services (Consulting, B2B)",
+    audienceProfile: "Executives, decision-makers, business owners seeking strategic guidance and expertise.",
+    colorStrategy: {
+      psychology: "Trust, credibility, results. These buyers need to feel confident in your expertise.",
+      dominantColors: ["Corporate blue (#1E40AF)", "Slate (#475569)", "White (#FFFFFF)"],
+      accentColors: ["Growth green (#10B981)", "Success blue (#3B82F6)"],
+      avoid: ["Neon colors", "Playful pastels", "Overly trendy gradients"],
+      reasoning: "Blue conveys trust and stability. Green signals growth and results."
+    },
+    typographyStrategy: {
+      headingStyle: "Refined sans-serif (Plus Jakarta Sans, Inter). Weight 600.",
+      bodyStyle: "Clean sans-serif, 16px, excellent readability.",
+      hierarchy: "Clear distinction between headings and body. Ample white space.",
+      avoid: ["Script fonts", "Overly bold weights", "Decorative typefaces"],
+      reasoning: "Consulting audiences value clarity and substance."
+    },
+    imageryStrategy: {
+      primaryStyle: "Abstract or minimal photography",
+      effectiveSubjects: ["Business meetings", "Results graphs", "Professional portraits"],
+      treatments: ["Professional", "Clean", "Well-lit"],
+      avoid: ["Stock photo clichés", "Cheesy handshakes", "Cluttered scenes"],
+      reasoning: "Imagery should reinforce expertise without distracting."
+    },
+    trustSignals: {
+      critical: ["Client logos", "Case study results", "Credentials/certifications"],
+      effective: ["Testimonials", "Industry recognition", "Published work"],
+      placement: "Logo bar near hero, credentials in hero badge",
+      avoid: ["Fake testimonials", "Excessive badges"]
+    },
+    layoutPatterns: {
+      heroStyle: "Authority-focused with credentials",
+      sectionFlow: ["Hero", "Stats", "Problem-Solution", "Process", "Testimonials", "CTA"],
+      ctaPlacement: "Above fold and bottom of page",
+      whitespaceApproach: "Generous - let expertise breathe"
+    },
+    ctaStrategy: {
+      effectiveLanguage: ["Schedule a Consultation", "Get a Strategy Session", "Discuss Your Goals"],
+      buttonStyle: "Solid primary color, medium radius, confident but not aggressive",
+      urgencyApproach: "Subtle scarcity - limited availability",
+      avoid: ["Buy Now", "Sign Up Free", "Limited Time"]
+    },
+    commonMistakes: ["Too much jargon", "No concrete results/proof", "Generic stock imagery"],
+    competitorInsights: {
+      topPerformerTraits: ["Clear methodology", "Specific niche focus", "Prominent credentials"],
+      differentiationOpportunities: ["Unique frameworks", "Specific vertical expertise"]
+    }
+  },
+  "venturestudio": {
+    industry: "Venture Studio / Startup Builder",
+    audienceProfile: "Founders, entrepreneurs, startups seeking strategic partnership.",
+    colorStrategy: {
+      psychology: "Innovation, trust, partnership.",
+      dominantColors: ["Deep blue (#1E40AF)", "Slate (#475569)", "White (#FFFFFF)"],
+      accentColors: ["Innovation purple (#6366F1)", "Growth green (#10B981)"],
+      avoid: ["Muted colors", "Overly corporate tones"],
+      reasoning: "Blue signals stability while purple adds innovation energy."
+    },
+    typographyStrategy: {
+      headingStyle: "Modern sans-serif (Inter). Weight 600-700.",
+      bodyStyle: "Clean sans-serif, 16px.",
+      hierarchy: "Strong headline presence with supportive body text.",
+      avoid: ["Overly playful fonts", "Script fonts"],
+      reasoning: "Need to convey both innovation and reliability."
+    },
+    imageryStrategy: {
+      primaryStyle: "Abstract or photography of startups/teams",
+      effectiveSubjects: ["Team collaboration", "Product launches", "Portfolio success"],
+      treatments: ["Dynamic", "Forward-looking", "Professional"],
+      avoid: ["Cliché startup imagery", "Ping pong tables"],
+      reasoning: "Show tangible outcomes and partnership value."
+    },
+    trustSignals: {
+      critical: ["Portfolio company logos", "Exit metrics", "Founder testimonials"],
+      effective: ["Team credentials", "Industry partnerships", "Press mentions"],
+      placement: "Portfolio logos prominently featured",
+      avoid: ["Vague claims", "Hidden portfolio"]
+    },
+    layoutPatterns: {
+      heroStyle: "Bold with portfolio proof",
+      sectionFlow: ["Hero", "Portfolio", "Process", "Team", "Apply"],
+      ctaPlacement: "Hero and after portfolio proof",
+      whitespaceApproach: "Modern, balanced"
+    },
+    ctaStrategy: {
+      effectiveLanguage: ["Apply to Partner", "Submit Your Idea", "Explore Partnership"],
+      buttonStyle: "Solid or gradient, confident",
+      urgencyApproach: "Selectivity - highlight quality over quantity",
+      avoid: ["Generic 'Learn More'", "Passive language"]
+    },
+    commonMistakes: ["Unclear value proposition", "No portfolio proof", "Too many buzzwords"],
+    competitorInsights: {
+      topPerformerTraits: ["Clear thesis/focus", "Prominent portfolio", "Transparent process"],
+      differentiationOpportunities: ["Specific vertical focus", "Unique support model"]
+    }
+  },
+  "incubator": {
+    industry: "Incubator / Startup Support",
+    audienceProfile: "Early-stage founders seeking mentorship and resources.",
+    colorStrategy: {
+      psychology: "Growth, energy, support.",
+      dominantColors: ["Trust blue (#1E40AF)", "Growth green (#10B981)", "White (#FFFFFF)"],
+      accentColors: ["Energy orange (#F59E0B)", "Innovation purple (#6366F1)"],
+      avoid: ["Dull corporate colors"],
+      reasoning: "Convey professionalism and startup energy."
+    },
+    typographyStrategy: {
+      headingStyle: "Bold modern sans-serif. Weight 600-700.",
+      bodyStyle: "Clean, readable sans-serif, 16px.",
+      hierarchy: "Strong headlines with clear supporting content.",
+      avoid: ["Overly formal fonts"],
+      reasoning: "Accessible to founders while maintaining credibility."
+    },
+    imageryStrategy: {
+      primaryStyle: "Photography of founders, cohorts, demo days",
+      effectiveSubjects: ["Cohort photos", "Demo day presentations"],
+      treatments: ["Energetic", "Authentic", "Community-focused"],
+      avoid: ["Generic stock photos"],
+      reasoning: "Show the community and support system."
+    },
+    trustSignals: {
+      critical: ["Alumni company logos", "Funding raised by alumni", "Program outcomes"],
+      effective: ["Partner logos", "Press coverage"],
+      placement: "Alumni logos prominently, metrics in stats bar",
+      avoid: ["Vague success claims"]
+    },
+    layoutPatterns: {
+      heroStyle: "Community-focused with social proof",
+      sectionFlow: ["Hero", "Alumni", "Program", "Mentors", "Apply"],
+      ctaPlacement: "After proof sections",
+      whitespaceApproach: "Balanced, modern"
+    },
+    ctaStrategy: {
+      effectiveLanguage: ["Apply Now", "Join the Next Cohort", "Start Your Journey"],
+      buttonStyle: "Bold, action-oriented",
+      urgencyApproach: "Cohort deadlines",
+      avoid: ["Passive language"]
+    },
+    commonMistakes: ["Unclear program structure", "No outcome data"],
+    competitorInsights: {
+      topPerformerTraits: ["Clear program timeline", "Prominent alumni success"],
+      differentiationOpportunities: ["Unique curriculum", "Better mentor access"]
+    }
+  },
+  "accelerator": {
+    industry: "Startup Accelerator",
+    audienceProfile: "Growth-stage founders seeking rapid scaling support.",
+    colorStrategy: {
+      psychology: "Speed, growth, results.",
+      dominantColors: ["Dynamic blue (#1E40AF)", "Energy green (#10B981)", "White (#FFFFFF)"],
+      accentColors: ["Speed orange (#F59E0B)", "Tech purple (#6366F1)"],
+      avoid: ["Slow/heavy colors"],
+      reasoning: "Colors should convey momentum."
+    },
+    typographyStrategy: {
+      headingStyle: "Bold, dynamic sans-serif. Weight 600-700.",
+      bodyStyle: "Clean sans-serif, 16px.",
+      hierarchy: "Strong hierarchy with clear information flow.",
+      avoid: ["Slow script fonts"],
+      reasoning: "Feel fast and action-oriented."
+    },
+    imageryStrategy: {
+      primaryStyle: "Photography of demos, pitch events",
+      effectiveSubjects: ["Demo day stages", "Pitch presentations"],
+      treatments: ["Dynamic", "High-energy", "Authentic"],
+      avoid: ["Static office photos"],
+      reasoning: "Show the energy and outcomes."
+    },
+    trustSignals: {
+      critical: ["Portfolio valuations", "Investment raised", "Exit outcomes"],
+      effective: ["Corporate sponsors", "Investor network"],
+      placement: "Metrics prominently in hero/stats bar",
+      avoid: ["Hidden outcomes"]
+    },
+    layoutPatterns: {
+      heroStyle: "Metrics-forward with urgency",
+      sectionFlow: ["Hero", "Metrics", "Portfolio", "Process", "Apply"],
+      ctaPlacement: "Multiple touchpoints",
+      whitespaceApproach: "Efficient, dynamic"
+    },
+    ctaStrategy: {
+      effectiveLanguage: ["Apply to Accelerate", "Join the Program", "Submit Application"],
+      buttonStyle: "Bold, confident",
+      urgencyApproach: "Application deadlines, limited seats",
+      avoid: ["Passive options"]
+    },
+    commonMistakes: ["Vague outcomes", "Hidden metrics"],
+    competitorInsights: {
+      topPerformerTraits: ["Prominent investment terms", "Clear outcomes data"],
+      differentiationOpportunities: ["Better terms", "Specific vertical focus"]
+    }
+  },
 };
 
 // Helper function to get intelligence by industry

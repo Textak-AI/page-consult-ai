@@ -2200,18 +2200,38 @@ function GenerateContent() {
       
       // Generate fallback design system for non-strategic flows
       if (!designSystem) {
+        // CRITICAL FIX: Detect industry variant FIRST, then use it for design system
+        const fallbackVariant = detectIndustryVariantNew(consultationData.industry);
+        
+        // Map industry variant to design system industry type
+        // This ensures "consulting" variant gets "professional-services" design system, not "default"
+        const industryTypeMap: Record<string, string> = {
+          'consulting': 'professional-services',
+          'saas': 'saas-software',
+          'healthcare': 'healthcare-medical',
+          'realestate': 'real-estate',
+          'fitness': 'fitness-wellness',
+          'manufacturing': 'manufacturing-industrial',
+          'legal': 'legal-services',
+          'financial': 'financial-services',
+          'ecommerce': 'ecommerce-retail',
+          'agency': 'agency-creative',
+          'education': 'education-coaching',
+        };
+        
+        const mappedIndustryType = industryTypeMap[fallbackVariant] || consultationData.industry || 'default';
+        
         const ds = generateDesignSystem({
-          industry: consultationData.industry || 'default',
+          industry: mappedIndustryType,
           tone: 'professional',
         });
         setDesignSystem(ds);
         
         // Generate industry-aware CSS variables for fallback
-        const fallbackVariant = detectIndustryVariantNew(consultationData.industry);
         const fallbackTokens = getIndustryTokens(fallbackVariant);
         const fallbackIndustryCss = generateIndustryCSSString(fallbackTokens);
         setCssVariables(`${designSystemToCSSVariables(ds)}\n  ${fallbackIndustryCss}`);
-        console.log('🎨 Generated fallback design system:', ds.id, 'with industry:', fallbackVariant);
+        console.log('🎨 Using', fallbackVariant, 'design system (industry type:', mappedIndustryType, ')');
       }
 
       // PRIORITY 1: Use pre-generated content from wizard if available
@@ -2448,11 +2468,41 @@ function GenerateContent() {
     const heroImageUrl = await fetchHeroImage(businessName);
 
     // Get brand settings for passing to sections
-    // BRAND DATA PIPELINE: Check all possible paths
-    const brandSettings = strategicConsultation?.brandSettings 
+    // BRAND DATA PIPELINE: Check all possible paths INCLUDING localStorage
+    let brandSettings = strategicConsultation?.brandSettings 
       || effectiveNavState?.strategicData?.brandSettings
       || effectiveNavState?.strategicData?.consultationData?.brandSettings
       || null;
+    
+    // CRITICAL FIX: Also check localStorage for brand data (extraction saves here)
+    if (!brandSettings?.logoUrl && !brandSettings?.primaryColor) {
+      const localStorageBrandPaths = [
+        'pageconsult_brand_settings',
+        'brand_settings', 
+        'pageconsult_brand_data',
+        'consultation_brand_data'
+      ];
+      
+      for (const path of localStorageBrandPaths) {
+        try {
+          const stored = localStorage.getItem(path);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed?.primaryColor || parsed?.logoUrl) {
+              console.log(`🎨 [Brand Pipeline] Retrieved brand from localStorage "${path}":`, {
+                logoUrl: parsed?.logoUrl?.substring(0, 50) + '...',
+                primaryColor: parsed?.primaryColor
+              });
+              brandSettings = { ...brandSettings, ...parsed };
+              break;
+            }
+          }
+        } catch (e) {
+          // Silently continue to next path
+        }
+      }
+    }
+    
     const logoUrl = brandSettings?.logoUrl 
       || strategicConsultation?.websiteIntelligence?.logoUrl 
       || effectiveNavState?.strategicData?.consultationData?.websiteIntelligence?.logoUrl
@@ -2464,7 +2514,7 @@ function GenerateContent() {
       || designSystem?.colors?.primary 
       || null;
     
-    console.log('🖼️ [Brand Pipeline] mapStrategyBriefContentToSections logoUrl:', logoUrl);
+    console.log('🖼️ [Brand Pipeline] mapStrategyBriefContentToSections logoUrl:', logoUrl ? logoUrl.substring(0, 60) + '...' : null);
     console.log('🎨 [Brand Pipeline] mapStrategyBriefContentToSections primaryColor:', primaryColor);
 
     // Check if content is a valid structured brief
