@@ -145,30 +145,30 @@ export const consultingVariant: IndustryDesignTokens = {
   
   sectionHeaders: {
     features: {
-      title: 'Why Choose Us',
+      title: 'Areas of Practice',
       subtitle: 'Expertise that drives real results',
-      eyebrow: 'Our Expertise',
+      eyebrow: 'OUR EXPERTISE',
     },
     process: {
-      title: 'How It Works',
-      subtitle: 'Your path to results',
+      title: 'Our Engagement Model',
+      subtitle: 'A collaborative path to success',
     },
     proof: {
-      title: 'Results That Speak',
-      subtitle: 'Trusted by leaders across industries',
+      title: 'Client Success',
+      subtitle: 'Measurable impact across industries',
     },
     testimonials: {
-      title: 'What Our Clients Say',
-      subtitle: 'Real results from real clients',
+      title: 'What Clients Say',
+      subtitle: 'Real results from real partnerships',
     },
     cta: {
-      title: 'Ready to Get Started?',
-      ctaText: 'Schedule a Consultation',
+      title: 'Schedule a Conversation',
+      ctaText: 'Book a Consultation',
       subtext: 'No commitment required • Response within 24 hours',
     },
     faq: {
-      title: 'Frequently Asked Questions',
-      eyebrow: 'Common Questions',
+      title: 'Common Questions',
+      eyebrow: 'FAQ',
     },
   },
 };

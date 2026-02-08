@@ -98,12 +98,14 @@ export function SocialProofSection({ content, onUpdate, isEditing }: SocialProof
   const isLocalServices = content.industryVariant === 'local-services';
   const header = getSocialProofHeader(content.industry, isConsulting);
   
-  // PRIORITY: SDI mode prop > industry-based detection
-  const isLightMode = content.mode 
-    ? (content.mode === 'light' || content.mode === 'warm')
-    : (isConsulting || isHealthcare || isLocalServices);
+  // PRIORITY: Consulting ALWAYS light mode, then SDI mode prop > industry-based detection
+  const isLightMode = isConsulting 
+    ? true 
+    : (content.mode 
+      ? (content.mode === 'light' || content.mode === 'warm')
+      : (isHealthcare || isLocalServices));
   
-  console.log('🎨 [SocialProofSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', content.industryVariant);
+  console.log('🎨 [SocialProofSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', content.industryVariant, 'forcedLight:', isConsulting);
 
   
   const testimonial = content.testimonial || {

@@ -72,17 +72,20 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
   
   // Get industry-specific tokens
   const tokens = getIndustryTokens(industryVariant);
-  // PRIORITY: SDI mode prop > industry token mode
-  const isLightMode = content.mode 
-    ? (content.mode === 'light' || content.mode === 'warm')
-    : tokens.mode === 'light';
   const isConsulting = industryVariant === 'consulting';
   const isHealthcare = industryVariant === 'healthcare';
   const isSaas = industryVariant === 'saas';
   const isLocalServices = industryVariant === 'local-services';
+  
+  // PRIORITY: Consulting ALWAYS light mode, then SDI mode prop > industry token mode
+  const isLightMode = isConsulting 
+    ? true 
+    : (content.mode 
+      ? (content.mode === 'light' || content.mode === 'warm')
+      : tokens.mode === 'light');
 
   // Debug logging
-  console.log('🎨 [FeaturesSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant);
+  console.log('🎨 [FeaturesSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant, 'forcedLight:', isConsulting);
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     if (!onUpdate) return;
