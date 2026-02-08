@@ -394,16 +394,16 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   }
 
   if (isConsulting) {
-    // Consulting layout: Light mode with subtle navy accent band - warm, credible, professional
-    const hasBrandColor = !!content.primaryColor;
+    // Consulting layout: Brand-colored dark section for maximum impact
+    const bgColor = content.primaryColor || '#32373C';
     
     return (
-      <section className="py-24 bg-slate-50 relative overflow-hidden">
-        {/* Subtle decorative element */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-slate-300 via-slate-400 to-slate-300" />
-        
+      <section 
+        className="py-24 md:py-32 relative overflow-hidden"
+        style={{ backgroundColor: bgColor }}
+      >
         {isEditing && (
-          <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-10" />
+          <div className="absolute inset-0 border-2 border-white/30 rounded-lg pointer-events-none z-10" />
         )}
         
         <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
@@ -414,7 +414,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             transition={{ duration: 0.5 }}
             className="mb-4"
           >
-            <span className="inline-block px-4 py-1 bg-slate-200 text-slate-700 text-sm font-semibold rounded-full">
+            <span className="inline-block px-4 py-1 bg-white/20 text-white text-sm font-semibold rounded-full">
               GET STARTED
             </span>
           </motion.div>
@@ -424,8 +424,8 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 mb-4 ${
-              isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-2" : ""
+            className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mb-4 ${
+              isEditing ? "outline-dashed outline-2 outline-white/30 rounded px-2" : ""
             }`}
             contentEditable={isEditing}
             suppressContentEditableWarning
@@ -439,7 +439,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className={`text-lg text-slate-600 mb-8 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-1' : ''}`}
+            className={`text-lg text-white/80 mb-8 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-white/40 focus:outline-none focus:ring-2 focus:ring-white/40 rounded px-1' : ''}`}
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("subtext", e)}
@@ -454,7 +454,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="inline-flex items-center gap-2 bg-amber-100 border border-amber-300 text-amber-800 px-5 py-2.5 rounded-full text-sm font-medium mb-8"
+              className="inline-flex items-center gap-2 bg-white/20 border border-white/30 text-white px-5 py-2.5 rounded-full text-sm font-medium mb-8"
             >
               <span>⏰</span>
               <span>{urgencyText}</span>
@@ -469,13 +469,9 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
           >
             <Button 
               size="lg" 
-              className={`px-12 py-6 text-lg font-semibold rounded-lg shadow-md hover:shadow-lg transition-all ${
-                isEditing ? "outline-dashed outline-2 outline-blue-500/30" : ""
+              className={`px-12 py-6 text-lg font-semibold bg-white text-slate-900 hover:bg-slate-100 rounded-lg shadow-lg transition-all ${
+                isEditing ? "outline-dashed outline-2 outline-white/30" : ""
               }`}
-              style={hasBrandColor 
-                ? { backgroundColor: content.primaryColor, color: 'white' }
-                : { backgroundColor: '#1E3A5F', color: 'white' } // Warm navy default
-              }
             >
               <span
                 contentEditable={isEditing}
@@ -495,7 +491,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex items-center justify-center gap-2 text-green-700 mt-6 mb-4"
+              className="flex items-center justify-center gap-2 text-white/90 mt-6 mb-4"
             >
               <Shield className="w-5 h-5" />
               <span className="text-sm font-medium">{guaranteeText}</span>
@@ -512,10 +508,10 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               className="flex flex-wrap justify-center gap-6 mt-8"
             >
               {trustIndicators.map((item, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-slate-600">
-                  <CheckCircle className="w-4 h-4 text-green-600" strokeWidth={1.5} />
+                <div key={i} className="flex items-center gap-2 text-sm text-white/80">
+                  <CheckCircle className="w-4 h-4 text-white" strokeWidth={1.5} />
                   <span
-                    className={isEditing ? 'cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-1' : ''}
+                    className={isEditing ? 'cursor-text hover:ring-2 hover:ring-white/40 focus:outline-none focus:ring-2 focus:ring-white/40 rounded px-1' : ''}
                     contentEditable={isEditing}
                     suppressContentEditableWarning
                     onBlur={(e) => {
