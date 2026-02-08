@@ -11,6 +11,7 @@ import { detectAwarenessLevel, getPageStructure, AwarenessLevel, PageStructure }
 import { analyzeProofDensity, getVisualWeightConfig, extractProofPoints, ProofDensity, VisualWeightConfig, ProofPoints } from './proofDensityAnalyzer';
 import { selectLayout, type LayoutSelectionResult } from '@/lib/layoutSelector';
 import type { IndustryVariant } from '@/lib/industryDesignSystem';
+import type { SDIPalette, SDISectionThemes, SDITypography } from './types';
 
 export interface DesignIntelligenceInput {
   conversationText: string;
@@ -46,6 +47,11 @@ export interface DesignIntelligenceOutput {
   layoutSections: string[];
   layoutConfidence: 'high' | 'medium' | 'low';
   layoutReasoning: string;
+  
+  // NEW: SDI Dynamic Design System (optional for backward compatibility)
+  palette?: SDIPalette;
+  sectionThemes?: SDISectionThemes;
+  sdiTypography?: SDITypography;
   
   // Summary for brief
   summary: {
@@ -160,3 +166,4 @@ export type { ToneProfile, TypographyRecommendation } from './toneDetector';
 export type { ColorPalette, EmotionalDriver } from './colorIntelligence';
 export type { AwarenessLevel, PageStructure } from './awarenessDetector';
 export type { ProofDensity, VisualWeightConfig, ProofPoints } from './proofDensityAnalyzer';
+export type { SDIPalette, SDISectionThemes, SDITypography, SectionTheme, SDIDesignConfig } from './types';
