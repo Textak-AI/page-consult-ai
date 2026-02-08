@@ -63,7 +63,7 @@ export function ClientResultsSection({ content }: ClientResultsSectionProps) {
   const icons = [TrendingUp, Award, Users, CheckCircle2];
 
   return (
-    <section className={`py-20 ${isLightMode ? 'bg-slate-50' : 'bg-slate-900'}`}>
+    <section className={`py-24 md:py-32 ${isLightMode ? 'bg-slate-50' : 'bg-slate-900'}`}>
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-12">
           <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 ${
@@ -82,16 +82,16 @@ export function ClientResultsSection({ content }: ClientResultsSectionProps) {
             return (
               <div 
                 key={index} 
-                className={`p-6 rounded-xl border ${
+                className={`p-8 rounded-lg ${
                   isLightMode 
-                    ? 'bg-white border-slate-200 shadow-sm' 
+                    ? 'bg-white border border-slate-200' 
                     : 'bg-white/5 border-white/10'
                 }`}
               >
                 <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${
-                  isLightMode ? 'bg-green-100' : 'bg-green-500/20'
+                  isLightMode ? 'bg-slate-100' : 'bg-slate-700'
                 }`}>
-                  <Icon className={`w-6 h-6 ${isLightMode ? 'text-green-600' : 'text-green-400'}`} />
+                  <Icon className={`w-6 h-6 ${isLightMode ? 'text-slate-700' : 'text-slate-300'}`} />
                 </div>
                 <h3 className={`text-2xl font-bold mb-2 ${
                   isLightMode ? 'text-primary' : 'text-primary'
