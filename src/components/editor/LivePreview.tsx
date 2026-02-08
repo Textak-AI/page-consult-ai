@@ -17,6 +17,13 @@ import { CredibilityStripSection } from "@/components/sections/CredibilityStripS
 import { StakesAmplifySection } from "@/components/sections/StakesAmplifySection";
 import { RiskReversalSection } from "@/components/sections/RiskReversalSection";
 import { ComparisonSection } from "@/components/sections/ComparisonSection";
+// Consulting-specific sections (layout template system)
+import { CredentialsBarSection } from "@/components/sections/CredentialsBarSection";
+import { TheRealChallengeSection } from "@/components/sections/TheRealChallengeSection";
+import { OurApproachSection } from "@/components/sections/OurApproachSection";
+import { ExpertiseAreasSection } from "@/components/sections/ExpertiseAreasSection";
+import { EngagementModelSection } from "@/components/sections/EngagementModelSection";
+import { ClientResultsSection } from "@/components/sections/ClientResultsSection";
 // Beta sections
 import { 
   BetaHeroTeaserSection, 
@@ -546,6 +553,49 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
+        );
+      // Consulting-specific section types (from layout templates)
+      case "credentials-bar":
+        console.log('🎨 [LivePreview] Rendering section: credentials-bar');
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <CredentialsBarSection content={sectionContent} />
+        );
+      case "the-real-challenge":
+        console.log('🎨 [LivePreview] Rendering section: the-real-challenge');
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <TheRealChallengeSection content={sectionContent} />
+        );
+      case "our-approach":
+        console.log('🎨 [LivePreview] Rendering section: our-approach');
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <OurApproachSection content={sectionContent} />
+        );
+      case "expertise-areas":
+        console.log('🎨 [LivePreview] Rendering section: expertise-areas');
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <ExpertiseAreasSection content={sectionContent} />
+        );
+      case "engagement-model":
+        console.log('🎨 [LivePreview] Rendering section: engagement-model');
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <EngagementModelSection content={sectionContent} />
+        );
+      case "client-results":
+        console.log('🎨 [LivePreview] Rendering section: client-results');
+        return renderSectionWithToolbar(
+          section,
+          index,
+          <ClientResultsSection content={sectionContent} />
         );
       default:
         return null;

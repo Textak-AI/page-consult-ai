@@ -33,10 +33,13 @@ export function ExpertiseAreasSection({ content }: ExpertiseAreasSectionProps) {
     headline = "Areas of Practice",
     subtitle = "Deep expertise across critical business domains",
     areas = [],
-    mode = 'light'
+    mode = 'light',
+    industryVariant = 'consulting'
   } = content;
   
-  const isLightMode = mode === 'light' || mode === 'warm';
+  // Force light mode for consulting - this is a design requirement
+  const isConsulting = industryVariant === 'consulting';
+  const isLightMode = isConsulting ? true : (mode === 'light' || mode === 'warm');
 
   // Default areas if none provided
   const displayAreas = areas.length > 0 ? areas : [
