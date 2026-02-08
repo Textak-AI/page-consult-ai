@@ -4825,6 +4825,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             {isSaving ? "Saving..." : "Save Draft"}
           </Button>
           {/* Regenerate button - only shows for existing loaded pages */}
+          {(console.log('🔄 [Regenerate Button] existingPageLoaded:', existingPageLoaded, '| pageData?.id:', pageData?.id), null)}
           {existingPageLoaded && pageData?.id && (
             <Button
               variant="outline"
