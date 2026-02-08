@@ -1841,19 +1841,39 @@ function GenerateContent() {
         console.log("🎯 Including target_market in page record:", targetMarket);
       }
       
-      const { data: savedPageData, error } = await supabase
-        .from("landing_pages")
-        .insert(insertData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error("❌ Database save error:", error);
-        throw error;
+      // Attempt insert with retry on slug conflict (23505 unique constraint violation)
+      let savedPageData = null;
+      let insertAttempts = 0;
+      const maxInsertAttempts = 3;
+      
+      while (insertAttempts < maxInsertAttempts) {
+        insertAttempts++;
+        const { data, error } = await supabase
+          .from("landing_pages")
+          .insert(insertData)
+          .select()
+          .single();
+        
+        if (error) {
+          // Check for unique constraint violation on slug (Postgres error 23505)
+          if (error.code === '23505' && insertAttempts < maxInsertAttempts) {
+            const { appendRandomSuffixToSlug } = await import('@/utils/slugUtils');
+            const oldSlug = insertData.slug;
+            insertData.slug = appendRandomSuffixToSlug(oldSlug);
+            console.log(`⚠️ Slug collision detected for "${oldSlug}", retrying with "${insertData.slug}" (attempt ${insertAttempts + 1}/${maxInsertAttempts})`);
+            continue; // Retry with new slug
+          }
+          
+          console.error("❌ Database save error:", error);
+          throw error;
+        }
+        
+        savedPageData = data;
+        break; // Success, exit loop
       }
 
       if (savedPageData) {
-        console.log("✅ Page saved successfully:", savedPageData.id);
+        console.log("✅ Page saved successfully:", savedPageData.id, "with slug:", savedPageData.slug);
         setPageData(savedPageData);
         setSections(generatedSections);
       }
