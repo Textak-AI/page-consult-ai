@@ -241,6 +241,12 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   const heroHeadlineClass = sdiTypography?.heroHeadline || 'text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]';
   const heroSubheadlineClass = sdiTypography?.sectionSubtitle || 'text-lg md:text-xl lg:text-2xl leading-relaxed';
 
+  console.log('🎨 [HeroSection] SDI Typography:', {
+    received: !!content.sdiTypography,
+    heroHeadline: content.sdiTypography?.heroHeadline,
+    appliedClass: heroHeadlineClass,
+  });
+
   // Local Services variant: Light mode, trust-forward, phone-prominent
   if (isLocalServices) {
     return (
