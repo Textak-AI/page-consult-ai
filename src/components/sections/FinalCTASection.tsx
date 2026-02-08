@@ -424,7 +424,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className={`text-3xl md:text-4xl font-bold text-slate-900 mb-4 ${
+            className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 mb-4 ${
               isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-2" : ""
             }`}
             contentEditable={isEditing}
