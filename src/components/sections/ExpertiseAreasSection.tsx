@@ -1,17 +1,11 @@
 /**
- * Expertise Areas Section (Stub)
+ * Expertise Areas Section
  * 
- * Showcases areas of expertise, practice areas, or service categories
- * for consulting and professional services.
- * 
- * TODO: Implement full version with:
- * - Expandable detail cards
- * - Case study links
- * - Industry-specific icons
- * - Animation on scroll
+ * Showcases areas of expertise using SDI dynamic design system.
  */
 
 import { Briefcase, BarChart3, Users2, Layers } from 'lucide-react';
+import type { SDIPalette, SDISectionThemes, SDITypography } from '@/lib/designIntelligence/types';
 
 interface ExpertiseAreasSectionProps {
   content: {
@@ -25,6 +19,11 @@ interface ExpertiseAreasSectionProps {
     }>;
     industryVariant?: string;
     mode?: string;
+    // SDI Design System
+    primaryColor?: string;
+    palette?: SDIPalette;
+    sectionThemes?: SDISectionThemes;
+    sdiTypography?: SDITypography;
   };
 }
 
@@ -33,16 +32,59 @@ export function ExpertiseAreasSection({ content }: ExpertiseAreasSectionProps) {
     headline = "Areas of Practice",
     subtitle = "Deep expertise across critical business domains",
     areas = [],
-    mode = 'light',
-    industryVariant = 'consulting'
   } = content;
   
-  // Force light mode for consulting - this is a design requirement
-  const isConsulting = industryVariant === 'consulting';
-  const isLightMode = isConsulting ? true : (mode === 'light' || mode === 'warm');
-  
-  // Get brand color for consulting variant
-  const primaryColor = (content as any).primaryColor;
+  // SDI Design System
+  const theme = content.sectionThemes?.['expertise-areas'] || 'light';
+  const palette = content.palette;
+  const typography = content.sdiTypography;
+
+  // Helper functions for SDI-driven styling
+  const getSectionStyles = (): React.CSSProperties => {
+    if (!palette) {
+      return { backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff' };
+    }
+    switch (theme) {
+      case 'dark':
+        return { backgroundColor: palette.darkSection };
+      case 'tinted':
+        return { backgroundColor: palette.primaryTint };
+      default:
+        return { backgroundColor: palette.lightSection };
+    }
+  };
+
+  const getTextColorClass = () => {
+    return theme === 'dark' ? 'text-white' : 'text-slate-900';
+  };
+
+  const getMutedTextColorClass = () => {
+    return theme === 'dark' ? 'text-white/70' : 'text-slate-600';
+  };
+
+  const getCardStyles = () => {
+    if (theme === 'dark') {
+      return 'bg-white/5 border border-white/10 hover:bg-white/10 transition-colors';
+    }
+    return 'bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors';
+  };
+
+  const getIconStyles = (): React.CSSProperties => {
+    if (theme === 'dark') {
+      return { backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff' };
+    }
+    if (palette) {
+      return { backgroundColor: palette.iconBg, color: palette.iconColor };
+    }
+    return { backgroundColor: '#f1f5f9', color: '#475569' };
+  };
+
+  const getTagStyles = () => {
+    if (theme === 'dark') {
+      return 'bg-white/10 text-white/60';
+    }
+    return 'bg-slate-100 text-slate-600';
+  };
 
   // Default areas if none provided
   const displayAreas = areas.length > 0 ? areas : [
@@ -80,15 +122,16 @@ export function ExpertiseAreasSection({ content }: ExpertiseAreasSectionProps) {
   };
 
   return (
-    <section className={`py-24 md:py-32 ${isLightMode ? 'bg-white' : 'bg-slate-900'}`}>
+    <section 
+      className="py-24 md:py-32"
+      style={getSectionStyles()}
+    >
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-12">
-          <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 ${
-            isLightMode ? 'text-slate-900' : 'text-white'
-          }`}>
+          <h2 className={`${typography?.sectionTitle || 'text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight'} mb-4 ${getTextColorClass()}`}>
             {headline}
           </h2>
-          <p className={`text-lg md:text-xl ${isLightMode ? 'text-slate-600' : 'text-white/70'}`}>
+          <p className={`${typography?.sectionSubtitle || 'text-lg md:text-xl'} ${getMutedTextColorClass()}`}>
             {subtitle}
           </p>
         </div>
@@ -99,33 +142,20 @@ export function ExpertiseAreasSection({ content }: ExpertiseAreasSectionProps) {
             return (
               <div 
                 key={index} 
-                className={`p-8 rounded-lg ${
-                  isLightMode 
-                    ? 'bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors' 
-                    : 'bg-white/5 border-white/10 hover:bg-white/10 transition-colors'
-                }`}
+                className={`p-8 rounded-lg ${getCardStyles()}`}
               >
                 <div className="flex items-start gap-4">
                   <div 
-                    className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                      isConsulting ? '' : (isLightMode ? 'bg-slate-100' : 'bg-slate-700')
-                    }`}
-                    style={isConsulting && primaryColor ? { backgroundColor: `${primaryColor}15` } : undefined}
+                    className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={getIconStyles()}
                   >
-                    <Icon 
-                      className={`w-6 h-6 ${isConsulting ? '' : (isLightMode ? 'text-slate-700' : 'text-slate-300')}`}
-                      style={isConsulting && primaryColor ? { color: primaryColor } : undefined}
-                    />
+                    <Icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className={`text-xl font-semibold mb-2 ${
-                      isLightMode ? 'text-slate-900' : 'text-white'
-                    }`}>
+                    <h3 className={`${typography?.cardTitle || 'text-xl font-semibold'} mb-2 ${getTextColorClass()}`}>
                       {area.title}
                     </h3>
-                    <p className={`text-base mb-3 ${
-                      isLightMode ? 'text-slate-600' : 'text-white/70'
-                    }`}>
+                    <p className={`${typography?.body || 'text-base'} mb-3 ${getMutedTextColorClass()}`}>
                       {area.description}
                     </p>
                     {area.examples && area.examples.length > 0 && (
@@ -133,11 +163,7 @@ export function ExpertiseAreasSection({ content }: ExpertiseAreasSectionProps) {
                         {area.examples.map((example, i) => (
                           <span 
                             key={i}
-                            className={`text-xs px-2 py-1 rounded-full ${
-                              isLightMode 
-                                ? 'bg-slate-100 text-slate-600' 
-                                : 'bg-white/10 text-white/60'
-                            }`}
+                            className={`text-xs px-2 py-1 rounded-full ${getTagStyles()}`}
                           >
                             {example}
                           </span>
