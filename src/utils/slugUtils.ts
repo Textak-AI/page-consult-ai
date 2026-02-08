@@ -34,6 +34,19 @@ export function generateCleanSlug(companyName: string): string {
 }
 
 /**
+ * Generate a short random suffix for slug collision resolution
+ * Returns something like "a1b2c3" (6 chars)
+ */
+export function generateRandomSuffix(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let suffix = '';
+  for (let i = 0; i < 6; i++) {
+    suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return suffix;
+}
+
+/**
  * Get a unique slug by checking the database
  * If "fractal-software" exists, returns "fractal-software-2", etc.
  */
@@ -100,4 +113,22 @@ export async function copyPageUrlToClipboard(slug: string): Promise<boolean> {
     console.error('Failed to copy URL:', error);
     return false;
   }
+}
+
+/**
+ * Check if a Postgres error is a unique constraint violation (code 23505)
+ */
+export function isSlugConflictError(error: any): boolean {
+  return error?.code === '23505';
+}
+
+/**
+ * Append a random suffix to a slug to resolve conflicts
+ */
+export function appendRandomSuffixToSlug(slug: string): string {
+  const suffix = generateRandomSuffix();
+  // Truncate slug if needed to make room for suffix (max total ~50 chars)
+  const maxSlugLength = 42; // Leave room for "-" + 6 char suffix
+  const truncatedSlug = slug.substring(0, maxSlugLength).replace(/-$/, '');
+  return `${truncatedSlug}-${suffix}`;
 }
