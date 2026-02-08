@@ -33,7 +33,11 @@ export function TheRealChallengeSection({ content }: TheRealChallengeSectionProp
     mode = 'light'
   } = content;
   
+  const isConsulting = content.industryVariant === 'consulting';
   const isLightMode = mode === 'light' || mode === 'warm';
+  
+  // Get brand color for consulting variant
+  const primaryColor = (content as any).primaryColor;
 
   // Default challenges if none provided
   const displayChallenges = challenges.length > 0 ? challenges : [
@@ -56,8 +60,16 @@ export function TheRealChallengeSection({ content }: TheRealChallengeSectionProp
 
   const icons = [AlertTriangle, TrendingDown, Clock];
 
+  // Consulting gets subtle brand color background
+  const sectionBg = isConsulting && primaryColor 
+    ? { backgroundColor: `${primaryColor}08` } // 5% opacity
+    : undefined;
+
   return (
-    <section className={`py-24 md:py-32 ${isLightMode ? 'bg-slate-50' : 'bg-slate-900'}`}>
+    <section 
+      className={`py-24 md:py-32 ${!sectionBg ? (isLightMode ? 'bg-slate-50' : 'bg-slate-900') : ''}`}
+      style={sectionBg}
+    >
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-12">
           <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 ${
@@ -79,10 +91,16 @@ export function TheRealChallengeSection({ content }: TheRealChallengeSectionProp
                     : 'bg-white/5 border-white/10'
                 }`}
               >
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${
-                  isLightMode ? 'bg-slate-100' : 'bg-slate-700'
-                }`}>
-                  <Icon className={`w-6 h-6 ${isLightMode ? 'text-slate-700' : 'text-slate-300'}`} />
+                <div 
+                  className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${
+                    isConsulting ? '' : (isLightMode ? 'bg-slate-100' : 'bg-slate-700')
+                  }`}
+                  style={isConsulting && primaryColor ? { backgroundColor: `${primaryColor}15` } : undefined}
+                >
+                  <Icon 
+                    className={`w-6 h-6 ${isConsulting ? '' : (isLightMode ? 'text-slate-700' : 'text-slate-300')}`}
+                    style={isConsulting && primaryColor ? { color: primaryColor } : undefined}
+                  />
                 </div>
                 <h3 className={`text-xl font-semibold mb-2 ${
                   isLightMode ? 'text-slate-900' : 'text-white'

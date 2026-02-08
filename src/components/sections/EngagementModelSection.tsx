@@ -36,7 +36,11 @@ export function EngagementModelSection({ content }: EngagementModelSectionProps)
     mode = 'light'
   } = content;
   
+  const isConsulting = content.industryVariant === 'consulting';
   const isLightMode = mode === 'light' || mode === 'warm';
+  
+  // Get brand color for consulting variant
+  const primaryColor = (content as any).primaryColor;
 
   // Default steps if none provided
   const displaySteps = steps.length > 0 ? steps : [
@@ -68,6 +72,11 @@ export function EngagementModelSection({ content }: EngagementModelSectionProps)
 
   const icons = [MessageSquare, ClipboardList, Rocket, RefreshCw];
 
+  // Timeline step circle style
+  const stepCircleStyle = isConsulting && primaryColor 
+    ? { backgroundColor: primaryColor } 
+    : undefined;
+
   return (
     <section className={`py-24 md:py-32 ${isLightMode ? 'bg-white' : 'bg-slate-950'}`}>
       <div className="container mx-auto px-6">
@@ -94,11 +103,12 @@ export function EngagementModelSection({ content }: EngagementModelSectionProps)
               return (
                 <div key={index} className="relative flex gap-6 mb-8 last:mb-0">
                   {/* Step number circle */}
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 z-10 ${
-                    isLightMode 
-                      ? 'bg-slate-800 text-white' 
-                      : 'bg-slate-700 text-white'
-                  }`}>
+                  <div 
+                    className={`w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 z-10 ${
+                      stepCircleStyle ? 'text-white' : (isLightMode ? 'bg-slate-800 text-white' : 'bg-slate-700 text-white')
+                    }`}
+                    style={stepCircleStyle}
+                  >
                     <Icon className="w-7 h-7" />
                   </div>
 

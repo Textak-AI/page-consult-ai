@@ -40,6 +40,9 @@ export function ExpertiseAreasSection({ content }: ExpertiseAreasSectionProps) {
   // Force light mode for consulting - this is a design requirement
   const isConsulting = industryVariant === 'consulting';
   const isLightMode = isConsulting ? true : (mode === 'light' || mode === 'warm');
+  
+  // Get brand color for consulting variant
+  const primaryColor = (content as any).primaryColor;
 
   // Default areas if none provided
   const displayAreas = areas.length > 0 ? areas : [
@@ -77,7 +80,7 @@ export function ExpertiseAreasSection({ content }: ExpertiseAreasSectionProps) {
   };
 
   return (
-    <section className={`py-24 md:py-32 ${isLightMode ? 'bg-slate-50' : 'bg-slate-900'}`}>
+    <section className={`py-24 md:py-32 ${isLightMode ? 'bg-white' : 'bg-slate-900'}`}>
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-12">
           <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 ${
@@ -98,15 +101,21 @@ export function ExpertiseAreasSection({ content }: ExpertiseAreasSectionProps) {
                 key={index} 
                 className={`p-8 rounded-lg ${
                   isLightMode 
-                    ? 'bg-white border border-slate-200 hover:border-slate-300 transition-colors' 
+                    ? 'bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors' 
                     : 'bg-white/5 border-white/10 hover:bg-white/10 transition-colors'
                 }`}
               >
                 <div className="flex items-start gap-4">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    isLightMode ? 'bg-slate-100' : 'bg-slate-700'
-                  }`}>
-                    <Icon className={`w-6 h-6 ${isLightMode ? 'text-slate-700' : 'text-slate-300'}`} />
+                  <div 
+                    className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      isConsulting ? '' : (isLightMode ? 'bg-slate-100' : 'bg-slate-700')
+                    }`}
+                    style={isConsulting && primaryColor ? { backgroundColor: `${primaryColor}15` } : undefined}
+                  >
+                    <Icon 
+                      className={`w-6 h-6 ${isConsulting ? '' : (isLightMode ? 'text-slate-700' : 'text-slate-300')}`}
+                      style={isConsulting && primaryColor ? { color: primaryColor } : undefined}
+                    />
                   </div>
                   <div>
                     <h3 className={`text-xl font-semibold mb-2 ${
