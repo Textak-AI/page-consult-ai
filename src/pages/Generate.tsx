@@ -2615,6 +2615,14 @@ function GenerateContent() {
     // PRIORITY: Extract SDI (Strategic Design Intelligence) if available
     const sdi = consultationData?.designIntelligence;
     
+    // DEBUG: Log SDI design system availability
+    console.log('🎨 [mapLegacyStrategyContent] SDI available:', {
+      hasPalette: !!sdi?.palette,
+      hasSectionThemes: !!sdi?.sectionThemes,
+      hasTypography: !!sdi?.sdiTypography,
+      primaryColor: sdi?.palette?.primary,
+    });
+    
     if (sdi) {
       console.log('🎨 [SDI] Legacy mapper found design intelligence:', {
         industry: sdi.industry,
@@ -3180,10 +3188,13 @@ function GenerateContent() {
               productName: strategicConsultation?.productName || businessName,
               launchDate: strategicConsultation?.launchDate || null,
               logoUrl,
-              primaryColor,
+              primaryColor: sdi?.palette?.primary || primaryColor,
               industryVariant,
               mode: sdiMode,
               designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             } : {
               headline: content.headline,
               subheadline: content.subheadline,
@@ -3191,10 +3202,13 @@ function GenerateContent() {
               ctaLink: "#contact",
               backgroundImage: heroImageUrl,
               logoUrl,
-              primaryColor,
+              primaryColor: sdi?.palette?.primary || primaryColor,
               industryVariant,
               mode: sdiMode,
               designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             },
           });
           break;
@@ -3209,7 +3223,16 @@ function GenerateContent() {
               type: "stats-bar",
               order: order++,
               visible: true,
-              content: { statistics, industryVariant, mode: sdiMode },
+              content: { 
+                statistics, 
+                industryVariant, 
+                mode: sdiMode,
+                primaryColor: sdi?.palette?.primary || primaryColor,
+                designIntelligence: sdi,
+                palette: sdi?.palette,
+                sectionThemes: sdi?.sectionThemes,
+                sdiTypography: sdi?.sdiTypography,
+              },
             });
           } else {
             console.log('⚠️ [mapLegacyStrategyContent] stats-bar skipped: no stats found');
@@ -3227,6 +3250,11 @@ function GenerateContent() {
                 solution: content.solutionStatement,
                 industryVariant,
                 mode: sdiMode,
+                primaryColor: sdi?.palette?.primary || primaryColor,
+                designIntelligence: sdi,
+                palette: sdi?.palette,
+                sectionThemes: sdi?.sectionThemes,
+                sdiTypography: sdi?.sdiTypography,
               },
             });
           }
@@ -3246,6 +3274,11 @@ function GenerateContent() {
                 scarcityMessage: `Only ${strategicConsultation?.maxSignups || consultationData.maxSignups || 100} spots available`,
                 industryVariant,
                 mode: sdiMode,
+                primaryColor: sdi?.palette?.primary || primaryColor,
+                designIntelligence: sdi,
+                palette: sdi?.palette,
+                sectionThemes: sdi?.sectionThemes,
+                sdiTypography: sdi?.sdiTypography,
               },
             });
           } else if (content.features && content.features.length > 0) {
@@ -3263,6 +3296,11 @@ function GenerateContent() {
                 })),
                 industryVariant,
                 mode: sdiMode,
+                primaryColor: sdi?.palette?.primary || primaryColor,
+                designIntelligence: sdi,
+                palette: sdi?.palette,
+                sectionThemes: sdi?.sectionThemes,
+                sdiTypography: sdi?.sdiTypography,
               },
             });
           }
@@ -3283,6 +3321,11 @@ function GenerateContent() {
                 steps: processSteps,
                 industryVariant,
                 mode: sdiMode,
+                primaryColor: sdi?.palette?.primary || primaryColor,
+                designIntelligence: sdi,
+                palette: sdi?.palette,
+                sectionThemes: sdi?.sectionThemes,
+                sdiTypography: sdi?.sdiTypography,
               },
             });
           } else {
@@ -3316,6 +3359,11 @@ function GenerateContent() {
               } : undefined,
               industryVariant,
               mode: sdiMode,
+              primaryColor: sdi?.palette?.primary || primaryColor,
+              designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             },
           });
           break;
@@ -3335,6 +3383,11 @@ function GenerateContent() {
                 photo: strategicConsultation?.founderPhoto || founder?.photo || null,
                 industryVariant,
                 mode: sdiMode,
+                primaryColor: sdi?.palette?.primary || primaryColor,
+                designIntelligence: sdi,
+                palette: sdi?.palette,
+                sectionThemes: sdi?.sectionThemes,
+                sdiTypography: sdi?.sdiTypography,
               },
             });
             break;
@@ -3351,6 +3404,11 @@ function GenerateContent() {
                 spotsRemaining: strategicConsultation?.maxSignups || consultationData.maxSignups || 100,
                 industryVariant,
                 mode: sdiMode,
+                primaryColor: sdi?.palette?.primary || primaryColor,
+                designIntelligence: sdi,
+                palette: sdi?.palette,
+                sectionThemes: sdi?.sectionThemes,
+                sdiTypography: sdi?.sdiTypography,
               },
             });
             break;
@@ -3386,6 +3444,11 @@ function GenerateContent() {
                 })),
                 industryVariant,
                 mode: sdiMode,
+                primaryColor: sdi?.palette?.primary || primaryColor,
+                designIntelligence: sdi,
+                palette: sdi?.palette,
+                sectionThemes: sdi?.sectionThemes,
+                sdiTypography: sdi?.sdiTypography,
               },
             });
           }
@@ -3438,19 +3501,22 @@ function GenerateContent() {
               ctaText: ctaText || "Get Early Access",
               ctaLink: "#signup",
               spotsRemaining: strategicConsultation?.maxSignups || consultationData.maxSignups || 100,
-              primaryColor,
+              primaryColor: sdi?.palette?.primary || primaryColor,
               industryVariant,
               mode: sdiMode,
               secondaryCta,
               urgencyText,
               guaranteeText,
               designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             } : {
               headline: "Ready to Get Started?",
               subtext: ctaSubtext,
               ctaText,
               ctaLink: "#contact",
-              primaryColor,
+              primaryColor: sdi?.palette?.primary || primaryColor,
               industryVariant,
               mode: sdiMode,
               secondaryCta,
@@ -3462,6 +3528,9 @@ function GenerateContent() {
                 { icon: 'check', text: 'Cancel anytime' },
               ],
               designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             },
           });
           break;
@@ -3480,6 +3549,11 @@ function GenerateContent() {
                 : undefined,
               industryVariant,
               mode: sdiMode,
+              primaryColor: sdi?.palette?.primary || primaryColor,
+              designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             },
           });
           break;
@@ -3496,6 +3570,11 @@ function GenerateContent() {
                          'Your satisfaction is 100% guaranteed.',
               industryVariant,
               mode: sdiMode,
+              primaryColor: sdi?.palette?.primary || primaryColor,
+              designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             },
           });
           break;
@@ -3527,6 +3606,11 @@ function GenerateContent() {
               },
               industryVariant,
               mode: sdiMode,
+              primaryColor: sdi?.palette?.primary || primaryColor,
+              designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             },
           });
           break;
@@ -3545,6 +3629,11 @@ function GenerateContent() {
               mode: sdiMode,
               businessName,
               credentials: extractedCredentials,
+              primaryColor: sdi?.palette?.primary || primaryColor,
+              designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             },
           });
           break;
@@ -3563,6 +3652,11 @@ function GenerateContent() {
               businessName,
               headline: content.problemStatement ? "The Challenges You're Facing" : undefined,
               challenges: extractedChallenges,
+              primaryColor: sdi?.palette?.primary || primaryColor,
+              designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             },
           });
           break;
@@ -3582,6 +3676,11 @@ function GenerateContent() {
               headline: "Our Approach",
               subtitle: strategicConsultation?.uniqueValue || content.solutionStatement || "A proven methodology that delivers results",
               principles: extractedPrinciples,
+              primaryColor: sdi?.palette?.primary || primaryColor,
+              designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             },
           });
           break;
@@ -3601,6 +3700,11 @@ function GenerateContent() {
               headline: "Areas of Practice",
               subtitle: `Deep expertise across critical business domains`,
               areas: extractedAreas,
+              primaryColor: sdi?.palette?.primary || primaryColor,
+              designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             },
           });
           break;
@@ -3620,6 +3724,11 @@ function GenerateContent() {
               headline: "Our Engagement Model",
               subtitle: "A structured approach designed for your success",
               steps: extractedSteps,
+              primaryColor: sdi?.palette?.primary || primaryColor,
+              designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             },
           });
           break;
@@ -3640,6 +3749,11 @@ function GenerateContent() {
               subtitle: "Measurable results that speak for themselves",
               results: extractedResults,
               testimonials: content.testimonials || [],
+              primaryColor: sdi?.palette?.primary || primaryColor,
+              designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
             },
           });
           break;
