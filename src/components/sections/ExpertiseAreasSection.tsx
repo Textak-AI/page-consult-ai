@@ -80,12 +80,12 @@ export function ExpertiseAreasSection({ content }: ExpertiseAreasSectionProps) {
     <section className={`py-20 ${isLightMode ? 'bg-slate-50' : 'bg-slate-900'}`}>
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto text-center mb-12">
-          <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${
+          <h2 className={`text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 ${
             isLightMode ? 'text-slate-900' : 'text-white'
           }`}>
             {headline}
           </h2>
-          <p className={`text-lg ${isLightMode ? 'text-slate-600' : 'text-white/70'}`}>
+          <p className={`text-lg md:text-xl ${isLightMode ? 'text-slate-600' : 'text-white/70'}`}>
             {subtitle}
           </p>
         </div>

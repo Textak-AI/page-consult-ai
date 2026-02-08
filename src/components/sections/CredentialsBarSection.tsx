@@ -58,10 +58,10 @@ export function CredentialsBarSection({ content }: CredentialsBarSectionProps) {
                 )}
               </div>
               <div>
-                <div className={`font-bold text-lg ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
+                <div className={`font-bold text-xl md:text-2xl ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
                   {cred.value}
                 </div>
-                <div className={`text-sm ${isLightMode ? 'text-slate-600' : 'text-white/60'}`}>
+                <div className={`text-sm md:text-base ${isLightMode ? 'text-slate-600' : 'text-white/60'}`}>
                   {cred.label}
                 </div>
               </div>
