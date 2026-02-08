@@ -239,6 +239,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   // SDI Typography - use passed typography or fallback
   const sdiTypography = content.sdiTypography;
   const heroHeadlineClass = sdiTypography?.heroHeadline || 'text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]';
+  const heroSubheadlineClass = sdiTypography?.sectionSubtitle || 'text-lg md:text-xl lg:text-2xl leading-relaxed';
 
   // Local Services variant: Light mode, trust-forward, phone-prominent
   if (isLocalServices) {
@@ -307,7 +308,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("subheadline", e)}
-              className={`text-xl md:text-2xl text-slate-600 mb-8 max-w-3xl mx-auto ${
+              className={`${heroSubheadlineClass} text-slate-600 mb-8 max-w-3xl mx-auto ${
                 isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-2" : ""
               }`}
             >
@@ -479,7 +480,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("subheadline", e)}
-            className={`text-xl text-slate-300 mb-10 leading-relaxed max-w-3xl mx-auto ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
+            className={`${heroSubheadlineClass} text-slate-300 mb-10 max-w-3xl mx-auto ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
           >
             {content.subheadline}
           </p>
@@ -694,7 +695,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("subheadline", e)}
-              className={`text-xl lg:text-2xl leading-relaxed mb-8 max-w-2xl ${
+              className={`${heroSubheadlineClass} mb-8 max-w-2xl ${
                 hasBackgroundImage && showDarkOverlay ? 'text-slate-200' : 'text-slate-600'
               } ${isEditing ? "cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2" : ""}`}
             >
@@ -927,7 +928,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 contentEditable={isEditing}
                 suppressContentEditableWarning
                 onBlur={(e) => handleBlur("subheadline", e)}
-                className={`text-xl lg:text-2xl leading-relaxed max-w-xl ${
+                className={`${heroSubheadlineClass} max-w-xl ${
                   hasBackgroundImage && showDarkOverlay ? 'text-slate-300' : 'text-slate-600'
                 } ${isEditing ? "cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2" : ""}`}
               >
@@ -1349,9 +1350,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.35 }}
-            className={`max-w-3xl leading-relaxed ${
-              isConsulting ? 'text-xl md:text-2xl' : 'text-lg md:text-xl lg:text-2xl'
-            } ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""}`}
+            className={`${heroSubheadlineClass} max-w-3xl ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""}`}
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("subheadline", e)}
