@@ -1834,6 +1834,12 @@ function GenerateContent() {
         console.log("🎨 Including SDI decisions in page record:", sdiDecisions);
       }
       
+      // NEW: Include layout_id from SDI if available
+      if (designIntelligence?.layoutId) {
+        insertData.layout_id = designIntelligence.layoutId;
+        console.log("📐 Including layout_id in page record:", designIntelligence.layoutId);
+      }
+      
       // Extract and set target_market from consultation data
       const targetMarket = getTargetMarketFromSources(consultationData, strategicData, effectiveNavState);
       if (targetMarket) {
