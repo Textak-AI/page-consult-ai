@@ -4154,6 +4154,8 @@ function GenerateContent() {
         isRegenerating={isRegenerating}
         handleRegenerate={handleRegenerate}
         handleRegenerateSection={handleRegenerateSection}
+        handleRegeneratePage={handleRegeneratePage}
+        existingPageLoaded={existingPageLoaded}
         landingPageBestPractices={landingPageBestPractices}
         strategicData={strategicData}
         cssVariables={cssVariables}
@@ -4189,6 +4191,8 @@ function EditorContent({
   isRegenerating,
   handleRegenerate,
   handleRegenerateSection,
+  handleRegeneratePage,
+  existingPageLoaded,
   landingPageBestPractices,
   strategicData,
   cssVariables,
