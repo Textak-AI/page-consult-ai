@@ -5,6 +5,7 @@ import { useState, useMemo } from "react";
 import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star, Image, Layers, PlayCircle, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
+import type { SDIPalette, SDISectionThemes, SDITypography } from '@/lib/designIntelligence/types';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { getAmbientHeroGradient } from "@/lib/industryPatterns";
@@ -140,6 +141,10 @@ interface HeroSectionProps {
     industryVariant?: IndustryVariant;
     // SDI mode override - takes precedence over industry token mode
     mode?: 'light' | 'dark' | 'warm' | 'cold';
+    // SDI Design System
+    palette?: SDIPalette;
+    sectionThemes?: SDISectionThemes;
+    sdiTypography?: SDITypography;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -230,6 +235,10 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   
   // Single trust badge (credential) for consulting hero
   const trustBadge = content.trustBadge || content.fomo?.badge;
+  
+  // SDI Typography - use passed typography or fallback
+  const sdiTypography = content.sdiTypography;
+  const heroHeadlineClass = sdiTypography?.heroHeadline || 'text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]';
 
   // Local Services variant: Light mode, trust-forward, phone-prominent
   if (isLocalServices) {
@@ -286,7 +295,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("headline", e)}
-              className={`text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight ${
+              className={`${heroHeadlineClass} text-slate-900 mb-6 ${
                 isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-2 inline-block" : ""
               }`}
             >
@@ -460,7 +469,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("headline", e)}
-            className={`text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 max-w-4xl mx-auto ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
+            className={`${heroHeadlineClass} text-white mb-6 max-w-4xl mx-auto ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
           >
             {content.headline}
           </h1>
@@ -670,7 +679,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("headline", e)}
-              className={`text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-8 ${
+              className={`${heroHeadlineClass} mb-8 ${
                 hasBackgroundImage && showDarkOverlay ? 'text-white' : 'text-slate-900'
               } ${isEditing ? "cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2" : ""}`}
             >
@@ -899,7 +908,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 contentEditable={isEditing}
                 suppressContentEditableWarning
                 onBlur={(e) => handleBlur("headline", e)}
-                className={`text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight ${
+                className={`${heroHeadlineClass} ${
                   hasBackgroundImage && showDarkOverlay ? 'text-white' : 'text-slate-900'
                 } ${isEditing ? "cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2" : ""}`}
               >
@@ -1323,11 +1332,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className={`font-bold tracking-tight leading-[1.1] max-w-4xl ${
-              isConsulting 
-                ? 'text-4xl sm:text-5xl md:text-6xl' 
-                : 'text-4xl sm:text-5xl md:text-6xl lg:text-7xl'
-            } ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""}`}
+            className={`${heroHeadlineClass} max-w-4xl ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""}`}
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("headline", e)}
