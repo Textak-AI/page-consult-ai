@@ -161,6 +161,11 @@ export type IndustryType =
   | "education-coaching"
   | "agency-creative"
   | "events-entertainment"
+  // Industry variant aliases (map to their base design systems)
+  | "consulting"
+  | "venturestudio"
+  | "incubator"
+  | "accelerator"
   | "default";
 
 export type ToneType =

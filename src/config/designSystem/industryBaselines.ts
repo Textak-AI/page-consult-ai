@@ -641,6 +641,11 @@ export const industryBaselines: Record<IndustryType, DesignSystem> = {
   "education-coaching": healthcareMedical, // Uses healthcare as base (approachable)
   "agency-creative": saasSoftware, // Uses SaaS as base (modern)
   "events-entertainment": fitnessWellness, // Uses fitness as base (dynamic)
+  // Direct variant mappings (consulting variant → professional services design)
+  "consulting": professionalServices, 
+  "venturestudio": professionalServices,
+  "incubator": professionalServices,
+  "accelerator": professionalServices,
   default: defaultBaseline,
 };
 
