@@ -16,6 +16,13 @@ import { CredibilityStripSection } from '@/components/sections/CredibilityStripS
 import { StakesAmplifySection } from '@/components/sections/StakesAmplifySection';
 import { RiskReversalSection } from '@/components/sections/RiskReversalSection';
 import { ComparisonSection } from '@/components/sections/ComparisonSection';
+// Consulting-specific sections (layout template system)
+import { CredentialsBarSection } from '@/components/sections/CredentialsBarSection';
+import { TheRealChallengeSection } from '@/components/sections/TheRealChallengeSection';
+import { OurApproachSection } from '@/components/sections/OurApproachSection';
+import { ExpertiseAreasSection } from '@/components/sections/ExpertiseAreasSection';
+import { EngagementModelSection } from '@/components/sections/EngagementModelSection';
+import { ClientResultsSection } from '@/components/sections/ClientResultsSection';
 // Beta sections
 import { 
   BetaHeroTeaserSection, 
@@ -270,6 +277,37 @@ export function PublicPageRenderer({
             onUpdate={noOp}
             isEditing={false}
           />
+        );
+      // Consulting-specific section types (from layout templates)
+      case 'credentials-bar':
+        console.log('🎨 [PublicRenderer] Rendering section: credentials-bar');
+        return (
+          <CredentialsBarSection key={index} content={section.content} />
+        );
+      case 'the-real-challenge':
+        console.log('🎨 [PublicRenderer] Rendering section: the-real-challenge');
+        return (
+          <TheRealChallengeSection key={index} content={section.content} />
+        );
+      case 'our-approach':
+        console.log('🎨 [PublicRenderer] Rendering section: our-approach');
+        return (
+          <OurApproachSection key={index} content={section.content} />
+        );
+      case 'expertise-areas':
+        console.log('🎨 [PublicRenderer] Rendering section: expertise-areas');
+        return (
+          <ExpertiseAreasSection key={index} content={section.content} />
+        );
+      case 'engagement-model':
+        console.log('🎨 [PublicRenderer] Rendering section: engagement-model');
+        return (
+          <EngagementModelSection key={index} content={section.content} />
+        );
+      case 'client-results':
+        console.log('🎨 [PublicRenderer] Rendering section: client-results');
+        return (
+          <ClientResultsSection key={index} content={section.content} />
         );
       default:
         return null;

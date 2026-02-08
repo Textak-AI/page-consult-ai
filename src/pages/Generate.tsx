@@ -2662,19 +2662,39 @@ function GenerateContent() {
       || designSystem?.colors?.primary 
       || null;
 
-    // SDI-DRIVEN SECTION SELECTION (replaces hardcoded structure)
-    const sdiSelectionResult = selectSectionsFromSDI(sdi, { isBetaPage });
-    const pageStructure: string[] = content.pageStructure || sdiSelectionResult.sections;
+    // LAYOUT TEMPLATE INTEGRATION:
+    // Priority 1: Use layoutSections from SDI (from layout template system)
+    // Priority 2: Use content.pageStructure (from strategy brief generation)
+    // Priority 3: Use SDI section selection (computed)
+    let pageStructure: string[];
+    let layoutSource: string = 'unknown';
     
-    console.log('🏗️ [mapLegacyStrategyContent] SDI-driven section selection:', {
-      awarenessLevel: sdi?.awarenessLevel,
-      proofDensity: sdi?.proofDensity,
-      heroVariant: sdiSelectionResult.heroVariant,
-      reasoning: sdiSelectionResult.reasoning,
-      pageStructure
-    });
+    if (sdi?.layoutSections && sdi.layoutSections.length > 0) {
+      // Use layout template sections from SDI
+      pageStructure = sdi.layoutSections;
+      layoutSource = `layout-template:${sdi.layoutId}`;
+      console.log(`📐 [mapLegacyStrategyContent] Using layout template "${sdi.layoutId}" with ${pageStructure.length} sections:`, pageStructure);
+      console.log(`📐 [mapLegacyStrategyContent] Layout reasoning: ${sdi.layoutReasoning}`);
+      console.log(`📐 [mapLegacyStrategyContent] Layout confidence: ${sdi.layoutConfidence}`);
+    } else if (content.pageStructure && content.pageStructure.length > 0) {
+      pageStructure = content.pageStructure;
+      layoutSource = 'content-strategy-brief';
+      console.log('📋 [mapLegacyStrategyContent] Using page structure from content:', pageStructure);
+    } else {
+      // Fallback to SDI-driven section selection
+      const sdiSelectionResult = selectSectionsFromSDI(sdi, { isBetaPage });
+      pageStructure = sdiSelectionResult.sections;
+      layoutSource = 'sdi-computed';
+      console.log('🏗️ [mapLegacyStrategyContent] SDI-driven section selection:', {
+        awarenessLevel: sdi?.awarenessLevel,
+        proofDensity: sdi?.proofDensity,
+        heroVariant: sdiSelectionResult.heroVariant,
+        reasoning: sdiSelectionResult.reasoning,
+        pageStructure
+      });
+    }
     
-    console.log('🏗️ Legacy mapping with structure:', pageStructure);
+    console.log('📐 [mapLegacyStrategyContent] Layout source:', layoutSource, '| Structure:', pageStructure);
 
     // Helper to parse objections string into FAQ items
     const parseObjectionsString = (objStr: string): Array<{ question: string; answer: string }> => {
@@ -3169,6 +3189,109 @@ function GenerateContent() {
               },
               industryVariant,
               mode: sdiMode,
+            },
+          });
+          break;
+
+        // CONSULTING-SPECIFIC SECTION TYPES (from layout templates)
+        case 'credentials-bar':
+          console.log(`📐 [mapLegacyStrategyContent] Creating consulting section: credentials-bar`);
+          sections.push({
+            type: "credentials-bar",
+            order: order++,
+            visible: true,
+            content: {
+              industryVariant,
+              mode: sdiMode,
+              businessName,
+              credentials: consultationData?.credentials || strategicConsultation?.credentials || [],
+            },
+          });
+          break;
+          
+        case 'the-real-challenge':
+          console.log(`📐 [mapLegacyStrategyContent] Creating consulting section: the-real-challenge`);
+          sections.push({
+            type: "the-real-challenge",
+            order: order++,
+            visible: true,
+            content: {
+              industryVariant,
+              mode: sdiMode,
+              businessName,
+              problemStatement: content.problemStatement || consultationData?.challenge,
+              challenges: content.faqItems?.slice(0, 3) || [],
+            },
+          });
+          break;
+          
+        case 'our-approach':
+          console.log(`📐 [mapLegacyStrategyContent] Creating consulting section: our-approach`);
+          sections.push({
+            type: "our-approach",
+            order: order++,
+            visible: true,
+            content: {
+              industryVariant,
+              mode: sdiMode,
+              businessName,
+              solutionStatement: content.solutionStatement || consultationData?.uniqueValue,
+              principles: content.features?.slice(0, 3).map((f: any) => ({
+                title: f.title,
+                description: f.description,
+                icon: f.icon,
+              })) || [],
+            },
+          });
+          break;
+          
+        case 'expertise-areas':
+          console.log(`📐 [mapLegacyStrategyContent] Creating consulting section: expertise-areas`);
+          sections.push({
+            type: "expertise-areas",
+            order: order++,
+            visible: true,
+            content: {
+              industryVariant,
+              mode: sdiMode,
+              businessName,
+              areas: content.features?.slice(0, 4).map((f: any) => ({
+                title: f.title,
+                description: f.description,
+                icon: f.icon,
+                examples: f.examples || [],
+              })) || [],
+            },
+          });
+          break;
+          
+        case 'engagement-model':
+          console.log(`📐 [mapLegacyStrategyContent] Creating consulting section: engagement-model`);
+          sections.push({
+            type: "engagement-model",
+            order: order++,
+            visible: true,
+            content: {
+              industryVariant,
+              mode: sdiMode,
+              businessName,
+              steps: content.processSteps || content.steps || [],
+            },
+          });
+          break;
+          
+        case 'client-results':
+          console.log(`📐 [mapLegacyStrategyContent] Creating consulting section: client-results`);
+          sections.push({
+            type: "client-results",
+            order: order++,
+            visible: true,
+            content: {
+              industryVariant,
+              mode: sdiMode,
+              businessName,
+              testimonials: content.testimonials || [],
+              caseStudies: content.caseStudies || [],
             },
           });
           break;
