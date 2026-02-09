@@ -2799,7 +2799,6 @@ function GenerateContent() {
     // Helper to parse objections string into FAQ items
     const parseObjectionsString = (objStr: string): Array<{ question: string; answer: string }> => {
       if (!objStr) return [];
-      // Split by comma and create Q&A pairs
       return objStr.split(',').map(q => {
         const trimmed = q.trim();
         return {
@@ -2807,6 +2806,50 @@ function GenerateContent() {
           answer: 'We address this concern directly in our consultation process and provide clear solutions tailored to your situation.'
         };
       }).filter(item => item.question.length > 5);
+    };
+
+    // Reframe a buyer objection into a natural prospect question
+    const reframeObjectionAsQuestion = (objection: string): string => {
+      const lower = objection.toLowerCase().trim();
+      // Already a question
+      if (lower.endsWith('?')) return objection;
+      // Common objection patterns → question reframes
+      if (lower.startsWith('we already') || lower.includes('already have') || lower.includes('already use')) {
+        return `How is this different from the tools we already use?`;
+      }
+      if (lower.includes('too expensive') || lower.includes('cost') || lower.includes('price') || lower.includes('budget')) {
+        return `What's the expected ROI and how does pricing work?`;
+      }
+      if (lower.includes('don\'t have time') || lower.includes('too busy') || lower.includes('bandwidth')) {
+        return `How much time does implementation and onboarding take?`;
+      }
+      if (lower.includes('not sure') || lower.includes('not ready') || lower.includes('need to think')) {
+        return `What should we consider before making a decision?`;
+      }
+      if (lower.includes('competitor') || lower.includes('alternative') || lower.includes('other option')) {
+        return `How do you compare to other options in the market?`;
+      }
+      // Generic reframe: turn statement into question
+      return `${objection.charAt(0).toUpperCase()}${objection.slice(1)}${objection.endsWith('?') ? '' : '?'}`;
+    };
+
+    // Reframe a pain point into a natural prospect question
+    const reframePainPointAsQuestion = (painPoint: string): string => {
+      const lower = painPoint.toLowerCase().trim();
+      if (lower.includes('toggling') || lower.includes('switching') || lower.includes('disconnected')) {
+        return `Will this replace our existing tools or work alongside them?`;
+      }
+      if (lower.includes('manual') || lower.includes('time-consuming') || lower.includes('repetitive')) {
+        return `How much of the manual work does this automate?`;
+      }
+      if (lower.includes('visibility') || lower.includes('tracking') || lower.includes('reporting')) {
+        return `What kind of visibility and reporting do we get?`;
+      }
+      if (lower.includes('scaling') || lower.includes('growth') || lower.includes('growing')) {
+        return `How does this scale as our business grows?`;
+      }
+      // Generic reframe
+      return `How do you help with ${painPoint.toLowerCase().replace(/[.!]$/, '')}?`;
     };
 
     // ========== CONSULTING SECTION DATA EXTRACTION HELPERS ==========
@@ -3499,44 +3542,106 @@ function GenerateContent() {
             break;
 
         case 'faq':
-          // Use faqItems or objections from content, or parse objections string from consultationData
-          let faqData = content.faqItems || content.objections || [];
+          // ============ OBJECTION-TO-FAQ PIPELINE ============
+          // Priority: content.faqItems > content.objections > extracted_intelligence > consultationData.objections > painPoints
+          let faqData: Array<{ question: string; answer: string }> = content.faqItems || [];
           
-          // If no FAQ items in content, try parsing objections string from consultationData
-          if (faqData.length === 0 && consultationData?.objections) {
-            console.log('🔍 [mapLegacyStrategyContent] faq: parsing objections from consultationData:', consultationData.objections);
-            faqData = parseObjectionsString(consultationData.objections);
+          // Source 1: Content objections array
+          if (faqData.length === 0 && content.objections && Array.isArray(content.objections)) {
+            faqData = content.objections.filter((o: any) => o.question && o.answer);
           }
           
-          // ZERO-FABRICATION: If no real FAQ data exists, skip the section entirely
-          if (faqData.length === 0) {
-            console.log('🚫 [mapLegacyStrategyContent] faq: No real FAQ data found - section will be hidden (zero-fabrication policy)');
-            // Don't push the section - it won't render
+          // Source 2: extracted_intelligence buyerObjections / buyerObjectionsFull
+          const intel = consultationData?.extracted_intelligence || strategicConsultation?.extracted_intelligence;
+          if (faqData.length < 2 && intel) {
+            const objectionSources = [
+              intel.buyerObjectionsFull,
+              intel.buyerObjections,
+              intel.objectionsSummary,
+            ].filter(Boolean);
+            
+            for (const src of objectionSources) {
+              if (faqData.length >= 4) break;
+              
+              if (Array.isArray(src)) {
+                for (const obj of src) {
+                  if (faqData.length >= 6) break;
+                  const objText = typeof obj === 'string' ? obj : obj?.objection || obj?.text || obj?.question || '';
+                  const answerText = typeof obj === 'string' ? '' : obj?.answer || obj?.counterStrategy || obj?.response || '';
+                  if (objText.length > 10) {
+                    // Reframe objection as prospect question
+                    const reframed = reframeObjectionAsQuestion(objText);
+                    const answer = answerText || 'We address this directly — reach out and we\'ll walk you through our approach.';
+                    // Deduplicate
+                    if (!faqData.some(f => f.question.toLowerCase().includes(objText.slice(0, 20).toLowerCase()))) {
+                      faqData.push({ question: reframed, answer });
+                    }
+                  }
+                }
+              } else if (typeof src === 'string' && src.length > 10) {
+                // objectionsSummary as string
+                const parsed = parseObjectionsString(src);
+                faqData.push(...parsed.filter(p => !faqData.some(f => f.question === p.question)));
+              }
+            }
+            console.log('🔍 [faq] After extracted_intelligence:', faqData.length, 'items');
+          }
+          
+          // Source 3: consultationData.objections string
+          if (faqData.length < 2 && consultationData?.objections) {
+            console.log('🔍 [faq] parsing objections from consultationData:', consultationData.objections);
+            const parsed = parseObjectionsString(consultationData.objections);
+            faqData.push(...parsed.filter(p => !faqData.some(f => f.question === p.question)));
+          }
+          
+          // Source 4: Pain points reframed as FAQs
+          if (faqData.length < 2) {
+            const painPoints = intel?.painPoints || intel?.audiencePainPoints || 
+                               consultationData?.audience_pain_points || [];
+            if (Array.isArray(painPoints)) {
+              for (const pain of painPoints) {
+                if (faqData.length >= 6) break;
+                const painText = typeof pain === 'string' ? pain : pain?.text || '';
+                if (painText.length > 10) {
+                  const reframed = reframePainPointAsQuestion(painText);
+                  if (!faqData.some(f => f.question.toLowerCase().includes(painText.slice(0, 15).toLowerCase()))) {
+                    faqData.push({ 
+                      question: reframed, 
+                      answer: 'Our solution is specifically designed to address this challenge.' 
+                    });
+                  }
+                }
+              }
+              console.log('🔍 [faq] After pain points:', faqData.length, 'items');
+            }
+          }
+          
+          // ZERO-FABRICATION: Require at least 2 real FAQ items
+          if (faqData.length < 2) {
+            console.log('🚫 [mapLegacyStrategyContent] faq: Only', faqData.length, 'items — need 2+ (zero-fabrication policy)');
             break;
           }
           
-          console.log('🔍 [mapLegacyStrategyContent] faq: found', faqData.length, 'items');
-          if (faqData.length > 0) {
-            sections.push({
-              type: "faq",
-              order: order++,
-              visible: true,
-              content: {
-                title: "Frequently Asked Questions",
-                items: faqData.map((faq: any) => ({
-                  question: faq.question,
-                  answer: faq.answer,
-                })),
-                industryVariant,
-                mode: sdiMode,
-                primaryColor: sdi?.palette?.primary || primaryColor,
-                designIntelligence: sdi,
-                palette: sdi?.palette,
-                sectionThemes: sdi?.sectionThemes,
-                sdiTypography: sdi?.sdiTypography,
-              },
-            });
-          }
+          console.log('🔍 [mapLegacyStrategyContent] faq: rendering', faqData.length, 'items');
+          sections.push({
+            type: "faq",
+            order: order++,
+            visible: true,
+            content: {
+              title: "Frequently Asked Questions",
+              items: faqData.map((faq: any) => ({
+                question: faq.question,
+                answer: faq.answer,
+              })),
+              industryVariant,
+              mode: sdiMode,
+              primaryColor: sdi?.palette?.primary || primaryColor,
+              designIntelligence: sdi,
+              palette: sdi?.palette,
+              sectionThemes: sdi?.sectionThemes,
+              sdiTypography: sdi?.sdiTypography,
+            },
+          });
           break;
 
         case 'final-cta':
