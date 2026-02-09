@@ -16,6 +16,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { getIndustryPattern } from '@/data/industry-patterns';
+import { resolveIndustry } from '@/lib/resolveIndustry';
 
 export interface ConsultationData {
   industry?: string;
@@ -72,6 +73,10 @@ export async function generateIntelligentContent(
   // Detect industry and load patterns
   const industryKey = detectIndustry(consultation);
   const pattern = getIndustryPattern(industryKey);
+  
+  // Unified resolution for logging/tracking (pattern lookup uses its own keys)
+  const resolution = resolveIndustry(consultation.industry, industryKey, 'medium');
+  console.log(`🏭 [resolveIndustry] Content gen: ${resolution.industry} (source: ${resolution.source})`);
   
   if (!pattern) {
     throw new Error(`No pattern found for industry: ${industryKey}`);

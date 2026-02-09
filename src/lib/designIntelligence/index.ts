@@ -12,6 +12,7 @@ import { analyzeProofDensity, getVisualWeightConfig, extractProofPoints, ProofDe
 import { selectLayout, type LayoutSelectionResult } from '@/lib/layoutSelector';
 import type { IndustryVariant } from '@/lib/industryDesignSystem';
 import type { SDIPalette, SDISectionThemes, SDITypography } from './types';
+import { resolveIndustry } from '@/lib/resolveIndustry';
 
 // ============================================================================
 // SDI HELPER FUNCTIONS & INDUSTRY DEFAULTS
@@ -295,26 +296,17 @@ export function generateDesignIntelligence(input: DesignIntelligenceInput): Desi
   const tone = detectTone(conversationText);
   const typography = getTypographyRecommendation(tone);
   
-  // 2. Industry resolution with CLEAR PRIORITY ORDER:
-  // Priority 1: consultationIndustry (explicit field from consultation - user confirmed)
-  // Priority 2: industryCategory from extraction (with confidence check)
-  // Priority 3: localStorage detection (from IntelligenceContext)
-  // Priority 4: Text-based detection (last resort)
-  let industry: string;
+  // 2. Industry resolution via unified resolveIndustry utility
   const textDetectedIndustry = detectIndustry(conversationText); // Always compute for logging
   
-  if (consultationIndustry && consultationIndustry !== 'default' && consultationIndustry.length > 2) {
-    // BUG 3 FIX: Consultation industry ALWAYS takes priority
-    industry = consultationIndustry;
-    console.log(`🎨 [SDI] Industry resolution: {fromConsultation: '${consultationIndustry}', fromTextDetection: '${textDetectedIndustry}', resolved: '${industry}'}`);
-  } else if (industryCategory && industryCategory !== 'default' && industryConfidence !== 'low') {
-    industry = industryCategory;
-    console.log(`🎨 [SDI] Industry resolution: {fromConsultation: null, fromIndustryCategory: '${industryCategory}', fromTextDetection: '${textDetectedIndustry}', resolved: '${industry}'}`);
-  } else {
-    // detectIndustry now checks localStorage first before text detection
-    industry = textDetectedIndustry;
-    console.log(`🎨 [SDI] Industry resolution: {fromConsultation: null, fromTextDetection: '${textDetectedIndustry}', resolved: '${industry}'}`);
-  }
+  const resolution = resolveIndustry(
+    consultationIndustry || industryCategory || textDetectedIndustry,
+    industryCategory || textDetectedIndustry,
+    industryConfidence || 'medium'
+  );
+  const industry = resolution.industry;
+  
+  console.log(`🎨 [SDI] Industry resolution: {resolved: '${industry}', source: '${resolution.source}', confidence: '${resolution.confidence}', inputs: {consultation: '${consultationIndustry}', category: '${industryCategory}', textDetected: '${textDetectedIndustry}'}}`);
   
   const emotionalDrivers = detectEmotionalDrivers(conversationText);
   const colors = getColorPalette(industry, targetMarket, emotionalDrivers);

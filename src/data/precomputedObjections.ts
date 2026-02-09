@@ -1,5 +1,6 @@
 // Pre-computed Objections Data
 // Used for instant objection display without waiting for AI research
+import { resolveIndustry } from '@/lib/resolveIndustry';
 
 export interface PredictedObjection {
   objection: string;
@@ -588,13 +589,20 @@ export function getPrecomputedObjections(
 ): PredictedObjection[] {
   if (!industry) return [];
   
-  // Resolve to canonical category
+  // Resolve to canonical category via local alias system
   const industryKey = resolveIndustryCategory(industry);
   const targetKey = targetMarket 
     ? resolveIndustryCategory(targetMarket) 
     : '_default';
   
-  const industryData = PRECOMPUTED_OBJECTIONS[industryKey];
+  let industryData = PRECOMPUTED_OBJECTIONS[industryKey];
+  
+  // Fallback: use unified resolveIndustry for broader keyword matching
+  if (!industryData) {
+    const resolution = resolveIndustry(industry);
+    console.log(`🎯 [Objections] Unified resolution fallback: "${industry}" → "${resolution.industry}" (${resolution.source})`);
+    industryData = PRECOMPUTED_OBJECTIONS[resolution.industry];
+  }
   if (!industryData) {
     console.log(`⚠️ No pre-computed objections for industry: "${industry}" (resolved: "${industryKey}")`);
     return [];

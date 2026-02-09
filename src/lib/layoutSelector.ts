@@ -7,6 +7,7 @@
 
 import type { IndustryVariant } from '@/lib/industryDesignSystem';
 import type { DesignIntelligenceOutput } from '@/lib/designIntelligence';
+import { resolveIndustry } from '@/lib/resolveIndustry';
 import { 
   layoutTemplates, 
   getLayoutTemplate, 
@@ -251,8 +252,10 @@ export function selectLayoutFromSDI(sdi: DesignIntelligenceOutput, pageType?: st
     hasCaseStudies: (sdi.proofPoints?.caseStudies?.length || 0) > 0,
   };
 
+  const { industry: resolvedIndustry } = resolveIndustry(sdi.industry);
+
   return selectLayout({
-    industry: sdi.industry as IndustryVariant,
+    industry: resolvedIndustry as IndustryVariant,
     awarenessLevel: awarenessMapping[sdi.awarenessLevel] || 'solution-aware',
     pageType: (pageType as any) || 'standard',
     proofDensity: sdi.proofDensity,
