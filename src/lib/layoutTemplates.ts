@@ -98,6 +98,37 @@ export interface LayoutTemplate {
 
 export const layoutTemplates: Record<string, LayoutTemplate> = {
   // ---------------------------------------------------------------------------
+  // ENTERPRISE / EXECUTIVE AUDIENCE (cross-industry)
+  // ---------------------------------------------------------------------------
+  'enterprise-executive': {
+    id: 'enterprise-executive',
+    name: 'Enterprise Executive',
+    description: 'Cross-industry layout optimized for executive/C-suite audiences. Leads with social proof and authority, avoids self-serve/PLG elements.',
+    industries: ['saas', 'saas-enterprise', 'consulting', 'fintech', 'healthtech', 'manufacturing', 'default'],
+    awarenessLevels: ['solution-aware', 'product-aware', 'most-aware'],
+    sections: [
+      'hero',
+      'stats-bar',
+      'features',
+      'social-proof',
+      'how-it-works',
+      'client-results',
+      'faq',
+      'final-cta',
+    ],
+    conditionalSections: [
+      { section: 'credentials-bar', condition: 'hasCredentials', insertAfter: 'stats-bar' },
+      { section: 'client-results', condition: 'hasCaseStudies', insertAfter: 'social-proof' },
+    ],
+    visualStyle: {
+      heroStyle: 'bold-statement',
+      proofDensity: 'comprehensive',
+      ctaFrequency: 'hero-and-final',
+    },
+    priority: 85, // High priority when executive audience detected
+  },
+
+  // ---------------------------------------------------------------------------
   // CONSULTING / PROFESSIONAL SERVICES
   // ---------------------------------------------------------------------------
   'consulting-authority': {

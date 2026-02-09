@@ -8,6 +8,7 @@
 import type { IndustryVariant } from '@/lib/industryDesignSystem';
 import type { DesignIntelligenceOutput } from '@/lib/designIntelligence';
 import { resolveIndustry } from '@/lib/resolveIndustry';
+import { detectAudienceSeniority, type AudienceSeniority } from '@/lib/audienceSeniority';
 import { 
   layoutTemplates, 
   getLayoutTemplate, 
@@ -25,6 +26,9 @@ export interface LayoutSelectionInput {
   pageType?: 'standard' | 'beta-prelaunch' | 'demo' | 'sales' | null;
   proofDensity?: 'sparse' | 'moderate' | 'rich';
   designIntelligence?: DesignIntelligenceOutput;
+  // Audience seniority for layout prioritization
+  audienceSeniority?: AudienceSeniority;
+  targetAudience?: string;
   // Available proof for conditional sections
   availableProof?: {
     hasTestimonials?: boolean;
@@ -64,9 +68,14 @@ export function selectLayout(input: LayoutSelectionInput): LayoutSelectionResult
     pageType = 'standard',
     proofDensity = 'moderate',
     availableProof = {},
+    targetAudience,
   } = input;
 
-  console.log('📐 [LayoutSelector] Selecting layout for:', { industry, awarenessLevel, pageType, proofDensity });
+  // Detect audience seniority (from explicit input or target audience text)
+  const seniority = input.audienceSeniority || 
+    detectAudienceSeniority(targetAudience).seniority;
+
+  console.log('📐 [LayoutSelector] Selecting layout for:', { industry, awarenessLevel, pageType, proofDensity, seniority });
 
   let selectedTemplate: LayoutTemplate | null = null;
   let matchReason = '';
@@ -78,6 +87,14 @@ export function selectLayout(input: LayoutSelectionInput): LayoutSelectionResult
     matchReason = `Selected beta-prelaunch layout for pre-launch page type`;
     confidence = 'high';
     console.log('📐 [LayoutSelector] Using beta-prelaunch layout');
+  }
+
+  // PRIORITY 1.5: Executive audience override (cross-industry)
+  if (!selectedTemplate && seniority === 'executive') {
+    selectedTemplate = layoutTemplates['enterprise-executive'];
+    matchReason = `Selected enterprise-executive layout for executive audience (${industry} industry)`;
+    confidence = 'high';
+    console.log('📐 [LayoutSelector] Executive audience detected — using enterprise-executive layout');
   }
 
   // PRIORITY 2: Industry + awareness level exact match
@@ -229,7 +246,7 @@ function checkCondition(
 /**
  * Get layout selection based on SDI output
  */
-export function selectLayoutFromSDI(sdi: DesignIntelligenceOutput, pageType?: string): LayoutSelectionResult {
+export function selectLayoutFromSDI(sdi: DesignIntelligenceOutput, pageType?: string, targetAudience?: string): LayoutSelectionResult {
   // Map SDI awareness level to layout selector format
   const awarenessMapping: Record<string, 'unaware' | 'problem-aware' | 'solution-aware' | 'product-aware' | 'most-aware'> = {
     'unaware': 'unaware',
@@ -246,8 +263,8 @@ export function selectLayoutFromSDI(sdi: DesignIntelligenceOutput, pageType?: st
               (sdi.proofPoints?.percentageStats?.length || 0) > 0 ||
               !!sdi.proofPoints?.clientCount || 
               !!sdi.proofPoints?.yearsInBusiness,
-    hasProcess: false, // Process steps not in ProofPoints type
-    hasFAQ: true, // Always assume FAQ is possible
+    hasProcess: false,
+    hasFAQ: true,
     hasCredentials: (sdi.proofPoints?.certifications?.length || 0) > 0,
     hasCaseStudies: (sdi.proofPoints?.caseStudies?.length || 0) > 0,
   };
@@ -261,5 +278,6 @@ export function selectLayoutFromSDI(sdi: DesignIntelligenceOutput, pageType?: st
     proofDensity: sdi.proofDensity,
     designIntelligence: sdi,
     availableProof,
+    targetAudience,
   });
 }
