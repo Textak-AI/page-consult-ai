@@ -1958,19 +1958,42 @@ function GenerateContent() {
         
         // Generate design system from industry + tone + brand colors
         const structuredBrief = strategicData.structuredBrief;
-        // BRAND DATA PIPELINE: Extract from multiple possible paths
-        // Priority: strategicData.brandSettings > consultationData.brandSettings > websiteIntelligence
-        const brandSettings = strategicData.brandSettings 
+        // BRAND DATA PIPELINE: Resolve from priority chain
+        // Priority 1: consultation.extracted_intelligence.colors & .logoUrl
+        // Priority 2: strategicData.brandSettings / consultationData.brandSettings
+        // Priority 3: websiteIntelligence
+        // Priority 4: localStorage
+        const extractedIntel = strategicData.consultationData?.extracted_intelligence 
+          || consultationData?.extracted_intelligence;
+        const extractedIntelBrand = extractedIntel ? {
+          primaryColor: extractedIntel.colors?.[0] || extractedIntel.brandColors?.primary || null,
+          secondaryColor: extractedIntel.colors?.[1] || extractedIntel.brandColors?.secondary || null,
+          logoUrl: extractedIntel.logoUrl || null,
+        } : null;
+
+        const navBrandSettings = strategicData.brandSettings 
           || strategicData.consultationData?.brandSettings
           || (strategicData.consultationData?.websiteIntelligence ? {
             logoUrl: strategicData.consultationData.websiteIntelligence.logoUrl,
             primaryColor: strategicData.consultationData.websiteIntelligence.primaryColor,
             secondaryColor: strategicData.consultationData.websiteIntelligence.secondaryColor,
           } : null);
+
+        // Merge with extracted_intelligence taking priority
+        const brandSettings = {
+          ...navBrandSettings,
+          ...(extractedIntelBrand?.primaryColor ? { primaryColor: extractedIntelBrand.primaryColor } : {}),
+          ...(extractedIntelBrand?.logoUrl ? { logoUrl: extractedIntelBrand.logoUrl } : {}),
+          ...(extractedIntelBrand?.secondaryColor ? { secondaryColor: extractedIntelBrand.secondaryColor } : {}),
+        };
+
+        const brandSource = extractedIntelBrand?.primaryColor ? 'extracted_intelligence' 
+          : navBrandSettings?.primaryColor ? 'brandSettings/websiteIntelligence'
+          : 'none';
         
-        console.log('🔍 [Brand Pipeline] strategicData.brandSettings:', strategicData.brandSettings);
-        console.log('🔍 [Brand Pipeline] strategicData.consultationData?.brandSettings:', strategicData.consultationData?.brandSettings);
-        console.log('🔍 [Brand Pipeline] strategicData.consultationData?.websiteIntelligence:', strategicData.consultationData?.websiteIntelligence);
+        console.log(`🎨 [Brand Pipeline] Using colors from: ${brandSource}`);
+        console.log('🔍 [Brand Pipeline] extractedIntelBrand:', extractedIntelBrand);
+        console.log('🔍 [Brand Pipeline] navBrandSettings:', navBrandSettings);
         console.log('🔍 [Brand Pipeline] Resolved brandSettings:', brandSettings);
         
         const ds = generateDesignSystem({
@@ -2480,15 +2503,24 @@ function GenerateContent() {
     // Fetch hero image
     const heroImageUrl = await fetchHeroImage(businessName);
 
-    // Get brand settings for passing to sections
-    // BRAND DATA PIPELINE: Check all possible paths INCLUDING localStorage
-    let brandSettings = strategicConsultation?.brandSettings 
+    // BRAND DATA PIPELINE: Resolve from priority chain with source logging
+    // Priority 1: consultation.extracted_intelligence
+    const extractedIntel = strategicConsultation?.extracted_intelligence 
+      || consultationData?.extracted_intelligence;
+    const extractedIntelBrand = extractedIntel ? {
+      primaryColor: extractedIntel.colors?.[0] || extractedIntel.brandColors?.primary || null,
+      secondaryColor: extractedIntel.colors?.[1] || extractedIntel.brandColors?.secondary || null,
+      logoUrl: extractedIntel.logoUrl || null,
+    } : null;
+
+    // Priority 2: brandSettings from nav state
+    let navBrandSettings = strategicConsultation?.brandSettings 
       || effectiveNavState?.strategicData?.brandSettings
       || effectiveNavState?.strategicData?.consultationData?.brandSettings
       || null;
     
-    // CRITICAL FIX: Also check localStorage for brand data (extraction saves here)
-    if (!brandSettings?.logoUrl && !brandSettings?.primaryColor) {
+    // Priority 3: localStorage brand data
+    if (!navBrandSettings?.logoUrl && !navBrandSettings?.primaryColor) {
       const localStorageBrandPaths = [
         'pageconsult_brand_settings',
         'brand_settings', 
@@ -2502,11 +2534,8 @@ function GenerateContent() {
           if (stored) {
             const parsed = JSON.parse(stored);
             if (parsed?.primaryColor || parsed?.logoUrl) {
-              console.log(`🎨 [Brand Pipeline] Retrieved brand from localStorage "${path}":`, {
-                logoUrl: parsed?.logoUrl?.substring(0, 50) + '...',
-                primaryColor: parsed?.primaryColor
-              });
-              brandSettings = { ...brandSettings, ...parsed };
+              console.log(`🎨 [Brand Pipeline] Retrieved brand from localStorage "${path}"`);
+              navBrandSettings = { ...navBrandSettings, ...parsed };
               break;
             }
           }
@@ -2515,18 +2544,28 @@ function GenerateContent() {
         }
       }
     }
-    
-    const logoUrl = brandSettings?.logoUrl 
+
+    // Merge: extracted_intelligence > brandSettings > websiteIntelligence
+    const logoUrl = extractedIntelBrand?.logoUrl
+      || navBrandSettings?.logoUrl
       || strategicConsultation?.websiteIntelligence?.logoUrl 
       || effectiveNavState?.strategicData?.consultationData?.websiteIntelligence?.logoUrl
       || effectiveNavState?.strategicData?.websiteIntelligence?.logoUrl
       || null;
-    const primaryColor = brandSettings?.primaryColor 
+    const primaryColor = extractedIntelBrand?.primaryColor
+      || navBrandSettings?.primaryColor 
       || strategicConsultation?.websiteIntelligence?.primaryColor
       || effectiveNavState?.strategicData?.consultationData?.websiteIntelligence?.primaryColor
       || designSystem?.colors?.primary 
       || null;
+
+    const brandSource = extractedIntelBrand?.primaryColor ? 'extracted_intelligence'
+      : navBrandSettings?.primaryColor ? 'brandSettings'
+      : strategicConsultation?.websiteIntelligence?.primaryColor ? 'websiteIntelligence'
+      : designSystem?.colors?.primary ? 'designSystem'
+      : 'none';
     
+    console.log(`🎨 [Brand Pipeline] Using colors from: ${brandSource}`);
     console.log('🖼️ [Brand Pipeline] mapStrategyBriefContentToSections logoUrl:', logoUrl ? logoUrl.substring(0, 60) + '...' : null);
     console.log('🎨 [Brand Pipeline] mapStrategyBriefContentToSections primaryColor:', primaryColor);
 

@@ -361,9 +361,18 @@ export function generateDesignIntelligence(input: DesignIntelligenceInput): Desi
   ];
   
   // 7. NEW: Generate dynamic SDI design system
+  // Brand color priority: explicit brandSettings > extractedIntelligence > industry default
   const brandColor = extractedIntelligence?.brandSettings?.primaryColor || 
-                     extractedIntelligence?.primaryColor || 
+                     extractedIntelligence?.primaryColor ||
+                     extractedIntelligence?.brandColors?.primary ||
+                     (extractedIntelligence?.colors as string[] | undefined)?.[0] ||
                      null;
+  
+  const brandSource = extractedIntelligence?.brandSettings?.primaryColor ? 'brandSettings'
+    : extractedIntelligence?.primaryColor ? 'extractedIntelligence.primaryColor'
+    : extractedIntelligence?.brandColors?.primary ? 'extractedIntelligence.brandColors'
+    : (extractedIntelligence?.colors as string[] | undefined)?.[0] ? 'extractedIntelligence.colors[0]'
+    : 'industry-default';
   
   const palette = generateSDIPalette(brandColor, industry);
   const sectionThemes = computeSectionThemes(industry);
@@ -371,6 +380,7 @@ export function generateDesignIntelligence(input: DesignIntelligenceInput): Desi
   
   console.log('🎨 [SDI] Dynamic design system generated:', {
     brandColor,
+    brandSource,
     industry,
     paletteGenerated: !!palette,
     themesGenerated: !!sectionThemes,
