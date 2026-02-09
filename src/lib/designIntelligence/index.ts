@@ -320,17 +320,18 @@ export function generateDesignIntelligence(input: DesignIntelligenceInput): Desi
   const proofDensity = analyzeProofDensity(proofPoints);
   const visualWeight = getVisualWeightConfig(proofDensity);
   
-  // 5. NEW: Select layout template based on industry + awareness + proof density
+  // 5. NEW: Select layout template based on industry + awareness + proof density + audience seniority
   const layoutResult = selectLayout({
     industry: industry as IndustryVariant,
     awarenessLevel: awarenessLevel as any,
     pageType: pageType || 'standard',
     proofDensity,
+    targetAudience: targetMarket || undefined,
     availableProof: {
       hasTestimonials: (proofPoints.testimonials?.length || 0) > 0,
       hasStats: !!(proofPoints.clientCount || proofPoints.yearsInBusiness || 
                    (proofPoints.percentageStats?.length || 0) > 0),
-      hasProcess: false, // Would need to detect from intelligence
+      hasProcess: false,
       hasFAQ: true,
       hasCredentials: (proofPoints.certifications?.length || 0) > 0,
       hasCaseStudies: (proofPoints.caseStudies?.length || 0) > 0,
