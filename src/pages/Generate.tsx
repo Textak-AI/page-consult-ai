@@ -2709,7 +2709,53 @@ function GenerateContent() {
       });
     }
     
-    console.log('📐 [mapLegacyStrategyContent] Layout source:', layoutSource, '| Structure:', pageStructure);
+    // SUPPORTED_SECTION_TYPES: Only section types with working renderer components
+    const SUPPORTED_SECTION_TYPES = new Set([
+      'hero',
+      'features',
+      'stats-bar', 'stats_bar',
+      'social-proof', 'testimonials',
+      'process', 'how-it-works',
+      'faq',
+      'final-cta',
+      'problem-solution',
+      'founder',
+      'waitlist-proof',
+      'beta-perks',
+      'beta-hero-teaser',
+      'beta-final-cta',
+    ]);
+
+    const MIN_SECTIONS = 4;
+    const TARGET_SECTIONS = 5;
+
+    // Filter pageStructure against supported types
+    const unsupported = pageStructure.filter(s => !SUPPORTED_SECTION_TYPES.has(s));
+    if (unsupported.length > 0) {
+      console.warn(`⚠️ [mapLegacyStrategyContent] Filtered out unsupported section types:`, unsupported);
+    }
+    let filteredStructure = pageStructure.filter(s => SUPPORTED_SECTION_TYPES.has(s));
+
+    // If filtering reduced below MIN_SECTIONS, supplement from AI-suggested content.sections
+    if (filteredStructure.length < MIN_SECTIONS && content.sections && Array.isArray(content.sections)) {
+      const alreadyIncluded = new Set(filteredStructure);
+      const aiSuggested = (content.sections as string[])
+        .filter(s => SUPPORTED_SECTION_TYPES.has(s) && !alreadyIncluded.has(s));
+      const needed = TARGET_SECTIONS - filteredStructure.length;
+      const supplement = aiSuggested.slice(0, needed);
+      if (supplement.length > 0) {
+        console.log(`📋 [mapLegacyStrategyContent] Supplementing with ${supplement.length} AI-suggested sections:`, supplement);
+        filteredStructure = [...filteredStructure, ...supplement];
+      }
+    }
+
+    console.log('📐 [mapLegacyStrategyContent] Layout source:', layoutSource,
+      '| Original:', pageStructure.length,
+      '| Filtered:', filteredStructure.length,
+      '| Structure:', filteredStructure);
+
+    // Use filtered structure for rendering
+    pageStructure = filteredStructure;
 
     // Helper to parse objections string into FAQ items
     const parseObjectionsString = (objStr: string): Array<{ question: string; answer: string }> => {
