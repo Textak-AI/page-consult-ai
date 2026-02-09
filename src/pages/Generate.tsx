@@ -2752,8 +2752,8 @@ function GenerateContent() {
     const SUPPORTED_SECTION_TYPES = new Set([
       'hero',
       'features',
-      'stats-bar', 'stats_bar',
-      'social-proof', 'testimonials',
+      'stats-bar',
+      'social-proof',
       'process', 'how-it-works',
       'faq',
       'final-cta',
@@ -2763,37 +2763,96 @@ function GenerateContent() {
       'beta-perks',
       'beta-hero-teaser',
       'beta-final-cta',
+      // Consulting-specific
+      'credentials-bar',
+      'the-real-challenge',
+      'our-approach',
+      'expertise-areas',
+      'engagement-model',
+      'client-results',
+      // SDI-driven
+      'stakes-amplify',
+      'risk-reversal',
+      'comparison',
     ]);
 
+    // Map alternate names to canonical supported types (null = explicitly skip)
+    const SECTION_TYPE_ALIASES: Record<string, string | null> = {
+      'stats_bar': 'stats-bar',
+      'statsbar': 'stats-bar',
+      'stats-bar': 'stats-bar',
+      'testimonials': 'social-proof',
+      'process_timeline': 'how-it-works',
+      'process-timeline': 'how-it-works',
+      'howItWorks': 'how-it-works',
+      'case_study': 'social-proof',      // fallback: render as social proof
+      'case-study': 'social-proof',      // until dedicated case-study renderer exists
+      'product-demo': null,              // explicitly unsupported, skip silently
+      'integrations': null,              // explicitly unsupported, skip silently
+      'pricing-tiers': null,             // explicitly unsupported, skip silently
+      'pricing': null,                   // explicitly unsupported, skip silently
+    };
+
     const MIN_SECTIONS = 4;
-    const TARGET_SECTIONS = 5;
+    const TARGET_SECTIONS = 6;
 
-    // Filter pageStructure against supported types
-    const unsupported = pageStructure.filter(s => !SUPPORTED_SECTION_TYPES.has(s));
-    if (unsupported.length > 0) {
-      console.warn(`⚠️ [mapLegacyStrategyContent] Filtered out unsupported section types:`, unsupported);
+    // Resolve section types through alias mapping, then filter against supported set
+    const resolvedStructure = pageStructure
+      .map(s => {
+        if (s in SECTION_TYPE_ALIASES) {
+          const alias = SECTION_TYPE_ALIASES[s];
+          if (alias === null) {
+            console.log(`📐 [mapLegacyStrategyContent] Skipping unsupported layout section: ${s}`);
+            return null;
+          }
+          if (alias !== s) {
+            console.log(`📐 [mapLegacyStrategyContent] Alias: ${s} → ${alias}`);
+          }
+          return alias;
+        }
+        return s;
+      })
+      .filter((s): s is string => s !== null)
+      .filter(s => SUPPORTED_SECTION_TYPES.has(s));
+
+    // Deduplicate (e.g. if both 'testimonials' and 'social-proof' mapped to same type)
+    let filteredStructure = [...new Set(resolvedStructure)];
+
+    const droppedCount = pageStructure.length - filteredStructure.length;
+    if (droppedCount > 0) {
+      console.warn(`⚠️ [mapLegacyStrategyContent] Dropped ${droppedCount} sections after alias resolution`);
     }
-    let filteredStructure = pageStructure.filter(s => SUPPORTED_SECTION_TYPES.has(s));
 
-    // If filtering reduced below MIN_SECTIONS, supplement from AI-suggested content.sections
+    // If filtering reduced below MIN_SECTIONS, backfill from AI-suggested content.sections
     if (filteredStructure.length < MIN_SECTIONS && content.sections && Array.isArray(content.sections)) {
       const alreadyIncluded = new Set(filteredStructure);
       const aiSuggested = (content.sections as string[])
-        .filter(s => SUPPORTED_SECTION_TYPES.has(s) && !alreadyIncluded.has(s));
-      const needed = TARGET_SECTIONS - filteredStructure.length;
-      const supplement = aiSuggested.slice(0, needed);
-      if (supplement.length > 0) {
-        console.log(`📋 [mapLegacyStrategyContent] Supplementing with ${supplement.length} AI-suggested sections:`, supplement);
-        filteredStructure = [...filteredStructure, ...supplement];
+        .map(s => SECTION_TYPE_ALIASES[s] !== undefined ? SECTION_TYPE_ALIASES[s] : s)
+        .filter((s): s is string => s !== null && SUPPORTED_SECTION_TYPES.has(s) && !alreadyIncluded.has(s));
+      
+      for (const aiSection of aiSuggested) {
+        if (filteredStructure.length >= TARGET_SECTIONS) break;
+        // Insert before final-cta if present
+        const ctaIndex = filteredStructure.indexOf('final-cta');
+        if (ctaIndex >= 0) {
+          filteredStructure.splice(ctaIndex, 0, aiSection);
+        } else {
+          filteredStructure.push(aiSection);
+        }
+        alreadyIncluded.add(aiSection);
+      }
+      
+      if (aiSuggested.length > 0) {
+        console.log(`📋 [mapLegacyStrategyContent] Backfilled from AI suggestions. Final sections:`, filteredStructure);
       }
     }
 
     console.log('📐 [mapLegacyStrategyContent] Layout source:', layoutSource,
       '| Original:', pageStructure.length,
-      '| Filtered:', filteredStructure.length,
+      '| Resolved:', filteredStructure.length,
       '| Structure:', filteredStructure);
 
-    // Use filtered structure for rendering
+    // Use resolved structure for rendering
     pageStructure = filteredStructure;
 
     // Helper to parse objections string into FAQ items
