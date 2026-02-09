@@ -2793,8 +2793,8 @@ function GenerateContent() {
       'pricing': null,                   // explicitly unsupported, skip silently
     };
 
-    const MIN_SECTIONS = 4;
-    const TARGET_SECTIONS = 6;
+    const MIN_SECTIONS = 5;
+    const TARGET_SECTIONS = 7;
 
     // Resolve section types through alias mapping, then filter against supported set
     const resolvedStructure = pageStructure
@@ -3638,11 +3638,53 @@ function GenerateContent() {
                   }
                 }
               } else if (typeof src === 'string' && src.length > 10) {
-                // objectionsSummary as string
-                const parsed = parseObjectionsString(src);
-                faqData.push(...parsed.filter(p => !faqData.some(f => f.question === p.question)));
+                // Handle string-type objections (e.g. "we already have tools for that")
+                // Split on semicolons for multiple objections, or treat as single
+                const objectionParts = src.split(/[;]/).map((s: string) => s.trim()).filter((s: string) => s.length > 5);
+                
+                for (const objPart of objectionParts) {
+                  if (faqData.length >= 6) break;
+                  const reframed = reframeObjectionAsQuestion(objPart);
+                  // Use objectionsSummary as the answer if available
+                  const objSummary = typeof intel.objectionsSummary === 'string' ? intel.objectionsSummary : '';
+                  const answer = objSummary || `We address this directly — reach out and we'll walk you through our approach.`;
+                  if (!faqData.some(f => f.question.toLowerCase().includes(objPart.slice(0, 20).toLowerCase()))) {
+                    faqData.push({ question: reframed, answer });
+                  }
+                }
               }
             }
+            
+            // Source 2b: Pain points as FAQ entries (from extracted_intelligence)
+            if (faqData.length < 3) {
+              const painText = typeof intel.painPoints === 'string' ? intel.painPoints : 
+                               typeof intel.painPointsFull === 'string' ? intel.painPointsFull : '';
+              const painSummary = typeof intel.painSummary === 'string' ? intel.painSummary : '';
+              
+              if (painText.length > 5) {
+                const reframed = reframePainPointAsQuestion(painText);
+                const answer = painSummary || `Our platform directly addresses ${painText} by providing a unified solution.`;
+                if (!faqData.some(f => f.question.toLowerCase().includes(painText.slice(0, 15).toLowerCase()))) {
+                  faqData.push({ question: reframed, answer });
+                }
+              }
+            }
+            
+            // Source 2c: Onboarding/implementation FAQ from proof elements
+            if (faqData.length < 5) {
+              const proofText = typeof intel.proofElements === 'string' ? intel.proofElements : 
+                                typeof intel.proofElementsFull === 'string' ? intel.proofElementsFull : '';
+              const proofSum = typeof intel.proofSummary === 'string' ? intel.proofSummary : '';
+              const combinedProof = (proofText + ' ' + proofSum).toLowerCase();
+              
+              if (combinedProof.match(/onboard|week|day|implementation|setup/)) {
+                const answer = proofSum || proofText;
+                if (answer && !faqData.some(f => f.question.toLowerCase().includes('onboarding'))) {
+                  faqData.push({ question: 'What does the onboarding process look like?', answer });
+                }
+              }
+            }
+            
             console.log('🔍 [faq] After extracted_intelligence:', faqData.length, 'items');
           }
           

@@ -626,7 +626,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         .live-preview-container h2, 
         .live-preview-container h3 {
           font-weight: ${currentStyle.typography.headingWeight};
-          font-size: calc(1em * ${currentStyle.typography.headingSize});
+          /* font-size removed — let Tailwind classes control heading sizes */
           font-family: var(--font-heading, ${currentStyle.typography.headingFont}), system-ui, sans-serif;
         }
         .live-preview-container section {
