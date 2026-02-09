@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, memo } from "react";
+import { sanitizeFullCSS } from "@/lib/sanitizeCSS";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { ProblemSolutionSection } from "@/components/sections/ProblemSolutionSection";
 import { CalculatorSection } from "@/components/sections/CalculatorSection";
@@ -615,9 +616,9 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         fontFamily: currentStyle.typography.bodyFont,
       } as React.CSSProperties}
     >
-      {/* Inject design system CSS variables */}
+      {/* Inject design system CSS variables (sanitized) */}
       {cssVariables && (
-        <style dangerouslySetInnerHTML={{ __html: cssVariables }} />
+        <style dangerouslySetInnerHTML={{ __html: sanitizeFullCSS(cssVariables) }} />
       )}
       <style>{`
         /* Base typography from style preset */

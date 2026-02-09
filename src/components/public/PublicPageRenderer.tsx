@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { ProblemSolutionSection } from '@/components/sections/ProblemSolutionSection';
 import { CalculatorSection } from '@/components/sections/CalculatorSection';
@@ -332,9 +333,9 @@ export function PublicPageRenderer({
         {heroThumbnailUrl && <meta name="twitter:image" content={heroThumbnailUrl} />}
       </Helmet>
 
-      {/* Apply custom styles if provided */}
+      {/* Apply custom styles if provided (sanitized) */}
       {styles?.cssVariables && (
-        <style dangerouslySetInnerHTML={{ __html: styles.cssVariables }} />
+        <style dangerouslySetInnerHTML={{ __html: sanitizeFullCSS(styles.cssVariables) }} />
       )}
 
       <div 
