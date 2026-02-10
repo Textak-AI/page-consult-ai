@@ -732,6 +732,28 @@ export default function Signup() {
   const saveConsultationData = async (userId: string) => {
     if (!consultationData) return;
 
+    // Also attach any demo extracted intelligence from localStorage
+    let demoExtracted: any = null;
+    try {
+      const raw = localStorage.getItem('pageconsult_demo_extracted');
+      if (raw) {
+        demoExtracted = JSON.parse(raw);
+        // Merge brand data
+        const brandRaw = localStorage.getItem('pageconsult_brand_data');
+        if (brandRaw) {
+          const brand = JSON.parse(brandRaw);
+          demoExtracted.websiteUrl = demoExtracted.websiteUrl || brand.websiteUrl;
+          demoExtracted.companyName = demoExtracted.companyName || brand.companyName;
+          demoExtracted.logoUrl = demoExtracted.logoUrl || brand.logo;
+        }
+        demoExtracted.source = 'demo';
+        demoExtracted.capturedAt = new Date().toISOString();
+        console.log('📦 [Consultation Creation] Attaching extracted_intelligence with keys:', Object.keys(demoExtracted));
+      }
+    } catch (e) {
+      console.error('⚠️ [Consultation Creation] Failed to read demo_extracted:', e);
+    }
+
     try {
       const { error } = await supabase
         .from("consultations")
@@ -744,7 +766,10 @@ export default function Signup() {
           challenge: consultationData.challenge,
           unique_value: consultationData.uniqueValue,
           offer: consultationData.goal,
-          status: "completed"
+          status: "completed",
+          extracted_intelligence: demoExtracted,
+          business_name: demoExtracted?.companyName || null,
+          website_url: demoExtracted?.websiteUrl || null,
         });
 
       if (error) {
