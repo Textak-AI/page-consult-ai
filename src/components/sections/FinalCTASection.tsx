@@ -113,8 +113,13 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
 
   return (
     <section 
-      className="py-24 md:py-32 relative overflow-hidden"
-      style={getSectionStyles()}
+      className="py-24 md:py-32 relative overflow-hidden section-pattern-mesh section-glow-orb"
+      style={{
+        ...getSectionStyles(),
+        '--glow-color': palette?.primary ? `${palette.primary}14` : 'hsla(189, 95%, 43%, 0.08)',
+        '--glow-top': '30%',
+        '--glow-right': '-8%',
+      } as React.CSSProperties}
     >
       {/* Decorative glow for dark sections */}
       {theme === 'dark' && (
