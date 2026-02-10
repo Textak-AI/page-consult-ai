@@ -73,6 +73,7 @@ import { getTargetMarketFromSources } from "@/lib/targetMarketExtractor";
 import { resolveHeroImageUrl } from "@/hooks/useHeroImageResolution";
 import { generateUniqueSlug } from "@/utils/slugUtils";
 import { PublishToolbar } from "@/components/editor/PublishToolbar";
+import { autoQCPass } from "@/lib/autoQCPass";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -1336,10 +1337,13 @@ function GenerateContent() {
         slug: "dev-test",
         sections: generatedSections,
       });
-      setSections(generatedSections.map((s, i) => {
+      const patternedDev = generatedSections.map((s, i) => {
         const { patternClass, glowClass } = getPatternForSection(i, s.type);
         return { ...s, content: { ...s.content, patternClass, glowClass } };
-      }));
+      });
+      const companyNameForQC = consultationData?.businessName || consultationData?.business_name || '';
+      const { sections: qcSectionsDev } = autoQCPass(patternedDev, consultationData?.extracted_intelligence || consultationData, consultationData, companyNameForQC);
+      setSections(qcSectionsDev);
 
       clearInterval(progressInterval);
       setProgress(100);
@@ -1916,7 +1920,11 @@ function GenerateContent() {
       if (savedPageData) {
         console.log("✅ Page saved successfully:", savedPageData.id, "with slug:", savedPageData.slug);
         setPageData(savedPageData);
-        setSections(generatedSections);
+        // Auto-QC pass before displaying
+        const companyNameForQC = companyName || '';
+        const extractedIntel = (consultationData.extracted_intelligence as any) || strategicData?.consultationData || consultationData;
+        const { sections: qcSections } = autoQCPass(generatedSections, extractedIntel, consultationData, companyNameForQC);
+        setSections(qcSections);
       }
 
       // Mark generation complete - UnifiedGenerationFlow handles transition
@@ -4785,10 +4793,14 @@ function GenerateContent() {
 
       if (result.success && result.content) {
         const newSections = await mapGeneratedContentToSections(result.content, consultationData);
-        setSections(newSections.map((s, i) => {
+        const patternedRegen = newSections.map((s, i) => {
           const { patternClass, glowClass } = getPatternForSection(i, s.type);
           return { ...s, content: { ...s.content, patternClass, glowClass } };
-        }));
+        });
+        const regenCompanyName = consultationData?.businessName || consultationData?.business_name || consultation?.businessName || '';
+        const regenIntel = consultationData?.extracted_intelligence || consultationData;
+        const { sections: qcRegenSections } = autoQCPass(patternedRegen, regenIntel, consultationData, regenCompanyName);
+        setSections(qcRegenSections);
         toast({
           title: "Content Regenerated",
           description: intelligence 
