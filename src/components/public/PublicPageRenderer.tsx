@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
+import { cn } from '@/lib/utils';
+import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from '@/lib/premiumPageEffects';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { ProblemSolutionSection } from '@/components/sections/ProblemSolutionSection';
 import { CalculatorSection } from '@/components/sections/CalculatorSection';
@@ -341,10 +343,13 @@ export function PublicPageRenderer({
       <div 
         data-mode={colorMode}
         data-industry={industryVariant}
-        className={colorMode === 'light' ? 'min-h-screen bg-white' : 'min-h-screen bg-slate-950'}
+        className={cn(
+          colorMode === 'light' ? 'min-h-screen bg-white' : 'min-h-screen bg-slate-950',
+          colorMode === 'dark' && 'page-noise-overlay',
+          'relative'
+        )}
         style={(() => {
           const styles: React.CSSProperties = {};
-          // Apply brand colors as CSS custom properties
           const primaryColor = designIntelligence?.brandColors?.primary || brandSettings?.primaryColor;
           if (primaryColor) {
             styles['--color-brand' as any] = primaryColor;
@@ -359,14 +364,61 @@ export function PublicPageRenderer({
           return Object.keys(styles).length > 0 ? styles : undefined;
         })()}
       >
-        {/* Render all visible sections */}
-        {sortedSections.map((section, index) => renderSection(section, index))}
+        {/* Ambient floating orbs — dark mode only */}
+        {colorMode === 'dark' && (() => {
+          const orbColors = getAmbientOrbColors(industryVariant);
+          return (
+            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+              <div
+                className="absolute w-[500px] h-[500px] rounded-full blur-[120px] animate-float-orb-slow will-change-transform"
+                style={{ background: orbColors.primary, top: '10%', right: '-5%' }}
+              />
+              <div
+                className="absolute w-[400px] h-[400px] rounded-full blur-[120px] animate-float-orb-reverse will-change-transform"
+                style={{ background: orbColors.secondary, bottom: '15%', left: '-8%' }}
+              />
+              <div
+                className="absolute w-[350px] h-[350px] rounded-full blur-[120px] animate-float-orb-drift will-change-transform"
+                style={{ background: orbColors.tertiary, top: '45%', left: '30%' }}
+              />
+            </div>
+          );
+        })()}
+
+        {/* Render all visible sections with tier wrappers */}
+        <div className="relative z-10">
+          {sortedSections.map((section, index) => {
+            const tier = getSectionTier(section.type, index);
+            const spacing = getSectionSpacing(section.type);
+            const divider = getSectionDivider(section.type, index);
+
+            return colorMode === 'dark' ? (
+              <div
+                key={`tier-${index}`}
+                className={cn(
+                  `section-tier-${tier}`,
+                  `section-spacing-${spacing}`,
+                  divider,
+                  'relative'
+                )}
+              >
+                <div className="relative z-10">
+                  {renderSection(section, index)}
+                </div>
+              </div>
+            ) : (
+              renderSection(section, index)
+            );
+          })}
+        </div>
         
         {/* Footer with brand info */}
-        <PageFooter 
-          companyName={brandSettings?.companyName}
-          logoUrl={brandSettings?.logoUrl}
-        />
+        <div className="relative z-10">
+          <PageFooter 
+            companyName={brandSettings?.companyName}
+            logoUrl={brandSettings?.logoUrl}
+          />
+        </div>
         
         {/* "Built with PageConsult" badge */}
         {showPoweredBy && (

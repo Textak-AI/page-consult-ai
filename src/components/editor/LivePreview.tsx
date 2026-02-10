@@ -47,6 +47,7 @@ import { SEOHead } from "@/components/seo/SEOHead";
 import type { SEOHeadData } from "@/lib/aiSeoIntegration";
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
+import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from "@/lib/premiumPageEffects";
 import { StrategyConsultantButton } from "@/components/editor/StrategyConsultantButton";
 import { StrategyConsultantOverlay, type ChatMessage } from "@/components/editor/StrategyConsultantOverlay";
 
@@ -670,22 +671,20 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         data-mode={colorMode} 
         data-industry={industryVariant || 'default'}
         data-card-style={(() => {
-          // Extract card style from sections' designIntelligence if available
           const firstSection = sections.find(s => s.content?.designIntelligence);
           const di = firstSection?.content?.designIntelligence;
           return di?.designTokens?.cardStyle || di?.cardStyle || 'glass';
         })()}
         className={cn(
-          "min-h-full live-preview-container",
-          colorMode === 'light' ? 'bg-white text-slate-900' : 'bg-slate-950 text-slate-50'
+          "min-h-full live-preview-container relative",
+          colorMode === 'light' ? 'bg-white text-slate-900' : 'bg-slate-950 text-slate-50',
+          colorMode === 'dark' && 'page-noise-overlay'
         )}
         style={(() => {
           const styles: React.CSSProperties = {};
-          // Apply brand colors as CSS custom properties
           if (brandSettings?.primaryColor) {
             styles['--color-brand' as any] = brandSettings.primaryColor;
             styles['--color-primary' as any] = brandSettings.primaryColor;
-            // Also set button/accent colors for CTAs
             styles['--brand-primary' as any] = brandSettings.primaryColor;
           }
           if (brandSettings?.secondaryColor) {
@@ -699,15 +698,64 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           return Object.keys(styles).length > 0 ? styles : undefined;
         })()}
       >
-        {sections
-          .sort((a, b) => a.order - b.order)
-          .map((section, index) => renderSection(section, index))}
+        {/* Ambient floating orbs — dark mode only */}
+        {colorMode === 'dark' && (() => {
+          const orbColors = getAmbientOrbColors(industryVariant || 'default');
+          return (
+            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+              <div
+                className="absolute w-[500px] h-[500px] rounded-full blur-[120px] animate-float-orb-slow will-change-transform"
+                style={{ background: orbColors.primary, top: '10%', right: '-5%' }}
+              />
+              <div
+                className="absolute w-[400px] h-[400px] rounded-full blur-[120px] animate-float-orb-reverse will-change-transform"
+                style={{ background: orbColors.secondary, bottom: '15%', left: '-8%' }}
+              />
+              <div
+                className="absolute w-[350px] h-[350px] rounded-full blur-[120px] animate-float-orb-drift will-change-transform"
+                style={{ background: orbColors.tertiary, top: '45%', left: '30%' }}
+              />
+            </div>
+          );
+        })()}
+
+        {/* Sections with tier wrappers */}
+        <div className="relative z-10">
+          {sections
+            .sort((a, b) => a.order - b.order)
+            .map((section, index) => {
+              if (!section.visible) return null;
+              const tier = getSectionTier(section.type, index);
+              const spacing = getSectionSpacing(section.type);
+              const divider = getSectionDivider(section.type, index);
+
+              return colorMode === 'dark' ? (
+                <div
+                  key={`tier-${index}`}
+                  className={cn(
+                    `section-tier-${tier}`,
+                    `section-spacing-${spacing}`,
+                    divider,
+                    'relative'
+                  )}
+                >
+                  <div className="relative z-10">
+                    {renderSection(section, index)}
+                  </div>
+                </div>
+              ) : (
+                renderSection(section, index)
+              );
+            })}
+        </div>
         
         {/* Footer with brand customization */}
-        <PageFooter 
-          companyName={brandSettings?.companyName}
-          logoUrl={brandSettings?.logoUrl}
-        />
+        <div className="relative z-10">
+          <PageFooter 
+            companyName={brandSettings?.companyName}
+            logoUrl={brandSettings?.logoUrl}
+          />
+        </div>
       </div>
       
       {/* AI Chat Drawer */}
