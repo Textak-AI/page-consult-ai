@@ -3664,90 +3664,115 @@ function GenerateContent() {
             });
             break;
 
-        case 'faq':
+        case 'faq': {
           // ============ OBJECTION-TO-FAQ PIPELINE ============
           // Priority: content.faqItems > content.objections > extracted_intelligence > consultationData.objections > painPoints
           let faqData: Array<{ question: string; answer: string }> = content.faqItems || [];
           
+          // Helper: add FAQ only if not a duplicate
+          const addFAQ = (question: string, answer: string) => {
+            const normalized = question.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().slice(0, 40);
+            const isDuplicate = faqData.some(existing => {
+              const existingNorm = existing.question.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().slice(0, 40);
+              return existingNorm === normalized;
+            });
+            if (!isDuplicate) {
+              faqData.push({ question, answer });
+            } else {
+              console.log(`🔍 [faq] Skipping duplicate question: "${question.slice(0, 50)}..."`);
+            }
+          };
+
+          // Helper: build polished answer from objection data
+          const buildObjectionAnswer = (objection: string, summary: string): string => {
+            if (summary && summary.length > 20) {
+              let cleaned = summary
+                .replace(/^(a |the )?(significant |common |frequent )?(buyer |customer )?objection (is|involves|relates to)[^,.]*/i, '')
+                .replace(/^[,.\s]+/, '')
+                .trim();
+              if (cleaned.length > 0) cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+              if (cleaned.length >= 20) return cleaned;
+            }
+            return `${companyName || 'Our platform'} is designed to complement and unify your existing tools, not replace them. We integrate with the systems you already use while providing a strategic layer that connects everything.`;
+          };
+
+          // Helper: build polished answer from proof data
+          const buildProofAnswer = (proofEl: string, proofSum: string): string => {
+            const combined = `${proofEl} ${proofSum}`.toLowerCase();
+            const facts: string[] = [];
+            const timelineMatch = combined.match(/(\d+[-–]\d+\s*weeks?|\d+\s*weeks?|\d+[-–]\d+\s*days?|\d+\s*days?)/i);
+            if (timelineMatch) facts.push(`Our typical onboarding takes ${timelineMatch[1]}`);
+            if (combined.includes('user count') || combined.includes('per user') || combined.includes('per seat')) {
+              facts.push('pricing is tailored based on your team size and the modules you need');
+            }
+            if (facts.length > 0) {
+              return `${facts[0]}, with a dedicated team guiding you through setup, configuration, and training. ${facts.length > 1 ? `Our ${facts.slice(1).join(', ')}, so you get exactly what your organization needs.` : 'We ensure your team is fully operational and confident before handoff.'}`;
+            }
+            return `${companyName || 'Our'} team provides hands-on onboarding support to ensure a smooth transition. We handle setup, configuration, and training so your team can start seeing results quickly.`;
+          };
+          
           // Source 1: Content objections array
           if (faqData.length === 0 && content.objections && Array.isArray(content.objections)) {
-            faqData = content.objections.filter((o: any) => o.question && o.answer);
+            for (const o of content.objections) {
+              if (o.question && o.answer) addFAQ(o.question, o.answer);
+            }
           }
           
-          // Source 2: extracted_intelligence buyerObjections / buyerObjectionsFull
-          // Use the pre-extracted intel from the top of mapLegacyStrategyContent
-          const intel = extractedIntel;
-          console.log('🔍 [faq] intel available:', !!intel, 'buyerObjections:', intel?.buyerObjections);
-          if (faqData.length < 2 && intel) {
-            const objectionSources = [
-              intel.buyerObjectionsFull,
-              intel.buyerObjections,
-              intel.objectionsSummary,
-            ].filter(Boolean);
+          // Source 2: extracted_intelligence buyerObjections
+          const faqIntel = extractedIntel;
+          console.log('🔍 [faq] intel available:', !!faqIntel, 'buyerObjections:', faqIntel?.buyerObjections);
+          if (faqData.length < 2 && faqIntel) {
+            // Use buyerObjectionsFull preferentially (richer), DON'T process both
+            const buyerObjections = faqIntel.buyerObjectionsFull || faqIntel.buyerObjections || '';
+            const objSummary = typeof faqIntel.objectionsSummary === 'string' ? faqIntel.objectionsSummary : '';
             
-            for (const src of objectionSources) {
-              if (faqData.length >= 4) break;
+            if (typeof buyerObjections === 'string' && buyerObjections.length > 10) {
+              // Only split on semicolons and pipes — NOT "and" (too aggressive)
+              const parts = buyerObjections.split(/[;|]/)
+                .map((s: string) => s.trim())
+                .filter((s: string) => s.length > 10);
               
-              if (Array.isArray(src)) {
-                for (const obj of src) {
-                  if (faqData.length >= 6) break;
-                  const objText = typeof obj === 'string' ? obj : obj?.objection || obj?.text || obj?.question || '';
-                  const answerText = typeof obj === 'string' ? '' : obj?.answer || obj?.counterStrategy || obj?.response || '';
-                  if (objText.length > 10) {
-                    // Reframe objection as prospect question
-                    const reframed = reframeObjectionAsQuestion(objText);
-                    const answer = answerText || 'We address this directly — reach out and we\'ll walk you through our approach.';
-                    // Deduplicate
-                    if (!faqData.some(f => f.question.toLowerCase().includes(objText.slice(0, 20).toLowerCase()))) {
-                      faqData.push({ question: reframed, answer });
-                    }
-                  }
-                }
-              } else if (typeof src === 'string' && src.length > 10) {
-                // Handle string-type objections (e.g. "we already have tools for that")
-                // Split on semicolons for multiple objections, or treat as single
-                const objectionParts = src.split(/[;]/).map((s: string) => s.trim()).filter((s: string) => s.length > 5);
-                
-                for (const objPart of objectionParts) {
-                  if (faqData.length >= 6) break;
-                  const reframed = reframeObjectionAsQuestion(objPart);
-                  // Use objectionsSummary as the answer if available
-                  const objSummary = typeof intel.objectionsSummary === 'string' ? intel.objectionsSummary : '';
-                  const answer = objSummary || `We address this directly — reach out and we'll walk you through our approach.`;
-                  if (!faqData.some(f => f.question.toLowerCase().includes(objPart.slice(0, 20).toLowerCase()))) {
-                    faqData.push({ question: reframed, answer });
-                  }
+              for (const objPart of parts) {
+                if (faqData.length >= 6) break;
+                const reframed = reframeObjectionAsQuestion(objPart);
+                addFAQ(reframed, buildObjectionAnswer(objPart, objSummary));
+              }
+            } else if (Array.isArray(buyerObjections)) {
+              for (const obj of buyerObjections) {
+                if (faqData.length >= 6) break;
+                const objText = typeof obj === 'string' ? obj : obj?.objection || obj?.text || obj?.question || '';
+                const answerText = typeof obj === 'string' ? '' : obj?.answer || obj?.counterStrategy || obj?.response || '';
+                if (objText.length > 10) {
+                  const reframed = reframeObjectionAsQuestion(objText);
+                  addFAQ(reframed, answerText || buildObjectionAnswer(objText, objSummary));
                 }
               }
             }
             
-            // Source 2b: Pain points as FAQ entries (from extracted_intelligence)
+            console.log('🔍 [faq] After objections:', faqData.length, 'items');
+            
+            // Source 2b: Pain points as FAQ entries
             if (faqData.length < 3) {
-              const painText = typeof intel.painPoints === 'string' ? intel.painPoints : 
-                               typeof intel.painPointsFull === 'string' ? intel.painPointsFull : '';
-              const painSummary = typeof intel.painSummary === 'string' ? intel.painSummary : '';
+              const painText = typeof faqIntel.painPoints === 'string' ? faqIntel.painPoints : 
+                               typeof faqIntel.painPointsFull === 'string' ? faqIntel.painPointsFull : '';
+              const painSummary = typeof faqIntel.painSummary === 'string' ? faqIntel.painSummary : '';
               
               if (painText.length > 5) {
                 const reframed = reframePainPointAsQuestion(painText);
                 const answer = painSummary || `Our platform directly addresses ${painText} by providing a unified solution.`;
-                if (!faqData.some(f => f.question.toLowerCase().includes(painText.slice(0, 15).toLowerCase()))) {
-                  faqData.push({ question: reframed, answer });
-                }
+                addFAQ(reframed, answer);
               }
             }
             
             // Source 2c: Onboarding/implementation FAQ from proof elements
             if (faqData.length < 5) {
-              const proofText = typeof intel.proofElements === 'string' ? intel.proofElements : 
-                                typeof intel.proofElementsFull === 'string' ? intel.proofElementsFull : '';
-              const proofSum = typeof intel.proofSummary === 'string' ? intel.proofSummary : '';
+              const proofText = typeof faqIntel.proofElements === 'string' ? faqIntel.proofElements : 
+                                typeof faqIntel.proofElementsFull === 'string' ? faqIntel.proofElementsFull : '';
+              const proofSum = typeof faqIntel.proofSummary === 'string' ? faqIntel.proofSummary : '';
               const combinedProof = (proofText + ' ' + proofSum).toLowerCase();
               
               if (combinedProof.match(/onboard|week|day|implementation|setup/)) {
-                const answer = proofSum || proofText;
-                if (answer && !faqData.some(f => f.question.toLowerCase().includes('onboarding'))) {
-                  faqData.push({ question: 'What does the onboarding process look like?', answer });
-                }
+                addFAQ('What does the onboarding process look like?', buildProofAnswer(proofText, proofSum));
               }
             }
             
@@ -3758,12 +3783,12 @@ function GenerateContent() {
           if (faqData.length < 2 && consultationData?.objections) {
             console.log('🔍 [faq] parsing objections from consultationData:', consultationData.objections);
             const parsed = parseObjectionsString(consultationData.objections);
-            faqData.push(...parsed.filter(p => !faqData.some(f => f.question === p.question)));
+            for (const p of parsed) addFAQ(p.question, p.answer);
           }
           
           // Source 4: Pain points reframed as FAQs
           if (faqData.length < 2) {
-            const painPoints = intel?.painPoints || intel?.audiencePainPoints || 
+            const painPoints = faqIntel?.painPoints || faqIntel?.audiencePainPoints || 
                                consultationData?.audience_pain_points || [];
             if (Array.isArray(painPoints)) {
               for (const pain of painPoints) {
@@ -3771,12 +3796,7 @@ function GenerateContent() {
                 const painText = typeof pain === 'string' ? pain : pain?.text || '';
                 if (painText.length > 10) {
                   const reframed = reframePainPointAsQuestion(painText);
-                  if (!faqData.some(f => f.question.toLowerCase().includes(painText.slice(0, 15).toLowerCase()))) {
-                    faqData.push({ 
-                      question: reframed, 
-                      answer: 'Our solution is specifically designed to address this challenge.' 
-                    });
-                  }
+                  addFAQ(reframed, 'Our solution is specifically designed to address this challenge.');
                 }
               }
               console.log('🔍 [faq] After pain points:', faqData.length, 'items');
@@ -3810,6 +3830,7 @@ function GenerateContent() {
             },
           });
           break;
+        }
 
         case 'final-cta':
           // Consultation data takes PRIORITY over AI-generated content
@@ -3843,9 +3864,9 @@ function GenerateContent() {
                                 strategicConsultation?.guaranteeOffer ||
                                 null;
           
-          const ctaSubtext = consultationData.uniqueValue?.slice(0, 150) ||
+          const ctaSubtext = content.solutionStatement?.split(".")[0] ||
+                             consultationData.uniqueValue?.slice(0, 150) ||
                              consultationData.unique_value?.slice(0, 150) ||
-                             content.solutionStatement?.split(".")[0] ||
                              null;
           
           sections.push({
@@ -3904,6 +3925,10 @@ function GenerateContent() {
                 { icon: 'check', text: 'Free consultation' },
                 { icon: 'check', text: 'Cancel anytime' },
               ],
+              brandColors: {
+                primary: extractedIntel?.colors?.[0] || null,
+                secondary: extractedIntel?.colors?.[1] || null,
+              },
               designIntelligence: sdi,
               palette: sdi?.palette,
               sectionThemes: sdi?.sectionThemes,
