@@ -21,6 +21,8 @@ interface FinalCTASectionProps {
     palette?: SDIPalette;
     sectionThemes?: SDISectionThemes;
     sdiTypography?: SDITypography;
+    // Brand colors for background
+    brandColors?: { primary?: string | null; secondary?: string | null };
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -39,7 +41,16 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
 
   // Helper functions for SDI-driven styling
   const getSectionStyles = (): React.CSSProperties => {
+    const brandColors = content.brandColors;
     if (!palette) {
+      // Use brand colors if available, otherwise dark fallback
+      if (brandColors?.primary) {
+        return {
+          background: brandColors.secondary
+            ? `linear-gradient(135deg, ${brandColors.primary}dd, ${brandColors.secondary}dd)`
+            : `linear-gradient(135deg, ${brandColors.primary}dd, ${brandColors.primary}99)`,
+        };
+      }
       return { 
         backgroundColor: '#0f172a',
         background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
