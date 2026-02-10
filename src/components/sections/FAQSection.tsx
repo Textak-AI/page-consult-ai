@@ -781,8 +781,13 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
   // Default dark mode layout with industry-aware background
   return (
     <section 
-      className="relative overflow-hidden"
-      style={{ padding: '96px 24px' }}
+      className="relative overflow-hidden section-pattern-grid section-glow-orb"
+      style={{ 
+        padding: '96px 24px',
+        '--glow-color': 'hsla(189, 95%, 43%, 0.06)',
+        '--glow-top': '40%',
+        '--glow-right': '-5%',
+      } as React.CSSProperties}
       itemScope
       itemType="https://schema.org/FAQPage"
     >

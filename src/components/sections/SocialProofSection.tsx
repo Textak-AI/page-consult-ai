@@ -160,7 +160,7 @@ export function SocialProofSection({ content, onUpdate, isEditing }: SocialProof
   // SaaS variant
   if (isSaas) {
     return (
-      <section className={`py-24 ${isEditing ? 'relative' : ''}`} style={{ backgroundColor: '#0F172A' }}>
+      <section className={`py-24 relative overflow-hidden section-pattern-grid ${isEditing ? '' : ''}`} style={{ backgroundColor: '#0F172A' }}>
         {isEditing && (
           <div className="absolute inset-0 border-2 border-purple-500/50 rounded-lg pointer-events-none z-10" />
         )}
@@ -187,7 +187,7 @@ export function SocialProofSection({ content, onUpdate, isEditing }: SocialProof
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-slate-800 border border-slate-700 p-10 rounded-2xl"
+            className="bg-slate-800 border border-slate-700 p-10 rounded-2xl premium-gen-card"
           >
             {/* Stars */}
             <div className="flex gap-1 mb-6 justify-center">
@@ -357,11 +357,14 @@ export function SocialProofSection({ content, onUpdate, isEditing }: SocialProof
   // Default dark mode layout
   return (
     <section 
-      className={isEditing ? 'relative' : ''}
+      className={`relative overflow-hidden section-pattern-grid section-glow-orb ${isEditing ? '' : ''}`}
       style={{ 
         backgroundColor: 'var(--color-surface)',
         padding: '96px 24px',
-      }}
+        '--glow-color': 'hsla(189, 95%, 43%, 0.06)',
+        '--glow-top': '10%',
+        '--glow-right': '-8%',
+      } as React.CSSProperties}
     >
       {isEditing && (
         <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
@@ -407,7 +410,7 @@ export function SocialProofSection({ content, onUpdate, isEditing }: SocialProof
           className="max-w-4xl mx-auto mb-16"
         >
           <div 
-            className="relative"
+            className="relative premium-gen-card"
             style={{
               backgroundColor: 'var(--color-background-alt)',
               borderColor: 'var(--color-border)',

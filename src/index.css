@@ -1144,6 +1144,157 @@ All colors MUST be HSL.
   }
 }
 
+/* ============================================
+ * PREMIUM DIMENSIONAL PATTERNS FOR GENERATED PAGES
+ * Subtle grid overlays, glassmorphism cards, glow orbs
+ * ============================================ */
+
+/* Dimensional grid pattern — subtle repeating lines */
+.section-pattern-grid {
+  position: relative;
+}
+.section-pattern-grid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent,
+    transparent 39px,
+    rgba(255, 255, 255, 0.015) 39px,
+    rgba(255, 255, 255, 0.015) 40px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Diagonal mesh pattern — crosshatch */
+.section-pattern-mesh {
+  position: relative;
+}
+.section-pattern-mesh::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 59px,
+      rgba(255, 255, 255, 0.01) 59px,
+      rgba(255, 255, 255, 0.01) 60px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 59px,
+      rgba(255, 255, 255, 0.01) 59px,
+      rgba(255, 255, 255, 0.01) 60px
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ambient glow orb — brand-colored via CSS vars */
+.section-glow-orb {
+  position: relative;
+}
+.section-glow-orb::after {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    var(--glow-color, hsla(239, 84%, 67%, 0.08)) 0%,
+    transparent 70%
+  );
+  top: var(--glow-top, -10%);
+  right: var(--glow-right, -5%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Premium card glassmorphism for generated pages */
+.premium-gen-card {
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.premium-gen-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 20px var(--glow-color, hsla(239, 84%, 67%, 0.08));
+}
+
+/* Light mode variants */
+[data-mode="light"] .section-pattern-grid::before {
+  background: repeating-linear-gradient(
+    135deg,
+    transparent,
+    transparent 39px,
+    rgba(0, 0, 0, 0.018) 39px,
+    rgba(0, 0, 0, 0.018) 40px
+  );
+}
+[data-mode="light"] .section-pattern-mesh::before {
+  background: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 59px,
+      rgba(0, 0, 0, 0.012) 59px,
+      rgba(0, 0, 0, 0.012) 60px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 59px,
+      rgba(0, 0, 0, 0.012) 59px,
+      rgba(0, 0, 0, 0.012) 60px
+    );
+}
+[data-mode="light"] .premium-gen-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+[data-mode="light"] .premium-gen-card:hover {
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* Card style variants driven by data-card-style */
+[data-card-style="bordered"] .premium-gen-card {
+  backdrop-filter: none;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+}
+[data-card-style="elevated"] .premium-gen-card {
+  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-radius: 0.75rem;
+}
+[data-card-style="flat"] .premium-gen-card {
+  backdrop-filter: none;
+  background: rgba(30, 41, 59, 0.3);
+  border: none;
+}
+
+/* Reduce patterns on mobile for performance */
+@media (max-width: 768px) {
+  .section-glow-orb::after {
+    width: 250px;
+    height: 250px;
+    opacity: 0.6;
+  }
+}
+
 /* Intelligence Profile Animations */
 @keyframes bar-glow {
   0%, 100% {

@@ -224,7 +224,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
   // SaaS variant
   if (isSaas) {
     return (
-      <section className={`py-24 bg-slate-800/30 ${isEditing ? 'relative' : ''}`} style={{ backgroundColor: '#0F172A' }}>
+      <section className={`py-24 relative overflow-hidden section-pattern-grid bg-slate-800/30 ${isEditing ? '' : ''}`} style={{ backgroundColor: '#0F172A' }}>
         {isEditing && (
           <div className="absolute inset-0 border-2 border-purple-500/50 rounded-lg pointer-events-none z-10" />
         )}
@@ -278,7 +278,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   className={useFlexLayout ? "w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]" : undefined}
                 >
-                  <div className="h-full p-8 bg-slate-800 border border-slate-700 rounded-2xl hover:border-purple-500/50 transition-colors">
+                  <div className="h-full p-8 bg-slate-800 border border-slate-700 rounded-2xl hover:border-purple-500/50 transition-colors premium-gen-card">
                     <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-6">
                       <Icon className="w-7 h-7 text-purple-400" strokeWidth={1.5} />
                     </div>
@@ -423,21 +423,18 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
   // Default dark mode layout
   return (
     <section 
-      className={`relative overflow-hidden ${isEditing ? 'relative' : ''}`}
+      className={`relative overflow-hidden section-pattern-grid section-glow-orb ${isEditing ? 'relative' : ''}`}
       style={{ 
         backgroundColor: 'hsl(217, 33%, 6%)',
         padding: '96px 24px',
-      }}
+        '--glow-color': hasBrandColor ? `${brandPrimaryColor}12` : 'hsla(189, 95%, 43%, 0.06)',
+        '--glow-top': '20%',
+        '--glow-right': '-10%',
+      } as React.CSSProperties}
     >
       {isEditing && (
         <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
       )}
-      {/* Subtle Background */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-30" />
-      <div 
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full blur-[150px]"
-        style={{ backgroundColor: 'hsla(189, 95%, 43%, 0.05)' }}
-      />
 
       <div className="container mx-auto relative z-10 max-w-6xl">
         {/* Section Header */}
