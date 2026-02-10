@@ -781,7 +781,7 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
   // Default dark mode layout with industry-aware background
   return (
     <section 
-      className="relative overflow-hidden section-pattern-grid section-glow-orb"
+      className={`relative overflow-hidden ${(content as any)?.patternClass || 'section-pattern-dots'} ${(content as any)?.glowClass || 'section-glow-edge'}`}
       style={{ 
         padding: '96px 24px',
         '--glow-color': 'hsla(189, 95%, 43%, 0.06)',

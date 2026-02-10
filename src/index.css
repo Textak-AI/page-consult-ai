@@ -1195,7 +1195,88 @@ All colors MUST be HSL.
   z-index: 1;
 }
 
-/* Ambient glow orb — brand-colored via CSS vars */
+/* Scattered dots pattern */
+.section-pattern-dots {
+  position: relative;
+}
+.section-pattern-dots::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Diagonal lines pattern */
+.section-pattern-lines {
+  position: relative;
+}
+.section-pattern-lines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 79px,
+    rgba(255, 255, 255, 0.012) 79px,
+    rgba(255, 255, 255, 0.012) 80px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Noise texture pattern */
+.section-pattern-noise {
+  position: relative;
+}
+.section-pattern-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(rgba(255, 255, 255, 0.008) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Edge highlight glow */
+.section-glow-edge {
+  position: relative;
+}
+.section-glow-edge::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glow-color, hsla(239, 84%, 67%, 0.15)), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Light mode variants for new patterns */
+[data-mode="light"] .section-pattern-dots::before {
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+[data-mode="light"] .section-pattern-lines::before {
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 79px,
+    rgba(0, 0, 0, 0.015) 79px,
+    rgba(0, 0, 0, 0.015) 80px
+  );
+}
+[data-mode="light"] .section-pattern-noise::before {
+  background: repeating-conic-gradient(rgba(0, 0, 0, 0.01) 0% 25%, transparent 0% 50%) 0 0 / 4px 4px;
+}
+
+
 .section-glow-orb {
   position: relative;
 }
