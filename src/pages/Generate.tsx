@@ -2651,7 +2651,17 @@ function GenerateContent() {
       strategicConsultation?.extracted_intelligence ||
       consultationData?.strategicConsultation?.extracted_intelligence ||
       consultationData?.strategic_consultation?.extracted_intelligence ||
-      null;
+      (() => {
+        // Fallback: read from localStorage if consultation record is missing it
+        try {
+          const raw = localStorage.getItem('pageconsult_demo_extracted');
+          if (raw) {
+            console.log('📦 [mapLegacyStrategyContent] Using localStorage fallback for extractedIntel');
+            return JSON.parse(raw);
+          }
+        } catch { }
+        return null;
+      })();
     
     console.log('🔍 [mapLegacyStrategyContent] extractedIntel found:', !!extractedIntel);
     if (extractedIntel) {
@@ -2665,7 +2675,12 @@ function GenerateContent() {
       || consultationData?.company_name 
       || consultationData?.business_name
       || strategicConsultation?.businessName
-      || '';
+      || (() => {
+        try {
+          const brandData = JSON.parse(localStorage.getItem('pageconsult_brand_data') || '{}');
+          return brandData.companyName || '';
+        } catch { return ''; }
+      })();
     const businessName = companyName || strategicConsultation?.businessName || consultationData.industry;
     
     // CRITICAL: Get pageType for beta section mapping
