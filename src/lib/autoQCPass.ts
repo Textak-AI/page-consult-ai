@@ -41,6 +41,28 @@ function extractFirstPain(painText: string): string {
   return parts[0]?.slice(0, 60) || painText.slice(0, 60);
 }
 
+/**
+ * Fuzzy company name matching to prevent stutter like "Targa TARGA.AI"
+ * Strips common domain suffixes and checks if the base name already appears.
+ */
+function companyNameAlreadyPresent(text: string, companyName: string): boolean {
+  const textLower = text.toLowerCase();
+  const nameLower = companyName.toLowerCase();
+  
+  // Exact match
+  if (textLower.includes(nameLower)) return true;
+  
+  // Base name match: strip common suffixes and check
+  const baseName = nameLower
+    .replace(/\.(ai|io|co|com|app|dev|tech|hq|inc|llc|ltd|corp)$/i, '')
+    .replace(/[-_\s]+/g, '')
+    .trim();
+  
+  if (baseName.length >= 3 && textLower.includes(baseName)) return true;
+  
+  return false;
+}
+
 // ========================
 // GENERIC PHRASE RULES
 // ========================
@@ -292,19 +314,19 @@ function runUtilizationPass(
   if (used.length > 0) console.log(`  ✅ Used: ${used.map(f => f.field).join(', ')}`);
   if (unused.length > 0) console.log(`  ⚠️ Unused: ${unused.map(f => f.field).join(', ')}`);
 
-  // Company name injection if it appears < 2 times
+  // Company name injection if it appears < 2 times (using fuzzy matching)
   if (companyName && companyName.length > 1) {
-    const nameRegex = new RegExp(companyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    const nameCount = (allText.match(nameRegex) || []).length;
+    // Use fuzzy matching: if base name (e.g. "targa") already appears, count as present
+    const nameAlreadyPresent = companyNameAlreadyPresent(allText, companyName);
 
-    if (nameCount < 2) {
+    if (!nameAlreadyPresent) {
       let injected = false;
       return sections.map(section => {
         if (injected) return section;
         if (section.type !== 'features') return section;
 
         const content = { ...section.content };
-        if (content.subtitle && typeof content.subtitle === 'string' && !content.subtitle.toLowerCase().includes(companyName.toLowerCase())) {
+        if (content.subtitle && typeof content.subtitle === 'string' && !companyNameAlreadyPresent(content.subtitle, companyName)) {
           const original = content.subtitle;
           let improved = original;
           if (/apart$/i.test(improved)) {
@@ -321,7 +343,7 @@ function runUtilizationPass(
             improvements.push({
               sectionType: section.type, field: 'subtitle',
               before: original, after: improved,
-              reason: `Company name only appeared ${nameCount}x — injected for brand reinforcement`,
+              reason: `Company name not detected — injected for brand reinforcement`,
               category: 'personalization',
             });
           }

@@ -1342,7 +1342,14 @@ function GenerateContent() {
         return { ...s, content: { ...s.content, patternClass, glowClass } };
       });
       const companyNameForQC = consultationData?.businessName || consultationData?.business_name || '';
-      const { sections: qcSectionsDev } = autoQCPass(patternedDev, consultationData?.extracted_intelligence || consultationData, consultationData, companyNameForQC);
+      const extractedIntelForQC = (() => {
+        try {
+          const stored = localStorage.getItem('pageconsult_demo_extracted') || localStorage.getItem('pageconsult_extracted_intelligence');
+          if (stored) { const p = JSON.parse(stored); if (p && typeof p === 'object' && Object.keys(p).length > 3) return p; }
+        } catch {}
+        return consultationData?.extracted_intelligence || consultationData;
+      })();
+      const { sections: qcSectionsDev } = autoQCPass(patternedDev, extractedIntelForQC, consultationData, companyNameForQC);
       setSections(qcSectionsDev);
 
       clearInterval(progressInterval);
@@ -1922,8 +1929,14 @@ function GenerateContent() {
         setPageData(savedPageData);
         // Auto-QC pass before displaying
         const companyNameForQC = companyName || '';
-        const extractedIntel = (consultationData.extracted_intelligence as any) || strategicData?.consultationData || consultationData;
-        const { sections: qcSections } = autoQCPass(generatedSections, extractedIntel, consultationData, companyNameForQC);
+        const extractedIntelForQC = (() => {
+          try {
+            const stored = localStorage.getItem('pageconsult_demo_extracted') || localStorage.getItem('pageconsult_extracted_intelligence');
+            if (stored) { const p = JSON.parse(stored); if (p && typeof p === 'object' && Object.keys(p).length > 3) return p; }
+          } catch {}
+          return (consultationData.extracted_intelligence as any) || strategicData?.consultationData || consultationData;
+        })();
+        const { sections: qcSections } = autoQCPass(generatedSections, extractedIntelForQC, consultationData, companyNameForQC);
         setSections(qcSections);
       }
 
@@ -3499,15 +3512,20 @@ function GenerateContent() {
           }
           break;
 
-        case 'problem-solution':
-          if (content.problemStatement && content.solutionStatement) {
+        case 'problem-solution': {
+          const problem = content.problemStatement || extractedIntel?.painPoints || '';
+          const solution = content.solutionStatement || extractedIntel?.valueProp || '';
+          
+          if (problem && solution) {
             sections.push({
               type: "problem-solution",
               order: order++,
               visible: true,
               content: {
-                problem: content.problemStatement,
-                solution: content.solutionStatement,
+                problemTitle: 'The Challenge',
+                problem,
+                solutionTitle: `The ${companyName || ''} Solution`.trim(),
+                solution,
                 industryVariant,
                 mode: sdiMode,
                 primaryColor: sdi?.palette?.primary || primaryColor,
@@ -3517,8 +3535,11 @@ function GenerateContent() {
                 sdiTypography: sdi?.sdiTypography,
               },
             });
+          } else {
+            console.log('⚠️ [mapLegacyStrategyContent] problem-solution skipped: missing problem or solution data');
           }
           break;
+        }
 
         case 'features':
           if (isBetaPage) {
@@ -3594,18 +3615,46 @@ function GenerateContent() {
           break;
 
         case 'how-it-works':
-        case 'process':
-          const processSteps = content.processSteps || content.steps || [];
+        case 'process': {
+          let processSteps = content.processSteps || content.steps || [];
           console.log('🔍 [mapLegacyStrategyContent] how-it-works: found', processSteps.length, 'steps');
+          
+          // Generate process steps from consultation intelligence when none exist
+          if (processSteps.length === 0 && extractedIntel) {
+            const compName = extractedIntel.companyName || companyName || 'our platform';
+            processSteps = [
+              {
+                step: 1,
+                title: 'Strategic Assessment',
+                description: `We start by understanding your specific challenges and objectives to ensure ${compName} is configured for your exact needs.`,
+              },
+              {
+                step: 2,
+                title: 'Custom Configuration',
+                description: `Your dedicated team configures the platform to align with your existing workflows, integrations, and reporting requirements.`,
+              },
+              {
+                step: 3,
+                title: 'Launch & Optimize',
+                description: `Go live with full support, then continuously refine based on real performance data and team feedback.`,
+              },
+            ];
+            console.log(`🔧 [how-it-works] Generated ${processSteps.length} process steps from intelligence`);
+          }
+          
           if (processSteps.length > 0) {
             sections.push({
               type: "how-it-works",
               order: order++,
               visible: true,
               content: {
-                title: 'How It Works',
+                title: `How ${companyName || 'It'} Works`,
                 subtitle: 'Your path to results',
-                steps: processSteps,
+                steps: processSteps.map((step: any, i: number) => ({
+                  step: step.step || i + 1,
+                  title: step.title,
+                  description: step.description,
+                })),
                 industryVariant,
                 mode: sdiMode,
                 primaryColor: sdi?.palette?.primary || primaryColor,
@@ -3616,9 +3665,10 @@ function GenerateContent() {
               },
             });
           } else {
-            console.log('⚠️ [mapLegacyStrategyContent] how-it-works skipped: no steps found');
+            console.log('⚠️ [mapLegacyStrategyContent] how-it-works skipped: no steps found and no intelligence available');
           }
           break;
+        }
 
         case 'social-proof':
         case 'testimonials':
@@ -4798,8 +4848,14 @@ function GenerateContent() {
           return { ...s, content: { ...s.content, patternClass, glowClass } };
         });
         const regenCompanyName = consultationData?.businessName || consultationData?.business_name || consultation?.businessName || '';
-        const regenIntel = consultationData?.extracted_intelligence || consultationData;
-        const { sections: qcRegenSections } = autoQCPass(patternedRegen, regenIntel, consultationData, regenCompanyName);
+        const regenIntelForQC = (() => {
+          try {
+            const stored = localStorage.getItem('pageconsult_demo_extracted') || localStorage.getItem('pageconsult_extracted_intelligence');
+            if (stored) { const p = JSON.parse(stored); if (p && typeof p === 'object' && Object.keys(p).length > 3) return p; }
+          } catch {}
+          return consultationData?.extracted_intelligence || consultationData;
+        })();
+        const { sections: qcRegenSections } = autoQCPass(patternedRegen, regenIntelForQC, consultationData, regenCompanyName);
         setSections(qcRegenSections);
         toast({
           title: "Content Regenerated",

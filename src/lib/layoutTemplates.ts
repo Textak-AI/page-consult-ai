@@ -108,10 +108,10 @@ export const layoutTemplates: Record<string, LayoutTemplate> = {
     awarenessLevels: ['solution-aware', 'product-aware', 'most-aware'],
     sections: [
       'hero',
-      'stats-bar',
+      'problem-solution',
       'features',
-      'social-proof',
       'how-it-works',
+      'social-proof',
       'client-results',
       'faq',
       'final-cta',
