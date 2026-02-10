@@ -67,7 +67,8 @@ export function generateSDIPalette(
   const normalizedIndustry = industry?.toLowerCase() || 'default';
   const defaults = industryDefaults[normalizedIndustry] || industryDefaults.default;
   const primary = brandPrimaryColor || defaults.primary;
-  const darkBg = brandPrimaryColor || defaults.darkBg;
+  // NEVER use brand primary as dark section background — it should always be a dark/navy color
+  const darkBg = defaults.darkBg;
   
   const palette: SDIPalette = {
     primary,
