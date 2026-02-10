@@ -38,6 +38,7 @@ const iconMap: Record<string, LucideIcon> = {
   DollarSign, Tag, Clock, CheckCircle, Heart, Star, Lightbulb, Rocket,
   BarChart3, Lock, Globe, Layers, Settings, MessageSquare, Briefcase,
   Calendar, FileText, Mail, Phone, Search, ShoppingCart, Truck, Wrench,
+  Sparkles,
   zap: Zap, target: Target, shield: Shield, trendingup: TrendingUp,
   users: Users, award: Award, grid: Grid, list: List, headset: Headset,
   dollarsign: DollarSign, tag: Tag, clock: Clock, checkcircle: CheckCircle,
@@ -46,6 +47,7 @@ const iconMap: Record<string, LucideIcon> = {
   settings: Settings, messagesquare: MessageSquare, briefcase: Briefcase,
   calendar: Calendar, filetext: FileText, mail: Mail, phone: Phone,
   search: Search, shoppingcart: ShoppingCart, truck: Truck, wrench: Wrench,
+  sparkles: Sparkles,
 };
 
 const getIconComponent = (iconName: string): LucideIcon => {

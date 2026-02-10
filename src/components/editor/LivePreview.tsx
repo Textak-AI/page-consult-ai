@@ -669,6 +669,12 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
       <div 
         data-mode={colorMode} 
         data-industry={industryVariant || 'default'}
+        data-card-style={(() => {
+          // Extract card style from sections' designIntelligence if available
+          const firstSection = sections.find(s => s.content?.designIntelligence);
+          const di = firstSection?.content?.designIntelligence;
+          return di?.designTokens?.cardStyle || di?.cardStyle || 'glass';
+        })()}
         className={cn(
           "min-h-full live-preview-container",
           colorMode === 'light' ? 'bg-white text-slate-900' : 'bg-slate-950 text-slate-50'

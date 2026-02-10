@@ -2644,7 +2644,29 @@ function GenerateContent() {
     
     const sections: Section[] = [];
     let order = 0;
-    const businessName = strategicConsultation?.businessName || consultationData.industry;
+    
+    // Extract intelligence from ALL possible locations — do this ONCE at the top
+    const extractedIntel: any = 
+      consultationData?.extracted_intelligence ||
+      strategicConsultation?.extracted_intelligence ||
+      consultationData?.strategicConsultation?.extracted_intelligence ||
+      consultationData?.strategic_consultation?.extracted_intelligence ||
+      null;
+    
+    console.log('🔍 [mapLegacyStrategyContent] extractedIntel found:', !!extractedIntel);
+    if (extractedIntel) {
+      console.log('🔍 [mapLegacyStrategyContent] extractedIntel keys:', Object.keys(extractedIntel));
+      console.log('🔍 [mapLegacyStrategyContent] buyerObjections:', extractedIntel.buyerObjections);
+      console.log('🔍 [mapLegacyStrategyContent] painPoints:', extractedIntel.painPoints);
+    }
+    
+    // Use company name from extracted intelligence for subtitle/headline personalization
+    const companyName = extractedIntel?.companyName 
+      || consultationData?.company_name 
+      || consultationData?.business_name
+      || strategicConsultation?.businessName
+      || '';
+    const businessName = companyName || strategicConsultation?.businessName || consultationData.industry;
     
     // CRITICAL: Get pageType for beta section mapping
     const pageType = strategicConsultation?.pageType || consultationData.pageType || null;
@@ -3469,17 +3491,44 @@ function GenerateContent() {
               },
             });
           } else if (content.features && content.features.length > 0) {
+            // Infer icons from feature titles when default/checkmark icons are used
+            const inferFeatureIcon = (title: string): string => {
+              const lower = title.toLowerCase();
+              if (lower.includes('goal') || lower.includes('align') || lower.includes('objective')) return 'Target';
+              if (lower.includes('real-time') || lower.includes('dashboard') || lower.includes('monitor') || lower.includes('visib')) return 'BarChart3';
+              if (lower.includes('automat') || lower.includes('workflow') || lower.includes('orchestrat')) return 'Zap';
+              if (lower.includes('data') || lower.includes('intelligen') || lower.includes('analytic')) return 'Lightbulb';
+              if (lower.includes('integrat') || lower.includes('connect') || lower.includes('enterprise')) return 'Globe';
+              if (lower.includes('security') || lower.includes('compliance') || lower.includes('protect')) return 'Shield';
+              if (lower.includes('team') || lower.includes('collaborat') || lower.includes('cross-functional')) return 'Users';
+              if (lower.includes('scale') || lower.includes('grow') || lower.includes('expand')) return 'TrendingUp';
+              if (lower.includes('report') || lower.includes('insight')) return 'FileText';
+              if (lower.includes('time') || lower.includes('speed') || lower.includes('fast')) return 'Clock';
+              if (lower.includes('custom') || lower.includes('configur') || lower.includes('flexib')) return 'Settings';
+              if (lower.includes('support') || lower.includes('help')) return 'Headset';
+              // Fallback rotation to avoid all-same icons
+              const fallbacks = ['Sparkles', 'Layers', 'Rocket', 'Star', 'Briefcase'];
+              const hash = lower.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+              return fallbacks[hash % fallbacks.length];
+            };
+            
+            const featureSubtitle = companyName 
+              ? `What sets ${companyName} apart`
+              : 'What sets us apart';
+            
             sections.push({
               type: "features",
               order: order++,
               visible: true,
               content: {
                 title: 'Why Choose Us',
-                subtitle: `What sets ${businessName} apart`,
-                features: content.features.map((f: any) => ({
+                subtitle: featureSubtitle,
+                features: content.features.map((f: any, i: number) => ({
                   title: f.title,
                   description: f.description,
-                  icon: f.icon || "CheckCircle",
+                  icon: (f.icon && f.icon !== '✓' && f.icon !== '✔' && f.icon !== 'CheckCircle')
+                    ? f.icon
+                    : inferFeatureIcon(f.title || `feature-${i}`),
                 })),
                 industryVariant,
                 mode: sdiMode,
@@ -3611,7 +3660,9 @@ function GenerateContent() {
           }
           
           // Source 2: extracted_intelligence buyerObjections / buyerObjectionsFull
-          const intel = consultationData?.extracted_intelligence || strategicConsultation?.extracted_intelligence;
+          // Use the pre-extracted intel from the top of mapLegacyStrategyContent
+          const intel = extractedIntel;
+          console.log('🔍 [faq] intel available:', !!intel, 'buyerObjections:', intel?.buyerObjections);
           if (faqData.length < 2 && intel) {
             const objectionSources = [
               intel.buyerObjectionsFull,
@@ -3803,8 +3854,28 @@ function GenerateContent() {
               sectionThemes: sdi?.sectionThemes,
               sdiTypography: sdi?.sdiTypography,
             } : {
-              headline: "Ready to Get Started?",
-              subtext: ctaSubtext,
+              headline: (() => {
+                // Build a personalized headline using audience context
+                const audience = extractedIntel?.audience || extractedIntel?.audienceFull || '';
+                if (companyName || audience) {
+                  const audienceLabel = audience
+                    ? audience.split(',')[0].trim()
+                    : 'Organization';
+                  const capitalized = audienceLabel.charAt(0).toUpperCase() + audienceLabel.slice(1);
+                  return `Ready to Transform Your ${capitalized}?`;
+                }
+                return 'Ready to Get Started?';
+              })(),
+              subtext: (() => {
+                // Use solutionStatement (well-formatted) over raw value prop
+                let sub = content.solutionStatement || '';
+                if (sub.length > 200) sub = sub.split('.')[0] + '.';
+                if (!sub && ctaSubtext) {
+                  sub = ctaSubtext.charAt(0).toUpperCase() + ctaSubtext.slice(1);
+                  if (!sub.endsWith('.')) sub += '.';
+                }
+                return sub || ctaSubtext;
+              })(),
               ctaText,
               ctaLink: "#contact",
               primaryColor: sdi?.palette?.primary || primaryColor,
