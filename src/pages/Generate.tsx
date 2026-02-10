@@ -3977,20 +3977,42 @@ function GenerateContent() {
               sdiTypography: sdi?.sdiTypography,
             } : {
               headline: (() => {
-                // Build a personalized headline using audience context
-                const audience = extractedIntel?.audience || extractedIntel?.audienceFull || '';
-                if (companyName || audience) {
-                  const audienceLabel = audience
-                    ? audience.split(',')[0].trim()
-                    : 'Organization';
-                  const capitalized = audienceLabel.charAt(0).toUpperCase() + audienceLabel.slice(1);
-                  return `Ready to Transform Your ${capitalized}?`;
+                // Build CTA headline from OUTCOME/PROBLEM — NEVER use audience as the object
+                const solution = content.solutionStatement || extractedIntel?.solutionStatement || extractedIntel?.valueProp || '';
+                const problem = content.problemStatement || extractedIntel?.painPoints || '';
+                
+                // Priority 1: Extract a transformation verb+object from solution
+                if (solution) {
+                  const transformMatch = solution.match(/(align|transform|automate|streamline|accelerate|optimize|connect|bridge|eliminate|reduce|improve|scale|grow|simplify|create|deliver|drive|enable|unlock|unify)\s+(.{10,50}?)[\.,;]/i);
+                  if (transformMatch) {
+                    const verb = transformMatch[1].charAt(0).toUpperCase() + transformMatch[1].slice(1);
+                    const object = transformMatch[2].trim();
+                    return `Ready to ${verb} ${object}?`;
+                  }
                 }
+                
+                // Priority 2: Use problem framing
+                if (problem) {
+                  const firstProblem = problem.split(/[.?!]/)[0].trim().slice(0, 50);
+                  if (firstProblem.length > 10) return `Ready to Solve ${firstProblem}?`;
+                }
+                
+                // Priority 3: Safe fallback with company name
+                if (companyName) return `Ready to Get Started with ${companyName}?`;
                 return 'Ready to Get Started?';
               })(),
               subtext: (() => {
-                // Use solutionStatement (well-formatted) over raw value prop
-                let sub = content.solutionStatement || '';
+                // Subheadline: solution context + audience framing (audience belongs HERE, not in headline)
+                const solution = content.solutionStatement || '';
+                const audience = extractedIntel?.audience || '';
+                
+                if (solution && audience) {
+                  const firstSentence = solution.split(/[.!]/)[0].trim();
+                  const shortSentence = firstSentence.length > 150 ? firstSentence.slice(0, 150) + '...' : firstSentence;
+                  return `${shortSentence} — built for ${audience.split(',')[0].trim()} who demand results.`;
+                }
+                
+                let sub = solution;
                 if (sub.length > 200) sub = sub.split('.')[0] + '.';
                 if (!sub && ctaSubtext) {
                   sub = ctaSubtext.charAt(0).toUpperCase() + ctaSubtext.slice(1);

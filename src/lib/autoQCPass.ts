@@ -281,6 +281,44 @@ function runStructuralPass(
 // PASS 3: UTILIZATION
 // ========================
 
+/**
+ * Keyword-overlap matching for intelligence field detection.
+ * The AI often paraphrases consultation data, so substring matching misses usage.
+ * If 40%+ of meaningful keywords from the field value appear in page text, it counts.
+ */
+function fieldIsUsedInContent(fieldValue: string, allText: string): boolean {
+  if (!fieldValue || fieldValue.length < 5) return false;
+
+  const textLower = allText.toLowerCase();
+  const valueLower = fieldValue.toLowerCase();
+
+  // Method 1: Direct substring (catches exact matches)
+  if (textLower.includes(valueLower.slice(0, 25))) return true;
+
+  // Method 2: Keyword overlap
+  const stopWords = new Set([
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+    'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+    'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+    'should', 'may', 'might', 'can', 'that', 'this', 'these', 'those',
+    'it', 'its', 'they', 'them', 'their', 'we', 'our', 'you', 'your',
+    'i', 'me', 'my', 'not', 'no', 'just', 'also', 'very', 'too',
+    'how', 'what', 'when', 'where', 'who', 'which', 'much', 'many',
+    "don", "don't", "doesn't", 'already', 'really', 'about',
+  ]);
+
+  const keywords = valueLower
+    .split(/[\s,;.!?()]+/)
+    .filter(word => word.length > 3 && !stopWords.has(word));
+
+  if (keywords.length === 0) return false;
+
+  const matchedKeywords = keywords.filter(kw => textLower.includes(kw));
+  const matchRatio = matchedKeywords.length / keywords.length;
+
+  return matchRatio >= 0.4;
+}
+
 function runUtilizationPass(
   sections: any[],
   intel: any,
@@ -302,10 +340,7 @@ function runUtilizationPass(
   ];
 
   const available = fieldChecks.filter(f => f.value && typeof f.value === 'string' && f.value.length > 3);
-  const used = available.filter(f => {
-    const searchStr = f.value!.toLowerCase().slice(0, 25);
-    return allText.includes(searchStr);
-  });
+  const used = available.filter(f => fieldIsUsedInContent(f.value!, allText));
   const unused = available.filter(f => !used.includes(f));
 
   const utilizationPct = available.length > 0 ? Math.round((used.length / available.length) * 100) : 0;
