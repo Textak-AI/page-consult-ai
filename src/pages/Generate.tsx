@@ -223,7 +223,26 @@ function computeSDIDecisions(
   };
 }
 
-// Patch sections with fresh consultation data (especially for final-cta)
+// Premium pattern alternation — ensures adjacent sections never share the same pattern
+function getPatternForSection(sectionIndex: number, sectionType: string): { patternClass: string; glowClass: string } {
+  if (sectionType === 'hero') {
+    return { patternClass: 'section-pattern-mesh', glowClass: 'section-glow-orb' };
+  }
+  if (sectionType === 'final-cta' || sectionType === 'beta-final-cta') {
+    return { patternClass: 'section-pattern-mesh', glowClass: 'section-glow-orb' };
+  }
+  // Middle sections rotate through distinct patterns
+  const middlePatterns = [
+    { patternClass: 'section-pattern-grid', glowClass: '' },
+    { patternClass: 'section-pattern-dots', glowClass: 'section-glow-edge' },
+    { patternClass: 'section-pattern-lines', glowClass: '' },
+    { patternClass: 'section-pattern-noise', glowClass: 'section-glow-orb' },
+  ];
+  const patternIndex = (sectionIndex - 1) % middlePatterns.length;
+  return middlePatterns[Math.max(0, patternIndex)];
+}
+
+
 function patchSectionsWithConsultationData(
   sections: Section[],
   consultationData: any
@@ -1029,16 +1048,22 @@ function GenerateContent() {
         );
         
         // Inject resolved design intelligence into section content
-        patchedSections = patchedSections.map(section => ({
-          ...section,
-          content: {
-            ...section.content,
-            mode: resolvedColorMode === 'light' ? 'light' : 'dark',
-            industryVariant: resolvedIndustryVariant,
-            primaryColor: section.content?.primaryColor || resolvedBrand.primaryColor,
-            logoUrl: section.content?.logoUrl || resolvedBrand.logoUrl,
-          },
-        }));
+        patchedSections = patchedSections.map((section, index) => {
+          // Assign alternating premium patterns to avoid adjacent repetition
+          const { patternClass, glowClass } = getPatternForSection(index, section.type);
+          return {
+            ...section,
+            content: {
+              ...section.content,
+              mode: resolvedColorMode === 'light' ? 'light' : 'dark',
+              industryVariant: resolvedIndustryVariant,
+              primaryColor: section.content?.primaryColor || resolvedBrand.primaryColor,
+              logoUrl: section.content?.logoUrl || resolvedBrand.logoUrl,
+              patternClass,
+              glowClass,
+            },
+          };
+        });
         
         // BUG 1 FIX: Override stale design_intelligence in pageData with resolved values
         const correctedDesignIntelligence = {
@@ -1311,7 +1336,10 @@ function GenerateContent() {
         slug: "dev-test",
         sections: generatedSections,
       });
-      setSections(generatedSections);
+      setSections(generatedSections.map((s, i) => {
+        const { patternClass, glowClass } = getPatternForSection(i, s.type);
+        return { ...s, content: { ...s.content, patternClass, glowClass } };
+      }));
 
       clearInterval(progressInterval);
       setProgress(100);
@@ -4757,7 +4785,10 @@ function GenerateContent() {
 
       if (result.success && result.content) {
         const newSections = await mapGeneratedContentToSections(result.content, consultationData);
-        setSections(newSections);
+        setSections(newSections.map((s, i) => {
+          const { patternClass, glowClass } = getPatternForSection(i, s.type);
+          return { ...s, content: { ...s.content, patternClass, glowClass } };
+        }));
         toast({
           title: "Content Regenerated",
           description: intelligence 

@@ -40,29 +40,31 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   const { urgencyText, guaranteeText, secondaryCta } = content;
 
   // Helper functions for SDI-driven styling
+  // CTA section ALWAYS uses dark background — primary color reserved for buttons/accents
   const getSectionStyles = (): React.CSSProperties => {
     const brandColors = content.brandColors;
-    if (!palette) {
-      // Use brand colors if available, otherwise dark fallback
-      if (brandColors?.primary) {
-        return {
-          background: brandColors.secondary
-            ? `linear-gradient(135deg, ${brandColors.primary}dd, ${brandColors.secondary}dd)`
-            : `linear-gradient(135deg, ${brandColors.primary}dd, ${brandColors.primary}99)`,
-        };
-      }
+    // 1. SDI dark section color
+    if (palette?.darkSection) {
       return { 
-        backgroundColor: '#0f172a',
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
+        background: `linear-gradient(135deg, ${palette.darkSection}, ${palette.darkSection}dd)` 
       };
     }
-    if (theme === 'dark') {
-      return { backgroundColor: palette.darkSection };
+    // 2. Brand secondary (navy/dark) color
+    if (brandColors?.secondary) {
+      return { 
+        background: `linear-gradient(135deg, ${brandColors.secondary}ee, ${brandColors.secondary}cc)` 
+      };
     }
-    if (theme === 'tinted') {
-      return { backgroundColor: palette.primaryTint };
+    // 3. Dark fallback with subtle primary tint
+    if (brandColors?.primary) {
+      return { 
+        background: `linear-gradient(135deg, #0f172a 0%, ${brandColors.primary}15 100%)` 
+      };
     }
-    return { backgroundColor: palette.lightSection };
+    // 4. Pure dark fallback
+    return { 
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
+    };
   };
 
   const getTextColorClass = () => {
@@ -78,22 +80,26 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   };
 
   const getButtonStyles = (): React.CSSProperties => {
-    if (theme === 'dark') {
-      // White button on dark bg
-      return {};
-    }
-    // Colored button on light bg
-    if (palette) {
+    // Use brand primary color on the button (pops against dark CTA background)
+    const brandPrimary = palette?.primary || content.brandColors?.primary;
+    if (brandPrimary) {
       return { 
-        backgroundColor: palette.primary, 
+        backgroundColor: brandPrimary, 
         color: '#ffffff',
-        boxShadow: `0 10px 40px -10px ${palette.primary}88`
+        boxShadow: `0 10px 40px -10px ${brandPrimary}88`
       };
+    }
+    if (theme === 'dark') {
+      return {};
     }
     return {};
   };
 
   const getButtonClassName = () => {
+    const brandPrimary = palette?.primary || content.brandColors?.primary;
+    if (brandPrimary) {
+      return 'text-white hover:opacity-90';
+    }
     if (theme === 'dark') {
       return 'bg-white text-slate-900 hover:bg-slate-100';
     }
@@ -124,7 +130,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
 
   return (
     <section 
-      className="py-24 md:py-32 relative overflow-hidden section-pattern-mesh section-glow-orb"
+      className={`py-24 md:py-32 relative overflow-hidden ${(content as any).patternClass || 'section-pattern-mesh'} ${(content as any).glowClass || 'section-glow-orb'}`}
       style={{
         ...getSectionStyles(),
         '--glow-color': palette?.primary ? `${palette.primary}14` : 'hsla(189, 95%, 43%, 0.08)',

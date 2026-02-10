@@ -425,7 +425,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
   // Default dark mode layout
   return (
     <section 
-      className={`relative overflow-hidden section-pattern-grid section-glow-orb ${isEditing ? 'relative' : ''}`}
+      className={`relative overflow-hidden ${(content as any)?.patternClass || 'section-pattern-grid'} ${(content as any)?.glowClass || 'section-glow-orb'} ${isEditing ? 'relative' : ''}`}
       style={{ 
         backgroundColor: 'hsl(217, 33%, 6%)',
         padding: '96px 24px',

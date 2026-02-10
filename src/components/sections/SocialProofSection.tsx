@@ -357,7 +357,7 @@ export function SocialProofSection({ content, onUpdate, isEditing }: SocialProof
   // Default dark mode layout
   return (
     <section 
-      className={`relative overflow-hidden section-pattern-grid section-glow-orb ${isEditing ? '' : ''}`}
+      className={`relative overflow-hidden ${(content as any)?.patternClass || 'section-pattern-lines'} ${(content as any)?.glowClass || ''} ${isEditing ? '' : ''}`}
       style={{ 
         backgroundColor: 'var(--color-surface)',
         padding: '96px 24px',
