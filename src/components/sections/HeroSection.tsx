@@ -2,9 +2,36 @@ import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
 import { LogoUploader } from "@/components/editor/LogoUploader";
 import { useState, useMemo } from "react";
-import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star, Image, Layers, PlayCircle, Check } from "lucide-react";
+import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star, Image, Layers, PlayCircle, Check, HeartPulse, Factory, TrendingUp, Lightbulb, Palette, GraduationCap, ShoppingBag, Scale, Home, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
+
+// Industry-aware hero icon mapping
+const heroIconMap: Record<string, { icon: LucideIcon; label: string }> = {
+  healthcare: { icon: HeartPulse, label: 'Patient Care' },
+  saas: { icon: Layers, label: 'Platform' },
+  manufacturing: { icon: Factory, label: 'Operations' },
+  finance: { icon: TrendingUp, label: 'Growth' },
+  fintech: { icon: TrendingUp, label: 'Growth' },
+  consulting: { icon: Lightbulb, label: 'Strategy' },
+  coaching: { icon: Lightbulb, label: 'Strategy' },
+  creative: { icon: Palette, label: 'Design' },
+  education: { icon: GraduationCap, label: 'Learning' },
+  ecommerce: { icon: ShoppingBag, label: 'Commerce' },
+  legal: { icon: Scale, label: 'Justice' },
+  realestate: { icon: Home, label: 'Property' },
+  'real-estate': { icon: Home, label: 'Property' },
+  'local-services': { icon: Award, label: 'Service' },
+  devtools: { icon: Layers, label: 'Developer Tools' },
+};
+const defaultHeroIcon = { icon: Sparkles, label: 'Innovation' };
+
+function getHeroIcon(industryVariant: string): { icon: LucideIcon; label: string } {
+  const key = industryVariant.toLowerCase();
+  return heroIconMap[key] || 
+    Object.entries(heroIconMap).find(([k]) => key.includes(k))?.[1] || 
+    defaultHeroIcon;
+}
 import type { SDIPalette, SDISectionThemes, SDITypography } from '@/lib/designIntelligence/types';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -583,7 +610,10 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             }}
           >
             {showDarkOverlay && (
-              <div className="absolute inset-0 bg-black/50" />
+              <>
+                <div className="absolute inset-0 bg-black/40" />
+                <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/50 to-transparent" />
+              </>
             )}
           </div>
         )}
@@ -813,7 +843,10 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             }}
           >
             {showDarkOverlay && (
-              <div className="absolute inset-0 bg-black/60" />
+              <>
+                <div className="absolute inset-0 bg-black/40" />
+                <div className="absolute inset-0 bg-gradient-to-r from-white/75 via-white/50 to-transparent" />
+              </>
             )}
           </div>
         )}
@@ -1021,13 +1054,22 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                     : 'bg-gradient-to-br from-slate-100 to-slate-200'
                 } p-8 shadow-2xl`}
               >
-                {/* Abstract representation - sophisticated placeholder */}
+                {/* Industry-aware icon */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-40 h-40 rounded-full border-4 border-teal-500/30 flex items-center justify-center animate-pulse">
-                    <div className="w-28 h-28 rounded-full bg-teal-500/20 flex items-center justify-center">
-                      <Shield className="w-14 h-14 text-teal-500" />
-                    </div>
-                  </div>
+                  {(() => {
+                    const { icon: IndustryIcon } = getHeroIcon(industryVariant);
+                    const accentColor = content.primaryColor || '#14b8a6';
+                    return (
+                      <div 
+                        className="p-6 rounded-2xl"
+                        style={{ backgroundColor: `${accentColor}15`, boxShadow: `0 0 30px ${accentColor}25` }}
+                      >
+                        <div className="w-28 h-28 rounded-full flex items-center justify-center" style={{ backgroundColor: `${accentColor}20` }}>
+                          <IndustryIcon className="w-14 h-14" style={{ color: accentColor }} strokeWidth={1.5} />
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
                 
                 {/* Decorative rings */}
@@ -1148,9 +1190,16 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           }}
         >
           {showDarkOverlay && (
-            <div 
-              className="absolute inset-0 bg-black/60" 
-            />
+            <>
+              {/* Base overlay */}
+              <div className="absolute inset-0 bg-black/40" />
+              {/* Text readability gradient panel - stronger on left/center where text lives */}
+              <div className={`absolute inset-0 ${
+                isLightMode 
+                  ? 'bg-gradient-to-b from-white/80 via-white/60 to-white/40'
+                  : 'bg-gradient-to-b from-slate-900/85 via-slate-900/70 to-slate-900/50'
+              }`} />
+            </>
           )}
         </div>
       )}
