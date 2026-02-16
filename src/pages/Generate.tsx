@@ -2397,8 +2397,12 @@ function GenerateContent() {
     content: GeneratedContent, 
     consultationData: any
   ): Promise<Section[]> => {
-    // Fetch images
-    const heroImageUrl = await fetchHeroImage(content.images?.hero || consultationData.industry);
+    // Fetch images with industry context
+    const effectiveIndustry = consultationData?.industry || consultationData?.industryCategory || 'professional services';
+    const heroImageUrl = await fetchHeroImage(
+      content.images?.hero || `${consultationData.industry || ''} ${consultationData.target_audience || ''}`.trim(),
+      effectiveIndustry
+    );
     const galleryImages = await fetchGalleryImages(content.images?.gallery || []);
 
     const sections: Section[] = [];
@@ -2549,8 +2553,12 @@ function GenerateContent() {
     
     console.log('[mapStrategyBriefContentToSections] pageType:', pageType);
     
-    // Fetch hero image
-    const heroImageUrl = await fetchHeroImage(businessName);
+    // Fetch hero image with full industry context
+    const effectiveIndustry = strategicConsultation?.industry || consultationData?.industry || 'professional services';
+    const heroImageUrl = await fetchHeroImage(
+      `${businessName} ${strategicConsultation?.target_audience || ''} ${strategicConsultation?.unique_value || ''}`.trim(),
+      effectiveIndustry
+    );
 
     // BRAND DATA PIPELINE: Resolve from priority chain with source logging
     // Priority 1: consultation.extracted_intelligence
@@ -4633,7 +4641,7 @@ function GenerateContent() {
       const { data, error } = await supabase.functions.invoke('generate-hero-images', {
         body: {
           prompts: [aiPrompt],
-          cacheKey: `fallback::${effectiveIndustry.toLowerCase()}::${query.toLowerCase().replace(/\s+/g, '-').slice(0, 30)}`,
+          cacheKey: `fallback::${effectiveIndustry.toLowerCase()}::${query.toLowerCase().replace(/\s+/g, '-').slice(0, 30)}::v${Date.now() % 5}`,
         },
       });
       
@@ -4689,8 +4697,13 @@ function GenerateContent() {
     const brandColor = effectiveNavState?.strategicData?.consultationData?.primaryColor || '';
     const colorHint = brandColor ? `Color palette hints: tones compatible with ${brandColor}.` : '';
     
+    // Add variation seed for regeneration uniqueness
+    const variationSeed = Date.now() % 5;
+    const variations = ['wide angle', 'close-up detail', 'aerial view', 'side angle', 'symmetrical'];
+    const compositionVariation = variations[variationSeed];
+    
     // Build the final prompt with full context
-    return `Professional wide-angle photograph for a ${industry} company landing page. Subject: ${subject}. Style: ${tone} corporate photography. Composition: Main subject on right side, clear space on left for text overlay. Lighting: Soft, professional, warm. ${colorHint} NO: People's faces in focus, text, logos, watermarks, cluttered scenes. YES: Clean backgrounds, depth of field, professional quality. 16:9 aspect ratio. Cinematic lighting. ${businessContext} context.`;
+    return `Professional wide-angle photograph for a ${industry} company landing page. Subject: ${subject}. Style: ${tone} corporate photography. Composition: ${compositionVariation}, main subject on right side, clear space on left for text overlay. Lighting: Soft, professional, warm. ${colorHint} NO: People's faces in focus, text, logos, watermarks, cluttered scenes. YES: Clean backgrounds, depth of field, professional quality. 16:9 aspect ratio. Cinematic lighting. ${businessContext} context.`;
   };
 
   // Fetch gallery images from Unsplash
