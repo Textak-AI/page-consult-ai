@@ -778,7 +778,99 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
     );
   }
 
-  // Default dark mode layout with industry-aware background
+  // Default layout — respects isLightMode
+  if (isLightMode) {
+    // Light mode: white background, dark text, clean accordion
+    return (
+      <section 
+        className="py-24 bg-white"
+        itemScope
+        itemType="https://schema.org/FAQPage"
+      >
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+
+        <div className="max-w-3xl mx-auto px-6">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-1 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full mb-4">
+              {eyebrow}
+            </span>
+            <h2 
+              className={`text-3xl md:text-4xl font-bold text-gray-900 ${
+                isEditing ? 'outline-dashed outline-2 outline-cyan-500/30 rounded px-2' : ''
+              }`}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={handleHeadlineUpdate}
+            >
+              {headline}
+            </h2>
+          </div>
+
+          {/* FAQ Accordion */}
+          {isEditing ? (
+            <Reorder.Group axis="y" values={items} onReorder={handleReorder} className="space-y-4">
+              {items.map((item, index) => (
+                <Reorder.Item key={`${item.question}-${index}`} value={item}>
+                  {renderFAQItem(item, index, 'consulting')}
+                </Reorder.Item>
+              ))}
+            </Reorder.Group>
+          ) : (
+            <div className="space-y-4">
+              {items.map((item, index) => renderFAQItem(item, index, 'consulting'))}
+            </div>
+          )}
+
+          {/* Add Question Button */}
+          {isEditing && (
+            <div className="mt-6 flex justify-center">
+              <Button
+                variant="outline"
+                onClick={handleAddItem}
+                className="gap-2 border-dashed border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50"
+              >
+                <Plus className="w-4 h-4" />
+                Add Question
+              </Button>
+            </div>
+          )}
+
+          {items.length === 0 && isEditing && (
+            <div className="text-center py-12 text-gray-400">
+              <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" strokeWidth={1.5} />
+              <p>No FAQ items yet</p>
+            </div>
+          )}
+        </div>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteConfirmIndex !== null} onOpenChange={() => setDeleteConfirmIndex(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete FAQ Item?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete this question and answer.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteConfirmIndex !== null && handleDeleteItem(deleteConfirmIndex)}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </section>
+    );
+  }
+
+  // Dark mode layout with industry-aware background
   return (
     <section 
       className={`relative overflow-hidden ${(content as any)?.patternClass || 'section-pattern-dots'} ${(content as any)?.glowClass || 'section-glow-edge'}`}

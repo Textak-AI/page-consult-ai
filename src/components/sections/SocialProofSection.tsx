@@ -354,6 +354,121 @@ export function SocialProofSection({ content, onUpdate, isEditing }: SocialProof
     );
   }
   
+  // Light mode: clean white layout
+  if (isLightMode) {
+    return (
+      <section className={`py-24 bg-gray-50 ${isEditing ? 'relative' : ''}`}>
+        {isEditing && (
+          <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
+        )}
+        <div className="max-w-4xl mx-auto px-6">
+          {/* Section Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <span className="inline-block px-4 py-1 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full mb-4">
+              TESTIMONIALS
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+              {content.sectionTitle || header.title}
+            </h2>
+          </motion.div>
+
+          {/* Featured Testimonial */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="bg-white p-10 md:p-12 rounded-2xl shadow-md border border-gray-100"
+          >
+            <div className="flex gap-1 mb-6 justify-center">
+              {[...Array(testimonial.rating || 5)].map((_, i) => (
+                <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />
+              ))}
+            </div>
+            
+            <blockquote 
+              className={`text-xl md:text-2xl text-gray-800 leading-relaxed text-center mb-8 italic ${
+                isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
+              }`}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onBlur={(e) => handleBlur("testimonial.quote", e)}
+            >
+              "{testimonial.quote}"
+            </blockquote>
+            
+            <div className="flex items-center justify-center gap-4">
+              <div className="relative group">
+                <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                  {testimonial.avatarUrl ? (
+                    <img src={testimonial.avatarUrl} alt={testimonial.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-7 h-7 text-gray-500" strokeWidth={1.5} />
+                  )}
+                </div>
+                {isEditing && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="absolute -bottom-2 -right-2 h-7 w-7 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={handleAvatarChange}
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+              <div className="text-left">
+                <div className={`font-bold text-gray-900 ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""}`}
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleBlur("testimonial.name", e)}
+                >
+                  {testimonial.name}
+                </div>
+                <div className={`text-gray-600 ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""}`}
+                  contentEditable={isEditing}
+                  suppressContentEditableWarning
+                  onBlur={(e) => handleBlur("testimonial.title", e)}
+                >
+                  {testimonial.title}{testimonial.company && `, ${testimonial.company}`}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Stats Grid */}
+          {content.stats && content.stats.length > 0 && content.stats.some(s => s.value) && (
+            <div className="grid md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto">
+              {content.stats.filter(s => s.value).map((stat, i) => (
+                <motion.div 
+                  key={i} 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
+                  className="text-center bg-white p-6 rounded-xl shadow-sm border border-gray-100"
+                >
+                  <div className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
+                    {stat.value}
+                  </div>
+                  <div className="text-gray-600">
+                    {stat.label}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    );
+  }
+
   // Default dark mode layout
   return (
     <section 

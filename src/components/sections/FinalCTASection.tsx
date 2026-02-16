@@ -40,25 +40,27 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   const { urgencyText, guaranteeText, secondaryCta } = content;
 
   // Helper functions for SDI-driven styling
-  // CTA section ALWAYS uses dark background — primary color reserved for buttons/accents
+  // CTA section uses brand primary color as gradient background when available
   const getSectionStyles = (): React.CSSProperties => {
+    const brandPrimary = content.primaryColor || palette?.primary || content.brandColors?.primary;
     const brandColors = content.brandColors;
-    // 1. SDI dark section color
+    
+    // 1. Use brand primary color as gradient (the key visual anchor)
+    if (brandPrimary) {
+      return { 
+        background: `linear-gradient(135deg, ${brandPrimary}, ${brandPrimary}dd)` 
+      };
+    }
+    // 2. SDI dark section color
     if (palette?.darkSection) {
       return { 
         background: `linear-gradient(135deg, ${palette.darkSection}, ${palette.darkSection}dd)` 
       };
     }
-    // 2. Brand secondary (navy/dark) color
+    // 3. Brand secondary (navy/dark) color
     if (brandColors?.secondary) {
       return { 
         background: `linear-gradient(135deg, ${brandColors.secondary}ee, ${brandColors.secondary}cc)` 
-      };
-    }
-    // 3. Dark fallback with subtle primary tint
-    if (brandColors?.primary) {
-      return { 
-        background: `linear-gradient(135deg, #0f172a 0%, ${brandColors.primary}15 100%)` 
       };
     }
     // 4. Pure dark fallback
@@ -80,17 +82,13 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   };
 
   const getButtonStyles = (): React.CSSProperties => {
-    // Use brand primary color on the button (pops against dark CTA background)
+    // When CTA bg uses brand primary, the button should be white with brand text
     const brandPrimary = content.primaryColor || palette?.primary || content.brandColors?.primary;
     if (brandPrimary) {
       return { 
-        backgroundColor: brandPrimary, 
-        color: '#ffffff',
-        boxShadow: `0 10px 40px -10px ${brandPrimary}88`
+        backgroundColor: '#ffffff', 
+        color: brandPrimary,
       };
-    }
-    if (theme === 'dark') {
-      return {};
     }
     return {};
   };
@@ -98,12 +96,9 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   const getButtonClassName = () => {
     const brandPrimary = content.primaryColor || palette?.primary || content.brandColors?.primary;
     if (brandPrimary) {
-      return 'text-white hover:opacity-90';
+      return 'hover:bg-gray-50 font-bold';
     }
-    if (theme === 'dark') {
-      return 'bg-white text-slate-900 hover:bg-slate-100';
-    }
-    return 'text-white hover:opacity-90';
+    return 'bg-white text-slate-900 hover:bg-slate-100';
   };
 
   const getUrgencyBannerStyles = () => {

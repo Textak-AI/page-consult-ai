@@ -422,17 +422,18 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
 
   // This block removed - consulting is handled by the isHealthcare || isConsulting block above
 
-  // Default dark mode layout
+  // Default layout — respects isLightMode
+  const accentColor = brandPrimaryColor || '#14b8a6';
+  
+  // Light mode: clean white/gray surfaces. Dark mode: premium dark surfaces.
+  const sectionBgStyle = isLightMode 
+    ? { backgroundColor: '#f8fafc', padding: '96px 24px' }
+    : { backgroundColor: 'hsl(217, 33%, 6%)', padding: '96px 24px', '--glow-color': hasBrandColor ? `${brandPrimaryColor}12` : 'hsla(189, 95%, 43%, 0.06)', '--glow-top': '20%', '--glow-right': '-10%' } as React.CSSProperties;
+  
   return (
     <section 
-      className={`relative overflow-hidden ${(content as any)?.patternClass || 'section-pattern-grid'} ${(content as any)?.glowClass || 'section-glow-orb'} ${isEditing ? 'relative' : ''}`}
-      style={{ 
-        backgroundColor: 'hsl(217, 33%, 6%)',
-        padding: '96px 24px',
-        '--glow-color': hasBrandColor ? `${brandPrimaryColor}12` : 'hsla(189, 95%, 43%, 0.06)',
-        '--glow-top': '20%',
-        '--glow-right': '-10%',
-      } as React.CSSProperties}
+      className={`relative overflow-hidden ${isLightMode ? '' : `${(content as any)?.patternClass || 'section-pattern-grid'} ${(content as any)?.glowClass || 'section-glow-orb'}`} ${isEditing ? 'relative' : ''}`}
+      style={sectionBgStyle}
     >
       {isEditing && (
         <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-10" />
@@ -445,16 +446,20 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-20 mx-auto max-w-3xl"
+          className="text-center mb-16 mx-auto max-w-3xl"
         >
-          <EyebrowBadge 
-            icon={<Sparkles className="w-4 h-4" strokeWidth={1.5} />} 
-            text={eyebrow} 
-            className="mb-6"
-          />
+          <span 
+            className="inline-block px-4 py-1 text-sm font-semibold rounded-full mb-4"
+            style={isLightMode 
+              ? { backgroundColor: `${accentColor}15`, color: accentColor }
+              : { backgroundColor: `${accentColor}20`, color: accentColor }
+            }
+          >
+            {eyebrow}
+          </span>
           
           <h2 
-            className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-6 tracking-tight text-white ${
+            className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-6 tracking-tight ${isLightMode ? 'text-gray-900' : 'text-white'} ${
               isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2 inline-block" : ""
             }`}
             contentEditable={isEditing}
@@ -464,7 +469,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
             {title}
           </h2>
           <p 
-            className={`text-lg md:text-xl leading-relaxed text-slate-400 ${
+            className={`text-lg md:text-xl leading-relaxed ${isLightMode ? 'text-gray-600' : 'text-slate-400'} ${
               isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
             }`}
             contentEditable={isEditing}
@@ -477,8 +482,8 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
 
         {/* Features Grid */}
         <div className={useFlexLayout 
-          ? "flex flex-wrap justify-center gap-6"
-          : `grid gap-6 ${getGridClass()}`
+          ? "flex flex-wrap justify-center gap-8"
+          : `grid gap-8 ${getGridClass()}`
         }>
           {features.map((feature, i) => {
             const Icon = getIconComponent(feature.icon);
@@ -489,40 +494,71 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                className={useFlexLayout ? "w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]" : undefined}
+                className={useFlexLayout ? "w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]" : undefined}
               >
-                <PremiumCard 
-                  variant="glass" 
-                  glow 
-                  glowColor="cyan"
-                  className="h-full group"
-                >
-                  <GradientIcon className="mb-6">
-                    <Icon className="w-7 h-7 text-white" strokeWidth={1.5} />
-                  </GradientIcon>
-                  
-                  <h3 
-                    className={`text-xl md:text-2xl font-semibold mb-4 text-white group-hover:text-cyan-400 transition-colors ${
-                      isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
-                    }`}
-                    contentEditable={isEditing}
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleFeatureBlur(i, "title", e)}
+                {isLightMode ? (
+                  <div className="h-full p-8 bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow">
+                    <div 
+                      className="w-14 h-14 rounded-xl flex items-center justify-center mb-6"
+                      style={{ backgroundColor: `${accentColor}15`, color: accentColor }}
+                    >
+                      <Icon className="w-7 h-7" strokeWidth={1.5} />
+                    </div>
+                    <h3 
+                      className={`text-xl font-bold text-gray-900 mb-3 ${
+                        isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleFeatureBlur(i, "title", e)}
+                    >
+                      {feature.title}
+                    </h3>
+                    <p 
+                      className={`text-gray-600 leading-relaxed ${
+                        isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleFeatureBlur(i, "description", e)}
+                    >
+                      {feature.description}
+                    </p>
+                  </div>
+                ) : (
+                  <PremiumCard 
+                    variant="glass" 
+                    glow 
+                    glowColor="cyan"
+                    className="h-full group"
                   >
-                    {feature.title}
-                  </h3>
-                  
-                  <p 
-                    className={`text-base md:text-lg text-slate-400 leading-relaxed ${
-                      isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
-                    }`}
-                    contentEditable={isEditing}
-                    suppressContentEditableWarning
-                    onBlur={(e) => handleFeatureBlur(i, "description", e)}
-                  >
-                    {feature.description}
-                  </p>
-                </PremiumCard>
+                    <GradientIcon className="mb-6">
+                      <Icon className="w-7 h-7 text-white" strokeWidth={1.5} />
+                    </GradientIcon>
+                    
+                    <h3 
+                      className={`text-xl md:text-2xl font-semibold mb-4 text-white group-hover:text-cyan-400 transition-colors ${
+                        isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleFeatureBlur(i, "title", e)}
+                    >
+                      {feature.title}
+                    </h3>
+                    
+                    <p 
+                      className={`text-base md:text-lg text-slate-400 leading-relaxed ${
+                        isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                      }`}
+                      contentEditable={isEditing}
+                      suppressContentEditableWarning
+                      onBlur={(e) => handleFeatureBlur(i, "description", e)}
+                    >
+                      {feature.description}
+                    </p>
+                  </PremiumCard>
+                )}
               </motion.div>
             );
           })}

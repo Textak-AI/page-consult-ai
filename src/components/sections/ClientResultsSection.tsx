@@ -38,11 +38,19 @@ export function ClientResultsSection({ content }: ClientResultsSectionProps) {
   const theme = content.sectionThemes?.['client-results'] || 'tinted';
   const palette = content.palette;
   const typography = content.sdiTypography;
+  
+  // Respect mode prop for light/dark
+  const isLightMode = content.mode 
+    ? (content.mode === 'light' || content.mode === 'warm')
+    : theme !== 'dark';
 
   // Helper functions for SDI-driven styling
   const getSectionStyles = (): React.CSSProperties => {
+    if (isLightMode) {
+      return { backgroundColor: '#f8fafc' };
+    }
     if (!palette) {
-      return { backgroundColor: theme === 'dark' ? '#0f172a' : '#f8fafc' };
+      return { backgroundColor: '#0f172a' };
     }
     switch (theme) {
       case 'dark':
@@ -55,44 +63,39 @@ export function ClientResultsSection({ content }: ClientResultsSectionProps) {
   };
 
   const getTextColorClass = () => {
-    return theme === 'dark' ? 'text-white' : 'text-slate-900';
+    return isLightMode ? 'text-gray-900' : 'text-white';
   };
 
   const getMutedTextColorClass = () => {
-    return theme === 'dark' ? 'text-white/70' : 'text-slate-600';
+    return isLightMode ? 'text-gray-600' : 'text-white/70';
   };
 
   const getCardStyles = () => {
-    if (theme === 'dark') {
+    if (!isLightMode) {
       return 'bg-white/5 border border-white/10';
     }
-    return 'bg-white border border-slate-200';
+    return 'bg-white shadow-md border border-gray-100';
   };
 
   const getIconStyles = (): React.CSSProperties => {
-    if (theme === 'dark') {
+    if (!isLightMode) {
       return { backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff' };
     }
-    if (palette) {
-      return { backgroundColor: palette.iconBg, color: palette.iconColor };
-    }
-    return { backgroundColor: '#f1f5f9', color: '#475569' };
+    const accentColor = content.primaryColor || palette?.primary || '#475569';
+    return { backgroundColor: `${accentColor}15`, color: accentColor };
   };
 
   const getMetricStyles = (): React.CSSProperties => {
-    // Use primary color for metrics on light themes
-    if (theme !== 'dark' && palette) {
-      return { color: palette.primary };
+    const accentColor = content.primaryColor || palette?.primary;
+    if (isLightMode && accentColor) {
+      return { color: accentColor };
     }
     return {};
   };
 
   const getMetricColorClass = () => {
-    if (theme === 'dark') {
-      return 'text-white';
-    }
-    // If no palette, use a default accent color
-    return palette ? '' : 'text-slate-900';
+    if (!isLightMode) return 'text-white';
+    return (content.primaryColor || palette?.primary) ? '' : 'text-gray-900';
   };
 
   // Default results if none provided
