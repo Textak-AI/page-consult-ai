@@ -229,6 +229,13 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
               isEditing ? "outline-dashed outline-2 outline-white/30" : ""
             }`}
             style={getButtonStyles()}
+            onClick={() => {
+              if (content.ctaLink && content.ctaLink !== '#contact' && content.ctaLink !== '#') {
+                window.open(content.ctaLink, '_blank');
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
           >
             <span
               contentEditable={isEditing}
