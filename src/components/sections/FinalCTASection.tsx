@@ -249,11 +249,17 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             <Button 
               size="lg" 
               variant="outline"
-              className={`px-8 py-6 text-lg font-semibold rounded-lg ${
-                theme === 'dark' 
-                  ? 'border-white/30 text-white hover:bg-white/10' 
-                  : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+              className={`px-8 py-6 text-lg font-semibold rounded-lg transition-all ${
+                (palette?.primary || content.brandColors?.primary)
+                  ? 'hover:opacity-80'
+                  : theme === 'dark' 
+                    ? 'border-white/30 text-white hover:bg-white/10' 
+                    : 'border-slate-300 text-slate-700 hover:bg-slate-50'
               }`}
+              style={(palette?.primary || content.brandColors?.primary) ? {
+                borderColor: palette?.primary || content.brandColors?.primary || undefined,
+                color: palette?.primary || content.brandColors?.primary || undefined,
+              } : undefined}
             >
               {secondaryCta}
             </Button>
