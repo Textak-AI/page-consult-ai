@@ -11,7 +11,7 @@ import { detectAwarenessLevel, getPageStructure, AwarenessLevel, PageStructure }
 import { analyzeProofDensity, getVisualWeightConfig, extractProofPoints, ProofDensity, VisualWeightConfig, ProofPoints } from './proofDensityAnalyzer';
 import { selectLayout, type LayoutSelectionResult } from '@/lib/layoutSelector';
 import type { IndustryVariant } from '@/lib/industryDesignSystem';
-import type { SDIPalette, SDISectionThemes, SDITypography } from './types';
+import type { SDIPalette, SDISectionThemes, SDITypography, ColorMode } from './types';
 import { resolveIndustry } from '@/lib/resolveIndustry';
 
 // ============================================================================
@@ -31,6 +31,37 @@ function hexToRgba(hex: string, alpha: number): string {
   const g = parseInt(fullHex.slice(3, 5), 16);
   const b = parseInt(fullHex.slice(5, 7), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * Determine lightness (0-100) from hex color
+ */
+function hexLightness(hex: string): number {
+  let h = hex.replace('#', '');
+  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  const r = parseInt(h.slice(0,2),16)/255;
+  const g = parseInt(h.slice(2,4),16)/255;
+  const b = parseInt(h.slice(4,6),16)/255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  return ((max+min)/2)*100;
+}
+
+/**
+ * Resolve color mode from backgroundColor, with industry fallback
+ */
+function resolveColorMode(
+  backgroundColor: string | null | undefined,
+  industry: string
+): ColorMode {
+  if (backgroundColor) {
+    const l = hexLightness(backgroundColor);
+    if (l > 70) return 'light';
+    if (l < 30) return 'dark';
+  }
+  // Industry defaults
+  const lightIndustries = ['healthcare', 'medical', 'education', 'nonprofit', 'coaching', 'realestate'];
+  if (lightIndustries.includes(industry)) return 'light';
+  return 'dark';
 }
 
 /**
@@ -62,21 +93,25 @@ const industryDefaults: Record<string, { primary: string; darkBg: string }> = {
  */
 export function generateSDIPalette(
   brandPrimaryColor: string | null | undefined,
-  industry: string
+  industry: string,
+  backgroundColor?: string | null
 ): SDIPalette {
   const normalizedIndustry = industry?.toLowerCase() || 'default';
   const defaults = industryDefaults[normalizedIndustry] || industryDefaults.default;
   const primary = brandPrimaryColor || defaults.primary;
-  // NEVER use brand primary as dark section background — it should always be a dark/navy color
   const darkBg = defaults.darkBg;
+  const colorMode = resolveColorMode(backgroundColor, normalizedIndustry);
   
   const palette: SDIPalette = {
     primary,
-    primaryTint: hexToRgba(primary, 0.06),
+    primaryTint: colorMode === 'light' ? hexToRgba(primary, 0.04) : hexToRgba(primary, 0.06),
     darkSection: darkBg,
     lightSection: '#ffffff',
     iconBg: hexToRgba(primary, 0.12),
     iconColor: primary,
+    colorMode,
+    altSectionBg: colorMode === 'light' ? '#f5f5f5' : hexToRgba(primary, 0.06),
+    cardStyle: colorMode === 'light' ? 'light-shadow' : 'dark-border',
     text: {
       onLight: '#1e293b',
       onDark: '#ffffff',
@@ -84,14 +119,30 @@ export function generateSDIPalette(
     },
   };
   
-  console.log('🎨 [SDI] Generated palette:', palette);
+  console.log('🎨 [SDI] Generated palette:', { colorMode, brandColor: primary, backgroundColor });
   return palette;
 }
 
 /**
- * Compute section themes based on industry vertical
+ * Compute section themes based on industry vertical AND color mode
  */
-export function computeSectionThemes(industry: string): SDISectionThemes {
+export function computeSectionThemes(industry: string, colorMode: ColorMode = 'dark'): SDISectionThemes {
+  // In light mode, replace 'dark' themes with 'light' or 'tinted' for a clean look
+  // Only final-cta keeps 'dark' for contrast
+  if (colorMode === 'light') {
+    return {
+      'hero': 'light',
+      'credentials-bar': 'light',
+      'the-real-challenge': 'tinted',
+      'our-approach': 'light',
+      'expertise-areas': 'tinted',
+      'client-results': 'light',
+      'engagement-model': 'tinted',
+      'faq': 'light',
+      'final-cta': 'dark', // Keep dark for final CTA contrast
+    };
+  }
+
   const normalizedIndustry = industry?.toLowerCase() || 'default';
   
   let themes: SDISectionThemes;
@@ -368,13 +419,21 @@ export function generateDesignIntelligence(input: DesignIntelligenceInput): Desi
     : (extractedIntelligence?.colors as string[] | undefined)?.[0] ? 'extractedIntelligence.colors[0]'
     : 'industry-default';
   
-  const palette = generateSDIPalette(brandColor, industry);
-  const sectionThemes = computeSectionThemes(industry);
+  // Resolve backgroundColor from brand extraction
+  const backgroundColor = extractedIntelligence?.backgroundColor ||
+                           extractedIntelligence?.brandSettings?.backgroundColor ||
+                           extractedIntelligence?.brandColors?.backgroundColor ||
+                           null;
+
+  const palette = generateSDIPalette(brandColor, industry, backgroundColor);
+  const sectionThemes = computeSectionThemes(industry, palette.colorMode);
   const sdiTypographyConfig = computeSDITypography(industry);
   
   console.log('🎨 [SDI] Dynamic design system generated:', {
     brandColor,
     brandSource,
+    backgroundColor,
+    colorMode: palette.colorMode,
     industry,
     paletteGenerated: !!palette,
     themesGenerated: !!sectionThemes,
@@ -417,4 +476,4 @@ export type { ToneProfile, TypographyRecommendation } from './toneDetector';
 export type { ColorPalette, EmotionalDriver } from './colorIntelligence';
 export type { AwarenessLevel, PageStructure } from './awarenessDetector';
 export type { ProofDensity, VisualWeightConfig, ProofPoints } from './proofDensityAnalyzer';
-export type { SDIPalette, SDISectionThemes, SDITypography, SectionTheme, SDIDesignConfig } from './types';
+export type { SDIPalette, SDISectionThemes, SDITypography, SectionTheme, SDIDesignConfig, ColorMode } from './types';
