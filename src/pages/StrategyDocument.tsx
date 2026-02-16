@@ -223,15 +223,25 @@ export default function StrategyDocument() {
     const accumConsult = accumulator?.consultationData as any;
     const briefData = consultation?.strategy_brief as any;
 
-    const rawObjections: any[] = 
+    const raw: any = 
       extractedIntel?.objections ||
       extractedIntel?.buyerObjections ||
       accumConsult?.objections ||
       accumConsult?.buyerObjections ||
       briefData?.objectionHandlers ||
       briefData?.objections ||
-      (consultation as any)?.audience_pain_points || // sometimes stored here
+      (consultation as any)?.audience_pain_points ||
       [];
+
+    // Normalise to array regardless of source format
+    let rawObjections: any[];
+    if (typeof raw === 'string') {
+      rawObjections = raw.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean);
+    } else if (Array.isArray(raw)) {
+      rawObjections = raw;
+    } else {
+      rawObjections = [];
+    }
 
     if (rawObjections.length > 0) {
       const mapped = rawObjections.map((obj: any) => {
