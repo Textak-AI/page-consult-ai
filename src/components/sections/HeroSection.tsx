@@ -1060,33 +1060,27 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               </motion.div>
             </div>
             
-            {/* Visual element - 5 columns: Industry icon in glowing brand container */}
-            <div className="lg:col-span-5 relative hidden lg:block">
+            {/* Visual element - 5 columns: Industry icon with considered proportions */}
+            <div className="lg:col-span-5 relative hidden lg:flex items-center justify-center h-full">
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.97 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.7, delay: 0.3 }}
-                className="relative flex items-center justify-center min-h-[400px]"
+                transition={{ duration: 0.6, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                className="flex items-center justify-center"
               >
-                {/* Ambient brand glow */}
-                <div 
-                  className="absolute w-48 h-48 md:w-64 md:h-64 rounded-full blur-3xl"
-                  style={{ backgroundColor: content.primaryColor || '#14b8a6', opacity: 0.15 }}
-                />
-                
-                {/* Icon container */}
                 {(() => {
                   const { icon: IndustryIcon } = getHeroIcon(industryVariant);
                   const accentColor = content.primaryColor || '#14b8a6';
                   return (
                     <div 
-                      className="relative z-10 p-6 md:p-8 rounded-3xl shadow-2xl"
+                      className="aspect-square w-40 md:w-48 flex items-center justify-center rounded-3xl border"
                       style={{ 
-                        backgroundColor: `${accentColor}15`,
-                        boxShadow: `0 8px 40px ${accentColor}30`
+                        backgroundColor: `${accentColor}06`,
+                        borderColor: `${accentColor}15`,
+                        boxShadow: `0 1px 3px ${accentColor}08, 0 8px 32px ${accentColor}06`
                       }}
                     >
-                      <IndustryIcon className="w-16 h-16 md:w-20 md:h-20" style={{ color: accentColor }} strokeWidth={1.5} />
+                      <IndustryIcon className="w-16 h-16 md:w-20 md:h-20" style={{ color: accentColor, opacity: 0.85 }} strokeWidth={1.75} />
                     </div>
                   );
                 })()}
