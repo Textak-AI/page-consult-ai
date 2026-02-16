@@ -3,3 +3,4 @@ export { InvestorProfileStep, type InvestorProfileData } from './InvestorProfile
 export { TractionMilestonesStep, type TractionMilestonesData } from './TractionMilestonesStep';
 export { InvestmentOpportunityStep, type InvestmentOpportunityData } from './InvestmentOpportunityStep';
 export { TeamAdvisorsStep, type TeamAdvisorsData, type TeamMember, type Advisor } from './TeamAdvisorsStep';
+export { CampaignContextStep, type CampaignContextData, type PagePurpose, type TrafficSource } from './CampaignContextStep';
