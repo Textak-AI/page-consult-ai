@@ -870,13 +870,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           </div>
         )}
         
-        {/* Subtle gradient orbs - visual anchors (only when no bg image) */}
-        {!content.backgroundImage && (
-          <>
-            <div className="absolute top-20 right-[10%] w-[500px] h-[500px] rounded-full blur-3xl opacity-20" style={{ backgroundColor: content.primaryColor || '#2dd4bf' }} />
-            <div className="absolute bottom-10 left-[5%] w-[300px] h-[300px] rounded-full blur-3xl opacity-10" style={{ backgroundColor: content.primaryColor || '#22d3ee' }} />
-          </>
-        )}
+        {/* Clean background — no blur orbs */}
         
         {isEditing && (
           <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
@@ -1064,10 +1058,10 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             {/* Visual element - 5 columns: Brand Intelligence Card */}
             <div className="lg:col-span-5 relative flex items-center justify-center h-full">
               <HeroVisualComposition
-                industry={getHeroIcon(industryVariant).label}
+                industry={content.industryVariant || industryVariant || 'Strategic Intelligence'}
                 industryIcon={getHeroIcon(industryVariant).icon}
                 primaryColor={content.primaryColor || '#14b8a6'}
-                companyName={content.headline?.split(' ').slice(0, 3).join(' ') || 'Page Analysis'}
+                companyName={(content as any).companyName || (content as any).businessName || 'Page Analysis'}
                 colorMode={isLightMode ? 'light' : 'dark'}
               />
             </div>
