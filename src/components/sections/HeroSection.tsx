@@ -536,7 +536,14 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             </Button>
             
             {content.secondaryCTA?.text && (
-              <Button variant="outline" size="lg" className="px-8 py-6 text-lg border-slate-600 text-slate-300 hover:bg-slate-800 rounded-xl">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className={`px-8 py-6 text-lg rounded-xl transition-all ${
+                  content.primaryColor ? 'hover:opacity-80' : 'border-slate-600 text-slate-300 hover:bg-slate-800'
+                }`}
+                style={content.primaryColor ? { borderColor: content.primaryColor, color: content.primaryColor } : undefined}
+              >
                 {content.secondaryCTA.text}
               </Button>
             )}
@@ -769,11 +776,14 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 <Button 
                   variant="outline" 
                   size="lg"
-                  className={`px-8 py-6 text-lg font-semibold rounded-lg ${
-                    hasBackgroundImage && showDarkOverlay 
-                      ? 'border-white text-white hover:bg-white/10' 
-                      : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                  className={`px-8 py-6 text-lg font-semibold rounded-lg transition-all ${
+                    hasBrandColor 
+                      ? 'hover:opacity-80'
+                      : hasBackgroundImage && showDarkOverlay 
+                        ? 'border-white text-white hover:bg-white/10' 
+                        : 'border-slate-300 text-slate-700 hover:bg-slate-50'
                   }`}
+                  style={hasBrandColor ? { borderColor: content.primaryColor, color: content.primaryColor } : undefined}
                 >
                   {content.secondaryCTA.text}
                 </Button>
@@ -854,8 +864,8 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         {/* Subtle gradient orbs - visual anchors (only when no bg image) */}
         {!content.backgroundImage && (
           <>
-            <div className="absolute top-20 right-[10%] w-[500px] h-[500px] rounded-full blur-3xl opacity-20 bg-teal-400" />
-            <div className="absolute bottom-10 left-[5%] w-[300px] h-[300px] rounded-full blur-3xl opacity-10 bg-cyan-400" />
+            <div className="absolute top-20 right-[10%] w-[500px] h-[500px] rounded-full blur-3xl opacity-20" style={{ backgroundColor: content.primaryColor || '#2dd4bf' }} />
+            <div className="absolute bottom-10 left-[5%] w-[300px] h-[300px] rounded-full blur-3xl opacity-10" style={{ backgroundColor: content.primaryColor || '#22d3ee' }} />
           </>
         )}
         
@@ -932,7 +942,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="flex items-center gap-3"
               >
-                <div className="h-px w-12 bg-teal-500" />
+                <div className="h-px w-12" style={{ backgroundColor: content.primaryColor || '#14b8a6' }} />
                 <span className={`text-sm font-medium tracking-wide uppercase ${
                   hasBackgroundImage && showDarkOverlay ? 'text-slate-300' : 'text-slate-500'
                 }`}>
@@ -1073,8 +1083,8 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 </div>
                 
                 {/* Decorative rings */}
-                <div className="absolute inset-8 rounded-full border border-teal-500/10" />
-                <div className="absolute inset-16 rounded-full border border-teal-500/5" />
+                <div className="absolute inset-8 rounded-full border" style={{ borderColor: `${content.primaryColor || '#14b8a6'}1a` }} />
+                <div className="absolute inset-16 rounded-full border" style={{ borderColor: `${content.primaryColor || '#14b8a6'}0d` }} />
               </motion.div>
             </div>
           </div>
@@ -1465,15 +1475,18 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             </div>
 
             {/* Secondary CTA - only show if configured */}
-            {content.secondaryCTA?.text && (
+           {content.secondaryCTA?.text && (
               <Button
                 variant="ghost"
                 size="lg"
                 className={`transition-all text-lg px-8 py-7 h-auto ${
-                  useLightText
-                    ? 'text-white/80 hover:text-white hover:bg-white/10'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  content.primaryColor
+                    ? 'hover:opacity-80'
+                    : useLightText
+                      ? 'text-white/80 hover:text-white hover:bg-white/10'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
+                style={content.primaryColor ? { color: content.primaryColor } : undefined}
               >
                 {content.secondaryCTA.text}
               </Button>
