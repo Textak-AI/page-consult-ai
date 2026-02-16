@@ -8,6 +8,8 @@
 /**
  * SDI Color Palette - Brand-driven colors for visual hierarchy
  */
+export type ColorMode = 'light' | 'dark';
+
 export interface SDIPalette {
   primary: string;           // Brand color or industry default
   primaryTint: string;       // primary @ 5-8% opacity for tinted backgrounds
@@ -15,6 +17,9 @@ export interface SDIPalette {
   lightSection: string;      // White or warm white
   iconBg: string;            // Icon container background (primary @ 15%)
   iconColor: string;         // Icon color
+  colorMode: ColorMode;      // Light or dark page mode
+  altSectionBg: string;      // Alternating section bg (#f5f5f5 light, dark tint dark)
+  cardStyle: 'light-shadow' | 'dark-border' | 'glass'; // Card treatment
   text: {
     onLight: string;         // Text on light backgrounds (#1e293b)
     onDark: string;          // Text on dark backgrounds (#ffffff)
