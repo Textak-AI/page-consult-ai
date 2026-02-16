@@ -185,7 +185,11 @@ Output the brief in clean markdown format with a STRUCTURED JSON block at the en
       userFeedback: artifacts.userFeedback?.substring(0, 50),
     });
 
+    const campaignContextPrompt = buildCampaignContextPrompt(consultationData);
+    
     const userPrompt = `Create a strategy brief for this landing page project:
+
+${campaignContextPrompt}
 
 ## Client Information
 - Business Name: ${consultationData.businessName || 'Not specified'}
@@ -418,3 +422,85 @@ Be specific. No generic advice. Everything should tie back to the actual consult
     });
   }
 });
+
+function buildCampaignContextPrompt(data: any): string {
+  if (!data.pagePurpose) return '';
+  
+  const purposeDirectives: Record<string, string> = {
+    'outbound-campaign': `
+## CAMPAIGN CONTEXT: OUTBOUND CAMPAIGN PAGE (cold traffic)
+- Visitors did NOT ask for this — they received a cold email/LinkedIn message
+- Lead with a pattern-interrupt headline that earns attention
+- Establish relevance and credibility in the first 2 sentences
+- Keep the page focused: 4-5 sections maximum
+- CTA should be low-friction (assessment/consultation, not purchase)
+- Proof should emphasize results relevant to the target segment
+${data.campaignAudienceSegment ? `- Targeting: ${data.campaignAudienceSegment}` : ''}
+${data.trafficSource ? `- Traffic source: ${data.trafficSource}` : ''}
+- Do NOT build a comprehensive homepage — this is a focused conversion page`,
+
+    'service-spotlight': `
+## CAMPAIGN CONTEXT: SERVICE SPOTLIGHT PAGE
+- Focus exclusively on: ${data.spotlightService || 'the featured service'}
+- Do NOT spread across the full portfolio
+- Go deeper on this one service: how it works, who it's for, specific results
+- Use a full 6-8 section layout to thoroughly present the offering
+- CTA should be specific to this service (demo, consultation, trial)`,
+
+    'event-conference': `
+## CAMPAIGN CONTEXT: CONFERENCE/EVENT PAGE
+${data.campaignTrigger ? `- Event: ${data.campaignTrigger}` : ''}
+${data.eventGoal ? `- Goal: ${data.eventGoal}` : ''}
+- Reference the event by name in the headline or subheadline
+- Create time-bound urgency ("See us at Booth #X" or "Limited meeting slots")
+- Keep the page SHORT: 2-3 sections maximum
+- CTA should match the event goal (book meeting, visit booth, register)
+- Lead with what makes this company worth their time AT THIS EVENT`,
+
+    'retargeting': `
+## CAMPAIGN CONTEXT: RETARGETING PAGE (warm traffic)
+- These visitors already know the company — skip the introduction
+- Lead with the strongest offer or most compelling case study
+- Keep it SHORT: 2-4 sections maximum
+- CTA should be direct and specific (start trial, book call, buy now)
+- Use proof to push past the final hesitation, not to build awareness`,
+
+    'lead-magnet': `
+## CAMPAIGN CONTEXT: LEAD MAGNET DOWNLOAD PAGE
+${data.campaignTrigger ? `- Resource: ${data.campaignTrigger}` : ''}
+- The exchange is clear: their email for valuable content
+- Keep it SHORT: 2-3 sections maximum
+- Headline should name the specific resource and its value
+- Social proof should focus on authority (why trust this content)
+- CTA is "Download" or "Get the Guide" — not a sales action`,
+
+    'webinar-registration': `
+## CAMPAIGN CONTEXT: WEBINAR/EVENT REGISTRATION PAGE
+${data.campaignTrigger ? `- Topic: ${data.campaignTrigger}` : ''}
+- Lead with what attendees will learn or gain
+- Include speaker credentials as social proof
+- Show the date, time, and duration prominently
+- Create urgency with "limited spots" or "live only" language
+- Keep it focused: 3-4 sections maximum
+- CTA is "Register Now" or "Save Your Spot"`,
+
+    'ab-test': `
+## CAMPAIGN CONTEXT: A/B TEST VARIANT
+- Generate messaging that takes a DIFFERENT ANGLE than typical positioning
+- If the user's current site leads with features, try leading with outcomes
+- If current messaging is professional/corporate, try a more direct/bold approach
+- Match the same general page length and CTA as their existing page
+- The goal is a meaningfully different approach to test against current`,
+
+    'primary-site': `
+## CAMPAIGN CONTEXT: PRIMARY WEB PRESENCE
+- Build comprehensive: 6-8 sections covering the full story
+- Include: hero, problem/solution, features, process, proof, FAQ, CTA
+- This needs to serve multiple audience segments
+- Balance depth with scanability
+- Include navigation-worthy sections that cover the full business`,
+  };
+  
+  console.log('🎯 [Intelligence] Campaign context detected:', data.pagePurpose);
+  return purposeDirectives[data.pagePurpose] || '';
+}

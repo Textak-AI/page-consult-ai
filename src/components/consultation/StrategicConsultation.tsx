@@ -34,7 +34,11 @@ import {
   InvestmentOpportunityStep,
   type InvestmentOpportunityData,
   TeamAdvisorsStep,
-  type TeamAdvisorsData
+  type TeamAdvisorsData,
+  CampaignContextStep,
+  type CampaignContextData,
+  type PagePurpose,
+  type TrafficSource,
 } from './steps';
 import {
   BetaStageStep,
@@ -138,6 +142,15 @@ export interface ConsultationData {
     founderStory?: string;
   };
   
+  // Campaign Context
+  pagePurpose?: PagePurpose;
+  trafficSource?: TrafficSource;
+  campaignTrigger?: string;
+  campaignAudienceSegment?: string;
+  spotlightService?: string;
+  eventGoal?: string;
+  hasExistingWebsite?: boolean;
+  
   // Hero Background (AI-generated)
   heroBackgroundUrl?: string;
 }
@@ -157,6 +170,7 @@ const BASE_STEPS_WITHOUT_BRANDING = [
 
 // Customer Acquisition specific steps
 const CUSTOMER_ACQUISITION_STEPS = [
+  { id: 'campaign-context', title: 'Campaign Context', icon: Target },
   { id: 'audience', title: 'Target Audience', icon: Users },
   { id: 'credibility', title: 'Credibility', icon: Trophy },
   { id: 'offer', title: 'Your Offer', icon: Target },
@@ -379,6 +393,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       console.log('🤖 Using AI website analysis for initial data');
       initial.businessName = websiteAnalysis.companyName || extractedBrand?.companyName || '';
       initial.websiteUrl = extractedBrand?.websiteUrl || '';
+      initial.hasExistingWebsite = !!extractedBrand?.websiteUrl;
       initial.industry = websiteAnalysis.industry || '';
       initial.idealClient = websiteAnalysis.targetAudience || '';
       initial.clientFrustration = websiteAnalysis.problemStatement || '';
@@ -428,6 +443,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       }
       if (extractedBrand.websiteUrl) {
         initial.websiteUrl = extractedBrand.websiteUrl;
+        initial.hasExistingWebsite = true;
       }
       if (extractedBrand.tagline || extractedBrand.description) {
         initial.uniqueStrength = extractedBrand.tagline || extractedBrand.description || '';
@@ -694,6 +710,9 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         case 'page-type':
           if (!savedData.pageType) return i;
           break;
+        case 'campaign-context':
+          if (!savedData.pagePurpose) return i;
+          break;
         case 'identity':
           if (!savedData.businessName || !savedData.industry || !savedData.uniqueStrength) return i;
           break;
@@ -944,6 +963,8 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         return true; // Can always proceed (defaults available)
       case 'page-type':
         return !!data.pageType; // Must select a page type
+      case 'campaign-context':
+        return !!data.pagePurpose; // Must select a page purpose
       case 'identity':
         return data.businessName && data.industry && data.uniqueStrength;
       case 'audience':
@@ -1177,6 +1198,23 @@ ${d.ctaText}
             onChange={(pageType) => updateData({ pageType: pageType as PageTypeId })}
             onContinue={handleNext}
             onBack={handleBack}
+          />
+        );
+
+      case 'campaign-context':
+        return (
+          <CampaignContextStep
+            data={{
+              pagePurpose: data.pagePurpose,
+              trafficSource: data.trafficSource,
+              campaignTrigger: data.campaignTrigger,
+              campaignAudienceSegment: data.campaignAudienceSegment,
+              spotlightService: data.spotlightService,
+              eventGoal: data.eventGoal,
+              hasExistingWebsite: data.hasExistingWebsite,
+            }}
+            websiteUrl={data.websiteUrl}
+            onChange={(updates) => updateData(updates)}
           />
         );
 
