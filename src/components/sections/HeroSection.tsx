@@ -619,7 +619,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             {showDarkOverlay && (
               <>
                 <div className="absolute inset-0 bg-black/40" />
-                <div className="absolute inset-0 bg-gradient-to-r from-white/80 via-white/50 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-white from-5% via-white/95 via-40% to-white/30 to-90%" />
               </>
             )}
           </div>
@@ -850,8 +850,8 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               alt="" 
               className="w-full h-full object-cover"
             />
-            {/* Light mode: strong white gradient from left for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/85 to-white/40" />
+            {/* Light mode: near-solid white on left for text readability, fading right to reveal image */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white from-5% via-white/95 via-40% to-white/30 to-90%" />
           </div>
         )}
         
