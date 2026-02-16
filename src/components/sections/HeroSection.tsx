@@ -206,9 +206,11 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   
   console.log('🎨 [HeroSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant, 'forcedLight:', isConsulting);
   
-  // Determine if we should use light text (when dark overlay is active OR when not in light mode)
-  const hasBackgroundImage = !!content.backgroundImage;
-  const showDarkOverlay = hasBackgroundImage && (content.darkOverlay !== false); // Default to true when bg image exists
+  // AI hero images disabled — always use CSS gradient backgrounds
+  // User-selected images (via editor) are still honored
+  const ENABLE_HERO_BG_IMAGES = false;
+  const hasBackgroundImage = ENABLE_HERO_BG_IMAGES && !!content.backgroundImage;
+  const showDarkOverlay = hasBackgroundImage && (content.darkOverlay !== false);
   // Use light text when: overlay is active on bg image, or when in dark mode
   const useLightText = showDarkOverlay || !isLightMode;
 
@@ -446,9 +448,15 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           <div className="absolute inset-0 z-0">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-transparent to-blue-900/20" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-600/15 via-transparent to-transparent" />
-            {/* Subtle floating orbs */}
-            <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px]" />
-            <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px]" />
+            {/* Brand-colored orbs */}
+            <div 
+              className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[120px] opacity-15"
+              style={{ backgroundColor: content.primaryColor || '#7c3aed' }}
+            />
+            <div 
+              className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full blur-[100px] opacity-10"
+              style={{ backgroundColor: content.primaryColor || '#3b82f6' }}
+            />
           </div>
         )}
         
@@ -628,8 +636,14 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         {/* Subtle warm gradient orbs - no glassmorphism */}
         {!content.backgroundImage && (
           <>
-            <div className="absolute top-20 right-[10%] w-[400px] h-[400px] rounded-full blur-3xl opacity-10 bg-slate-300" />
-            <div className="absolute bottom-20 left-[5%] w-[250px] h-[250px] rounded-full blur-3xl opacity-10 bg-slate-400" />
+            <div 
+              className="absolute top-20 right-[10%] w-[400px] h-[400px] rounded-full blur-3xl opacity-10"
+              style={{ backgroundColor: content.primaryColor || '#94a3b8' }}
+            />
+            <div 
+              className="absolute bottom-20 left-[5%] w-[250px] h-[250px] rounded-full blur-3xl opacity-8"
+              style={{ backgroundColor: content.primaryColor || '#94a3b8' }}
+            />
           </>
         )}
         
@@ -1168,14 +1182,14 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           {/* Subtle Grid Pattern */}
           <div className="absolute inset-0 bg-grid-pattern opacity-40" />
           
-          {/* Floating Orbs - industry-aware colors */}
+          {/* Brand-colored floating orbs */}
           <div 
             className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px] animate-float-slow"
-            style={{ backgroundColor: meshColors.orb1 }}
+            style={{ backgroundColor: content.primaryColor ? `${content.primaryColor}15` : meshColors.orb1 }}
           />
           <div 
             className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] animate-float-delayed"
-            style={{ backgroundColor: meshColors.orb2 }}
+            style={{ backgroundColor: content.primaryColor ? `${content.primaryColor}10` : meshColors.orb2 }}
           />
         </div>
       )}

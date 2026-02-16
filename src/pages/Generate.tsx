@@ -2096,22 +2096,10 @@ function GenerateContent() {
         const businessName = strategicData.consultationData?.businessName || consultationData.industry || 'Our Company';
         const userSelectedHeroImage = strategicData.heroBackgroundUrl || strategicData.consultationData?.heroBackgroundUrl;
         
-        // Resolve hero image with proper caching
-        const heroResolution = await resolveHeroImageUrl({
-          userSelectedUrl: userSelectedHeroImage,
-          consultationId: consultationData.id,
-          sessionId: consultationData.session_id,
-          businessName,
-          industry: consultationData.industry,
-          industryVariant: earlyVariant,
-          colorMode: earlyTokens.mode,
-        });
-        const heroImageUrl = heroResolution.imageUrl || '';
-        console.log('🖼️ [Generate] Hero resolved:', { 
-          url: heroImageUrl.slice(0, 80) + '...', 
-          fromCache: heroResolution.isFromCache,
-          hasAmbient: !!heroResolution.ambientGradient,
-        });
+        // AI hero images disabled — use CSS gradient backgrounds instead
+        // Only use user-selected images (manual picks via editor)
+        const heroImageUrl = userSelectedHeroImage || '';
+        console.log('🖼️ [Generate] Hero image disabled — using CSS gradient. User-selected:', !!userSelectedHeroImage);
         
         // Get brand settings for passing to sections
         // BRAND DATA PIPELINE: Check all possible paths for logoUrl and primaryColor
@@ -4643,22 +4631,27 @@ function GenerateContent() {
     return mappedSections;
   };
 
-  // Fetch hero image - PREFER AI generation over Unsplash stock photos
-  // Follows "minimal, intentional imagery" philosophy
+  // FEATURE FLAG: AI hero images disabled until QC pipeline is ready
+  // Clean CSS gradients with brand colors are used instead
+  const ENABLE_AI_HERO_IMAGES = false;
+
+  // Fetch hero image - DISABLED: returns empty to use CSS gradient backgrounds instead
   const fetchHeroImage = async (query: string, industry?: string): Promise<string> => {
+    if (!ENABLE_AI_HERO_IMAGES) {
+      console.log('🖼️ [fetchHeroImage] AI hero images DISABLED — using CSS gradient background');
+      return "";
+    }
+
     try {
-      // Determine industry for AI prompt
       const effectiveIndustry = industry || 
         consultation?.industry || 
         effectiveNavState?.strategicData?.consultationData?.industry ||
         'professional services';
       
-      // Build an industry-aware prompt for AI generation
       const aiPrompt = buildHeroImagePrompt(effectiveIndustry, query);
       
       console.log('🖼️ [fetchHeroImage] Generating AI hero image for:', { query, industry: effectiveIndustry });
       
-      // Try AI generation first (FLUX via Replicate)
       const { data, error } = await supabase.functions.invoke('generate-hero-images', {
         body: {
           prompts: [aiPrompt],
@@ -4671,8 +4664,7 @@ function GenerateContent() {
         return data.images[0].url;
       }
       
-      console.warn('⚠️ [fetchHeroImage] AI generation failed, returning empty (no Unsplash fallback)');
-      // Return empty - sections will use industry-appropriate gradient/pattern fallback
+      console.warn('⚠️ [fetchHeroImage] AI generation failed, returning empty');
       return "";
     } catch (err) {
       console.error('❌ [fetchHeroImage] Error:', err);
