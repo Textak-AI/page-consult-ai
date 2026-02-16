@@ -3994,11 +3994,19 @@ function GenerateContent() {
               sdiTypography: sdi?.sdiTypography,
             } : {
               headline: (() => {
-                // Build CTA headline from OUTCOME/PROBLEM — NEVER use audience as the object
-                const solution = content.solutionStatement || extractedIntel?.solutionStatement || extractedIntel?.valueProp || '';
-                const problem = content.problemStatement || extractedIntel?.painPoints || '';
+                // Build a clean CTA headline — NEVER insert problemStatement directly
+                // If we have a dedicated CTA headline from AI, use it
+                if (content.ctaHeadline) return content.ctaHeadline;
                 
-                // Priority 1: Extract a transformation verb+object from solution
+                // Build from value prop
+                const valueProp = extractedIntel?.valueProp || extractedIntel?.valuePropSummary;
+                if (valueProp) {
+                  const cleaned = valueProp.charAt(0).toLowerCase() + valueProp.slice(1);
+                  return `Ready to ${cleaned}?`;
+                }
+                
+                // Extract a transformation verb+object from solution (not problem)
+                const solution = content.solutionStatement || extractedIntel?.solutionStatement || '';
                 if (solution) {
                   const transformMatch = solution.match(/(align|transform|automate|streamline|accelerate|optimize|connect|bridge|eliminate|reduce|improve|scale|grow|simplify|create|deliver|drive|enable|unlock|unify)\s+(.{10,50}?)[\.,;]/i);
                   if (transformMatch) {
@@ -4008,15 +4016,9 @@ function GenerateContent() {
                   }
                 }
                 
-                // Priority 2: Use problem framing
-                if (problem) {
-                  const firstProblem = problem.split(/[.?!]/)[0].trim().slice(0, 50);
-                  if (firstProblem.length > 10) return `Ready to Solve ${firstProblem}?`;
-                }
-                
-                // Priority 3: Safe fallback with company name
+                // Fallback — clean and simple
                 if (companyName) return `Ready to Get Started with ${companyName}?`;
-                return 'Ready to Get Started?';
+                return 'Ready to Transform Your Results?';
               })(),
               subtext: (() => {
                 // Subheadline: solution context + audience framing (audience belongs HERE, not in headline)
