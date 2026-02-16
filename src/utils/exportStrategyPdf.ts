@@ -89,7 +89,7 @@
    pdf.setFont('helvetica', 'bold');
    pdf.setFontSize(36);
    pdf.setTextColor(255, 255, 255);
-   pdf.text('Strategic Blueprint', margin, 180);
+   pdf.text('StrataQuest™ Blueprint', margin, 180);
  
    // Company name
    pdf.setFont('helvetica', 'normal');
@@ -122,7 +122,7 @@
    pdf.setFontSize(12);
    pdf.setTextColor(100, 116, 139); // Slate-500
    pdf.text(`Generated ${exportDate}`, margin, 340);
-   pdf.text('Powered by AI-driven strategic analysis', margin, 360);
+   pdf.text('Powered by StrataQuest™ Methodology', margin, 360);
  
    // Footer on cover
    pdf.setFontSize(10);
@@ -157,7 +157,7 @@
      pdf.text('PageConsult AI', margin, 24);
      pdf.setFont('helvetica', 'normal');
      pdf.setTextColor(100, 116, 139);
-     pdf.text(`  |  ${companyName} — Strategic Blueprint`, margin + pdf.getTextWidth('PageConsult AI'), 24);
+     pdf.text(`  |  ${companyName} — StrataQuest™ Blueprint`, margin + pdf.getTextWidth('PageConsult AI'), 24);
      
      // Thin accent line under header
      pdf.setDrawColor(99, 102, 241);

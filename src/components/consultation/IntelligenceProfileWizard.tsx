@@ -15,7 +15,7 @@ import {
 const WIZARD_CATEGORIES = [
   {
     key: 'whoYouAre' as const,
-    label: 'WHO YOU ARE',
+    label: 'CLIENT CONTEXT',
     fields: [
       { key: 'industry' as const, label: 'Industry', maxPoints: 10 },
       { key: 'audience' as const, label: 'Audience', maxPoints: 10 },
@@ -24,7 +24,7 @@ const WIZARD_CATEGORIES = [
   },
   {
     key: 'whatYouOffer' as const,
-    label: 'WHAT YOU OFFER',
+    label: 'VALUE ARCHITECTURE',
     fields: [
       { key: 'valueProp' as const, label: 'Value Prop', maxPoints: 10 },
       { key: 'edge' as const, label: 'Edge', maxPoints: 10 },
@@ -42,7 +42,7 @@ const WIZARD_CATEGORIES = [
   },
   {
     key: 'proofCredibility' as const,
-    label: 'PROOF & CREDIBILITY',
+    label: 'PROOF INVENTORY',
     fields: [
       { key: 'results' as const, label: 'Results', maxPoints: 10 },
       { key: 'socialProof' as const, label: 'Social Proof', maxPoints: 10 },
@@ -148,9 +148,12 @@ export function IntelligenceProfileWizard({
         {/* Header - Fixed at top */}
         <div className="flex-shrink-0 p-4 border-b border-slate-800/50">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-medium tracking-wide text-white">
-              Intelligence Profile
-            </h2>
+            <div>
+              <h2 className="text-base font-medium tracking-wide text-white">
+                Discovery Protocol™
+              </h2>
+              <div className="text-[10px] text-slate-500">StrataQuest™ Pillar 1</div>
+            </div>
             <motion.span
               key={score.totalScore}
               initial={{ scale: 1.2, color: 'rgb(34, 211, 238)' }}
