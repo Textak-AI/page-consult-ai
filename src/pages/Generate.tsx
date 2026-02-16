@@ -4658,29 +4658,39 @@ function GenerateContent() {
   const buildHeroImagePrompt = (industry: string, businessContext: string): string => {
     const industryLower = industry.toLowerCase();
     
-    // Industry-specific scene descriptions
-    const industryScenes: Record<string, string> = {
-      'manufacturing': 'Modern industrial facility with clean lines, precision machinery, soft ambient lighting, professional manufacturing environment',
-      'healthcare': 'Bright, clean medical environment with natural light, modern healthcare facility, calming atmosphere, white and teal tones',
-      'consulting': 'Professional executive office space with city skyline view, warm natural lighting, sophisticated business environment',
-      'coaching': 'Inspiring modern workspace with natural light, warm and inviting atmosphere, professional development setting',
-      'fintech': 'Sleek modern office with subtle blue accents, financial technology environment, sophisticated and trustworthy',
-      'saas': 'Modern tech workspace with ambient lighting, clean minimalist design, subtle purple and blue gradients in background',
-      'devtools': 'Developer workspace with subtle code elements, modern tech environment, dark theme with accent lighting',
-      'creative': 'Modern creative studio with dramatic lighting, artistic environment, bold and expressive atmosphere',
-      'ecommerce': 'Clean product photography style, minimalist backdrop, professional commercial setting',
-      'realestate': 'Beautiful architectural interior with natural light, modern luxury space, welcoming atmosphere',
-      'legal': 'Traditional professional office with warm wood tones, law library aesthetic, sophisticated and trustworthy',
-      'finance': 'Modern financial office with city views, clean lines, professional and secure atmosphere',
+    // Industry-specific subject matter for more targeted imagery
+    const industrySubjects: Record<string, string> = {
+      'manufacturing': 'modern factory floor, precision engineering, industrial automation, clean manufacturing lines',
+      'healthcare': 'modern healthcare technology, patient care environment, medical innovation, bright clinical space',
+      'consulting': 'strategic planning session, professional collaboration, executive boardroom, city skyline',
+      'coaching': 'inspiring workspace, personal growth environment, warm inviting atmosphere, mentorship setting',
+      'fintech': 'financial data visualization, fintech interface, wealth management, digital banking',
+      'saas': 'abstract data visualization, modern software interface, cloud technology, digital dashboard',
+      'devtools': 'developer workspace with code elements, modern tech environment, dark theme with accent lighting',
+      'creative': 'design studio, creative workspace, artistic environment, bold expressive atmosphere',
+      'ecommerce': 'premium product display, clean commercial photography, minimalist retail backdrop',
+      'realestate': 'beautiful architectural interior, modern luxury space, natural light, welcoming atmosphere',
+      'legal': 'traditional professional office, warm wood tones, law library aesthetic, trustworthy setting',
+      'finance': 'modern financial district, city views, clean professional atmosphere, secure environment',
+      'education': 'modern learning environment, academic campus, knowledge and growth, bright study space',
     };
     
-    // Find matching industry or use default
-    const baseScene = Object.entries(industryScenes).find(([key]) => 
+    // Find matching industry subject or use default
+    const subject = Object.entries(industrySubjects).find(([key]) => 
       industryLower.includes(key)
-    )?.[1] || 'Professional modern business environment with clean design and ambient lighting';
+    )?.[1] || 'professional modern business environment, innovation and growth';
+
+    // Pull tone from consultation data if available
+    const tone = effectiveNavState?.strategicData?.consultationData?.tone || 
+      effectiveNavState?.strategicData?.consultationData?.communicationStyle?.tone ||
+      'professional';
+
+    // Pull brand color hint if available
+    const brandColor = effectiveNavState?.strategicData?.consultationData?.primaryColor || '';
+    const colorHint = brandColor ? `Color palette hints: tones compatible with ${brandColor}.` : '';
     
-    // Build the final prompt
-    return `${baseScene}. Subtle, professional background suitable for text overlay. No people or faces. Soft focus on background elements. High quality photography style. 16:9 aspect ratio. Cinematic lighting. ${businessContext} industry context.`;
+    // Build the final prompt with full context
+    return `Professional wide-angle photograph for a ${industry} company landing page. Subject: ${subject}. Style: ${tone} corporate photography. Composition: Main subject on right side, clear space on left for text overlay. Lighting: Soft, professional, warm. ${colorHint} NO: People's faces in focus, text, logos, watermarks, cluttered scenes. YES: Clean backgrounds, depth of field, professional quality. 16:9 aspect ratio. Cinematic lighting. ${businessContext} context.`;
   };
 
   // Fetch gallery images from Unsplash
