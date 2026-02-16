@@ -344,7 +344,7 @@ export default function StrategyDocument() {
               {isExporting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Exporting...
+                  Generating PDF...
                 </>
               ) : (
                 <>
