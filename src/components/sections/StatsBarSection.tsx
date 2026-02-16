@@ -54,10 +54,37 @@ export function StatsBarSection({ statistics, industryVariant, mode, onUpdate, i
   }
 
   /**
+   * Safe parse: handle statistics arriving as a stringified JSON string,
+   * an array of objects, or deeply nested/corrupt structures
+   */
+  const parsedStatistics: Statistic[] = (() => {
+    let raw: any = statistics;
+    
+    // If it's a string, try to parse it
+    if (typeof raw === 'string') {
+      try {
+        raw = JSON.parse(raw);
+      } catch {
+        console.warn('⚠️ [StatsBarSection] Failed to parse statistics string');
+        return [];
+      }
+    }
+    
+    if (!Array.isArray(raw)) return [];
+    
+    return raw.map((item: any) => {
+      if (!item || typeof item !== 'object') return null;
+      const value = typeof item.value === 'string' ? item.value : String(item.value || '');
+      const label = typeof item.label === 'string' ? item.label : String(item.label || '');
+      return { value, label, source: item.source };
+    }).filter(Boolean) as Statistic[];
+  })();
+
+  /**
    * Validate stat for display:
    * - Has non-empty value and label
    * - Value is reasonable length (not a sentence)
-   * - Label doesn't contain JSON field name patterns
+   * - Label doesn't contain JSON field name patterns or syntax chars
    * - Label isn't truncated mid-word
    */
   const isValidStat = (stat: Statistic): boolean => {
@@ -66,15 +93,17 @@ export function StatsBarSection({ statistics, industryVariant, mode, onUpdate, i
     if (stat.label.length > 50) return false;  // Reasonable label length
     if (stat.label.length < 3) return false;   // Too short
     
+    // Reject labels containing JSON syntax characters
+    if (/[{}[\]":]/.test(stat.label)) return false;
+    
     // Reject JSON field name patterns
     if (/^[a-z]+[A-Z]/.test(stat.label)) return false; // camelCase
-    if (/^[a-z_]+$/i.test(stat.label)) return false; // single identifier
-    if (/^(valueprop|buyerobject|painpoint|proofelem|percent|dollar)/i.test(stat.label)) return false;
+    if (/^[a-z_]+$/i.test(stat.label) && !/\s/.test(stat.label)) return false; // single identifier
+    if (/^(valueprop|buyerobject|painpoint|proofelem|percent|dollar|clientcount|yearsinbusiness|authority|uniquevalue)/i.test(stat.label)) return false;
     
     // Reject labels that look truncated (ends with lowercase, no spaces, short)
     if (/[a-z]$/i.test(stat.label) && stat.label.length < 15 && !/\s/.test(stat.label)) {
-      // Could be truncated - check for common truncation patterns
-      if (/tim$|obj$|ful$|ent$|ion$|ers$/i.test(stat.label)) return false;
+      if (/tim$|obj$|ful$|ent$|ion$|ers$|ati$|ect$/i.test(stat.label)) return false;
     }
     
     return true;
@@ -82,7 +111,8 @@ export function StatsBarSection({ statistics, industryVariant, mode, onUpdate, i
 
   // Clean and deduplicate stats
   const seenValues = new Set<string>();
-  const cleanStats = statistics.filter(stat => {
+  const seenLabels = new Set<string>();
+  const cleanStats = parsedStatistics.filter(stat => {
     if (!isValidStat(stat)) {
       console.log('⚠️ [StatsBarSection] Rejected invalid stat:', stat);
       return false;
@@ -91,16 +121,26 @@ export function StatsBarSection({ statistics, industryVariant, mode, onUpdate, i
     // Deduplicate by normalized value
     const normalizedValue = stat.value.replace(/[^0-9a-z%$+]/gi, '').toLowerCase();
     if (seenValues.has(normalizedValue)) {
-      console.log('🔄 [StatsBarSection] Skipping duplicate stat:', stat.value);
+      console.log('🔄 [StatsBarSection] Skipping duplicate value:', stat.value);
       return false;
     }
     seenValues.add(normalizedValue);
+    
+    // Deduplicate by normalized label
+    const normalizedLabel = stat.label.toLowerCase().trim();
+    if (seenLabels.has(normalizedLabel)) {
+      console.log('🔄 [StatsBarSection] Skipping duplicate label:', stat.label);
+      return false;
+    }
+    seenLabels.add(normalizedLabel);
+    
     return true;
-  });
+  }).slice(0, 4); // Max 4 stats
 
-  console.log('📊 [StatsBarSection] Rendering', cleanStats.length, 'valid stats from', statistics.length, 'input');
+  console.log('📊 [StatsBarSection] Rendering', cleanStats.length, 'valid stats from', parsedStatistics.length, 'input');
 
-  if (cleanStats.length === 0) {
+  // Graceful fallback: hide if fewer than 2 valid stats
+  if (cleanStats.length < 2) {
     return null;
   }
 

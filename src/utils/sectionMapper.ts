@@ -753,13 +753,18 @@ export function isStructuredBriefContent(content: any): content is StructuredBri
 function validateStatLabel(label: string): string | null {
   if (!label || label.length < 3) return null;
   
+  // Reject labels containing JSON syntax characters
+  if (/[{}[\]":]/.test(label)) return null;
+  
   // Reject labels that look like JSON field names
   if (/^[a-z]+[A-Z]/.test(label)) return null; // camelCase
-  if (/^[a-z_]+$/i.test(label)) return null; // snake_case or single word identifier
-  if (/^(valueprop|buyerobject|painpoint|proofelem|percent|dollar)/i.test(label)) return null;
+  if (/^[a-z_]+$/i.test(label) && !/\s/.test(label)) return null; // single identifier without spaces
+  if (/^(valueprop|buyerobject|painpoint|proofelem|percent|dollar|clientcount|yearsinbusiness|authority|uniquevalue|messagingpillar|problemstate|solutionstate|headline|subhead|keybenef)/i.test(label)) return null;
   
-  // Reject truncated words (ending mid-word without punctuation)
-  if (/[a-z]$/i.test(label) && label.length < 10 && !/\s/.test(label)) return null;
+  // Reject truncated words (ending mid-word without punctuation, no spaces, short)
+  if (/[a-z]$/i.test(label) && label.length < 12 && !/\s/.test(label)) {
+    if (/ti$|obj$|ful$|ent$|ion$|ers$|ati$|ect$|ems$|ges$/i.test(label)) return null;
+  }
   
   // Clean up the label
   let cleaned = label
