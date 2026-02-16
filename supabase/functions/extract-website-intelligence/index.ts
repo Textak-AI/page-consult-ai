@@ -54,11 +54,18 @@ function normalizeColor(color: string): string | null {
   return null;
 }
 
-// Check if color is near white
-function isNearWhite(hex: string): boolean {
+// Get lightness (0-100) from hex
+function getLightness(hex: string): number {
   const rgb = hexToRgb(hex);
-  if (!rgb) return false;
-  return rgb.r > 240 && rgb.g > 240 && rgb.b > 240;
+  if (!rgb) return 0;
+  const r = rgb.r / 255, g = rgb.g / 255, b = rgb.b / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  return ((max + min) / 2) * 100;
+}
+
+// Check if color is near white (within 10% lightness of pure white)
+function isNearWhite(hex: string): boolean {
+  return getLightness(hex) >= 90;
 }
 
 // Check if color is near black
@@ -76,16 +83,19 @@ function isGray(hex: string): boolean {
   return diff < 25;
 }
 
-// Check if a color should be excluded (white, black, or gray)
-function isExcludedColor(color: string): boolean {
+// Check if a color is a brand-viable color (not white, black, or gray)
+function isBrandViableColor(color: string): boolean {
   const normalized = normalizeColor(color);
-  if (!normalized) return true;
-  
-  if (isNearWhite(normalized)) return true;
-  if (isNearBlack(normalized)) return true;
-  if (isGray(normalized)) return true;
-  
-  return false;
+  if (!normalized) return false;
+  if (isNearWhite(normalized)) return false;
+  if (isNearBlack(normalized)) return false;
+  if (isGray(normalized)) return false;
+  return true;
+}
+
+// Check if a color should be excluded (white, black, or gray) - legacy alias
+function isExcludedColor(color: string): boolean {
+  return !isBrandViableColor(color);
 }
 
 // Calculate color vibrancy (higher = more vibrant/saturated)
@@ -95,9 +105,34 @@ function getColorVibrancy(hex: string): number {
   const max = Math.max(rgb.r, rgb.g, rgb.b);
   const min = Math.min(rgb.r, rgb.g, rgb.b);
   const delta = max - min;
-  // Simple saturation approximation
   if (max === 0) return 0;
   return delta / max;
+}
+
+// Derive a lighter tint of a color (+20% lightness)
+function deriveLighterTint(hex: string): string {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return '#CCCCCC';
+  const factor = 0.2;
+  return rgbToHex(
+    Math.min(255, Math.round(rgb.r + (255 - rgb.r) * factor)),
+    Math.min(255, Math.round(rgb.g + (255 - rgb.g) * factor)),
+    Math.min(255, Math.round(rgb.b + (255 - rgb.b) * factor))
+  );
+}
+
+// Detect if a color is a common CMS/theme default (WordPress blue, Showit defaults, etc.)
+function isCmsDefault(hex: string): boolean {
+  const defaults = [
+    '#21759B', // WordPress default blue
+    '#0073AA', // WordPress admin blue
+    '#23282D', // WordPress admin dark
+    '#0085BA', // WordPress customizer blue
+    '#00A0D2', // WordPress highlight
+    '#3858E9', // Squarespace default
+    '#111111', // Generic dark
+  ];
+  return defaults.includes(hex.toUpperCase());
 }
 
 serve(async (req) => {
@@ -239,12 +274,20 @@ serve(async (req) => {
     }
 
     // ============================================
-    // 2. BRAND COLORS EXTRACTION (enhanced with source tracking)
+    // 2. BRAND COLORS EXTRACTION (weighted priority hierarchy)
     // ============================================
-    const collectedColors: Array<{ color: string; source: string; priority: number }> = [];
-    const allExtractedColors: string[] = [];
+    // Priority tiers:
+    //   HIGHEST (1): Hero/header section bg, CTA/primary button bg, H1 heading color
+    //   HIGH (2): Logo dominant color (fallback), nav/header bg, footer bg
+    //   MEDIUM (3): Link color, accent elements, border-colors on feature cards
+    //   LOW (4): Meta tags, favicon colors, WordPress/Showit theme defaults
     
-    // Helper to add color with source tracking
+    const collectedColors: Array<{ color: string; source: string; priority: number; isCmsDefault: boolean }> = [];
+    const allExtractedColors: string[] = [];
+    let detectedBackgroundColor: string | null = null;
+    let colorConfidenceLevel: 'high' | 'medium' | 'low' = 'low';
+    
+    // Helper to add color with source tracking and white/cms handling
     const addColor = (rawColor: string, source: string, priority: number) => {
       const normalized = normalizeColor(rawColor);
       if (!normalized) return;
@@ -254,24 +297,114 @@ serve(async (req) => {
       // Track by source
       if (source === 'themeColor') extractedData.colorsBySource.themeColor.push(normalized);
       else if (source === 'cssVar') extractedData.colorsBySource.cssVars.push(normalized);
-      else if (source === 'button') extractedData.colorsBySource.buttons.push(normalized);
+      else if (source === 'button' || source === 'heroBg' || source === 'h1Color') extractedData.colorsBySource.buttons.push(normalized);
       else if (source === 'inline') extractedData.colorsBySource.inlineStyles.push(normalized);
       else if (source === 'styleTag') extractedData.colorsBySource.styleTags.push(normalized);
       
-      if (!isExcludedColor(normalized)) {
-        collectedColors.push({ color: normalized, source, priority });
-        console.log(`[extract] Color from ${source}:`, normalized);
+      // White/near-white → classify as background, not brand
+      if (isNearWhite(normalized)) {
+        if (!detectedBackgroundColor) {
+          detectedBackgroundColor = normalized;
+          console.log(`[extract] White/near-white from ${source} classified as background:`, normalized);
+        }
+        return;
       }
+      
+      // Skip black/gray for brand colors
+      if (isNearBlack(normalized) || isGray(normalized)) {
+        // But track dark colors as potential background
+        if (isNearBlack(normalized) && !detectedBackgroundColor) {
+          detectedBackgroundColor = normalized;
+        }
+        return;
+      }
+      
+      const isCms = isCmsDefault(normalized);
+      if (isCms) {
+        // Demote CMS defaults to lowest priority
+        console.log(`[extract] CMS default color detected from ${source}:`, normalized, '→ demoted');
+        priority = 10;
+      }
+      
+      collectedColors.push({ color: normalized, source, priority, isCmsDefault: isCms });
+      console.log(`[extract] Color from ${source} (priority ${priority}${isCms ? ' CMS-DEFAULT' : ''}):`, normalized);
     };
     
-    // Priority 1: Meta theme-color (highest priority - explicit brand intent)
-    const themeColorMatch = html.match(/<meta[^>]*name=["']theme-color["'][^>]*content=["']([^"']+)["']/i)
-                    || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']theme-color["']/i);
-    if (themeColorMatch) {
-      addColor(themeColorMatch[1], 'themeColor', 1);
+    // HIGHEST PRIORITY (1): Hero/header section backgrounds
+    const heroSectionMatch = html.match(/<(?:div|section)[^>]*class=["'][^"']*hero[^"']*["'][^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/i);
+    if (heroSectionMatch) addColor(heroSectionMatch[1], 'heroBg', 1);
+    
+    const headerBgMatch = html.match(/<header[^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/i);
+    if (headerBgMatch) addColor(headerBgMatch[1], 'heroBg', 1);
+    
+    // HIGHEST PRIORITY (1): CTA/primary button background-color
+    const buttonInlinePatterns = [
+      /<(?:button|a)[^>]*class=["'][^"']*(?:btn|button|cta|primary)[^"']*["'][^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/gi,
+      /<(?:button|a)[^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)[^"']*["'][^>]*class=["'][^"']*(?:btn|button|cta|primary)/gi,
+      /<[^>]*class=["'][^"']*(?:cta|call-to-action|hero-btn|main-btn|action-btn)[^"']*["'][^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/gi,
+    ];
+    for (const pattern of buttonInlinePatterns) {
+      const matches = html.matchAll(pattern);
+      for (const match of matches) {
+        addColor(match[1], 'button', 1);
+      }
     }
     
-    // Priority 2: CSS custom properties (--primary, --brand, --accent, etc.)
+    // HIGHEST PRIORITY (1): H1 heading color property
+    const styleTagMatches = html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+    const allStyleContent: string[] = [];
+    for (const styleMatch of styleTagMatches) {
+      const cssContent = styleMatch[1];
+      allStyleContent.push(cssContent);
+      
+      // H1 color
+      const h1ColorMatch = cssContent.match(/h1[^{]*\{[^}]*(?<!background-)color:\s*([^;}]+)/i);
+      if (h1ColorMatch) addColor(h1ColorMatch[1], 'h1Color', 1);
+      
+      // Button/CTA background colors (HIGHEST)
+      const buttonCssPatterns = [
+        /\.(?:btn|button|cta|primary-btn|main-btn|action-btn)[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
+        /button(?:\.[^\s{]+)?[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
+        /a\.(?:btn|button|cta)[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
+      ];
+      for (const pattern of buttonCssPatterns) {
+        const matches = cssContent.matchAll(pattern);
+        for (const match of matches) addColor(match[1], 'button', 1);
+      }
+      
+      // Hero section CSS backgrounds (HIGHEST)
+      const heroCssMatch = cssContent.match(/\.hero[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/i);
+      if (heroCssMatch) addColor(heroCssMatch[1], 'heroBg', 1);
+      
+      // Nav/header/footer backgrounds (HIGH - priority 2)
+      const navBgMatch = cssContent.match(/(?:nav|\.nav|\.navbar|\.navigation)[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/i);
+      if (navBgMatch) addColor(navBgMatch[1], 'navBg', 2);
+      
+      const footerBgMatch = cssContent.match(/footer[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/i);
+      if (footerBgMatch) addColor(footerBgMatch[1], 'footerBg', 2);
+      
+      // Primary/accent class colors (MEDIUM - priority 3)
+      const accentPatterns = [
+        /\.(?:primary|accent|brand)[^{]*\{[^}]*(?:background(?:-color)?|color):\s*([^;}]+)/gi,
+      ];
+      for (const pattern of accentPatterns) {
+        const matches = cssContent.matchAll(pattern);
+        for (const match of matches) addColor(match[1], 'styleTag', 3);
+      }
+      
+      // Link colors (MEDIUM - priority 3)
+      const linkColorMatch = cssContent.match(/a(?:\s*,|\s*\{|\s*:)[^{]*\{[^}]*(?<!background-)color:\s*(#[0-9a-fA-F]{3,8})/i);
+      if (linkColorMatch) addColor(linkColorMatch[1], 'linkColor', 3);
+      
+      // Background color for light/dark mode detection
+      const bodyBgMatch = cssContent.match(/body[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/i);
+      if (bodyBgMatch) {
+        const normalized = normalizeColor(bodyBgMatch[1]);
+        if (normalized) detectedBackgroundColor = normalized;
+      }
+    }
+    
+    // CSS custom properties (HIGH - priority 2)
     const cssVarPatterns = [
       /--(?:primary|brand|main|accent|theme)(?:[-_]?color)?:\s*(#[0-9a-fA-F]{3,8})/gi,
       /--(?:primary|brand|main|accent|theme)(?:[-_]?color)?:\s*(rgb[a]?\([^)]+\))/gi,
@@ -281,69 +414,31 @@ serve(async (req) => {
     ];
     for (const pattern of cssVarPatterns) {
       const matches = html.matchAll(pattern);
-      for (const match of matches) {
-        addColor(match[1], 'cssVar', 2);
-      }
+      for (const match of matches) addColor(match[1], 'cssVar', 2);
     }
     
-    // Priority 3: Button/CTA inline styles (almost always brand colors!)
-    const buttonInlinePatterns = [
-      // Buttons with inline background
-      /<(?:button|a)[^>]*class=["'][^"']*(?:btn|button|cta|primary)[^"']*["'][^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/gi,
-      /<(?:button|a)[^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)[^"']*["'][^>]*class=["'][^"']*(?:btn|button|cta|primary)/gi,
-      // Any element with CTA-like classes and background
-      /<[^>]*class=["'][^"']*(?:cta|call-to-action|hero-btn|main-btn|action-btn)[^"']*["'][^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/gi,
-    ];
-    for (const pattern of buttonInlinePatterns) {
-      const matches = html.matchAll(pattern);
-      for (const match of matches) {
-        addColor(match[1], 'button', 3);
-      }
+    // Meta theme-color (LOW priority 4 — often CMS defaults)
+    const themeColorMatch = html.match(/<meta[^>]*name=["']theme-color["'][^>]*content=["']([^"']+)["']/i)
+                    || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']theme-color["']/i);
+    if (themeColorMatch) {
+      addColor(themeColorMatch[1], 'themeColor', 4);
     }
     
-    // Priority 4: Style tags - button/CTA class definitions
-    const styleTagMatches = html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi);
-    for (const styleMatch of styleTagMatches) {
-      const cssContent = styleMatch[1];
-      
-      // Button/CTA background colors
-      const buttonCssPatterns = [
-        /\.(?:btn|button|cta|primary-btn|main-btn|action-btn)[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
-        /button(?:\.[^\s{]+)?[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
-        /a\.(?:btn|button|cta)[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
-        // Hero section colors
-        /\.hero[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
-        // Primary/accent colors
-        /\.(?:primary|accent|brand)[^{]*\{[^}]*(?:background(?:-color)?|color):\s*([^;}]+)/gi,
-      ];
-      
-      for (const pattern of buttonCssPatterns) {
-        const matches = cssContent.matchAll(pattern);
-        for (const match of matches) {
-          addColor(match[1], 'styleTag', 4);
-        }
-      }
-    }
-    
-    // Priority 5: General inline styles (lower priority)
+    // General inline styles (LOW - priority 4)
     const inlineColorPatterns = [
       /style=["'][^"']*background(?:-color)?:\s*(#[0-9a-fA-F]{3,8})/gi,
       /style=["'][^"']*background(?:-color)?:\s*(rgb[a]?\([^)]+\))/gi,
     ];
     for (const pattern of inlineColorPatterns) {
       const matches = html.matchAll(pattern);
-      for (const match of matches) {
-        addColor(match[1], 'inline', 5);
-      }
+      for (const match of matches) addColor(match[1], 'inline', 4);
     }
     
-    // Priority 6: Fetch and parse external CSS stylesheets for brand colors
-    // (Especially important for Webflow, Squarespace, and other CMS sites)
-    // Match both `rel=... href=...` and `href=... rel=...` patterns
+    // Fetch and parse external CSS stylesheets
     const cssLinkPatterns = [
       /<link[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["']/gi,
       /<link[^>]*href=["']([^"']+\.css[^"']*)["'][^>]*rel=["']stylesheet["']/gi,
-      /<link[^>]*href=["']([^"']+\.css[^"']*)["'][^>]*>/gi, // Fallback: any .css file
+      /<link[^>]*href=["']([^"']+\.css[^"']*)["'][^>]*>/gi,
     ];
     const cssLinks: string[] = [];
     for (const pattern of cssLinkPatterns) {
@@ -353,9 +448,7 @@ serve(async (req) => {
         if (!href.includes('googleapis.com/css') && !href.includes('fonts.') && !href.includes('icon') && !cssLinks.includes(href)) {
           try {
             const cssUrl = href.startsWith('http') ? href : new URL(href, baseUrl).href;
-            if (!cssLinks.includes(cssUrl)) {
-              cssLinks.push(cssUrl);
-            }
+            if (!cssLinks.includes(cssUrl)) cssLinks.push(cssUrl);
           } catch (e) { /* ignore invalid URLs */ }
         }
       }
@@ -363,8 +456,7 @@ serve(async (req) => {
     
     console.log('[extract] Found CSS links:', cssLinks.length, cssLinks.slice(0, 2).map(u => u.slice(0, 60)));
     
-    // Fetch first 2 CSS files (limit to avoid timeout)
-    for (const cssUrl of cssLinks.slice(0, 2)) {
+    for (const cssUrl of cssLinks.slice(0, 3)) {
       try {
         console.log('[extract] Fetching external CSS:', cssUrl.slice(0, 80));
         const cssResponse = await fetch(cssUrl, {
@@ -372,41 +464,51 @@ serve(async (req) => {
         });
         if (cssResponse.ok) {
           const cssContent = await cssResponse.text();
-          console.log('[extract] CSS content length:', cssContent.length);
           
-          // Extract colors from CSS classes that indicate brand colors
-          const externalCssPatterns = [
-            // Primary/brand color classes
-            /\.(?:primary|brand|accent|main|theme)[-_]?(?:color|bg|background)?[^{]*\{[^}]*(?:background(?:-color)?|color):\s*([^;}]+)/gi,
-            // Button/CTA classes  
+          // Button/CTA in external CSS (HIGHEST)
+          const extButtonPatterns = [
             /\.(?:btn|button|cta)(?:[-_]primary|[-_]main)?[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
-            // Color utility classes (common in Tailwind, Bootstrap, Webflow)
-            /\.(?:bg|background)[-_](?:primary|brand|accent|main)[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
-            /\.(?:text|font|color)[-_](?:primary|brand|accent|main)[^{]*\{[^}]*color:\s*([^;}]+)/gi,
-            // Link colors
-            /a(?:\:[a-z]+)?[^{]*\{[^}]*color:\s*(#[0-9a-fA-F]{3,8})/gi,
-            // Webflow-specific patterns
             /\.w-button[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
-            /\.is[-_]?primary[^{]*\{[^}]*(?:background(?:-color)?|color|border-color):\s*([^;}]+)/gi,
-            /\.primary[-_]?(?:blue|color|bg)[^{]*\{[^}]*(?:background(?:-color)?|color):\s*([^;}]+)/gi,
-            // Root/body colors
-            /:root[^{]*\{[^}]*--(?:primary|brand|accent|main)(?:[-_]color)?:\s*([^;}]+)/gi,
-            /body[^{]*\{[^}]*(?:--(?:primary|brand|accent)|background(?:-color)?|color):\s*([^;}]+)/gi,
           ];
-          
-          for (const pattern of externalCssPatterns) {
+          for (const pattern of extButtonPatterns) {
             const matches = cssContent.matchAll(pattern);
-            for (const match of matches) {
-              addColor(match[1], 'cssVar', 3); // Treat external CSS brand classes as priority 3
-            }
+            for (const match of matches) addColor(match[1], 'button', 1);
           }
           
-          // Also look for CSS variables in external stylesheets
+          // Hero backgrounds in external CSS (HIGHEST)
+          const extHeroMatch = cssContent.match(/\.hero[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/i);
+          if (extHeroMatch) addColor(extHeroMatch[1], 'heroBg', 1);
+          
+          // H1 color in external CSS (HIGHEST)
+          const extH1Match = cssContent.match(/h1[^{]*\{[^}]*(?<!background-)color:\s*([^;}]+)/i);
+          if (extH1Match) addColor(extH1Match[1], 'h1Color', 1);
+          
+          // CSS vars in external (HIGH)
           for (const pattern of cssVarPatterns) {
             const matches = cssContent.matchAll(pattern);
-            for (const match of matches) {
-              addColor(match[1], 'cssVar', 2);
-            }
+            for (const match of matches) addColor(match[1], 'cssVar', 2);
+          }
+          
+          // Primary/brand class colors (MEDIUM)
+          const extBrandPatterns = [
+            /\.(?:primary|brand|accent|main|theme)[-_]?(?:color|bg|background)?[^{]*\{[^}]*(?:background(?:-color)?|color):\s*([^;}]+)/gi,
+            /\.(?:bg|background)[-_](?:primary|brand|accent|main)[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/gi,
+            /\.is[-_]?primary[^{]*\{[^}]*(?:background(?:-color)?|color|border-color):\s*([^;}]+)/gi,
+          ];
+          for (const pattern of extBrandPatterns) {
+            const matches = cssContent.matchAll(pattern);
+            for (const match of matches) addColor(match[1], 'cssVar', 3);
+          }
+          
+          // Link colors (MEDIUM)
+          const extLinkMatch = cssContent.match(/a(?:\s*,|\s*\{|\s*:)[^{]*\{[^}]*(?<!background-)color:\s*(#[0-9a-fA-F]{3,8})/i);
+          if (extLinkMatch) addColor(extLinkMatch[1], 'linkColor', 3);
+          
+          // Body background for light/dark detection
+          const extBodyBg = cssContent.match(/body[^{]*\{[^}]*background(?:-color)?:\s*([^;}]+)/i);
+          if (extBodyBg && !detectedBackgroundColor) {
+            const normalized = normalizeColor(extBodyBg[1]);
+            if (normalized) detectedBackgroundColor = normalized;
           }
           
           console.log('[extract] Colors after external CSS:', collectedColors.length);
@@ -416,12 +518,13 @@ serve(async (req) => {
       }
     }
     
-    // Sort by priority and vibrancy, deduplicate
+    // Sort by priority (lower = better), then vibrancy, excluding CMS defaults when better options exist
+    const hasNonCmsColors = collectedColors.some(c => !c.isCmsDefault);
+    
     const sortedColors = collectedColors
+      .filter(c => !hasNonCmsColors || !c.isCmsDefault) // Remove CMS defaults if we have real colors
       .sort((a, b) => {
-        // First by priority
         if (a.priority !== b.priority) return a.priority - b.priority;
-        // Then by vibrancy (more vibrant = better brand color)
         return getColorVibrancy(b.color) - getColorVibrancy(a.color);
       });
     
@@ -438,21 +541,53 @@ serve(async (req) => {
     
     const uniqueAllColors = [...new Set(allExtractedColors)].slice(0, 10);
     
+    // SAFEGUARD: Duplicate detection — if primary === secondary, derive secondary
+    if (uniqueColors.length >= 2 && uniqueColors[0] === uniqueColors[1]) {
+      uniqueColors[1] = deriveLighterTint(uniqueColors[0]);
+      console.log('[extract] Duplicate primary/secondary detected, derived tint:', uniqueColors[1]);
+    } else if (uniqueColors.length === 1) {
+      // Only one color found — derive a secondary from it
+      uniqueColors.push(deriveLighterTint(uniqueColors[0]));
+      console.log('[extract] Only one color found, derived secondary:', uniqueColors[1]);
+    }
+    
+    // Determine confidence
+    const highestPrioritySources = collectedColors.filter(c => c.priority <= 1 && !c.isCmsDefault);
+    const mediumPrioritySources = collectedColors.filter(c => c.priority <= 3 && !c.isCmsDefault);
+    const onlyCmsColors = collectedColors.length > 0 && collectedColors.every(c => c.isCmsDefault);
+    
+    if (highestPrioritySources.length > 0) {
+      colorConfidenceLevel = 'high';
+    } else if (mediumPrioritySources.length > 0) {
+      colorConfidenceLevel = 'medium';
+    } else if (onlyCmsColors) {
+      colorConfidenceLevel = 'low'; // Only CMS defaults found
+    } else {
+      colorConfidenceLevel = uniqueColors.length > 0 ? 'medium' : 'low';
+    }
+    
+    // Default background if none detected
+    if (!detectedBackgroundColor) {
+      detectedBackgroundColor = '#FFFFFF'; // Assume light mode
+    }
+    
+    // Determine color mode from background
+    const backgroundLightness = getLightness(detectedBackgroundColor);
+    const detectedColorMode = backgroundLightness >= 50 ? 'light' : 'dark';
+    
     // Detect minimal/monochromatic brand
     if (uniqueAllColors.length > 0 && uniqueColors.length === 0) {
       extractedData.isMinimalBrand = true;
-      extractedData.brandColors = uniqueAllColors.slice(0, 3);
+      extractedData.brandColors = uniqueAllColors.filter(c => isBrandViableColor(c)).slice(0, 3);
       extractedData.extractionConfidence = 'medium';
       console.log('[extract] Minimal brand detected, using monochromatic colors:', extractedData.brandColors);
     } else {
       extractedData.brandColors = uniqueColors;
-      // Confidence based on source quality
-      const hasHighQualitySource = collectedColors.some(c => c.priority <= 3);
-      extractedData.extractionConfidence = hasHighQualitySource ? 'high' : (uniqueColors.length > 0 ? 'medium' : 'low');
+      extractedData.extractionConfidence = colorConfidenceLevel;
     }
     
     extractedData.allExtractedColors = uniqueAllColors;
-    console.log('[extract] Final colors:', extractedData.brandColors, 'isMinimalBrand:', extractedData.isMinimalBrand, 'confidence:', extractedData.extractionConfidence);
+    console.log('[extract] Final colors:', extractedData.brandColors, 'background:', detectedBackgroundColor, 'colorMode:', detectedColorMode, 'confidence:', colorConfidenceLevel, 'isMinimalBrand:', extractedData.isMinimalBrand);
 
     // ============================================
     // 3. FONT EXTRACTION (enhanced)
@@ -935,11 +1070,11 @@ serve(async (req) => {
     // Build enhanced response with backward compatibility
     const responseData = {
       success: true,
-      // ===== BACKWARD COMPATIBLE FIELDS (keep exactly as before) =====
+      // ===== BACKWARD COMPATIBLE FIELDS =====
       companyName: extractedData.companyName,
       logoUrl: extractedData.logoUrl,
       brandColors: extractedData.brandColors,
-      fonts: extractedData.fonts, // { heading: string, body: string }
+      fonts: extractedData.fonts,
       title: extractedData.title,
       tagline: extractedData.tagline,
       description: extractedData.description,
@@ -951,11 +1086,20 @@ serve(async (req) => {
       extractionConfidence: extractedData.extractionConfidence,
       inferredIndustry,
       
-      // ===== NEW ENHANCED FIELDS =====
-      // Primary/secondary/accent from brandColors for easy access
+      // ===== ENHANCED COLOR FIELDS =====
       primary: extractedData.brandColors[0] || null,
       secondary: extractedData.brandColors[1] || null,
       accent: extractedData.brandColors[2] || null,
+      
+      // Background color + color mode for SDI light/dark detection
+      backgroundColor: detectedBackgroundColor,
+      colorMode: detectedColorMode,
+      
+      // Color confidence: 'low' means we only found CMS defaults or meta tags
+      colorConfidence: colorConfidenceLevel,
+      colorConfidenceMessage: colorConfidenceLevel === 'low' 
+        ? 'We detected these colors but they may be CMS defaults — do they look right?' 
+        : null,
       
       // Extended color arrays
       secondaryColors: extractedData.brandColors.slice(1, 3),
@@ -974,8 +1118,10 @@ serve(async (req) => {
       primary: responseData.primary,
       secondary: responseData.secondary,
       accent: responseData.accent,
+      backgroundColor: responseData.backgroundColor,
+      colorMode: responseData.colorMode,
+      colorConfidence: responseData.colorConfidence,
       fonts: responseData.extractedFonts,
-      confidence: responseData.extractionConfidence,
     });
 
     return new Response(JSON.stringify(responseData), {
