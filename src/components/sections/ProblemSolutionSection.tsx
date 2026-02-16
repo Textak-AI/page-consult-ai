@@ -400,12 +400,12 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
     );
   }
 
-  // Default dark mode layout
-  const sectionBg = 'hsl(217, 33%, 6%)';
-  const cardBg = 'hsla(0, 0%, 100%, 0.02)';
-  const cardBorder = 'hsla(0, 0%, 100%, 0.05)';
-  const textPrimary = 'hsl(210, 40%, 80%)';
-  const textSecondary = 'hsl(210, 20%, 60%)';
+  // Default layout — respects isLightMode
+  const sectionBg = isLightMode ? '#f8fafc' : 'hsl(217, 33%, 6%)';
+  const cardBg = isLightMode ? '#ffffff' : 'hsla(0, 0%, 100%, 0.02)';
+  const cardBorder = isLightMode ? '#e2e8f0' : 'hsla(0, 0%, 100%, 0.05)';
+  const textPrimary = isLightMode ? '#1e293b' : 'hsl(210, 40%, 80%)';
+  const textSecondary = isLightMode ? '#475569' : 'hsl(210, 20%, 60%)';
 
   return (
     <section 

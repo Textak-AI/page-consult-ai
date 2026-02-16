@@ -254,16 +254,23 @@ export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSe
     );
   }
 
-  // Default dark mode layout with industry-aware background
+  // Determine mode from content prop
+  const mode = (content as any).mode;
+  const isLightMode = mode 
+    ? (mode === 'light' || mode === 'warm')
+    : false;
+
+  // Default layout — respects isLightMode
   return (
     <section 
       className={`relative overflow-hidden ${isEditing ? '' : ''}`}
       style={{ 
         padding: '96px 24px',
+        backgroundColor: isLightMode ? '#ffffff' : undefined,
       }}
     >
-      {/* Industry-aware background pattern */}
-      <IndustryBackgroundPattern css={industryPattern.css} />
+      {/* Industry-aware background pattern — only for dark mode */}
+      {!isLightMode && <IndustryBackgroundPattern css={industryPattern.css} />}
       
       {isEditing && (
         <div className="absolute inset-0 border-2 border-cyan-500/50 rounded-lg pointer-events-none z-20" />
@@ -277,10 +284,13 @@ export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSe
           className="text-center mb-16 md:mb-20 mx-auto max-w-3xl"
         >
           <h2 
-            className={`text-3xl sm:text-4xl md:text-5xl mb-5 ${
+            className={`text-3xl sm:text-4xl md:text-5xl mb-5 ${isLightMode ? 'text-gray-900' : ''} ${
               isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2 inline-block" : ""
             }`}
-            style={{ 
+            style={isLightMode ? {
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 'var(--font-weight-heading)',
+            } : { 
               color: 'var(--color-text-primary)',
               fontFamily: 'var(--font-heading)',
               fontWeight: 'var(--font-weight-heading)',
@@ -294,10 +304,10 @@ export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSe
             {title}
           </h2>
           <p 
-            className={`text-lg md:text-xl ${
+            className={`text-lg md:text-xl ${isLightMode ? 'text-gray-600' : ''} ${
               isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
             }`}
-            style={{ 
+            style={isLightMode ? {} : { 
               color: 'var(--color-text-secondary)',
               fontFamily: 'var(--font-body)',
               lineHeight: 'var(--line-height-body)',
@@ -336,8 +346,8 @@ export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSe
                 className="relative"
               >
                 <div 
-                  className="h-full flex flex-col"
-                  style={{
+                  className={`h-full flex flex-col ${isLightMode ? 'bg-white shadow-md border border-gray-100 rounded-xl p-8' : ''}`}
+                  style={isLightMode ? {} : {
                     backgroundColor: 'var(--color-surface)',
                     borderColor: 'var(--color-border)',
                     borderWidth: 'var(--border-width)',
@@ -368,10 +378,10 @@ export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSe
                   </div>
 
                   <h3 
-                    className={`text-xl mb-3 text-center md:text-left ${
+                    className={`text-xl mb-3 text-center md:text-left ${isLightMode ? 'text-gray-900 font-bold' : ''} ${
                       isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
                     }`}
-                    style={{ 
+                    style={isLightMode ? {} : { 
                       color: 'var(--color-text-primary)',
                       fontFamily: 'var(--font-heading)',
                       fontWeight: 'var(--font-weight-heading)',
@@ -384,10 +394,10 @@ export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSe
                   </h3>
 
                   <p 
-                    className={`text-center md:text-left flex-grow ${
+                    className={`text-center md:text-left flex-grow ${isLightMode ? 'text-gray-600' : ''} ${
                       isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
                     }`}
-                    style={{ 
+                    style={isLightMode ? {} : { 
                       color: 'var(--color-text-secondary)',
                       fontFamily: 'var(--font-body)',
                       lineHeight: 'var(--line-height-body)',
