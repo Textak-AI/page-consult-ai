@@ -725,6 +725,18 @@ export function mapBriefToSections(
     types: sections.map(s => s.type),
   });
   
+  // COLOR CASCADE STEP 3: Inject primaryColor into ALL sections that don't have it
+  // This ensures brand color reaches every component, not just hero and final-cta
+  const resolvedPrimary = primaryColor || sdi?.palette?.primary || null;
+  if (resolvedPrimary) {
+    for (const section of sections) {
+      if (!section.content.primaryColor) {
+        section.content.primaryColor = resolvedPrimary;
+      }
+    }
+    console.log(`🎨 [sectionMapper] Injected primaryColor "${resolvedPrimary}" into ${sections.length} sections`);
+  }
+
   console.log(`🧠 [sectionMapper] Generated ${sections.length} sections from pageStructure:`, pageStructure);
   return sections;
 }

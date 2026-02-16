@@ -67,13 +67,14 @@ import {
 import type { DesignSystem } from "@/config/designSystem";
 import { SEOHead } from "@/components/seo/SEOHead";
 import { applyBrandColors } from "@/lib/colorUtils";
-import { generateDesignIntelligence, type DesignIntelligenceOutput } from "@/lib/designIntelligence";
+import { generateDesignIntelligence, generateSDIPalette, type DesignIntelligenceOutput } from "@/lib/designIntelligence";
 import { intelligenceConcierge } from "@/lib/intelligenceConcierge";
 import { getTargetMarketFromSources } from "@/lib/targetMarketExtractor";
 import { resolveHeroImageUrl } from "@/hooks/useHeroImageResolution";
 import { generateUniqueSlug } from "@/utils/slugUtils";
 import { PublishToolbar } from "@/components/editor/PublishToolbar";
 import { autoQCPass } from "@/lib/autoQCPass";
+import { buildResolvedPalette, injectPaletteIntoContent } from "@/lib/resolvedPalette";
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -2118,16 +2119,25 @@ function GenerateContent() {
           || strategicData.consultationData?.websiteIntelligence?.logoUrl 
           || strategicData.websiteIntelligence?.logoUrl
           || null;
+        
+        // COLOR CASCADE: Generate SDI palette for brand color resolution
+        const sdiPaletteForBrief = generateSDIPalette(
+          brandSettings?.primaryColor,
+          consultationData.industry || 'default',
+          extractedIntel?.backgroundColor
+        );
+        
         const primaryColor = brandSettings?.primaryColor 
           || strategicData.consultationData?.websiteIntelligence?.primaryColor
           || strategicData.websiteIntelligence?.primaryColor
           || ds.colors?.primary 
+          || sdiPaletteForBrief.primary  // SDI palette fallback — never null
           || null;
         const pageType = strategicData.consultationData?.pageType || null;
         const pageGoal = strategicData.consultationData?.goal || consultationData.goal || 'generate-leads';
         
         console.log('🖼️ [Brand Pipeline] Logo URL for sections:', logoUrl);
-        console.log('🎨 [Brand Pipeline] Primary color for sections:', primaryColor);
+        console.log('🎨 [Brand Pipeline] Primary color for sections:', primaryColor, '| SDI palette primary:', sdiPaletteForBrief.primary);
         console.log('📄 Page type:', pageType);
         console.log('🎯 Page goal:', pageGoal);
         
@@ -2613,13 +2623,23 @@ function GenerateContent() {
       || navBrandSettings?.primaryColor 
       || strategicConsultation?.websiteIntelligence?.primaryColor
       || effectiveNavState?.strategicData?.consultationData?.websiteIntelligence?.primaryColor
-      || designSystem?.colors?.primary 
+      || designSystem?.colors?.primary
+      // COLOR CASCADE: SDI palette fallback — ensures brand color ALWAYS flows through
+      || (() => {
+        const sdiData = consultationData?.designIntelligence;
+        if (sdiData?.palette?.primary) {
+          console.log('🎨 [Brand Pipeline] Using SDI palette primary as fallback:', sdiData.palette.primary);
+          return sdiData.palette.primary;
+        }
+        return null;
+      })()
       || null;
 
     const brandSource = extractedIntelBrand?.primaryColor ? 'extracted_intelligence'
       : navBrandSettings?.primaryColor ? 'brandSettings'
       : strategicConsultation?.websiteIntelligence?.primaryColor ? 'websiteIntelligence'
       : designSystem?.colors?.primary ? 'designSystem'
+      : consultationData?.designIntelligence?.palette?.primary ? 'sdi-palette'
       : 'none';
     
     console.log(`🎨 [Brand Pipeline] Using colors from: ${brandSource}`);
@@ -2808,6 +2828,7 @@ function GenerateContent() {
       || strategicConsultation?.websiteIntelligence?.primaryColor
       || effectiveNavState?.strategicData?.consultationData?.websiteIntelligence?.primaryColor
       || designSystem?.colors?.primary 
+      || sdi?.palette?.primary  // COLOR CASCADE: SDI palette fallback
       || null;
 
     // LAYOUT TEMPLATE INTEGRATION:

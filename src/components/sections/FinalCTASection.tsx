@@ -81,7 +81,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
 
   const getButtonStyles = (): React.CSSProperties => {
     // Use brand primary color on the button (pops against dark CTA background)
-    const brandPrimary = palette?.primary || content.brandColors?.primary;
+    const brandPrimary = content.primaryColor || palette?.primary || content.brandColors?.primary;
     if (brandPrimary) {
       return { 
         backgroundColor: brandPrimary, 
@@ -96,7 +96,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   };
 
   const getButtonClassName = () => {
-    const brandPrimary = palette?.primary || content.brandColors?.primary;
+    const brandPrimary = content.primaryColor || palette?.primary || content.brandColors?.primary;
     if (brandPrimary) {
       return 'text-white hover:opacity-90';
     }
