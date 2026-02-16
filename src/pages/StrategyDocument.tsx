@@ -209,12 +209,51 @@ export default function StrategyDocument() {
     return brief || {};
   }, [consultation, accumulator, intelligence]);
 
-  // Get market data
+  // Get market data with objection resolution from all sources
   const marketData = useMemo((): Partial<ConciergeMarketData> => {
     const fromAccumulator = accumulator?.marketData;
     const fromIntelligence = (intelligence as any)?.marketResearch;
-    return fromAccumulator || fromIntelligence || {};
-  }, [accumulator, intelligence]);
+    const base = fromAccumulator || fromIntelligence || {};
+
+    // If commonObjections already populated, return as-is
+    if (base.commonObjections && base.commonObjections.length > 0) return base;
+
+    // Resolve objections from all possible locations
+    const extractedIntel = consultation?.extracted_intelligence as any;
+    const accumConsult = accumulator?.consultationData as any;
+    const briefData = consultation?.strategy_brief as any;
+
+    const rawObjections: any[] = 
+      extractedIntel?.objections ||
+      extractedIntel?.buyerObjections ||
+      accumConsult?.objections ||
+      accumConsult?.buyerObjections ||
+      briefData?.objectionHandlers ||
+      briefData?.objections ||
+      (consultation as any)?.audience_pain_points || // sometimes stored here
+      [];
+
+    if (rawObjections.length > 0) {
+      const mapped = rawObjections.map((obj: any) => {
+        if (typeof obj === 'string') {
+          return { objection: obj, strategy: 'Address with proof points and case studies' };
+        }
+        if (obj && typeof obj === 'object') {
+          return {
+            objection: obj.objection || obj.question || obj.text || String(obj),
+            strategy: obj.strategy || obj.answer || obj.response || 'Address with proof points and case studies',
+          };
+        }
+        return null;
+      }).filter(Boolean);
+
+      if (mapped.length > 0) {
+        return { ...base, commonObjections: mapped };
+      }
+    }
+
+    return base;
+  }, [accumulator, intelligence, consultation]);
 
   // Extract pain points as array
   const painPointsArray = useMemo(() => {
