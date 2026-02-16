@@ -31,6 +31,104 @@ export interface QCResult {
 // HELPERS
 // ========================
 
+const STOP_WORDS = new Set([
+  'the', 'and', 'that', 'with', 'this', 'from', 'have', 'been', 'will', 'your',
+  'they', 'their', 'them', 'than', 'more', 'into', 'also', 'each', 'which',
+  'when', 'what', 'about', 'over', 'such', 'most', 'some', 'very', 'help',
+  'through', 'does', 'make', 'like', 'just', 'only', 'well', 'even', 'where',
+]);
+
+/**
+ * Detect and remove repeated non-trivial words within a single text field.
+ * Returns cleaned text or original if no duplicates found.
+ */
+export function deduplicateFieldText(text: string): { cleaned: string; hadDuplicates: boolean } {
+  if (!text || typeof text !== 'string') return { cleaned: text, hadDuplicates: false };
+
+  const words = text.split(/\s+/);
+  if (words.length < 4) return { cleaned: text, hadDuplicates: false };
+
+  // Find non-trivial words (4+ chars, not stop words) that repeat
+  const wordCounts = new Map<string, number>();
+  for (const w of words) {
+    const lower = w.toLowerCase().replace(/[^a-z]/g, '');
+    if (lower.length >= 4 && !STOP_WORDS.has(lower)) {
+      wordCounts.set(lower, (wordCounts.get(lower) || 0) + 1);
+    }
+  }
+
+  const duplicates = [...wordCounts.entries()].filter(([, count]) => count >= 2);
+  if (duplicates.length === 0) return { cleaned: text, hadDuplicates: false };
+
+  // Strategy: find the longest repeated phrase and remove the second occurrence
+  // Check for repeated multi-word phrases first (e.g., "optimize workflows ... optimize workflows")
+  const lowerText = text.toLowerCase();
+  for (const [word] of duplicates) {
+    // Find phrases containing the duplicate word (up to 3-word window)
+    const phraseRegex = new RegExp(`(\\b\\w*\\s+)?${word}(\\s+\\w*\\b)?`, 'gi');
+    const matches = [...text.matchAll(phraseRegex)];
+    
+    if (matches.length >= 2) {
+      // Remove the second occurrence of the phrase
+      const secondMatch = matches[1];
+      const idx = secondMatch.index!;
+      const matchStr = secondMatch[0];
+      
+      // Check for surrounding connectors like "to" before the duplicate
+      const before = text.slice(Math.max(0, idx - 4), idx).trim().toLowerCase();
+      const prefixCut = ['to', 'and', 'or'].includes(before) ? before.length + 1 : 0;
+      
+      const cleaned = (
+        text.slice(0, idx - prefixCut).trimEnd() + 
+        text.slice(idx + matchStr.length)
+      ).replace(/\s{2,}/g, ' ').replace(/\s+([.,;!?])/g, '$1').trim();
+      
+      console.log(`🔧 [AutoQC] Dedup: removed repeated "${word}" → "${cleaned.slice(0, 80)}..."`);
+      return { cleaned, hadDuplicates: true };
+    }
+  }
+
+  return { cleaned: text, hadDuplicates: false };
+}
+
+/**
+ * Run deduplication on specific intelligence fields.
+ * Returns the cleaned intel object and list of fields that were fixed.
+ */
+export function deduplicateIntelligenceFields(intel: Record<string, any>): { 
+  cleaned: Record<string, any>; 
+  fixedFields: string[] 
+} {
+  if (!intel) return { cleaned: intel, fixedFields: [] };
+
+  const fieldsToCheck = [
+    'competitiveEdge', 'competitorDifferentiator', 'competitorDifferentiatorFull',
+    'valueProp', 'valuePropFull', 'valueProposition',
+    'uniqueValue', 'unique_value',
+    'headline', 'primaryHeadline', 'supportingHeadline',
+  ];
+
+  const cleaned = { ...intel };
+  const fixedFields: string[] = [];
+
+  for (const field of fieldsToCheck) {
+    const value = cleaned[field];
+    if (value && typeof value === 'string') {
+      const result = deduplicateFieldText(value);
+      if (result.hadDuplicates) {
+        cleaned[field] = result.cleaned;
+        fixedFields.push(field);
+      }
+    }
+  }
+
+  if (fixedFields.length > 0) {
+    console.log(`🔧 [AutoQC] Deduplicated ${fixedFields.length} intelligence fields: ${fixedFields.join(', ')}`);
+  }
+
+  return { cleaned, fixedFields };
+}
+
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -409,14 +507,24 @@ export function autoQCPass(
   const improvements: QCImprovement[] = [];
   let improved = structuredClone(sections);
 
+  // Pass 0: Deduplicate intelligence fields (word repetition within same field)
+  let cleanedIntel = extractedIntel;
+  if (extractedIntel) {
+    const { cleaned, fixedFields } = deduplicateIntelligenceFields(extractedIntel);
+    cleanedIntel = cleaned;
+    if (fixedFields.length > 0) {
+      console.log(`🔧 [AutoQC] Pre-pass: cleaned ${fixedFields.length} fields with word repetition`);
+    }
+  }
+
   // Pass 1: Copy specificity — catch and fix generic phrases
-  improved = runSpecificityPass(improved, extractedIntel, companyName, improvements);
+  improved = runSpecificityPass(improved, cleanedIntel, companyName, improvements);
 
   // Pass 2: Structural QC — conversion best practices
-  improved = runStructuralPass(improved, extractedIntel, consultationData, companyName, improvements);
+  improved = runStructuralPass(improved, cleanedIntel, consultationData, companyName, improvements);
 
   // Pass 3: Intelligence utilization — ensure consultation data is surfaced
-  improved = runUtilizationPass(improved, extractedIntel, companyName, improvements);
+  improved = runUtilizationPass(improved, cleanedIntel, companyName, improvements);
 
   // Cap at 8 improvements (conservative — avoid over-editing)
   if (improvements.length > 8) {
