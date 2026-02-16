@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, Download, Edit, Loader2 } from 'lucide-react';
+import { ArrowRight, Download, Edit, Loader2, Building2, Target, Mic, Brain, Layers, Palette, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateIntelligenceScore, type GenericIntelligence } from '@/lib/intelligenceScoreCalculator';
@@ -375,7 +375,7 @@ export default function StrategyDocument() {
         {/* Section 1: Executive Summary */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-            <span className="text-3xl">🏢</span>
+            <span className="p-2 rounded-lg bg-cyan-500/15 drop-shadow-[0_0_6px_rgba(6,182,212,0.3)]"><Building2 className="w-5 h-5 text-cyan-400" strokeWidth={1.5} /></span>
             <span className={SECTION_COLORS.whoYouAre.section}>Executive Summary</span>
           </h2>
           
@@ -420,7 +420,7 @@ export default function StrategyDocument() {
         {/* Section 2: Buyer Archetype Assignment — StrataQuest™ Pillar 2 */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-            <span className="text-3xl">🎯</span>
+            <span className="p-2 rounded-lg bg-purple-500/15 drop-shadow-[0_0_6px_rgba(168,85,247,0.3)]"><Target className="w-5 h-5 text-purple-400" strokeWidth={1.5} /></span>
             <span className={SECTION_COLORS.buyerReality.section}>Buyer Archetype Assignment</span>
             <PillarPill pillar="Pillar 2" />
           </h2>
@@ -468,7 +468,7 @@ export default function StrategyDocument() {
         {/* Section 3: Voice Resonance™ Strategy — Pillar 4 */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-            <span className="text-3xl">💎</span>
+            <span className="p-2 rounded-lg bg-green-500/15 drop-shadow-[0_0_6px_rgba(34,197,94,0.3)]"><Mic className="w-5 h-5 text-green-400" strokeWidth={1.5} /></span>
             <span className={SECTION_COLORS.whatYouOffer.section}>Voice Resonance™ Strategy</span>
             <PillarPill pillar="Pillar 4" />
           </h2>
@@ -523,7 +523,7 @@ export default function StrategyDocument() {
         {/* Section 4: Buyer Psychology Analysis */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-            <span className="text-3xl">🧠</span>
+            <span className="p-2 rounded-lg bg-purple-500/15 drop-shadow-[0_0_6px_rgba(168,85,247,0.3)]"><Brain className="w-5 h-5 text-purple-400" strokeWidth={1.5} /></span>
             <span className={SECTION_COLORS.buyerReality.section}>Buyer Psychology Analysis</span>
           </h2>
           
@@ -593,7 +593,7 @@ export default function StrategyDocument() {
         {/* Section 5: Conversion Architecture™ — Pillar 3 */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-            <span className="text-3xl">📄</span>
+            <span className="p-2 rounded-lg bg-indigo-500/15 drop-shadow-[0_0_6px_rgba(99,102,241,0.3)]"><Layers className="w-5 h-5 text-indigo-400" strokeWidth={1.5} /></span>
             <span className={SECTION_COLORS.contentStrategy.section}>Conversion Architecture™</span>
             <PillarPill pillar="Pillar 3" />
           </h2>
@@ -670,7 +670,7 @@ export default function StrategyDocument() {
         {/* Section 6: Design Intelligence (SDI) */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-            <span className="text-3xl">🎨</span>
+            <span className="p-2 rounded-lg bg-slate-500/15 drop-shadow-[0_0_6px_rgba(148,163,184,0.3)]"><Palette className="w-5 h-5 text-slate-400" strokeWidth={1.5} /></span>
             <span className={SECTION_COLORS.design.section}>Strategic Design Intelligence (SDI)</span>
           </h2>
           
@@ -734,7 +734,7 @@ export default function StrategyDocument() {
         {/* Section 7: Conversion Optimization */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-            <span className="text-3xl">⭐</span>
+            <span className="p-2 rounded-lg bg-yellow-500/15 drop-shadow-[0_0_6px_rgba(234,179,8,0.3)]"><Zap className="w-5 h-5 text-yellow-400" strokeWidth={1.5} /></span>
             <span className={SECTION_COLORS.proofCredibility.section}>Conversion Optimization</span>
           </h2>
           
