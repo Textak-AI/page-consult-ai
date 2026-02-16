@@ -215,8 +215,8 @@ export default function StrategyDocument() {
     const fromIntelligence = (intelligence as any)?.marketResearch;
     const base = fromAccumulator || fromIntelligence || {};
 
-    // If commonObjections already populated, return as-is
-    if (base.commonObjections && base.commonObjections.length > 0) return base;
+    // If commonObjections already populated as a proper array, return as-is
+    if (Array.isArray(base.commonObjections) && base.commonObjections.length > 0) return base;
 
     // Resolve objections from all possible locations
     const extractedIntel = consultation?.extracted_intelligence as any;
@@ -527,7 +527,7 @@ export default function StrategyDocument() {
             <div className={`${SECTION_COLORS.whatYouOffer.cardBg} border ${SECTION_COLORS.whatYouOffer.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.whatYouOffer.textMuted} mb-4`}>Primary Headline Options</h3>
               
-              {strategyData.headlineVariants?.length > 0 ? (
+              {Array.isArray(strategyData.headlineVariants) && strategyData.headlineVariants.length > 0 ? (
                 strategyData.headlineVariants.map((variant: any, idx: number) => (
                   <div key={idx} className="mb-4 last:mb-0">
                     <div className="flex items-start gap-3">
@@ -599,7 +599,7 @@ export default function StrategyDocument() {
             {/* Objection Handling */}
             <div className={`${SECTION_COLORS.buyerReality.cardBg} border ${SECTION_COLORS.buyerReality.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.buyerReality.textMuted} mb-4`}>Objection Handling Strategy</h3>
-              {marketData.commonObjections?.length > 0 ? (
+              {Array.isArray(marketData.commonObjections) && marketData.commonObjections.length > 0 ? (
                 marketData.commonObjections.map((objection: any, idx: number) => (
                   <div key={idx} className="mb-4 last:mb-0 p-4 bg-purple-900/30 rounded-lg border border-purple-500/10">
                     <div className="font-semibold text-purple-200 mb-2">
@@ -795,7 +795,7 @@ export default function StrategyDocument() {
                 <PillarPill pillar="Pillar 2+3" />
               </h3>
               <div className="space-y-3">
-                {(marketData.designConventions?.trustSignalPriority || [
+                {(Array.isArray(marketData.designConventions?.trustSignalPriority) ? marketData.designConventions.trustSignalPriority : [
                   "Customer Results",
                   "Technical Credentials", 
                   "Security/Compliance",
