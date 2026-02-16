@@ -9,6 +9,14 @@ import { ProgressRail } from '@/components/flow/ProgressRail';
 import { useFlowNavigation, type FlowState } from '@/hooks/useFlowNavigation';
  import { exportStrategyBriefPdf } from '@/utils/exportStrategyPdf';
  import { toast } from 'sonner';
+import { assignArchetype } from '@/lib/buyerArchetype';
+
+// Pillar reference pill component
+const PillarPill = ({ pillar }: { pillar: string }) => (
+  <span className="text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded ml-2 align-middle">
+    {pillar}
+  </span>
+);
 
 // Color scheme matching Intelligence Profile
 const SECTION_COLORS = {
@@ -123,7 +131,7 @@ export default function StrategyDocument() {
            })
          }
        );
-       toast.success(`Strategy Blueprint exported as ${filename}`);
+       toast.success(`StrataQuest™ Blueprint exported as ${filename}`);
      } catch (error) {
        console.error('PDF export failed:', error);
        toast.error('Failed to export PDF. Please try again.');
@@ -174,7 +182,7 @@ export default function StrategyDocument() {
     loadData();
   }, [consultationId]);
 
-  // Calculate intelligence score - MUST be before any conditional returns
+  // Calculate intelligence score
   const intelligence = useMemo(() => {
     const intel = consultation?.extracted_intelligence || 
       (accumulator?.consultationData as unknown as GenericIntelligence | undefined);
@@ -182,7 +190,6 @@ export default function StrategyDocument() {
   }, [consultation, accumulator]);
 
   const score = useMemo(() => {
-    // Check for market research in multiple locations (could be in extracted_intelligence from demo migration)
     const hasMarketResearch = !!accumulator?.marketData || 
       !!(intelligence as any)?.marketResearch ||
       !!(consultation?.strategy_brief);
@@ -194,7 +201,7 @@ export default function StrategyDocument() {
     return calculatedScore;
   }, [intelligence, accumulator, consultation]);
 
-  // Get strategy data - check multiple sources for migrated demo data
+  // Get strategy data
   const strategyData = useMemo((): Record<string, any> => {
     const brief = consultation?.strategy_brief || 
       (intelligence as any)?.marketResearch ||
@@ -202,44 +209,52 @@ export default function StrategyDocument() {
     return brief || {};
   }, [consultation, accumulator, intelligence]);
 
-  // Get market data with proper typing - check extracted_intelligence for migrated demo data
+  // Get market data
   const marketData = useMemo((): Partial<ConciergeMarketData> => {
     const fromAccumulator = accumulator?.marketData;
     const fromIntelligence = (intelligence as any)?.marketResearch;
     return fromAccumulator || fromIntelligence || {};
   }, [accumulator, intelligence]);
 
-  // Extract pain points as array - check multiple sources
+  // Extract pain points as array
   const painPointsArray = useMemo(() => {
-    // Check strategy_brief first (from demo migration)
     const briefPainPoints = (consultation?.strategy_brief as any)?.audiencePainPoints;
     if (Array.isArray(briefPainPoints) && briefPainPoints.length > 0) return briefPainPoints;
     
-    // Check extracted_intelligence marketResearch (from demo migration)
     const intelPainPoints = (intelligence as any)?.audiencePainPoints;
     if (Array.isArray(intelPainPoints) && intelPainPoints.length > 0) return intelPainPoints;
     
-    // Fallback to original locations
     const painPoints = intelligence?.painPoints || accumulator?.consultationData?.painPoints;
     if (Array.isArray(painPoints)) return painPoints;
     if (typeof painPoints === 'string') return painPoints.split(',').map(p => p.trim()).filter(Boolean);
     return [];
   }, [intelligence, accumulator, consultation]);
 
-  // Build flow state for ProgressRail - MUST be before conditional returns
+  // Buyer Archetype Assignment (derived from existing data)
+  const archetype = useMemo(() => {
+    const briefData: Record<string, any> = {
+      industry: consultation?.industry || (intelligence as any)?.industry || '',
+      targetAudience: consultation?.target_audience || (intelligence as any)?.audience || '',
+      competitiveEdge: consultation?.competitor_differentiator || (intelligence as any)?.competitiveEdge || '',
+      valueProp: consultation?.unique_value || (intelligence as any)?.valueProp || '',
+      painPoints: typeof intelligence?.painPoints === 'string' ? intelligence.painPoints : painPointsArray.join(', '),
+      proofElements: (intelligence as any)?.proofElements || (intelligence as any)?.proof || '',
+    };
+    return assignArchetype(briefData);
+  }, [consultation, intelligence, painPointsArray]);
+
+  // Build flow state for ProgressRail
   const flowState: FlowState = useMemo(() => ({
     consultationScore: score.totalScore,
-    briefGenerated: true, // Brief was generated to reach strategy
-    brandVisited: true, // We're in strategy, so brand was visited
-    strategyVisited: true, // We're on strategy
+    briefGenerated: true,
+    brandVisited: true,
+    strategyVisited: true,
     sessionId: consultationId || undefined,
     consultationId: consultationId || undefined,
   }), [score.totalScore, consultationId]);
 
-  // Hook must be called before conditional returns
   const { goBack } = useFlowNavigation('strategy', flowState);
 
-  // Conditional returns AFTER all hooks
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -301,8 +316,15 @@ export default function StrategyDocument() {
             </Button>
           </div>
           
-          <h1 className="text-4xl font-bold mb-2">Your Strategic Blueprint</h1>
-          <p className="text-gray-400">A comprehensive strategy for your landing page</p>
+          <h1 className="text-4xl font-bold mb-2">Your StrataQuest™ Blueprint</h1>
+          <p className="text-gray-400">Strategic methodology applied to your landing page</p>
+          
+          {/* Methodology Badge */}
+          <div className="mt-3">
+            <span className="bg-purple-500/10 text-purple-400 text-xs px-2 py-0.5 rounded-full">
+              Powered by StrataQuest™ Methodology
+            </span>
+          </div>
           
           {/* Intelligence Score Badge */}
           <div className="mt-6 flex flex-wrap items-center gap-6">
@@ -314,14 +336,14 @@ export default function StrategyDocument() {
               </div>
             </div>
             
-            {/* Intelligence Breakdown - SAME COLORS AS PANEL */}
+            {/* Intelligence Breakdown — StrataQuest category names */}
             <div className="flex flex-wrap gap-3">
               <div className={`px-3 py-2 ${SECTION_COLORS.whoYouAre.badgeBg} border ${SECTION_COLORS.whoYouAre.badgeBorder} rounded-lg`}>
-                <div className={`text-xs ${SECTION_COLORS.whoYouAre.badgeText}`}>Who You Are</div>
+                <div className={`text-xs ${SECTION_COLORS.whoYouAre.badgeText}`}>Client Context</div>
                 <div className={`font-semibold ${SECTION_COLORS.whoYouAre.scoreText}`}>{score.whoYouAre.total}/25</div>
               </div>
               <div className={`px-3 py-2 ${SECTION_COLORS.whatYouOffer.badgeBg} border ${SECTION_COLORS.whatYouOffer.badgeBorder} rounded-lg`}>
-                <div className={`text-xs ${SECTION_COLORS.whatYouOffer.badgeText}`}>What You Offer</div>
+                <div className={`text-xs ${SECTION_COLORS.whatYouOffer.badgeText}`}>Value Architecture</div>
                 <div className={`font-semibold ${SECTION_COLORS.whatYouOffer.scoreText}`}>{score.whatYouOffer.total}/25</div>
               </div>
               <div className={`px-3 py-2 ${SECTION_COLORS.buyerReality.badgeBg} border ${SECTION_COLORS.buyerReality.badgeBorder} rounded-lg`}>
@@ -329,7 +351,7 @@ export default function StrategyDocument() {
                 <div className={`font-semibold ${SECTION_COLORS.buyerReality.scoreText}`}>{score.buyerReality.total}/25</div>
               </div>
               <div className={`px-3 py-2 ${SECTION_COLORS.proofCredibility.badgeBg} border ${SECTION_COLORS.proofCredibility.badgeBorder} rounded-lg`}>
-                <div className={`text-xs ${SECTION_COLORS.proofCredibility.badgeText}`}>Proof & Credibility</div>
+                <div className={`text-xs ${SECTION_COLORS.proofCredibility.badgeText}`}>Proof Inventory</div>
                 <div className={`font-semibold ${SECTION_COLORS.proofCredibility.scoreText}`}>{score.proofCredibility.total}/25</div>
               </div>
             </div>
@@ -350,7 +372,7 @@ export default function StrategyDocument() {
       {/* Main Content */}
       <main id="strategy-brief-content" className="max-w-6xl mx-auto p-8 space-y-12">
         
-        {/* Section 1: Executive Summary (WHO YOU ARE - Cyan) */}
+        {/* Section 1: Executive Summary */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <span className="text-3xl">🏢</span>
@@ -358,7 +380,6 @@ export default function StrategyDocument() {
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Industry Card - Cyan theme */}
             <div className={`${SECTION_COLORS.whoYouAre.cardBg} border ${SECTION_COLORS.whoYouAre.cardBorder} rounded-lg p-6`}>
               <div className={`text-sm ${SECTION_COLORS.whoYouAre.textMuted} mb-2`}>Industry</div>
               <div className={`font-semibold text-lg ${SECTION_COLORS.whoYouAre.text}`}>
@@ -366,7 +387,6 @@ export default function StrategyDocument() {
               </div>
             </div>
             
-            {/* Audience Card - Cyan theme */}
             <div className={`${SECTION_COLORS.whoYouAre.cardBg} border ${SECTION_COLORS.whoYouAre.cardBorder} rounded-lg p-6`}>
               <div className={`text-sm ${SECTION_COLORS.whoYouAre.textMuted} mb-2`}>Target Audience</div>
               <div className={`font-semibold text-lg ${SECTION_COLORS.whoYouAre.text}`}>
@@ -374,7 +394,6 @@ export default function StrategyDocument() {
               </div>
             </div>
             
-            {/* Value Prop Card - Green theme (WHAT YOU OFFER) */}
             <div className={`${SECTION_COLORS.whatYouOffer.cardBg} border ${SECTION_COLORS.whatYouOffer.cardBorder} rounded-lg p-6`}>
               <div className={`text-sm ${SECTION_COLORS.whatYouOffer.textMuted} mb-2`}>Value Proposition</div>
               <div className={`font-semibold text-lg ${SECTION_COLORS.whatYouOffer.text}`}>
@@ -382,7 +401,6 @@ export default function StrategyDocument() {
               </div>
             </div>
             
-            {/* Competitive Edge - Green theme */}
             <div className={`${SECTION_COLORS.whatYouOffer.cardBg} border ${SECTION_COLORS.whatYouOffer.cardBorder} rounded-lg p-6`}>
               <div className={`text-sm ${SECTION_COLORS.whatYouOffer.textMuted} mb-2`}>Competitive Edge</div>
               <div className={`font-semibold text-lg ${SECTION_COLORS.whatYouOffer.text}`}>
@@ -399,15 +417,64 @@ export default function StrategyDocument() {
           </div>
         </section>
 
-        {/* Section 2: Messaging Architecture (WHAT YOU OFFER - Green) */}
+        {/* Section 2: Buyer Archetype Assignment — StrataQuest™ Pillar 2 */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+            <span className="text-3xl">🎯</span>
+            <span className={SECTION_COLORS.buyerReality.section}>Buyer Archetype Assignment</span>
+            <PillarPill pillar="Pillar 2" />
+          </h2>
+          
+          <div className={`${SECTION_COLORS.buyerReality.cardBg} border ${SECTION_COLORS.buyerReality.cardBorder} rounded-lg p-6`}>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mb-1`}>Primary Archetype</div>
+                <div className={`text-2xl font-bold ${SECTION_COLORS.buyerReality.text}`}>{archetype.label}</div>
+                <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mt-1 italic`}>{archetype.description}</div>
+              </div>
+              <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                archetype.confidence === 'High' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
+                archetype.confidence === 'Moderate' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
+                'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+              }`}>
+                {archetype.confidence} ({archetype.signalCount} converging signals)
+              </div>
+            </div>
+            
+            <div className="mb-4 p-3 bg-purple-900/20 border border-purple-500/10 rounded-lg">
+              <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mb-1`}>Internal Monologue</div>
+              <div className="text-purple-200 italic">{archetype.internalMonologue}</div>
+            </div>
+            
+            <div className="mb-4">
+              <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mb-2`}>Signals Detected:</div>
+              <div className="space-y-1">
+                {archetype.signals.map((signal, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-sm">
+                    <span className="text-green-400">✓</span>
+                    <span className={SECTION_COLORS.buyerReality.text}>{signal}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mb-1`}>Voice Match</div>
+              <div className={SECTION_COLORS.buyerReality.text}>{archetype.voiceMatch}</div>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 3: Voice Resonance™ Strategy — Pillar 4 */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <span className="text-3xl">💎</span>
-            <span className={SECTION_COLORS.whatYouOffer.section}>Messaging Architecture</span>
+            <span className={SECTION_COLORS.whatYouOffer.section}>Voice Resonance™ Strategy</span>
+            <PillarPill pillar="Pillar 4" />
           </h2>
           
           <div className="space-y-6">
-            {/* Headline Options - Green theme */}
+            {/* Headline Options */}
             <div className={`${SECTION_COLORS.whatYouOffer.cardBg} border ${SECTION_COLORS.whatYouOffer.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.whatYouOffer.textMuted} mb-4`}>Primary Headline Options</h3>
               
@@ -443,32 +510,17 @@ export default function StrategyDocument() {
               )}
             </div>
             
-            {/* Subheadline Strategy - Green theme */}
+            {/* Subheadline Strategy */}
             <div className={`${SECTION_COLORS.whatYouOffer.cardBg} border ${SECTION_COLORS.whatYouOffer.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.whatYouOffer.textMuted} mb-3`}>Subheadline Strategy</h3>
               <div className={SECTION_COLORS.whatYouOffer.text}>
                 {strategyData.subheadlineApproach || "Amplify the promise with specific benefits and target audience context"}
               </div>
             </div>
-            
-            {/* Positioning Framework - Green theme */}
-            <div className={`${SECTION_COLORS.whatYouOffer.cardBg} border ${SECTION_COLORS.whatYouOffer.cardBorder} rounded-lg p-6`}>
-              <h3 className={`font-semibold text-lg ${SECTION_COLORS.whatYouOffer.textMuted} mb-3`}>Positioning Framework</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className={`text-sm ${SECTION_COLORS.whatYouOffer.textMuted} mb-1`}>Primary Angle</div>
-                  <div className={SECTION_COLORS.whatYouOffer.text}>{strategyData.primaryAngle || "Results-driven"}</div>
-                </div>
-                <div>
-                  <div className={`text-sm ${SECTION_COLORS.whatYouOffer.textMuted} mb-1`}>Tone</div>
-                  <div className={SECTION_COLORS.whatYouOffer.text}>{strategyData.tone || "Professional, authoritative"}</div>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 
-        {/* Section 3: Buyer Psychology Analysis (BUYER REALITY - Purple) */}
+        {/* Section 4: Buyer Psychology Analysis */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <span className="text-3xl">🧠</span>
@@ -476,11 +528,11 @@ export default function StrategyDocument() {
           </h2>
           
           <div className="space-y-6">
-            {/* Pain Point Prioritization - Purple theme */}
+            {/* Pain Point Prioritization */}
             <div className={`${SECTION_COLORS.buyerReality.cardBg} border ${SECTION_COLORS.buyerReality.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.buyerReality.textMuted} mb-4`}>Pain Point Prioritization</h3>
               {painPointsArray.length > 0 ? (
-                painPointsArray.map((pain, idx) => (
+                painPointsArray.map((pain: string, idx: number) => (
                   <div key={idx} className="flex items-start gap-3 mb-3 last:mb-0">
                     <div className={`mt-1 w-8 h-8 rounded-full ${SECTION_COLORS.buyerReality.accent} flex items-center justify-center text-sm font-semibold`}>
                       {idx + 1}
@@ -495,7 +547,7 @@ export default function StrategyDocument() {
               )}
             </div>
             
-            {/* Objection Handling - Purple theme */}
+            {/* Objection Handling */}
             <div className={`${SECTION_COLORS.buyerReality.cardBg} border ${SECTION_COLORS.buyerReality.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.buyerReality.textMuted} mb-4`}>Objection Handling Strategy</h3>
               {marketData.commonObjections?.length > 0 ? (
@@ -514,9 +566,12 @@ export default function StrategyDocument() {
               )}
             </div>
             
-            {/* Buyer Awareness Level - Purple theme */}
+            {/* Buyer Awareness Level — Schwartz Framework */}
             <div className={`${SECTION_COLORS.buyerReality.cardBg} border ${SECTION_COLORS.buyerReality.cardBorder} rounded-lg p-6`}>
-              <h3 className={`font-semibold text-lg ${SECTION_COLORS.buyerReality.textMuted} mb-3`}>Buyer Awareness Assessment</h3>
+              <h3 className={`font-semibold text-lg ${SECTION_COLORS.buyerReality.textMuted} mb-3`}>
+                Awareness Level — Schwartz Framework
+                <PillarPill pillar="Pillar 3" />
+              </h3>
               <div className="flex items-center gap-4">
                 <div className="flex-1 bg-gray-800 h-3 rounded-full relative overflow-hidden">
                   <div 
@@ -535,11 +590,12 @@ export default function StrategyDocument() {
           </div>
         </section>
 
-        {/* Section 4: Content Strategy (Neutral/Indigo - Strategic) */}
+        {/* Section 5: Conversion Architecture™ — Pillar 3 */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <span className="text-3xl">📄</span>
-            <span className={SECTION_COLORS.contentStrategy.section}>Content Strategy</span>
+            <span className={SECTION_COLORS.contentStrategy.section}>Conversion Architecture™</span>
+            <PillarPill pillar="Pillar 3" />
           </h2>
           
           <div className="space-y-6">
@@ -554,9 +610,9 @@ export default function StrategyDocument() {
               </div>
             </div>
             
-            {/* Section-by-Section Breakdown */}
+            {/* Section Blueprint */}
             <div className={`${SECTION_COLORS.contentStrategy.cardBg} border ${SECTION_COLORS.contentStrategy.cardBorder} rounded-lg p-6`}>
-              <h3 className={`font-semibold text-lg ${SECTION_COLORS.contentStrategy.textMuted} mb-4`}>Section Breakdown</h3>
+              <h3 className={`font-semibold text-lg ${SECTION_COLORS.contentStrategy.textMuted} mb-4`}>Section Blueprint</h3>
               <div className="space-y-4">
                 {[
                   { section: "Hero", purpose: "Capture attention with measurable promise", priority: "Critical" },
@@ -588,9 +644,12 @@ export default function StrategyDocument() {
               </div>
             </div>
             
-            {/* Proof Timing Strategy */}
+            {/* Trust Architecture™ Strategy */}
             <div className={`${SECTION_COLORS.contentStrategy.cardBg} border ${SECTION_COLORS.contentStrategy.cardBorder} rounded-lg p-6`}>
-              <h3 className={`font-semibold text-lg ${SECTION_COLORS.contentStrategy.textMuted} mb-3`}>Proof Point Strategy</h3>
+              <h3 className={`font-semibold text-lg ${SECTION_COLORS.contentStrategy.textMuted} mb-3`}>
+                Trust Architecture™ Strategy
+                <PillarPill pillar="Pillar 2+3" />
+              </h3>
               <div className="flex items-center gap-4 mb-3">
                 <div className={`px-4 py-2 ${SECTION_COLORS.contentStrategy.cardBg} border ${SECTION_COLORS.contentStrategy.cardBorder} rounded-lg`}>
                   <div className={`text-xs ${SECTION_COLORS.contentStrategy.textMuted}`}>Proof Timing</div>
@@ -608,15 +667,14 @@ export default function StrategyDocument() {
           </div>
         </section>
 
-        {/* Section 5: Design Intelligence (Neutral - Design) */}
+        {/* Section 6: Design Intelligence (SDI) */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <span className="text-3xl">🎨</span>
-            <span className={SECTION_COLORS.design.section}>Design Intelligence</span>
+            <span className={SECTION_COLORS.design.section}>Strategic Design Intelligence (SDI)</span>
           </h2>
           
           <div className="space-y-6">
-            {/* Design Mode Reasoning */}
             <div className={`${SECTION_COLORS.design.cardBg} border ${SECTION_COLORS.design.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.design.text} mb-4`}>Visual Design Direction</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -654,7 +712,6 @@ export default function StrategyDocument() {
               </div>
             </div>
             
-            {/* Typography Strategy */}
             <div className={`${SECTION_COLORS.design.cardBg} border ${SECTION_COLORS.design.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.design.text} mb-3`}>Typography Approach</h3>
               <div className={`${SECTION_COLORS.design.text} mb-3`}>
@@ -674,7 +731,7 @@ export default function StrategyDocument() {
           </div>
         </section>
 
-        {/* Section 6: Conversion Optimization (PROOF & CREDIBILITY - Yellow) */}
+        {/* Section 7: Conversion Optimization */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <span className="text-3xl">⭐</span>
@@ -682,9 +739,12 @@ export default function StrategyDocument() {
           </h2>
           
           <div className="space-y-6">
-            {/* Trust Signal Hierarchy - Yellow theme */}
+            {/* Trust Architecture™ Hierarchy */}
             <div className={`${SECTION_COLORS.proofCredibility.cardBg} border ${SECTION_COLORS.proofCredibility.cardBorder} rounded-lg p-6`}>
-              <h3 className={`font-semibold text-lg ${SECTION_COLORS.proofCredibility.textMuted} mb-4`}>Trust Signal Hierarchy</h3>
+              <h3 className={`font-semibold text-lg ${SECTION_COLORS.proofCredibility.textMuted} mb-4`}>
+                Trust Architecture™ Hierarchy
+                <PillarPill pillar="Pillar 2+3" />
+              </h3>
               <div className="space-y-3">
                 {(marketData.designConventions?.trustSignalPriority || [
                   "Customer Results",
@@ -706,9 +766,12 @@ export default function StrategyDocument() {
               </div>
             </div>
             
-            {/* CTA Strategy - Yellow theme */}
+            {/* Conversion Pathway™ Strategy */}
             <div className={`${SECTION_COLORS.proofCredibility.cardBg} border ${SECTION_COLORS.proofCredibility.cardBorder} rounded-lg p-6`}>
-              <h3 className={`font-semibold text-lg ${SECTION_COLORS.proofCredibility.textMuted} mb-4`}>CTA Strategy</h3>
+              <h3 className={`font-semibold text-lg ${SECTION_COLORS.proofCredibility.textMuted} mb-4`}>
+                Conversion Pathway™ Strategy
+                <PillarPill pillar="Pillar 3" />
+              </h3>
               <div className="space-y-4">
                 <div>
                   <div className={`text-sm ${SECTION_COLORS.proofCredibility.textMuted} mb-2`}>Primary CTA Copy</div>
@@ -729,7 +792,7 @@ export default function StrategyDocument() {
               </div>
             </div>
             
-            {/* Risk Reversal - Yellow theme */}
+            {/* Risk Reversal Elements */}
             <div className={`${SECTION_COLORS.proofCredibility.cardBg} border ${SECTION_COLORS.proofCredibility.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.proofCredibility.textMuted} mb-3`}>Risk Reversal Elements</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -746,12 +809,12 @@ export default function StrategyDocument() {
           </div>
         </section>
 
-        {/* Section 7: Next Steps */}
+        {/* Section 8: Next Steps */}
         <section className="mb-12" data-pdf-ignore="true">
           <div className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 border border-purple-500/20 rounded-2xl p-8 text-center">
             <h2 className="text-2xl font-bold mb-4">Ready to Build Your Page?</h2>
             <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
-              Your strategic blueprint is complete. Continue to generate a high-converting landing page based on this intelligence.
+              Your StrataQuest™ blueprint is complete. Continue to generate a high-converting landing page based on this intelligence.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Button 

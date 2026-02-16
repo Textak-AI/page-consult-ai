@@ -25,7 +25,7 @@ import { CreativeDirectionPanel } from '@/components/demo/CreativeDirectionPanel
 const DEMO_CATEGORIES = [
   {
     key: 'whoYouAre' as const,
-    label: 'Who You Are',
+    label: 'Client Context',
     fields: [
       { key: 'industry' as const, label: 'Industry' },
       { key: 'audience' as const, label: 'Audience' },
@@ -33,7 +33,7 @@ const DEMO_CATEGORIES = [
   },
   {
     key: 'whatYouOffer' as const,
-    label: 'What You Offer',
+    label: 'Value Architecture',
     fields: [
       { key: 'valueProp' as const, label: 'Value Prop' },
       { key: 'edge' as const, label: 'Edge' },
@@ -49,7 +49,7 @@ const DEMO_CATEGORIES = [
   },
   {
     key: 'proofCredibility' as const,
-    label: 'Proof & Credibility',
+    label: 'Proof Inventory',
     fields: [
       { key: 'results' as const, label: 'Results' },
       { key: 'socialProof' as const, label: 'Social Proof' },
@@ -433,9 +433,12 @@ export function IntelligenceProfileDemo({
         {/* Header - Fixed at top */}
         <div className="flex-shrink-0 p-4 border-b border-slate-800/50">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-light tracking-wide text-white">
-              Intelligence Profile
-            </h2>
+            <div>
+              <h2 className="text-base font-light tracking-wide text-white">
+                Discovery Protocol™
+              </h2>
+              <div className="text-[10px] text-slate-500">StrataQuest™ Pillar 1</div>
+            </div>
             <motion.span
               key={score.totalScore}
               initial={{ scale: 1.2, color: 'rgb(34, 211, 238)' }}
@@ -746,7 +749,7 @@ export function IntelligenceProfileDemo({
         {/* Header row */}
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-sm font-light tracking-wide text-white">Intelligence Profile</h2>
+             <h2 className="text-sm font-light tracking-wide text-white">Discovery Protocol™</h2>
             <div className="flex items-center gap-2">
               <span className={cn("text-xs font-medium tracking-wider", levelColors.text)}>
                 {levelConfig.label}
@@ -826,7 +829,7 @@ export function IntelligenceProfileDemo({
           <div className="flex items-center gap-3">
             <div className={cn("w-1 h-8 rounded-full bg-gradient-to-b", levelColors.gradient)} />
             <div>
-              <h2 className="text-sm font-light tracking-wide text-white">Intelligence Profile</h2>
+              <h2 className="text-sm font-light tracking-wide text-white">Discovery Protocol™</h2>
               <div className="flex items-center gap-2">
                 <span className={cn("text-xs font-medium tracking-wider", levelColors.text)}>
                   {levelConfig.label}
