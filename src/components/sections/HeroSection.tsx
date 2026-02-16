@@ -33,6 +33,7 @@ function getHeroIcon(industryVariant: string): { icon: LucideIcon; label: string
     defaultHeroIcon;
 }
 import type { SDIPalette, SDISectionThemes, SDITypography } from '@/lib/designIntelligence/types';
+import { HeroVisualComposition } from "@/components/sections/hero/HeroVisualComposition";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { getAmbientHeroGradient } from "@/lib/industryPatterns";
@@ -1060,31 +1061,15 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               </motion.div>
             </div>
             
-            {/* Visual element - 5 columns: Industry icon with considered proportions */}
-            <div className="lg:col-span-5 relative hidden lg:flex items-center justify-center h-full">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                className="flex items-center justify-center"
-              >
-                {(() => {
-                  const { icon: IndustryIcon } = getHeroIcon(industryVariant);
-                  const accentColor = content.primaryColor || '#14b8a6';
-                  return (
-                    <div 
-                      className="aspect-square w-40 md:w-48 flex items-center justify-center rounded-3xl border"
-                      style={{ 
-                        backgroundColor: `${accentColor}06`,
-                        borderColor: `${accentColor}15`,
-                        boxShadow: `0 1px 3px ${accentColor}08, 0 8px 32px ${accentColor}06`
-                      }}
-                    >
-                      <IndustryIcon className="w-16 h-16 md:w-20 md:h-20" style={{ color: accentColor, opacity: 0.85 }} strokeWidth={1.75} />
-                    </div>
-                  );
-                })()}
-              </motion.div>
+            {/* Visual element - 5 columns: Brand Intelligence Card */}
+            <div className="lg:col-span-5 relative flex items-center justify-center h-full">
+              <HeroVisualComposition
+                industry={getHeroIcon(industryVariant).label}
+                industryIcon={getHeroIcon(industryVariant).icon}
+                primaryColor={content.primaryColor || '#14b8a6'}
+                companyName={content.headline?.split(' ').slice(0, 3).join(' ') || 'Page Analysis'}
+                colorMode={isLightMode ? 'light' : 'dark'}
+              />
             </div>
           </div>
         </div>
