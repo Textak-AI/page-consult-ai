@@ -842,22 +842,16 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             : 'bg-gradient-to-br from-slate-50 via-white to-slate-50'
         }`}
       >
-        {/* Background Image Layer (if provided) */}
+        {/* Background Image Layer (if provided) — atmospheric with strong text-readability gradient */}
         {content.backgroundImage && (
-          <div 
-            className="absolute inset-0 z-0"
-            style={{
-              backgroundImage: `url(${content.backgroundImage})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          >
-            {showDarkOverlay && (
-              <>
-                <div className="absolute inset-0 bg-black/40" />
-                <div className="absolute inset-0 bg-gradient-to-r from-white/75 via-white/50 to-transparent" />
-              </>
-            )}
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={content.backgroundImage} 
+              alt="" 
+              className="w-full h-full object-cover"
+            />
+            {/* Light mode: strong white gradient from left for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/85 to-white/40" />
           </div>
         )}
         
@@ -1052,7 +1046,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               </motion.div>
             </div>
             
-            {/* Visual element - 5 columns (asymmetric) */}
+            {/* Visual element - 5 columns: Industry icon in glowing brand container */}
             <div className="lg:col-span-5 relative hidden lg:block">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -1060,85 +1054,28 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 transition={{ duration: 0.7, delay: 0.3 }}
                 className="relative flex items-center justify-center min-h-[400px]"
               >
-                {content.logoUrl && isLightMode ? (
-                  <>
-                    {/* Branded logo composition */}
-                    {/* Large ambient brand color glow */}
+                {/* Ambient brand glow */}
+                <div 
+                  className="absolute w-48 h-48 md:w-64 md:h-64 rounded-full blur-3xl"
+                  style={{ backgroundColor: content.primaryColor || '#14b8a6', opacity: 0.15 }}
+                />
+                
+                {/* Icon container */}
+                {(() => {
+                  const { icon: IndustryIcon } = getHeroIcon(industryVariant);
+                  const accentColor = content.primaryColor || '#14b8a6';
+                  return (
                     <div 
-                      className="absolute w-72 h-72 md:w-96 md:h-96 rounded-full blur-3xl animate-float-slow"
-                      style={{ backgroundColor: content.primaryColor || '#14b8a6', opacity: 0.1 }}
-                    />
-                    {/* Secondary floating accent */}
-                    <div 
-                      className="absolute -top-8 -right-8 w-32 h-32 rounded-full blur-2xl animate-float-delayed"
-                      style={{ backgroundColor: content.primaryColor || '#14b8a6', opacity: 0.08 }}
-                    />
-                    
-                    {/* Glassmorphic card with logo */}
-                    <div className="relative z-10">
-                      <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-12 md:p-16 shadow-2xl border border-slate-100">
-                        <img 
-                          src={content.logoUrl} 
-                          alt="Company logo"
-                          className="w-48 md:w-64 lg:w-80 h-auto object-contain"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                        />
-                      </div>
-                      
-                      {/* Industry icon badge */}
-                      {(() => {
-                        const { icon: BadgeIcon } = getHeroIcon(industryVariant);
-                        const accentColor = content.primaryColor || '#14b8a6';
-                        return (
-                          <div 
-                            className="absolute -bottom-4 -right-4 p-3 rounded-xl shadow-lg"
-                            style={{ 
-                              backgroundColor: accentColor,
-                              boxShadow: `0 8px 30px ${accentColor}40`
-                            }}
-                          >
-                            <BadgeIcon className="w-6 h-6 text-white" strokeWidth={1.5} />
-                          </div>
-                        );
-                      })()}
+                      className="relative z-10 p-6 md:p-8 rounded-3xl shadow-2xl"
+                      style={{ 
+                        backgroundColor: `${accentColor}15`,
+                        boxShadow: `0 8px 40px ${accentColor}30`
+                      }}
+                    >
+                      <IndustryIcon className="w-16 h-16 md:w-20 md:h-20" style={{ color: accentColor }} strokeWidth={1.5} />
                     </div>
-
-                    {/* Floating proof badge */}
-                    {content.proofPoints?.clientCount && (
-                      <div className="absolute -bottom-6 left-4 bg-white rounded-xl shadow-lg border border-slate-100 px-4 py-3 z-20">
-                        <div className="text-sm font-semibold" style={{ color: content.primaryColor || '#14b8a6' }}>
-                          {content.proofPoints.clientCount}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  /* Fallback: icon-based composition */
-                  <div className={`relative aspect-square w-full rounded-3xl ${
-                    hasBackgroundImage && showDarkOverlay 
-                      ? 'bg-white/5 backdrop-blur-sm' 
-                      : 'bg-gradient-to-br from-slate-100 to-slate-200'
-                  } p-8 shadow-2xl`}>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      {(() => {
-                        const { icon: IndustryIcon } = getHeroIcon(industryVariant);
-                        const accentColor = content.primaryColor || '#14b8a6';
-                        return (
-                          <div 
-                            className="p-6 rounded-2xl"
-                            style={{ backgroundColor: `${accentColor}15`, boxShadow: `0 0 30px ${accentColor}25` }}
-                          >
-                            <div className="w-28 h-28 rounded-full flex items-center justify-center" style={{ backgroundColor: `${accentColor}20` }}>
-                              <IndustryIcon className="w-14 h-14" style={{ color: accentColor }} strokeWidth={1.5} />
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                    <div className="absolute inset-8 rounded-full border" style={{ borderColor: `${content.primaryColor || '#14b8a6'}1a` }} />
-                    <div className="absolute inset-16 rounded-full border" style={{ borderColor: `${content.primaryColor || '#14b8a6'}0d` }} />
-                  </div>
-                )}
+                  );
+                })()}
               </motion.div>
             </div>
           </div>
