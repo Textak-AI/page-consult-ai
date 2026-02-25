@@ -198,22 +198,7 @@ export function IntelligenceProfileDemo({
     // Check for classification conflict (stated industry needs AI classification)
     const hasConflict = industryDetection?.hasClassificationConflict === true;
     
-    // Debug: Log what we're rendering with
-    console.log('🔍 [Profile] renderDesignMode:', {
-      hasHybridMode,
-      isConfirmed,
-      hasConflict,
-      industryDetection: industryDetection ? {
-        variant: industryDetection.variant,
-        manuallyConfirmed: industryDetection.manuallyConfirmed,
-        hasClassificationConflict: industryDetection.hasClassificationConflict,
-        statedIndustry: industryDetection.statedIndustry,
-      } : null,
-      aestheticMode: aestheticMode ? {
-        primary: aestheticMode.primary,
-        secondary: aestheticMode.secondary,
-      } : null,
-    });
+    // Debug log removed — was firing 10k+ times per tick due to render loop
     
     // If hybrid mode, show split view with edit capability
     if (hasHybridMode && aestheticMode) {
