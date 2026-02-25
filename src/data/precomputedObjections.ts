@@ -661,7 +661,7 @@ export function getPrecomputedObjections(
     ? targetMarket.toLowerCase().replace(/[^a-z]/g, '')
     : '_default';
   
-  console.log(`🎯 [Objections v2] Looking up "${directKey}" in keys: [${Object.keys(PRECOMPUTED_OBJECTIONS).join(', ')}]`);
+  console.log(`🎯 [Objections v3] Looking up "${directKey}" in keys: [${Object.keys(PRECOMPUTED_OBJECTIONS).join(', ')}]`);
   
   // 1. Try direct key match first
   let industryData = PRECOMPUTED_OBJECTIONS[directKey];
@@ -671,12 +671,12 @@ export function getPrecomputedObjections(
     const aliasKey = resolveIndustryCategory(directKey);
     industryData = PRECOMPUTED_OBJECTIONS[aliasKey];
     if (industryData) {
-      console.log(`🎯 [Objections v2] Alias resolved: "${directKey}" → "${aliasKey}"`);
+      console.log(`🎯 [Objections v3] Alias resolved: "${directKey}" → "${aliasKey}"`);
     }
   }
 
   if (!industryData) {
-    console.log(`⚠️ [Objections v2] No pre-computed objections for industry: "${industry}" (key: "${directKey}")`);
+    console.log(`⚠️ [Objections v3] No pre-computed objections for industry: "${industry}" (key: "${directKey}")`);
     return [];
   }
   
@@ -685,7 +685,7 @@ export function getPrecomputedObjections(
   const objections = industryData[targetAliasKey] || industryData['_default'] || [];
   
   if (objections.length > 0) {
-    console.log(`🎯 [Objections v2] Found ${objections.length} objections for "${directKey}" → "${targetAliasKey}"`);
+    console.log(`🎯 [Objections v3] Found ${objections.length} objections for "${directKey}" → "${targetAliasKey}"`);
   }
   
   return objections;
