@@ -86,10 +86,10 @@ export function IntelligenceTabs({
     !state.market.isLoading && 
     (!!state.market.marketSize || state.market.industryInsights.length > 0);
   
-  // Pass research bonus to score calculator
-  const score = calculateIntelligenceScore(state.extracted, {
+  // Pass research bonus to score calculator — memoize to prevent infinite re-renders
+  const score = useMemo(() => calculateIntelligenceScore(state.extracted, {
     marketResearchComplete,
-  });
+  }), [state.extracted, marketResearchComplete]);
   
   const hasMarketResearchData = state.emailCaptured && 
     (state.market.isLoading || state.market.marketSize || state.market.industryInsights.length > 0);
