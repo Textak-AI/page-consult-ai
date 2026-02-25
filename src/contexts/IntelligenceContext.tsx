@@ -386,12 +386,28 @@ function safeClearDemoState(): void {
 
 // Module-level guard: survives component remounts within the same page session
 let _globalInitializedSession: string | null = null;
+// Module-level session ID: ensures all mounts (including StrictMode re-mounts) use the same ID
+let _globalSessionId: string | null = null;
+let _globalMountCount = 0;
 
 export function IntelligenceProvider({ children }: { children: React.ReactNode }) {
+  _globalMountCount++;
+  console.log(`🔴 [IntelligenceProvider] MOUNT #${_globalMountCount}`);
+  
   const navigate = useNavigate();
   
   // Initialize sessionId from URL or localStorage FIRST to prevent ID mismatch
+  // Use module-level _globalSessionId so StrictMode re-mounts don't generate new IDs
   const [state, setState] = useState<IntelligenceState>(() => {
+    // If we already have a global session ID from a previous mount, reuse it
+    if (_globalSessionId) {
+      console.log('🔑 [IntelligenceContext] Session ID reused from previous mount:', _globalSessionId);
+      return {
+        ...initialState,
+        sessionId: _globalSessionId,
+      };
+    }
+    
     // Check URL first (highest priority)
     const urlParams = new URLSearchParams(window.location.search);
     const urlSessionId = urlParams.get('session');
@@ -401,6 +417,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     
     // Use URL > localStorage > generate new
     const sessionId = urlSessionId || storedSessionId || uuidv4();
+    _globalSessionId = sessionId;
     
     console.log('🔑 [IntelligenceContext] Session ID initialized:', {
       source: urlSessionId ? 'URL' : storedSessionId ? 'localStorage' : 'generated',
