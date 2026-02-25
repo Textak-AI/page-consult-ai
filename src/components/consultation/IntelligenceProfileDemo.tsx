@@ -718,19 +718,19 @@ export function IntelligenceProfileDemo({
             <div className="space-y-2">
               {/* Show progress toward generation */}
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500">Generation unlocks at 70</span>
-                <span className="text-cyan-400 font-mono">{score.totalScore}/70</span>
+                <span className="text-slate-500">70 points to unlock generation</span>
+                <span className="text-cyan-400 font-mono">{score.totalScore}/100</span>
               </div>
               <div className="h-1.5 bg-slate-700/50 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-purple-500"
                   initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(100, (score.totalScore / 70) * 100)}%` }}
+                  animate={{ width: `${Math.min(100, (score.totalScore / 100) * 100)}%` }}
                   transition={{ duration: 0.5, ease: 'easeOut' }}
                 />
               </div>
               <p className="text-xs text-slate-500 text-center">
-                {70 - score.totalScore} points to unlock
+                {Math.max(0, 70 - score.totalScore)} more points to unlock
               </p>
             </div>
           ) : null}
@@ -771,7 +771,7 @@ export function IntelligenceProfileDemo({
             </button>
           ) : showCTA && (
             <span className="text-xs text-slate-500">
-              {score.totalScore}/70 to unlock
+              {score.totalScore}/100 • 70 to unlock
             </span>
           )}
         </div>
