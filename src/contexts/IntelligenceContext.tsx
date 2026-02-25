@@ -388,11 +388,8 @@ function safeClearDemoState(): void {
 let _globalInitializedSession: string | null = null;
 // Module-level session ID: ensures all mounts (including StrictMode re-mounts) use the same ID
 let _globalSessionId: string | null = null;
-let _globalMountCount = 0;
 
 export function IntelligenceProvider({ children }: { children: React.ReactNode }) {
-  _globalMountCount++;
-  console.log(`🔴 [IntelligenceProvider] MOUNT #${_globalMountCount}`);
   
   const navigate = useNavigate();
   
