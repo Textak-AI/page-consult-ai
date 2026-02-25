@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -384,6 +384,9 @@ function safeClearDemoState(): void {
   });
 }
 
+// Module-level guard: survives component remounts within the same page session
+let _globalInitializedSession: string | null = null;
+
 export function IntelligenceProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   
@@ -431,6 +434,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // ----------------------------------------
   // Check for existing session in URL on mount
   // Guard: only fire once per session ID to prevent excessive re-initialization
+  // Uses module-level variable so it survives component remounts within the same page session
   // ----------------------------------------
   const initializedSessionRef = useRef<string | null>(null);
   
@@ -442,8 +446,14 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     const currentSessionId = existingSessionId || state.sessionId;
     
     // Guard: skip if we already initialized this exact session
-    if (initializedSessionRef.current === currentSessionId) return;
+    // Check both ref (same mount) and module-level guard (across remounts)
+    if (initializedSessionRef.current === currentSessionId || _globalInitializedSession === currentSessionId) {
+      console.log('[IntelligenceContext] Remount prevented — session already active:', currentSessionId);
+      hasRestoredState.current = true;
+      return;
+    }
     initializedSessionRef.current = currentSessionId;
+    _globalInitializedSession = currentSessionId;
     hasRestoredState.current = true;
 
     if (existingSessionId) {
@@ -1619,7 +1629,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     }));
   }, []);
 
-  const contextValue: IntelligenceContextValue = {
+  const contextValue: IntelligenceContextValue = useMemo(() => ({
     state,
     processUserMessage,
     resetIntelligence,
@@ -1634,7 +1644,21 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     shouldShowObjectionPanel,
     shouldShowResearchPanel,
     shouldShowContinueButton,
-  };
+  }), [
+    state,
+    processUserMessage,
+    resetIntelligence,
+    getPrefillData,
+    submitEmail,
+    submitBusinessCard,
+    dismissEmailGate,
+    reopenEmailGate,
+    confirmIndustrySelection,
+    updateExtracted,
+    shouldShowObjectionPanel,
+    shouldShowResearchPanel,
+    shouldShowContinueButton,
+  ]);
 
   return (
     <IntelligenceContext.Provider value={contextValue}>
