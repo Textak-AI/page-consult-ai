@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import { resolveIndustry } from '@/lib/resolveIndustry';
 import { 
   detectIndustryFromConversation, 
   confirmIndustry, 
@@ -419,13 +420,21 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
 
   // ----------------------------------------
   // Check for existing session in URL on mount
+  // Guard: only fire once per session ID to prevent excessive re-initialization
   // ----------------------------------------
+  const initializedSessionRef = useRef<string | null>(null);
+  
   useEffect(() => {
     if (hasRestoredState.current) return;
-    hasRestoredState.current = true;
-
+    
     const urlParams = new URLSearchParams(window.location.search);
     const existingSessionId = urlParams.get('session');
+    const currentSessionId = existingSessionId || state.sessionId;
+    
+    // Guard: skip if we already initialized this exact session
+    if (initializedSessionRef.current === currentSessionId) return;
+    initializedSessionRef.current = currentSessionId;
+    hasRestoredState.current = true;
 
     if (existingSessionId) {
       console.log('📂 [IntelligenceContext] Found session in URL:', existingSessionId);
@@ -537,8 +546,13 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // ----------------------------------------
   useEffect(() => {
     if (state.extracted.industry) {
+      // Use resolveIndustry() to get the canonical industry key, not the raw stated industry
+      const resolution = resolveIndustry(state.extracted.industry);
+      const resolvedKey = resolution.industry;
+      console.log(`🎯 [Objections] Resolving industry: "${state.extracted.industry}" → "${resolvedKey}" (${resolution.source}, ${resolution.confidence})`);
+      
       const objections = getPrecomputedObjections(
-        state.extracted.industry,
+        resolvedKey,
         state.extracted.targetMarket
       );
       
@@ -548,7 +562,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           ...prev,
           predictedObjections: objections,
         }));
-        console.log('🎯 Loaded', objections.length, 'pre-computed objections for', state.extracted.industry);
+        console.log('🎯 Loaded', objections.length, 'pre-computed objections for', resolvedKey, '(raw:', state.extracted.industry, ')');
       }
     }
   }, [state.extracted.industry, state.extracted.targetMarket]);
@@ -702,9 +716,10 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       // Don't block on this - UX is more important
     }
 
-    // Now fetch market research
+    // Now fetch market research - use resolved industry key
     if (currentExtracted.industry) {
-      await fetchMarketResearch(currentExtracted.industry, currentExtracted.audience);
+      const resolution = resolveIndustry(currentExtracted.industry);
+      await fetchMarketResearch(resolution.industry, currentExtracted.audience);
     }
   }, [state, calculateReadiness, calculateEngagementScore, fetchMarketResearch]);
 
@@ -1555,9 +1570,10 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         console.log('💰 [Research] Founders pricing unlocked');
       }
 
-      // Also fetch market research
+      // Also fetch market research - use resolved industry key
       if (state.extracted.industry) {
-        await fetchMarketResearch(state.extracted.industry, state.extracted.audience);
+        const resolution = resolveIndustry(state.extracted.industry);
+        await fetchMarketResearch(resolution.industry, state.extracted.audience);
       }
 
     } finally {
