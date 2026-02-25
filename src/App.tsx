@@ -17,6 +17,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { SessionProvider } from "@/contexts/SessionContext";
 import { CompanionProvider } from "@/contexts/CompanionContext";
+import { IntelligenceProvider } from "@/contexts/IntelligenceContext";
 
 import { DevFloatingButton } from "@/components/dev";
 import HomePage from "./pages/HomePage";
@@ -106,6 +107,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
+            <IntelligenceProvider>
             <CompanionProvider>
               <DevFloatingButton />
               <Routes>
@@ -173,6 +175,7 @@ const App = () => {
               </Routes>
               
             </CompanionProvider>
+            </IntelligenceProvider>
           </BrowserRouter>
         </TooltipProvider>
       </OrchestratorProvider>

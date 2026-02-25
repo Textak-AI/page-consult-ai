@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { IntelligenceProvider, useIntelligence } from "@/contexts/IntelligenceContext";
+import { useIntelligence } from "@/contexts/IntelligenceContext";
 import SoftLockDemo from "@/components/landing/SoftLockDemo";
 import { BrandDetectionPrompt } from "@/components/demo/BrandDetectionPrompt";
 import { Sparkles } from "lucide-react";
@@ -162,9 +162,5 @@ function TryDemoContent() {
 }
 
 export default function TryDemo() {
-  return (
-    <IntelligenceProvider>
-      <TryDemoContent />
-    </IntelligenceProvider>
-  );
+  return <TryDemoContent />;
 }

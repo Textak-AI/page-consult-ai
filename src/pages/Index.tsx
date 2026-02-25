@@ -13,7 +13,7 @@ import FAQ from "@/components/FAQ";
 import Pricing from "@/components/Pricing";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
-import { IntelligenceProvider, useIntelligence } from "@/contexts/IntelligenceContext";
+import { useIntelligence } from "@/contexts/IntelligenceContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 
@@ -159,9 +159,7 @@ const Index = () => {
   }, [location.hash, autoOpenSession]);
 
   return (
-    <IntelligenceProvider>
-      <IndexContent autoOpen={autoOpenSession} />
-    </IntelligenceProvider>
+    <IndexContent autoOpen={autoOpenSession} />
   );
 };
 
