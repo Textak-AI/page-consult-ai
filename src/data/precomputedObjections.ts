@@ -411,6 +411,53 @@ const PRECOMPUTED_OBJECTIONS: Record<string, Record<string, PredictedObjection[]
         proofNeeded: 'Time requirements, busy client success stories'
       }
     ]
+  },
+
+  'creative': {
+    '_default': [
+      {
+        objection: "We've tried agencies before and didn't see ROI",
+        frequency: 'very_common',
+        source: 'Agency industry research',
+        counterStrategy: 'Lead with measurable outcomes and case studies showing concrete results (conversions, revenue lift)',
+        proofNeeded: 'Before/after metrics, client revenue impact numbers'
+      },
+      {
+        objection: "AI-generated work lacks the human touch our brand needs",
+        frequency: 'common',
+        source: 'Creative industry forums',
+        counterStrategy: 'Position AI as a tool that accelerates the human creative process, not replaces it',
+        proofNeeded: 'Examples of AI-assisted work with clear human creative direction'
+      },
+      {
+        objection: "We can't afford a full rebrand right now",
+        frequency: 'very_common',
+        source: 'SMB buyer research',
+        counterStrategy: 'Offer phased approaches or targeted deliverables that show quick wins before larger investment',
+        proofNeeded: 'Tiered pricing, quick-win case studies, ROI timelines'
+      },
+      {
+        objection: "Our in-house team can handle this",
+        frequency: 'common',
+        source: 'Creative buyer interviews',
+        counterStrategy: 'Position as a force multiplier — specialized expertise that elevates what the internal team produces',
+        proofNeeded: 'Testimonials from clients who had in-house teams and still benefited'
+      },
+      {
+        objection: "How do we know the work will actually convert, not just look good?",
+        frequency: 'very_common',
+        source: 'Marketing leadership surveys',
+        counterStrategy: 'Emphasize conversion-driven design methodology with data-backed creative decisions',
+        proofNeeded: 'Conversion rate improvements, A/B test results from past projects'
+      },
+      {
+        objection: "We don't have time to go through a lengthy brand process",
+        frequency: 'common',
+        source: 'Startup founder interviews',
+        counterStrategy: 'Highlight streamlined process with clear timelines and minimal client time required',
+        proofNeeded: 'Process timeline, client time commitment breakdown'
+      }
+    ]
   }
 };
 
@@ -530,6 +577,24 @@ const INDUSTRY_ALIASES: Record<string, string> = {
   'industrialmanufacturing': 'manufacturing',
   'factoryautomation': 'manufacturing',
   'production': 'manufacturing',
+  
+  // Creative / Agency / Design aliases
+  'agency': 'creative',
+  'creativeagency': 'creative',
+  'designstudio': 'creative',
+  'designagency': 'creative',
+  'brandagency': 'creative',
+  'brandingagency': 'creative',
+  'digitalagency': 'creative',
+  'marketingagency': 'creative',
+  'advertisingagency': 'creative',
+  'graphicdesign': 'creative',
+  'webdesign': 'creative',
+  'strategiccreativestudio': 'creative',
+  'creativestudio': 'creative',
+  'brandstudio': 'creative',
+  'contentcreation': 'creative',
+  'contentmarketing': 'creative',
 };
 
 /**
@@ -589,30 +654,36 @@ export function getPrecomputedObjections(
 ): PredictedObjection[] {
   if (!industry) return [];
   
-  // Resolve to canonical category via local alias system
-  const industryKey = resolveIndustryCategory(industry);
+  // The caller (IntelligenceContext) is responsible for resolving the industry key.
+  // Here we just do a simple direct lookup with lowercase trim.
+  const directKey = industry.toLowerCase().trim();
   const targetKey = targetMarket 
-    ? resolveIndustryCategory(targetMarket) 
+    ? targetMarket.toLowerCase().replace(/[^a-z]/g, '')
     : '_default';
   
-  let industryData = PRECOMPUTED_OBJECTIONS[industryKey];
+  // 1. Try direct key match first
+  let industryData = PRECOMPUTED_OBJECTIONS[directKey];
   
-  // Fallback: use unified resolveIndustry for broader keyword matching
+  // 2. Fallback: try local alias resolution (handles e.g. "strategiccreativestudio" → "creative")
   if (!industryData) {
-    const resolution = resolveIndustry(industry);
-    console.log(`🎯 [Objections] Unified resolution fallback: "${industry}" → "${resolution.industry}" (${resolution.source})`);
-    industryData = PRECOMPUTED_OBJECTIONS[resolution.industry];
+    const aliasKey = resolveIndustryCategory(directKey);
+    industryData = PRECOMPUTED_OBJECTIONS[aliasKey];
+    if (industryData) {
+      console.log(`🎯 [Objections] Alias resolved: "${directKey}" → "${aliasKey}"`);
+    }
   }
+
   if (!industryData) {
-    console.log(`⚠️ No pre-computed objections for industry: "${industry}" (resolved: "${industryKey}")`);
+    console.log(`⚠️ No pre-computed objections for industry: "${industry}" (key: "${directKey}")`);
     return [];
   }
   
   // Try specific target market first, fall back to default
-  const objections = industryData[targetKey] || industryData['_default'] || [];
+  const targetAliasKey = INDUSTRY_ALIASES[targetKey] || targetKey;
+  const objections = industryData[targetAliasKey] || industryData['_default'] || [];
   
   if (objections.length > 0) {
-    console.log(`🎯 Found ${objections.length} objections for ${industryKey} → ${targetKey}`);
+    console.log(`🎯 Found ${objections.length} objections for "${directKey}" → "${targetAliasKey}"`);
   }
   
   return objections;
