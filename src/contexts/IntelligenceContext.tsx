@@ -414,9 +414,19 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   const hasRestoredState = useRef(false);
   const sessionCreatedInDb = useRef(false);
   
+  // Ref mirrors extracted.industry so submitBusinessCard can read it without stale closures
+  const extractedIndustryRef = useRef<string | null>(null);
+  const extractedAudienceRef = useRef<string | null>(null);
+  
   // Debounce timer for session updates to prevent rate limiting (429 errors)
   const sessionUpdateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSessionUpdateRef = useRef<object | null>(null);
+
+  // Keep refs in sync with extracted state
+  useEffect(() => {
+    extractedIndustryRef.current = state.extracted.industry;
+    extractedAudienceRef.current = state.extracted.audience;
+  }, [state.extracted.industry, state.extracted.audience]);
 
   // ----------------------------------------
   // Check for existing session in URL on mount
@@ -1581,26 +1591,25 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         console.log('💰 [Research] Founders pricing unlocked');
       }
 
-      // Also fetch market research - read latest state to avoid stale closure
-      setState(prev => {
-        const industry = prev.extracted.industry;
-        const audience = prev.extracted.audience;
-        if (industry) {
-          console.log('🔍 [Research] Starting market research for:', companyName, '/', website, '/ industry:', industry);
-          const resolution = resolveIndustry(industry);
-          // Reset guard so fetchMarketResearch can proceed even if previously blocked
-          marketResearchFetched.current = false;
-          fetchMarketResearch(resolution.industry, audience);
-        } else {
-          console.warn('❌ [Research] Market research skipped — no industry extracted yet');
-        }
-        return prev; // no state change, just reading
-      });
+      // Fetch market research using refs (avoids stale closure)
+      const industry = extractedIndustryRef.current;
+      const audience = extractedAudienceRef.current;
+      if (industry) {
+        console.log('🔍 [Research] Triggering market research for:', companyName, '/', website, '/ industry:', industry);
+        const resolution = resolveIndustry(industry);
+        const resolvedKey = resolution.industry === 'default' ? 'creative' : resolution.industry;
+        marketResearchFetched.current = false;
+        fetchMarketResearch(resolvedKey, audience);
+      } else {
+        console.warn('⚠️ [Research] No industry extracted yet, using fallback "creative"');
+        marketResearchFetched.current = false;
+        fetchMarketResearch('creative', null);
+      }
 
     } finally {
       setState(prev => ({ ...prev, isResearchingCompany: false }));
     }
-  }, [state.extracted.industry, state.extracted.audience, fetchMarketResearch]);
+  }, [fetchMarketResearch]);
 
   // Update extracted intelligence
   const updateExtracted = useCallback((updates: Partial<ExtractedIntelligence>) => {
