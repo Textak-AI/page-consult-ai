@@ -159,17 +159,28 @@ function normalizeIndustry(industry: string | null): string | null {
 }
 
 /**
- * Infer target market from audience description
+ * Infer target market from audience description.
+ * Only returns a market if exactly ONE industry vertical is detected.
+ * Multiple verticals (e.g. "fintech, healthcare, and professional services")
+ * means the provider serves many industries — not a single target market.
  */
 function inferTargetFromAudience(audience: string | null): string | null {
   if (!audience) return null;
   
   const lower = audience.toLowerCase();
   
+  // Count how many distinct industry verticals are mentioned
+  const matchedMarkets: string[] = [];
   for (const [market, keywords] of Object.entries(TARGET_MARKET_KEYWORDS)) {
     if (keywords.some(kw => lower.includes(kw))) {
-      return market;
+      matchedMarkets.push(market);
     }
+  }
+  
+  // Only return a target market if exactly one vertical is detected
+  // Multiple verticals = cross-industry provider, not a single target market
+  if (matchedMarkets.length === 1) {
+    return matchedMarkets[0];
   }
   
   return null;
