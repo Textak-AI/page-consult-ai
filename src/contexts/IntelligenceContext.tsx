@@ -648,8 +648,13 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // Fetch market research (only after email captured)
   // ----------------------------------------
   const fetchMarketResearch = useCallback(async (industry: string, audience: string | null) => {
-    if (marketResearchFetched.current) return;
+    if (marketResearchFetched.current) {
+      console.log('🔍 [Research] Market research already fetched, skipping');
+      return;
+    }
     marketResearchFetched.current = true;
+    
+    console.log('🔍 [Research] Starting market research for:', industry, '/ audience:', audience);
 
     setState(prev => ({
       ...prev,
@@ -663,6 +668,12 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
 
       if (error) throw error;
 
+      console.log('✅ [Research] Market research complete:', {
+        hasMarketSize: !!data?.marketSize,
+        insightCount: data?.industryInsights?.length || 0,
+        objectionCount: data?.commonObjections?.length || 0,
+      });
+
       setState(prev => ({
         ...prev,
         market: {
@@ -675,7 +686,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         readiness: calculateReadiness(prev.extracted, true, prev.emailCaptured),
       }));
     } catch (err) {
-      console.error('Market research failed:', err);
+      console.error('❌ [Research] Market research failed:', err);
       setState(prev => ({
         ...prev,
         market: { ...prev.market, isLoading: false },
@@ -1570,11 +1581,21 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         console.log('💰 [Research] Founders pricing unlocked');
       }
 
-      // Also fetch market research - use resolved industry key
-      if (state.extracted.industry) {
-        const resolution = resolveIndustry(state.extracted.industry);
-        await fetchMarketResearch(resolution.industry, state.extracted.audience);
-      }
+      // Also fetch market research - read latest state to avoid stale closure
+      setState(prev => {
+        const industry = prev.extracted.industry;
+        const audience = prev.extracted.audience;
+        if (industry) {
+          console.log('🔍 [Research] Starting market research for:', companyName, '/', website, '/ industry:', industry);
+          const resolution = resolveIndustry(industry);
+          // Reset guard so fetchMarketResearch can proceed even if previously blocked
+          marketResearchFetched.current = false;
+          fetchMarketResearch(resolution.industry, audience);
+        } else {
+          console.warn('❌ [Research] Market research skipped — no industry extracted yet');
+        }
+        return prev; // no state change, just reading
+      });
 
     } finally {
       setState(prev => ({ ...prev, isResearchingCompany: false }));
