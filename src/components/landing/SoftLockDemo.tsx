@@ -850,13 +850,13 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
                     {!canGenerate && (
                       <div className="mb-3 space-y-2">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-400">Progress to unlock</span>
-                          <span className="text-cyan-400 font-medium">{intelScore}/70</span>
+                          <span className="text-slate-400">70 points to unlock</span>
+                          <span className="text-cyan-400 font-medium">{intelScore}/100</span>
                         </div>
                         <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, (intelScore / 70) * 100)}%` }}
+                            style={{ width: `${Math.min(100, (intelScore / 100) * 100)}%` }}
                           />
                         </div>
                       </div>
