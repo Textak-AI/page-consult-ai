@@ -155,9 +155,9 @@ Trigger phrases that indicate AUDIENCE:
 
 Examples: "CFOs", "plant managers", "IT directors", "small business owners", "hospital administrators"
 
-### TARGET MARKET = The INDUSTRY of their BUYERS (if different from provider industry)
+### TARGET MARKET = The SINGLE INDUSTRY of their BUYERS (if different from provider industry)
 This is CRITICAL for hybrid design aesthetic. Extract when:
-- A provider serves buyers in a DIFFERENT industry than their own
+- A provider serves buyers in ONE SPECIFIC, DIFFERENT industry than their own
 - Example: "cybersecurity for healthcare" → industry: "Cybersecurity", targetMarket: "Healthcare"
 - Example: "HR consulting for law firms" → industry: "HR Consulting", targetMarket: "Legal"
 - Example: "marketing agency for manufacturers" → industry: "Marketing Agency", targetMarket: "Manufacturing"
@@ -166,6 +166,8 @@ Return null for targetMarket if:
 - Buyers are in the same industry as the provider
 - No specific buyer industry is mentioned
 - Example: "we're a SaaS company" → industry: "SaaS", targetMarket: null
+- **MULTIPLE verticals are listed** (e.g. "fintech, healthcare, and professional services") — this means they serve MANY industries, not ONE target market. Return null.
+- The user lists industries as EXAMPLES of who they serve, not as their exclusive focus
 
 ### BUSINESS TYPE DETECTION
 - "B2B" = business-to-business (serving other companies)
@@ -177,12 +179,15 @@ Return null for targetMarket if:
    - "do/provide/specialize/run" → INDUSTRY
    - "help/serve/work with/target/for" → AUDIENCE + potentially TARGET MARKET
 
-2. If "for [X]" appears AFTER an industry statement, check if [X] is an industry vertical:
+2. If "for [X]" appears AFTER an industry statement, check if [X] is a SINGLE industry vertical:
    - "We do cybersecurity for healthcare companies" → Industry: "cybersecurity", targetMarket: "healthcare", audience: "healthcare companies"
    - "We do marketing for plant managers" → Industry: "marketing", targetMarket: null (plant managers isn't an industry), audience: "plant managers"
+   - "We help B2B companies in fintech, healthcare, and professional services" → Industry: inferred from context, targetMarket: null (MULTIPLE verticals = no single target), audience: "B2B companies in fintech, healthcare, and professional services"
 
-3. Known industry verticals for targetMarket detection:
+3. Known industry verticals for targetMarket detection (ONLY when a SINGLE one is mentioned):
    Healthcare, Manufacturing, Legal, Finance/Banking, Real Estate, Retail/E-commerce, SaaS/Tech, Construction, Education, Government, Hospitality, Energy
+
+4. MULTIPLE VERTICAL RULE: If the user mentions 2+ different industry verticals as their client base, set targetMarket to null. These are client vertical examples, not a single target market.
 
 ### REJECTION RULES - Return null for generic terms:
 
@@ -256,6 +261,8 @@ For example: "Fortune 500 HR leaders" NOT "Fortune 500"
 | "I run a SaaS company that serves small businesses" | "SaaS" | null | "small business" |
 | "We're a law firm working with tech startups" | "law firm" | "saas" | "tech startups" |
 | "HR consulting for manufacturing companies" | "HR consulting" | "manufacturing" | "manufacturing companies" |
+| "We help B2B companies in fintech, healthcare, and professional services" | contextual | null | "B2B companies in fintech, healthcare, and professional services" |
+| "We serve enterprise teams across multiple verticals" | contextual | null | "enterprise teams" |
 
 Return ONLY valid JSON.`;
 
