@@ -226,12 +226,19 @@ export interface IntelligenceState {
   sessionId: string;
   rateLimited: boolean;
   
-  // Email gate (legacy - now business card)
+  // Conversational capture flow
   email: string | null;
   emailCaptured: boolean;
-  emailOffered: boolean;      // Track if modal was shown
+  emailOffered: boolean;      // Track if website ask was injected
   emailDismissed: boolean;    // Track if user dismissed without entering email
-  showEmailGate: boolean;
+  showEmailGate: boolean;     // Legacy - kept for compat but never set to true
+  
+  // Website capture (conversational)
+  websiteCaptured: boolean;
+  websiteAskInjected: boolean;   // Track if website ask was injected
+  emailAskInjected: boolean;     // Track if email ask was injected
+  pendingWebsiteCapture: boolean; // Waiting for user to reply with URL
+  pendingEmailCapture: boolean;   // Waiting for user to reply with email
   
   // Business card & company research (new)
   businessCard: BusinessCardData | null;
@@ -334,6 +341,11 @@ const initialState: IntelligenceState = {
   emailOffered: false,
   emailDismissed: false,
   showEmailGate: false,
+  websiteCaptured: false,
+  websiteAskInjected: false,
+  emailAskInjected: false,
+  pendingWebsiteCapture: false,
+  pendingEmailCapture: false,
   // Business card & company research
   businessCard: null,
   companyResearch: null,
@@ -885,9 +897,97 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     
     // Rate limiting removed - gate at generation, not conversation
 
-    // If email gate is showing, don't process more messages
-    if (stateRef.current.showEmailGate) {
-      return;
+    // Conversational capture: detect email in reply if we're waiting for one
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+    const currentSt = stateRef.current;
+    
+    if (currentSt.pendingEmailCapture && emailRegex.test(message)) {
+      const emailMatch = message.match(emailRegex);
+      if (emailMatch) {
+        const capturedEmail = emailMatch[0];
+        console.log('📧 [Conversational] Email captured from reply:', capturedEmail);
+        
+        // Save email immediately
+        setState(prev => ({
+          ...prev,
+          email: capturedEmail,
+          emailCaptured: true,
+          pendingEmailCapture: false,
+        }));
+        
+        // Save lead to database
+        const engagementScore = calculateEngagementScore(stateRef.current);
+        (supabase.from('demo_leads') as any).insert([{
+          email: capturedEmail,
+          session_id: currentSt.sessionId,
+          extracted_intelligence: currentSt.extracted as any,
+          engagement_score: engagementScore,
+        }]).then(() => {
+          console.log('✅ [Conversational] Lead saved:', capturedEmail);
+        });
+        
+        // Store for signup pre-fill
+        sessionStorage.setItem('pageconsult_email', capturedEmail);
+      }
+    }
+    
+    // Conversational capture: detect URL in reply if we're waiting for one
+    if (currentSt.pendingWebsiteCapture) {
+      const detectedUrlsForCapture = extractUrls(message);
+      if (detectedUrlsForCapture.length > 0) {
+        const capturedUrl = detectedUrlsForCapture[0];
+        console.log('🌐 [Conversational] Website captured from reply:', capturedUrl);
+        
+        setState(prev => ({
+          ...prev,
+          websiteCaptured: true,
+          pendingWebsiteCapture: false,
+          isResearchingCompany: true,
+          extracted: { ...prev.extracted, websiteUrl: capturedUrl },
+        }));
+        
+        // Trigger website intelligence extraction silently
+        supabase.functions.invoke('extract-website-intelligence', {
+          body: { url: capturedUrl }
+        }).then(({ data, error }) => {
+          if (!error && data?.success !== false) {
+            console.log('✅ [Conversational] Website intelligence extracted');
+            setState(prev => ({
+              ...prev,
+              isResearchingCompany: false,
+              extracted: {
+                ...prev.extracted,
+                companyName: data.companyName || prev.extracted.companyName,
+                logoUrl: data.logoUrl || prev.extracted.logoUrl,
+                colors: data.brandColors || prev.extracted.colors,
+              },
+              extractedLogo: data.logoUrl || prev.extractedLogo,
+              companyResearch: {
+                companyName: data.companyName || capturedUrl,
+                website: capturedUrl,
+                description: data.description || data.tagline || null,
+                services: data.services || [],
+                targetMarket: data.targetAudience || null,
+                founded: null,
+                location: null,
+                differentiators: data.differentiators || [],
+                publicProof: data.proofPoints || [],
+                industryPosition: data.industryPosition || null,
+                confidence: data.confidence || 'medium',
+                researchedAt: new Date().toISOString(),
+              },
+            }));
+          } else {
+            console.warn('⚠️ [Conversational] Website extraction failed:', error);
+            setState(prev => ({ ...prev, isResearchingCompany: false }));
+          }
+        }).catch(err => {
+          console.error('❌ [Conversational] Website extraction error:', err);
+          setState(prev => ({ ...prev, isResearchingCompany: false }));
+        });
+        
+        sessionStorage.setItem('pageconsult_website', capturedUrl);
+      }
     }
 
     // Capture sessionId before any awaits (use ref for freshest value)
@@ -1206,15 +1306,8 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         consecutiveThinInputs: newThinCount,
       }));
 
-      // Step 3: Check if we should show email gate (use stateRef for fresh values)
-      // Show gate after message 2 if we have industry detected
-      // Only show if: industry detected, not captured yet, and not already dismissed
+      // Step 3: Conversational capture — inject website/email asks as chat messages
       const gateState = stateRef.current;
-      const shouldShowGate = gateState.messageCount >= 2 && 
-                             mergedExtractedForApi.industry && 
-                             !gateState.emailCaptured &&
-                             !gateState.emailDismissed &&
-                             !gateState.emailOffered;
 
       const aiMessage: ConversationMessage = {
         role: 'assistant',
@@ -1247,17 +1340,13 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         if (lastAIMsg) {
           const prevArtifacts = extractArtifactsFromMessage(lastAIMsg.content);
           
-          // User selected a headline option
           if (prevArtifacts.headlines.length > 0) {
             let selectedContent: string | null = null;
-            
             if (userSelection.selectedOption !== null && prevArtifacts.headlines[userSelection.selectedOption - 1]) {
               selectedContent = prevArtifacts.headlines[userSelection.selectedOption - 1];
             } else {
-              // Default to first option if no specific number given
               selectedContent = prevArtifacts.headlines[0];
             }
-            
             if (selectedContent) {
               logArtifactCapture('headline', 'selected', selectedContent, userSelection.feedback || undefined);
               artifactUpdates = {
@@ -1280,16 +1369,13 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
             }
           }
           
-          // User selected a CTA option
           if (prevArtifacts.ctas.length > 0) {
             let selectedCTA: string | null = null;
-            
             if (userSelection.selectedOption !== null && prevArtifacts.ctas[userSelection.selectedOption - 1]) {
               selectedCTA = prevArtifacts.ctas[userSelection.selectedOption - 1];
             } else if (prevArtifacts.ctas.length === 1) {
               selectedCTA = prevArtifacts.ctas[0];
             }
-            
             if (selectedCTA) {
               logArtifactCapture('cta', 'selected', selectedCTA, userSelection.feedback || undefined);
               artifactUpdates = {
@@ -1317,7 +1403,6 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         ...prev,
         conversation: [...prev.conversation, aiMessage],
         isProcessing: false,
-        // Update artifacts if we detected/captured any
         ...(artifactUpdates ? {
           artifacts: {
             ...prev.artifacts,
@@ -1326,12 +1411,46 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         } : {}),
       }));
 
-      // Show email gate with 2-second delay so user can read the response first
-      // Also trigger immediately if user affirmed research offer
-      if (shouldShowGate || isResearchReveal) {
+      // Conversational website ask: After 2nd message, if no email/website captured
+      if (gateState.messageCount >= 2 && 
+          !gateState.emailCaptured && 
+          !gateState.websiteAskInjected &&
+          !gateState.websiteCaptured) {
         setTimeout(() => {
-          setState(prev => ({ ...prev, showEmailGate: true, emailOffered: true }));
-        }, isResearchReveal ? 500 : 2000); // Faster if they asked for research
+          const websiteAskMessage: ConversationMessage = {
+            role: 'assistant',
+            content: "Before I go deeper — what's your website? I can cross-reference what you're telling me with what your site is actually communicating, and flag any positioning gaps in real time.",
+            timestamp: new Date(),
+          };
+          setState(prev => ({
+            ...prev,
+            conversation: [...prev.conversation, websiteAskMessage],
+            websiteAskInjected: true,
+            emailOffered: true,
+            pendingWebsiteCapture: true,
+          }));
+          console.log('🌐 [Conversational] Website ask injected');
+        }, 1500);
+      }
+
+      // Conversational email ask: One message after website is captured
+      if (gateState.websiteCaptured && 
+          !gateState.emailCaptured && 
+          !gateState.emailAskInjected) {
+        setTimeout(() => {
+          const emailAskMessage: ConversationMessage = {
+            role: 'assistant',
+            content: "What email should I send your strategy brief to when we're done?",
+            timestamp: new Date(),
+          };
+          setState(prev => ({
+            ...prev,
+            conversation: [...prev.conversation, emailAskMessage],
+            emailAskInjected: true,
+            pendingEmailCapture: true,
+          }));
+          console.log('📧 [Conversational] Email ask injected');
+        }, 1500);
       }
 
       // Update session in database (debounced to prevent 429 rate limit errors)

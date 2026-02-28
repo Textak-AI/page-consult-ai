@@ -143,7 +143,7 @@ export function IntelligenceTabs({
       shortLabel: 'Research',
       icon: Search,
       hasNewData: newDataTabs.has('research') && !seenTabs.has('research'),
-      isAvailable: !!(hasMarketResearchData || (state.emailDismissed && !state.emailCaptured && state.extracted.industry)),
+      isAvailable: !!(hasMarketResearchData || state.companyResearch || state.isResearchingCompany || (state.emailDismissed && !state.emailCaptured && state.extracted.industry)),
     },
     {
       id: 'personas',
@@ -162,12 +162,12 @@ export function IntelligenceTabs({
     }
   }, [shouldShowObjectionPanel, seenTabs]);
 
-  // Track when new research becomes available
+  // Track when new research becomes available (market research OR company research)
   useEffect(() => {
-    if (hasMarketResearchData && !seenTabs.has('research')) {
+    if ((hasMarketResearchData || state.companyResearch) && !seenTabs.has('research')) {
       setNewDataTabs(prev => new Set([...prev, 'research']));
     }
-  }, [hasMarketResearchData, seenTabs]);
+  }, [hasMarketResearchData, state.companyResearch, seenTabs]);
 
   // Mark tab as seen when clicked
   const handleTabClick = (tabId: string) => {
@@ -352,14 +352,14 @@ export function IntelligenceTabs({
                         <div className="font-medium text-white">
                           {state.companyResearch.companyName}
                         </div>
-                        {state.businessCard?.website && (
+                        {(state.businessCard?.website || state.companyResearch?.website || state.extracted.websiteUrl) && (
                           <a 
-                            href={state.businessCard.website}
+                            href={state.businessCard?.website || state.companyResearch?.website || state.extracted.websiteUrl || '#'}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs text-cyan-400 hover:underline flex items-center gap-1"
                           >
-                            {new URL(state.businessCard.website).hostname.replace('www.', '')}
+                            {(() => { try { return new URL(state.businessCard?.website || state.companyResearch?.website || state.extracted.websiteUrl || '').hostname.replace('www.', ''); } catch { return 'Website'; } })()}
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         )}
@@ -525,10 +525,10 @@ export function IntelligenceTabs({
                 )}
 
                 {/* Empty state before any research */}
-                {!state.companyResearch && !state.isResearchingCompany && !state.emailDismissed && !state.emailCaptured && (
+                {!state.companyResearch && !state.isResearchingCompany && !state.emailDismissed && !state.emailCaptured && !state.websiteCaptured && (
                   <div className="text-center py-8 text-slate-500">
                     <Building className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Share your business card to unlock personalized research</p>
+                    <p className="text-sm">Share your website to unlock personalized research</p>
                   </div>
                 )}
                 
