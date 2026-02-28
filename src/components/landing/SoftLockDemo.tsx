@@ -928,13 +928,7 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
         )}
       </AnimatePresence>
 
-      {/* Business Card Gate Modal */}
-      <BusinessCardGateModal
-        isOpen={state.showEmailGate}
-        onSubmit={handleBusinessCardSubmit}
-        onContinueWithoutResearch={handleContinueWithoutEmail}
-        industry={state.extracted.industry}
-      />
+      {/* Business Card Gate Modal removed — replaced by conversational capture */}
 
       {/* Saving session loader */}
       <AnimatePresence>

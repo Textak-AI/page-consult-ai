@@ -580,13 +580,7 @@ export default function LiveDemoSection() {
         )}
       </AnimatePresence>
 
-      {/* Business Card Gate Modal */}
-      <BusinessCardGateModal
-        isOpen={state.showEmailGate}
-        onSubmit={handleBusinessCardSubmitAndActivateFocus}
-        onContinueWithoutResearch={handleContinueWithoutEmail}
-        industry={state.extracted.industry}
-      />
+      {/* Business Card Gate Modal removed — replaced by conversational capture */}
 
       {/* Saving session loader - shown when transitioning to signup */}
       <AnimatePresence>
