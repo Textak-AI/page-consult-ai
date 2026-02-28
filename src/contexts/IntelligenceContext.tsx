@@ -435,15 +435,19 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   const extractedIndustryRef = useRef<string | null>(null);
   const extractedAudienceRef = useRef<string | null>(null);
   
+  // Refs to avoid stale closures in async processUserMessage
+  const stateRef = useRef(state);
+  
   // Debounce timer for session updates to prevent rate limiting (429 errors)
   const sessionUpdateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSessionUpdateRef = useRef<object | null>(null);
 
-  // Keep refs in sync with extracted state
+  // Keep refs in sync with state
   useEffect(() => {
+    stateRef.current = state;
     extractedIndustryRef.current = state.extracted.industry;
     extractedAudienceRef.current = state.extracted.audience;
-  }, [state.extracted.industry, state.extracted.audience]);
+  }, [state]);
 
   // ----------------------------------------
   // Check for existing session in URL on mount
@@ -732,9 +736,9 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // Submit email (triggers market research)
   // ----------------------------------------
   const submitEmail = useCallback(async (email: string) => {
-    // Capture current state before updating
-    const currentExtracted = state.extracted;
-    const currentSessionId = state.sessionId;
+    // Use stateRef to avoid stale closure
+    const currentExtracted = stateRef.current.extracted;
+    const currentSessionId = stateRef.current.sessionId;
     
     // Update state immediately
     setState(prev => ({
@@ -747,8 +751,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
 
     // Save lead to database (fire and forget)
     try {
-      const engagementScore = calculateEngagementScore(state);
-      // Cast to any to avoid type issues with the new table not in generated types yet
+      const engagementScore = calculateEngagementScore(stateRef.current);
       await (supabase.from('demo_leads') as any).insert([{
         email,
         session_id: currentSessionId,
@@ -758,7 +761,6 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       console.log('Lead saved:', email);
     } catch (err) {
       console.error('Failed to save lead:', err);
-      // Don't block on this - UX is more important
     }
 
     // Now fetch market research - use resolved industry key
@@ -766,7 +768,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       const resolution = resolveIndustry(currentExtracted.industry);
       await fetchMarketResearch(resolution.industry, currentExtracted.audience);
     }
-  }, [state, calculateReadiness, calculateEngagementScore, fetchMarketResearch]);
+  }, [calculateReadiness, calculateEngagementScore, fetchMarketResearch]);
 
   // ----------------------------------------
   // Dismiss email gate (user clicks outside, X, ESC, or "Skip for now")
@@ -884,12 +886,15 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     // Rate limiting removed - gate at generation, not conversation
 
     // If email gate is showing, don't process more messages
-    if (state.showEmailGate) {
+    if (stateRef.current.showEmailGate) {
       return;
     }
 
+    // Capture sessionId before any awaits (use ref for freshest value)
+    const currentSessionId = stateRef.current.sessionId;
+
     // Create database session on first message
-    await createSessionInDatabase(state.sessionId);
+    await createSessionInDatabase(currentSessionId);
 
     const userMessage: ConversationMessage = {
       role: 'user',
@@ -897,13 +902,11 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       timestamp: new Date(),
     };
 
-    const newMessageCount = state.messageCount + 1;
-
     setState(prev => ({
       ...prev,
       conversation: [...prev.conversation, userMessage],
       isProcessing: true,
-      messageCount: newMessageCount,
+      messageCount: prev.messageCount + 1,
     }));
 
     try {
@@ -935,12 +938,13 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         }
       }
 
-      // Step 1: Extract intelligence - pass website data so AI doesn't guess
+      // Step 1: Extract intelligence - use stateRef for fresh values after awaits
+      const currentState = stateRef.current;
       const { data: extractedData, error: extractError } = await supabase.functions.invoke('demo-extract-intelligence', {
         body: {
           message,
-          conversationHistory: state.conversation.map(m => ({ role: m.role, content: m.content })),
-          existingIntelligence: state.extracted,
+          conversationHistory: currentState.conversation.map(m => ({ role: m.role, content: m.content })),
+          existingIntelligence: currentState.extracted,
           websiteIntelligence, // Pass website data so extraction is accurate
         },
       });
@@ -962,63 +966,64 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       }
 
       // Compute merged extracted data for use in API calls
-      // We merge with current state.extracted here, and will re-merge in setState with prev.extracted
-      // to handle any race conditions
-      let mergedExtractedForApi = state.extracted;
+      // Use stateRef for fresh values after await boundaries
+      const freshExtracted = stateRef.current.extracted;
+      let mergedExtractedForApi = freshExtracted;
       
       if (!extractError && extractedData) {
-        // Merge new extractions with current state (for API calls)
+        // Merge new extractions with fresh state (for API calls)
         mergedExtractedForApi = {
           // Short values (for sidebar display)
-          industry: extractedData.industry || state.extracted.industry,
-          audience: extractedData.audience || state.extracted.audience,
-          valueProp: extractedData.valueProp || state.extracted.valueProp,
-          competitorDifferentiator: extractedData.competitorDifferentiator || state.extracted.competitorDifferentiator,
-          painPoints: extractedData.painPoints || state.extracted.painPoints,
-          buyerObjections: extractedData.buyerObjections || state.extracted.buyerObjections,
-          proofElements: extractedData.proofElements || state.extracted.proofElements,
-          socialProof: extractedData.socialProof || state.extracted.socialProof,
+          industry: extractedData.industry || freshExtracted.industry,
+          audience: extractedData.audience || freshExtracted.audience,
+          valueProp: extractedData.valueProp || freshExtracted.valueProp,
+          competitorDifferentiator: extractedData.competitorDifferentiator || freshExtracted.competitorDifferentiator,
+          painPoints: extractedData.painPoints || freshExtracted.painPoints,
+          buyerObjections: extractedData.buyerObjections || freshExtracted.buyerObjections,
+          proofElements: extractedData.proofElements || freshExtracted.proofElements,
+          socialProof: extractedData.socialProof || freshExtracted.socialProof,
           // Target Aesthetic System
-          targetMarket: extractedData.targetMarket || state.extracted.targetMarket,
-          businessType: extractedData.businessType || state.extracted.businessType,
+          targetMarket: extractedData.targetMarket || freshExtracted.targetMarket,
+          businessType: extractedData.businessType || freshExtracted.businessType,
           // Website & Brand data (from URL detection)
-          websiteUrl: websiteIntelligence?.url || detectedUrls[0] || state.extracted.websiteUrl,
-          companyName: websiteIntelligence?.companyName || state.extracted.companyName,
-          logoUrl: websiteIntelligence?.logoUrl || state.extracted.logoUrl,
-          colors: websiteIntelligence?.brandColors || state.extracted.colors,
+          websiteUrl: websiteIntelligence?.url || detectedUrls[0] || freshExtracted.websiteUrl,
+          companyName: websiteIntelligence?.companyName || freshExtracted.companyName,
+          logoUrl: websiteIntelligence?.logoUrl || freshExtracted.logoUrl,
+          colors: websiteIntelligence?.brandColors || freshExtracted.colors,
           // Full values (for Hero/CTA generation)
-          industryFull: extractedData.industryFull || state.extracted.industryFull,
-          audienceFull: extractedData.audienceFull || state.extracted.audienceFull,
-          valuePropFull: extractedData.valuePropFull || state.extracted.valuePropFull,
-          competitorDifferentiatorFull: extractedData.competitorDifferentiatorFull || state.extracted.competitorDifferentiatorFull,
-          painPointsFull: extractedData.painPointsFull || state.extracted.painPointsFull,
-          buyerObjectionsFull: extractedData.buyerObjectionsFull || state.extracted.buyerObjectionsFull,
-          proofElementsFull: extractedData.proofElementsFull || state.extracted.proofElementsFull,
-          socialProofFull: extractedData.socialProofFull || state.extracted.socialProofFull,
+          industryFull: extractedData.industryFull || freshExtracted.industryFull,
+          audienceFull: extractedData.audienceFull || freshExtracted.audienceFull,
+          valuePropFull: extractedData.valuePropFull || freshExtracted.valuePropFull,
+          competitorDifferentiatorFull: extractedData.competitorDifferentiatorFull || freshExtracted.competitorDifferentiatorFull,
+          painPointsFull: extractedData.painPointsFull || freshExtracted.painPointsFull,
+          buyerObjectionsFull: extractedData.buyerObjectionsFull || freshExtracted.buyerObjectionsFull,
+          proofElementsFull: extractedData.proofElementsFull || freshExtracted.proofElementsFull,
+          socialProofFull: extractedData.socialProofFull || freshExtracted.socialProofFull,
           // Summaries
-          industrySummary: extractedData.industrySummary || state.extracted.industrySummary,
-          audienceSummary: extractedData.audienceSummary || state.extracted.audienceSummary,
-          valuePropSummary: extractedData.valuePropSummary || state.extracted.valuePropSummary,
-          edgeSummary: extractedData.edgeSummary || state.extracted.edgeSummary,
-          painSummary: extractedData.painSummary || state.extracted.painSummary,
-          objectionsSummary: extractedData.objectionsSummary || state.extracted.objectionsSummary,
-          proofSummary: extractedData.proofSummary || state.extracted.proofSummary,
-          socialProofSummary: extractedData.socialProofSummary || state.extracted.socialProofSummary,
+          industrySummary: extractedData.industrySummary || freshExtracted.industrySummary,
+          audienceSummary: extractedData.audienceSummary || freshExtracted.audienceSummary,
+          valuePropSummary: extractedData.valuePropSummary || freshExtracted.valuePropSummary,
+          edgeSummary: extractedData.edgeSummary || freshExtracted.edgeSummary,
+          painSummary: extractedData.painSummary || freshExtracted.painSummary,
+          objectionsSummary: extractedData.objectionsSummary || freshExtracted.objectionsSummary,
+          proofSummary: extractedData.proofSummary || freshExtracted.proofSummary,
+          socialProofSummary: extractedData.socialProofSummary || freshExtracted.socialProofSummary,
         };
 
         // Re-run industry detection with all conversation messages
-        // Pass the stated industry from extraction to detect conflicts
-        const allUserMessages = [...state.conversation, userMessage]
+        // Use stateRef for fresh conversation after await
+        const freshState = stateRef.current;
+        const allUserMessages = [...freshState.conversation, userMessage]
           .filter(m => m.role === 'user')
           .map(m => m.content);
         
         // Get the stated industry from the extraction (what user explicitly said they are)
-        const statedIndustry = extractedData?.industry || state.extracted.industry;
+        const statedIndustry = extractedData?.industry || freshState.extracted.industry;
         
         const updatedIndustryDetection = detectIndustryFromConversation(
           allUserMessages,
-          state.industryDetection,
-          statedIndustry // NEW: Pass stated industry for conflict detection
+          freshState.industryDetection,
+          statedIndustry
         );
 
         // Use functional setState to ensure we merge with the LATEST state
@@ -1148,32 +1153,34 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       console.log('📊 Input quality from extraction:', inputQuality);
       
       // Calculate new thin input count based on current input quality
-      // If thin: increment count. If adequate/rich: reset to 0
+      // Use stateRef for fresh values after await boundaries
+      const latestState = stateRef.current;
       const newThinCount = inputQuality === 'thin' 
-        ? state.consecutiveThinInputs + 1 
+        ? latestState.consecutiveThinInputs + 1 
         : 0;
       
-      console.log('🔄 Consecutive thin inputs:', state.consecutiveThinInputs, '→', newThinCount);
+      console.log('🔄 Consecutive thin inputs:', latestState.consecutiveThinInputs, '→', newThinCount);
       
       const { data: responseData, error: responseError } = await supabase.functions.invoke('demo-generate-response', {
         body: {
           userMessage: message,
           extractedIntelligence: mergedExtractedForApi,
-          marketResearch: state.emailCaptured ? state.market : null, // Only include if email captured
-          conversationHistory: [...state.conversation, userMessage].map(m => ({ role: m.role, content: m.content })),
-          messageCount: newMessageCount,
-          inputQuality, // Pass the input quality for smarter response handling
-          consecutiveThinInputs: newThinCount, // Pass the explicit count for PROBE→GUIDE logic
-          websiteIntelligence, // Pass website data so AI can acknowledge what it found
+          marketResearch: latestState.emailCaptured ? latestState.market : null,
+          conversationHistory: latestState.conversation.map(m => ({ role: m.role, content: m.content })),
+          messageCount: latestState.messageCount,
+          inputQuality,
+          consecutiveThinInputs: newThinCount,
+          websiteIntelligence,
         },
       });
 
       let aiResponseContent = "I'd love to learn more about your business. What's the main outcome you deliver for clients?";
       let isResearchReveal = false;
       
-      // Check if user is affirming the research offer
-      const lastAIMessage = state.conversation.length > 0 
-        ? state.conversation[state.conversation.length - 1]
+      // Check if user is affirming the research offer (use stateRef for fresh conversation)
+      const freshConversation = stateRef.current.conversation;
+      const lastAIMessage = freshConversation.length > 0 
+        ? freshConversation[freshConversation.length - 1]
         : null;
       const isAffirmativeToResearchOffer = (() => {
         if (!lastAIMessage || lastAIMessage.role !== 'assistant') return false;
@@ -1189,7 +1196,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       }
       
       // If affirming research offer and email not captured, trigger the gate
-      if (isAffirmativeToResearchOffer && !state.emailCaptured) {
+      if (isAffirmativeToResearchOffer && !stateRef.current.emailCaptured) {
         isResearchReveal = true;
       }
       
@@ -1199,14 +1206,15 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         consecutiveThinInputs: newThinCount,
       }));
 
-      // Step 3: Check if we should show email gate
+      // Step 3: Check if we should show email gate (use stateRef for fresh values)
       // Show gate after message 2 if we have industry detected
       // Only show if: industry detected, not captured yet, and not already dismissed
-      const shouldShowGate = newMessageCount >= 2 && 
+      const gateState = stateRef.current;
+      const shouldShowGate = gateState.messageCount >= 2 && 
                              mergedExtractedForApi.industry && 
-                             !state.emailCaptured &&
-                             !state.emailDismissed &&
-                             !state.emailOffered;
+                             !gateState.emailCaptured &&
+                             !gateState.emailDismissed &&
+                             !gateState.emailOffered;
 
       const aiMessage: ConversationMessage = {
         role: 'assistant',
@@ -1327,19 +1335,20 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       }
 
       // Update session in database (debounced to prevent 429 rate limit errors)
-      // Calculate current readiness for the update
-      const currentReadiness = calculateReadiness(mergedExtractedForApi, state.market.marketSize !== null, state.emailCaptured);
+      // Use stateRef for fresh values
+      const dbState = stateRef.current;
+      const currentReadiness = calculateReadiness(mergedExtractedForApi, dbState.market.marketSize !== null, dbState.emailCaptured);
       
       const sessionData = {
-        sessionId: state.sessionId,
-        messages: [...state.conversation, userMessage, aiMessage].map(m => ({
+        sessionId: currentSessionId,
+        messages: dbState.conversation.map(m => ({
           role: m.role,
           content: m.content,
           timestamp: m.timestamp.toISOString(),
         })),
         extractedIntelligence: mergedExtractedForApi,
-        marketResearch: state.market,
-        messageCount: newMessageCount,
+        marketResearch: dbState.market,
+        messageCount: dbState.messageCount,
         readiness: currentReadiness,
       };
       
@@ -1382,7 +1391,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         isProcessing: false,
       }));
     }
-  }, [state, calculateReadiness, navigate, createSessionInDatabase]);
+  }, [calculateReadiness, navigate, createSessionInDatabase]);
 
   // ----------------------------------------
   // Reset intelligence state
@@ -1525,7 +1534,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       // Run ALL parallel operations (including brand extraction)
       const [researchResult, logoResult, brandResult, loopsResult] = await Promise.allSettled([
         supabase.functions.invoke('company-research', {
-          body: { companyName, website, industryContext: state.extracted.industry },
+          body: { companyName, website, industryContext: stateRef.current.extracted.industry },
         }),
         supabase.functions.invoke('extract-logo', {
           body: { url: website },
@@ -1595,7 +1604,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         
         // Generate and trigger assumptive follow-up message
         if (onFollowUp && researchData) {
-          const followUpMessage = generateAssumptiveFollowUp(researchData, state.extracted.industry);
+          const followUpMessage = generateAssumptiveFollowUp(researchData, stateRef.current.extracted.industry);
           console.log('📝 [Research] Assumptive follow-up queued:', followUpMessage.substring(0, 60) + '...');
           onFollowUp(followUpMessage);
         }
