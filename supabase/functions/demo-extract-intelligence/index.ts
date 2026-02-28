@@ -396,6 +396,9 @@ serve(async (req) => {
       if (existingIntelligence.proofElements) capturedFields.push(`Proof: ${existingIntelligence.proofElements}`);
       else missingFields.push('proofElements');
       
+      if (existingIntelligence.socialProof) capturedFields.push(`Social Proof: ${existingIntelligence.socialProof}`);
+      else missingFields.push('socialProof');
+      
       // Build context that encourages finding MISSING fields
       existingContext = '\n\n';
       if (capturedFields.length > 0) {
@@ -636,10 +639,11 @@ Extract only SPECIFIC information. If websiteIntelligence was provided, USE IT a
           competitorDifferentiatorFull: edgeConfidence >= CONFIDENCE_THRESHOLD ? competitiveEdgeFull : null,
           edgeSummary: edgeConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.edgeSummary) : null,
           
-          painPoints: painConfidence >= CONFIDENCE_THRESHOLD ? painPoints : null,
+          // Pain points: no confidence gate (consistent with buyerObjections/proofElements/socialProof)
+          painPoints: painPoints,
           painConfidence,
-          painPointsFull: painConfidence >= CONFIDENCE_THRESHOLD ? painPointsFull : null,
-          painSummary: painConfidence >= CONFIDENCE_THRESHOLD ? formatSummary(parsed.painSummary) : null,
+          painPointsFull: painPointsFull,
+          painSummary: formatSummary(parsed.painSummary),
           
           buyerObjections: formatShort(parsed.buyerObjections),
           objectionsConfidence: getConfidence(parsed.objectionsConfidence, 60),

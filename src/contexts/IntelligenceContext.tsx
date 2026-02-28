@@ -949,6 +949,18 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         console.error('Extraction error:', extractError);
       }
 
+      // Debug: log what the extraction returned for Buyer Reality & Proof fields
+      if (extractedData) {
+        console.log('📊 [Extraction→Score] Buyer Reality fields:', {
+          painPoints: extractedData.painPoints || null,
+          buyerObjections: extractedData.buyerObjections || null,
+        });
+        console.log('📊 [Extraction→Score] Proof fields:', {
+          proofElements: extractedData.proofElements || null,
+          socialProof: extractedData.socialProof || null,
+        });
+      }
+
       // Compute merged extracted data for use in API calls
       // We merge with current state.extracted here, and will re-merge in setState with prev.extracted
       // to handle any race conditions
@@ -1541,13 +1553,44 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       if (researchResult.status === 'fulfilled' && researchResult.value.data?.success) {
         const researchData = researchResult.value.data.data;
         
-        setState(prev => ({
-          ...prev,
-          companyResearch: {
-            ...researchData,
-            researchedAt: new Date().toISOString(),
-          },
-        }));
+        setState(prev => {
+          // Merge research findings into extracted intelligence for scoring
+          const enrichedExtracted = { ...prev.extracted };
+          
+          // Enrich proof/credibility from research if not already captured
+          if (!enrichedExtracted.proofElements && researchData.publicProof?.length > 0) {
+            const proofText = researchData.publicProof.slice(0, 3).join('; ');
+            enrichedExtracted.proofElements = proofText.slice(0, 200);
+            enrichedExtracted.proofElementsFull = proofText.slice(0, 500);
+            enrichedExtracted.proofSummary = `Research found: ${proofText}`;
+            console.log('📊 [Research→Score] Enriched proofElements from research:', enrichedExtracted.proofElements);
+          }
+          
+          // Enrich competitive edge from research if not already captured
+          if (!enrichedExtracted.competitorDifferentiator && researchData.differentiators?.length > 0) {
+            const edgeText = researchData.differentiators.slice(0, 2).join('; ');
+            enrichedExtracted.competitorDifferentiator = edgeText.slice(0, 200);
+            enrichedExtracted.competitorDifferentiatorFull = edgeText.slice(0, 500);
+            enrichedExtracted.edgeSummary = `Research found: ${edgeText}`;
+            console.log('📊 [Research→Score] Enriched edge from research:', enrichedExtracted.competitorDifferentiator);
+          }
+          
+          // Enrich social proof from research if not already captured
+          if (!enrichedExtracted.socialProof && researchData.industryPosition) {
+            enrichedExtracted.socialProof = researchData.industryPosition.slice(0, 200);
+            enrichedExtracted.socialProofSummary = researchData.industryPosition;
+            console.log('📊 [Research→Score] Enriched socialProof from research:', enrichedExtracted.socialProof);
+          }
+          
+          return {
+            ...prev,
+            extracted: enrichedExtracted,
+            companyResearch: {
+              ...researchData,
+              researchedAt: new Date().toISOString(),
+            },
+          };
+        });
         console.log('🔍 [Research] Company research complete:', researchData);
         
         // Generate and trigger assumptive follow-up message
