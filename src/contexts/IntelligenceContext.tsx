@@ -1261,6 +1261,14 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       
       console.log('🔄 Consecutive thin inputs:', latestState.consecutiveThinInputs, '→', newThinCount);
       
+      // Determine if we should ask for website or email conversationally
+      const shouldAskForWebsite = latestState.messageCount >= 3 && 
+        !latestState.websiteCaptured && 
+        !latestState.websiteAskInjected;
+      const shouldAskForEmail = latestState.websiteCaptured && 
+        !latestState.emailCaptured && 
+        !latestState.emailAskInjected;
+
       const { data: responseData, error: responseError } = await supabase.functions.invoke('demo-generate-response', {
         body: {
           userMessage: message,
@@ -1271,6 +1279,8 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
           inputQuality,
           consecutiveThinInputs: newThinCount,
           websiteIntelligence,
+          shouldAskForWebsite,
+          shouldAskForEmail,
         },
       });
 
@@ -1411,46 +1421,24 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         } : {}),
       }));
 
-      // Conversational website ask: After 2nd message, if no email/website captured
-      if (gateState.messageCount >= 2 && 
-          !gateState.emailCaptured && 
-          !gateState.websiteAskInjected &&
-          !gateState.websiteCaptured) {
-        setTimeout(() => {
-          const websiteAskMessage: ConversationMessage = {
-            role: 'assistant',
-            content: "Before I go deeper — what's your website? I can cross-reference what you're telling me with what your site is actually communicating, and flag any positioning gaps in real time.",
-            timestamp: new Date(),
-          };
-          setState(prev => ({
-            ...prev,
-            conversation: [...prev.conversation, websiteAskMessage],
-            websiteAskInjected: true,
-            emailOffered: true,
-            pendingWebsiteCapture: true,
-          }));
-          console.log('🌐 [Conversational] Website ask injected');
-        }, 1500);
+      // Conversational capture: set state flags when AI was asked to weave in the ask
+      if (shouldAskForWebsite) {
+        setState(prev => ({
+          ...prev,
+          websiteAskInjected: true,
+          emailOffered: true,
+          pendingWebsiteCapture: true,
+        }));
+        console.log('🌐 [Conversational] Website ask flag sent to AI');
       }
 
-      // Conversational email ask: One message after website is captured
-      if (gateState.websiteCaptured && 
-          !gateState.emailCaptured && 
-          !gateState.emailAskInjected) {
-        setTimeout(() => {
-          const emailAskMessage: ConversationMessage = {
-            role: 'assistant',
-            content: "What email should I send your strategy brief to when we're done?",
-            timestamp: new Date(),
-          };
-          setState(prev => ({
-            ...prev,
-            conversation: [...prev.conversation, emailAskMessage],
-            emailAskInjected: true,
-            pendingEmailCapture: true,
-          }));
-          console.log('📧 [Conversational] Email ask injected');
-        }, 1500);
+      if (shouldAskForEmail) {
+        setState(prev => ({
+          ...prev,
+          emailAskInjected: true,
+          pendingEmailCapture: true,
+        }));
+        console.log('📧 [Conversational] Email ask flag sent to AI');
       }
 
       // Update session in database (debounced to prevent 429 rate limit errors)

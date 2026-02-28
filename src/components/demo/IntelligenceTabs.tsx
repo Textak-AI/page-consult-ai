@@ -380,11 +380,19 @@ export function IntelligenceTabs({
                       </span>
                     </div>
                     
-                    {/* Description */}
+                    {/* About Description */}
                     {state.companyResearch.description && (
                       <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
                         <div className="text-xs text-slate-500 mb-1">About</div>
-                        <p className="text-sm text-slate-300">{state.companyResearch.description}</p>
+                        <p className="text-sm text-slate-300 whitespace-pre-wrap">{state.companyResearch.description}</p>
+                      </div>
+                    )}
+
+                    {/* Industry Position */}
+                    {state.companyResearch.industryPosition && (
+                      <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                        <div className="text-xs text-slate-500 mb-1">Industry Position</div>
+                        <p className="text-sm text-slate-300">{state.companyResearch.industryPosition}</p>
                       </div>
                     )}
                     
