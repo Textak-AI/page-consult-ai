@@ -306,7 +306,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { userMessage, extractedIntelligence, marketResearch, conversationHistory, messageCount, inputQuality, websiteIntelligence } = body;
+    const { userMessage, extractedIntelligence, marketResearch, conversationHistory, messageCount, inputQuality, websiteIntelligence, shouldAskForWebsite, shouldAskForEmail } = body;
 
     // Input validation
     if (!userMessage || typeof userMessage !== 'string') {
@@ -406,8 +406,19 @@ serve(async (req) => {
       hasWebsiteIntelligence
     );
     
+    // Append conversational capture instructions if flags are set
+    let captureInstructions = '';
+    if (shouldAskForWebsite) {
+      captureInstructions += `\n\n## WEBSITE ASK (IMPORTANT)
+Naturally weave a request for the user's website into the END of your response — something like "By the way, what's your website? I can cross-reference what you're telling me with what your site is actually communicating." Keep it one sentence, conversational, after your main response.`;
+    }
+    if (shouldAskForEmail) {
+      captureInstructions += `\n\n## EMAIL ASK (IMPORTANT)
+At the END of your response, naturally ask for their email — something like "What email should I send your strategy brief to when we're done?" Keep it one sentence, conversational, after your main response.`;
+    }
+
     const messages: Array<{ role: string; content: string }> = [
-      { role: 'system', content: systemPrompt + context },
+      { role: 'system', content: systemPrompt + context + captureInstructions },
     ];
 
     // Add sanitized conversation history (last 6 messages for context)
