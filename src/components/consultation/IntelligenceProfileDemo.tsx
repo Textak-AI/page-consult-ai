@@ -219,12 +219,6 @@ export function IntelligenceProfileDemo({
         ? getDesignApproachText(detectedVariant as any, targetMarketDisplay)
         : aestheticMode?.rationale || 'Balanced design adaptable to your market';
       
-      console.log('🎨 [Profile] Display values:', {
-        yourIndustryDisplay,
-        targetMarketDisplay,
-        designApproach: designApproach?.substring(0, 50) + '...',
-        isConfirmed,
-      });
       
       return (
         <div className="px-4 py-3 border-b border-slate-800/50">
