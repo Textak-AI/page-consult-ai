@@ -5,6 +5,7 @@ import IntelligenceContext from "@/contexts/IntelligenceContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatForHeadline } from "@/utils/formatForDisplay";
 import { GlossyBackground } from "@/components/ui/GlossyBackground";
+import { getCtaByIndustry } from "@/lib/ctaByIndustry";
 
 const FinalCTA = () => {
   // Try to get intelligence context (may be null if not in provider)
@@ -17,9 +18,11 @@ const FinalCTA = () => {
     ? `Ready to Build Your ${formatForHeadline(extractedIndustry)} Page?`
     : "Ready to Build Pages That Convert?";
 
+  // Industry-aware CTA copy
+  const industryCta = getCtaByIndustry(extractedIndustry);
   const buttonText = readiness >= 60
-    ? "Continue My Strategy Session →"
-    : "Start Strategic Consultation";
+    ? `Continue → ${industryCta.primary}`
+    : industryCta.primary;
 
   return (
     <GlossyBackground

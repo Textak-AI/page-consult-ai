@@ -12,8 +12,42 @@ import { useFlowNavigation, type FlowState } from '@/hooks/useFlowNavigation';
 import { assignArchetype } from '@/lib/buyerArchetype';
 import { getPrecomputedObjections, type PredictedObjection } from '@/data/precomputedObjections';
 import { resolveIndustry } from '@/lib/resolveIndustry';
+import { getCtaByIndustry } from '@/lib/ctaByIndustry';
 
-// Pillar reference pill component
+// Infer a counter-strategy from objection text when no precomputed data exists
+function inferCounterStrategy(objection: string): string {
+  const lower = objection.toLowerCase();
+  if (lower.includes('price') || lower.includes('cost') || lower.includes('expensive') || lower.includes('budget'))
+    return 'Reframe around ROI and total cost of ownership. Show concrete dollar-value outcomes.';
+  if (lower.includes('trust') || lower.includes('risk') || lower.includes('proven') || lower.includes('track record'))
+    return 'Lead with social proof, case studies, and third-party validation.';
+  if (lower.includes('time') || lower.includes('busy') || lower.includes('bandwidth') || lower.includes('resource'))
+    return 'Emphasize fast onboarding, low time commitment, and done-for-you implementation.';
+  if (lower.includes('competitor') || lower.includes('alternative') || lower.includes('already') || lower.includes('existing'))
+    return 'Differentiate on unique strengths. Show switching costs are lower than perceived.';
+  if (lower.includes('complex') || lower.includes('difficult') || lower.includes('integration'))
+    return 'Demonstrate ease of use with a guided walkthrough or quick-start guarantee.';
+  if (lower.includes('security') || lower.includes('compliance') || lower.includes('data'))
+    return 'Lead with certifications, compliance standards, and security architecture transparency.';
+  return 'Counter with specific proof points, client outcomes, and risk reversal guarantees.';
+}
+
+// Infer what proof is needed to overcome an objection
+function inferProofNeeded(objection: string): string {
+  const lower = objection.toLowerCase();
+  if (lower.includes('price') || lower.includes('cost') || lower.includes('roi'))
+    return 'ROI calculator, cost comparison, or client savings data';
+  if (lower.includes('trust') || lower.includes('risk') || lower.includes('proven'))
+    return 'Client testimonials, case studies, and industry certifications';
+  if (lower.includes('time') || lower.includes('busy'))
+    return 'Implementation timeline, quick-start demo, or onboarding guarantee';
+  if (lower.includes('competitor') || lower.includes('alternative'))
+    return 'Feature comparison matrix and migration success stories';
+  if (lower.includes('security') || lower.includes('compliance'))
+    return 'Security certifications, audit reports, and compliance documentation';
+  return 'Case studies and measurable client results';
+}
+
 const PillarPill = ({ pillar }: { pillar: string }) => (
   <span className="text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded ml-2 align-middle">
     {pillar}
@@ -259,17 +293,31 @@ export default function StrategyDocument() {
     }
 
     if (rawObjections.length > 0) {
-      const mapped = rawObjections.map((obj: any) => {
-        if (typeof obj === 'string') {
-          return { objection: obj, strategy: 'Address with proof points and case studies' };
-        }
-        if (obj && typeof obj === 'object') {
+      const mapped = rawObjections.map((obj: any, idx: number) => {
+        const objText = typeof obj === 'string' 
+          ? obj 
+          : (obj?.objection || obj?.question || obj?.text || String(obj));
+        
+        // If already rich format, preserve it
+        if (obj && typeof obj === 'object' && (obj.counterStrategy || obj.frequency || obj.proofNeeded)) {
           return {
-            objection: obj.objection || obj.question || obj.text || String(obj),
-            strategy: obj.strategy || obj.answer || obj.response || 'Address with proof points and case studies',
+            objection: objText,
+            strategy: obj.counterStrategy || obj.strategy || obj.answer || obj.response,
+            frequency: obj.frequency || (idx === 0 ? 'very_common' : idx < 3 ? 'common' : 'moderate'),
+            proofNeeded: obj.proofNeeded || 'Case studies and client results',
           };
         }
-        return null;
+        
+        // For string-only or sparse objects: infer rich fields
+        const hasStrategy = obj && typeof obj === 'object' && (obj.strategy || obj.answer || obj.response);
+        return {
+          objection: objText,
+          strategy: hasStrategy 
+            ? (obj.strategy || obj.answer || obj.response) 
+            : inferCounterStrategy(objText),
+          frequency: (idx === 0 ? 'very_common' : idx < 3 ? 'common' : 'moderate') as 'very_common' | 'common' | 'moderate',
+          proofNeeded: inferProofNeeded(objText),
+        };
       }).filter(Boolean);
 
       if (mapped.length > 0) {
@@ -872,24 +920,30 @@ export default function StrategyDocument() {
                 Conversion Pathway™ Strategy
                 <PillarPill pillar="Pillar 3" />
               </h3>
-              <div className="space-y-4">
-                <div>
-                  <div className={`text-sm ${SECTION_COLORS.proofCredibility.textMuted} mb-2`}>Primary CTA Copy</div>
-                  <div className="text-xl font-semibold text-yellow-200">
-                    {strategyData.primaryCTA || "Schedule Strategic Consultation"}
+              {(() => {
+                const industryRaw = consultation?.industry || (intelligence as any)?.industry || '';
+                const industryCta = getCtaByIndustry(industryRaw);
+                return (
+                  <div className="space-y-4">
+                    <div>
+                      <div className={`text-sm ${SECTION_COLORS.proofCredibility.textMuted} mb-2`}>Primary CTA Copy</div>
+                      <div className="text-xl font-semibold text-yellow-200">
+                        {strategyData.primaryCTA || industryCta.primary}
+                      </div>
+                      <div className={`text-sm ${SECTION_COLORS.proofCredibility.textMuted} mt-1`}>
+                        Why: {industryCta.reason}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className={`text-sm ${SECTION_COLORS.proofCredibility.textMuted} mb-2`}>Secondary CTA</div>
+                      <div className={`text-lg font-semibold ${SECTION_COLORS.proofCredibility.text}`}>
+                        {strategyData.secondaryCTA || industryCta.secondary}
+                      </div>
+                    </div>
                   </div>
-                  <div className={`text-sm ${SECTION_COLORS.proofCredibility.textMuted} mt-1`}>
-                    Why: Low-friction, high-value ask for complex B2B sale
-                  </div>
-                </div>
-                
-                <div>
-                  <div className={`text-sm ${SECTION_COLORS.proofCredibility.textMuted} mb-2`}>Secondary CTA</div>
-                  <div className={`text-lg font-semibold ${SECTION_COLORS.proofCredibility.text}`}>
-                    {strategyData.secondaryCTA || "Download Technical Overview"}
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
             
             {/* Risk Reversal Elements */}
