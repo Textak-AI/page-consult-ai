@@ -10,6 +10,8 @@ import { useFlowNavigation, type FlowState } from '@/hooks/useFlowNavigation';
  import { exportStrategyBriefPdf } from '@/utils/exportStrategyPdf';
  import { toast } from 'sonner';
 import { assignArchetype } from '@/lib/buyerArchetype';
+import { getPrecomputedObjections, type PredictedObjection } from '@/data/precomputedObjections';
+import { resolveIndustry } from '@/lib/resolveIndustry';
 
 // Pillar reference pill component
 const PillarPill = ({ pillar }: { pillar: string }) => (
@@ -209,6 +211,16 @@ export default function StrategyDocument() {
     return brief || {};
   }, [consultation, accumulator, intelligence]);
 
+  // Resolve precomputed objections (same source as Objections tab in sidebar)
+  const precomputedObjections = useMemo((): PredictedObjection[] => {
+    const industryRaw = consultation?.industry || (intelligence as any)?.industry || '';
+    if (!industryRaw) return [];
+    const resolution = resolveIndustry(industryRaw);
+    const resolvedKey = resolution.industry;
+    const targetMarket = consultation?.target_audience || (intelligence as any)?.targetMarket || (intelligence as any)?.audience || null;
+    return getPrecomputedObjections(resolvedKey, targetMarket);
+  }, [consultation, intelligence]);
+
   // Get market data with objection resolution from all sources
   const marketData = useMemo((): Partial<ConciergeMarketData> => {
     const fromAccumulator = accumulator?.marketData;
@@ -262,8 +274,19 @@ export default function StrategyDocument() {
       }
     }
 
+    // Fallback: use precomputed objections (same source as Objections tab)
+    if (precomputedObjections.length > 0) {
+      const mapped = precomputedObjections.map(obj => ({
+        objection: obj.objection,
+        strategy: obj.counterStrategy,
+        frequency: obj.frequency,
+        proofNeeded: obj.proofNeeded,
+      }));
+      return { ...base, commonObjections: mapped };
+    }
+
     return base;
-  }, [accumulator, intelligence, consultation]);
+  }, [accumulator, intelligence, consultation, precomputedObjections]);
 
   // Extract pain points as array
   const painPointsArray = useMemo(() => {
@@ -600,18 +623,43 @@ export default function StrategyDocument() {
             <div className={`${SECTION_COLORS.buyerReality.cardBg} border ${SECTION_COLORS.buyerReality.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.buyerReality.textMuted} mb-4`}>Objection Handling Strategy</h3>
               {Array.isArray(marketData.commonObjections) && marketData.commonObjections.length > 0 ? (
-                marketData.commonObjections.map((objection: any, idx: number) => (
-                  <div key={idx} className="mb-4 last:mb-0 p-4 bg-purple-900/30 rounded-lg border border-purple-500/10">
-                    <div className="font-semibold text-purple-200 mb-2">
-                      {objection.objection || objection}
+                marketData.commonObjections.map((objection: any, idx: number) => {
+                  const frequencyLabel = objection.frequency === 'very_common' ? 'Very Common'
+                    : objection.frequency === 'common' ? 'Common'
+                    : objection.frequency === 'moderate' ? 'Occasional'
+                    : objection.frequency === 'rare' ? 'Rare'
+                    : null;
+                  const frequencyColor = objection.frequency === 'very_common' ? 'text-red-400'
+                    : objection.frequency === 'common' ? 'text-orange-400'
+                    : objection.frequency === 'moderate' ? 'text-yellow-400'
+                    : 'text-green-400';
+                  return (
+                    <div key={idx} className="mb-4 last:mb-0 p-4 bg-purple-900/30 rounded-lg border border-purple-500/10">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="font-semibold text-purple-200">
+                          "{objection.objection || objection}"
+                        </div>
+                        {frequencyLabel && (
+                          <span className={`text-[10px] font-medium ${frequencyColor} whitespace-nowrap mt-1`}>
+                            {frequencyLabel}
+                          </span>
+                        )}
+                      </div>
+                      <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mb-1`}>
+                        <span className="text-emerald-400/80 font-medium">Counter:</span>{' '}
+                        {objection.strategy || "Direct proof and risk reversal"}
+                      </div>
+                      {objection.proofNeeded && (
+                        <div className={`text-xs ${SECTION_COLORS.buyerReality.textMuted} opacity-70`}>
+                          <span className="text-amber-400/70 font-medium">Proof needed:</span>{' '}
+                          {objection.proofNeeded}
+                        </div>
+                      )}
                     </div>
-                    <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted}`}>
-                      Address with: {objection.strategy || "Direct proof and risk reversal"}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
-                <div className={SECTION_COLORS.buyerReality.textMuted}>No specific objections identified</div>
+                <div className={SECTION_COLORS.buyerReality.textMuted}>Add more context to generate objection handling strategy</div>
               )}
             </div>
             
