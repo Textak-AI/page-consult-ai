@@ -3889,6 +3889,32 @@ function GenerateContent() {
             for (const p of parsed) addFAQ(p.question, p.answer);
           }
           
+          // Source 3b: Precomputed objections (same source as Objections tab in sidebar)
+          if (faqData.length < 2) {
+            const industryRaw = consultationData?.industry || strategicConsultation?.industry || extractedIntel?.industry || '';
+            if (industryRaw) {
+              try {
+                const { resolveIndustry: resolveInd } = await import('@/lib/resolveIndustry');
+                const { getPrecomputedObjections: getPrecomp } = await import('@/data/precomputedObjections');
+                const resolution = resolveInd(industryRaw);
+                const targetMarket = consultationData?.target_audience || extractedIntel?.targetMarket || null;
+                const precomputed = getPrecomp(resolution.industry, targetMarket);
+                if (precomputed.length > 0) {
+                  console.log('🔍 [faq] Using', precomputed.length, 'precomputed objections as FAQ source');
+                  for (const obj of precomputed) {
+                    if (faqData.length >= 6) break;
+                    addFAQ(
+                      reframeObjectionAsQuestion(obj.objection),
+                      obj.counterStrategy
+                    );
+                  }
+                }
+              } catch (e) {
+                console.warn('🔍 [faq] Failed to load precomputed objections:', e);
+              }
+            }
+          }
+          
           // Source 4: Pain points reframed as FAQs
           if (faqData.length < 2) {
             const painPoints = faqIntel?.painPoints || faqIntel?.audiencePainPoints || 
