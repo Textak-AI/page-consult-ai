@@ -90,52 +90,88 @@ export function StatsBarSection({ statistics, industryVariant, mode, onUpdate, i
   const isValidStat = (stat: Statistic): boolean => {
     if (!stat.value || !stat.label) return false;
     if (stat.value.length > 15) return false;  // Values like "94%" or "$1.5M"
-    if (stat.label.length > 50) return false;  // Reasonable label length
     if (stat.label.length < 3) return false;   // Too short
+    
+    // Must contain a recognizable numeric value (%, x multiplier, $, or plain number)
+    if (!/\d/.test(stat.value) && !/[%x$+]/.test(stat.value)) return false;
     
     // Reject labels containing JSON syntax characters
     if (/[{}[\]":]/.test(stat.label)) return false;
     
-    // Reject JSON field name patterns
-    if (/^[a-z]+[A-Z]/.test(stat.label)) return false; // camelCase
+    // Reject JSON field name patterns — camelCase anywhere
+    if (/[a-z][A-Z]/.test(stat.label) && !/\s/.test(stat.label)) return false;
     if (/^[a-z_]+$/i.test(stat.label) && !/\s/.test(stat.label)) return false; // single identifier
-    if (/^(valueprop|buyerobject|painpoint|proofelem|percent|dollar|clientcount|yearsinbusiness|authority|uniquevalue)/i.test(stat.label)) return false;
     
-    // Reject labels that look truncated (ends with lowercase, no spaces, short)
-    if (/[a-z]$/i.test(stat.label) && stat.label.length < 15 && !/\s/.test(stat.label)) {
-      if (/tim$|obj$|ful$|ent$|ion$|ers$|ati$|ect$/i.test(stat.label)) return false;
-    }
+    // Reject concatenated lowercase (>8 chars, no spaces) — JSON key leakage
+    if (/^[a-z]{9,}$/i.test(stat.label) && !/\s/.test(stat.label)) return false;
+    
+    // Reject known JSON field name prefixes
+    if (/^(valueprop|buyerobject|painpoint|proofelem|percent|dollar|clientcount|yearsinbusiness|authority|uniquevalue|targetmark|industr|compet|differ|credent|guaran)/i.test(stat.label)) return false;
+    
+    // Clean label: strip embedded camelCase tokens
+    const cleanedLabel = stat.label.replace(/\b[a-z]{2,}[A-Z][a-zA-Z]*\b/g, '').trim();
+    if (cleanedLabel.length < 3) return false;
+    
+    // Label must contain at least one space (be human-readable, not a single token)
+    // Exception: short known words like "Satisfaction" or "Revenue"
+    if (!/\s/.test(stat.label) && stat.label.length > 15) return false;
     
     return true;
   };
 
+  /**
+   * Truncate label at word boundary if too long
+   */
+  const truncateLabel = (label: string, maxLen: number = 60): string => {
+    if (label.length <= maxLen) return label;
+    const truncated = label.slice(0, maxLen);
+    const lastSpace = truncated.lastIndexOf(' ');
+    if (lastSpace > maxLen * 0.5) {
+      return truncated.slice(0, lastSpace) + '…';
+    }
+    return truncated + '…';
+  };
+
   // Clean and deduplicate stats
-  const seenValues = new Set<string>();
+  const seenNumericValues = new Set<string>();
   const seenLabels = new Set<string>();
-  const cleanStats = parsedStatistics.filter(stat => {
-    if (!isValidStat(stat)) {
-      console.log('⚠️ [StatsBarSection] Rejected invalid stat:', stat);
-      return false;
-    }
-    
-    // Deduplicate by normalized value
-    const normalizedValue = stat.value.replace(/[^0-9a-z%$+]/gi, '').toLowerCase();
-    if (seenValues.has(normalizedValue)) {
-      console.log('🔄 [StatsBarSection] Skipping duplicate value:', stat.value);
-      return false;
-    }
-    seenValues.add(normalizedValue);
-    
-    // Deduplicate by normalized label
-    const normalizedLabel = stat.label.toLowerCase().trim();
-    if (seenLabels.has(normalizedLabel)) {
-      console.log('🔄 [StatsBarSection] Skipping duplicate label:', stat.label);
-      return false;
-    }
-    seenLabels.add(normalizedLabel);
-    
-    return true;
-  }).slice(0, 4); // Max 4 stats
+  const cleanStats = parsedStatistics
+    .map(stat => ({
+      ...stat,
+      label: truncateLabel(stat.label), // Ensure no truncated labels
+    }))
+    .filter(stat => {
+      if (!isValidStat(stat)) {
+        console.log('⚠️ [StatsBarSection] Rejected invalid stat:', stat);
+        return false;
+      }
+      
+      // Extract numeric portion for aggressive dedup
+      const numericOnly = stat.value.replace(/[^0-9.]/g, '');
+      const normalizedValue = stat.value.replace(/[^0-9a-z%$+x]/gi, '').toLowerCase();
+      
+      if (seenNumericValues.has(normalizedValue)) {
+        console.log('🔄 [StatsBarSection] Skipping duplicate value:', stat.value);
+        return false;
+      }
+      // Also dedup by raw numeric (catches "94%" appearing with different labels)
+      if (numericOnly && numericOnly.length >= 2 && seenNumericValues.has(numericOnly)) {
+        console.log('🔄 [StatsBarSection] Skipping duplicate numeric:', stat.value, stat.label);
+        return false;
+      }
+      seenNumericValues.add(normalizedValue);
+      if (numericOnly) seenNumericValues.add(numericOnly);
+      
+      // Deduplicate by normalized label
+      const normalizedLabel = stat.label.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (seenLabels.has(normalizedLabel)) {
+        console.log('🔄 [StatsBarSection] Skipping duplicate label:', stat.label);
+        return false;
+      }
+      seenLabels.add(normalizedLabel);
+      
+      return true;
+    }).slice(0, 4); // Max 4 stats
 
   console.log('📊 [StatsBarSection] Rendering', cleanStats.length, 'valid stats from', parsedStatistics.length, 'input');
 

@@ -769,20 +769,30 @@ function validateStatLabel(label: string): string | null {
   if (/[{}[\]":]/.test(label)) return null;
   
   // Reject labels that look like JSON field names
-  if (/^[a-z]+[A-Z]/.test(label)) return null; // camelCase
+  if (/^[a-z]+[A-Z]/.test(label)) return null; // camelCase start
+  if (/[a-z][A-Z]/.test(label) && !/\s/.test(label)) return null; // camelCase anywhere, no spaces
   if (/^[a-z_]+$/i.test(label) && !/\s/.test(label)) return null; // single identifier without spaces
-  if (/^(valueprop|buyerobject|painpoint|proofelem|percent|dollar|clientcount|yearsinbusiness|authority|uniquevalue|messagingpillar|problemstate|solutionstate|headline|subhead|keybenef)/i.test(label)) return null;
   
-  // Reject truncated words (ending mid-word without punctuation, no spaces, short)
-  if (/[a-z]$/i.test(label) && label.length < 12 && !/\s/.test(label)) {
-    if (/ti$|obj$|ful$|ent$|ion$|ers$|ati$|ect$|ems$|ges$/i.test(label)) return null;
-  }
+  // Reject concatenated lowercase patterns (>8 chars, no spaces) — JSON key leakage
+  if (/^[a-z]{9,}$/i.test(label.replace(/\s/g, '')) && !/\s/.test(label)) return null;
   
-  // Clean up the label
+  // Reject known JSON field name prefixes
+  if (/^(valueprop|buyerobject|painpoint|proofelem|percent|dollar|clientcount|yearsinbusiness|authority|uniquevalue|messagingpillar|problemstate|solutionstate|headline|subhead|keybenef|targetmark|industr|compet|differ|credent|guaran)/i.test(label)) return null;
+  
+  // Clean up the label — strip any embedded JSON key fragments (camelCase tokens without spaces)
   let cleaned = label
     .replace(/[{}[\]"':,]/g, ' ')  // Remove JSON syntax
+    .replace(/\b[a-z]{2,}[A-Z][a-zA-Z]*\b/g, '') // Remove camelCase tokens
     .replace(/\s+/g, ' ')
     .trim();
+  
+  // Reject if cleaning removed everything meaningful
+  if (cleaned.length < 3) return null;
+  
+  // Smart truncation at word boundary if too long
+  if (cleaned.length > 50) {
+    cleaned = truncateAtWord(cleaned, 50);
+  }
   
   // Ensure it starts with uppercase
   if (cleaned.length > 0) {
@@ -790,6 +800,19 @@ function validateStatLabel(label: string): string | null {
   }
   
   return cleaned.length >= 3 ? cleaned : null;
+}
+
+/**
+ * Truncate text at the nearest word boundary, adding ellipsis
+ */
+function truncateAtWord(text: string, maxLen: number): string {
+  if (text.length <= maxLen) return text;
+  const truncated = text.slice(0, maxLen);
+  const lastSpace = truncated.lastIndexOf(' ');
+  if (lastSpace > maxLen * 0.5) {
+    return truncated.slice(0, lastSpace) + '…';
+  }
+  return truncated + '…';
 }
 
 /**
@@ -838,8 +861,11 @@ function buildStatsFromSDI(sdi: DesignIntelligenceOutput): Array<{value: string,
         label = label
           .replace(/^of\s+(our\s+)?/i, '')
           .replace(/^we\s+/i, '')
-          .replace(/\s+$/g, '')
-          .slice(0, 40);
+          .replace(/\s+$/g, '');
+        // Truncate at word boundary instead of hard slice
+        if (label.length > 40) {
+          label = truncateAtWord(label, 40);
+        }
         
         addStat(match[1], label, 'Success Rate');
       }
@@ -856,8 +882,10 @@ function buildStatsFromSDI(sdi: DesignIntelligenceOutput): Array<{value: string,
         let label = stat.replace(match[1], '').trim();
         label = label
           .replace(/^in\s+/i, '')
-          .replace(/\s+$/g, '')
-          .slice(0, 40);
+          .replace(/\s+$/g, '');
+        if (label.length > 40) {
+          label = truncateAtWord(label, 40);
+        }
         
         addStat(match[1], label, 'Value Delivered');
       }
@@ -972,15 +1000,35 @@ export function buildStatistics(sources: any, industryVariant: string): Array<{v
  * Deduplicate stats by normalized value to prevent duplicate display
  */
 function deduplicateStats(stats: Array<{value: string, label: string}>): Array<{value: string, label: string}> {
-  const seen = new Set<string>();
+  const seenNumeric = new Set<string>();
+  const seenLabels = new Set<string>();
   return stats.filter(stat => {
-    // Normalize value: strip formatting, lowercase
-    const normalizedValue = stat.value.replace(/[^0-9a-z%$+]/gi, '').toLowerCase();
-    if (seen.has(normalizedValue)) {
-      console.log('🔄 [deduplicateStats] Removing duplicate:', stat.value, stat.label);
+    // Extract just the numeric portion for dedup (e.g., "94%" → "94", "$1.5M" → "15")
+    const numericOnly = stat.value.replace(/[^0-9.]/g, '');
+    const normalizedValue = stat.value.replace(/[^0-9a-z%$+x]/gi, '').toLowerCase();
+    
+    // Dedup by exact normalized value
+    if (seenNumeric.has(normalizedValue)) {
+      console.log('🔄 [deduplicateStats] Removing duplicate value:', stat.value, stat.label);
       return false;
     }
-    seen.add(normalizedValue);
+    
+    // Also dedup by raw numeric portion (catches "94%" and "94% satisfaction" as same)
+    if (numericOnly && seenNumeric.has(numericOnly)) {
+      console.log('🔄 [deduplicateStats] Removing duplicate numeric:', stat.value, stat.label);
+      return false;
+    }
+    
+    // Dedup by similar label
+    const normalizedLabel = stat.label.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (seenLabels.has(normalizedLabel)) {
+      console.log('🔄 [deduplicateStats] Removing duplicate label:', stat.label);
+      return false;
+    }
+    
+    seenNumeric.add(normalizedValue);
+    if (numericOnly) seenNumeric.add(numericOnly);
+    seenLabels.add(normalizedLabel);
     return true;
   });
 }
