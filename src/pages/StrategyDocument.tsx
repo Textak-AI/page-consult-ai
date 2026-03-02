@@ -119,7 +119,10 @@ export default function StrategyDocument() {
    }, [consultation, accumulator]);
  
    const handleExportPdf = async () => {
+     if (isExporting) return;
      setIsExporting(true);
+     // Allow browser to paint the loading state before html2canvas blocks the main thread
+     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
      try {
        const filename = await exportStrategyBriefPdf(
          'strategy-brief-content',
