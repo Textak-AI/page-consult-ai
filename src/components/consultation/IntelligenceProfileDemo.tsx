@@ -316,7 +316,21 @@ export function IntelligenceProfileDemo({
     }
     
     // Fall back to original industry detection display with smart confirmation
-    if (!industryDetection || industryDetection.variant === 'default') return null;
+    // If variant is 'default' but we have industry from consultation intel, show it
+    if (!industryDetection || industryDetection.variant === 'default') {
+      const intelIndustry = (score.whoYouAre?.industry as FieldScore)?.value;
+      if (intelIndustry) {
+        return (
+          <div className="px-4 py-3 border-b border-slate-800/50">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider">Industry</span>
+              <span className="text-xs text-cyan-400 font-medium">{intelIndustry}</span>
+            </div>
+          </div>
+        );
+      }
+      return null;
+    }
     
     const displayName = variantToDisplayName(industryDetection.variant);
     const isLowConfidence = industryDetection.confidence === 'low';

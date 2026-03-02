@@ -234,6 +234,7 @@ export default function EnhancedBrandSetup() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [extractionResults, setExtractionResults] = useState<ExtractionResults | null>(null);
   const [extractionSuccess, setExtractionSuccess] = useState(false);
+  const [extractionError, setExtractionError] = useState<string | null>(null);
   const [logo, setLogo] = useState<string | null>(null);
   const [colors, setColors] = useState(DEFAULT_COLORS);
   const [fontSettings, setFontSettings] = useState({
@@ -847,6 +848,7 @@ export default function EnhancedBrandSetup() {
     }
 
     setIsAnalyzing(true);
+    setExtractionError(null);
     try {
       let formattedUrl = websiteUrl.trim();
       if (!formattedUrl.startsWith('http')) {
@@ -866,7 +868,7 @@ export default function EnhancedBrandSetup() {
       // Also support legacy nested format: { success: true, data: { ... } }
       const extracted = response.data?.data || response.data;
       
-      if (extracted?.success !== false) {
+      if (extracted?.success !== false && extracted) {
         console.log('[BrandSetup] Extracted data:', extracted);
         console.log('[BrandSetup] Colors in response:', {
           primary: extracted.primary,
@@ -988,10 +990,13 @@ export default function EnhancedBrandSetup() {
           communicationStyle,
         });
         console.log('✅ [BrandSetup] Brand data persisted after extraction');
+      } else {
+        // Edge function returned success: false or empty data
+        setExtractionError("We couldn't extract brand data from this URL automatically — some sites block this. Upload your logo below and we'll use your consultation colors.");
       }
     } catch (error) {
       console.error('Analysis error:', error);
-      toast.error('Failed to analyze website. Please try again.');
+      setExtractionError("We couldn't extract brand data from this URL automatically — some sites block this. Upload your logo below and we'll use your consultation colors.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -1853,7 +1858,10 @@ export default function EnhancedBrandSetup() {
                   className="bg-purple-600 hover:bg-purple-700 rounded-xl px-6"
                 >
                   {isAnalyzing ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Analyzing...
+                    </>
                   ) : (
                     'Analyze'
                   )}
@@ -1932,6 +1940,15 @@ export default function EnhancedBrandSetup() {
                       ].filter(Boolean).join(', ') || 'No data extracted'}
                     </p>
                   </div>
+                </div>
+               )}
+
+              {/* Extraction error - contextual inline message */}
+              {extractionError && !isAnalyzing && !extractionResults && (
+                <div className="mt-4 p-4 bg-amber-500/10 rounded-xl border border-amber-500/30">
+                  <p className="text-sm text-amber-200">
+                    {extractionError}
+                  </p>
                 </div>
               )}
 
