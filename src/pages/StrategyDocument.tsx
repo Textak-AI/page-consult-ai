@@ -59,30 +59,55 @@ function extractCore(valueProp: string): string {
   return first.charAt(0).toLowerCase() + first.slice(1);
 }
 
+function synthesizeOutcome(valueProp: string): string {
+  // If short enough, use as-is
+  if (valueProp.length <= 60) return capitalize(valueProp);
+  // Try to extract a "X for Y" pattern spanning the full prop
+  const forMatch = valueProp.match(/^(.+?)\s+for\s+(.+)$/i);
+  if (forMatch) {
+    const what = forMatch[1].trim();
+    const who = forMatch[2].trim();
+    // Condense: keep first noun-phrase of "what", keep full "who"
+    const shortWhat = what.length > 30 ? what.split(/\s+/).slice(0, 4).join(' ') : what;
+    return `${capitalize(shortWhat)} built for ${who}`;
+  }
+  // Summarize by taking first ~8 words
+  const words = valueProp.split(/\s+/);
+  return capitalize(words.slice(0, 8).join(' '));
+}
+
 function buildOutcomeHeadline(valueProp: string, audience: string, companyName: string): string {
-  // "X that finally works for Y"
-  const core = valueProp.split(/[.,;]/)[0].trim();
-  // If valueProp has "for X" already, use it directly
-  if (/\bfor\b/i.test(core)) {
-    return capitalize(core);
+  const outcome = synthesizeOutcome(valueProp);
+  // If audience is already embedded, return as-is
+  if (audience && outcome.toLowerCase().includes(audience.toLowerCase().split(/\s+/)[0])) {
+    return outcome;
   }
   if (audience) {
-    return `${capitalize(core)} — built for ${audience}`;
+    return `${outcome} — designed for ${audience}`;
   }
-  return capitalize(core);
+  return outcome;
 }
 
 function buildAudienceHeadline(audience: string, challenge: string): string {
-  const cleanChallenge = challenge.split(/[.,;]/)[0].trim();
-  return `${audience} deserve better than ${cleanChallenge.charAt(0).toLowerCase() + cleanChallenge.slice(1)}`;
+  // Use the full challenge, never truncate mid-word
+  const clean = challenge.trim();
+  return `${audience} deserve better than ${clean.charAt(0).toLowerCase() + clean.slice(1)}`;
 }
 
 function buildContrastHeadline(edge: string, audience: string): string {
-  const cleanEdge = edge.split(/[.,;]/)[0].trim();
-  if (audience) {
-    return `The only solution ${audience} trust for ${cleanEdge.charAt(0).toLowerCase() + cleanEdge.slice(1)}`;
+  // Derive a verb phrase from the edge instead of pasting it raw
+  const lower = edge.toLowerCase();
+  // Try to extract a verb-object from common patterns
+  const verbMatch = lower.match(/(?:appeals to|works for|serves|enables|supports|empowers)\s+(.+)/i);
+  if (verbMatch && audience) {
+    // "appeals to both devs and CFOs" → "developers love and CFOs approve"
+    return `Stop compromising — ${capitalize(edge.replace(/^appeals to\s*/i, '').replace(/^works for\s*/i, '').trim())} deserve a single platform`;
   }
-  return `Unlike anything else: ${cleanEdge}`;
+  // Fallback: use edge as a benefit clause
+  if (audience) {
+    return `The only platform ${audience} trust — ${lower}`;
+  }
+  return `Stop compromising — ${capitalize(edge)}`;
 }
 
 const PillarPill = ({ pillar }: { pillar: string }) => (
