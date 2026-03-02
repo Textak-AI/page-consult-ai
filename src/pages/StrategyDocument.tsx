@@ -48,6 +48,43 @@ function inferProofNeeded(objection: string): string {
   return 'Case studies and measurable client results';
 }
 
+// --- Headline generation helpers for Voice Resonance section ---
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function extractCore(valueProp: string): string {
+  // Get the first meaningful clause
+  const first = valueProp.split(/[.,;]/)[0].trim();
+  return first.charAt(0).toLowerCase() + first.slice(1);
+}
+
+function buildOutcomeHeadline(valueProp: string, audience: string, companyName: string): string {
+  // "X that finally works for Y"
+  const core = valueProp.split(/[.,;]/)[0].trim();
+  // If valueProp has "for X" already, use it directly
+  if (/\bfor\b/i.test(core)) {
+    return capitalize(core);
+  }
+  if (audience) {
+    return `${capitalize(core)} — built for ${audience}`;
+  }
+  return capitalize(core);
+}
+
+function buildAudienceHeadline(audience: string, challenge: string): string {
+  const cleanChallenge = challenge.split(/[.,;]/)[0].trim();
+  return `${audience} deserve better than ${cleanChallenge.charAt(0).toLowerCase() + cleanChallenge.slice(1)}`;
+}
+
+function buildContrastHeadline(edge: string, audience: string): string {
+  const cleanEdge = edge.split(/[.,;]/)[0].trim();
+  if (audience) {
+    return `The only solution ${audience} trust for ${cleanEdge.charAt(0).toLowerCase() + cleanEdge.slice(1)}`;
+  }
+  return `Unlike anything else: ${cleanEdge}`;
+}
+
 const PillarPill = ({ pillar }: { pillar: string }) => (
   <span className="text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded ml-2 align-middle">
     {pillar}
@@ -596,51 +633,121 @@ export default function StrategyDocument() {
             <PillarPill pillar="Pillar 4" />
           </h2>
           
-          <div className="space-y-6">
-            {/* Headline Options */}
-            <div className={`${SECTION_COLORS.whatYouOffer.cardBg} border ${SECTION_COLORS.whatYouOffer.cardBorder} rounded-lg p-6`}>
-              <h3 className={`font-semibold text-lg ${SECTION_COLORS.whatYouOffer.textMuted} mb-4`}>Primary Headline Options</h3>
-              
-              {Array.isArray(strategyData.headlineVariants) && strategyData.headlineVariants.length > 0 ? (
-                strategyData.headlineVariants.map((variant: any, idx: number) => (
-                  <div key={idx} className="mb-4 last:mb-0">
-                    <div className="flex items-start gap-3">
-                      <div className={`mt-1 px-3 py-1 ${SECTION_COLORS.whatYouOffer.accent} text-sm font-semibold rounded`}>
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-xl font-semibold mb-2 text-green-50">
-                          "{variant.headline || variant}"
-                        </div>
-                        {idx === 0 && (
-                          <div className="flex items-center gap-2">
-                            <span className={`text-xs px-2 py-1 ${SECTION_COLORS.whatYouOffer.accent} rounded`}>
-                              ✓ Recommended
-                            </span>
-                            <span className={`text-sm ${SECTION_COLORS.whatYouOffer.textMuted}`}>
-                              {variant.reasoning || "Leads with measurable outcome"}
-                            </span>
+          {(() => {
+            // Generate headline options from consultation intel — no API call needed
+            const valueProp = (intelligence as any)?.valueProp || consultation?.unique_value || '';
+            const audience = consultation?.target_audience || (intelligence as any)?.audience || '';
+            const challenge = (consultation as any)?.challenge || (intelligence as any)?.painPoints?.[0] || '';
+            const companyName = (intelligence as any)?.businessName || (consultation as any)?.business_name || '';
+            const edge = consultation?.competitor_differentiator || (intelligence as any)?.competitorDifferentiation || '';
+
+            // Build 3 headline variants from available data
+            const headlines: Array<{ headline: string; reasoning: string }> = [];
+
+            if (valueProp || audience || challenge) {
+              // Option 1: Outcome-focused
+              if (valueProp && audience) {
+                headlines.push({
+                  headline: buildOutcomeHeadline(valueProp, audience, companyName),
+                  reasoning: 'Leads with the measurable outcome your buyer cares about',
+                });
+              } else if (valueProp) {
+                headlines.push({
+                  headline: `${capitalize(valueProp.split(/[.,;]/)[0].trim())}`,
+                  reasoning: 'Leads with your core value proposition',
+                });
+              }
+
+              // Option 2: Audience-specific
+              if (audience && challenge) {
+                headlines.push({
+                  headline: buildAudienceHeadline(audience, challenge),
+                  reasoning: 'Names the exact buyer and their top frustration',
+                });
+              } else if (audience && valueProp) {
+                headlines.push({
+                  headline: `Built for ${audience} who demand ${extractCore(valueProp)}`,
+                  reasoning: 'Names the exact buyer and what they need',
+                });
+              }
+
+              // Option 3: Contrast/differentiation
+              if (edge) {
+                headlines.push({
+                  headline: buildContrastHeadline(edge, audience),
+                  reasoning: 'Positions against the status quo or competitors',
+                });
+              } else if (challenge) {
+                headlines.push({
+                  headline: `Stop ${challenge.charAt(0).toLowerCase() + challenge.slice(1).split(/[.,;]/)[0].trim()}`,
+                  reasoning: 'Calls out the pain the buyer wants to leave behind',
+                });
+              }
+            }
+
+            // Use AI-generated variants if available, otherwise use our generated ones
+            const displayHeadlines = (Array.isArray(strategyData.headlineVariants) && strategyData.headlineVariants.length > 0)
+              ? strategyData.headlineVariants
+              : headlines;
+
+            // Build subheadline suggestion
+            const subheadlineSuggestion = strategyData.subheadlineApproach || (() => {
+              if (valueProp && audience) {
+                const core = extractCore(valueProp);
+                return `${capitalize(core)} — designed for ${audience}${companyName ? `, powered by ${companyName}` : ''}.`;
+              }
+              if (valueProp) return capitalize(valueProp.split(/[.,;]/)[0].trim()) + '.';
+              return 'Amplify the headline with specific benefits and who they serve.';
+            })();
+
+            return (
+              <div className="space-y-6">
+                {/* Headline Options */}
+                <div className={`${SECTION_COLORS.whatYouOffer.cardBg} border ${SECTION_COLORS.whatYouOffer.cardBorder} rounded-lg p-6`}>
+                  <h3 className={`font-semibold text-lg ${SECTION_COLORS.whatYouOffer.textMuted} mb-4`}>Primary Headline Options</h3>
+                  
+                  {displayHeadlines.length > 0 ? (
+                    displayHeadlines.map((variant: any, idx: number) => (
+                      <div key={idx} className="mb-4 last:mb-0">
+                        <div className="flex items-start gap-3">
+                          <div className={`mt-1 px-3 py-1 ${SECTION_COLORS.whatYouOffer.accent} text-sm font-semibold rounded`}>
+                            {idx + 1}
                           </div>
-                        )}
+                          <div className="flex-1">
+                            <div className="text-xl font-semibold mb-2 text-green-50">
+                              "{variant.headline || variant}"
+                            </div>
+                            {idx === 0 && (
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs px-2 py-1 ${SECTION_COLORS.whatYouOffer.accent} rounded`}>
+                                  ✓ Recommended
+                                </span>
+                                <span className={`text-sm ${SECTION_COLORS.whatYouOffer.textMuted}`}>
+                                  {variant.reasoning || "Leads with measurable outcome"}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className={SECTION_COLORS.whatYouOffer.textMuted}>
+                      Add your value proposition and target audience to generate headline options.
                     </div>
-                  </div>
-                ))
-              ) : (
-                <div className={SECTION_COLORS.whatYouOffer.textMuted}>
-                  Headline variants will be generated based on your strategy...
+                  )}
                 </div>
-              )}
-            </div>
-            
-            {/* Subheadline Strategy */}
-            <div className={`${SECTION_COLORS.whatYouOffer.cardBg} border ${SECTION_COLORS.whatYouOffer.cardBorder} rounded-lg p-6`}>
-              <h3 className={`font-semibold text-lg ${SECTION_COLORS.whatYouOffer.textMuted} mb-3`}>Subheadline Strategy</h3>
-              <div className={SECTION_COLORS.whatYouOffer.text}>
-                {strategyData.subheadlineApproach || "Amplify the promise with specific benefits and target audience context"}
+                
+                {/* Subheadline Strategy */}
+                <div className={`${SECTION_COLORS.whatYouOffer.cardBg} border ${SECTION_COLORS.whatYouOffer.cardBorder} rounded-lg p-6`}>
+                  <h3 className={`font-semibold text-lg ${SECTION_COLORS.whatYouOffer.textMuted} mb-3`}>Subheadline Strategy</h3>
+                  <div className={SECTION_COLORS.whatYouOffer.text}>
+                    {subheadlineSuggestion}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
         </section>
 
         {/* Section 4: Buyer Psychology Analysis */}
