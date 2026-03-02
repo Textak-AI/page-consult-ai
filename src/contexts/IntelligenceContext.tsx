@@ -932,7 +932,8 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     }
     
     // Conversational capture: detect URL in reply if we're waiting for one
-    if (currentSt.pendingWebsiteCapture) {
+    // This sets websiteCaptured=true so the general URL detection below won't duplicate
+    if (currentSt.pendingWebsiteCapture && !currentSt.websiteCaptured) {
       const detectedUrlsForCapture = extractUrls(message);
       if (detectedUrlsForCapture.length > 0) {
         const capturedUrl = detectedUrlsForCapture[0];
@@ -979,11 +980,47 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
             }));
           } else {
             console.warn('⚠️ [Conversational] Website extraction failed:', error);
-            setState(prev => ({ ...prev, isResearchingCompany: false }));
+            setState(prev => ({
+              ...prev,
+              isResearchingCompany: false,
+              companyResearch: {
+                companyName: capturedUrl,
+                website: capturedUrl,
+                description: null,
+                services: [],
+                targetMarket: null,
+                founded: null,
+                location: null,
+                differentiators: [],
+                publicProof: [],
+                industryPosition: null,
+                confidence: 'low',
+                researchedAt: new Date().toISOString(),
+                error: "Couldn't reach that URL — try entering your details manually",
+              } as any,
+            }));
           }
         }).catch(err => {
           console.error('❌ [Conversational] Website extraction error:', err);
-          setState(prev => ({ ...prev, isResearchingCompany: false }));
+          setState(prev => ({
+            ...prev,
+            isResearchingCompany: false,
+            companyResearch: {
+              companyName: capturedUrl,
+              website: capturedUrl,
+              description: null,
+              services: [],
+              targetMarket: null,
+              founded: null,
+              location: null,
+              differentiators: [],
+              publicProof: [],
+              industryPosition: null,
+              confidence: 'low',
+              researchedAt: new Date().toISOString(),
+              error: "Couldn't reach that URL — try entering your details manually",
+            } as any,
+          }));
         });
         
         sessionStorage.setItem('pageconsult_website', capturedUrl);
@@ -1014,14 +1051,26 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       const detectedUrls = extractUrls(message);
       let websiteIntelligence: any = null;
       
-      if (detectedUrls.length > 0) {
-        console.log('🌐 [IntelligenceContext] URL detected, extracting website intelligence:', detectedUrls[0]);
+      if (detectedUrls.length > 0 && !stateRef.current.websiteCaptured) {
+        const detectedUrl = detectedUrls[0];
+        console.log('🌐 [IntelligenceContext] URL detected, extracting website intelligence:', detectedUrl);
+        
+        // Set loading state and mark website as captured immediately
+        setState(prev => ({
+          ...prev,
+          websiteCaptured: true,
+          pendingWebsiteCapture: false,
+          isResearchingCompany: true,
+          extracted: { ...prev.extracted, websiteUrl: detectedUrl },
+        }));
+        sessionStorage.setItem('pageconsult_website', detectedUrl);
+        
         try {
           const { data, error } = await supabase.functions.invoke('extract-website-intelligence', {
-            body: { url: detectedUrls[0] }
+            body: { url: detectedUrl }
           });
           
-          if (!error && data) {
+          if (!error && data && data.success !== false) {
             websiteIntelligence = data;
             console.log('✅ [IntelligenceContext] Website intelligence extracted:', {
               companyName: data.companyName,
@@ -1030,9 +1079,86 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
               hasLogo: !!data.logoUrl,
               colorCount: data.brandColors?.length || 0,
             });
+            
+            // Populate companyResearch so the Research tab renders
+            setState(prev => ({
+              ...prev,
+              isResearchingCompany: false,
+              extracted: {
+                ...prev.extracted,
+                companyName: data.companyName || prev.extracted.companyName,
+                logoUrl: data.logoUrl || prev.extracted.logoUrl,
+                colors: data.brandColors || prev.extracted.colors,
+              },
+              extractedLogo: data.logoUrl || prev.extractedLogo,
+              companyResearch: {
+                companyName: data.companyName || detectedUrl,
+                website: detectedUrl,
+                description: data.description || data.tagline || null,
+                services: data.services || [],
+                targetMarket: data.targetAudience || null,
+                founded: null,
+                location: null,
+                differentiators: data.differentiators || [],
+                publicProof: data.proofPoints || [],
+                industryPosition: data.industryPosition || null,
+                confidence: data.confidence || 'medium',
+                researchedAt: new Date().toISOString(),
+              },
+            }));
           } else {
             console.warn('⚠️ [IntelligenceContext] Website extraction failed:', error);
+            // Set error state so Research tab shows failure message instead of empty
+            setState(prev => ({
+              ...prev,
+              isResearchingCompany: false,
+              companyResearch: {
+                companyName: detectedUrl,
+                website: detectedUrl,
+                description: null,
+                services: [],
+                targetMarket: null,
+                founded: null,
+                location: null,
+                differentiators: [],
+                publicProof: [],
+                industryPosition: null,
+                confidence: 'low',
+                researchedAt: new Date().toISOString(),
+                error: "Couldn't reach that URL — try entering your details manually",
+              } as any,
+            }));
           }
+        } catch (err) {
+          console.error('❌ [IntelligenceContext] Website extraction error:', err);
+          setState(prev => ({
+            ...prev,
+            isResearchingCompany: false,
+            companyResearch: {
+              companyName: detectedUrl,
+              website: detectedUrl,
+              description: null,
+              services: [],
+              targetMarket: null,
+              founded: null,
+              location: null,
+              differentiators: [],
+              publicProof: [],
+              industryPosition: null,
+              confidence: 'low',
+              researchedAt: new Date().toISOString(),
+              error: "Couldn't reach that URL — try entering your details manually",
+            } as any,
+          }));
+        }
+      } else if (detectedUrls.length > 0 && stateRef.current.websiteCaptured) {
+        // URL already captured, just extract intelligence for the API call
+        console.log('🌐 [IntelligenceContext] URL detected but website already captured, extracting for API only');
+        try {
+          const { data, error } = await supabase.functions.invoke('extract-website-intelligence', {
+            body: { url: detectedUrls[0] }
+          });
+          if (!error && data) websiteIntelligence = data;
         } catch (err) {
           console.error('❌ [IntelligenceContext] Website extraction error:', err);
         }
