@@ -88,9 +88,11 @@ function buildOutcomeHeadline(valueProp: string, audience: string, companyName: 
   return outcome;
 }
 
-function buildAudienceHeadline(audience: string, challenge: string): string {
-  // Use the full challenge, never truncate mid-word
+function buildAudienceHeadline(audience: string, challenge: string, fallbackPain?: string): string {
   const clean = challenge.trim();
+  if (clean.length < 10) {
+    return fallbackPain ? `${audience} deserve a better ${fallbackPain.toLowerCase()}` : `${audience} deserve a better experience`;
+  }
   return `${audience} deserve better than ${clean.charAt(0).toLowerCase() + clean.slice(1)}`;
 }
 
@@ -686,7 +688,7 @@ export default function StrategyDocument() {
               // Option 2: Audience-specific
               if (audience && challenge) {
                 headlines.push({
-                  headline: buildAudienceHeadline(audience, challenge),
+                  headline: buildAudienceHeadline(audience, challenge, painPointsArray[0]),
                   reasoning: 'Names the exact buyer and their top frustration',
                 });
               } else if (audience && valueProp) {
