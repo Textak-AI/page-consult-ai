@@ -2746,7 +2746,7 @@ function GenerateContent() {
           return brandData.companyName || '';
         } catch { return ''; }
       })();
-    const businessName = companyName || strategicConsultation?.businessName || consultationData.industry;
+    const businessName = companyName || strategicConsultation?.businessName || '';
     
     // CRITICAL: Get pageType for beta section mapping
     const pageType = strategicConsultation?.pageType || consultationData.pageType || null;
@@ -4024,11 +4024,24 @@ function GenerateContent() {
                 // If we have a dedicated CTA headline from AI, use it
                 if (content.ctaHeadline) return content.ctaHeadline;
                 
-                // Build from value prop
-                const valueProp = extractedIntel?.valueProp || extractedIntel?.valuePropSummary;
+                // Build from value prop — extract a transformation, don't concatenate raw text
+                const valueProp = extractedIntel?.valueProp || extractedIntel?.valuePropSummary || '';
                 if (valueProp) {
-                  const cleaned = valueProp.charAt(0).toLowerCase() + valueProp.slice(1);
-                  return `Ready to ${cleaned}?`;
+                  // Try to extract a verb+object pattern from the value prop
+                  const verbMatch = valueProp.match(/(align|transform|automate|streamline|accelerate|optimize|connect|bridge|eliminate|reduce|improve|scale|grow|simplify|create|deliver|drive|enable|unlock|unify|empower|modernize|consolidate|integrate|centralize)\s+(.{10,60}?)[\.,;!]?$/i);
+                  if (verbMatch) {
+                    const verb = verbMatch[1].charAt(0).toLowerCase() + verbMatch[1].slice(1);
+                    const object = verbMatch[2].trim().replace(/[.,;!?]+$/, '');
+                    return `Ready to ${verb} ${object}?`;
+                  }
+                  // Try audience-based rewrite: "X for Y" → "Ready to bring X to your Y?"
+                  const forMatch = valueProp.match(/^(.{5,40})\s+for\s+(.{5,40})$/i);
+                  if (forMatch) {
+                    return `Ready to bring ${forMatch[1].charAt(0).toLowerCase() + forMatch[1].slice(1)} to your ${forMatch[2]}?`;
+                  }
+                  // Fallback: use company name or generic
+                  if (companyName) return `Ready to Get Started with ${companyName}?`;
+                  return 'Ready to Transform Your Results?';
                 }
                 
                 // Extract a transformation verb+object from solution (not problem)
