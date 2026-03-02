@@ -508,7 +508,19 @@ export function IntelligenceTabs({
                 {state.isResearchingCompany && (
                   <div className="text-center py-8">
                     <Loader2 className="w-6 h-6 mx-auto mb-2 animate-spin text-cyan-400" />
-                    <p className="text-sm text-slate-400">Researching your business...</p>
+                    <p className="text-sm text-slate-400">
+                      {state.extracted.websiteUrl 
+                        ? `Analyzing ${(() => { try { return new URL(state.extracted.websiteUrl.startsWith('http') ? state.extracted.websiteUrl : `https://${state.extracted.websiteUrl}`).hostname.replace('www.', ''); } catch { return state.extracted.websiteUrl; } })()}...`
+                        : 'Researching your business...'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Error state from failed extraction */}
+                {!state.isResearchingCompany && state.companyResearch && (state.companyResearch as any).error && (
+                  <div className="text-center py-8">
+                    <Building className="w-8 h-8 mx-auto mb-2 opacity-50 text-amber-400" />
+                    <p className="text-sm text-amber-400">{(state.companyResearch as any).error}</p>
                   </div>
                 )}
 
