@@ -26,6 +26,7 @@ import {
   type IndustryTokens,
 } from '@/lib/industryDesignSystem';
 import { classifyIndustrySync, type IndustryClassification } from '@/lib/industryClassification';
+import { getCtaByIndustry } from '@/lib/ctaByIndustry';
 import {
   generateSchemaOrg,
   generateAISEOMetaTags,
@@ -355,7 +356,7 @@ export function mapBriefToSections(
           content: {
             headline: headlineSelection.primary,
             subheadline: brief.subheadline,
-            ctaText: isConsulting ? industryTokens.ctaDefaults.primary : brief.ctaText,
+            ctaText: isConsulting ? industryTokens.ctaDefaults.primary : (brief.ctaText || getCtaByIndustry(industry).primary),
             ctaLink: '#contact',
             backgroundImage: heroImageUrl || null,
             trustBadges: trustBadges.length > 0 ? trustBadges : undefined,
@@ -589,10 +590,11 @@ export function mapBriefToSections(
           authoritySignalsCount: authoritySignals.length,
         });
 
-        // CTA Text - check multiple sources
+        // CTA Text - check multiple sources (industry-aware fallback)
+        const industryCta = getCtaByIndustry(industry);
         const ctaButtonText = consultation.primaryCTA || 
                               brief.ctaText || 
-                              industryTokens.ctaDefaults.primary || 
+                              industryCta.primary || 
                               'Get Started';
         
         // Secondary CTA
@@ -654,11 +656,13 @@ export function mapBriefToSections(
           urgencyText,
           guaranteeText,
           trustSignal,
-          trustIndicators: ctaTrustIndicators.length > 0 ? ctaTrustIndicators : [
-            { text: 'No credit card required' },
-            { text: 'Free to start' },
-            { text: 'Cancel anytime' },
-          ],
+          trustIndicators: ctaTrustIndicators.length > 0 ? ctaTrustIndicators : (() => {
+            const saasKeywords = ['saas', 'software', 'platform', 'app', 'developer', 'devtools', 'api', 'fintech', 'payment', 'processing', 'automation', 'analytics', 'cloud', 'ai', 'tech'];
+            const isSaasIndustry = industry && saasKeywords.some(kw => industry.toLowerCase().includes(kw));
+            return isSaasIndustry
+              ? [{ text: 'Free to start' }, { text: 'Pay as you go' }, { text: 'No contracts' }]
+              : [{ text: 'No credit card required' }, { text: 'Free to start' }, { text: 'Cancel anytime' }];
+          })(),
           primaryColor: primaryColor || null,
           industryVariant: industryVariant,
           mode: sdiMode,
