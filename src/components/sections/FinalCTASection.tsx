@@ -44,6 +44,19 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   const getSectionStyles = (): React.CSSProperties => {
     const brandPrimary = content.primaryColor || palette?.primary || content.brandColors?.primary;
     const brandColors = content.brandColors;
+    const variant = content.industryVariant?.toLowerCase() || '';
+    
+    // Dark-mode industries (SaaS, fintech, payment, developer): dark navy with subtle purple accent
+    const isDarkModeIndustry = ['saas', 'fintech', 'payment', 'developer', 'devtools', 'default'].some(
+      kw => variant.includes(kw)
+    ) || (content.mode === 'dark' || content.mode === 'cold');
+    
+    if (isDarkModeIndustry) {
+      const accentColor = brandPrimary || '#7c3aed';
+      return { 
+        background: `linear-gradient(135deg, #0F172A 0%, #1E293B 60%, ${accentColor}18 100%)` 
+      };
+    }
     
     // 1. Use brand primary color as gradient (the key visual anchor)
     if (brandPrimary) {

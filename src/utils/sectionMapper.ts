@@ -449,9 +449,17 @@ export function mapBriefToSections(
               title: isBetaPage 
                 ? 'Early Adopter Perks' 
                 : (intelligentHeaders.features?.title || industryTokens.sectionHeaders.features.title),
-              subtitle: isBetaPage 
-                ? 'What you get by joining early' 
-                : (intelligentHeaders.features?.subtitle || industryTokens.sectionHeaders.features.subtitle),
+              subtitle: (() => {
+                if (isBetaPage) return 'What you get by joining early';
+                if (intelligentHeaders.features?.subtitle) return intelligentHeaders.features.subtitle;
+                // Never use raw industry string as subtitle
+                const defaultSub = industryTokens.sectionHeaders.features.subtitle;
+                const industryLower = (industry || '').toLowerCase().replace(/[_-]/g, ' ');
+                if (defaultSub && industryLower.length > 3 && defaultSub.toLowerCase().includes(industryLower)) {
+                  return businessName ? `What sets ${businessName} apart` : 'What makes the difference';
+                }
+                return defaultSub || (businessName ? `What sets ${businessName} apart` : 'What makes the difference');
+              })(),
               eyebrow: undefined,
               features: enhancedPillars.map(pillar => ({
                 title: pillar.title,

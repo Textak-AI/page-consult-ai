@@ -757,7 +757,7 @@ export function detectIndustryVariant(
     return 'ecommerce';
   }
   
-  // SaaS detection (LAST among business types - most generic tech terms)
+  // SaaS / Fintech / Payment detection (LAST among business types - most generic tech terms)
   if (
     combined.includes('saas') ||
     combined.includes('software') ||
@@ -766,7 +766,13 @@ export function detectIndustryVariant(
     combined.includes('platform') ||
     combined.includes('startup') ||
     combined.includes('cloud') ||
-    combined.includes('digital product')
+    combined.includes('digital product') ||
+    combined.includes('payment') ||
+    combined.includes('fintech') ||
+    combined.includes('api') ||
+    combined.includes('devtools') ||
+    combined.includes('developer tools') ||
+    combined.includes('infrastructure')
   ) {
     return 'saas';
   }
