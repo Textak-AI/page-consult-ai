@@ -470,6 +470,7 @@ export function mapBriefToSections(
               })),
               industryVariant: industryVariant,
               industry: industry || '',
+              businessName: businessName || '',
               mode: sdiMode,
             },
           });

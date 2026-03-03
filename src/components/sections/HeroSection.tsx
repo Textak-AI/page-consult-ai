@@ -430,30 +430,28 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         }}
       >
         {/* Minimal Top Nav Bar */}
-        <nav className="relative z-20 w-full border-b border-white/10" style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(12px)' }}>
-          <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {content.logoUrl ? (
-                <LogoImage src={content.logoUrl} alt="Logo" className="h-7 object-contain" isDarkMode={true} />
-              ) : (
-                <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
-                  <span className="text-white/60 text-xs font-bold">★</span>
-                </div>
-              )}
-              <span className="text-white/80 text-sm font-medium tracking-wide">{content.headline?.split(' ').slice(0, 3).join(' ') || 'Product'}</span>
-            </div>
-            <Button
-              size="sm"
-              className="text-xs px-4 py-1.5 h-auto rounded-md font-medium"
-              style={content.primaryColor ? { backgroundColor: content.primaryColor, color: '#fff' } : undefined}
-              onClick={() => {
-                const ctaEl = document.getElementById('contact');
-                if (ctaEl) ctaEl.scrollIntoView({ behavior: 'smooth' });
-              }}
-            >
-              {content.ctaText || 'Get Started Free'}
-            </Button>
+        <nav className="absolute top-0 left-0 right-0 flex items-center justify-between px-8 py-4 z-20 border-b border-white/10" style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(12px)' }}>
+          <div className="flex items-center gap-3">
+            {content.logoUrl ? (
+              <LogoImage src={content.logoUrl} alt="Logo" className="h-7 object-contain" isDarkMode={true} />
+            ) : (
+              <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
+                <span className="text-white/60 text-xs font-bold">★</span>
+              </div>
+            )}
+            <span className="text-white text-sm font-medium tracking-wide">{content.headline?.split(' ').slice(0, 3).join(' ') || 'Product'}</span>
           </div>
+          <Button
+            size="sm"
+            className="text-xs px-4 py-1.5 h-auto rounded-md font-medium bg-white hover:bg-white/90"
+            style={content.primaryColor ? { backgroundColor: '#fff', color: content.primaryColor } : { color: '#7c3aed' }}
+            onClick={() => {
+              const ctaEl = document.getElementById('contact');
+              if (ctaEl) ctaEl.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            {content.ctaText || 'Get Started Free'}
+          </Button>
         </nav>
 
         {/* Background Image Layer (if provided) - FULL BLEED */}
@@ -501,9 +499,9 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         )}
         
         {/* Content - Centered with max width */}
-        <div className="relative max-w-5xl mx-auto px-6 py-32 z-10 text-center flex-1 flex flex-col justify-center">
-          {/* Logo */}
-          {(content.logoUrl || isEditing) && (
+        <div className="relative max-w-5xl mx-auto px-6 pt-24 pb-32 z-10 text-center flex-1 flex flex-col justify-center">
+          {/* Logo - only show standalone in editing mode (nav bar handles display mode) */}
+          {isEditing && (
             <div className="mb-8">
               {content.logoUrl ? (
                 <div className="relative inline-block">
@@ -513,16 +511,14 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                     className={`${logoSizeClasses[logoSize]} object-contain mx-auto`}
                     isDarkMode={!isLightMode}
                   />
-                  {isEditing && (
-                    <button
-                      onClick={() => setLogoUploaderOpen(true)}
-                      className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors"
-                    >
-                      <Camera className="w-2.5 h-2.5 text-white" />
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setLogoUploaderOpen(true)}
+                    className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors"
+                  >
+                    <Camera className="w-2.5 h-2.5 text-white" />
+                  </button>
                 </div>
-              ) : isEditing ? (
+              ) : (
                 <button
                   onClick={() => setLogoUploaderOpen(true)}
                   className="inline-flex items-center gap-2 px-4 py-2 border-2 border-dashed border-slate-600 rounded-lg text-slate-400 hover:border-purple-400 hover:text-purple-400 transition-all"
@@ -530,7 +526,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                   <Image className="w-4 h-4" />
                   Add Logo
                 </button>
-              ) : null}
+              )}
             </div>
           )}
           
