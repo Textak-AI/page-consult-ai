@@ -54,6 +54,10 @@ import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid, generateSE
 import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief, type MappedPage } from "@/utils/sectionMapper";
 import { selectSectionsFromSDI } from "@/utils/sectionSelector";
 import { generateDesignSystem, designSystemToCSSVariables } from "@/config/designSystem";
+
+// Title-case helper for industry strings in headlines
+const toTitleCase = (str: string) => str.replace(/\b\w/g, c => c.toUpperCase());
+
 // Removed old detectIndustryVariant import - using detectIndustryVariantNew from industryDesignSystem
 import {
   detectIndustryVariant as detectIndustryVariantNew,
@@ -4046,7 +4050,7 @@ function GenerateContent() {
                     return `Ready to bring ${forMatch[1].charAt(0).toLowerCase() + forMatch[1].slice(1)} to your ${forMatch[2]}?`;
                   }
                   // Fallback: use company name or generic
-                  if (companyName) return `Ready to Get Started with ${companyName}?`;
+                  if (companyName) return `Ready to Get Started with ${toTitleCase(companyName)}?`;
                   return 'Ready to Transform Your Results?';
                 }
                 
@@ -4062,7 +4066,7 @@ function GenerateContent() {
                 }
                 
                 // Fallback — clean and simple
-                if (companyName) return `Ready to Get Started with ${companyName}?`;
+                if (companyName) return `Ready to Get Started with ${toTitleCase(companyName)}?`;
                 return 'Ready to Transform Your Results?';
               })(),
               subtext: (() => {
