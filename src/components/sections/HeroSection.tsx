@@ -281,7 +281,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   // Local Services variant: Light mode, trust-forward, phone-prominent
   if (isLocalServices) {
     return (
-      <section className="relative py-20 md:py-28 overflow-hidden bg-white">
+      <section className={`relative py-20 md:py-28 overflow-hidden ${isLightMode ? 'bg-white' : 'bg-slate-950'}`}>
         {isEditing && (
           <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-20" />
         )}
