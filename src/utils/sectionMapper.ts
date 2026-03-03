@@ -469,6 +469,7 @@ export function mapBriefToSections(
                 proofPoint: pillar.proofPoint,
               })),
               industryVariant: industryVariant,
+              industry: industry || '',
               mode: sdiMode,
             },
           });

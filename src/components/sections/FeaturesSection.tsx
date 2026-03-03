@@ -22,6 +22,7 @@ interface FeaturesSectionProps {
       icon: string;
     }>;
     industryVariant?: IndustryVariant;
+    industry?: string;
     businessName?: string;
     // SDI mode override - takes precedence over industry token mode
     mode?: 'light' | 'dark' | 'warm' | 'cold';
@@ -61,13 +62,20 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
   const { 
     features,
     industryVariant = 'default',
+    industry,
     businessName,
   } = content;
 
   // Get industry-specific headers from centralized system
   const sectionHeader = getSectionHeader(industryVariant, 'features');
   const title = content.title || sectionHeader.title;
-  const subtitle = content.subtitle || sectionHeader.subtitle;
+  
+  // Clean subtitle: strip raw industry strings like "Payment processing"
+  const rawSubtitle = content.subtitle || sectionHeader.subtitle;
+  const industryLower = (industry || '').toLowerCase().replace(/[_-]/g, ' ');
+  const subtitle = (industryLower.length > 3 && rawSubtitle?.toLowerCase().includes(industryLower))
+    ? (businessName ? `What sets ${businessName} apart` : 'What makes the difference')
+    : rawSubtitle;
   const eyebrow = content.eyebrow || sectionHeader.title.toUpperCase();
 
   if (!features || features.length === 0) return null;
