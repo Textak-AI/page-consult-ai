@@ -2801,9 +2801,20 @@ function GenerateContent() {
       console.log('🔍 [Legacy] Detected industry from string:', industryVariant);
     }
     
-    // Get mode from SDI colors
-    const sdiMode = sdi?.colors?.mode || 'dark';
-    console.log('🎨 [SDI] Mode:', sdiMode);
+    // Get mode from SDI colors — PRIORITY: extracted brand colorMode > SDI detected > industry default
+    // This ensures dark-mode brands (e.g., Ankura) don't get forced to light mode by industry rules
+    const extractedBrandColorMode = 
+      strategicConsultation?.websiteIntelligence?.colorMode ||
+      consultationData?.websiteIntelligence?.colorMode ||
+      effectiveNavState?.strategicData?.consultationData?.websiteIntelligence?.colorMode ||
+      effectiveNavState?.strategicData?.websiteIntelligence?.colorMode ||
+      null;
+    const sdiMode = extractedBrandColorMode || sdi?.colors?.mode || 'dark';
+    console.log('🎨 [sectionMapper] Mode priority:', {
+      brandExtracted: extractedBrandColorMode,
+      sdiDetected: sdi?.colors?.mode,
+      final: sdiMode,
+    });
     
     // Get brand settings for passing to sections
     // BRAND DATA PIPELINE: Check all possible paths
@@ -4339,6 +4350,24 @@ function GenerateContent() {
         default:
           console.warn(`⚠️ Unknown section type in pageStructure: ${sectionType}`);
       }
+    }
+
+    // COLOR CASCADE: Ensure every section has mode, primaryColor, secondaryColor
+    const resolvedPrimary = primaryColor || sdi?.palette?.primary || null;
+    const resolvedSecondary = brandSettings?.secondaryColor || sdi?.palette?.primaryTint || null;
+    for (const section of sections) {
+      if (!section.content.mode) {
+        section.content.mode = sdiMode;
+      }
+      if (!section.content.primaryColor && resolvedPrimary) {
+        section.content.primaryColor = resolvedPrimary;
+      }
+      if (!section.content.secondaryColor && resolvedSecondary) {
+        section.content.secondaryColor = resolvedSecondary;
+      }
+    }
+    if (resolvedPrimary) {
+      console.log(`🎨 [sectionMapper] Injected primaryColor "${resolvedPrimary}" into ${sections.length} sections`);
     }
 
     console.log(`✅ Legacy mapper built ${sections.length} sections from SDI-driven structure (isBeta: ${isBetaPage})`);
