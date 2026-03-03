@@ -191,12 +191,13 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   
   // Get industry tokens
   const industryVariant = content.industryVariant || 'default';
+  const normalizedIndustryVariant = String(industryVariant).toLowerCase();
   const tokens = getIndustryTokens(industryVariant);
   // PRIORITY: Consulting ALWAYS light mode, then SDI mode prop > industry token mode
-  const isConsulting = industryVariant === 'consulting';
-  const isHealthcare = industryVariant === 'healthcare';
-  const isSaas = industryVariant === 'saas';
-  const isLocalServices = industryVariant === 'local-services';
+  const isConsulting = normalizedIndustryVariant === 'consulting';
+  const isHealthcare = normalizedIndustryVariant === 'healthcare';
+  const isSaas = normalizedIndustryVariant === 'saas' || normalizedIndustryVariant.includes('saas');
+  const isLocalServices = normalizedIndustryVariant === 'local-services';
   
   // Force light mode for consulting - this is a design requirement
   const isLightMode = isConsulting 
