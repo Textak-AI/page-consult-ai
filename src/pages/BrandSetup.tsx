@@ -541,6 +541,35 @@ export default function BrandSetup() {
           .maybeSingle();
         
         const extractedData = result.data;
+
+        // 🔧 FIX: Persist extracted colors to consultation state for generation
+        if (extractedData.brandColors?.length > 0) {
+          const existingIntel = (() => {
+            try {
+              const raw = localStorage.getItem('pageconsult_extracted_intelligence');
+              return raw ? JSON.parse(raw) : {};
+            } catch { return {}; }
+          })();
+
+          const updatedIntel = {
+            ...existingIntel,
+            colors: extractedData.brandColors,
+            brandColors: {
+              primary: extractedData.brandColors[0] || null,
+              secondary: extractedData.brandColors[1] || null,
+              accent: extractedData.brandColors[2] || null,
+            },
+            logoUrl: extractedData.logoUrl || existingIntel.logoUrl,
+            companyName: extractedData.companyName || existingIntel.companyName,
+          };
+
+          localStorage.setItem('pageconsult_extracted_intelligence', JSON.stringify(updatedIntel));
+          console.log('🎨 [BrandSetup] Synced extracted colors to consultation state:', {
+            colors: extractedData.brandColors,
+            extracted: true
+          });
+        }
+
         const brandUpdate: any = {
           website_url: normalizedUrl,
           updated_at: new Date().toISOString(),
