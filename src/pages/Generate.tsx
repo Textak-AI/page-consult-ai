@@ -1643,31 +1643,62 @@ function GenerateContent() {
             return null;
           })();
           
+          // ============================================
+          // BULLETPROOF: Brand Color Resolution
+          // Check all possible sources with backfill
+          // ============================================
+          const consultationExtractedColors = colorsArray || [];
+          const intelBrandColors = intel.brandColors ? [intel.brandColors.primary, intel.brandColors.secondary, intel.brandColors.accent].filter(Boolean) : [];
+
+          // Backfill: If extracted_intelligence.colors is empty, try to populate from other sources
+          let finalColorsArray = consultationExtractedColors;
+          if (finalColorsArray.length === 0 && intelBrandColors.length > 0) {
+            finalColorsArray = intelBrandColors;
+            console.log('🎨 [LoadExisting] Backfill: populated colors from intel.brandColors');
+          }
+          if (finalColorsArray.length === 0 && intel.colors?.length > 0) {
+            finalColorsArray = intel.colors;
+            console.log('🎨 [LoadExisting] Backfill: populated colors from intel.colors');
+          }
+
+          // Additional backfill: Check localStorage for persisted extracted intelligence
+          if (finalColorsArray.length === 0) {
+            try {
+              const localIntel = JSON.parse(localStorage.getItem('pageconsult_extracted_intelligence') || '{}');
+              if (localIntel.colors?.length > 0) {
+                finalColorsArray = localIntel.colors;
+                console.log('🎨 [LoadExisting] Backfill: populated colors from localStorage pageconsult_extracted_intelligence');
+              }
+            } catch {
+              // localStorage unavailable or parse failed
+            }
+          }
+
           // Resolve brand data with CLEAR PRIORITY:
-          // 1. pageWebsiteIntel (from website extraction)
+          // 1. pageWebsiteIntel (from website extraction on page record)
           // 2. consultationBrandSettings (explicit brand setup)
-          // 3. extracted_intelligence colors array
-          // 4. intel.brandColors (from extracted_intelligence)
-          // 5. localStorage (pageconsult_brand_data - fallback for data not yet persisted)
+          // 3. extracted_intelligence colors array (from consultation state or localStorage)
+          // 4. intel.brandColors (from extracted_intelligence object)
+          // 5. localStorage (pageconsult_brand_data - temporary fallback)
           // 6. pageConsultationData.websiteIntelligence (legacy)
           const resolvedBrand = {
             primaryColor: pageWebsiteIntel.primaryColor ||
                           consultationBrandSettings.primaryColor ||
-                          colorsArray[0] ||
+                          finalColorsArray[0] ||
                           intel.brandColors?.primary ||
                           localBrandData?.primaryColor ||
                           pageConsultationData.websiteIntelligence?.primaryColor ||
                           null,
             secondaryColor: pageWebsiteIntel.secondaryColor ||
                             consultationBrandSettings.secondaryColor ||
-                            colorsArray[1] ||
+                            finalColorsArray[1] ||
                             intel.brandColors?.secondary ||
                             localBrandData?.secondaryColor ||
                             pageConsultationData.websiteIntelligence?.secondaryColor ||
                             null,
             accentColor: pageWebsiteIntel.accentColor ||
                          consultationBrandSettings.accentColor ||
-                         colorsArray[2] ||
+                         finalColorsArray[2] ||
                          intel.brandColors?.accent ||
                          localBrandData?.accentColor ||
                          pageConsultationData.websiteIntelligence?.accentColor ||
@@ -1685,27 +1716,24 @@ function GenerateContent() {
                          pageConsultationData.businessName ||
                          null,
           };
-          
-          // Log brand hydration sources
-          console.log('🎨 [LoadExisting] Brand hydration:', {
-            fromPageWebsiteIntel: !!pageWebsiteIntel.primaryColor,
-            fromConsultationBrandSettings: !!consultationBrandSettings.primaryColor,
-            fromExtractedIntel: colorsArray.length > 0,
-            fromLocalStorage: !!localBrandData?.primaryColor,
-            fromLegacy: !!pageConsultationData.websiteIntelligence?.primaryColor,
-            resolved: {
-              primaryColor: resolvedBrand.primaryColor,
-              secondaryColor: resolvedBrand.secondaryColor,
-              logoUrl: resolvedBrand.logoUrl ? '(present)' : null,
-            }
+
+          // Log brand hydration sources for debugging
+          console.log('🎨 [LoadExisting] Brand hydration (source-by-source):', {
+            pageWebsiteIntel: !!pageWebsiteIntel.primaryColor,
+            consultationBrandSettings: !!consultationBrandSettings.primaryColor,
+            extractedIntelColors: finalColorsArray.length > 0,
+            intelBrandColors: !!intel.brandColors?.primary,
+            localStorage: !!localBrandData?.primaryColor,
+            legacy: !!pageConsultationData.websiteIntelligence?.primaryColor,
           });
-          
-          console.log('🎨 [LoadExisting] Resolved brand data:', {
-            colorMode: resolvedColorMode,
-            logoUrl: resolvedBrand.logoUrl,
+
+          console.log('🎨 [LoadExisting] RESOLVED BRAND COLORS:', {
             primaryColor: resolvedBrand.primaryColor,
             secondaryColor: resolvedBrand.secondaryColor,
-            colorsArray: colorsArray.slice(0, 3),
+            accentColor: resolvedBrand.accentColor,
+            logoUrl: resolvedBrand.logoUrl ? '(present)' : null,
+            companyName: resolvedBrand.companyName,
+            finalColorsArray: finalColorsArray.slice(0, 3),
           });
           
           // CRITICAL: Inject colorMode, primaryColor, and industryVariant into each section
