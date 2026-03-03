@@ -404,6 +404,14 @@ For trust indicator micro-copy beneath the CTA button:
 - All others → "No credit card required · Free to start · Cancel anytime"
 
 Never use "Schedule Strategic [anything]" as a button label.
+
+═══════════════════════════════════════════════════════════
+IMPORTANT — FEATURES SECTION SUBTITLE RULES (mandatory):
+═══════════════════════════════════════════════════════════
+The Features section subtitle must NEVER use the raw industry string.
+BAD examples: "What sets Payment processing apart", "What sets payment_processing apart"
+GOOD examples: "What makes the difference", "What sets us apart", "Why teams choose us"
+Use a generic, polished phrase — never interpolate the industry name into the subtitle.
 ═══════════════════════════════════════════════════════════
 
 INSTRUCTIONS:

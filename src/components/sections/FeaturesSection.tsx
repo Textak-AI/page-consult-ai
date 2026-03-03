@@ -226,7 +226,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
   // SaaS variant
   if (isSaas) {
     return (
-      <section className={`py-24 relative overflow-hidden section-pattern-grid bg-slate-800/30 ${isEditing ? '' : ''}`} style={{ backgroundColor: '#0F172A' }}>
+      <section className={`py-20 pb-16 relative overflow-hidden section-pattern-grid bg-slate-800/30 ${isEditing ? '' : ''}`} style={{ backgroundColor: '#0F172A' }}>
         {isEditing && (
           <div className="absolute inset-0 border-2 border-purple-500/50 rounded-lg pointer-events-none z-10" />
         )}
