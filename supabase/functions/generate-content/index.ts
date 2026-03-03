@@ -388,6 +388,24 @@ CONSULTATION DATA:
 - Unique Value: ${consultationData?.uniqueValue || 'Not specified'}
 - Offer: ${consultationData?.offer || 'Not specified'}
 
+═══════════════════════════════════════════════════════════
+IMPORTANT — CTA BUTTON TEXT RULES (mandatory, do not invent alternatives):
+═══════════════════════════════════════════════════════════
+Based on the industry above, use ONLY these exact CTA button labels:
+- SaaS / software / platform / API / fintech / payment / developer tools → "Get Started Free"
+- Consulting / services / agency / coaching → "Schedule a Call"
+- E-commerce / retail → "Shop Now"
+- Healthcare / medical → "Book a Consultation"
+- All others → "Get Started"
+
+For trust indicator micro-copy beneath the CTA button:
+- SaaS / fintech / payment / developer → "Free to start · Pay as you go · No contracts"
+- Consulting / services → "Free consultation · No commitment · Cancel anytime"
+- All others → "No credit card required · Free to start · Cancel anytime"
+
+Never use "Schedule Strategic [anything]" as a button label.
+═══════════════════════════════════════════════════════════
+
 INSTRUCTIONS:
 1. Create compelling, conversion-focused copy
 2. Use industry-appropriate language and tone
