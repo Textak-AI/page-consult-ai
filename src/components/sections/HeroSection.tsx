@@ -1166,6 +1166,20 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         minHeight: '100vh',
       }}
     >
+      {!isLightMode && (
+        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-8 py-5">
+          <span className="text-white font-bold text-lg">
+            {(content as any).companyName || 'Product'}
+          </span>
+          <button
+            onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+            className="px-4 py-2 bg-white text-purple-700 rounded-lg text-sm font-semibold"
+          >
+            {content.ctaText || 'Get Started Free'}
+          </button>
+        </div>
+      )}
+
       {/* Premium Background Layer - only when no background image */}
       {!hasBackgroundImage && (
         <div className="absolute inset-0 z-0">
@@ -1246,7 +1260,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
 
       {/* Content Layer */}
       <div className={`container mx-auto max-w-5xl text-center relative z-10 px-6 ${
-        isConsulting ? 'py-32' : 'py-32 min-h-screen flex items-center'
+        isConsulting ? 'pt-24 pb-32' : 'pt-24 pb-32 min-h-screen flex items-center'
       }`}>
         <div className="flex flex-col items-center gap-8 w-full">
           
