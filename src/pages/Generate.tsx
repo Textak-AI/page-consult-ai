@@ -3603,14 +3603,20 @@ function GenerateContent() {
             
             const featureSubtitle = companyName 
               ? `What sets ${companyName} apart`
-              : 'What sets us apart';
+              : 'What makes the difference';
+            
+            // Derive a specific heading from value prop or audience
+            const audience = consultationData?.targetAudience || consultationData?.target_audience || '';
+            const featureTitle = audience 
+              ? `The infrastructure ${audience.split(',')[0].trim().toLowerCase()} depends on`
+              : 'Why Choose Us';
             
             sections.push({
               type: "features",
               order: order++,
               visible: true,
               content: {
-                title: 'Why Choose Us',
+                title: featureTitle,
                 subtitle: featureSubtitle,
                 features: content.features.map((f: any, i: number) => ({
                   title: f.title,

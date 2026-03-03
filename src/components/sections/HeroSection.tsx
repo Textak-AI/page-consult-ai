@@ -422,13 +422,40 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
 
     return (
       <section 
-        className="relative min-h-screen flex items-center overflow-hidden"
+        className="relative min-h-screen flex flex-col overflow-hidden"
         style={{
           background: !hasBackgroundImage 
             ? 'linear-gradient(135deg, hsl(265, 80%, 15%) 0%, hsl(220, 40%, 8%) 50%, hsl(210, 50%, 12%) 100%)'
             : 'hsl(217, 33%, 6%)',
         }}
       >
+        {/* Minimal Top Nav Bar */}
+        <nav className="relative z-20 w-full border-b border-white/10" style={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(12px)' }}>
+          <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {content.logoUrl ? (
+                <LogoImage src={content.logoUrl} alt="Logo" className="h-7 object-contain" isDarkMode={true} />
+              ) : (
+                <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
+                  <span className="text-white/60 text-xs font-bold">★</span>
+                </div>
+              )}
+              <span className="text-white/80 text-sm font-medium tracking-wide">{content.headline?.split(' ').slice(0, 3).join(' ') || 'Product'}</span>
+            </div>
+            <Button
+              size="sm"
+              className="text-xs px-4 py-1.5 h-auto rounded-md font-medium"
+              style={content.primaryColor ? { backgroundColor: content.primaryColor, color: '#fff' } : undefined}
+              onClick={() => {
+                const ctaEl = document.getElementById('contact');
+                if (ctaEl) ctaEl.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              {content.ctaText || 'Get Started Free'}
+            </Button>
+          </div>
+        </nav>
+
         {/* Background Image Layer (if provided) - FULL BLEED */}
         {hasBackgroundImage && (
           <div 
@@ -474,7 +501,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
         )}
         
         {/* Content - Centered with max width */}
-        <div className="relative max-w-5xl mx-auto px-6 py-32 z-10 text-center">
+        <div className="relative max-w-5xl mx-auto px-6 py-32 z-10 text-center flex-1 flex flex-col justify-center">
           {/* Logo */}
           {(content.logoUrl || isEditing) && (
             <div className="mb-8">
