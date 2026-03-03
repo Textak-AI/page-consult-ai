@@ -437,7 +437,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           </span>
           <button
             onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-            className="px-4 py-2 bg-white text-purple-700 rounded-lg text-sm font-semibold"
+            className="px-4 py-2 bg-white text-purple-700 rounded-lg text-sm font-semibold hover:bg-white/90 transition-colors"
           >
             {content.ctaText || 'Get Started Free'}
           </button>
