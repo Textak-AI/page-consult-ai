@@ -196,7 +196,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   // PRIORITY: Consulting ALWAYS light mode, then SDI mode prop > industry token mode
   const isConsulting = normalizedIndustryVariant === 'consulting';
   const isHealthcare = normalizedIndustryVariant === 'healthcare';
-  const isSaas = normalizedIndustryVariant === 'saas' || normalizedIndustryVariant === 'fintech' || normalizedIndustryVariant.includes('saas');
+  const isSaasLike = ['saas', 'fintech', 'payment', 'developer', 'devtools', 'default'].includes(content.industryVariant?.toLowerCase() || '');
   const isLocalServices = normalizedIndustryVariant === 'local-services';
   
   // Force light mode for consulting - this is a design requirement
@@ -410,7 +410,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
 
   // SaaS variant: Full-bleed hero with gradient background (same pattern as default)
   // Product screenshot is now an OPT-IN editor feature, not the default
-  if (isSaas) {
+  if (isSaasLike) {
     // Determine CTA button style - use brand color if available
     const ctaStyle = content.primaryColor 
       ? { backgroundColor: content.primaryColor, boxShadow: `0 10px 30px -10px ${content.primaryColor}66` }
