@@ -73,8 +73,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
   // Clean subtitle: strip raw industry strings like "Payment processing"
   const rawSubtitle = content.subtitle || sectionHeader.subtitle;
   const industryLower = (industry || '').toLowerCase().replace(/[_-]/g, ' ');
+  const PLACEHOLDER_NAMES = ['your company', 'company', ''];
+  const isPlaceholder = !businessName || PLACEHOLDER_NAMES.includes(businessName.toLowerCase().trim());
   const subtitle = (industryLower.length > 3 && rawSubtitle?.toLowerCase().includes(industryLower))
-    ? (businessName ? `What sets ${businessName} apart` : 'What makes the difference')
+    ? (isPlaceholder ? 'What makes the difference' : `What sets ${businessName} apart`)
     : rawSubtitle;
   const eyebrow = content.eyebrow || sectionHeader.title.toUpperCase();
 
