@@ -143,6 +143,16 @@ export interface MapBriefOptions {
     source?: 'keyword' | 'ai' | 'fallback' | string;
     classifiedAt?: string;
   } | null;
+  // SDI Layer 1.5: Messaging architecture for section reordering/suppression
+  messagingArchitecture?: {
+    archetype: string;
+    headlineFocus: string;
+    proofStyle: string;
+    commitmentAsk: string;
+    voiceRegister: string;
+    urgencySignal: string;
+    socialProofType: string;
+  } | null;
 }
 
 // Enhanced return type for full page mapping
@@ -233,7 +243,7 @@ export function mapBriefToSections(
   console.log('🖼️ [sectionMapper] heroImageUrl:', options.heroImageUrl);
   
   const { businessName, heroImageUrl, logoUrl, primaryColor, pageType, pageGoal, industry, serviceType, aiSearchOptimization } = options;
-  const sections: Section[] = [];
+  let sections: Section[] = [];
   
   // Get SDI from options if available
   const sdi = options.designIntelligence;
@@ -752,6 +762,63 @@ export function mapBriefToSections(
   }
 
   console.log(`🧠 [sectionMapper] Generated ${sections.length} sections from pageStructure:`, pageStructure);
+
+  // ── Apply Messaging Architecture (SDI Layer 1.5) ──────────────────────
+  const msgArch = options.messagingArchitecture;
+  if (msgArch) {
+    console.log('🎯 [SectionMapper] Applying messaging architecture:', msgArch.archetype);
+
+    // 1. Stats placement: quantitative proof → stats-bar early
+    if (msgArch.proofStyle === 'quantitative') {
+      const statsIdx = sections.findIndex(s => s.type === 'stats-bar');
+      if (statsIdx > 1) {
+        const [statsSection] = sections.splice(statsIdx, 1);
+        sections.splice(1, 0, statsSection);
+        console.log('🎯 [SectionMapper] Moved stats-bar to position 1 (quantitative proof)');
+      }
+    }
+
+    // 2. Urgency suppression
+    if (msgArch.urgencySignal === 'absent') {
+      const before = sections.length;
+      sections = sections.filter(s =>
+        !['urgency', 'countdown', 'limited-time'].includes(s.type)
+      );
+      if (sections.length < before) {
+        console.log('🎯 [SectionMapper] Removed urgency sections (urgency=absent)');
+      }
+    }
+
+    // 3. Social proof ordering
+    if (msgArch.socialProofType === 'authority') {
+      const logoIdx = sections.findIndex(s =>
+        s.type === 'logo-bar' || s.type === 'credentials' || s.type === 'trust-bar'
+      );
+      const testimonialIdx = sections.findIndex(s =>
+        s.type === 'testimonial' || s.type === 'social-proof'
+      );
+      if (logoIdx > -1 && testimonialIdx > -1 && logoIdx > testimonialIdx) {
+        const [logoSection] = sections.splice(logoIdx, 1);
+        sections.splice(testimonialIdx, 0, logoSection);
+        console.log('🎯 [SectionMapper] Moved credentials before testimonials (authority proof)');
+      }
+    }
+
+    // 4. CTA softening for exploratory ask
+    if (msgArch.commitmentAsk === 'exploratory') {
+      sections.forEach(s => {
+        if (s.content?.ctaText) {
+          const hard = ['get started', 'buy now', 'sign up', 'purchase', 'subscribe', 'start now'];
+          if (hard.some(cta => s.content.ctaText.toLowerCase().includes(cta))) {
+            const original = s.content.ctaText;
+            s.content.ctaText = 'See How It Works';
+            console.log('🎯 [SectionMapper] Softened CTA:', original, '→', s.content.ctaText);
+          }
+        }
+      });
+    }
+  }
+
   return sections;
 }
 
