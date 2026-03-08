@@ -2300,16 +2300,17 @@ function GenerateContent() {
         // This runs the optimizer and logs results to console for validation.
         // Prompt 2 will wire results into the generation payload.
         try {
+          const sc = strategicData?.consultationData || {};
           const intelProfile: IntelProfile = {
-            industry: strategicConsultation?.industry || strategicConsultation?.industryCategory || industry,
-            audience: strategicConsultation?.idealClient,
+            industry: sc?.industry || sc?.industryCategory || consultationData.industry,
+            audience: sc?.idealClient,
             pricePoint: parseFloat(
-              String(strategicConsultation?.investmentRange || '0').replace(/[^0-9.]/g, '')
+              String(sc?.investmentRange || '0').replace(/[^0-9.]/g, '')
             ),
-            painPoints: strategicConsultation?.clientFrustration,
-            tone: strategicConsultation?.tone,
-            valueProp: strategicConsultation?.mainOffer,
-            edge: strategicConsultation?.uniqueStrength,
+            painPoints: sc?.clientFrustration,
+            tone: sc?.tone,
+            valueProp: sc?.mainOffer,
+            edge: sc?.uniqueStrength,
           };
           const optimizationResult = optimizeFromProfile(intelProfile);
           console.log('🎯 [ArchetypeOptimizer] Generation constraints that WILL be injected in Prompt 2:');
