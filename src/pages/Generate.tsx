@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Check, Sparkles, Wand2, Undo2, Redo2, Brain, Rocket, Zap, AlertTriangle, RefreshCw } from "lucide-react";
 import { calculateStrategicLevel } from "@/lib/strategicLevelCalculator";
+import { optimizeFromProfile, type IntelProfile } from '@/utils/archetypeOptimizer';
 import type { ExtractedIntelligence, ConsultationStatus } from "@/types/consultationReadiness";
 import { PersonaInsightsPanel } from "@/components/editor/PersonaInsightsPanel";
 import { SectionManager } from "@/components/editor/SectionManager";
@@ -2295,6 +2296,28 @@ function GenerateContent() {
         });
         setCssVariables(`${designSystemToCSSVariables(ds)}\n  ${industryCss}`);
         
+        // ── Archetype Optimization (SDI Layer 1.5) — LOGGING ONLY ─────────────
+        // This runs the optimizer and logs results to console for validation.
+        // Prompt 2 will wire results into the generation payload.
+        try {
+          const intelProfile: IntelProfile = {
+            industry: strategicConsultation?.industry || strategicConsultation?.industryCategory || industry,
+            audience: strategicConsultation?.idealClient,
+            pricePoint: parseFloat(
+              String(strategicConsultation?.investmentRange || '0').replace(/[^0-9.]/g, '')
+            ),
+            painPoints: strategicConsultation?.clientFrustration,
+            tone: strategicConsultation?.tone,
+            valueProp: strategicConsultation?.mainOffer,
+            edge: strategicConsultation?.uniqueStrength,
+          };
+          const optimizationResult = optimizeFromProfile(intelProfile);
+          console.log('🎯 [ArchetypeOptimizer] Generation constraints that WILL be injected in Prompt 2:');
+          console.log(optimizationResult.generationConstraints);
+        } catch (err) {
+          console.warn('🎯 [ArchetypeOptimizer] Optimization failed (non-blocking):', err);
+        }
+
         const { data: result, error } = await supabase.functions.invoke('generate-page-content', {
           body: {
             strategyBrief: strategicData.strategyBrief,
