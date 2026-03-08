@@ -775,6 +775,7 @@ export default function NewConsultation() {
               brief={strategyBrief}
               consultationData={consultationData}
               aiSeoData={aiSeoData}
+              messagingArchitecture={optimizationResult?.primary || null}
               onApprove={handleBriefApproved}
               onEdit={handleBriefEdit}
               onRestart={handleRestart}
