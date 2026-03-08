@@ -1,6 +1,13 @@
 import { motion } from 'framer-motion';
 import { Brain, CheckCircle, AlertTriangle } from 'lucide-react';
 
+const ARCHETYPE_PROFILES: Record<string, string> = {
+  'Analytical Validator': 'This buyer evaluates vendors like they evaluate data — systematically. They want ROI projections, benchmark comparisons, and peer-reviewed credibility. Urgency tactics insult their intelligence. Authority and hard evidence win.',
+  'Emotional Connector': 'This buyer is in pain and looking for someone who gets it. They respond to stories of transformation, peer-level warmth, and low-pressure entry points. Hard sells push them away. Empathy and testimonials win.',
+  'Decisive Commander': 'This buyer has budget authority and wants to move. They respect directness, outcome proof, and recognizable credentials. Don\'t waste their time with soft asks or long narratives. Show the result, make the ask, close.',
+  'Cautious Researcher': 'This buyer is thorough and risk-averse. They\'re comparing 3–5 vendors, reading every case study, and checking references. Urgency destroys trust instantly. Give them a soft entry, balanced proof, and room to evaluate.',
+};
+
 export interface MessagingArchitecturePanelProps {
   messagingArchitecture: {
     archetype: string;
@@ -14,6 +21,7 @@ export interface MessagingArchitecturePanelProps {
     probability: number;
     stateKey: string;
   };
+  detectedSignals?: string[];
 }
 
 const ARCHETYPE_META: Record<string, { description: string; color: string; colorClass: string; bgClass: string; borderClass: string; pillBg: string }> = {
@@ -158,7 +166,7 @@ function buildBriefPreview(arch: MessagingArchitecturePanelProps['messagingArchi
   return `Your buyer is ${article} ${arch.archetype} — ${desc} We've optimized your page architecture around this psychology. ${headlineReason} ${urgencyReason} ${ctaReason}`;
 }
 
-export function MessagingArchitecturePanel({ messagingArchitecture }: MessagingArchitecturePanelProps) {
+export function MessagingArchitecturePanel({ messagingArchitecture, detectedSignals }: MessagingArchitecturePanelProps) {
   const meta = ARCHETYPE_META[messagingArchitecture.archetype] || ARCHETYPE_META['Analytical Validator'];
   const activePairs = getActiveCoherencePairs(messagingArchitecture);
   const reinforcing = activePairs.filter(p => p.type === 'reinforcing');
@@ -197,6 +205,24 @@ export function MessagingArchitecturePanel({ messagingArchitecture }: MessagingA
             {Math.round(messagingArchitecture.confidence * 100)}% confidence
           </span>
         </div>
+        {ARCHETYPE_PROFILES[messagingArchitecture.archetype] && (
+          <p className="text-xs text-slate-400 leading-relaxed mt-2">
+            {ARCHETYPE_PROFILES[messagingArchitecture.archetype]}
+          </p>
+        )}
+        {detectedSignals && detectedSignals.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            <span className="text-[10px] text-slate-500 mr-1">Detected signals:</span>
+            {detectedSignals.map((signal) => (
+              <span
+                key={signal}
+                className={`text-[10px] px-2 py-0.5 rounded-full ${meta.pillBg}`}
+              >
+                {signal}
+              </span>
+            ))}
+          </div>
+        )}
         <p className="text-slate-500 text-xs mt-3">
           64 page architectures evaluated. Optimal configuration locked before generation.
         </p>

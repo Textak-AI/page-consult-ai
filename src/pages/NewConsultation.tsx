@@ -78,7 +78,7 @@ export default function NewConsultation() {
   const [strategyBrief, setStrategyBrief] = useState<string>('');
   const [structuredBrief, setStructuredBrief] = useState<any>(null);
   const [aiSeoData, setAiSeoData] = useState<AISeoData | null>(null);
-  const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
+  const [optimizationResult, setOptimizationResult] = useState<(OptimizationResult & { inference?: { matchedMarkers?: string[] } }) | null>(null);
   const [industryClassification, setIndustryClassification] = useState<IndustryClassification | null>(null);
   const [consultationStep, setConsultationStep] = useState(1);
   const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
@@ -779,6 +779,7 @@ export default function NewConsultation() {
               consultationData={consultationData}
               aiSeoData={aiSeoData}
               messagingArchitecture={optimizationResult?.primary || null}
+              detectedSignals={optimizationResult?.inference?.matchedMarkers}
               onApprove={handleBriefApproved}
               onEdit={handleBriefEdit}
               onRestart={handleRestart}

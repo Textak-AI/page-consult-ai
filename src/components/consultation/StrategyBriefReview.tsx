@@ -13,12 +13,13 @@ interface Props {
   consultationData: ConsultationData;
   aiSeoData?: AISeoData | null;
   messagingArchitecture?: MessagingArchitecturePanelProps['messagingArchitecture'] | null;
+  detectedSignals?: string[];
   onApprove: () => void;
   onEdit: (editedBrief: string) => void;
   onRestart: () => void;
 }
 
-export function StrategyBriefReview({ brief, consultationData, aiSeoData, messagingArchitecture, onApprove, onEdit, onRestart }: Props) {
+export function StrategyBriefReview({ brief, consultationData, aiSeoData, messagingArchitecture, detectedSignals, onApprove, onEdit, onRestart }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedBrief, setEditedBrief] = useState(brief);
 
@@ -133,7 +134,7 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, messag
 
       {/* Messaging Architecture Panel */}
       {messagingArchitecture && (
-        <MessagingArchitecturePanel messagingArchitecture={messagingArchitecture} />
+        <MessagingArchitecturePanel messagingArchitecture={messagingArchitecture} detectedSignals={detectedSignals} />
       )}
 
       <motion.div
