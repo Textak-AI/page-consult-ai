@@ -460,7 +460,12 @@ function GenerateContent() {
   const [designIntelligence, setDesignIntelligence] = useState<DesignIntelligenceOutput | null>(null);
   
   // Messaging Architecture from Archetype Optimizer (SDI Layer 1.5)
-  const [messagingArchitecture, setMessagingArchitecture] = useState<any>(null);
+  // Initialize from nav state if available (fallback for page reloads)
+  const [messagingArchitecture, setMessagingArchitecture] = useState<any>(
+    effectiveNavState?.strategicData?.messagingArchitecture
+      ? { primary: effectiveNavState.strategicData.messagingArchitecture, generationConstraints: effectiveNavState.strategicData.messagingConstraints }
+      : null
+  );
   
 
 
