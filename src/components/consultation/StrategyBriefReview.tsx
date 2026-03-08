@@ -134,7 +134,7 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, messag
 
       {/* Messaging Architecture Panel */}
       {messagingArchitecture && (
-        <MessagingArchitecturePanel messagingArchitecture={messagingArchitecture} />
+        <MessagingArchitecturePanel messagingArchitecture={messagingArchitecture} detectedSignals={detectedSignals} />
       )}
 
       <motion.div
