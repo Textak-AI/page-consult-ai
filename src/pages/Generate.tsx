@@ -2332,6 +2332,10 @@ function GenerateContent() {
           console.log('🎯 [ArchetypeOptimizer] Locked:', optimizationResult.primary.archetype, '→', optimizationResult.primary.stateKey);
         } catch (err) {
           console.warn('🎯 [ArchetypeOptimizer] Optimization failed (non-blocking):', err);
+          // Fallback to nav state if optimizer fails
+          optimizationPrimary = strategicData?.messagingArchitecture || null;
+          optimizationConstraints = strategicData?.messagingConstraints || null;
+          if (optimizationPrimary) console.log('🎯 [ArchetypeOptimizer] Using nav state fallback');
         }
 
         const { data: result, error } = await supabase.functions.invoke('generate-page-content', {
