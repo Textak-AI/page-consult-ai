@@ -65,6 +65,9 @@ const GenerateContentRequestSchema = z.object({
   pageType: z.string().optional(),
   // NEW: User ID for brand brief lookup
   userId: z.string().uuid().optional(),
+  // SDI Layer 1.5: Messaging architecture from Archetype Optimizer
+  messagingArchitecture: z.any().optional(),
+  messagingConstraints: z.string().max(10000).optional(),
   // NEW: Full consultation data from strategic consultation
   strategicConsultation: z.object({
     businessName: z.string().optional(),
