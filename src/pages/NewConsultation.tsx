@@ -417,6 +417,24 @@ export default function NewConsultation() {
     setStructuredBrief(structuredBriefData || null);
     setAiSeoData(seoData || null);
     setIndustryClassification(classification || null);
+
+    // Run Archetype Optimizer (SDI Layer 1.5)
+    try {
+      const intelProfile: IntelProfile = {
+        industry: data.industry || data.industryCategory,
+        audience: data.idealClient,
+        pricePoint: parseFloat(String(data.investmentRange || '0').replace(/[^0-9.]/g, '')),
+        painPoints: data.clientFrustration,
+        tone: data.tone,
+        valueProp: data.mainOffer,
+        edge: data.uniqueStrength,
+      };
+      const optimization = optimizeFromProfile(intelProfile);
+      setOptimizationResult(optimization);
+      console.log('🎯 [NewConsultation] Archetype optimizer ran:', optimization.primary.archetype);
+    } catch (err) {
+      console.warn('🎯 [NewConsultation] Optimizer failed (non-blocking):', err);
+    }
     console.log('🔄 setStage called:', 'brief-review', 'from: handleConsultationComplete');
     setStage('brief-review');
   };
