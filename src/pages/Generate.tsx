@@ -384,6 +384,9 @@ function GenerateContent() {
         source: 'keyword' | 'ai' | 'fallback';
         classifiedAt?: string;
       } | null;
+      // SDI Layer 1.5: Messaging architecture from Archetype Optimizer
+      messagingArchitecture?: any;
+      messagingConstraints?: string | null;
     };
     fromStrategicConsultation?: boolean;
   } | null;
