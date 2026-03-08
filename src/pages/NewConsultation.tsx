@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 import { StrategicConsultation, StrategyBriefReview, ConsultationIntro, shouldShowIntro, type ConsultationData } from "@/components/consultation";
+import { optimizeFromProfile, type IntelProfile, type OptimizationResult } from '@/utils/archetypeOptimizer';
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import iconmark from "@/assets/iconmark-darkmode.svg";
@@ -77,6 +78,7 @@ export default function NewConsultation() {
   const [strategyBrief, setStrategyBrief] = useState<string>('');
   const [structuredBrief, setStructuredBrief] = useState<any>(null);
   const [aiSeoData, setAiSeoData] = useState<AISeoData | null>(null);
+  const [optimizationResult, setOptimizationResult] = useState<OptimizationResult | null>(null);
   const [industryClassification, setIndustryClassification] = useState<IndustryClassification | null>(null);
   const [consultationStep, setConsultationStep] = useState(1);
   const [prefillData, setPrefillData] = useState<PrefillData | null>(null);
@@ -415,6 +417,24 @@ export default function NewConsultation() {
     setStructuredBrief(structuredBriefData || null);
     setAiSeoData(seoData || null);
     setIndustryClassification(classification || null);
+
+    // Run Archetype Optimizer (SDI Layer 1.5)
+    try {
+      const intelProfile: IntelProfile = {
+        industry: data.industry || data.industryCategory,
+        audience: data.idealClient,
+        pricePoint: parseFloat(String(data.investmentRange || '0').replace(/[^0-9.]/g, '')),
+        painPoints: data.clientFrustration,
+        tone: (data as any).tone,
+        valueProp: data.mainOffer,
+        edge: data.uniqueStrength,
+      };
+      const optimization = optimizeFromProfile(intelProfile);
+      setOptimizationResult(optimization);
+      console.log('🎯 [NewConsultation] Archetype optimizer ran:', optimization.primary.archetype);
+    } catch (err) {
+      console.warn('🎯 [NewConsultation] Optimizer failed (non-blocking):', err);
+    }
     console.log('🔄 setStage called:', 'brief-review', 'from: handleConsultationComplete');
     setStage('brief-review');
   };
@@ -503,6 +523,9 @@ export default function NewConsultation() {
             heroBackgroundUrl: consultationData.heroBackgroundUrl,
             // CRITICAL: Include the AI-powered industry classification
             industryClassification,
+            // SDI Layer 1.5: Messaging architecture for generation constraints
+            messagingArchitecture: optimizationResult?.primary || null,
+            messagingConstraints: optimizationResult?.generationConstraints || null,
           },
           fromStrategicConsultation: true,
         },
@@ -755,6 +778,7 @@ export default function NewConsultation() {
               brief={strategyBrief}
               consultationData={consultationData}
               aiSeoData={aiSeoData}
+              messagingArchitecture={optimizationResult?.primary || null}
               onApprove={handleBriefApproved}
               onEdit={handleBriefEdit}
               onRestart={handleRestart}

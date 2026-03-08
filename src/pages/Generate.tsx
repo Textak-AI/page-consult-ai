@@ -384,6 +384,9 @@ function GenerateContent() {
         source: 'keyword' | 'ai' | 'fallback';
         classifiedAt?: string;
       } | null;
+      // SDI Layer 1.5: Messaging architecture from Archetype Optimizer
+      messagingArchitecture?: any;
+      messagingConstraints?: string | null;
     };
     fromStrategicConsultation?: boolean;
   } | null;
@@ -460,7 +463,12 @@ function GenerateContent() {
   const [designIntelligence, setDesignIntelligence] = useState<DesignIntelligenceOutput | null>(null);
   
   // Messaging Architecture from Archetype Optimizer (SDI Layer 1.5)
-  const [messagingArchitecture, setMessagingArchitecture] = useState<any>(null);
+  // Initialize from nav state if available (fallback for page reloads)
+  const [messagingArchitecture, setMessagingArchitecture] = useState<any>(
+    effectiveNavState?.strategicData?.messagingArchitecture
+      ? { primary: effectiveNavState.strategicData.messagingArchitecture, generationConstraints: effectiveNavState.strategicData.messagingConstraints }
+      : null
+  );
   
 
 
@@ -2324,6 +2332,10 @@ function GenerateContent() {
           console.log('🎯 [ArchetypeOptimizer] Locked:', optimizationResult.primary.archetype, '→', optimizationResult.primary.stateKey);
         } catch (err) {
           console.warn('🎯 [ArchetypeOptimizer] Optimization failed (non-blocking):', err);
+          // Fallback to nav state if optimizer fails
+          optimizationPrimary = strategicData?.messagingArchitecture || null;
+          optimizationConstraints = strategicData?.messagingConstraints || null;
+          if (optimizationPrimary) console.log('🎯 [ArchetypeOptimizer] Using nav state fallback');
         }
 
         const { data: result, error } = await supabase.functions.invoke('generate-page-content', {

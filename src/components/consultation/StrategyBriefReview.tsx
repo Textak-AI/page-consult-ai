@@ -4,6 +4,7 @@ import { FileText, Edit3, RotateCcw, ArrowRight, CheckCircle2, ChevronRight } fr
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
 import { AISeoPanel } from './AISeoPanel';
+import { MessagingArchitecturePanel, type MessagingArchitecturePanelProps } from './MessagingArchitecturePanel';
 import type { ConsultationData } from './StrategicConsultation';
 import type { AISeoData } from '@/services/intelligence/types';
 
@@ -11,12 +12,13 @@ interface Props {
   brief: string;
   consultationData: ConsultationData;
   aiSeoData?: AISeoData | null;
+  messagingArchitecture?: MessagingArchitecturePanelProps['messagingArchitecture'] | null;
   onApprove: () => void;
   onEdit: (editedBrief: string) => void;
   onRestart: () => void;
 }
 
-export function StrategyBriefReview({ brief, consultationData, aiSeoData, onApprove, onEdit, onRestart }: Props) {
+export function StrategyBriefReview({ brief, consultationData, aiSeoData, messagingArchitecture, onApprove, onEdit, onRestart }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedBrief, setEditedBrief] = useState(brief);
 
@@ -128,6 +130,11 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, onAppr
 
       {/* AI SEO Panel */}
       <AISeoPanel aiSeoData={aiSeoData ?? null} />
+
+      {/* Messaging Architecture Panel */}
+      {messagingArchitecture && (
+        <MessagingArchitecturePanel messagingArchitecture={messagingArchitecture} />
+      )}
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
