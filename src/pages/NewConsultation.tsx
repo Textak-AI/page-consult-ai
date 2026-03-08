@@ -425,7 +425,7 @@ export default function NewConsultation() {
         audience: data.idealClient,
         pricePoint: parseFloat(String(data.investmentRange || '0').replace(/[^0-9.]/g, '')),
         painPoints: data.clientFrustration,
-        tone: data.tone,
+        tone: (data as any).tone,
         valueProp: data.mainOffer,
         edge: data.uniqueStrength,
       };
