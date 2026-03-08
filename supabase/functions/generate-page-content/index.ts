@@ -322,7 +322,12 @@ ${brandContext ? `6. STRICTLY follow the brand guidelines provided below` : ''}
 
 A user should be able to trace EVERY section of the generated page back to the strategy brief.
 ${brandContext}
+${requestData.messagingConstraints ? `\n${requestData.messagingConstraints}\n` : ''}
 Return valid JSON only.`;
+
+      if (requestData.messagingConstraints) {
+        console.log('🎯 [generate-page-content] Messaging constraints injected for archetype:', requestData.messagingArchitecture?.archetype);
+      }
 
     } else {
       // ═══════════════════════════════════════════════════════════════════════════

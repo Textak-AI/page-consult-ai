@@ -459,6 +459,9 @@ function GenerateContent() {
   // Strategic Design Intelligence - infers typography, colors, layout from conversation
   const [designIntelligence, setDesignIntelligence] = useState<DesignIntelligenceOutput | null>(null);
   
+  // Messaging Architecture from Archetype Optimizer (SDI Layer 1.5)
+  const [messagingArchitecture, setMessagingArchitecture] = useState<any>(null);
+  
 
 
   // Apply brand colors when nav state is available OR load from DB
@@ -2246,6 +2249,8 @@ function GenerateContent() {
           availableProof,
           // CRITICAL: Pass stored AI classification for accurate industry styling
           industryClassification: storedClassification,
+          // SDI Layer 1.5: Messaging architecture for section reordering/suppression
+          messagingArchitecture: messagingArchitecture?.primary || null,
         });
         
         console.log('📊 aiSearchOptimization passed to mapper:', strategicData.aiSeoData ? 'from strategicData.aiSeoData' : strategicData.consultationData?.ai_seo_data ? 'from consultationData.ai_seo_data' : 'null');
@@ -2296,9 +2301,9 @@ function GenerateContent() {
         });
         setCssVariables(`${designSystemToCSSVariables(ds)}\n  ${industryCss}`);
         
-        // ── Archetype Optimization (SDI Layer 1.5) — LOGGING ONLY ─────────────
-        // This runs the optimizer and logs results to console for validation.
-        // Prompt 2 will wire results into the generation payload.
+        // ── Archetype Optimization (SDI Layer 1.5) ────────────────────────────
+        let optimizationConstraints: string | null = null;
+        let optimizationPrimary: any = null;
         try {
           const sc = strategicData?.consultationData || {};
           const intelProfile: IntelProfile = {
@@ -2313,8 +2318,10 @@ function GenerateContent() {
             edge: sc?.uniqueStrength,
           };
           const optimizationResult = optimizeFromProfile(intelProfile);
-          console.log('🎯 [ArchetypeOptimizer] Generation constraints that WILL be injected in Prompt 2:');
-          console.log(optimizationResult.generationConstraints);
+          optimizationConstraints = optimizationResult.generationConstraints;
+          optimizationPrimary = optimizationResult.primary;
+          setMessagingArchitecture(optimizationResult);
+          console.log('🎯 [ArchetypeOptimizer] Locked:', optimizationResult.primary.archetype, '→', optimizationResult.primary.stateKey);
         } catch (err) {
           console.warn('🎯 [ArchetypeOptimizer] Optimization failed (non-blocking):', err);
         }
@@ -2326,6 +2333,8 @@ function GenerateContent() {
             strategicConsultation: strategicData.consultationData,
             industry: consultationData.industry,
             pageType: strategicData.consultationData?.pageType || null,
+            messagingArchitecture: optimizationPrimary,
+            messagingConstraints: optimizationConstraints,
           }
         });
         
@@ -2723,6 +2732,7 @@ function GenerateContent() {
         industry: consultationData.industry,       // For industry variant detection
         serviceType: consultationData.service_type, // For industry variant detection
         aiSearchOptimization,                       // For authority signal extraction
+        messagingArchitecture: messagingArchitecture?.primary || null,
       });
       
       console.log(`✅ Brief-first mapper built ${sections.length} sections with intelligent extraction`);
