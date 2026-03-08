@@ -523,6 +523,9 @@ export default function NewConsultation() {
             heroBackgroundUrl: consultationData.heroBackgroundUrl,
             // CRITICAL: Include the AI-powered industry classification
             industryClassification,
+            // SDI Layer 1.5: Messaging architecture for generation constraints
+            messagingArchitecture: optimizationResult?.primary || null,
+            messagingConstraints: optimizationResult?.generationConstraints || null,
           },
           fromStrategicConsultation: true,
         },
