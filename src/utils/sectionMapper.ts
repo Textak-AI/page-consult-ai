@@ -243,7 +243,7 @@ export function mapBriefToSections(
   console.log('🖼️ [sectionMapper] heroImageUrl:', options.heroImageUrl);
   
   const { businessName, heroImageUrl, logoUrl, primaryColor, pageType, pageGoal, industry, serviceType, aiSearchOptimization } = options;
-  const sections: Section[] = [];
+  let sections: Section[] = [];
   
   // Get SDI from options if available
   const sdi = options.designIntelligence;
