@@ -216,7 +216,7 @@ export function optimizeArchitecture(archetype: ArchetypeName, confidence: numbe
 }
 
 export function optimizeFromProfile(profile: IntelProfile): OptimizationResult & {
-  inference: { archetype: ArchetypeName; confidence: number; reasoning: string };
+  inference: { archetype: ArchetypeName; confidence: number; reasoning: string; matchedMarkers: string[] };
 } {
   const inference = inferArchetype(profile);
   const result = optimizeArchitecture(inference.archetype, inference.confidence);
