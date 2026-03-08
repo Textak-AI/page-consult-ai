@@ -779,6 +779,7 @@ export default function NewConsultation() {
               consultationData={consultationData}
               aiSeoData={aiSeoData}
               messagingArchitecture={optimizationResult?.primary || null}
+              detectedSignals={optimizationResult?.inference?.matchedMarkers}
               onApprove={handleBriefApproved}
               onEdit={handleBriefEdit}
               onRestart={handleRestart}

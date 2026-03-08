@@ -113,6 +113,7 @@ export function inferArchetype(profile: IntelProfile): {
   archetype: ArchetypeName;
   confidence: number;
   reasoning: string;
+  matchedMarkers: string[];
 } {
   const text = [profile.industry, profile.audience, profile.painPoints, profile.tone, profile.valueProp, profile.edge].filter(Boolean).join(" ").toLowerCase();
 
@@ -143,10 +144,15 @@ export function inferArchetype(profile: IntelProfile): {
 
   console.log('🎯 [ArchetypeOptimizer] Inference:', sorted[0][0], '| Confidence:', confidence.toFixed(2), '| Scores:', JSON.stringify(scores));
 
+  // Collect which markers actually matched for the winning archetype
+  const winningArchetype = sorted[0][0];
+  const matchedMarkers = MARKERS[winningArchetype].filter(m => text.includes(m));
+
   return {
     archetype: sorted[0][0],
     confidence: parseFloat(confidence.toFixed(2)),
     reasoning: `Classified as ${sorted[0][0]} based on ${profile.industry || "unknown"} industry, $${price.toLocaleString()} price point, and language signal analysis.`,
+    matchedMarkers,
   };
 }
 
