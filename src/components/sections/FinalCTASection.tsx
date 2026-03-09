@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle, Shield } from "lucide-react";
 import type { SDIPalette, SDISectionThemes, SDITypography } from '@/lib/designIntelligence/types';
 import { getArchetypeCtaClass, type DesignProfile } from "@/lib/archetypeProfiles";
+import CTACenteredMinimal from './final-cta/CTACenteredMinimal';
 
 interface FinalCTASectionProps {
   content: {
