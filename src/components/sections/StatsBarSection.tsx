@@ -546,8 +546,7 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
                       transitionDelay: `${index * 50}ms`,
                       borderRadius: 'var(--archetype-card-radius, 0.75rem)',
                     }}
-                  }}
-                >
+                  >
                     <div 
                       className={`text-white ${archetypeStats.numberClass} ${
                         isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-2 inline-block" : ""
