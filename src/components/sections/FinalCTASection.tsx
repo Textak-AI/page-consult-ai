@@ -194,6 +194,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
           className={`${typography?.sectionTitle || 'text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight'} mb-4 ${getTextColorClass()} ${
             isEditing ? "outline-dashed outline-2 outline-white/30 rounded px-2" : ""
           }`}
+          style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.025em)' }}
           contentEditable={isEditing}
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("headline", e)}
