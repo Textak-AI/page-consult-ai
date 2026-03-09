@@ -66,6 +66,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
     industry,
     businessName,
   } = content;
+  const archetype: DesignProfile = (content as any).archetype || 'precision';
 
   // Get industry-specific headers from centralized system
   const sectionHeader = getSectionHeader(industryVariant, 'features');
