@@ -11,6 +11,7 @@ import { PremiumCard, GradientIcon, EyebrowBadge } from "@/components/ui/Premium
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
 import { getSectionHeader } from "@/lib/industrySectionHeaders";
 import { getArchetypeCardClass, type DesignProfile } from "@/lib/archetypeProfiles";
+import FeaturesBentoGrid from './features/FeaturesBentoGrid';
 
 interface FeaturesSectionProps {
   content: {

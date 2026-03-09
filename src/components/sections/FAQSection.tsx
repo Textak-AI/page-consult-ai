@@ -19,6 +19,7 @@ import type { FAQItem } from '@/services/intelligence/types';
 import { getIndustryPattern } from '@/lib/industryPatterns';
 
 import type { IndustryVariant } from '@/config/designSystem/industryVariants';
+import FAQAccordionHairline from './faq/FAQAccordionHairline';
 
 // Component to apply complex CSS background patterns via ref
 function IndustryBackgroundPattern({ css }: { css: string }) {

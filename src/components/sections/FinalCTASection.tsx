@@ -31,6 +31,12 @@ interface FinalCTASectionProps {
 }
 
 export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectionProps) {
+  // Art Director composition check
+  const ctaLayout = (content as any)?.ctaLayout;
+  if (ctaLayout === 'centered-minimal') {
+    return <CTACenteredMinimal content={content as any} onUpdate={onUpdate} isEditing={isEditing} />;
+  }
+
   // SDI Design System
   const theme = content.sectionThemes?.['final-cta'] || 'dark';
   const palette = content.palette;

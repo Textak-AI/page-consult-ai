@@ -28,7 +28,14 @@ interface StatsBarSectionProps {
  * - Staggered hover animations
  * - Industry-specific color accents
  */
-export function StatsBarSection({ statistics, industryVariant, mode, archetype = 'precision', onUpdate, isEditing }: StatsBarSectionProps) {
+export function StatsBarSection({ statistics, industryVariant, mode, archetype = 'precision', onUpdate, isEditing, ...rest }: StatsBarSectionProps & Record<string, any>) {
+  // Art Director composition check
+  const statsPresentation = (rest as any).statsPresentation || (rest as any).content?.statsPresentation;
+  if (statsPresentation === 'hairline-separated') {
+    const contentBag = { statistics, industryVariant, mode, ...(rest as any), ...(rest as any).content };
+    return <StatsHairlineSeparated content={contentBag} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
+  }
+
   const typography = getTypography(industryVariant);
   const isConsulting = industryVariant === 'consulting';
   const isHealthcare = industryVariant === 'healthcare';

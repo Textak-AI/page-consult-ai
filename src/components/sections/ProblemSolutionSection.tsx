@@ -28,6 +28,12 @@ interface ProblemSolutionSectionProps {
 }
 
 export function ProblemSolutionSection({ content, onUpdate, isEditing }: ProblemSolutionSectionProps) {
+  // Art Director composition check
+  const psComposition = (content as any)?.composition;
+  if (psComposition === 'two-column') {
+    return <ProblemSolutionTwoColumn content={content as any} onUpdate={onUpdate} isEditing={isEditing} />;
+  }
+
   const isConsulting = content.industryVariant === 'consulting';
   const isSaas = content.industryVariant === 'saas';
   const isHealthcare = content.industryVariant === 'healthcare';
