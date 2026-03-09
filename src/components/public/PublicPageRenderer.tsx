@@ -167,7 +167,7 @@ export function PublicPageRenderer({
         return (
           <SocialProofSection 
             key={index}
-            content={section.content} 
+            content={enrichedContent} 
             onUpdate={noOp} 
             isEditing={false}
           />
@@ -176,7 +176,7 @@ export function PublicPageRenderer({
         return (
           <FinalCTASection
             key={index}
-            content={section.content}
+            content={enrichedContent}
             onUpdate={noOp}
             isEditing={false}
           />
