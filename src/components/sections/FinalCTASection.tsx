@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle, Shield } from "lucide-react";
 import type { SDIPalette, SDISectionThemes, SDITypography } from '@/lib/designIntelligence/types';
+import { getArchetypeCtaClass, type DesignProfile } from "@/lib/archetypeProfiles";
 
 interface FinalCTASectionProps {
   content: {

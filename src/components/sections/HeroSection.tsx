@@ -5,6 +5,7 @@ import { useState, useMemo } from "react";
 import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star, Image, Layers, PlayCircle, Check, HeartPulse, Factory, TrendingUp, Lightbulb, Palette, GraduationCap, ShoppingBag, Scale, Home, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
+import { getArchetypeHeadingStyle, getArchetypeCtaClass, type DesignProfile } from "@/lib/archetypeProfiles";
 
 // Industry-aware hero icon mapping
 const heroIconMap: Record<string, { icon: LucideIcon; label: string }> = {

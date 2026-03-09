@@ -373,6 +373,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
             statistics={sectionContent.statistics || []} 
             industryVariant={sectionContent.industryVariant}
             mode={sectionContent.mode}
+            archetype={archetypeProfile}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
