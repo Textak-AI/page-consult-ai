@@ -1232,12 +1232,38 @@ serve(async (req) => {
     
     const inferredIndustry = inferIndustry(extractedData.pageCopy || '', extractedData.description, extractedData.heroText);
 
+    // ── Brand Design DNA Extraction ──────────────
+    // COMPLETELY ISOLATED — if this fails, existing extraction returns unchanged
+    let designDNA: BrandDesignDNA | null = null;
+    try {
+      designDNA = await Promise.race([
+        (async () => {
+          const cssContent = await extractCSS(normalizedUrl, html);
+          if (cssContent.length < 100) return null; // Not enough CSS to analyze
+          const dna = analyzeBrandDNA(cssContent);
+          console.log('🎨 [BrandDNA] Extracted design DNA:', JSON.stringify({
+            corners: dna.cornerRadius.style,
+            shadows: dna.shadowSystem.style,
+            borders: dna.borderSystem.style,
+            aesthetic: dna.aesthetic.primary,
+            usesBrandBg: dna.colorUsage.usesBrandBg,
+          }));
+          return dna;
+        })(),
+        new Promise<null>((_, reject) => setTimeout(() => reject(new Error('CSS analysis timeout')), 8000))
+      ]);
+    } catch (err: any) {
+      console.log('[extract-website-intelligence] CSS analysis skipped:', err?.message || err);
+      designDNA = null;
+    }
+
     console.log('[extract-website-intelligence] Final extracted data:', {
       companyName: extractedData.companyName,
       inferredIndustry,
       hasLogo: !!extractedData.logoUrl,
       colorCount: extractedData.brandColors.length,
       isMinimalBrand: extractedData.isMinimalBrand,
+      hasDesignDNA: !!designDNA,
     });
 
     // Build enhanced response with backward compatibility
