@@ -42,6 +42,7 @@ import {
   getIntelligentSectionHeaders,
 } from '@/lib/briefExtractor';
 import type { DesignIntelligenceOutput } from '@/lib/designIntelligence';
+import { generateArtDirectorBrief, archetypeFromStorage } from '@/lib/artDirectorBrief';
 
 // Type definitions
 export interface StructuredBrief {
