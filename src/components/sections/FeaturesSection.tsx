@@ -370,6 +370,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
               className={`text-3xl md:text-4xl font-bold text-slate-900 mb-4 ${
                 isEditing ? "outline-dashed outline-2 outline-teal-500/30 rounded px-2 inline-block" : ""
               }`}
+              style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.01em)' }}
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("title", e)}
