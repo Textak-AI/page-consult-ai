@@ -522,7 +522,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                 className={useFlexLayout ? "w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]" : undefined}
               >
                 {isLightMode ? (
-                  <div className={`h-full ${getArchetypeCardClass(archetype, true)} hover:shadow-lg transition-shadow`}>
+                  <div 
+                    className={`h-full ${getArchetypeCardClass(archetype, true)} hover:shadow-lg transition-shadow`}
+                    style={{ borderRadius: 'var(--archetype-card-radius, 0.5rem)', boxShadow: 'var(--archetype-card-shadow, none)' }}
+                  >
                     <div 
                       className="w-14 h-14 rounded-xl flex items-center justify-center mb-6"
                       style={{ backgroundColor: `${accentColor}15`, color: accentColor }}
