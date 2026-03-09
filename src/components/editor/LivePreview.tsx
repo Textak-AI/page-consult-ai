@@ -376,6 +376,9 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
             archetype={archetypeProfile}
             onUpdate={updateSection}
             isEditing={editingSection === index}
+            statsPresentation={sectionContent.statsPresentation}
+            sectionBackground={sectionContent.sectionBackground}
+            primaryColor={sectionContent.primaryColor}
           />
         );
       case "problem-solution":

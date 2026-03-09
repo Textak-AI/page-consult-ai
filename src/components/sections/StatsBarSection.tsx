@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { formatStatValue, getTypography } from "@/lib/typographyScale";
 import { getArchetypeStatClass, type DesignProfile } from "@/lib/archetypeProfiles";
+import StatsHairlineSeparated from './stats/StatsHairlineSeparated';
 
 interface Statistic {
   value: string;
@@ -27,7 +28,14 @@ interface StatsBarSectionProps {
  * - Staggered hover animations
  * - Industry-specific color accents
  */
-export function StatsBarSection({ statistics, industryVariant, mode, archetype = 'precision', onUpdate, isEditing }: StatsBarSectionProps) {
+export function StatsBarSection({ statistics, industryVariant, mode, archetype = 'precision', onUpdate, isEditing, ...rest }: StatsBarSectionProps & Record<string, any>) {
+  // Art Director composition check
+  const statsPresentation = rest.statsPresentation;
+  if (statsPresentation === 'hairline-separated') {
+    const contentBag = { statistics, industryVariant, mode, sectionBackground: rest.sectionBackground, primaryColor: rest.primaryColor };
+    return <StatsHairlineSeparated content={contentBag} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
+  }
+
   const typography = getTypography(industryVariant);
   const isConsulting = industryVariant === 'consulting';
   const isHealthcare = industryVariant === 'healthcare';

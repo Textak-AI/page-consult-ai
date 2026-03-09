@@ -19,6 +19,7 @@ import type { FAQItem } from '@/services/intelligence/types';
 import { getIndustryPattern } from '@/lib/industryPatterns';
 
 import type { IndustryVariant } from '@/config/designSystem/industryVariants';
+import FAQAccordionHairline from './faq/FAQAccordionHairline';
 
 // Component to apply complex CSS background patterns via ref
 function IndustryBackgroundPattern({ css }: { css: string }) {
@@ -481,9 +482,14 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
   const [editingItem, setEditingItem] = useState<number | null>(null);
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
 
+  // Art Director composition check (after hooks)
+  const faqLayout = (content as any)?.faqLayout;
+  if (faqLayout === 'accordion-hairline') {
+    return <FAQAccordionHairline content={content as any} onUpdate={onUpdate as any} isEditing={isEditing} />;
+  }
+
   const headline = content.headline || 'Frequently Asked Questions';
   const eyebrow = content.eyebrow || 'Common Questions';
-  // Transform FAQ items to ensure questions end with ?
   const items = (content.items || []).map(item => ({
     ...item,
     question: ensureQuestionFormat(item.question)

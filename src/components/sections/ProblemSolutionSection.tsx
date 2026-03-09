@@ -2,6 +2,7 @@ import { AlertTriangle, CheckCircle, ArrowRight, Sparkles, XCircle } from "lucid
 import { motion } from "framer-motion";
 import { EyebrowBadge } from "@/components/ui/PremiumCard";
 import { getTypography } from "@/lib/typographyScale";
+import ProblemSolutionTwoColumn from './problem-solution/ProblemSolutionTwoColumn';
 
 interface CitedStat {
   statistic: string;
@@ -27,6 +28,12 @@ interface ProblemSolutionSectionProps {
 }
 
 export function ProblemSolutionSection({ content, onUpdate, isEditing }: ProblemSolutionSectionProps) {
+  // Art Director composition check
+  const psComposition = (content as any)?.composition;
+  if (psComposition === 'two-column') {
+    return <ProblemSolutionTwoColumn content={content as any} onUpdate={onUpdate} isEditing={isEditing} />;
+  }
+
   const isConsulting = content.industryVariant === 'consulting';
   const isSaas = content.industryVariant === 'saas';
   const isHealthcare = content.industryVariant === 'healthcare';

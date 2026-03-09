@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useMemo, useRef, useEffect } from "react";
 import { getTypography } from "@/lib/typographyScale";
 import { getIndustryPattern, type PatternConfig } from "@/lib/industryPatterns";
+import ProcessNumberedRows from './process/ProcessNumberedRows';
 
 // Component to apply complex CSS background patterns via ref
 function IndustryBackgroundPattern({ css }: { css: string }) {
@@ -32,6 +33,12 @@ interface HowItWorksSectionProps {
 }
 
 export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSectionProps) {
+  // Art Director composition check
+  const processLayout = (content as any)?.processLayout;
+  if (processLayout === 'numbered-rows') {
+    return <ProcessNumberedRows content={content as any} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
+  }
+
   const { title = "How It Works", subtitle = "Your path to results", steps } = content;
   const industryVariant = content.industryVariant || 'default';
   const isConsulting = industryVariant === 'consulting';

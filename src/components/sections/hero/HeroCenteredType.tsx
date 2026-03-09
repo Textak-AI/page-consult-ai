@@ -18,6 +18,7 @@ interface HeroCenteredTypeProps {
 export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroCenteredTypeProps) {
   const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'dark', content.primaryColor);
   const primaryColor = content.primaryColor || '#6366F1';
+  const isSerif = content.typographyPairing === 'serif-sans';
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
@@ -28,17 +29,25 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
 
   const credibilityItems = content.credibilityBar || [];
   const trustBadges = content.trustBadges || [];
-  // Combine all trust signals into a single array
   const allTrustSignals = [
     ...credibilityItems.map((c: any) => c.text || c),
     ...trustBadges,
+    ...(content.credibilityItems || []).map((c: any) => c.text || c.label || c),
   ].filter(Boolean).slice(0, 4);
+
+  const trustSignals = allTrustSignals.length > 0 ? allTrustSignals : [
+    'Free consultation',
+    'No commitment required',
+    'Response within 48 hours',
+  ];
 
   const headingWeight = content.headingWeight || 400;
   const trackingStyle = content.trackingStyle || 'tight';
   const trackingValue = trackingStyle === 'tight' ? '-0.03em' : '0';
 
   return (
+    <>
+    <style>{`@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap');`}</style>
     <section
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
       style={{ backgroundColor: bgStyles.bg }}
@@ -79,8 +88,8 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
           />
         ) : content.businessName ? (
           <p
-            className="text-xs md:text-sm font-mono uppercase tracking-[0.2em] mb-12"
-            style={{ color: bgStyles.textMuted }}
+            className="text-xs md:text-sm uppercase tracking-[0.2em] mb-12"
+            style={{ color: bgStyles.textMuted, fontFamily: '"JetBrains Mono", "SF Mono", monospace' }}
           >
             {content.businessName}
           </p>
@@ -97,6 +106,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
             fontWeight: headingWeight,
             letterSpacing: trackingValue,
             fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
+            fontFamily: isSerif ? '"Instrument Serif", Georgia, "Times New Roman", serif' : '"DM Sans", system-ui, sans-serif',
           }}
         >
           {content.headline}
@@ -108,7 +118,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
           suppressContentEditableWarning
           onBlur={(e) => handleBlur('subheadline', e)}
           className={`max-w-2xl mx-auto leading-relaxed mb-12 text-lg md:text-xl ${isEditing ? 'outline-dashed outline-2 outline-cyan-500/30 rounded px-2' : ''}`}
-          style={{ color: bgStyles.textMuted }}
+          style={{ color: bgStyles.textMuted, fontFamily: '"DM Sans", system-ui, sans-serif' }}
         >
           {content.subheadline}
         </p>
@@ -132,9 +142,9 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
         </div>
 
         {/* Inline trust signals */}
-        {allTrustSignals.length > 0 && (
+        {trustSignals.length > 0 && (
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-            {allTrustSignals.map((signal: string, i: number) => (
+            {trustSignals.map((signal: string, i: number) => (
               <div
                 key={i}
                 className="flex items-center gap-2 text-sm"
@@ -148,5 +158,6 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
         )}
       </div>
     </section>
+    </>
   );
 }

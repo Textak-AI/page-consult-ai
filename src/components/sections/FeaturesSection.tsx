@@ -11,6 +11,7 @@ import { PremiumCard, GradientIcon, EyebrowBadge } from "@/components/ui/Premium
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
 import { getSectionHeader } from "@/lib/industrySectionHeaders";
 import { getArchetypeCardClass, type DesignProfile } from "@/lib/archetypeProfiles";
+import FeaturesBentoGrid from './features/FeaturesBentoGrid';
 
 interface FeaturesSectionProps {
   content: {
@@ -60,6 +61,12 @@ const getIconComponent = (iconName: string): LucideIcon => {
 };
 
 export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "outline" }: FeaturesSectionProps) {
+  // Art Director composition check
+  const featureLayout = (content as any)?.featureLayout;
+  if (featureLayout === 'bento-grid') {
+    return <FeaturesBentoGrid content={content as any} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
+  }
+
   const { 
     features,
     industryVariant = 'default',

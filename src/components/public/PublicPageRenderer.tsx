@@ -126,6 +126,9 @@ export function PublicPageRenderer({
             archetype={archetypeProfile}
             onUpdate={noOp}
             isEditing={false}
+            statsPresentation={enrichedContent.statsPresentation}
+            sectionBackground={enrichedContent.sectionBackground}
+            primaryColor={enrichedContent.primaryColor}
           />
         );
       case 'problem-solution':
