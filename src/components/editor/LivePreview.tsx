@@ -680,6 +680,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
       <div 
         data-mode={colorMode} 
         data-industry={industryVariant || 'default'}
+        data-archetype={archetypeProfile}
         data-card-style={(() => {
           const firstSection = sections.find(s => s.content?.designIntelligence);
           const di = firstSection?.content?.designIntelligence;
