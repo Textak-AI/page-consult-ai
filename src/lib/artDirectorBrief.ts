@@ -22,7 +22,7 @@ export interface ArtDirectorBrief {
   features: {
     layout: 'bento-grid' | 'numbered-list' | 'icon-cards' | 'spec-rows';
     background: 'dark' | 'light' | 'tinted';
-    numbering: 'monospace' | 'none';
+    numbering: 'monospace' | 'accent-large' | 'none';
     iconStyle: 'none' | 'monochrome-bare' | 'accent-circle';
   };
 
