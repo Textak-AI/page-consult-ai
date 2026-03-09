@@ -548,9 +548,9 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
                     }}
                   }}
                 >
-                  <div 
-                    className={`text-3xl lg:text-4xl font-bold text-white ${
-                      isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-2 inline-block" : ""
+                    <div 
+                      className={`text-white ${archetypeStats.numberClass} ${
+                        isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-2 inline-block" : ""
                     }`}
                     contentEditable={isEditing}
                     suppressContentEditableWarning
