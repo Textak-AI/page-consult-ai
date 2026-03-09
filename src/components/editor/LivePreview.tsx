@@ -89,6 +89,17 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
   const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();
   const currentStyle = styleVariants[pageStyle];
   
+  // Resolve archetype design profile from sections or localStorage bridge
+  const archetypeProfile = useMemo<DesignProfile>(() => {
+    // 1. Check if any section has archetype in content
+    const heroContent = sections?.find(s => s.type === 'hero')?.content;
+    if (heroContent?.archetype) return heroContent.archetype as DesignProfile;
+    // 2. Check localStorage bridge
+    return resolveArchetypeFromStorage();
+  }, [sections]);
+  
+  console.log('🎯 [DesignProfile] Active:', archetypeProfile);
+  
   // Debug logging for brand handoff - confirms data flow from Generate.tsx
   console.log('🎨 [LivePreview] Received props:', {
     colorMode,
@@ -96,11 +107,8 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     logoUrl: brandSettings?.logoUrl,
     primaryColor: brandSettings?.primaryColor,
     companyName: brandSettings?.companyName,
+    archetype: archetypeProfile,
   });
-  
-  // DIAGNOSTIC: Log what container will render (helps debug stale data-mode/data-industry)
-  console.log('🎨 [LivePreview Container] data-mode:', colorMode, 'data-industry:', industryVariant || 'default', 
-    'bgClass:', colorMode === 'light' ? 'bg-white' : 'bg-slate-950');
   
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [aiChatSection, setAiChatSection] = useState<{ index: number; type: string; content: any } | null>(null);
