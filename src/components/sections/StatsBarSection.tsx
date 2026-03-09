@@ -27,7 +27,7 @@ interface StatsBarSectionProps {
  * - Staggered hover animations
  * - Industry-specific color accents
  */
-export function StatsBarSection({ statistics, industryVariant, mode, onUpdate, isEditing }: StatsBarSectionProps) {
+export function StatsBarSection({ statistics, industryVariant, mode, archetype = 'precision', onUpdate, isEditing }: StatsBarSectionProps) {
   const typography = getTypography(industryVariant);
   const isConsulting = industryVariant === 'consulting';
   const isHealthcare = industryVariant === 'healthcare';
