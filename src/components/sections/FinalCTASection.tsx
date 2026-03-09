@@ -241,7 +241,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
         >
           <Button 
             size="lg" 
-            className={`px-12 py-6 text-lg font-semibold rounded-lg shadow-lg transition-all ${getButtonClassName()} ${
+            className={`text-lg font-semibold shadow-lg transition-all ${archetypeCtaClass} ${getButtonClassName()} ${
               isEditing ? "outline-dashed outline-2 outline-white/30" : ""
             }`}
             style={getButtonStyles()}
