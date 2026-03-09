@@ -34,6 +34,8 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   const theme = content.sectionThemes?.['final-cta'] || 'dark';
   const palette = content.palette;
   const typography = content.sdiTypography;
+  const archetype: DesignProfile = (content as any).archetype || 'precision';
+  const archetypeCtaClass = getArchetypeCtaClass(archetype);
 
   const headline = content.headline || "Ready to Get Started?";
   const ctaText = content.ctaText || "Get Started";
