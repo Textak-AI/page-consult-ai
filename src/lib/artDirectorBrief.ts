@@ -28,7 +28,7 @@ export interface ArtDirectorBrief {
 
   stats: {
     presentation: 'hairline-separated' | 'card-grid' | 'accent-strip';
-    background: 'dark' | 'light';
+    background: 'dark' | 'light' | 'brand';
     numberStyle: 'large-accent' | 'large-mono' | 'medium-bold';
     labelStyle: 'uppercase-small' | 'sentence-description' | 'minimal-muted';
   };
