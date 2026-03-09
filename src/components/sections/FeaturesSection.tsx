@@ -12,6 +12,7 @@ import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/i
 import { getSectionHeader } from "@/lib/industrySectionHeaders";
 import { getArchetypeCardClass, type DesignProfile } from "@/lib/archetypeProfiles";
 import FeaturesBentoGrid from './features/FeaturesBentoGrid';
+import FeaturesStoryBlocks from './features/FeaturesStoryBlocks';
 
 interface FeaturesSectionProps {
   content: {
