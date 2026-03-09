@@ -198,7 +198,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   className={useFlexLayout ? "w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]" : undefined}
                 >
-                  <div className="h-full p-6 bg-slate-50 rounded-xl border border-slate-200 hover:shadow-lg hover:border-blue-200 transition-all">
+                  <div 
+                    className="h-full p-6 bg-slate-50 border border-slate-200 hover:shadow-lg hover:border-blue-200 transition-all"
+                    style={{ borderRadius: 'var(--archetype-card-radius, 0.75rem)', boxShadow: 'var(--archetype-card-shadow, none)' }}
+                  >
                     <div 
                       className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
                       style={{ backgroundColor: hasBrandColor ? brandPrimaryColor : '#2563eb' }}
@@ -209,6 +212,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                       className={`text-lg font-bold text-slate-900 mb-2 ${
                         isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-1" : ""
                       }`}
+                      style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.01em)' }}
                       contentEditable={isEditing}
                       suppressContentEditableWarning
                       onBlur={(e) => handleFeatureBlur(i, "title", e)}
