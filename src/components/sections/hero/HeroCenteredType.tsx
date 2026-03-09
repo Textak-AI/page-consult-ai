@@ -158,5 +158,6 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
         )}
       </div>
     </section>
+    </>
   );
 }
