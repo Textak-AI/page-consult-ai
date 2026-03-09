@@ -194,6 +194,9 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   const industryVariant = content.industryVariant || 'default';
   const normalizedIndustryVariant = String(industryVariant).toLowerCase();
   const tokens = getIndustryTokens(industryVariant);
+  const archetype: DesignProfile = (content as any).archetype || 'precision';
+  const archetypeHeadingStyle = getArchetypeHeadingStyle(archetype);
+  const archetypeCtaClass = getArchetypeCtaClass(archetype);
   // PRIORITY: Consulting ALWAYS light mode, then SDI mode prop > industry token mode
   const isConsulting = normalizedIndustryVariant === 'consulting';
   const isHealthcare = normalizedIndustryVariant === 'healthcare';
