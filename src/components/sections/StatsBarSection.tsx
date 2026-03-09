@@ -36,6 +36,10 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
     const contentBag = { statistics, industryVariant, mode, sectionBackground: rest.sectionBackground, primaryColor: rest.primaryColor };
     return <StatsHairlineSeparated content={contentBag} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
   }
+  if (statsPresentation === 'card-grid') {
+    const contentBag = { statistics, industryVariant, mode, sectionBackground: rest.sectionBackground, primaryColor: rest.primaryColor };
+    return <StatsCardGrid content={contentBag} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
+  }
 
   const typography = getTypography(industryVariant);
   const isConsulting = industryVariant === 'consulting';

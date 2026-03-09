@@ -260,6 +260,13 @@ export function getSectionBackgroundStyles(
         textMuted: 'rgba(26,26,46,0.5)',
         border: 'rgba(0,0,0,0.04)',
       };
+    case 'brand':
+      return {
+        bg: primaryColor || '#56276B',
+        text: '#FFFFFF',
+        textMuted: 'rgba(255,255,255,0.75)',
+        border: 'rgba(255,255,255,0.15)',
+      };
     default:
       return {
         bg: '#0A0A0A',

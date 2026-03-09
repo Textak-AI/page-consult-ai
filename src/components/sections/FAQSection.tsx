@@ -488,6 +488,9 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
   if (faqLayout === 'accordion-hairline') {
     return <FAQAccordionHairline content={content as any} onUpdate={onUpdate as any} isEditing={isEditing} />;
   }
+  if (faqLayout === 'accordion-card') {
+    return <FAQAccordionCard content={content as any} onUpdate={onUpdate as any} isEditing={isEditing} />;
+  }
 
   const headline = content.headline || 'Frequently Asked Questions';
   const eyebrow = content.eyebrow || 'Common Questions';

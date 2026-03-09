@@ -67,6 +67,9 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
   if (featureLayout === 'bento-grid') {
     return <FeaturesBentoGrid content={content as any} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
   }
+  if (featureLayout === 'icon-cards') {
+    return <FeaturesStoryBlocks content={content as any} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
+  }
 
   const { 
     features,

@@ -34,6 +34,9 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
   if (psComposition === 'two-column') {
     return <ProblemSolutionTwoColumn content={content as any} onUpdate={onUpdate} isEditing={isEditing} />;
   }
+  if (psComposition === 'challenge-then-relief') {
+    return <ProblemSolutionReliefArc content={content as any} onUpdate={onUpdate} isEditing={isEditing} />;
+  }
 
   const isConsulting = content.industryVariant === 'consulting';
   const isSaas = content.industryVariant === 'saas';
