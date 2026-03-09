@@ -983,9 +983,10 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 contentEditable={isEditing}
                 suppressContentEditableWarning
                 onBlur={(e) => handleBlur("headline", e)}
-                className={`${heroHeadlineClass} ${
-                  hasBackgroundImage && showDarkOverlay ? 'text-white' : 'text-slate-900'
-                } ${isEditing ? "cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2" : ""}`}
+              className={`${heroHeadlineClass} ${
+                hasBackgroundImage && showDarkOverlay ? 'text-white' : 'text-slate-900'
+              } ${isEditing ? "cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2" : ""}`}
+              style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.02em)' }}
               >
                 <HeadlineWithHighlight 
                   text={content.headline}
