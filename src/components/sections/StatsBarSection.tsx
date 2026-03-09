@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { formatStatValue, getTypography } from "@/lib/typographyScale";
 import { getArchetypeStatClass, type DesignProfile } from "@/lib/archetypeProfiles";
 import StatsHairlineSeparated from './stats/StatsHairlineSeparated';
+import StatsCardGrid from './stats/StatsCardGrid';
 
 interface Statistic {
   value: string;
