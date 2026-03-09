@@ -149,7 +149,7 @@ export function PublicPageRenderer({
         return (
           <FeaturesSection
             key={index}
-            content={section.content}
+            content={enrichedContent}
             onUpdate={noOp}
             isEditing={false}
           />
