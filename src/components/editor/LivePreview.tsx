@@ -606,13 +606,29 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           index,
           <EngagementModelSection content={sectionContent} />
         );
-      case "client-results":
+      case "client-results": {
         console.log('🎨 [LivePreview] Rendering section: client-results');
+        const crResults = sectionContent.results || sectionContent.statistics || sectionContent.stats || [];
+        const validResults = crResults.filter((s: any) => {
+          if (!s.metric && !s.value) return false;
+          const label = s.description || s.label || '';
+          if (!label) return false;
+          const val = s.metric || s.value || '';
+          if (!/\d/.test(val)) return false;
+          const genericLabels = ['consulting', 'services', 'business', 'growth', 'company', 'industry'];
+          if (genericLabels.includes(String(label).toLowerCase().trim())) return false;
+          return true;
+        });
+        if (validResults.length < 2) {
+          console.log('🎨 [LivePreview] Quality floor: client-results hidden (only', validResults.length, 'valid)');
+          return null;
+        }
         return renderSectionWithToolbar(
           section,
           index,
           <ClientResultsSection content={sectionContent} />
         );
+      }
       default:
         return null;
     }

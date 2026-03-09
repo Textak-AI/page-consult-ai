@@ -92,6 +92,17 @@ function getSocialProofHeader(industry?: string, isConsulting?: boolean): { titl
 }
 
 export function SocialProofSection({ content, onUpdate, isEditing }: SocialProofSectionProps) {
+  // Quality floor: if no real testimonials, don't render the section at all
+  const testimonialData = content.testimonial;
+  const hasRealTestimonial = testimonialData && 
+    testimonialData.quote && testimonialData.quote.length > 10 && 
+    testimonialData.name && testimonialData.name.length > 0;
+
+  if (!hasRealTestimonial) {
+    console.log('🎨 [SocialProofSection] Quality floor: no real testimonials, hiding section');
+    return null;
+  }
+
   const isConsulting = content.industryVariant === 'consulting';
   const isSaas = content.industryVariant === 'saas';
   const isHealthcare = content.industryVariant === 'healthcare';
