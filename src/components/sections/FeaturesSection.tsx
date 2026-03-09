@@ -403,7 +403,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   className={useFlexLayout ? "w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]" : undefined}
                 >
-                  <div className="h-full p-8 bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                  <div 
+                    className="h-full p-8 bg-white shadow-sm border border-slate-100 hover:shadow-md transition-shadow"
+                    style={{ borderRadius: 'var(--archetype-card-radius, 1rem)', boxShadow: 'var(--archetype-card-shadow, 0 1px 2px rgba(0,0,0,0.05))' }}
+                  >
                     <div 
                       className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 ${iconBg}`}
                       style={iconBgStyle}
@@ -414,6 +417,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                       className={`text-xl font-bold text-slate-900 mb-3 ${
                         isEditing ? "outline-dashed outline-2 outline-teal-500/30 rounded px-1" : ""
                       }`}
+                      style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.01em)' }}
                       contentEditable={isEditing}
                       suppressContentEditableWarning
                       onBlur={(e) => handleFeatureBlur(i, "title", e)}
