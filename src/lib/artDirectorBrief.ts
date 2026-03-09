@@ -188,17 +188,30 @@ export function applyArtDirectorDirectives(
         processLayout: artBrief.process.layout,
         sectionBackground: artBrief.process.background,
         numbering: artBrief.process.numbering,
+        typographyPairing: artBrief.typography.pairing,
+        headingWeight: artBrief.typography.headingWeight,
+        trackingStyle: artBrief.typography.trackingStyle,
       };
     } else if (type === 'faq') {
       directives = {
         faqLayout: artBrief.faq.layout,
         sectionBackground: artBrief.faq.background,
+        typographyPairing: artBrief.typography.pairing,
+        headingWeight: artBrief.typography.headingWeight,
+        trackingStyle: artBrief.typography.trackingStyle,
       };
     } else if (type === 'final-cta') {
       directives = {
         ctaLayout: artBrief.finalCta.layout,
         sectionBackground: artBrief.finalCta.background,
         hasAccentGlow: artBrief.finalCta.hasAccentGlow,
+        typographyPairing: artBrief.typography.pairing,
+        headingWeight: artBrief.typography.headingWeight,
+      };
+    } else if (type === 'problem-solution') {
+      directives = {
+        composition: 'two-column',
+        sectionBackground: artBrief.process.background,
       };
     }
 
