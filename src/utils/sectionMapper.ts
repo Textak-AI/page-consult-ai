@@ -820,6 +820,72 @@ export function mapBriefToSections(
     }
   }
 
+  // ── Apply Art Director Compositional Brief ──────────────────────
+  const artArchetype = options.messagingArchitecture?.archetype || archetypeFromStorage() || 'Analytical Validator';
+  const artBrief = generateArtDirectorBrief(artArchetype);
+  console.log('🎨 [ArtDirector] Brief generated:', artBrief.designPhilosophy, '| Hero:', artBrief.hero.composition, '| Features:', artBrief.features.layout);
+
+  sections = sections.map(section => {
+    const type = section.type;
+    let directives: Record<string, any> = {};
+
+    if (type === 'hero' && artBrief.hero) {
+      directives = {
+        composition: artBrief.hero.composition,
+        sectionBackground: artBrief.hero.background,
+        hasGridTexture: artBrief.hero.hasGridTexture,
+        hasAccentGlow: artBrief.hero.hasAccentGlow,
+        trustSignals: artBrief.hero.trustSignals,
+        typographyPairing: artBrief.typography.pairing,
+        headingWeight: artBrief.typography.headingWeight,
+        trackingStyle: artBrief.typography.trackingStyle,
+        dividerSystem: artBrief.dividerSystem,
+      };
+    } else if (type === 'features' && artBrief.features) {
+      directives = {
+        featureLayout: artBrief.features.layout,
+        sectionBackground: artBrief.features.background,
+        numbering: artBrief.features.numbering,
+        iconStyle: artBrief.features.iconStyle,
+        typographyPairing: artBrief.typography.pairing,
+        headingWeight: artBrief.typography.headingWeight,
+        trackingStyle: artBrief.typography.trackingStyle,
+      };
+    } else if (type === 'stats-bar' && artBrief.stats) {
+      directives = {
+        statsPresentation: artBrief.stats.presentation,
+        sectionBackground: artBrief.stats.background,
+        numberStyle: artBrief.stats.numberStyle,
+        labelStyle: artBrief.stats.labelStyle,
+      };
+    } else if (type === 'how-it-works' && artBrief.process) {
+      directives = {
+        processLayout: artBrief.process.layout,
+        sectionBackground: artBrief.process.background,
+        numbering: artBrief.process.numbering,
+      };
+    } else if (type === 'faq' && artBrief.faq) {
+      directives = {
+        faqLayout: artBrief.faq.layout,
+        sectionBackground: artBrief.faq.background,
+      };
+    } else if (type === 'final-cta' && artBrief.finalCta) {
+      directives = {
+        ctaLayout: artBrief.finalCta.layout,
+        sectionBackground: artBrief.finalCta.background,
+        hasAccentGlow: artBrief.finalCta.hasAccentGlow,
+      };
+    }
+
+    return {
+      ...section,
+      content: {
+        ...section.content,
+        ...directives,
+      },
+    };
+  });
+
   return sections;
 }
 

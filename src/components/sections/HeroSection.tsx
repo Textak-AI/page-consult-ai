@@ -6,6 +6,8 @@ import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Cam
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
 import { getArchetypeHeadingStyle, getArchetypeCtaClass, type DesignProfile } from "@/lib/archetypeProfiles";
+import HeroCenteredType from "./hero/HeroCenteredType";
+import HeroSplitPhoto from "./hero/HeroSplitPhoto";
 
 // Industry-aware hero icon mapping
 const heroIconMap: Record<string, { icon: LucideIcon; label: string }> = {
