@@ -88,8 +88,8 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
           />
         ) : content.businessName ? (
           <p
-            className="text-xs md:text-sm font-mono uppercase tracking-[0.2em] mb-12"
-            style={{ color: bgStyles.textMuted }}
+            className="text-xs md:text-sm uppercase tracking-[0.2em] mb-12"
+            style={{ color: bgStyles.textMuted, fontFamily: '"JetBrains Mono", "SF Mono", monospace' }}
           >
             {content.businessName}
           </p>
