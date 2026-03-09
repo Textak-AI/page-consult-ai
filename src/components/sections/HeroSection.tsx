@@ -340,6 +340,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               className={`${heroHeadlineClass} text-slate-900 mb-6 ${
                 isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-2 inline-block" : ""
               }`}
+              style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.02em)' }}
             >
               {content.headline}
             </h1>
