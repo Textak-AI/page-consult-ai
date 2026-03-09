@@ -137,6 +137,81 @@ export function archetypeFromStorage(): string | null {
   return null;
 }
 
+/**
+ * Apply Art Director compositional directives to a Section[] array.
+ * Call this at the end of ANY mapping path to inject composition props.
+ */
+export function applyArtDirectorDirectives(
+  sections: any[],
+  messagingArchitecture?: { archetype?: string } | null
+): any[] {
+  const archetype = messagingArchitecture?.archetype || archetypeFromStorage() || 'Analytical Validator';
+  const artBrief = generateArtDirectorBrief(archetype);
+  console.log('🎨🎨🎨 [ArtDirector] EXECUTING — sections count:', sections.length, '| archetype:', archetype);
+  console.log('🎨 [ArtDirector] Brief generated:', artBrief.designPhilosophy, '| Hero:', artBrief.hero.composition, '| Features:', artBrief.features.layout);
+
+  return sections.map(section => {
+    const type = section.type;
+    let directives: Record<string, any> = {};
+
+    if (type === 'hero') {
+      directives = {
+        composition: artBrief.hero.composition,
+        sectionBackground: artBrief.hero.background,
+        hasGridTexture: artBrief.hero.hasGridTexture,
+        hasAccentGlow: artBrief.hero.hasAccentGlow,
+        trustSignals: artBrief.hero.trustSignals,
+        typographyPairing: artBrief.typography.pairing,
+        headingWeight: artBrief.typography.headingWeight,
+        trackingStyle: artBrief.typography.trackingStyle,
+        dividerSystem: artBrief.dividerSystem,
+      };
+    } else if (type === 'features') {
+      directives = {
+        featureLayout: artBrief.features.layout,
+        sectionBackground: artBrief.features.background,
+        numbering: artBrief.features.numbering,
+        iconStyle: artBrief.features.iconStyle,
+        typographyPairing: artBrief.typography.pairing,
+        headingWeight: artBrief.typography.headingWeight,
+        trackingStyle: artBrief.typography.trackingStyle,
+      };
+    } else if (type === 'stats-bar') {
+      directives = {
+        statsPresentation: artBrief.stats.presentation,
+        sectionBackground: artBrief.stats.background,
+        numberStyle: artBrief.stats.numberStyle,
+        labelStyle: artBrief.stats.labelStyle,
+      };
+    } else if (type === 'how-it-works') {
+      directives = {
+        processLayout: artBrief.process.layout,
+        sectionBackground: artBrief.process.background,
+        numbering: artBrief.process.numbering,
+      };
+    } else if (type === 'faq') {
+      directives = {
+        faqLayout: artBrief.faq.layout,
+        sectionBackground: artBrief.faq.background,
+      };
+    } else if (type === 'final-cta') {
+      directives = {
+        ctaLayout: artBrief.finalCta.layout,
+        sectionBackground: artBrief.finalCta.background,
+        hasAccentGlow: artBrief.finalCta.hasAccentGlow,
+      };
+    }
+
+    return {
+      ...section,
+      content: {
+        ...section.content,
+        ...directives,
+      },
+    };
+  });
+}
+
 /** 
  * Section background style helper.
  * Returns raw color values for sub-components to apply via inline styles.

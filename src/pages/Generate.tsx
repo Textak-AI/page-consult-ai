@@ -53,6 +53,7 @@ import {
 import { CreditDisplay, UpgradeDrawer } from "@/components/credits";
 import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid, generateSEOHeadData, type SEOHeadData } from "@/lib/aiSeoIntegration";
 import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief, type MappedPage } from "@/utils/sectionMapper";
+import { applyArtDirectorDirectives } from "@/lib/artDirectorBrief";
 import { selectSectionsFromSDI } from "@/utils/sectionSelector";
 import { generateDesignSystem, designSystemToCSSVariables } from "@/config/designSystem";
 
@@ -4460,7 +4461,7 @@ function GenerateContent() {
     }
 
     console.log(`✅ Legacy mapper built ${sections.length} sections from SDI-driven structure (isBeta: ${isBetaPage})`);
-    return sections;
+    return applyArtDirectorDirectives(sections);
   };
 
   // Map old generation format
