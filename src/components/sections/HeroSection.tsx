@@ -548,7 +548,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           <div className="flex flex-wrap gap-4 justify-center mb-10">
             <Button 
               size="lg" 
-              className={ctaClassName}
+              className={`${ctaClassName} ${archetypeCtaClass}`}
               style={ctaStyle}
             >
               <span
