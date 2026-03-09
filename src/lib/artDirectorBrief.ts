@@ -141,12 +141,105 @@ export function archetypeFromStorage(): string | null {
  * Apply Art Director compositional directives to a Section[] array.
  * Call this at the end of ANY mapping path to inject composition props.
  */
+/**
+ * Apply Brand DNA overrides to an Art Director brief.
+ * DNA signals from actual CSS analysis override archetype defaults.
+ */
+export function applyBrandDNAOverrides(
+  brief: ArtDirectorBrief,
+  designDNA: any | null
+): ArtDirectorBrief {
+  if (!designDNA) return brief;
+
+  const updated = { ...brief };
+  const dna = designDNA;
+
+  // ── Border System → accent bars vs hairlines vs none ──
+  if (dna.borderSystem?.confidence > 0.4) {
+    if (dna.borderSystem.style === 'accent') {
+      (updated as any).dividerSystem = 'accent-border';
+    }
+    if (dna.borderSystem.style === 'structural') {
+      updated.dividerSystem = 'hairlines';
+    }
+    if (dna.borderSystem.style === 'none') {
+      updated.dividerSystem = 'whitespace';
+    }
+  }
+
+  // ── Shadow System → flat vs elevated ──
+  if (dna.shadowSystem?.confidence > 0.4) {
+    if (dna.shadowSystem.style === 'none') {
+      if (updated.designPhilosophy !== 'organic') updated.designPhilosophy = 'structural';
+    }
+    if (dna.shadowSystem.style === 'deep') {
+      (updated as any).designPhilosophy = 'atmospheric';
+    }
+  }
+
+  // ── Color Usage → brand-color section backgrounds ──
+  if (dna.colorUsage?.confidence > 0.4) {
+    if (dna.colorUsage.usesBrandBg) {
+      updated.stats = { ...updated.stats, background: 'brand' };
+    }
+  }
+
+  // ── Typography → serif/mono detection ──
+  if (dna.typography?.confidence > 0.4) {
+    if (dna.typography.usesSerif) {
+      updated.typography = { ...updated.typography, pairing: 'serif-sans' };
+    }
+    if (dna.typography.usesMono) {
+      updated.typography = { ...updated.typography, pairing: 'sans-mono' as any };
+      updated.features = { ...updated.features, numbering: 'monospace' };
+    }
+  }
+
+  // ── Aesthetic → overall feel ──
+  if (dna.aesthetic?.confidence > 0.5) {
+    if (dna.aesthetic.primary === 'warm') {
+      updated.designPhilosophy = 'organic';
+    }
+    if (dna.aesthetic.primary === 'technical') {
+      updated.designPhilosophy = 'structural';
+    }
+    if (dna.aesthetic.primary === 'editorial') {
+      updated.typography = { ...updated.typography, pairing: 'serif-sans' };
+    }
+  }
+
+  console.log('🎨 [ArtDirector] Brand DNA overrides applied:', {
+    corners: dna.cornerRadius?.style,
+    borders: dna.borderSystem?.style,
+    shadows: dna.shadowSystem?.style,
+    aesthetic: dna.aesthetic?.primary,
+    usesBrandBg: dna.colorUsage?.usesBrandBg,
+  });
+
+  return updated;
+}
+
 export function applyArtDirectorDirectives(
   sections: any[],
   messagingArchitecture?: { archetype?: string } | null
 ): any[] {
   const archetype = messagingArchitecture?.archetype || archetypeFromStorage() || 'Analytical Validator';
-  const artBrief = generateArtDirectorBrief(archetype);
+  let artBrief = generateArtDirectorBrief(archetype);
+
+  // Apply Brand DNA overrides if available
+  try {
+    const intel = localStorage.getItem('pageconsult_extracted_intelligence');
+    if (intel) {
+      const parsed = JSON.parse(intel);
+      if (parsed.designDNA) {
+        artBrief = applyBrandDNAOverrides(artBrief, parsed.designDNA);
+        console.log('🎨 [ArtDirector] Brand DNA found and applied');
+      }
+    }
+  } catch (e) {
+    // Silently fail — storage may be unavailable
+  }
+
   console.log('🎨🎨🎨 [ArtDirector] EXECUTING — sections count:', sections.length, '| archetype:', archetype);
   console.log('🎨 [ArtDirector] Brief generated:', artBrief.designPhilosophy, '| Hero:', artBrief.hero.composition, '| Features:', artBrief.features.layout);
 
