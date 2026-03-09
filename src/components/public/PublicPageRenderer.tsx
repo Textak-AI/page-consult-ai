@@ -352,6 +352,7 @@ export function PublicPageRenderer({
       <div 
         data-mode={colorMode}
         data-industry={industryVariant}
+        data-archetype={archetypeProfile}
         className={cn(
           colorMode === 'light' ? 'min-h-screen bg-white' : 'min-h-screen bg-slate-950',
           colorMode === 'dark' && 'page-noise-overlay',
