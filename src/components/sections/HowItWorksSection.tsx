@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useMemo, useRef, useEffect } from "react";
 import { getTypography } from "@/lib/typographyScale";
 import { getIndustryPattern, type PatternConfig } from "@/lib/industryPatterns";
+import ProcessNumberedRows from './process/ProcessNumberedRows';
 
 // Component to apply complex CSS background patterns via ref
 function IndustryBackgroundPattern({ css }: { css: string }) {
