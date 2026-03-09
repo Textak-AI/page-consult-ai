@@ -158,7 +158,7 @@ export function PublicPageRenderer({
         return (
           <PhotoGallerySection
             key={index}
-            content={section.content}
+            content={enrichedContent}
             onUpdate={noOp}
             isEditing={false}
           />
