@@ -111,7 +111,7 @@ export function PublicPageRenderer({
         return (
           <HeroSection
             key={index}
-            content={section.content}
+            content={enrichedContent}
             onUpdate={noOp}
             isEditing={false}
           />
