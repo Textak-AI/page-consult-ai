@@ -28,7 +28,7 @@ export interface ArtDirectorBrief {
 
   stats: {
     presentation: 'hairline-separated' | 'card-grid' | 'accent-strip';
-    background: 'dark' | 'light';
+    background: 'dark' | 'light' | 'brand';
     numberStyle: 'large-accent' | 'large-mono' | 'medium-bold';
     labelStyle: 'uppercase-small' | 'sentence-description' | 'minimal-muted';
   };
@@ -84,7 +84,7 @@ export function generateArtDirectorBrief(archetype: string): ArtDirectorBrief {
         dividerSystem: 'whitespace',
         hero: { composition: 'split-photo', background: 'light', hasGridTexture: false, hasAccentGlow: false, trustSignals: 'inline-checks' },
         features: { layout: 'icon-cards', background: 'tinted', numbering: 'none', iconStyle: 'accent-circle' },
-        stats: { presentation: 'card-grid', background: 'light', numberStyle: 'medium-bold', labelStyle: 'sentence-description' },
+        stats: { presentation: 'card-grid', background: 'brand', numberStyle: 'medium-bold', labelStyle: 'sentence-description' },
         process: { layout: 'stacked-cards', background: 'tinted', numbering: 'accent-large' },
         faq: { layout: 'accordion-card', background: 'light' },
         finalCta: { layout: 'centered-minimal', background: 'light', hasAccentGlow: false },
@@ -259,6 +259,13 @@ export function getSectionBackgroundStyles(
         text: '#1A1A2E',
         textMuted: 'rgba(26,26,46,0.5)',
         border: 'rgba(0,0,0,0.04)',
+      };
+    case 'brand':
+      return {
+        bg: primaryColor || '#56276B',
+        text: '#FFFFFF',
+        textMuted: 'rgba(255,255,255,0.75)',
+        border: 'rgba(255,255,255,0.15)',
       };
     default:
       return {

@@ -20,6 +20,7 @@ import { getIndustryPattern } from '@/lib/industryPatterns';
 
 import type { IndustryVariant } from '@/config/designSystem/industryVariants';
 import FAQAccordionHairline from './faq/FAQAccordionHairline';
+import FAQAccordionCard from './faq/FAQAccordionCard';
 
 // Component to apply complex CSS background patterns via ref
 function IndustryBackgroundPattern({ css }: { css: string }) {
@@ -486,6 +487,9 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
   const faqLayout = (content as any)?.faqLayout;
   if (faqLayout === 'accordion-hairline') {
     return <FAQAccordionHairline content={content as any} onUpdate={onUpdate as any} isEditing={isEditing} />;
+  }
+  if (faqLayout === 'accordion-card') {
+    return <FAQAccordionCard content={content as any} onUpdate={onUpdate as any} isEditing={isEditing} />;
   }
 
   const headline = content.headline || 'Frequently Asked Questions';

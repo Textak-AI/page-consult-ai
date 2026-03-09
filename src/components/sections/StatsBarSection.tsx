@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { formatStatValue, getTypography } from "@/lib/typographyScale";
 import { getArchetypeStatClass, type DesignProfile } from "@/lib/archetypeProfiles";
 import StatsHairlineSeparated from './stats/StatsHairlineSeparated';
+import StatsCardGrid from './stats/StatsCardGrid';
 
 interface Statistic {
   value: string;
@@ -34,6 +35,10 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
   if (statsPresentation === 'hairline-separated') {
     const contentBag = { statistics, industryVariant, mode, sectionBackground: rest.sectionBackground, primaryColor: rest.primaryColor };
     return <StatsHairlineSeparated content={contentBag} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
+  }
+  if (statsPresentation === 'card-grid') {
+    const contentBag = { statistics, industryVariant, mode, sectionBackground: rest.sectionBackground, primaryColor: rest.primaryColor };
+    return <StatsCardGrid content={contentBag} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
   }
 
   const typography = getTypography(industryVariant);

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { EyebrowBadge } from "@/components/ui/PremiumCard";
 import { getTypography } from "@/lib/typographyScale";
 import ProblemSolutionTwoColumn from './problem-solution/ProblemSolutionTwoColumn';
+import ProblemSolutionReliefArc from './problem-solution/ProblemSolutionReliefArc';
 
 interface CitedStat {
   statistic: string;
@@ -32,6 +33,9 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
   const psComposition = (content as any)?.composition;
   if (psComposition === 'two-column') {
     return <ProblemSolutionTwoColumn content={content as any} onUpdate={onUpdate} isEditing={isEditing} />;
+  }
+  if (psComposition === 'challenge-then-relief') {
+    return <ProblemSolutionReliefArc content={content as any} onUpdate={onUpdate} isEditing={isEditing} />;
   }
 
   const isConsulting = content.industryVariant === 'consulting';
