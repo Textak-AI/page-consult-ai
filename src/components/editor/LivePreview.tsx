@@ -340,6 +340,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
       // Inject brand colors so section components can use them for CTAs/buttons
       primaryColor: section.content?.primaryColor || brandSettings?.primaryColor || null,
       logoUrl: section.content?.logoUrl || brandSettings?.logoUrl || null,
+      archetype: archetypeProfile, // Archetype design profile
     };
     
     // Debug logging
