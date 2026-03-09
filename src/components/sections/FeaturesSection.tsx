@@ -296,7 +296,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   className={useFlexLayout ? "w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]" : undefined}
                 >
-                  <div className="h-full p-8 bg-slate-800 border border-slate-700 rounded-2xl hover:border-purple-500/50 transition-colors premium-gen-card">
+                  <div 
+                    className="h-full p-8 bg-slate-800 border border-slate-700 hover:border-purple-500/50 transition-colors premium-gen-card"
+                    style={{ borderRadius: 'var(--archetype-card-radius, 1rem)', boxShadow: 'var(--archetype-card-shadow, none)' }}
+                  >
                     <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-6">
                       <Icon className="w-7 h-7 text-purple-400" strokeWidth={1.5} />
                     </div>
@@ -304,6 +307,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                       className={`text-xl font-bold text-white mb-3 ${
                         isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-1" : ""
                       }`}
+                      style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.01em)' }}
                       contentEditable={isEditing}
                       suppressContentEditableWarning
                       onBlur={(e) => handleFeatureBlur(i, "title", e)}
