@@ -462,6 +462,7 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
 
   // Default dark mode styling - also use premium layout
   const [heroStat, ...supportingStats] = cleanStats;
+  const archetypeStats = getArchetypeStatClass(archetype);
   
   return (
     <section 
@@ -486,22 +487,23 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="relative p-8 rounded-2xl"
+              className="relative p-8"
               style={{
                 backgroundColor: 'hsl(217, 33%, 10%)',
                 borderWidth: '1px',
                 borderColor: 'hsl(217, 33%, 18%)',
                 borderStyle: 'solid',
+                borderRadius: 'var(--archetype-card-radius, 1rem)',
               }}
             >
               {/* Accent corner */}
               <div className="absolute top-0 left-0 w-24 h-1 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500" />
               
               <div 
-                className={`text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight text-cyan-400 ${
+                className={`text-cyan-400 ${archetypeStats.numberClass} ${
                   isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-2 inline-block" : ""
                 }`}
-                style={{ fontFamily: 'var(--font-heading)' }}
+                style={{ fontFamily: 'var(--font-heading)', fontSize: archetype === 'command' ? 'clamp(3rem, 8vw, 6rem)' : undefined }}
                 contentEditable={isEditing}
                 suppressContentEditableWarning
                 onBlur={(e) => handleStatBlur(0, 'value', e)}
