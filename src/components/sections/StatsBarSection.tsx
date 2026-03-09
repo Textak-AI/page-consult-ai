@@ -30,9 +30,9 @@ interface StatsBarSectionProps {
  */
 export function StatsBarSection({ statistics, industryVariant, mode, archetype = 'precision', onUpdate, isEditing, ...rest }: StatsBarSectionProps & Record<string, any>) {
   // Art Director composition check
-  const statsPresentation = (rest as any).statsPresentation || (rest as any).content?.statsPresentation;
+  const statsPresentation = rest.statsPresentation;
   if (statsPresentation === 'hairline-separated') {
-    const contentBag = { statistics, industryVariant, mode, ...(rest as any), ...(rest as any).content };
+    const contentBag = { statistics, industryVariant, mode, sectionBackground: rest.sectionBackground, primaryColor: rest.primaryColor };
     return <StatsHairlineSeparated content={contentBag} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
   }
 
