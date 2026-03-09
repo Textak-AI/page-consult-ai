@@ -16,6 +16,18 @@ import ReactMarkdown from 'react-markdown';
 import tealLogo from '@/assets/iconmark-teal.svg';
 import { UnifiedNavBar } from '@/components/flow/UnifiedNavBar';
 import type { FlowState } from '@/hooks/useFlowNavigation';
+import { optimizeFromProfile, type IntelProfile } from '@/utils/archetypeOptimizer';
+
+function parsePriceFromText(text: string): number {
+  if (!text) return 0;
+  const cleaned = text.replace(/[^0-9.kmb]/gi, '');
+  let num = parseFloat(cleaned);
+  if (isNaN(num)) return 0;
+  if (/k/i.test(text)) num *= 1000;
+  if (/m/i.test(text)) num *= 1000000;
+  if (/b/i.test(text)) num *= 1000000000;
+  return num;
+}
 
 // Circuit pattern SVG - extremely subtle for expanded view (2% opacity)
 const circuitPatternSvg = `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.02'%3E%3Cpath d='M0 40h20v-20h20v-20'/%3E%3Cpath d='M80 40h-20v20h-20v20'/%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='60' cy='60' r='2'/%3E%3C/g%3E%3C/svg%3E")`;
@@ -209,6 +221,32 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
 
   // Show Brief Review modal when user clicks "Generate Your Brief"
   const handleGenerateClick = () => {
+    // Run Archetype Optimizer (SDI Layer 1.5)
+    try {
+      const intelProfile: IntelProfile = {
+        industry: state.extracted.industry || '',
+        audience: state.extracted.audience || '',
+        pricePoint: parsePriceFromText(state.extracted.pricePoint || ''),
+        painPoints: state.extracted.painPoints || '',
+        tone: '',
+        valueProp: state.extracted.valueProp || '',
+        edge: state.extracted.competitorDifferentiator || '',
+      };
+      console.log('🎯 [ArchetypeOptimizer] TryDemo: Profile extracted', intelProfile);
+      const optimizationResult = optimizeFromProfile(intelProfile);
+      console.log('🎯 [ArchetypeOptimizer] TryDemo fired:', optimizationResult.primary.archetype, '→', optimizationResult.primary.stateKey, '| Confidence:', optimizationResult.primary.confidence);
+      
+      localStorage.setItem('pageconsult_messaging_architecture', JSON.stringify({
+        primary: optimizationResult.primary,
+        generationConstraints: optimizationResult.generationConstraints,
+        inference: optimizationResult.inference,
+        timestamp: Date.now(),
+      }));
+      console.log('🎯 [ArchetypeOptimizer] Saved to localStorage');
+    } catch (err) {
+      console.warn('🎯 [ArchetypeOptimizer] TryDemo: Optimization failed (non-blocking):', err);
+    }
+
     setShowBriefReview(true);
   };
   

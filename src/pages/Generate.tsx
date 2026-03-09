@@ -463,12 +463,27 @@ function GenerateContent() {
   const [designIntelligence, setDesignIntelligence] = useState<DesignIntelligenceOutput | null>(null);
   
   // Messaging Architecture from Archetype Optimizer (SDI Layer 1.5)
-  // Initialize from nav state if available (fallback for page reloads)
-  const [messagingArchitecture, setMessagingArchitecture] = useState<any>(
-    effectiveNavState?.strategicData?.messagingArchitecture
-      ? { primary: effectiveNavState.strategicData.messagingArchitecture, generationConstraints: effectiveNavState.strategicData.messagingConstraints }
-      : null
-  );
+  // Initialize from nav state if available, then localStorage fallback
+  const [messagingArchitecture, setMessagingArchitecture] = useState<any>(() => {
+    // 1. Try nav state
+    if (effectiveNavState?.strategicData?.messagingArchitecture) {
+      return { primary: effectiveNavState.strategicData.messagingArchitecture, generationConstraints: effectiveNavState.strategicData.messagingConstraints };
+    }
+    // 2. Try localStorage fallback (persisted from TryDemo flow)
+    try {
+      const stored = localStorage.getItem('pageconsult_messaging_architecture');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 2 * 60 * 60 * 1000) {
+          console.log('🎯 [ArchetypeOptimizer] Generate: Loaded from localStorage:', parsed.primary?.archetype);
+          return { primary: parsed.primary || null, generationConstraints: parsed.generationConstraints || null };
+        }
+      }
+    } catch (e) {
+      console.warn('🎯 [ArchetypeOptimizer] Generate: Failed to read localStorage', e);
+    }
+    return null;
+  });
   
 
 
