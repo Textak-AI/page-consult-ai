@@ -255,7 +255,6 @@ export function getSectionBackgroundStyles(
         border: 'rgba(255,255,255,0.06)',
       };
 }
-  primaryColor?: string
 ): {
   bg: string;
   text: string;
