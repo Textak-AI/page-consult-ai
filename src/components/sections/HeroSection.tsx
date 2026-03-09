@@ -531,7 +531,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("headline", e)}
             className={`${heroHeadlineClass} text-white mb-6 max-w-4xl mx-auto ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
-            style={archetypeHeadingStyle}
+            style={{ ...archetypeHeadingStyle, fontWeight: 'var(--archetype-heading-weight, 600)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.02em)' }}
           >
             {content.headline}
           </h1>
