@@ -226,7 +226,7 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
       const intelProfile: IntelProfile = {
         industry: state.extracted.industry || '',
         audience: state.extracted.audience || '',
-        pricePoint: parsePriceFromText(state.extracted.pricePoint || ''),
+        pricePoint: parsePriceFromText((state.extracted as any).pricePoint || (state.extracted as any).investmentRange || ''),
         painPoints: state.extracted.painPoints || '',
         tone: '',
         valueProp: state.extracted.valueProp || '',
