@@ -141,7 +141,7 @@ export function PublicPageRenderer({
         return (
           <CalculatorSection 
             key={index} 
-            content={section.content} 
+            content={enrichedContent} 
             onUpdate={noOp} 
           />
         );
