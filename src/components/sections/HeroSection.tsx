@@ -284,6 +284,17 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
     appliedClass: heroHeadlineClass,
   });
 
+  // ── Art Director composition override — fires BEFORE industry branches ──
+  const composition = content?.composition;
+  if (composition === 'centered-type') {
+    console.log('🎨 [ArtDirector] Hero: centered-type composition');
+    return <HeroCenteredType content={content} onUpdate={onUpdate} isEditing={isEditing} />;
+  }
+  if (composition === 'split-photo') {
+    console.log('🎨 [ArtDirector] Hero: split-photo composition');
+    return <HeroSplitPhoto content={content} onUpdate={onUpdate} isEditing={isEditing} />;
+  }
+
   // Local Services variant: Light mode, trust-forward, phone-prominent
   if (isLocalServices) {
     return (
