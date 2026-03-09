@@ -86,6 +86,14 @@ export function PublicPageRenderer({
   const colorMode = designIntelligence?.colorMode || 'dark';
   const industryVariant = designIntelligence?.industryVariant || 'default';
   
+  // Resolve archetype design profile
+  const archetypeProfile = useMemo<DesignProfile>(() => {
+    // Check if hero section has archetype
+    const heroSection = sections?.find(s => s.type === 'hero' && s.visible);
+    if (heroSection?.content?.archetype) return heroSection.content.archetype as DesignProfile;
+    return resolveArchetypeFromStorage();
+  }, [sections]);
+  
   // Sort sections by order
   const sortedSections = useMemo(() => {
     return [...sections]
