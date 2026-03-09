@@ -245,7 +245,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
             className={`text-lg font-semibold shadow-lg transition-all ${archetypeCtaClass} ${getButtonClassName()} ${
               isEditing ? "outline-dashed outline-2 outline-white/30" : ""
             }`}
-            style={getButtonStyles()}
+            style={{ ...getButtonStyles(), borderRadius: 'var(--archetype-btn-radius, 0.375rem)' }}
             onClick={() => {
               if (content.ctaLink && content.ctaLink !== '#contact' && content.ctaLink !== '#') {
                 window.open(content.ctaLink, '_blank');
