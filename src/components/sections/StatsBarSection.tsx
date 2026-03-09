@@ -540,10 +540,12 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: (index + 1) * 0.1, duration: 0.5 }}
-                  className="p-6 rounded-xl transition-all duration-300 hover:scale-105"
-                  style={{ 
-                    backgroundColor: 'hsl(217, 33%, 10%)',
-                    transitionDelay: `${index * 50}ms` 
+                    className="p-6 transition-all duration-300 hover:scale-105"
+                    style={{ 
+                      backgroundColor: 'hsl(217, 33%, 10%)',
+                      transitionDelay: `${index * 50}ms`,
+                      borderRadius: 'var(--archetype-card-radius, 0.75rem)',
+                    }}
                   }}
                 >
                   <div 
