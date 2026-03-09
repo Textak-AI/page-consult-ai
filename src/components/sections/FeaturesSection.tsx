@@ -259,10 +259,11 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
             <span className="inline-block px-4 py-1 bg-purple-500/20 text-purple-400 text-sm font-semibold rounded-full mb-4">
               {eyebrow}
             </span>
-            <h2 
+             <h2 
               className={`text-3xl md:text-4xl font-bold text-white mb-4 ${
                 isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2 inline-block" : ""
               }`}
+              style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.01em)' }}
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("title", e)}
