@@ -135,6 +135,179 @@ function isCmsDefault(hex: string): boolean {
   return defaults.includes(hex.toUpperCase());
 }
 
+// ============================================
+// BRAND DESIGN DNA TYPES & ANALYSIS
+// ============================================
+
+interface BrandDesignDNA {
+  cornerRadius: { style: 'sharp' | 'slight' | 'medium' | 'round' | 'pill'; value: string; confidence: number };
+  shadowSystem: { style: 'none' | 'subtle' | 'medium' | 'deep'; confidence: number };
+  borderSystem: { style: 'structural' | 'accent' | 'minimal' | 'none'; weight: string; confidence: number };
+  typography: { headingWeight: string; bodyWeight: string; usesSerif: boolean; usesMono: boolean; confidence: number };
+  spacing: { density: 'compact' | 'normal' | 'generous'; confidence: number };
+  colorUsage: { paletteSize: 'minimal' | 'moderate' | 'colorful'; usesBrandBg: boolean; usesGradients: boolean; confidence: number };
+  aesthetic: { primary: 'minimal' | 'editorial' | 'corporate' | 'bold' | 'playful' | 'technical' | 'warm'; confidence: number };
+}
+
+async function extractCSS(pageUrl: string, html: string): Promise<string> {
+  let allCSS = '';
+
+  // 1. Inline <style> blocks
+  const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+  let match;
+  while ((match = styleRegex.exec(html)) !== null) {
+    allCSS += match[1] + '\n';
+  }
+
+  // 2. External stylesheets (same-origin + CDN only)
+  const linkRegex = /<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']+)["']/gi;
+  const urls: string[] = [];
+  while ((match = linkRegex.exec(html)) !== null) {
+    const href = match[1];
+    const absoluteUrl = href.startsWith('http') ? href : new URL(href, pageUrl).toString();
+    try {
+      const pageHost = new URL(pageUrl).hostname;
+      const cssHost = new URL(absoluteUrl).hostname;
+      if (cssHost === pageHost || cssHost.includes('googleapis') || cssHost.includes('cdnjs') || cssHost.includes('cdn.')) {
+        urls.push(absoluteUrl);
+      }
+    } catch {}
+  }
+
+  // Fetch first 3 stylesheets (avoid timeout)
+  for (const cssUrl of urls.slice(0, 3)) {
+    try {
+      const resp = await fetch(cssUrl, { signal: AbortSignal.timeout(3000) });
+      if (resp.ok) {
+        allCSS += await resp.text() + '\n';
+      }
+    } catch {}
+  }
+
+  // 3. Inline styles (sampling)
+  const inlineRegex = /style=["']([^"']+)["']/gi;
+  while ((match = inlineRegex.exec(html)) !== null) {
+    allCSS += `.inline { ${match[1]} }\n`;
+  }
+
+  return allCSS;
+}
+
+function analyzeBrandDNA(css: string): BrandDesignDNA {
+  // ── Corner Radius ──
+  const radiusMatches = css.match(/border-radius\s*:\s*([^;]+)/gi) || [];
+  const radiusValues = radiusMatches.map(m => parseFloat(m.replace(/border-radius\s*:\s*/i, ''))).filter(v => !isNaN(v) && v >= 0);
+  const avgRadius = radiusValues.length > 0 ? radiusValues.reduce((a, b) => a + b, 0) / radiusValues.length : 8;
+  let cornerStyle: BrandDesignDNA['cornerRadius']['style'] = 'medium';
+  if (avgRadius <= 2) cornerStyle = 'sharp';
+  else if (avgRadius <= 6) cornerStyle = 'slight';
+  else if (avgRadius <= 12) cornerStyle = 'medium';
+  else if (avgRadius <= 30) cornerStyle = 'round';
+  else cornerStyle = 'pill';
+
+  // ── Shadow System ──
+  const shadowMatches = css.match(/box-shadow\s*:\s*([^;]+)/gi) || [];
+  const realShadows = shadowMatches.filter(m => !m.includes('none') && !m.includes('0 0 0'));
+  let shadowStyle: BrandDesignDNA['shadowSystem']['style'] = 'none';
+  if (realShadows.length > 0) {
+    const blurs = realShadows.map(m => {
+      const nums = m.match(/(\d+)px/g);
+      return nums && nums.length >= 3 ? parseInt(nums[2]) : 0;
+    });
+    const avgBlur = blurs.reduce((a, b) => a + b, 0) / blurs.length;
+    if (avgBlur <= 4) shadowStyle = 'subtle';
+    else if (avgBlur <= 12) shadowStyle = 'medium';
+    else shadowStyle = 'deep';
+  }
+
+  // ── Border System ──
+  const borderMatches = css.match(/border(?:-(?:top|bottom|left|right))?\s*:\s*([^;]+)/gi) || [];
+  const borderCount = borderMatches.filter(m => !m.includes('none') && !m.includes('0px') && !m.includes('radius')).length;
+  let borderStyle: BrandDesignDNA['borderSystem']['style'] = 'minimal';
+  if (borderCount > 15) borderStyle = 'structural';
+  else if (borderCount > 5) borderStyle = 'accent';
+  else if (borderCount > 0) borderStyle = 'minimal';
+  else borderStyle = 'none';
+
+  // Check for thick accent bars (border-left: 3px+ solid)
+  const accentBars = borderMatches.filter(m => /border-left\s*:\s*[3-9]px\s+solid/i.test(m));
+  if (accentBars.length > 0) borderStyle = 'accent';
+
+  const borderWidths = borderMatches.map(m => {
+    const w = m.match(/(\d+)px/);
+    return w ? parseInt(w[1]) : 1;
+  });
+  const avgBorderWidth = borderWidths.length > 0 ? borderWidths.reduce((a, b) => a + b, 0) / borderWidths.length : 1;
+
+  // ── Typography ──
+  const weightMatches = css.match(/font-weight\s*:\s*([^;]+)/gi) || [];
+  const weights = weightMatches.map(m => {
+    const val = m.replace(/font-weight\s*:\s*/i, '').trim();
+    if (val === 'bold') return 700;
+    if (val === 'normal') return 400;
+    if (val === 'light') return 300;
+    return parseInt(val) || 400;
+  });
+  const avgWeight = weights.length > 0 ? Math.round(weights.reduce((a, b) => a + b, 0) / weights.length) : 500;
+
+  const fontFamilies = css.match(/font-family\s*:\s*([^;]+)/gi) || [];
+  const allFonts = fontFamilies.join(' ').toLowerCase();
+  const usesSerif = /\bserif\b/.test(allFonts) && !/\bsans-serif\b/.test(allFonts.replace(/\bserif\b/g, ''));
+  const usesMono = allFonts.includes('mono') || allFonts.includes('code') || allFonts.includes('courier');
+
+  // ── Spacing ──
+  const paddingMatches = css.match(/padding(?:-(?:top|bottom))?\s*:\s*([^;]+)/gi) || [];
+  const paddingValues = paddingMatches.map(m => parseFloat(m.match(/(\d+)/)?.[1] || '0')).filter(v => v > 0);
+  const avgPadding = paddingValues.length > 0 ? paddingValues.reduce((a, b) => a + b, 0) / paddingValues.length : 24;
+  let spacingDensity: BrandDesignDNA['spacing']['density'] = 'normal';
+  if (avgPadding < 16) spacingDensity = 'compact';
+  else if (avgPadding > 40) spacingDensity = 'generous';
+
+  // ── Color Usage ──
+  const bgColorMatches = css.match(/background(?:-color)?\s*:\s*([^;]+)/gi) || [];
+  const gradientCount = bgColorMatches.filter(m => m.includes('gradient')).length;
+  const colorValues = css.match(/#[0-9a-fA-F]{3,8}|rgb\([^)]+\)|hsl\([^)]+\)/g) || [];
+  const uniqueHues = new Set(colorValues.map(c => c.substring(0, 7))).size;
+  let paletteSize: BrandDesignDNA['colorUsage']['paletteSize'] = 'moderate';
+  if (uniqueHues <= 5) paletteSize = 'minimal';
+  else if (uniqueHues > 12) paletteSize = 'colorful';
+
+  const usesBrandBg = bgColorMatches.some(m => {
+    const val = m.replace(/background(?:-color)?\s*:\s*/i, '').trim();
+    return val !== 'white' && val !== '#fff' && val !== '#ffffff' && val !== 'transparent' && !val.startsWith('rgb(255') && !val.startsWith('#f');
+  });
+
+  // ── Aesthetic Classification ──
+  const scores: Record<string, number> = { minimal: 0, editorial: 0, corporate: 0, bold: 0, playful: 0, technical: 0, warm: 0 };
+
+  if (cornerStyle === 'sharp') { scores.technical += 2; scores.corporate += 1; }
+  if (cornerStyle === 'round' || cornerStyle === 'pill') { scores.playful += 2; scores.warm += 1; }
+  if (shadowStyle === 'none') { scores.minimal += 2; scores.technical += 1; }
+  if (shadowStyle === 'deep') { scores.warm += 1; scores.bold += 1; }
+  if (borderStyle === 'structural') { scores.editorial += 2; scores.technical += 1; }
+  if (borderStyle === 'accent') { scores.corporate += 1; scores.warm += 1; }
+  if (usesSerif) { scores.editorial += 2; scores.warm += 1; }
+  if (usesMono) { scores.technical += 2; }
+  if (avgWeight > 650) { scores.bold += 2; }
+  if (avgWeight < 450) { scores.editorial += 1; scores.minimal += 1; }
+  if (paletteSize === 'minimal') { scores.minimal += 2; }
+  if (usesBrandBg) { scores.bold += 1; scores.warm += 1; }
+  if (spacingDensity === 'generous') { scores.editorial += 1; scores.minimal += 1; }
+
+  const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const aesthetic = sortedScores[0][0] as BrandDesignDNA['aesthetic']['primary'];
+
+  return {
+    cornerRadius: { style: cornerStyle, value: `${Math.round(avgRadius)}px`, confidence: Math.min(radiusValues.length / 10, 1) },
+    shadowSystem: { style: shadowStyle, confidence: Math.min(shadowMatches.length / 8, 1) },
+    borderSystem: { style: borderStyle, weight: `${Math.round(avgBorderWidth)}px`, confidence: Math.min(borderCount / 10, 1) },
+    typography: { headingWeight: String(avgWeight), bodyWeight: String(Math.min(avgWeight, 400)), usesSerif, usesMono, confidence: Math.min(weights.length / 8, 1) },
+    spacing: { density: spacingDensity, confidence: Math.min(paddingValues.length / 15, 1) },
+    colorUsage: { paletteSize, usesBrandBg, usesGradients: gradientCount > 0, confidence: Math.min(colorValues.length / 20, 1) },
+    aesthetic: { primary: aesthetic, confidence: sortedScores[0][1] > 3 ? 0.8 : 0.5 },
+  };
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   const corsResponse = handleCorsPreflightRequest(req);
@@ -1059,12 +1232,38 @@ serve(async (req) => {
     
     const inferredIndustry = inferIndustry(extractedData.pageCopy || '', extractedData.description, extractedData.heroText);
 
+    // ── Brand Design DNA Extraction ──────────────
+    // COMPLETELY ISOLATED — if this fails, existing extraction returns unchanged
+    let designDNA: BrandDesignDNA | null = null;
+    try {
+      designDNA = await Promise.race([
+        (async () => {
+          const cssContent = await extractCSS(normalizedUrl, html);
+          if (cssContent.length < 100) return null; // Not enough CSS to analyze
+          const dna = analyzeBrandDNA(cssContent);
+          console.log('🎨 [BrandDNA] Extracted design DNA:', JSON.stringify({
+            corners: dna.cornerRadius.style,
+            shadows: dna.shadowSystem.style,
+            borders: dna.borderSystem.style,
+            aesthetic: dna.aesthetic.primary,
+            usesBrandBg: dna.colorUsage.usesBrandBg,
+          }));
+          return dna;
+        })(),
+        new Promise<null>((_, reject) => setTimeout(() => reject(new Error('CSS analysis timeout')), 8000))
+      ]);
+    } catch (err: any) {
+      console.log('[extract-website-intelligence] CSS analysis skipped:', err?.message || err);
+      designDNA = null;
+    }
+
     console.log('[extract-website-intelligence] Final extracted data:', {
       companyName: extractedData.companyName,
       inferredIndustry,
       hasLogo: !!extractedData.logoUrl,
       colorCount: extractedData.brandColors.length,
       isMinimalBrand: extractedData.isMinimalBrand,
+      hasDesignDNA: !!designDNA,
     });
 
     // Build enhanced response with backward compatibility
@@ -1111,6 +1310,9 @@ serve(async (req) => {
       
       // Enhanced font structure
       extractedFonts: extractedData.extractedFonts,
+      
+      // ===== BRAND DESIGN DNA =====
+      designDNA,
     };
     
     console.log('[extract-website-intelligence] Response:', {

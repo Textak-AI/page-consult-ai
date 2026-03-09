@@ -953,6 +953,15 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         }).then(({ data, error }) => {
           if (!error && data?.success !== false) {
             console.log('✅ [Conversational] Website intelligence extracted');
+            // Persist designDNA to localStorage for Art Director
+            if (data.designDNA) {
+              try {
+                const existing = JSON.parse(localStorage.getItem('pageconsult_extracted_intelligence') || '{}');
+                existing.designDNA = data.designDNA;
+                localStorage.setItem('pageconsult_extracted_intelligence', JSON.stringify(existing));
+                console.log('🎨 [Conversational] Design DNA persisted to localStorage');
+              } catch {}
+            }
             setState(prev => ({
               ...prev,
               isResearchingCompany: false,
@@ -1081,6 +1090,15 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
             });
             
             // Populate companyResearch so the Research tab renders
+            // Persist designDNA to localStorage for Art Director
+            if (data.designDNA) {
+              try {
+                const existing = JSON.parse(localStorage.getItem('pageconsult_extracted_intelligence') || '{}');
+                existing.designDNA = data.designDNA;
+                localStorage.setItem('pageconsult_extracted_intelligence', JSON.stringify(existing));
+                console.log('🎨 [IntelligenceContext] Design DNA persisted to localStorage');
+              } catch {}
+            }
             setState(prev => ({
               ...prev,
               isResearchingCompany: false,
