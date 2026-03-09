@@ -118,7 +118,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
           suppressContentEditableWarning
           onBlur={(e) => handleBlur('subheadline', e)}
           className={`max-w-2xl mx-auto leading-relaxed mb-12 text-lg md:text-xl ${isEditing ? 'outline-dashed outline-2 outline-cyan-500/30 rounded px-2' : ''}`}
-          style={{ color: bgStyles.textMuted }}
+          style={{ color: bgStyles.textMuted, fontFamily: '"DM Sans", system-ui, sans-serif' }}
         >
           {content.subheadline}
         </p>
