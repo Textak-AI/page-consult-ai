@@ -120,9 +120,10 @@ export function PublicPageRenderer({
         return (
           <StatsBarSection 
             key={index}
-            statistics={section.content.statistics || []} 
-            industryVariant={section.content.industryVariant}
-            mode={section.content.mode}
+            statistics={enrichedContent.statistics || []} 
+            industryVariant={enrichedContent.industryVariant}
+            mode={enrichedContent.mode}
+            archetype={archetypeProfile}
             onUpdate={noOp}
             isEditing={false}
           />
