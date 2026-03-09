@@ -164,6 +164,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
               className={`text-3xl md:text-4xl font-bold text-slate-900 mb-4 ${
                 isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-2 inline-block" : ""
               }`}
+              style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.01em)' }}
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("title", e)}
@@ -198,7 +199,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   className={useFlexLayout ? "w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]" : undefined}
                 >
-                  <div className="h-full p-6 bg-slate-50 rounded-xl border border-slate-200 hover:shadow-lg hover:border-blue-200 transition-all">
+                  <div 
+                    className="h-full p-6 bg-slate-50 border border-slate-200 hover:shadow-lg hover:border-blue-200 transition-all"
+                    style={{ borderRadius: 'var(--archetype-card-radius, 0.75rem)', boxShadow: 'var(--archetype-card-shadow, none)' }}
+                  >
                     <div 
                       className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
                       style={{ backgroundColor: hasBrandColor ? brandPrimaryColor : '#2563eb' }}
@@ -209,6 +213,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                       className={`text-lg font-bold text-slate-900 mb-2 ${
                         isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-1" : ""
                       }`}
+                      style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.01em)' }}
                       contentEditable={isEditing}
                       suppressContentEditableWarning
                       onBlur={(e) => handleFeatureBlur(i, "title", e)}
@@ -254,10 +259,11 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
             <span className="inline-block px-4 py-1 bg-purple-500/20 text-purple-400 text-sm font-semibold rounded-full mb-4">
               {eyebrow}
             </span>
-            <h2 
+             <h2 
               className={`text-3xl md:text-4xl font-bold text-white mb-4 ${
                 isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2 inline-block" : ""
               }`}
+              style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.01em)' }}
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("title", e)}
@@ -292,7 +298,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   className={useFlexLayout ? "w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]" : undefined}
                 >
-                  <div className="h-full p-8 bg-slate-800 border border-slate-700 rounded-2xl hover:border-purple-500/50 transition-colors premium-gen-card">
+                  <div 
+                    className="h-full p-8 bg-slate-800 border border-slate-700 hover:border-purple-500/50 transition-colors premium-gen-card"
+                    style={{ borderRadius: 'var(--archetype-card-radius, 1rem)', boxShadow: 'var(--archetype-card-shadow, none)' }}
+                  >
                     <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center mb-6">
                       <Icon className="w-7 h-7 text-purple-400" strokeWidth={1.5} />
                     </div>
@@ -300,6 +309,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                       className={`text-xl font-bold text-white mb-3 ${
                         isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-1" : ""
                       }`}
+                      style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.01em)' }}
                       contentEditable={isEditing}
                       suppressContentEditableWarning
                       onBlur={(e) => handleFeatureBlur(i, "title", e)}
@@ -362,6 +372,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
               className={`text-3xl md:text-4xl font-bold text-slate-900 mb-4 ${
                 isEditing ? "outline-dashed outline-2 outline-teal-500/30 rounded px-2 inline-block" : ""
               }`}
+              style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.01em)' }}
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("title", e)}
@@ -395,7 +406,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   className={useFlexLayout ? "w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]" : undefined}
                 >
-                  <div className="h-full p-8 bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                  <div 
+                    className="h-full p-8 bg-white shadow-sm border border-slate-100 hover:shadow-md transition-shadow"
+                    style={{ borderRadius: 'var(--archetype-card-radius, 1rem)', boxShadow: 'var(--archetype-card-shadow, 0 1px 2px rgba(0,0,0,0.05))' }}
+                  >
                     <div 
                       className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 ${iconBg}`}
                       style={iconBgStyle}
@@ -406,6 +420,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                       className={`text-xl font-bold text-slate-900 mb-3 ${
                         isEditing ? "outline-dashed outline-2 outline-teal-500/30 rounded px-1" : ""
                       }`}
+                      style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.01em)' }}
                       contentEditable={isEditing}
                       suppressContentEditableWarning
                       onBlur={(e) => handleFeatureBlur(i, "title", e)}
@@ -474,6 +489,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
             className={`text-3xl sm:text-4xl md:text-5xl font-bold mb-6 tracking-tight ${isLightMode ? 'text-gray-900' : 'text-white'} ${
               isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2 inline-block" : ""
             }`}
+            style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.025em)' }}
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("title", e)}
@@ -509,7 +525,10 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                 className={useFlexLayout ? "w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]" : undefined}
               >
                 {isLightMode ? (
-                  <div className={`h-full ${getArchetypeCardClass(archetype, true)} hover:shadow-lg transition-shadow`}>
+                  <div 
+                    className={`h-full ${getArchetypeCardClass(archetype, true)} hover:shadow-lg transition-shadow`}
+                    style={{ borderRadius: 'var(--archetype-card-radius, 0.5rem)', boxShadow: 'var(--archetype-card-shadow, none)' }}
+                  >
                     <div 
                       className="w-14 h-14 rounded-xl flex items-center justify-center mb-6"
                       style={{ backgroundColor: `${accentColor}15`, color: accentColor }}

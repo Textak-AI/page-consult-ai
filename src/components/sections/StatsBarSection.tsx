@@ -205,6 +205,7 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
                   className={`text-4xl md:text-5xl font-bold text-blue-600 ${
                     isEditing ? "cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2 inline-block" : ""
                   }`}
+                  style={{ fontSize: 'var(--archetype-stat-size, 2.5rem)', fontWeight: 'var(--archetype-heading-weight, 700)' as any }}
                   contentEditable={isEditing}
                   suppressContentEditableWarning
                   onBlur={(e) => handleStatBlur(index, 'value', e)}
@@ -252,7 +253,8 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="relative p-8 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700"
+                className="relative p-8 bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700"
+                style={{ borderRadius: 'var(--archetype-card-radius, 1rem)' }}
               >
                 {/* Accent corner */}
                 <div className="absolute top-0 left-0 w-24 h-1 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500" />
@@ -261,6 +263,7 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
                   className={`text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent ${
                     isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2 inline-block" : ""
                   }`}
+                  style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any }}
                   contentEditable={isEditing}
                   suppressContentEditableWarning
                   onBlur={(e) => handleStatBlur(0, 'value', e)}
@@ -297,13 +300,14 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: (index + 1) * 0.1, duration: 0.5 }}
-                    className="p-6 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition-all duration-300 hover:scale-105 border border-slate-700/50"
-                    style={{ transitionDelay: `${index * 50}ms` }}
+                    className="p-6 bg-slate-800/50 hover:bg-slate-800 transition-all duration-300 hover:scale-105 border border-slate-700/50"
+                    style={{ transitionDelay: `${index * 50}ms`, borderRadius: 'var(--archetype-card-radius, 0.75rem)' }}
                   >
                     <div 
                       className={`text-3xl lg:text-4xl font-bold text-white ${
                         isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2 inline-block" : ""
                       }`}
+                      style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any }}
                       contentEditable={isEditing}
                       suppressContentEditableWarning
                       onBlur={(e) => handleStatBlur(index + 1, 'value', e)}
@@ -368,7 +372,8 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="relative p-8 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100"
+                className="relative p-8 bg-gradient-to-br from-slate-50 to-slate-100"
+                style={{ borderRadius: 'var(--archetype-card-radius, 1rem)' }}
               >
                 {/* Accent corner */}
                 <div className={`absolute top-0 left-0 w-24 h-1 rounded-full ${
@@ -379,6 +384,7 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
                   className={`text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight ${valueColor} ${
                     isEditing ? `cursor-text hover:ring-2 hover:ring-${accentColor}-400 focus:outline-none focus:ring-2 focus:ring-${accentColor}-400 rounded px-2 inline-block` : ""
                   }`}
+                  style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any }}
                   contentEditable={isEditing}
                   suppressContentEditableWarning
                   onBlur={(e) => handleStatBlur(0, 'value', e)}
@@ -415,13 +421,14 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: (index + 1) * 0.1, duration: 0.5 }}
-                    className="p-6 rounded-xl bg-slate-50 hover:bg-slate-100 transition-all duration-300 hover:scale-105"
-                    style={{ transitionDelay: `${index * 50}ms` }}
+                    className="p-6 bg-slate-50 hover:bg-slate-100 transition-all duration-300 hover:scale-105"
+                    style={{ transitionDelay: `${index * 50}ms`, borderRadius: 'var(--archetype-card-radius, 0.75rem)' }}
                   >
                     <div 
                       className={`text-3xl lg:text-4xl font-bold text-slate-900 ${
                         isEditing ? `cursor-text hover:ring-2 hover:ring-${accentColor}-400 focus:outline-none focus:ring-2 focus:ring-${accentColor}-400 rounded px-2 inline-block` : ""
                       }`}
+                      style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any }}
                       contentEditable={isEditing}
                       suppressContentEditableWarning
                       onBlur={(e) => handleStatBlur(index + 1, 'value', e)}

@@ -340,6 +340,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               className={`${heroHeadlineClass} text-slate-900 mb-6 ${
                 isEditing ? "outline-dashed outline-2 outline-blue-500/30 rounded px-2 inline-block" : ""
               }`}
+              style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.02em)' }}
             >
               {content.headline}
             </h1>
@@ -360,7 +361,8 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
               <Button 
                 size="lg"
-                className="px-10 py-6 text-lg font-bold bg-orange-500 text-white hover:bg-orange-600 rounded-lg shadow-lg"
+                className="px-10 py-6 text-lg font-bold bg-orange-500 text-white hover:bg-orange-600 shadow-lg"
+                style={{ borderRadius: 'var(--archetype-btn-radius, 0.5rem)' }}
               >
                 <span
                   contentEditable={isEditing}
@@ -529,7 +531,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("headline", e)}
             className={`${heroHeadlineClass} text-white mb-6 max-w-4xl mx-auto ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
-            style={archetypeHeadingStyle}
+            style={{ ...archetypeHeadingStyle, fontWeight: 'var(--archetype-heading-weight, 600)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.02em)' }}
           >
             {content.headline}
           </h1>
@@ -549,7 +551,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             <Button 
               size="lg" 
               className={`${ctaClassName} ${archetypeCtaClass}`}
-              style={ctaStyle}
+              style={{ ...ctaStyle, borderRadius: 'var(--archetype-btn-radius, 0.75rem)' }}
             >
               <span
                 contentEditable={isEditing}
@@ -758,6 +760,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               className={`${heroHeadlineClass} mb-8 ${
                 hasBackgroundImage && showDarkOverlay ? 'text-white' : 'text-slate-900'
               } ${isEditing ? "cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2" : ""}`}
+              style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.02em)' }}
             >
               {content.headline}
             </motion.h1>
@@ -786,13 +789,15 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             >
               <Button 
                 size="lg" 
-                className={`group px-8 py-6 rounded-lg font-semibold text-lg transition-all shadow-md hover:shadow-lg ${
+                className={`group px-8 py-6 font-semibold text-lg transition-all shadow-md hover:shadow-lg ${
                   isEditing ? "outline-dashed outline-2 outline-blue-500/30" : ""
                 }`}
-                style={hasBrandColor 
-                  ? { backgroundColor: content.primaryColor, color: 'white' }
-                  : { backgroundColor: '#1E3A5F', color: 'white' }
-                }
+                style={{
+                  borderRadius: 'var(--archetype-btn-radius, 0.5rem)',
+                  ...(hasBrandColor 
+                    ? { backgroundColor: content.primaryColor, color: 'white' }
+                    : { backgroundColor: '#1E3A5F', color: 'white' }),
+                }}
               >
                 <span
                   contentEditable={isEditing}
@@ -978,9 +983,10 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                 contentEditable={isEditing}
                 suppressContentEditableWarning
                 onBlur={(e) => handleBlur("headline", e)}
-                className={`${heroHeadlineClass} ${
-                  hasBackgroundImage && showDarkOverlay ? 'text-white' : 'text-slate-900'
-                } ${isEditing ? "cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2" : ""}`}
+              className={`${heroHeadlineClass} ${
+                hasBackgroundImage && showDarkOverlay ? 'text-white' : 'text-slate-900'
+              } ${isEditing ? "cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-2" : ""}`}
+              style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.02em)' }}
               >
                 <HeadlineWithHighlight 
                   text={content.headline}
@@ -1024,7 +1030,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                     <Button 
                       size="lg" 
                       className={ctaClassName}
-                      style={ctaStyle}
+                      style={{ ...ctaStyle, borderRadius: 'var(--archetype-btn-radius, 0.75rem)' }}
                     >
                       <span
                         contentEditable={isEditing}
