@@ -253,7 +253,8 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="relative p-8 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700"
+                className="relative p-8 bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700"
+                style={{ borderRadius: 'var(--archetype-card-radius, 1rem)' }}
               >
                 {/* Accent corner */}
                 <div className="absolute top-0 left-0 w-24 h-1 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500" />
