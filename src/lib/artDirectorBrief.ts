@@ -84,7 +84,7 @@ export function generateArtDirectorBrief(archetype: string): ArtDirectorBrief {
         dividerSystem: 'whitespace',
         hero: { composition: 'split-photo', background: 'light', hasGridTexture: false, hasAccentGlow: false, trustSignals: 'inline-checks' },
         features: { layout: 'icon-cards', background: 'tinted', numbering: 'none', iconStyle: 'accent-circle' },
-        stats: { presentation: 'card-grid', background: 'light', numberStyle: 'medium-bold', labelStyle: 'sentence-description' },
+        stats: { presentation: 'card-grid', background: 'brand', numberStyle: 'medium-bold', labelStyle: 'sentence-description' },
         process: { layout: 'stacked-cards', background: 'tinted', numbering: 'accent-large' },
         faq: { layout: 'accordion-card', background: 'light' },
         finalCta: { layout: 'centered-minimal', background: 'light', hasAccentGlow: false },
