@@ -104,7 +104,8 @@ export function PublicPageRenderer({
   const renderSection = (section: Section, index: number) => {
     // Read-only render - no editing, no update callbacks
     const noOp = () => {};
-
+    // Inject archetype into section content for archetype-aware rendering
+    const enrichedContent = { ...section.content, archetype: archetypeProfile };
     switch (section.type) {
       case 'hero':
         return (
