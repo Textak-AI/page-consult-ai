@@ -789,13 +789,15 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             >
               <Button 
                 size="lg" 
-                className={`group px-8 py-6 rounded-lg font-semibold text-lg transition-all shadow-md hover:shadow-lg ${
+                className={`group px-8 py-6 font-semibold text-lg transition-all shadow-md hover:shadow-lg ${
                   isEditing ? "outline-dashed outline-2 outline-blue-500/30" : ""
                 }`}
-                style={hasBrandColor 
-                  ? { backgroundColor: content.primaryColor, color: 'white' }
-                  : { backgroundColor: '#1E3A5F', color: 'white' }
-                }
+                style={{
+                  borderRadius: 'var(--archetype-btn-radius, 0.5rem)',
+                  ...(hasBrandColor 
+                    ? { backgroundColor: content.primaryColor, color: 'white' }
+                    : { backgroundColor: '#1E3A5F', color: 'white' }),
+                }}
               >
                 <span
                   contentEditable={isEditing}
