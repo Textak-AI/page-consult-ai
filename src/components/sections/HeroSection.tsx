@@ -361,7 +361,8 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
               <Button 
                 size="lg"
-                className="px-10 py-6 text-lg font-bold bg-orange-500 text-white hover:bg-orange-600 rounded-lg shadow-lg"
+                className="px-10 py-6 text-lg font-bold bg-orange-500 text-white hover:bg-orange-600 shadow-lg"
+                style={{ borderRadius: 'var(--archetype-btn-radius, 0.5rem)' }}
               >
                 <span
                   contentEditable={isEditing}
