@@ -60,6 +60,12 @@ const getIconComponent = (iconName: string): LucideIcon => {
 };
 
 export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "outline" }: FeaturesSectionProps) {
+  // Art Director composition check
+  const featureLayout = (content as any)?.featureLayout;
+  if (featureLayout === 'bento-grid') {
+    return <FeaturesBentoGrid content={content as any} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
+  }
+
   const { 
     features,
     industryVariant = 'default',
