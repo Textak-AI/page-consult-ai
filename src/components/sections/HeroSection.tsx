@@ -5,6 +5,7 @@ import { useState, useMemo } from "react";
 import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star, Image, Layers, PlayCircle, Check, HeartPulse, Factory, TrendingUp, Lightbulb, Palette, GraduationCap, ShoppingBag, Scale, Home, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
+import { getArchetypeHeadingStyle, getArchetypeCtaClass, type DesignProfile } from "@/lib/archetypeProfiles";
 
 // Industry-aware hero icon mapping
 const heroIconMap: Record<string, { icon: LucideIcon; label: string }> = {
@@ -193,6 +194,9 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   const industryVariant = content.industryVariant || 'default';
   const normalizedIndustryVariant = String(industryVariant).toLowerCase();
   const tokens = getIndustryTokens(industryVariant);
+  const archetype: DesignProfile = (content as any).archetype || 'precision';
+  const archetypeHeadingStyle = getArchetypeHeadingStyle(archetype);
+  const archetypeCtaClass = getArchetypeCtaClass(archetype);
   // PRIORITY: Consulting ALWAYS light mode, then SDI mode prop > industry token mode
   const isConsulting = normalizedIndustryVariant === 'consulting';
   const isHealthcare = normalizedIndustryVariant === 'healthcare';
@@ -525,6 +529,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
             suppressContentEditableWarning
             onBlur={(e) => handleBlur("headline", e)}
             className={`${heroHeadlineClass} text-white mb-6 max-w-4xl mx-auto ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
+            style={archetypeHeadingStyle}
           >
             {content.headline}
           </h1>
@@ -543,7 +548,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
           <div className="flex flex-wrap gap-4 justify-center mb-10">
             <Button 
               size="lg" 
-              className={ctaClassName}
+              className={`${ctaClassName} ${archetypeCtaClass}`}
               style={ctaStyle}
             >
               <span

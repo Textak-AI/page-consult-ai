@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { PremiumCard, GradientIcon, EyebrowBadge } from "@/components/ui/PremiumCard";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
 import { getSectionHeader } from "@/lib/industrySectionHeaders";
+import { getArchetypeCardClass, type DesignProfile } from "@/lib/archetypeProfiles";
 
 interface FeaturesSectionProps {
   content: {
@@ -65,6 +66,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
     industry,
     businessName,
   } = content;
+  const archetype: DesignProfile = (content as any).archetype || 'precision';
 
   // Get industry-specific headers from centralized system
   const sectionHeader = getSectionHeader(industryVariant, 'features');
@@ -507,7 +509,7 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
                 className={useFlexLayout ? "w-full md:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)]" : undefined}
               >
                 {isLightMode ? (
-                  <div className="h-full p-8 bg-white rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow">
+                  <div className={`h-full ${getArchetypeCardClass(archetype, true)} hover:shadow-lg transition-shadow`}>
                     <div 
                       className="w-14 h-14 rounded-xl flex items-center justify-center mb-6"
                       style={{ backgroundColor: `${accentColor}15`, color: accentColor }}

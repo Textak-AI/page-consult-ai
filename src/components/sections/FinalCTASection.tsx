@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle, Shield } from "lucide-react";
 import type { SDIPalette, SDISectionThemes, SDITypography } from '@/lib/designIntelligence/types';
+import { getArchetypeCtaClass, type DesignProfile } from "@/lib/archetypeProfiles";
 
 interface FinalCTASectionProps {
   content: {
@@ -33,6 +34,8 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   const theme = content.sectionThemes?.['final-cta'] || 'dark';
   const palette = content.palette;
   const typography = content.sdiTypography;
+  const archetype: DesignProfile = (content as any).archetype || 'precision';
+  const archetypeCtaClass = getArchetypeCtaClass(archetype);
 
   const headline = content.headline || "Ready to Get Started?";
   const ctaText = content.ctaText || "Get Started";
@@ -238,7 +241,7 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
         >
           <Button 
             size="lg" 
-            className={`px-12 py-6 text-lg font-semibold rounded-lg shadow-lg transition-all ${getButtonClassName()} ${
+            className={`text-lg font-semibold shadow-lg transition-all ${archetypeCtaClass} ${getButtonClassName()} ${
               isEditing ? "outline-dashed outline-2 outline-white/30" : ""
             }`}
             style={getButtonStyles()}

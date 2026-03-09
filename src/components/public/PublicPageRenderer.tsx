@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { cn } from '@/lib/utils';
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from '@/lib/premiumPageEffects';
+import { resolveArchetypeFromStorage, type DesignProfile } from '@/lib/archetypeProfiles';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { ProblemSolutionSection } from '@/components/sections/ProblemSolutionSection';
 import { CalculatorSection } from '@/components/sections/CalculatorSection';
@@ -85,6 +86,14 @@ export function PublicPageRenderer({
   const colorMode = designIntelligence?.colorMode || 'dark';
   const industryVariant = designIntelligence?.industryVariant || 'default';
   
+  // Resolve archetype design profile
+  const archetypeProfile = useMemo<DesignProfile>(() => {
+    // Check if hero section has archetype
+    const heroSection = sections?.find(s => s.type === 'hero' && s.visible);
+    if (heroSection?.content?.archetype) return heroSection.content.archetype as DesignProfile;
+    return resolveArchetypeFromStorage();
+  }, [sections]);
+  
   // Sort sections by order
   const sortedSections = useMemo(() => {
     return [...sections]
@@ -95,13 +104,14 @@ export function PublicPageRenderer({
   const renderSection = (section: Section, index: number) => {
     // Read-only render - no editing, no update callbacks
     const noOp = () => {};
-
+    // Inject archetype into section content for archetype-aware rendering
+    const enrichedContent = { ...section.content, archetype: archetypeProfile };
     switch (section.type) {
       case 'hero':
         return (
           <HeroSection
             key={index}
-            content={section.content}
+            content={enrichedContent}
             onUpdate={noOp}
             isEditing={false}
           />
@@ -110,9 +120,10 @@ export function PublicPageRenderer({
         return (
           <StatsBarSection 
             key={index}
-            statistics={section.content.statistics || []} 
-            industryVariant={section.content.industryVariant}
-            mode={section.content.mode}
+            statistics={enrichedContent.statistics || []} 
+            industryVariant={enrichedContent.industryVariant}
+            mode={enrichedContent.mode}
+            archetype={archetypeProfile}
             onUpdate={noOp}
             isEditing={false}
           />
@@ -121,7 +132,7 @@ export function PublicPageRenderer({
         return (
           <ProblemSolutionSection
             key={index}
-            content={section.content}
+            content={enrichedContent}
             onUpdate={noOp}
             isEditing={false}
           />
@@ -130,7 +141,7 @@ export function PublicPageRenderer({
         return (
           <CalculatorSection 
             key={index} 
-            content={section.content} 
+            content={enrichedContent} 
             onUpdate={noOp} 
           />
         );
@@ -138,7 +149,7 @@ export function PublicPageRenderer({
         return (
           <FeaturesSection
             key={index}
-            content={section.content}
+            content={enrichedContent}
             onUpdate={noOp}
             isEditing={false}
           />
@@ -147,7 +158,7 @@ export function PublicPageRenderer({
         return (
           <PhotoGallerySection
             key={index}
-            content={section.content}
+            content={enrichedContent}
             onUpdate={noOp}
             isEditing={false}
           />
@@ -156,7 +167,7 @@ export function PublicPageRenderer({
         return (
           <SocialProofSection 
             key={index}
-            content={section.content} 
+            content={enrichedContent} 
             onUpdate={noOp} 
             isEditing={false}
           />
@@ -165,7 +176,7 @@ export function PublicPageRenderer({
         return (
           <FinalCTASection
             key={index}
-            content={section.content}
+            content={enrichedContent}
             onUpdate={noOp}
             isEditing={false}
           />
@@ -343,6 +354,7 @@ export function PublicPageRenderer({
       <div 
         data-mode={colorMode}
         data-industry={industryVariant}
+        data-archetype={archetypeProfile}
         className={cn(
           colorMode === 'light' ? 'min-h-screen bg-white' : 'min-h-screen bg-slate-950',
           colorMode === 'dark' && 'page-noise-overlay',

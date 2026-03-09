@@ -48,6 +48,7 @@ import type { SEOHeadData } from "@/lib/aiSeoIntegration";
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from "@/lib/premiumPageEffects";
+import { resolveArchetypeFromStorage, type DesignProfile } from "@/lib/archetypeProfiles";
 import { StrategyConsultantButton } from "@/components/editor/StrategyConsultantButton";
 import { StrategyConsultantOverlay, type ChatMessage } from "@/components/editor/StrategyConsultantOverlay";
 
@@ -88,6 +89,17 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
   const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();
   const currentStyle = styleVariants[pageStyle];
   
+  // Resolve archetype design profile from sections or localStorage bridge
+  const archetypeProfile = useMemo<DesignProfile>(() => {
+    // 1. Check if any section has archetype in content
+    const heroContent = sections?.find(s => s.type === 'hero')?.content;
+    if (heroContent?.archetype) return heroContent.archetype as DesignProfile;
+    // 2. Check localStorage bridge
+    return resolveArchetypeFromStorage();
+  }, [sections]);
+  
+  console.log('🎯 [DesignProfile] Active:', archetypeProfile);
+  
   // Debug logging for brand handoff - confirms data flow from Generate.tsx
   console.log('🎨 [LivePreview] Received props:', {
     colorMode,
@@ -95,11 +107,8 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     logoUrl: brandSettings?.logoUrl,
     primaryColor: brandSettings?.primaryColor,
     companyName: brandSettings?.companyName,
+    archetype: archetypeProfile,
   });
-  
-  // DIAGNOSTIC: Log what container will render (helps debug stale data-mode/data-industry)
-  console.log('🎨 [LivePreview Container] data-mode:', colorMode, 'data-industry:', industryVariant || 'default', 
-    'bgClass:', colorMode === 'light' ? 'bg-white' : 'bg-slate-950');
   
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [aiChatSection, setAiChatSection] = useState<{ index: number; type: string; content: any } | null>(null);
@@ -331,6 +340,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
       // Inject brand colors so section components can use them for CTAs/buttons
       primaryColor: section.content?.primaryColor || brandSettings?.primaryColor || null,
       logoUrl: section.content?.logoUrl || brandSettings?.logoUrl || null,
+      archetype: archetypeProfile, // Archetype design profile
     };
     
     // Debug logging
@@ -363,6 +373,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
             statistics={sectionContent.statistics || []} 
             industryVariant={sectionContent.industryVariant}
             mode={sectionContent.mode}
+            archetype={archetypeProfile}
             onUpdate={updateSection}
             isEditing={editingSection === index}
           />
@@ -670,6 +681,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
       <div 
         data-mode={colorMode} 
         data-industry={industryVariant || 'default'}
+        data-archetype={archetypeProfile}
         data-card-style={(() => {
           const firstSection = sections.find(s => s.content?.designIntelligence);
           const di = firstSection?.content?.designIntelligence;

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { formatStatValue, getTypography } from "@/lib/typographyScale";
+import { getArchetypeStatClass, type DesignProfile } from "@/lib/archetypeProfiles";
 
 interface Statistic {
   value: string;
@@ -12,6 +13,7 @@ interface StatsBarSectionProps {
   industryVariant?: string;
   // SDI mode override - takes precedence over industry detection
   mode?: 'light' | 'dark' | 'warm' | 'cold';
+  archetype?: DesignProfile;
   onUpdate?: (content: any) => void;
   isEditing?: boolean;
 }
@@ -25,7 +27,7 @@ interface StatsBarSectionProps {
  * - Staggered hover animations
  * - Industry-specific color accents
  */
-export function StatsBarSection({ statistics, industryVariant, mode, onUpdate, isEditing }: StatsBarSectionProps) {
+export function StatsBarSection({ statistics, industryVariant, mode, archetype = 'precision', onUpdate, isEditing }: StatsBarSectionProps) {
   const typography = getTypography(industryVariant);
   const isConsulting = industryVariant === 'consulting';
   const isHealthcare = industryVariant === 'healthcare';
@@ -460,6 +462,7 @@ export function StatsBarSection({ statistics, industryVariant, mode, onUpdate, i
 
   // Default dark mode styling - also use premium layout
   const [heroStat, ...supportingStats] = cleanStats;
+  const archetypeStats = getArchetypeStatClass(archetype);
   
   return (
     <section 
@@ -484,22 +487,23 @@ export function StatsBarSection({ statistics, industryVariant, mode, onUpdate, i
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="relative p-8 rounded-2xl"
+              className="relative p-8"
               style={{
                 backgroundColor: 'hsl(217, 33%, 10%)',
                 borderWidth: '1px',
                 borderColor: 'hsl(217, 33%, 18%)',
                 borderStyle: 'solid',
+                borderRadius: 'var(--archetype-card-radius, 1rem)',
               }}
             >
               {/* Accent corner */}
               <div className="absolute top-0 left-0 w-24 h-1 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500" />
               
               <div 
-                className={`text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight text-cyan-400 ${
+                className={`text-cyan-400 ${archetypeStats.numberClass} ${
                   isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-2 inline-block" : ""
                 }`}
-                style={{ fontFamily: 'var(--font-heading)' }}
+                style={{ fontFamily: 'var(--font-heading)', fontSize: archetype === 'command' ? 'clamp(3rem, 8vw, 6rem)' : undefined }}
                 contentEditable={isEditing}
                 suppressContentEditableWarning
                 onBlur={(e) => handleStatBlur(0, 'value', e)}
@@ -536,15 +540,16 @@ export function StatsBarSection({ statistics, industryVariant, mode, onUpdate, i
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: (index + 1) * 0.1, duration: 0.5 }}
-                  className="p-6 rounded-xl transition-all duration-300 hover:scale-105"
-                  style={{ 
-                    backgroundColor: 'hsl(217, 33%, 10%)',
-                    transitionDelay: `${index * 50}ms` 
-                  }}
-                >
-                  <div 
-                    className={`text-3xl lg:text-4xl font-bold text-white ${
-                      isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-2 inline-block" : ""
+                    className="p-6 transition-all duration-300 hover:scale-105"
+                    style={{ 
+                      backgroundColor: 'hsl(217, 33%, 10%)',
+                      transitionDelay: `${index * 50}ms`,
+                      borderRadius: 'var(--archetype-card-radius, 0.75rem)',
+                    }}
+                  >
+                    <div 
+                      className={`text-white ${archetypeStats.numberClass} ${
+                        isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-2 inline-block" : ""
                     }`}
                     contentEditable={isEditing}
                     suppressContentEditableWarning
@@ -553,9 +558,9 @@ export function StatsBarSection({ statistics, industryVariant, mode, onUpdate, i
                     {formatStatValue(stat.value)}
                   </div>
                   
-                  <p 
-                    className={`mt-2 text-sm leading-relaxed text-slate-400 ${
-                      isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1" : ""
+                    <p 
+                      className={`leading-relaxed text-slate-400 ${archetypeStats.labelClass} ${
+                        isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1" : ""
                     }`}
                     contentEditable={isEditing}
                     suppressContentEditableWarning
