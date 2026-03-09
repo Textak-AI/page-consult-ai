@@ -142,9 +142,9 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
         </div>
 
         {/* Inline trust signals */}
-        {allTrustSignals.length > 0 && (
+        {trustSignals.length > 0 && (
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-            {allTrustSignals.map((signal: string, i: number) => (
+            {trustSignals.map((signal: string, i: number) => (
               <div
                 key={i}
                 className="flex items-center gap-2 text-sm"
