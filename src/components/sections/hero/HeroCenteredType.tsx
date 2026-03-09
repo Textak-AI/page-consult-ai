@@ -106,6 +106,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
             fontWeight: headingWeight,
             letterSpacing: trackingValue,
             fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
+            fontFamily: isSerif ? '"Instrument Serif", Georgia, "Times New Roman", serif' : '"DM Sans", system-ui, sans-serif',
           }}
         >
           {content.headline}
