@@ -4461,7 +4461,7 @@ function GenerateContent() {
     }
 
     console.log(`✅ Legacy mapper built ${sections.length} sections from SDI-driven structure (isBeta: ${isBetaPage})`);
-    return sections;
+    return applyArtDirectorDirectives(sections);
   };
 
   // Map old generation format
