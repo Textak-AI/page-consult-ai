@@ -307,6 +307,7 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
                       className={`text-3xl lg:text-4xl font-bold text-white ${
                         isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2 inline-block" : ""
                       }`}
+                      style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any }}
                       contentEditable={isEditing}
                       suppressContentEditableWarning
                       onBlur={(e) => handleStatBlur(index + 1, 'value', e)}
