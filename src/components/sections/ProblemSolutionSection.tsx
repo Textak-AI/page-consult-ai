@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { EyebrowBadge } from "@/components/ui/PremiumCard";
 import { getTypography } from "@/lib/typographyScale";
 import ProblemSolutionTwoColumn from './problem-solution/ProblemSolutionTwoColumn';
+import ProblemSolutionReliefArc from './problem-solution/ProblemSolutionReliefArc';
 
 interface CitedStat {
   statistic: string;
