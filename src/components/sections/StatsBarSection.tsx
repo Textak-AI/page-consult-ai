@@ -559,9 +559,9 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
                     {formatStatValue(stat.value)}
                   </div>
                   
-                  <p 
-                    className={`mt-2 text-sm leading-relaxed text-slate-400 ${
-                      isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1" : ""
+                    <p 
+                      className={`leading-relaxed text-slate-400 ${archetypeStats.labelClass} ${
+                        isEditing ? "cursor-text hover:ring-2 hover:ring-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 rounded px-1" : ""
                     }`}
                     contentEditable={isEditing}
                     suppressContentEditableWarning
