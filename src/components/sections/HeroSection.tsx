@@ -176,6 +176,16 @@ interface HeroSectionProps {
     palette?: SDIPalette;
     sectionThemes?: SDISectionThemes;
     sdiTypography?: SDITypography;
+    // Art Director composition directives
+    composition?: string;
+    sectionBackground?: string;
+    hasGridTexture?: boolean;
+    hasAccentGlow?: boolean;
+    typographyPairing?: string;
+    headingWeight?: number;
+    trackingStyle?: string;
+    dividerSystem?: string;
+    [key: string]: any;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
