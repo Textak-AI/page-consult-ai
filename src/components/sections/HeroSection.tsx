@@ -760,6 +760,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
               className={`${heroHeadlineClass} mb-8 ${
                 hasBackgroundImage && showDarkOverlay ? 'text-white' : 'text-slate-900'
               } ${isEditing ? "cursor-text hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded px-2" : ""}`}
+              style={{ fontWeight: 'var(--archetype-heading-weight, 700)' as any, letterSpacing: 'var(--archetype-heading-tracking, -0.02em)' }}
             >
               {content.headline}
             </motion.h1>
