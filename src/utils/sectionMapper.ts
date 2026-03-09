@@ -821,9 +821,12 @@ export function mapBriefToSections(
   }
 
   // ── Apply Art Director Compositional Brief ──────────────────────
+  console.log('🎨🎨🎨 [ArtDirector] EXECUTING — sections count before injection:', sections.length, '| section types:', sections.map(s => s.type));
   const artArchetype = options.messagingArchitecture?.archetype || archetypeFromStorage() || 'Analytical Validator';
+  console.log('🎨 [ArtDirector] Resolved archetype:', artArchetype, '| from options:', options.messagingArchitecture?.archetype, '| from storage:', archetypeFromStorage());
   const artBrief = generateArtDirectorBrief(artArchetype);
   console.log('🎨 [ArtDirector] Brief generated:', artBrief.designPhilosophy, '| Hero:', artBrief.hero.composition, '| Features:', artBrief.features.layout);
+  console.log('🎨 [ArtDirector] Hero directives will be:', JSON.stringify({ composition: artBrief.hero.composition, bg: artBrief.hero.background, grid: artBrief.hero.hasGridTexture }));
 
   sections = sections.map(section => {
     const type = section.type;
