@@ -132,7 +132,7 @@ export function PublicPageRenderer({
         return (
           <ProblemSolutionSection
             key={index}
-            content={section.content}
+            content={enrichedContent}
             onUpdate={noOp}
             isEditing={false}
           />
