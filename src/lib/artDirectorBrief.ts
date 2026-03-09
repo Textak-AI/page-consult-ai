@@ -35,7 +35,7 @@ export interface ArtDirectorBrief {
 
   process: {
     layout: 'numbered-rows' | 'stacked-cards' | 'minimal-list';
-    background: 'dark' | 'light';
+    background: 'dark' | 'light' | 'tinted';
     numbering: 'monospace' | 'accent-large' | 'none';
   };
 
