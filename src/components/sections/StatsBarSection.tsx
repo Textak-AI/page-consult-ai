@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { formatStatValue, getTypography } from "@/lib/typographyScale";
+import { getArchetypeStatClass, type DesignProfile } from "@/lib/archetypeProfiles";
 
 interface Statistic {
   value: string;
@@ -12,6 +13,7 @@ interface StatsBarSectionProps {
   industryVariant?: string;
   // SDI mode override - takes precedence over industry detection
   mode?: 'light' | 'dark' | 'warm' | 'cold';
+  archetype?: DesignProfile;
   onUpdate?: (content: any) => void;
   isEditing?: boolean;
 }
