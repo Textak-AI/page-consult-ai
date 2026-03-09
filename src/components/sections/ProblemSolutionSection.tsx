@@ -2,6 +2,7 @@ import { AlertTriangle, CheckCircle, ArrowRight, Sparkles, XCircle } from "lucid
 import { motion } from "framer-motion";
 import { EyebrowBadge } from "@/components/ui/PremiumCard";
 import { getTypography } from "@/lib/typographyScale";
+import ProblemSolutionTwoColumn from './problem-solution/ProblemSolutionTwoColumn';
 
 interface CitedStat {
   statistic: string;
