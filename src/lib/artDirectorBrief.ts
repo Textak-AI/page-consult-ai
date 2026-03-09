@@ -254,41 +254,5 @@ export function getSectionBackgroundStyles(
         textMuted: 'rgba(255,255,255,0.45)',
         border: 'rgba(255,255,255,0.06)',
       };
-}
-): {
-  bg: string;
-  text: string;
-  textMuted: string;
-  border: string;
-} {
-  switch (background) {
-    case 'dark':
-      return {
-        bg: '#0A0A0A',
-        text: '#F1F5F9',
-        textMuted: 'rgba(255,255,255,0.45)',
-        border: 'rgba(255,255,255,0.06)',
-      };
-    case 'light':
-      return {
-        bg: '#F8F9FA',
-        text: '#1A1A2E',
-        textMuted: 'rgba(26,26,46,0.55)',
-        border: 'rgba(0,0,0,0.06)',
-      };
-    case 'tinted':
-      return {
-        bg: primaryColor ? `${primaryColor}06` : '#F5F3FF',
-        text: '#1A1A2E',
-        textMuted: 'rgba(26,26,46,0.5)',
-        border: 'rgba(0,0,0,0.04)',
-      };
-    default:
-      return {
-        bg: '#0A0A0A',
-        text: '#F1F5F9',
-        textMuted: 'rgba(255,255,255,0.45)',
-        border: 'rgba(255,255,255,0.06)',
-      };
   }
 }
