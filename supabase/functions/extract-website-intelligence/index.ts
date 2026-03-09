@@ -1310,6 +1310,9 @@ serve(async (req) => {
       
       // Enhanced font structure
       extractedFonts: extractedData.extractedFonts,
+      
+      // ===== BRAND DESIGN DNA =====
+      designDNA,
     };
     
     console.log('[extract-website-intelligence] Response:', {

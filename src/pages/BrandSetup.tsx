@@ -561,6 +561,7 @@ export default function BrandSetup() {
             },
             logoUrl: extractedData.logoUrl || existingIntel.logoUrl,
             companyName: extractedData.companyName || existingIntel.companyName,
+            designDNA: extractedData.designDNA || existingIntel.designDNA,
           };
 
           localStorage.setItem('pageconsult_extracted_intelligence', JSON.stringify(updatedIntel));

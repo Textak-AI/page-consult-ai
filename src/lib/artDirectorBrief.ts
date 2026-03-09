@@ -265,6 +265,7 @@ export function applyArtDirectorDirectives(
         sectionBackground: artBrief.features.background,
         numbering: artBrief.features.numbering,
         iconStyle: artBrief.features.iconStyle,
+        borderSystem: artBrief.dividerSystem,
         typographyPairing: artBrief.typography.pairing,
         headingWeight: artBrief.typography.headingWeight,
         trackingStyle: artBrief.typography.trackingStyle,
