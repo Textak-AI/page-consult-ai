@@ -6,6 +6,8 @@ import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Cam
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
 import { getArchetypeHeadingStyle, getArchetypeCtaClass, type DesignProfile } from "@/lib/archetypeProfiles";
+import HeroCenteredType from "./hero/HeroCenteredType";
+import HeroSplitPhoto from "./hero/HeroSplitPhoto";
 
 // Industry-aware hero icon mapping
 const heroIconMap: Record<string, { icon: LucideIcon; label: string }> = {
@@ -174,6 +176,16 @@ interface HeroSectionProps {
     palette?: SDIPalette;
     sectionThemes?: SDISectionThemes;
     sdiTypography?: SDITypography;
+    // Art Director composition directives
+    composition?: string;
+    sectionBackground?: string;
+    hasGridTexture?: boolean;
+    hasAccentGlow?: boolean;
+    typographyPairing?: string;
+    headingWeight?: number;
+    trackingStyle?: string;
+    dividerSystem?: string;
+    [key: string]: any;
   };
   onUpdate: (content: any) => void;
   isEditing?: boolean;
@@ -281,6 +293,17 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
     heroHeadline: content.sdiTypography?.heroHeadline,
     appliedClass: heroHeadlineClass,
   });
+
+  // ── Art Director composition override — fires BEFORE industry branches ──
+  const composition = content?.composition;
+  if (composition === 'centered-type') {
+    console.log('🎨 [ArtDirector] Hero: centered-type composition');
+    return <HeroCenteredType content={content} onUpdate={onUpdate} isEditing={isEditing} />;
+  }
+  if (composition === 'split-photo') {
+    console.log('🎨 [ArtDirector] Hero: split-photo composition');
+    return <HeroSplitPhoto content={content} onUpdate={onUpdate} isEditing={isEditing} />;
+  }
 
   // Local Services variant: Light mode, trust-forward, phone-prominent
   if (isLocalServices) {
