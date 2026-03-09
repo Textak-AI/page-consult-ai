@@ -478,6 +478,12 @@ function ensureQuestionFormat(text: string): string {
 }
 
 export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
+  // Art Director composition check
+  const faqLayout = (content as any)?.faqLayout;
+  if (faqLayout === 'accordion-hairline') {
+    return <FAQAccordionHairline content={content as any} onUpdate={onUpdate as any} isEditing={isEditing} />;
+  }
+
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [editingItem, setEditingItem] = useState<number | null>(null);
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
