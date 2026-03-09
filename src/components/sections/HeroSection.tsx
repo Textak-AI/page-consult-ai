@@ -1030,7 +1030,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                     <Button 
                       size="lg" 
                       className={ctaClassName}
-                      style={ctaStyle}
+                      style={{ ...ctaStyle, borderRadius: 'var(--archetype-btn-radius, 0.75rem)' }}
                     >
                       <span
                         contentEditable={isEditing}
