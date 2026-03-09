@@ -18,6 +18,7 @@ interface HeroCenteredTypeProps {
 export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroCenteredTypeProps) {
   const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'dark', content.primaryColor);
   const primaryColor = content.primaryColor || '#6366F1';
+  const isSerif = content.typographyPairing === 'serif-sans';
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({
@@ -28,17 +29,25 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
 
   const credibilityItems = content.credibilityBar || [];
   const trustBadges = content.trustBadges || [];
-  // Combine all trust signals into a single array
   const allTrustSignals = [
     ...credibilityItems.map((c: any) => c.text || c),
     ...trustBadges,
+    ...(content.credibilityItems || []).map((c: any) => c.text || c.label || c),
   ].filter(Boolean).slice(0, 4);
+
+  const trustSignals = allTrustSignals.length > 0 ? allTrustSignals : [
+    'Free consultation',
+    'No commitment required',
+    'Response within 48 hours',
+  ];
 
   const headingWeight = content.headingWeight || 400;
   const trackingStyle = content.trackingStyle || 'tight';
   const trackingValue = trackingStyle === 'tight' ? '-0.03em' : '0';
 
   return (
+    <>
+    <style>{`@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap');`}</style>
     <section
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
       style={{ backgroundColor: bgStyles.bg }}
