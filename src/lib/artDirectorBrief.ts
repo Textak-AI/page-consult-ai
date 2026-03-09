@@ -44,6 +44,8 @@ export interface ArtDirectorBrief {
     background: 'dark' | 'light' | 'tinted';
   };
 
+
+
   finalCta: {
     layout: 'centered-minimal' | 'bold-statement';
     background: 'dark' | 'light';
