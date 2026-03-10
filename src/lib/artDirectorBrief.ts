@@ -17,6 +17,8 @@ export interface ArtDirectorBrief {
     hasGridTexture: boolean;
     hasAccentGlow: boolean;
     trustSignals: 'inline-checks' | 'logo-bar' | 'none';
+    imageStyle?: 'ambient-texture' | 'split-right' | 'none';
+    imagePrompt?: string;
   };
 
   features: {
@@ -68,7 +70,7 @@ export function generateArtDirectorBrief(archetype: string): ArtDirectorBrief {
         designPhilosophy: 'structural',
         sectionRhythm: 'dark-light-alternating',
         dividerSystem: 'hairlines',
-        hero: { composition: 'centered-type', background: 'dark', hasGridTexture: true, hasAccentGlow: false, trustSignals: 'inline-checks' },
+        hero: { composition: 'centered-type', background: 'dark', hasGridTexture: true, hasAccentGlow: false, trustSignals: 'inline-checks', imageStyle: 'ambient-texture', imagePrompt: 'abstract dark geometric pattern, minimal lines, professional technology texture, deep shadows' },
         features: { layout: 'bento-grid', background: 'dark', numbering: 'monospace', iconStyle: 'none' },
         stats: { presentation: 'hairline-separated', background: 'dark', numberStyle: 'large-accent', labelStyle: 'minimal-muted' },
         process: { layout: 'numbered-rows', background: 'light', numbering: 'monospace' },
@@ -82,7 +84,7 @@ export function generateArtDirectorBrief(archetype: string): ArtDirectorBrief {
         designPhilosophy: 'organic',
         sectionRhythm: 'all-light',
         dividerSystem: 'whitespace',
-        hero: { composition: 'split-photo', background: 'light', hasGridTexture: false, hasAccentGlow: false, trustSignals: 'inline-checks' },
+        hero: { composition: 'split-photo', background: 'light', hasGridTexture: false, hasAccentGlow: false, trustSignals: 'inline-checks', imageStyle: 'split-right', imagePrompt: 'warm welcoming environment, soft natural lighting, community atmosphere, people connecting' },
         features: { layout: 'icon-cards', background: 'tinted', numbering: 'none', iconStyle: 'accent-circle' },
         stats: { presentation: 'card-grid', background: 'brand', numberStyle: 'medium-bold', labelStyle: 'sentence-description' },
         process: { layout: 'stacked-cards', background: 'tinted', numbering: 'accent-large' },
@@ -254,6 +256,8 @@ export function applyArtDirectorDirectives(
         hasGridTexture: artBrief.hero.hasGridTexture,
         hasAccentGlow: artBrief.hero.hasAccentGlow,
         trustSignals: artBrief.hero.trustSignals,
+        imageStyle: artBrief.hero.imageStyle || 'none',
+        imagePrompt: artBrief.hero.imagePrompt || '',
         typographyPairing: artBrief.typography.pairing,
         headingWeight: artBrief.typography.headingWeight,
         trackingStyle: artBrief.typography.trackingStyle,

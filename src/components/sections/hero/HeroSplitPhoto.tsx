@@ -36,6 +36,8 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
   const headingWeight = content.headingWeight || 500;
   const usesSerif = content.typographyPairing === 'serif-sans';
 
+  const heroImage = content.backgroundImage || content.heroImage;
+
   return (
     <section
       className="relative min-h-[85vh] flex items-center overflow-hidden"
@@ -130,16 +132,17 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
 
           {/* Visual — right 45% */}
           <div className="lg:col-span-5">
-            {content.backgroundImage ? (
+            {heroImage ? (
               <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-[4/5]">
                 <img
-                  src={content.backgroundImage}
+                  src={heroImage}
                   alt={content.headline || 'Hero visual'}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-opacity duration-1000"
+                  loading="eager"
                 />
               </div>
             ) : (
-              /* Abstract brand shape when no image */
+              /* Shimmer placeholder while image loads */
               <div
                 className="relative rounded-2xl aspect-[4/5] flex items-center justify-center overflow-hidden"
                 style={{
@@ -147,6 +150,14 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
                   border: `1px solid ${bgStyles.border}`,
                 }}
               >
+                {/* Shimmer animation */}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `linear-gradient(90deg, transparent 0%, ${primaryColor}08 50%, transparent 100%)`,
+                    animation: 'shimmer 2s ease-in-out infinite',
+                  }}
+                />
                 {/* Decorative circles */}
                 <div
                   className="absolute w-48 h-48 rounded-full blur-2xl"
@@ -168,6 +179,14 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
           </div>
         </div>
       </div>
+
+      {/* Shimmer keyframe */}
+      <style>{`
+        @keyframes shimmer {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 1; }
+        }
+      `}</style>
     </section>
   );
 }
