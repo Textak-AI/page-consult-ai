@@ -1449,9 +1449,10 @@ ${d.ctaText}
                   }
                   value={data.uniqueStrength || ''}
                   onChange={(e) => updateData({ uniqueStrength: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('uniqueStrength')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
-                <InlineConsultant fieldKey="uniqueStrength" fieldValue={data.uniqueStrength || ''} fieldLabel="Unique Strength" context={coachingContext} />
+                <InlineConsultant fieldKey="uniqueStrength" fieldValue={data.uniqueStrength || ''} fieldLabel="Unique Strength" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('uniqueStrength', handler)} />
               </div>
               
               {/* NEW: Identity Sentence */}
