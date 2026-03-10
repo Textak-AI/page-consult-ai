@@ -15,6 +15,7 @@ interface Props {
   isOptional?: boolean;
   wasSkipped?: boolean;
   skipCoaching?: CoachingResult | null;
+  onBlurHandlerReady?: (handler: () => void) => void;
 }
 
 export function InlineConsultant({
@@ -22,6 +23,7 @@ export function InlineConsultant({
   fieldValue,
   context,
   skipCoaching,
+  onBlurHandlerReady,
 }: Props) {
   const [coaching, setCoaching] = useState<CoachingResult | null>(null);
   const [visible, setVisible] = useState(false);
@@ -74,6 +76,11 @@ export function InlineConsultant({
     }
   }, [skipCoaching, fieldKey]);
 
+  // Expose blur handler to parent field controls
+  useEffect(() => {
+    onBlurHandlerReady?.(handleBlur);
+  }, [onBlurHandlerReady, handleBlur]);
+
   // Cleanup
   useEffect(() => {
     return () => {
@@ -82,12 +89,10 @@ export function InlineConsultant({
     };
   }, []);
 
-  // Attach blur listener to the field input
-  // We listen on the wrapper div's focusout event
   console.log('🔍 [Consultant] InlineConsultant rendered for:', fieldKey);
 
   return (
-    <div onBlur={handleBlur}>
+    <div>
       <AnimatePresence>
         {visible && coaching && (
           <motion.div

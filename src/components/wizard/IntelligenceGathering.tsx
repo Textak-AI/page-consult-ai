@@ -64,7 +64,7 @@ export function IntelligenceGathering({
       setCurrentStepIndex(0);
       
       // Animate each step
-      const timers: NodeJS.Timeout[] = [];
+      const timers: ReturnType<typeof setTimeout>[] = [];
       
       researchSteps.forEach((step, index) => {
         const delay = researchSteps.slice(0, index).reduce((sum, s) => sum + s.duration, 0);

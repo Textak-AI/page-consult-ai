@@ -91,7 +91,7 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
   
   // Track last persisted state to avoid duplicate saves
   const lastPersistedScoreRef = useRef(0);
-  const persistenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const persistenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Intelligence score state for unified action bar
   const [intelScore, setIntelScore] = useState(0);

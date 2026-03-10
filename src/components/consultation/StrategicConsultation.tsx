@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette, FileText, TrendingUp, UserCheck, Rocket, Calendar, Gift, Share2, Check, Save } from 'lucide-react';
 import { toast } from 'sonner';
@@ -552,6 +552,16 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     productName: data.productName,
     concreteProofStory: data.concreteProofStory,
   }), [data.industry, data.pageType, data.pagePurpose, data.businessName, data.productName, data.concreteProofStory]);
+
+  const consultantBlurHandlersRef = useRef<Record<string, (() => void) | undefined>>({});
+
+  const registerConsultantBlurHandler = useCallback((fieldKey: string, handler: () => void) => {
+    consultantBlurHandlersRef.current[fieldKey] = handler;
+  }, []);
+
+  const triggerConsultantBlur = useCallback((fieldKey: string) => {
+    consultantBlurHandlersRef.current[fieldKey]?.();
+  }, []);
   
   // Hero background state
   const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
@@ -1439,9 +1449,10 @@ ${d.ctaText}
                   }
                   value={data.uniqueStrength || ''}
                   onChange={(e) => updateData({ uniqueStrength: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('uniqueStrength')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
-                <InlineConsultant fieldKey="uniqueStrength" fieldValue={data.uniqueStrength || ''} fieldLabel="Unique Strength" context={coachingContext} />
+                <InlineConsultant fieldKey="uniqueStrength" fieldValue={data.uniqueStrength || ''} fieldLabel="Unique Strength" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('uniqueStrength', handler)} />
               </div>
               
               {/* NEW: Identity Sentence */}
@@ -1493,9 +1504,10 @@ ${d.ctaText}
                   placeholder={placeholders.idealClient}
                   value={data.idealClient || ''}
                   onChange={(e) => updateData({ idealClient: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('idealClient')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
-                <InlineConsultant fieldKey="idealClient" fieldValue={data.idealClient || ''} fieldLabel="Ideal Client" context={coachingContext} />
+                <InlineConsultant fieldKey="idealClient" fieldValue={data.idealClient || ''} fieldLabel="Ideal Client" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('idealClient', handler)} />
               </div>
               
               <div>
@@ -1508,9 +1520,10 @@ ${d.ctaText}
                   placeholder={placeholders.clientFrustration}
                   value={data.clientFrustration || ''}
                   onChange={(e) => updateData({ clientFrustration: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('clientFrustration')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
-                <InlineConsultant fieldKey="clientFrustration" fieldValue={data.clientFrustration || ''} fieldLabel="Client Frustration" context={coachingContext} />
+                <InlineConsultant fieldKey="clientFrustration" fieldValue={data.clientFrustration || ''} fieldLabel="Client Frustration" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('clientFrustration', handler)} />
               </div>
               
               <div>
@@ -1523,9 +1536,10 @@ ${d.ctaText}
                   placeholder={placeholders.desiredOutcome}
                   value={data.desiredOutcome || ''}
                   onChange={(e) => updateData({ desiredOutcome: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('desiredOutcome')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
-                <InlineConsultant fieldKey="desiredOutcome" fieldValue={data.desiredOutcome || ''} fieldLabel="Desired Outcome" context={coachingContext} />
+                <InlineConsultant fieldKey="desiredOutcome" fieldValue={data.desiredOutcome || ''} fieldLabel="Desired Outcome" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('desiredOutcome', handler)} />
               </div>
             </div>
           </div>
@@ -1564,9 +1578,10 @@ ${d.ctaText}
                   placeholder="e.g., 'Best of Weddings' award 3 years running, certified by XYZ, featured in ABC magazine..."
                   value={data.achievements || ''}
                   onChange={(e) => updateData({ achievements: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('achievements')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
                 />
-                <InlineConsultant fieldKey="achievements" fieldValue={data.achievements || ''} fieldLabel="Achievements" context={coachingContext} isOptional skipCoaching={skipCoachingResult} />
+                <InlineConsultant fieldKey="achievements" fieldValue={data.achievements || ''} fieldLabel="Achievements" context={coachingContext} isOptional skipCoaching={skipCoachingResult} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('achievements', handler)} />
               </div>
               
               <div>
@@ -1579,9 +1594,10 @@ ${d.ctaText}
                   placeholder={'e.g., "Working with [you] was the best decision we made. They handled everything professionally and our clients loved them." - Sarah M., Event Planner'}
                   value={data.testimonialText || ''}
                   onChange={(e) => updateData({ testimonialText: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('testimonialText')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
-                <InlineConsultant fieldKey="testimonialText" fieldValue={data.testimonialText || ''} fieldLabel="Testimonial" context={coachingContext} isOptional skipCoaching={skipCoachingResult} />
+                <InlineConsultant fieldKey="testimonialText" fieldValue={data.testimonialText || ''} fieldLabel="Testimonial" context={coachingContext} isOptional skipCoaching={skipCoachingResult} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('testimonialText', handler)} />
               </div>
               
               {/* NEW: Concrete Proof Story */}
@@ -1600,6 +1616,7 @@ ${d.ctaText}
                       updateData({ concreteProofStory: e.target.value });
                     }
                   }}
+                  onBlur={() => triggerConsultantBlur('concreteProofStory')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
                 />
                 <div className="flex justify-between mt-1">
@@ -1612,7 +1629,7 @@ ${d.ctaText}
                     {data.concreteProofStory?.length || 0}/300
                   </span>
                 </div>
-                <InlineConsultant fieldKey="concreteProofStory" fieldValue={data.concreteProofStory || ''} fieldLabel="Proof Story" context={coachingContext} skipCoaching={skipCoachingResult} />
+                <InlineConsultant fieldKey="concreteProofStory" fieldValue={data.concreteProofStory || ''} fieldLabel="Proof Story" context={coachingContext} skipCoaching={skipCoachingResult} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('concreteProofStory', handler)} />
               </div>
               
               {/* Proof Story Context - only show if proof story has content */}
@@ -1653,9 +1670,10 @@ ${d.ctaText}
                   placeholder="e.g., Wedding DJ Partnership Package, Growth Marketing Audit, Custom Software Development"
                   value={data.mainOffer || ''}
                   onChange={(e) => updateData({ mainOffer: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('mainOffer')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                 />
-                <InlineConsultant fieldKey="mainOffer" fieldValue={data.mainOffer || ''} fieldLabel="Main Offer" context={coachingContext} />
+                <InlineConsultant fieldKey="mainOffer" fieldValue={data.mainOffer || ''} fieldLabel="Main Offer" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('mainOffer', handler)} />
               </div>
               
               <div>
@@ -1667,9 +1685,10 @@ ${d.ctaText}
                   placeholder="e.g., 6 hours of coverage, backup equipment, planning consultation, custom playlist creation, MC services..."
                   value={data.offerIncludes || ''}
                   onChange={(e) => updateData({ offerIncludes: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('offerIncludes')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
-                <InlineConsultant fieldKey="offerIncludes" fieldValue={data.offerIncludes || ''} fieldLabel="Offer Includes" context={coachingContext} />
+                <InlineConsultant fieldKey="offerIncludes" fieldValue={data.offerIncludes || ''} fieldLabel="Offer Includes" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('offerIncludes', handler)} />
               </div>
               
               <div>
@@ -1699,9 +1718,10 @@ ${d.ctaText}
                   placeholder="e.g., 1) Free 15-min call to discuss needs, 2) Custom proposal within 48 hours, 3) Planning session if booked, 4) Delivery/event day"
                   value={data.processDescription || ''}
                   onChange={(e) => updateData({ processDescription: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('processDescription')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
-                <InlineConsultant fieldKey="processDescription" fieldValue={data.processDescription || ''} fieldLabel="Process Description" context={coachingContext} />
+                <InlineConsultant fieldKey="processDescription" fieldValue={data.processDescription || ''} fieldLabel="Process Description" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('processDescription', handler)} />
               </div>
               <div className="pt-4 border-t border-slate-700">
                 <Label className="text-slate-400">
@@ -1865,9 +1885,10 @@ ${d.ctaText}
                   placeholder="e.g., Price concerns, trust issues with new vendors, comparison to DIY options, timing/availability concerns..."
                   value={data.objectionsToOvercome || ''}
                   onChange={(e) => updateData({ objectionsToOvercome: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('objectionsToOvercome')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
                 />
-                <InlineConsultant fieldKey="objectionsToOvercome" fieldValue={data.objectionsToOvercome || ''} fieldLabel="Objections" context={coachingContext} isOptional skipCoaching={skipCoachingResult} />
+                <InlineConsultant fieldKey="objectionsToOvercome" fieldValue={data.objectionsToOvercome || ''} fieldLabel="Objections" context={coachingContext} isOptional skipCoaching={skipCoachingResult} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('objectionsToOvercome', handler)} />
               </div>
             </div>
           </div>

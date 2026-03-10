@@ -134,7 +134,7 @@ const BriefField: React.FC<BriefFieldProps> = ({
 // Auto-save hook
 const useAutoSave = (data: Partial<ConsultationData>, userId: string | null | undefined) => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const lastSavedRef = useRef<string>('');
 
   const save = useCallback(async (dataToSave: Partial<ConsultationData>) => {
