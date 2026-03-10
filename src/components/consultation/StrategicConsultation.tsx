@@ -1441,6 +1441,7 @@ ${d.ctaText}
                   onChange={(e) => updateData({ uniqueStrength: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
+                <InlineConsultant fieldKey="uniqueStrength" fieldValue={data.uniqueStrength || ''} fieldLabel="Unique Strength" context={coachingContext} />
               </div>
               
               {/* NEW: Identity Sentence */}
