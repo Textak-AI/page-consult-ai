@@ -98,27 +98,12 @@ export function ClientResultsSection({ content }: ClientResultsSectionProps) {
     return (content.primaryColor || palette?.primary) ? '' : 'text-gray-900';
   };
 
-  // Default results if none provided
-  const displayResults = results.length > 0 ? results : [
-    { 
-      metric: '40% Revenue Growth', 
-      description: 'Helped a mid-market company restructure their go-to-market strategy, resulting in significant revenue uplift.',
-      client: 'Technology Company',
-      industry: 'SaaS'
-    },
-    { 
-      metric: '$2.5M Cost Savings', 
-      description: 'Identified operational inefficiencies and implemented process improvements that delivered lasting savings.',
-      client: 'Manufacturing Firm',
-      industry: 'Industrial'
-    },
-    { 
-      metric: '3x Team Productivity', 
-      description: 'Redesigned workflows and implemented new systems that dramatically improved team output.',
-      client: 'Professional Services',
-      industry: 'Consulting'
-    },
-  ];
+  // No fallback fabrication — if no results, hide the section
+  if (results.length < 2) {
+    console.log('🎨 [ClientResultsSection] Quality floor: fewer than 2 results, hiding section');
+    return null;
+  }
+  const displayResults = results;
 
   const icons = [TrendingUp, Award, Users, CheckCircle2];
 
