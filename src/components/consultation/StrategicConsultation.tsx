@@ -1867,6 +1867,11 @@ ${d.ctaText}
                 />
                 <InlineConsultant fieldKey="objectionsToOvercome" fieldValue={data.objectionsToOvercome || ''} fieldLabel="Objections" context={coachingContext} isOptional skipCoaching={skipCoachingResult} />
               </div>
+            </div>
+          </div>
+        );
+
+      default:
         return null;
     }
   };
