@@ -597,6 +597,51 @@ function GenerateContent() {
     }
   }, [phase]);
 
+  // Auto-trigger hero image generation for Art Director compositions
+  const heroImageTriggered = useRef(false);
+  useEffect(() => {
+    if (phase !== 'editor' || sections.length === 0 || heroImageTriggered.current) return;
+
+    const heroSection = sections.find(s => s.type === 'hero');
+    if (!heroSection) return;
+
+    const { composition, imageStyle, imagePrompt, backgroundImage, heroImage } = heroSection.content || {};
+    const isArtDirector = composition === 'centered-type' || composition === 'split-photo';
+    if (!isArtDirector || imageStyle === 'none') return;
+    if (backgroundImage || heroImage) return; // Already has an image
+
+    heroImageTriggered.current = true;
+
+    const prompt = imagePrompt || `Professional ${consultation?.industry || 'business'} environment, modern, high quality`;
+    console.log('🖼️ [ImageGen] Auto-triggering hero image generation:', prompt);
+
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-hero-images', {
+          body: {
+            prompts: [prompt],
+            cacheKey: `art-director-${composition}-${(consultation?.id || 'anon').slice(0, 8)}`,
+            forceRegenerate: false,
+          },
+        });
+
+        if (error) throw error;
+
+        const imageUrl = data?.images?.[0]?.url;
+        if (imageUrl) {
+          console.log('🖼️ [ImageGen] Hero image generated:', imageUrl.substring(0, 60));
+          setSections(prev => prev.map(s =>
+            s.type === 'hero'
+              ? { ...s, content: { ...s.content, backgroundImage: imageUrl } }
+              : s
+          ));
+        }
+      } catch (err) {
+        console.warn('🖼️ [ImageGen] Auto-generation failed (non-blocking):', err);
+      }
+    })();
+  }, [phase, sections]);
+
   // Generate SEO data when consultation and AI SEO data are available
   useEffect(() => {
     if (!consultation) return;
