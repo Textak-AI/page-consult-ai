@@ -1670,9 +1670,10 @@ ${d.ctaText}
                   placeholder="e.g., Wedding DJ Partnership Package, Growth Marketing Audit, Custom Software Development"
                   value={data.mainOffer || ''}
                   onChange={(e) => updateData({ mainOffer: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('mainOffer')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                 />
-                <InlineConsultant fieldKey="mainOffer" fieldValue={data.mainOffer || ''} fieldLabel="Main Offer" context={coachingContext} />
+                <InlineConsultant fieldKey="mainOffer" fieldValue={data.mainOffer || ''} fieldLabel="Main Offer" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('mainOffer', handler)} />
               </div>
               
               <div>
