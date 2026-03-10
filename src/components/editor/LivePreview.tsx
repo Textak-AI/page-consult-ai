@@ -610,23 +610,29 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         console.log('🎨 [LivePreview] Rendering section: client-results');
         const crResults = sectionContent.results || sectionContent.statistics || sectionContent.stats || [];
         const validResults = crResults.filter((s: any) => {
-          if (!s.metric && !s.value) return false;
+          const value = s.metric || s.value || '';
           const label = s.description || s.label || '';
-          if (!label) return false;
-          const val = s.metric || s.value || '';
-          if (!/\d/.test(val)) return false;
-          const genericLabels = ['consulting', 'services', 'business', 'growth', 'company', 'industry'];
-          if (genericLabels.includes(String(label).toLowerCase().trim())) return false;
+          // Must have a numeric value
+          if (!/\d/.test(value)) return false;
+          // Label must be meaningful (not just an industry name or single word)
+          if (!label || label.length < 5) return false;
+          const junkLabels = ['consulting', 'services', 'business', 'growth', 'company', 'industry', 'say yes', 'say no'];
+          if (junkLabels.some(j => label.toLowerCase().trim() === j || label.toLowerCase().startsWith(j))) return false;
+          // Label shouldn't be a sentence fragment (more than 8 words is suspicious)
+          const wordCount = label.trim().split(/\s+/).length;
+          if (wordCount > 8) return false;
           return true;
         });
         if (validResults.length < 2) {
-          console.log('🎨 [LivePreview] Quality floor: client-results hidden (only', validResults.length, 'valid)');
+          console.log('🎨 [LivePreview] Quality floor: client-results hidden — only', validResults.length, 'valid results');
           return null;
         }
         return renderSectionWithToolbar(
           section,
           index,
-          <ClientResultsSection content={sectionContent} />
+          <ClientResultsSection 
+            content={{ ...sectionContent, results: validResults }}
+          />
         );
       }
       default:

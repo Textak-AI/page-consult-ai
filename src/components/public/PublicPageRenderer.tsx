@@ -321,11 +321,27 @@ export function PublicPageRenderer({
         return (
           <EngagementModelSection key={index} content={section.content} />
         );
-      case 'client-results':
+      case 'client-results': {
         console.log('🎨 [PublicRenderer] Rendering section: client-results');
+        const crResults = section.content.results || section.content.statistics || section.content.stats || [];
+        const validCR = crResults.filter((s: any) => {
+          const value = s.metric || s.value || '';
+          const label = s.description || s.label || '';
+          if (!/\d/.test(value)) return false;
+          if (!label || label.length < 5) return false;
+          const junkLabels = ['consulting', 'services', 'business', 'growth', 'company', 'industry', 'say yes', 'say no'];
+          if (junkLabels.some((j: string) => label.toLowerCase().trim() === j || label.toLowerCase().startsWith(j))) return false;
+          if (label.trim().split(/\s+/).length > 8) return false;
+          return true;
+        });
+        if (validCR.length < 2) {
+          console.log('🎨 [PublicRenderer] Quality floor: client-results hidden — only', validCR.length, 'valid');
+          return null;
+        }
         return (
-          <ClientResultsSection key={index} content={section.content} />
+          <ClientResultsSection key={index} content={{ ...section.content, results: validCR }} />
         );
+      }
       default:
         return null;
     }
