@@ -70,7 +70,7 @@ export function generateArtDirectorBrief(archetype: string): ArtDirectorBrief {
         designPhilosophy: 'structural',
         sectionRhythm: 'dark-light-alternating',
         dividerSystem: 'hairlines',
-        hero: { composition: 'centered-type', background: 'dark', hasGridTexture: true, hasAccentGlow: false, trustSignals: 'inline-checks' },
+        hero: { composition: 'centered-type', background: 'dark', hasGridTexture: true, hasAccentGlow: false, trustSignals: 'inline-checks', imageStyle: 'ambient-texture', imagePrompt: 'abstract dark geometric pattern, minimal lines, professional technology texture, deep shadows' },
         features: { layout: 'bento-grid', background: 'dark', numbering: 'monospace', iconStyle: 'none' },
         stats: { presentation: 'hairline-separated', background: 'dark', numberStyle: 'large-accent', labelStyle: 'minimal-muted' },
         process: { layout: 'numbered-rows', background: 'light', numbering: 'monospace' },
