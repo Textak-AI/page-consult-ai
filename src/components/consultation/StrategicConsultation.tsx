@@ -1578,9 +1578,10 @@ ${d.ctaText}
                   placeholder="e.g., 'Best of Weddings' award 3 years running, certified by XYZ, featured in ABC magazine..."
                   value={data.achievements || ''}
                   onChange={(e) => updateData({ achievements: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('achievements')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
                 />
-                <InlineConsultant fieldKey="achievements" fieldValue={data.achievements || ''} fieldLabel="Achievements" context={coachingContext} isOptional skipCoaching={skipCoachingResult} />
+                <InlineConsultant fieldKey="achievements" fieldValue={data.achievements || ''} fieldLabel="Achievements" context={coachingContext} isOptional skipCoaching={skipCoachingResult} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('achievements', handler)} />
               </div>
               
               <div>
