@@ -1653,6 +1653,7 @@ ${d.ctaText}
                   onChange={(e) => updateData({ mainOffer: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                 />
+                <InlineConsultant fieldKey="mainOffer" fieldValue={data.mainOffer || ''} fieldLabel="Main Offer" context={coachingContext} />
               </div>
               
               <div>
