@@ -1594,9 +1594,10 @@ ${d.ctaText}
                   placeholder={'e.g., "Working with [you] was the best decision we made. They handled everything professionally and our clients loved them." - Sarah M., Event Planner'}
                   value={data.testimonialText || ''}
                   onChange={(e) => updateData({ testimonialText: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('testimonialText')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
-                <InlineConsultant fieldKey="testimonialText" fieldValue={data.testimonialText || ''} fieldLabel="Testimonial" context={coachingContext} isOptional skipCoaching={skipCoachingResult} />
+                <InlineConsultant fieldKey="testimonialText" fieldValue={data.testimonialText || ''} fieldLabel="Testimonial" context={coachingContext} isOptional skipCoaching={skipCoachingResult} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('testimonialText', handler)} />
               </div>
               
               {/* NEW: Concrete Proof Story */}
