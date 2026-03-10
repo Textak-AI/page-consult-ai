@@ -1685,9 +1685,10 @@ ${d.ctaText}
                   placeholder="e.g., 6 hours of coverage, backup equipment, planning consultation, custom playlist creation, MC services..."
                   value={data.offerIncludes || ''}
                   onChange={(e) => updateData({ offerIncludes: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('offerIncludes')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
-                <InlineConsultant fieldKey="offerIncludes" fieldValue={data.offerIncludes || ''} fieldLabel="Offer Includes" context={coachingContext} />
+                <InlineConsultant fieldKey="offerIncludes" fieldValue={data.offerIncludes || ''} fieldLabel="Offer Includes" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('offerIncludes', handler)} />
               </div>
               
               <div>
