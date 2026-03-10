@@ -552,6 +552,16 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     productName: data.productName,
     concreteProofStory: data.concreteProofStory,
   }), [data.industry, data.pageType, data.pagePurpose, data.businessName, data.productName, data.concreteProofStory]);
+
+  const consultantBlurHandlersRef = useRef<Record<string, (() => void) | undefined>>({});
+
+  const registerConsultantBlurHandler = useCallback((fieldKey: string, handler: () => void) => {
+    consultantBlurHandlersRef.current[fieldKey] = handler;
+  }, []);
+
+  const triggerConsultantBlur = useCallback((fieldKey: string) => {
+    consultantBlurHandlersRef.current[fieldKey]?.();
+  }, []);
   
   // Hero background state
   const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
