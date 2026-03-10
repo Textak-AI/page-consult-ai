@@ -15,6 +15,7 @@ interface Props {
   isOptional?: boolean;
   wasSkipped?: boolean;
   skipCoaching?: CoachingResult | null;
+  onBlurHandlerReady?: (handler: () => void) => void;
 }
 
 export function InlineConsultant({
@@ -22,6 +23,7 @@ export function InlineConsultant({
   fieldValue,
   context,
   skipCoaching,
+  onBlurHandlerReady,
 }: Props) {
   const [coaching, setCoaching] = useState<CoachingResult | null>(null);
   const [visible, setVisible] = useState(false);
