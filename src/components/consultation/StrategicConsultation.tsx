@@ -1031,20 +1031,38 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   const handleNext = async () => {
     const currentStepId = STEPS[currentStep]?.id;
     
+    // Clear any previous skip coaching
+    setSkipCoachingResult(null);
+    
+    // Check for skipped optional fields and show coaching
+    const skippedFields: string[] = [];
+    if (currentStepId === 'credibility') {
+      if (!data.testimonialText?.trim()) skippedFields.push('testimonialText');
+      if (!data.concreteProofStory?.trim()) skippedFields.push('concreteProofStory');
+      if (!data.proofStoryContext?.trim()) skippedFields.push('proofStoryContext');
+      if (!data.achievements?.trim()) skippedFields.push('achievements');
+    }
+    if (currentStepId === 'goals') {
+      if (!data.objectionsToOvercome?.trim()) skippedFields.push('objectionsToOvercome');
+    }
+    
+    if (skippedFields.length > 0) {
+      const coaching = getSkipCoaching(skippedFields, coachingContext);
+      if (coaching) {
+        setSkipCoachingResult(coaching);
+        // Still proceed — coaching is informational, not blocking
+      }
+    }
+    
     // If moving from website step and no website intelligence, skip branding step
     if (currentStepId === 'website' && !data.websiteIntelligence) {
-      // Skip branding step (index 1) and go directly to page-type (index 2)
       setCurrentStep(currentStep + 2);
       return;
     }
     
-    // If page type changes, we might need to reset step index due to different step arrays
-    // The useMemo for STEPS handles this automatically
-    
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Final step - generate strategy brief
       await generateStrategyBrief();
     }
   };
