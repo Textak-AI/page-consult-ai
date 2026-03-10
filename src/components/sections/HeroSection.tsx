@@ -228,7 +228,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   // User-selected images (via editor) are still honored
   // Art Director compositions bypass this flag — they handle images internally
   const ENABLE_HERO_BG_IMAGES = false;
-  const isArtDirectorComposition = composition === 'centered-type' || composition === 'split-photo';
+  const isArtDirectorComposition = content?.composition === 'centered-type' || content?.composition === 'split-photo';
   const hasBackgroundImage = (ENABLE_HERO_BG_IMAGES || isArtDirectorComposition) && !!content.backgroundImage;
   const showDarkOverlay = hasBackgroundImage && (content.darkOverlay !== false);
   // Use light text when: overlay is active on bg image, or when in dark mode
