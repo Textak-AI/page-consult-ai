@@ -1523,12 +1523,8 @@ ${d.ctaText}
                   onChange={(e) => updateData({ desiredOutcome: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
+                <InlineConsultant fieldKey="desiredOutcome" fieldValue={data.desiredOutcome || ''} fieldLabel="Desired Outcome" context={coachingContext} />
               </div>
-            </div>
-          </div>
-        );
-
-      case 'credibility':
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
