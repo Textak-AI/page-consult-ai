@@ -541,6 +541,17 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [skipCoachingResult, setSkipCoachingResult] = useState<CoachingResult | null>(null);
+
+  // Coaching context derived from current wizard data
+  const coachingContext: WizardContext = useMemo(() => ({
+    industry: data.industry,
+    pageType: data.pageType,
+    pagePurpose: data.pagePurpose,
+    businessName: data.businessName,
+    productName: data.productName,
+    concreteProofStory: data.concreteProofStory,
+  }), [data.industry, data.pageType, data.pagePurpose, data.businessName, data.productName, data.concreteProofStory]);
   
   // Hero background state
   const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
