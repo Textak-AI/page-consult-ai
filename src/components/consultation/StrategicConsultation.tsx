@@ -1690,9 +1690,8 @@ ${d.ctaText}
                   onChange={(e) => updateData({ processDescription: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
+                <InlineConsultant fieldKey="processDescription" fieldValue={data.processDescription || ''} fieldLabel="Process Description" context={coachingContext} />
               </div>
-              
-              {/* NEW: Methodology Steps */}
               <div className="pt-4 border-t border-slate-700">
                 <Label className="text-slate-400">
                   What happens in the first 30 days of working with you?
