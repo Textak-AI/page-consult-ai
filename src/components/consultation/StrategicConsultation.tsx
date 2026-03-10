@@ -1718,9 +1718,10 @@ ${d.ctaText}
                   placeholder="e.g., 1) Free 15-min call to discuss needs, 2) Custom proposal within 48 hours, 3) Planning session if booked, 4) Delivery/event day"
                   value={data.processDescription || ''}
                   onChange={(e) => updateData({ processDescription: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('processDescription')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
-                <InlineConsultant fieldKey="processDescription" fieldValue={data.processDescription || ''} fieldLabel="Process Description" context={coachingContext} />
+                <InlineConsultant fieldKey="processDescription" fieldValue={data.processDescription || ''} fieldLabel="Process Description" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('processDescription', handler)} />
               </div>
               <div className="pt-4 border-t border-slate-700">
                 <Label className="text-slate-400">
