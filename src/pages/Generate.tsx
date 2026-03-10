@@ -349,7 +349,7 @@ function GenerateContent() {
   const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
   const [stylePickerOpen, setStylePickerOpen] = useState(false);
   const [calculatorUpgradeOpen, setCalculatorUpgradeOpen] = useState(false);
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedSectionsRef = useRef<string>('');
   const [isSaving, setIsSaving] = useState(false);
   const [existingPageLoaded, setExistingPageLoaded] = useState(false);

@@ -79,7 +79,7 @@ export function PageGenerationLoader({ consultation, onComplete }: PageGeneratio
 
   // Animate through generation steps
   useEffect(() => {
-    const timers: NodeJS.Timeout[] = [];
+    const timers: ReturnType<typeof setTimeout>[] = [];
     let cumulativeTime = 0;
     
     generationSteps.forEach((step, index) => {

@@ -24,7 +24,7 @@ export function IntelligenceSheet({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPeeking, setIsPeeking] = useState(false);
   const [lastScore, setLastScore] = useState(score);
-  const peekTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const peekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragControls = useDragControls();
 
   // Check for reduced motion preference

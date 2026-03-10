@@ -54,7 +54,7 @@ export function IntelligenceGatedTab({
 }: IntelligenceGatedTabProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tabRef = useRef<HTMLDivElement>(null);
 
   const isUnlocked = currentScore >= unlockThreshold;
