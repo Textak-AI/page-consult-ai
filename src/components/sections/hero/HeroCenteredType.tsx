@@ -45,6 +45,8 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
   const trackingStyle = content.trackingStyle || 'tight';
   const trackingValue = trackingStyle === 'tight' ? '-0.03em' : '0';
 
+  const heroImage = content.backgroundImage || content.heroImage;
+
   return (
     <>
     <style>{`@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap');`}</style>
@@ -55,6 +57,19 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
       {/* Editing outline */}
       {isEditing && (
         <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-20" />
+      )}
+
+      {/* AI-generated ambient background image at low opacity */}
+      {heroImage && (
+        <div
+          className="absolute inset-0 z-0 transition-opacity duration-1000"
+          style={{
+            backgroundImage: `url(${heroImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.15,
+          }}
+        />
       )}
 
       {/* Grid texture overlay */}

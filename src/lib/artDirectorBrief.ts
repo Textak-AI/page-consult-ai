@@ -256,6 +256,8 @@ export function applyArtDirectorDirectives(
         hasGridTexture: artBrief.hero.hasGridTexture,
         hasAccentGlow: artBrief.hero.hasAccentGlow,
         trustSignals: artBrief.hero.trustSignals,
+        imageStyle: artBrief.hero.imageStyle || 'none',
+        imagePrompt: artBrief.hero.imagePrompt || '',
         typographyPairing: artBrief.typography.pairing,
         headingWeight: artBrief.typography.headingWeight,
         trackingStyle: artBrief.typography.trackingStyle,

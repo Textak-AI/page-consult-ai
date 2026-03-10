@@ -224,10 +224,12 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
   
   console.log('🎨 [HeroSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant, 'forcedLight:', isConsulting);
   
-  // AI hero images disabled — always use CSS gradient backgrounds
+  // AI hero images disabled for legacy layouts — always use CSS gradient backgrounds
   // User-selected images (via editor) are still honored
+  // Art Director compositions bypass this flag — they handle images internally
   const ENABLE_HERO_BG_IMAGES = false;
-  const hasBackgroundImage = ENABLE_HERO_BG_IMAGES && !!content.backgroundImage;
+  const isArtDirectorComposition = composition === 'centered-type' || composition === 'split-photo';
+  const hasBackgroundImage = (ENABLE_HERO_BG_IMAGES || isArtDirectorComposition) && !!content.backgroundImage;
   const showDarkOverlay = hasBackgroundImage && (content.darkOverlay !== false);
   // Use light text when: overlay is active on bg image, or when in dark mode
   const useLightText = showDarkOverlay || !isLightMode;
