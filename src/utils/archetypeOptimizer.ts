@@ -104,7 +104,17 @@ function computeEnergy(state: number[], weights: [number, number][]): number {
 
 const MARKERS: Record<ArchetypeName, string[]> = {
   "Analytical Validator": ["roi","data","metrics","compliance","audit","performance","efficiency","optimize","kpi","saas","platform","integration","api","enterprise","reduce cost","pipeline","forecast","benchmark"],
-  "Emotional Connector": ["struggle","frustrated","overwhelmed","afraid","worried","stressed","burned out","transform","journey","dream","empower","heal","coach","wellness","therapy","personal","life-changing"],
+  "Emotional Connector": [
+    // Negative emotional (existing)
+    "struggle","frustrated","overwhelmed","afraid","worried","stressed","burned out","transform","journey","dream","empower","heal","coach","wellness","therapy","personal","life-changing",
+    // Positive emotional / community / belonging
+    "feel","feeling","joy","joyful","belonging","belong","community","warmth","warm","welcoming","welcome","home","family","pride","proud","love","loved","hearts","heart","passion","passionate",
+    "care","caring","compassion","compassionate","trust","trusted","safe","safety","comfort","comfortable","inclusive","inclusion","personalized","human","genuine","authentic",
+    "connection","connect","relationship","together","support","nurture","nurturing","empowering","celebrate","inspiring","inspired","meaningful","matter","matters",
+    "understand","understood","seen","heard","valued","accessible","approachable","friendly","inviting","invited",
+    // Expanded negative emotional
+    "invisible","ignored","overlooked","dismissed","excluded","lonely","isolated","abandoned","forgotten","unheard","nervous","anxious","uncertain","hesitant","skeptical","vulnerable","exposed","powerless","helpless",
+  ],
   "Decisive Commander": ["fast","immediately","results","bottom line","executive","scale","growth","revenue","competitive","market share","acquisition","funding","board","stakeholder","decision"],
   "Cautious Researcher": ["research","compare","evaluate","consider","risk","careful","thorough","due diligence","review","long-term","sustainable","proven","established","trust"],
 };
@@ -115,16 +125,55 @@ export function inferArchetype(profile: IntelProfile): {
   reasoning: string;
   matchedMarkers: string[];
 } {
-  const text = [profile.industry, profile.audience, profile.painPoints, profile.tone, profile.valueProp, profile.edge].filter(Boolean).join(" ").toLowerCase();
+  // Build text from profile fields
+  const profileText = [profile.industry, profile.audience, profile.painPoints, profile.tone, profile.valueProp, profile.edge].filter(Boolean).join(" ").toLowerCase();
+
+  // Also read conversation text from localStorage for richer language analysis
+  let conversationText = '';
+  try {
+    const convo = JSON.parse(localStorage.getItem('pageconsult_demo_conversation') || '[]');
+    conversationText = convo
+      .filter((m: any) => m.role === 'user')
+      .map((m: any) => m.content || m.text || m.message || '')
+      .join(' ')
+      .toLowerCase();
+  } catch {}
+
+  // Also read extracted intelligence fields
+  let extractedText = '';
+  try {
+    const extracted = JSON.parse(localStorage.getItem('pageconsult_demo_extracted') || '{}');
+    extractedText = [
+      extracted.painPoints || '',
+      extracted.valueProp || '',
+      extracted.buyerObjections || '',
+      extracted.audience || '',
+    ].join(' ').toLowerCase();
+  } catch {}
+
+  const text = [profileText, conversationText, extractedText].join(' ');
 
   const scores: Record<ArchetypeName, number> = {
     "Analytical Validator": 0, "Emotional Connector": 0,
     "Decisive Commander": 0, "Cautious Researcher": 0,
   };
 
+  const markerCounts: Record<ArchetypeName, number> = {
+    "Analytical Validator": 0, "Emotional Connector": 0,
+    "Decisive Commander": 0, "Cautious Researcher": 0,
+  };
+
   for (const [arch, markers] of Object.entries(MARKERS) as [ArchetypeName, string[]][]) {
-    scores[arch] += markers.reduce((c, m) => c + (text.includes(m) ? 2 : 0), 0);
+    const matched = markers.filter(m => text.includes(m));
+    markerCounts[arch] = matched.length;
+    scores[arch] += matched.length * 2;
   }
+
+  console.log('🎯 [ArchetypeOptimizer] Language scan: found',
+    markerCounts["Emotional Connector"], 'emotional markers,',
+    markerCounts["Analytical Validator"], 'analytical markers,',
+    markerCounts["Decisive Commander"], 'commander markers,',
+    markerCounts["Cautious Researcher"], 'researcher markers');
 
   const price = profile.pricePoint || 0;
   if (price >= 15000) { scores["Analytical Validator"] += 3; scores["Decisive Commander"] += 4; }
@@ -134,9 +183,17 @@ export function inferArchetype(profile: IntelProfile): {
 
   const ind = (profile.industry || "").toLowerCase();
   if (/saas|software|tech|platform|api|dev/.test(ind)) scores["Analytical Validator"] += 3;
-  if (/coach|wellness|therapy|personal|fitness/.test(ind)) scores["Emotional Connector"] += 3;
+  if (/coach|wellness|therapy|personal|fitness/.test(ind)) {
+    scores["Emotional Connector"] += 3;
+    console.log('🎯 [ArchetypeOptimizer] Industry boost: +3 for Emotional Connector (' + ind + ')');
+  }
+  // Expanded emotional industry signals
+  if (/healthcare|health|nonprofit|community|music|arts|creative|education|childcare|elder care|pet|veterinary|yoga|food|restaurant|bakery|cafe|hospitality|travel/.test(ind)) {
+    scores["Emotional Connector"] += 2;
+    console.log('🎯 [ArchetypeOptimizer] Industry boost: +2 for Emotional Connector (' + ind + ')');
+  }
   if (/executive|recruit|m&a|investment|private equity/.test(ind)) scores["Decisive Commander"] += 3;
-  if (/healthcare|legal|education|government/.test(ind)) scores["Cautious Researcher"] += 3;
+  if (/legal|government/.test(ind)) scores["Cautious Researcher"] += 3;
 
   const sorted = (Object.entries(scores) as [ArchetypeName, number][]).sort(([, a], [, b]) => b - a);
   const total = sorted.reduce((s, [, v]) => s + v, 0) || 1;
@@ -144,7 +201,6 @@ export function inferArchetype(profile: IntelProfile): {
 
   console.log('🎯 [ArchetypeOptimizer] Inference:', sorted[0][0], '| Confidence:', confidence.toFixed(2), '| Scores:', JSON.stringify(scores));
 
-  // Collect which markers actually matched for the winning archetype
   const winningArchetype = sorted[0][0];
   const matchedMarkers = MARKERS[winningArchetype].filter(m => text.includes(m));
 
