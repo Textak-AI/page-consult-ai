@@ -1580,6 +1580,7 @@ ${d.ctaText}
                   onChange={(e) => updateData({ testimonialText: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
+                <InlineConsultant fieldKey="testimonialText" fieldValue={data.testimonialText || ''} fieldLabel="Testimonial" context={coachingContext} isOptional skipCoaching={skipCoachingResult} />
               </div>
               
               {/* NEW: Concrete Proof Story */}
