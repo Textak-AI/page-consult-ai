@@ -17,6 +17,8 @@ export interface ArtDirectorBrief {
     hasGridTexture: boolean;
     hasAccentGlow: boolean;
     trustSignals: 'inline-checks' | 'logo-bar' | 'none';
+    imageStyle?: 'ambient-texture' | 'split-right' | 'none';
+    imagePrompt?: string;
   };
 
   features: {
