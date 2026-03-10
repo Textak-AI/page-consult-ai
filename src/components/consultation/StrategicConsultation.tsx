@@ -1856,12 +1856,8 @@ ${d.ctaText}
                   onChange={(e) => updateData({ objectionsToOvercome: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
                 />
+                <InlineConsultant fieldKey="objectionsToOvercome" fieldValue={data.objectionsToOvercome || ''} fieldLabel="Objections" context={coachingContext} isOptional skipCoaching={skipCoachingResult} />
               </div>
-            </div>
-          </div>
-        );
-
-      default:
         return null;
     }
   };
