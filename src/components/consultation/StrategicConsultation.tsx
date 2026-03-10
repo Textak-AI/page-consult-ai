@@ -1536,9 +1536,10 @@ ${d.ctaText}
                   placeholder={placeholders.desiredOutcome}
                   value={data.desiredOutcome || ''}
                   onChange={(e) => updateData({ desiredOutcome: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('desiredOutcome')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
-                <InlineConsultant fieldKey="desiredOutcome" fieldValue={data.desiredOutcome || ''} fieldLabel="Desired Outcome" context={coachingContext} />
+                <InlineConsultant fieldKey="desiredOutcome" fieldValue={data.desiredOutcome || ''} fieldLabel="Desired Outcome" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('desiredOutcome', handler)} />
               </div>
             </div>
           </div>
