@@ -4,6 +4,8 @@ import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Targe
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { IndustrySelector } from './IndustrySelector';
+import { InlineConsultant } from './InlineConsultant';
+import { getSkipCoaching, type CoachingResult, type WizardContext } from '@/utils/consultantCoaching';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -539,6 +541,17 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [skipCoachingResult, setSkipCoachingResult] = useState<CoachingResult | null>(null);
+
+  // Coaching context derived from current wizard data
+  const coachingContext: WizardContext = useMemo(() => ({
+    industry: data.industry,
+    pageType: data.pageType,
+    pagePurpose: data.pagePurpose,
+    businessName: data.businessName,
+    productName: data.productName,
+    concreteProofStory: data.concreteProofStory,
+  }), [data.industry, data.pageType, data.pagePurpose, data.businessName, data.productName, data.concreteProofStory]);
   
   // Hero background state
   const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
@@ -1018,20 +1031,38 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   const handleNext = async () => {
     const currentStepId = STEPS[currentStep]?.id;
     
+    // Clear any previous skip coaching
+    setSkipCoachingResult(null);
+    
+    // Check for skipped optional fields and show coaching
+    const skippedFields: string[] = [];
+    if (currentStepId === 'credibility') {
+      if (!data.testimonialText?.trim()) skippedFields.push('testimonialText');
+      if (!data.concreteProofStory?.trim()) skippedFields.push('concreteProofStory');
+      if (!data.proofStoryContext?.trim()) skippedFields.push('proofStoryContext');
+      if (!data.achievements?.trim()) skippedFields.push('achievements');
+    }
+    if (currentStepId === 'goals') {
+      if (!data.objectionsToOvercome?.trim()) skippedFields.push('objectionsToOvercome');
+    }
+    
+    if (skippedFields.length > 0) {
+      const coaching = getSkipCoaching(skippedFields, coachingContext);
+      if (coaching) {
+        setSkipCoachingResult(coaching);
+        // Still proceed — coaching is informational, not blocking
+      }
+    }
+    
     // If moving from website step and no website intelligence, skip branding step
     if (currentStepId === 'website' && !data.websiteIntelligence) {
-      // Skip branding step (index 1) and go directly to page-type (index 2)
       setCurrentStep(currentStep + 2);
       return;
     }
     
-    // If page type changes, we might need to reset step index due to different step arrays
-    // The useMemo for STEPS handles this automatically
-    
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Final step - generate strategy brief
       await generateStrategyBrief();
     }
   };
@@ -1410,6 +1441,7 @@ ${d.ctaText}
                   onChange={(e) => updateData({ uniqueStrength: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
+                <InlineConsultant fieldKey="uniqueStrength" fieldValue={data.uniqueStrength || ''} fieldLabel="Unique Strength" context={coachingContext} />
               </div>
               
               {/* NEW: Identity Sentence */}
@@ -1463,6 +1495,7 @@ ${d.ctaText}
                   onChange={(e) => updateData({ idealClient: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
+                <InlineConsultant fieldKey="idealClient" fieldValue={data.idealClient || ''} fieldLabel="Ideal Client" context={coachingContext} />
               </div>
               
               <div>
@@ -1477,6 +1510,7 @@ ${d.ctaText}
                   onChange={(e) => updateData({ clientFrustration: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
+                <InlineConsultant fieldKey="clientFrustration" fieldValue={data.clientFrustration || ''} fieldLabel="Client Frustration" context={coachingContext} />
               </div>
               
               <div>
@@ -1491,6 +1525,7 @@ ${d.ctaText}
                   onChange={(e) => updateData({ desiredOutcome: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
+                <InlineConsultant fieldKey="desiredOutcome" fieldValue={data.desiredOutcome || ''} fieldLabel="Desired Outcome" context={coachingContext} />
               </div>
             </div>
           </div>
@@ -1531,6 +1566,7 @@ ${d.ctaText}
                   onChange={(e) => updateData({ achievements: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
                 />
+                <InlineConsultant fieldKey="achievements" fieldValue={data.achievements || ''} fieldLabel="Achievements" context={coachingContext} isOptional skipCoaching={skipCoachingResult} />
               </div>
               
               <div>
@@ -1545,6 +1581,7 @@ ${d.ctaText}
                   onChange={(e) => updateData({ testimonialText: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
+                <InlineConsultant fieldKey="testimonialText" fieldValue={data.testimonialText || ''} fieldLabel="Testimonial" context={coachingContext} isOptional skipCoaching={skipCoachingResult} />
               </div>
               
               {/* NEW: Concrete Proof Story */}
@@ -1575,6 +1612,7 @@ ${d.ctaText}
                     {data.concreteProofStory?.length || 0}/300
                   </span>
                 </div>
+                <InlineConsultant fieldKey="concreteProofStory" fieldValue={data.concreteProofStory || ''} fieldLabel="Proof Story" context={coachingContext} skipCoaching={skipCoachingResult} />
               </div>
               
               {/* Proof Story Context - only show if proof story has content */}
@@ -1617,6 +1655,7 @@ ${d.ctaText}
                   onChange={(e) => updateData({ mainOffer: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
                 />
+                <InlineConsultant fieldKey="mainOffer" fieldValue={data.mainOffer || ''} fieldLabel="Main Offer" context={coachingContext} />
               </div>
               
               <div>
@@ -1630,6 +1669,7 @@ ${d.ctaText}
                   onChange={(e) => updateData({ offerIncludes: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
+                <InlineConsultant fieldKey="offerIncludes" fieldValue={data.offerIncludes || ''} fieldLabel="Offer Includes" context={coachingContext} />
               </div>
               
               <div>
@@ -1661,9 +1701,8 @@ ${d.ctaText}
                   onChange={(e) => updateData({ processDescription: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
                 />
+                <InlineConsultant fieldKey="processDescription" fieldValue={data.processDescription || ''} fieldLabel="Process Description" context={coachingContext} />
               </div>
-              
-              {/* NEW: Methodology Steps */}
               <div className="pt-4 border-t border-slate-700">
                 <Label className="text-slate-400">
                   What happens in the first 30 days of working with you?
@@ -1828,6 +1867,7 @@ ${d.ctaText}
                   onChange={(e) => updateData({ objectionsToOvercome: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
                 />
+                <InlineConsultant fieldKey="objectionsToOvercome" fieldValue={data.objectionsToOvercome || ''} fieldLabel="Objections" context={coachingContext} isOptional skipCoaching={skipCoachingResult} />
               </div>
             </div>
           </div>
