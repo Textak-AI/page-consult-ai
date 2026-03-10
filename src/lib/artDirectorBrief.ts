@@ -102,7 +102,7 @@ export function generateArtDirectorBrief(archetype: string): ArtDirectorBrief {
         process: { layout: 'minimal-list', background: 'light', numbering: 'monospace' },
         faq: { layout: 'accordion-hairline', background: 'light' },
         finalCta: { layout: 'bold-statement', background: 'dark', hasAccentGlow: false },
-        typography: { pairing: 'all-sans', headingWeight: 800, trackingStyle: 'tight' },
+        typography: { pairing: 'sans-mono', headingWeight: 800, trackingStyle: 'tight' },
       };
 
     case 'Cautious Researcher':
