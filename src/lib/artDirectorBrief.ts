@@ -74,7 +74,7 @@ export function generateArtDirectorBrief(archetype: string): ArtDirectorBrief {
         process: { layout: 'numbered-rows', background: 'light', numbering: 'monospace' },
         faq: { layout: 'accordion-hairline', background: 'light' },
         finalCta: { layout: 'centered-minimal', background: 'dark', hasAccentGlow: true },
-        typography: { pairing: 'serif-sans', headingWeight: 400, trackingStyle: 'tight' },
+        typography: { pairing: 'sans-mono', headingWeight: 700, trackingStyle: 'tight' },
       };
 
     case 'Emotional Connector':
