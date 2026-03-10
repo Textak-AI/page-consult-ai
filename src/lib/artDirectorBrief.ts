@@ -84,7 +84,7 @@ export function generateArtDirectorBrief(archetype: string): ArtDirectorBrief {
         designPhilosophy: 'organic',
         sectionRhythm: 'all-light',
         dividerSystem: 'whitespace',
-        hero: { composition: 'split-photo', background: 'light', hasGridTexture: false, hasAccentGlow: false, trustSignals: 'inline-checks' },
+        hero: { composition: 'split-photo', background: 'light', hasGridTexture: false, hasAccentGlow: false, trustSignals: 'inline-checks', imageStyle: 'split-right', imagePrompt: 'warm welcoming environment, soft natural lighting, community atmosphere, people connecting' },
         features: { layout: 'icon-cards', background: 'tinted', numbering: 'none', iconStyle: 'accent-circle' },
         stats: { presentation: 'card-grid', background: 'brand', numberStyle: 'medium-bold', labelStyle: 'sentence-description' },
         process: { layout: 'stacked-cards', background: 'tinted', numbering: 'accent-large' },
