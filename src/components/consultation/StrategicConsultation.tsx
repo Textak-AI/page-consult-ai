@@ -1566,6 +1566,7 @@ ${d.ctaText}
                   onChange={(e) => updateData({ achievements: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
                 />
+                <InlineConsultant fieldKey="achievements" fieldValue={data.achievements || ''} fieldLabel="Achievements" context={coachingContext} isOptional skipCoaching={skipCoachingResult} />
               </div>
               
               <div>
