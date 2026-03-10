@@ -84,6 +84,8 @@ export function InlineConsultant({
 
   // Attach blur listener to the field input
   // We listen on the wrapper div's focusout event
+  console.log('🔍 [Consultant] InlineConsultant rendered for:', fieldKey);
+
   return (
     <div onBlur={handleBlur}>
       <AnimatePresence>
