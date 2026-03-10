@@ -4,6 +4,8 @@ import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Targe
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { IndustrySelector } from './IndustrySelector';
+import { InlineConsultant } from './InlineConsultant';
+import { getSkipCoaching, type CoachingResult, type WizardContext } from '@/utils/consultantCoaching';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
