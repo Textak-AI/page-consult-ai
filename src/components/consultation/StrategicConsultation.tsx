@@ -1616,6 +1616,7 @@ ${d.ctaText}
                       updateData({ concreteProofStory: e.target.value });
                     }
                   }}
+                  onBlur={() => triggerConsultantBlur('concreteProofStory')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
                 />
                 <div className="flex justify-between mt-1">
@@ -1628,7 +1629,7 @@ ${d.ctaText}
                     {data.concreteProofStory?.length || 0}/300
                   </span>
                 </div>
-                <InlineConsultant fieldKey="concreteProofStory" fieldValue={data.concreteProofStory || ''} fieldLabel="Proof Story" context={coachingContext} skipCoaching={skipCoachingResult} />
+                <InlineConsultant fieldKey="concreteProofStory" fieldValue={data.concreteProofStory || ''} fieldLabel="Proof Story" context={coachingContext} skipCoaching={skipCoachingResult} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('concreteProofStory', handler)} />
               </div>
               
               {/* Proof Story Context - only show if proof story has content */}
