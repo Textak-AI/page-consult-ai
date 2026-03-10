@@ -104,7 +104,17 @@ function computeEnergy(state: number[], weights: [number, number][]): number {
 
 const MARKERS: Record<ArchetypeName, string[]> = {
   "Analytical Validator": ["roi","data","metrics","compliance","audit","performance","efficiency","optimize","kpi","saas","platform","integration","api","enterprise","reduce cost","pipeline","forecast","benchmark"],
-  "Emotional Connector": ["struggle","frustrated","overwhelmed","afraid","worried","stressed","burned out","transform","journey","dream","empower","heal","coach","wellness","therapy","personal","life-changing"],
+  "Emotional Connector": [
+    // Negative emotional (existing)
+    "struggle","frustrated","overwhelmed","afraid","worried","stressed","burned out","transform","journey","dream","empower","heal","coach","wellness","therapy","personal","life-changing",
+    // Positive emotional / community / belonging
+    "feel","feeling","joy","joyful","belonging","belong","community","warmth","warm","welcoming","welcome","home","family","pride","proud","love","loved","hearts","heart","passion","passionate",
+    "care","caring","compassion","compassionate","trust","trusted","safe","safety","comfort","comfortable","inclusive","inclusion","personalized","human","genuine","authentic",
+    "connection","connect","relationship","together","support","nurture","nurturing","empowering","celebrate","inspiring","inspired","meaningful","matter","matters",
+    "understand","understood","seen","heard","valued","accessible","approachable","friendly","inviting","invited",
+    // Expanded negative emotional
+    "invisible","ignored","overlooked","dismissed","excluded","lonely","isolated","abandoned","forgotten","unheard","nervous","anxious","uncertain","hesitant","skeptical","vulnerable","exposed","powerless","helpless",
+  ],
   "Decisive Commander": ["fast","immediately","results","bottom line","executive","scale","growth","revenue","competitive","market share","acquisition","funding","board","stakeholder","decision"],
   "Cautious Researcher": ["research","compare","evaluate","consider","risk","careful","thorough","due diligence","review","long-term","sustainable","proven","established","trust"],
 };
