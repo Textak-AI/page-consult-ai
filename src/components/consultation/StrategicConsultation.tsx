@@ -1603,6 +1603,7 @@ ${d.ctaText}
                     {data.concreteProofStory?.length || 0}/300
                   </span>
                 </div>
+                <InlineConsultant fieldKey="concreteProofStory" fieldValue={data.concreteProofStory || ''} fieldLabel="Proof Story" context={coachingContext} skipCoaching={skipCoachingResult} />
               </div>
               
               {/* Proof Story Context - only show if proof story has content */}
