@@ -74,7 +74,7 @@ export function generateArtDirectorBrief(archetype: string): ArtDirectorBrief {
         process: { layout: 'numbered-rows', background: 'light', numbering: 'monospace' },
         faq: { layout: 'accordion-hairline', background: 'light' },
         finalCta: { layout: 'centered-minimal', background: 'dark', hasAccentGlow: true },
-        typography: { pairing: 'serif-sans', headingWeight: 400, trackingStyle: 'tight' },
+        typography: { pairing: 'sans-mono', headingWeight: 700, trackingStyle: 'tight' },
       };
 
     case 'Emotional Connector':
@@ -102,7 +102,7 @@ export function generateArtDirectorBrief(archetype: string): ArtDirectorBrief {
         process: { layout: 'minimal-list', background: 'light', numbering: 'monospace' },
         faq: { layout: 'accordion-hairline', background: 'light' },
         finalCta: { layout: 'bold-statement', background: 'dark', hasAccentGlow: false },
-        typography: { pairing: 'all-sans', headingWeight: 800, trackingStyle: 'tight' },
+        typography: { pairing: 'sans-mono', headingWeight: 800, trackingStyle: 'tight' },
       };
 
     case 'Cautious Researcher':
@@ -117,7 +117,7 @@ export function generateArtDirectorBrief(archetype: string): ArtDirectorBrief {
         process: { layout: 'numbered-rows', background: 'light', numbering: 'accent-large' },
         faq: { layout: 'accordion-card', background: 'light' },
         finalCta: { layout: 'centered-minimal', background: 'light', hasAccentGlow: false },
-        typography: { pairing: 'all-sans', headingWeight: 600, trackingStyle: 'normal' },
+        typography: { pairing: 'serif-sans', headingWeight: 300, trackingStyle: 'normal' },
       };
   }
 }
