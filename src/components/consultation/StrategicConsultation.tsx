@@ -1885,9 +1885,10 @@ ${d.ctaText}
                   placeholder="e.g., Price concerns, trust issues with new vendors, comparison to DIY options, timing/availability concerns..."
                   value={data.objectionsToOvercome || ''}
                   onChange={(e) => updateData({ objectionsToOvercome: e.target.value })}
+                  onBlur={() => triggerConsultantBlur('objectionsToOvercome')}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
                 />
-                <InlineConsultant fieldKey="objectionsToOvercome" fieldValue={data.objectionsToOvercome || ''} fieldLabel="Objections" context={coachingContext} isOptional skipCoaching={skipCoachingResult} />
+                <InlineConsultant fieldKey="objectionsToOvercome" fieldValue={data.objectionsToOvercome || ''} fieldLabel="Objections" context={coachingContext} isOptional skipCoaching={skipCoachingResult} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('objectionsToOvercome', handler)} />
               </div>
             </div>
           </div>
