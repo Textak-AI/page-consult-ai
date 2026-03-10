@@ -117,7 +117,7 @@ export function generateArtDirectorBrief(archetype: string): ArtDirectorBrief {
         process: { layout: 'numbered-rows', background: 'light', numbering: 'accent-large' },
         faq: { layout: 'accordion-card', background: 'light' },
         finalCta: { layout: 'centered-minimal', background: 'light', hasAccentGlow: false },
-        typography: { pairing: 'all-sans', headingWeight: 600, trackingStyle: 'normal' },
+        typography: { pairing: 'serif-sans', headingWeight: 300, trackingStyle: 'normal' },
       };
   }
 }
