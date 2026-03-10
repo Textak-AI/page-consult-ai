@@ -1527,6 +1527,11 @@ ${d.ctaText}
                 />
                 <InlineConsultant fieldKey="desiredOutcome" fieldValue={data.desiredOutcome || ''} fieldLabel="Desired Outcome" context={coachingContext} />
               </div>
+            </div>
+          </div>
+        );
+
+      case 'credibility':
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
