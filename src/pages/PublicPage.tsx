@@ -103,7 +103,7 @@ export default function PublicPage() {
             };
           }
           setPage(mapped);
-          // Track view
+          setPublishedPageId(publishedData.id);
           supabase.rpc('increment_published_page_view', { page_slug: slug } as any).then(() => {});
           setIsLoading(false);
           return;
