@@ -106,6 +106,7 @@ export default function PublishedPage() {
       designIntelligence={designIntelligence as any}
       brandSettings={page.brand_settings}
       showPoweredBy={true}
+      publishedPageId={page.id}
     />
   );
 }
