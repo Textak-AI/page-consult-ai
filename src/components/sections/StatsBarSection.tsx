@@ -97,97 +97,104 @@ function StatsBarSectionBase({ statistics, industryVariant, mode, archetype = 'p
   })();
 
   /**
-   * Validate stat for display:
-   * - Has non-empty value and label
-   * - Value is reasonable length (not a sentence)
-   * - Label doesn't contain JSON field name patterns or syntax chars
-   * - Label isn't truncated mid-word
+   * Validate stat for display — STRICT rules to prevent garbage data.
+   * Rejects: camelCase, JSON field names, truncated words, short gibberish
    */
   const isValidStat = (stat: Statistic): boolean => {
     if (!stat.value || !stat.label) return false;
-    if (stat.value.length > 15) return false;  // Values like "94%" or "$1.5M"
-    if (stat.label.length < 3) return false;   // Too short
-    
-    // Must contain a recognizable numeric value (%, x multiplier, $, or plain number)
+    if (stat.value.length > 15) return false;
+    if (stat.label.length < 5) return false;
+
+    // Must contain a recognizable numeric value
     if (!/\d/.test(stat.value) && !/[%x$+]/.test(stat.value)) return false;
-    
-    // Reject labels containing JSON syntax characters
+
+    // Reject labels with JSON syntax
     if (/[{}[\]":]/.test(stat.label)) return false;
-    
-    // Reject JSON field name patterns — camelCase anywhere
-    if (/[a-z][A-Z]/.test(stat.label) && !/\s/.test(stat.label)) return false;
-    if (/^[a-z_]+$/i.test(stat.label) && !/\s/.test(stat.label)) return false; // single identifier
-    
-    // Reject concatenated lowercase (>8 chars, no spaces) — JSON key leakage
-    if (/^[a-z]{9,}$/i.test(stat.label) && !/\s/.test(stat.label)) return false;
-    
-    // Reject known JSON field name prefixes
-    if (/^(valueprop|buyerobject|painpoint|proofelem|percent|dollar|clientcount|yearsinbusiness|authority|uniquevalue|targetmark|industr|compet|differ|credent|guaran)/i.test(stat.label)) return false;
-    
-    // Clean label: strip embedded camelCase tokens
-    const cleanedLabel = stat.label.replace(/\b[a-z]{2,}[A-Z][a-zA-Z]*\b/g, '').trim();
-    if (cleanedLabel.length < 3) return false;
-    
-    // Label must contain at least one space (be human-readable, not a single token)
-    // Exception: short known words like "Satisfaction" or "Revenue"
-    if (!/\s/.test(stat.label) && stat.label.length > 15) return false;
-    
+
+    // Reject ANY camelCase pattern (even within multi-word strings)
+    if (/[a-z][A-Z]/.test(stat.label)) return false;
+
+    // Reject snake_case identifiers
+    if (/[a-z]_[a-z]/i.test(stat.label)) return false;
+
+    // Reject single-token identifiers (no spaces, looks like a variable name)
+    if (!/\s/.test(stat.label.trim()) && stat.label.length > 12) return false;
+
+    // Reject known JSON field name prefixes/fragments (checked with spaces stripped)
+    const fieldNamePattern = /\b(valueprop|buyerobject|painpoint|proofelem|percent|dollar|clientcount|yearsinbusiness|authority|uniquevalue|targetmark|industr|compet|differ|credent|guaran|founde|consult|servicetyp|keybenef|riskrevers|urgencyangle|flowstate|extractedintel|strategybrief|communicationstyl|audiencegoal|audiencepain)\b/i;
+    if (fieldNamePattern.test(stat.label.replace(/\s/g, ''))) return false;
+
+    // Reject if label is a single word under 10 chars that isn't a known noun
+    const words = stat.label.trim().split(/\s+/);
+    if (words.length === 1 && stat.label.length < 10) {
+      const knownGoodSingleWords = ['satisfaction', 'revenue', 'retention', 'growth', 'savings', 'uptime', 'accuracy', 'clients', 'customers', 'projects', 'delivered', 'reduction', 'increase', 'improvement'];
+      if (!knownGoodSingleWords.includes(stat.label.toLowerCase())) return false;
+    }
+
+    // Reject truncated labels: last word must be ≥3 chars or end with number/%/punctuation
+    const lastWord = words[words.length - 1];
+    if (lastWord.length < 3 && !/[\d%+).]$/.test(lastWord)) return false;
+
+    // Reject if >50% of words are under 3 chars (fragmented garbage)
+    const tinyWords = words.filter(w => w.length < 3 && !/^\d/.test(w));
+    if (words.length >= 3 && tinyWords.length / words.length > 0.5) return false;
+
     return true;
   };
 
   /**
-   * Truncate label at word boundary if too long
+   * Truncate label at last complete word boundary
    */
   const truncateLabel = (label: string, maxLen: number = 60): string => {
     if (label.length <= maxLen) return label;
     const truncated = label.slice(0, maxLen);
     const lastSpace = truncated.lastIndexOf(' ');
-    if (lastSpace > maxLen * 0.5) {
-      return truncated.slice(0, lastSpace) + '…';
+    if (lastSpace > maxLen * 0.4) {
+      return truncated.slice(0, lastSpace).replace(/[,\s]+$/, '') + '…';
     }
-    return truncated + '…';
+    return truncated.replace(/[,\s]+$/, '') + '…';
   };
 
-  // Clean and deduplicate stats
+  /**
+   * Clean a label: strip embedded field-name fragments, fix spacing
+   */
+  const cleanLabel = (label: string): string => {
+    let cleaned = label
+      .replace(/\b[a-z]{2,}[A-Z][a-zA-Z]*/g, '')  // Strip camelCase tokens
+      .replace(/["{}[\]]/g, '')                       // Strip JSON syntax
+      .replace(/\s{2,}/g, ' ')                        // Collapse whitespace
+      .trim();
+    if (cleaned.length > 0) {
+      cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    }
+    return cleaned;
+  };
+
+  // Clean, validate, and deduplicate stats
   const seenNumericValues = new Set<string>();
   const seenLabels = new Set<string>();
   const cleanStats = parsedStatistics
     .map(stat => ({
       ...stat,
-      label: truncateLabel(stat.label), // Ensure no truncated labels
+      label: truncateLabel(cleanLabel(stat.label)),
     }))
     .filter(stat => {
-      if (!isValidStat(stat)) {
-        console.log('⚠️ [StatsBarSection] Rejected invalid stat:', stat);
-        return false;
-      }
-      
-      // Extract numeric portion for aggressive dedup
+      if (!isValidStat(stat)) return false;
+
       const numericOnly = stat.value.replace(/[^0-9.]/g, '');
       const normalizedValue = stat.value.replace(/[^0-9a-z%$+x]/gi, '').toLowerCase();
-      
-      if (seenNumericValues.has(normalizedValue)) {
-        console.log('🔄 [StatsBarSection] Skipping duplicate value:', stat.value);
-        return false;
-      }
-      // Also dedup by raw numeric (catches "94%" appearing with different labels)
-      if (numericOnly && numericOnly.length >= 2 && seenNumericValues.has(numericOnly)) {
-        console.log('🔄 [StatsBarSection] Skipping duplicate numeric:', stat.value, stat.label);
-        return false;
-      }
+
+      if (seenNumericValues.has(normalizedValue)) return false;
+      if (numericOnly && numericOnly.length >= 2 && seenNumericValues.has(numericOnly)) return false;
       seenNumericValues.add(normalizedValue);
       if (numericOnly) seenNumericValues.add(numericOnly);
-      
-      // Deduplicate by normalized label
+
       const normalizedLabel = stat.label.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (seenLabels.has(normalizedLabel)) {
-        console.log('🔄 [StatsBarSection] Skipping duplicate label:', stat.label);
-        return false;
-      }
+      if (seenLabels.has(normalizedLabel)) return false;
       seenLabels.add(normalizedLabel);
-      
+
       return true;
-    }).slice(0, 4); // Max 4 stats
+    }).slice(0, 4);
 
   console.log('📊 [StatsBarSection] Rendering', cleanStats.length, 'valid stats from', parsedStatistics.length, 'input');
 
