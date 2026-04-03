@@ -33,6 +33,7 @@ export function PublishModal({
   onPublishStateChange,
 }: PublishModalProps) {
   const [publishState, setPublishState] = useState<PublishState>('idle');
+  const [isUpdating, setIsUpdating] = useState(false);
   const [slug, setSlug] = useState("");
   const [pageTitle, setPageTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
