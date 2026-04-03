@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { pdf } from '@react-pdf/renderer';
 import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import StrategyBriefPDF, { StrategyBriefData } from './StrategyBriefPDF';
 
 interface ExportBriefButtonProps {
@@ -23,7 +23,6 @@ const ExportBriefButton = ({
   className,
 }: ExportBriefButtonProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const { toast } = useToast();
 
   const sanitizeFilename = (name: string): string => {
     return name
@@ -34,18 +33,15 @@ const ExportBriefButton = ({
 
   const handleExport = async () => {
     if (!brief.businessName) {
-      toast({
-        title: 'Cannot export',
-        description: 'Business name is required to generate the PDF.',
-        variant: 'destructive',
-      });
+      toast.error('Cannot export', { description: 'Business name is required to generate the PDF.' });
       return;
     }
 
     setIsGenerating(true);
+    // Force React to paint the loading state before heavy PDF work
+    await new Promise(resolve => requestAnimationFrame(resolve));
 
     try {
-      // Generate the PDF blob
       const blob = await pdf(
         <StrategyBriefPDF
           brief={brief}
@@ -54,11 +50,9 @@ const ExportBriefButton = ({
         />
       ).toBlob();
 
-      // Create filename
       const date = new Date().toISOString().split('T')[0];
       const filename = `${sanitizeFilename(brief.businessName)}_Strategy_Brief_${date}.pdf`;
 
-      // Trigger download
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -68,17 +62,10 @@ const ExportBriefButton = ({
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      toast({
-        title: 'Strategy Brief downloaded',
-        description: `Saved as ${filename}`,
-      });
+      toast.success('Strategy brief exported');
     } catch (error) {
-      console.error('PDF generation error:', error);
-      toast({
-        title: 'Export failed',
-        description: 'There was an error generating the PDF. Please try again.',
-        variant: 'destructive',
-      });
+      console.error('PDF export failed:', error);
+      toast.error('Export failed — please try again');
     } finally {
       setIsGenerating(false);
     }
