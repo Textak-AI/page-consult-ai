@@ -79,6 +79,7 @@ import { getTargetMarketFromSources } from "@/lib/targetMarketExtractor";
 import { resolveHeroImageUrl } from "@/hooks/useHeroImageResolution";
 import { generateUniqueSlug } from "@/utils/slugUtils";
 import { PublishToolbar } from "@/components/editor/PublishToolbar";
+import { SharePreviewModal } from "@/components/editor/SharePreviewModal";
 import { autoQCPass } from "@/lib/autoQCPass";
 import { buildResolvedPalette, injectPaletteIntoContent } from "@/lib/resolvedPalette";
 
