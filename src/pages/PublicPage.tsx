@@ -66,8 +66,49 @@ export default function PublicPage() {
       }
 
       try {
-        // First try direct query to get full data including design_intelligence
-        // This works because we have an RLS policy for published pages
+        // First check published_pages table (new snapshot-based system)
+        const { data: publishedData } = await supabase
+          .from('published_pages')
+          .select('id, slug, page_content, page_styles, page_title, meta_description, og_image_url, design_intelligence, brand_settings, status')
+          .eq('slug', slug)
+          .eq('status', 'published')
+          .maybeSingle();
+
+        if (publishedData) {
+          const mapped: ExtendedPublicPage = {
+            id: publishedData.id,
+            title: publishedData.page_title || '',
+            slug: publishedData.slug,
+            sections: publishedData.page_content as any[],
+            styles: publishedData.page_styles,
+            is_published: true,
+            published_at: null,
+            published_url: `/p/${publishedData.slug}`,
+            meta_title: publishedData.page_title,
+            meta_description: publishedData.meta_description,
+            hero_thumbnail_url: publishedData.og_image_url,
+            status: 'published',
+            design_intelligence: publishedData.design_intelligence as any,
+            consultation_data: null,
+            website_intelligence: null,
+          };
+          // Use brand_settings from snapshot
+          const bs = publishedData.brand_settings as any;
+          if (bs) {
+            mapped.consultation_data = {
+              businessName: bs.companyName,
+              logoUrl: bs.logoUrl,
+              brandColors: { primary: bs.primaryColor },
+            };
+          }
+          setPage(mapped);
+          // Track view
+          supabase.rpc('increment_published_page_view', { page_slug: slug } as any).then(() => {});
+          setIsLoading(false);
+          return;
+        }
+
+        // Fallback: try direct query on landing_pages (legacy)
         const { data: directData, error: directError } = await supabase
           .from('landing_pages')
           .select('id, title, slug, sections, styles, is_published, published_at, published_url, meta_title, meta_description, hero_thumbnail_url, status, design_intelligence, consultation_data, website_intelligence')

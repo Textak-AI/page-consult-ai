@@ -5805,6 +5805,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
               slug={pageData.slug}
               isPublished={pageData.status === 'published' || pageData.is_published}
               publishedAt={pageData.published_at}
+              onOpenPublishModal={() => setPublishModalOpen(true)}
             />
           )}
           
@@ -6017,11 +6018,13 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         open={publishModalOpen}
         onOpenChange={setPublishModalOpen}
         pageData={pageData}
-        onPublish={() => {
-          toast({
-            title: "🎉 Your Page is Live!",
-            description: "Your landing page has been published successfully.",
-          });
+        sections={sections}
+        styles={pageData?.styles}
+        designIntelligence={pageData?.design_intelligence}
+        brandSettings={{
+          companyName: pageData?.consultation_data?.businessName || pageData?.title,
+          logoUrl: pageData?.consultation_data?.logoUrl,
+          primaryColor: pageData?.consultation_data?.brandColors?.primary,
         }}
       />
 
