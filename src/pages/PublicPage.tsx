@@ -54,6 +54,7 @@ interface ExtendedPublicPage extends PublicLandingPage {
 export default function PublicPage() {
   const { slug } = useParams<{ slug: string }>();
   const [page, setPage] = useState<ExtendedPublicPage | null>(null);
+  const [publishedPageId, setPublishedPageId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
