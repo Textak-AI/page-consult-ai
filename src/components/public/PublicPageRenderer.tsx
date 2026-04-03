@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
+import { LeadCaptureModal } from './LeadCaptureModal';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { cn } from '@/lib/utils';
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from '@/lib/premiumPageEffects';
@@ -51,7 +52,6 @@ interface PublicPageRendererProps {
   metaTitle?: string | null;
   metaDescription?: string | null;
   heroThumbnailUrl?: string | null;
-  // Design intelligence for color mode and brand colors
   designIntelligence?: {
     colorMode?: 'light' | 'dark';
     industryVariant?: string;
@@ -61,14 +61,14 @@ interface PublicPageRendererProps {
       accent?: string;
     };
   } | null;
-  // Brand settings fallback
   brandSettings?: {
     companyName?: string | null;
     logoUrl?: string | null;
     primaryColor?: string | null;
   } | null;
-  // Show "Built with PageConsult" badge
   showPoweredBy?: boolean;
+  /** When set, CTA clicks open a lead capture form instead of navigating */
+  publishedPageId?: string | null;
 }
 
 export function PublicPageRenderer({ 
@@ -79,9 +79,18 @@ export function PublicPageRenderer({
   heroThumbnailUrl,
   designIntelligence,
   brandSettings,
-  showPoweredBy = false
+  showPoweredBy = false,
+  publishedPageId,
 }: PublicPageRendererProps) {
-  
+  const [leadCaptureOpen, setLeadCaptureOpen] = useState(false);
+  const [leadCaptureCtaText, setLeadCaptureCtaText] = useState('Get Started');
+
+  // CTA click handler for published pages with lead capture
+  const handleCtaClick = useCallback(() => {
+    if (publishedPageId) {
+      setLeadCaptureOpen(true);
+    }
+  }, [publishedPageId]);
   // Derive colorMode from design intelligence
   const colorMode = designIntelligence?.colorMode || 'dark';
   const industryVariant = designIntelligence?.industryVariant || 'default';
@@ -417,7 +426,25 @@ export function PublicPageRenderer({
         })()}
 
         {/* Render all visible sections with tier wrappers */}
-        <div className="relative z-10">
+        <div 
+          className="relative z-10"
+          onClick={(e) => {
+            // Intercept CTA button clicks on published pages for lead capture
+            if (!publishedPageId) return;
+            const target = e.target as HTMLElement;
+            const button = target.closest('button, a[href="#contact"], a[href="#"]');
+            if (!button) return;
+            // Only intercept CTA-like buttons (not nav links, FAQ toggles, etc.)
+            const isCta = button.closest('[class*="final-cta"], [class*="FinalCTA"], section:last-of-type') ||
+              button.textContent?.match(/get started|contact|book|schedule|start|learn more|sign up|request|free/i);
+            if (isCta) {
+              e.preventDefault();
+              e.stopPropagation();
+              setLeadCaptureCtaText(button.textContent?.trim() || 'Get Started');
+              setLeadCaptureOpen(true);
+            }
+          }}
+        >
           {sortedSections.map((section, index) => {
             const tier = getSectionTier(section.type, index);
             const spacing = getSectionSpacing(section.type);
@@ -464,6 +491,17 @@ export function PublicPageRenderer({
             </svg>
             <span>Built with PageConsult</span>
           </a>
+        )}
+
+        {/* Lead Capture Modal for published pages */}
+        {publishedPageId && (
+          <LeadCaptureModal
+            open={leadCaptureOpen}
+            onOpenChange={setLeadCaptureOpen}
+            publishedPageId={publishedPageId}
+            ctaText={leadCaptureCtaText}
+            companyName={brandSettings?.companyName || undefined}
+          />
         )}
       </div>
     </>

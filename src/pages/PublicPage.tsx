@@ -54,6 +54,7 @@ interface ExtendedPublicPage extends PublicLandingPage {
 export default function PublicPage() {
   const { slug } = useParams<{ slug: string }>();
   const [page, setPage] = useState<ExtendedPublicPage | null>(null);
+  const [publishedPageId, setPublishedPageId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -102,7 +103,7 @@ export default function PublicPage() {
             };
           }
           setPage(mapped);
-          // Track view
+          setPublishedPageId(publishedData.id);
           supabase.rpc('increment_published_page_view', { page_slug: slug } as any).then(() => {});
           setIsLoading(false);
           return;
@@ -242,6 +243,7 @@ export default function PublicPage() {
       designIntelligence={designIntelligence as any}
       brandSettings={brandSettings}
       showPoweredBy={true}
+      publishedPageId={publishedPageId}
     />
   );
 }
