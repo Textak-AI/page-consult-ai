@@ -305,10 +305,10 @@ export function PublishModal({
               <Button
                 variant="outline"
                 onClick={handleUpdate}
-                disabled={publishState === 'updating'}
+                disabled={isUpdating}
                 className="flex-1"
               >
-                {publishState === 'updating' ? (
+                {isUpdating ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Updating...</>
                 ) : (
                   <><RefreshCw className="w-4 h-4 mr-2" />Update Page</>
