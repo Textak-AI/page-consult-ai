@@ -15,7 +15,6 @@ interface ProblemSolutionTwoColumnProps {
 }
 
 export default function ProblemSolutionTwoColumn({ content, onUpdate, isEditing }: ProblemSolutionTwoColumnProps) {
-  console.log('🎨 [ArtDirector] Problem/Solution: two-column composition');
   const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'light', content.primaryColor);
   const primaryColor = content.primaryColor || '#6366F1';
 

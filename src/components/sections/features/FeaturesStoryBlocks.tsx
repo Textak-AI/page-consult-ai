@@ -15,7 +15,6 @@ interface FeaturesStoryBlocksProps {
 }
 
 export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: FeaturesStoryBlocksProps) {
-  console.log('🎨 [ArtDirector] Features: icon-cards/story-blocks composition');
   const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'light', content.primaryColor);
   const primaryColor = content.primaryColor || '#6366F1';
   const features = content.features || content.messagingPillars || [];

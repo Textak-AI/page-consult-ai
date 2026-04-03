@@ -15,7 +15,6 @@ interface StatsHairlineSeparatedProps {
 }
 
 export default function StatsHairlineSeparated({ content, onUpdate, isEditing }: StatsHairlineSeparatedProps) {
-  console.log('🎨 [ArtDirector] Stats: hairline-separated composition');
   const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'dark', content.primaryColor);
   const primaryColor = content.primaryColor || '#6366F1';
   const stats = content.statistics || [];

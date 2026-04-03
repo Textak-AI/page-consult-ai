@@ -14,7 +14,6 @@ interface ProblemSolutionReliefArcProps {
 }
 
 export default function ProblemSolutionReliefArc({ content, onUpdate, isEditing }: ProblemSolutionReliefArcProps) {
-  console.log('🎨 [ArtDirector] Problem/Solution: challenge-then-relief composition');
   const primaryColor = content.primaryColor || '#6366F1';
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {

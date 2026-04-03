@@ -16,7 +16,6 @@ interface CTACenteredMinimalProps {
 }
 
 export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTACenteredMinimalProps) {
-  console.log('🎨 [ArtDirector] CTA: centered-minimal composition');
   const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'dark', content.primaryColor);
   const primaryColor = content.primaryColor || '#6366F1';
   const isSerif = content.typographyPairing === 'serif-sans';

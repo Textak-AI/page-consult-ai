@@ -14,7 +14,6 @@ interface ProcessNumberedRowsProps {
 }
 
 export default function ProcessNumberedRows({ content, onUpdate, isEditing }: ProcessNumberedRowsProps) {
-  console.log('🎨 [ArtDirector] Process: numbered-rows composition');
   const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'light', content.primaryColor);
   const primaryColor = content.primaryColor || '#6366F1';
   const steps = content.steps || [];

@@ -567,42 +567,36 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         );
       // Consulting-specific section types (from layout templates)
       case "credentials-bar":
-        console.log('🎨 [LivePreview] Rendering section: credentials-bar');
         return renderSectionWithToolbar(
           section,
           index,
           <CredentialsBarSection content={sectionContent} />
         );
       case "the-real-challenge":
-        console.log('🎨 [LivePreview] Rendering section: the-real-challenge');
         return renderSectionWithToolbar(
           section,
           index,
           <TheRealChallengeSection content={sectionContent} />
         );
       case "our-approach":
-        console.log('🎨 [LivePreview] Rendering section: our-approach');
         return renderSectionWithToolbar(
           section,
           index,
           <OurApproachSection content={sectionContent} />
         );
       case "expertise-areas":
-        console.log('🎨 [LivePreview] Rendering section: expertise-areas');
         return renderSectionWithToolbar(
           section,
           index,
           <ExpertiseAreasSection content={sectionContent} />
         );
       case "engagement-model":
-        console.log('🎨 [LivePreview] Rendering section: engagement-model');
         return renderSectionWithToolbar(
           section,
           index,
           <EngagementModelSection content={sectionContent} />
         );
       case "client-results": {
-        console.log('🎨 [LivePreview] Rendering section: client-results');
         const crResults = sectionContent.results || sectionContent.statistics || sectionContent.stats || [];
         const validResults = crResults.filter((s: any) => {
           const value = s.metric || s.value || '';

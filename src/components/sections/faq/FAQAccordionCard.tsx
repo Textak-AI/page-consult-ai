@@ -16,7 +16,6 @@ interface FAQAccordionCardProps {
 }
 
 export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAccordionCardProps) {
-  console.log('🎨 [ArtDirector] FAQ: accordion-card composition');
   const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'light', content.primaryColor);
   const primaryColor = content.primaryColor || '#6366F1';
   const items = content.items || [];
