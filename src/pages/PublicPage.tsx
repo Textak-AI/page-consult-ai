@@ -243,6 +243,7 @@ export default function PublicPage() {
       designIntelligence={designIntelligence as any}
       brandSettings={brandSettings}
       showPoweredBy={true}
+      publishedPageId={publishedPageId}
     />
   );
 }
