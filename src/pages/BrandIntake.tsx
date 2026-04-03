@@ -447,9 +447,9 @@ export default function BrandIntake() {
         }
       }
       
-      // Fallback: navigate to generate with session
-      console.log('🎨 [BrandIntake] Navigating to generate with session:', sid);
-      navigate(`/generate?session=${sid}`);
+      // Fallback: navigate to brand-setup (not generate) to preserve the flow
+      console.log('🎨 [BrandIntake] Navigating to brand-setup with session:', sid);
+      navigate(`/brand-setup?session=${sid}`);
       
     } catch (error) {
       console.error('Submit error:', error);
@@ -472,7 +472,7 @@ export default function BrandIntake() {
       navigate('/');
       return;
     }
-    navigate(`/generate?session=${sid}`);
+    navigate(`/brand-setup?session=${sid}`);
   };
   
   return (

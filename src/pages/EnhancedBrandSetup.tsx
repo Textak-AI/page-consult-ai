@@ -1436,8 +1436,49 @@ export default function EnhancedBrandSetup() {
         }
       }
       
-      // Fallback: navigate to generate with session
-      navigate(`/generate?session=${sessionId}`);
+      // Fallback for low-readiness demo: still go to strategy document, not generate
+      console.log('🚀 [EnhancedBrandSetup] Low-readiness demo - creating consultation for strategy review');
+      const { data: { user: demoUser } } = await supabase.auth.getUser();
+      if (demoUser) {
+        const intel = demoSession.extracted_intelligence as any;
+        const { data: newConsultation, error: createError } = await supabase
+          .from('consultations')
+          .insert({
+            user_id: demoUser.id,
+            industry: intel?.industry || null,
+            business_name: companyName,
+            website_url: websiteUrl,
+            extracted_intelligence: {
+              ...intel,
+              logoUrl: logo,
+              companyName,
+              websiteUrl,
+              brandColors: { primary: colors.primary, secondary: colors.secondary, accent: colors.accent },
+              source: 'demo',
+              migratedAt: new Date().toISOString(),
+            },
+            consultation_status: 'demo_complete',
+            status: 'in_progress',
+            readiness_score: demoSession.readiness || 10,
+            flow_state: 'brand_captured',
+          })
+          .select()
+          .single();
+        
+        if (!createError && newConsultation) {
+          await supabase
+            .from('demo_sessions')
+            .update({ claimed_by: demoUser.id, claimed_at: new Date().toISOString(), continued_to_consultation: true })
+            .eq('session_id', sessionId)
+            .is('claimed_by', null);
+          
+          navigate(`/strategy-document?consultationId=${newConsultation.id}`, { replace: true });
+          return;
+        }
+      }
+      // Ultimate fallback if consultation creation fails
+      navigate(`/strategy-document?session=${sessionId}`, { replace: true });
+      return;
     } else {
       // No consultationId and no demo session - create consultation from brand data if we have extraction results
       const { data: { user } } = await supabase.auth.getUser();
@@ -1504,22 +1545,21 @@ export default function EnhancedBrandSetup() {
         }
       }
       
-      // Ultimate fallback: go directly to generate with brand data in state
-      console.log('🚀 [EnhancedBrandSetup] Navigating to generate with brand data');
+      // Ultimate fallback: create consultation and go to strategy document
+      console.log('🚀 [EnhancedBrandSetup] Fallback - creating consultation for strategy review');
       
-      // Save brand data to localStorage for generate page to pick up
       const brandData = {
         companyName,
         websiteUrl,
         colors,
-        logo, // Include logo URL
+        logo,
         extractionResults,
         source: 'brand_setup',
       };
       localStorage.setItem('pageconsult_brand_data', JSON.stringify(brandData));
       
-      // Navigate to generate with brand data in state (bypasses consultation)
-      navigate('/generate', {
+      // Navigate to strategy document — never skip directly to generate
+      navigate('/strategy-document', {
         replace: true,
         state: {
           fromBrandSetup: true,
@@ -2540,10 +2580,10 @@ export default function EnhancedBrandSetup() {
         {/* Footer */}
         <div className="flex items-center justify-between mt-12 pt-8 border-t border-slate-800">
           <button 
-            onClick={() => demoSession ? navigate(`/generate?session=${sessionId}`) : navigate('/wizard')}
+            onClick={() => navigate(demoSession ? `/strategy-document?session=${sessionId}` : '/wizard')}
             className="text-slate-500 hover:text-slate-400 text-sm transition-colors"
           >
-            {demoSession ? 'Skip brand setup' : 'Skip for now (use defaults)'}
+            {demoSession ? 'Skip to strategy review' : 'Skip for now (use defaults)'}
           </button>
           <Button
             onClick={handleContinue}

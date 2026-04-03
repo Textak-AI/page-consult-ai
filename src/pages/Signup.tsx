@@ -475,9 +475,9 @@ export default function Signup() {
       
       // PRIORITY 3: Check for pending session from Brand Intake flow
       if (pendingSessionId) {
-        console.log('🚀 [Auth] Found pending session, redirecting to /generate?session=', pendingSessionId);
+        console.log('🚀 [Auth] Found pending session, redirecting to brand-setup with session:', pendingSessionId);
         sessionStorage.removeItem('pendingSessionId');
-        navigate(`/generate?session=${pendingSessionId}`, { replace: true });
+        navigate(`/brand-setup?session=${pendingSessionId}`, { replace: true });
         return;
       }
       
