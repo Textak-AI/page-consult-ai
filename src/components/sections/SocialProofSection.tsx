@@ -1,7 +1,7 @@
 import { Clock, Star, Quote, User, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useState } , memo } from "react";
+import { useState, memo } from "react";
 
 interface SocialProofSectionProps {
   content: {

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
 import { LogoUploader } from "@/components/editor/LogoUploader";
-import { useState, useMemo } , memo } from "react";
+import { useState, useMemo, memo } from "react";
 import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star, Image, Layers, PlayCircle, Check, HeartPulse, Factory, TrendingUp, Lightbulb, Palette, GraduationCap, ShoppingBag, Scale, Home, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useMemo, useRef, useEffect } , memo } from "react";
+import { useMemo, useRef, useEffect, memo } from "react";
 import { getTypography } from "@/lib/typographyScale";
 import { getIndustryPattern, type PatternConfig } from "@/lib/industryPatterns";
 import ProcessNumberedRows from './process/ProcessNumberedRows';
