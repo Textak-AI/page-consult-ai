@@ -49,7 +49,7 @@ export default function PublishedPage() {
         setPage(data as PublishedPageData);
 
         // Fire-and-forget view tracking
-        supabase.rpc('increment_published_page_view', { page_slug: slug }).then(() => {}).catch(() => {});
+        supabase.rpc('increment_published_page_view', { page_slug: slug } as any).then(() => {});
       } catch {
         setError(true);
       } finally {
