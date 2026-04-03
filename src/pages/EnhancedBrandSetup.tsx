@@ -1543,22 +1543,21 @@ export default function EnhancedBrandSetup() {
         }
       }
       
-      // Ultimate fallback: go directly to generate with brand data in state
-      console.log('🚀 [EnhancedBrandSetup] Navigating to generate with brand data');
+      // Ultimate fallback: create consultation and go to strategy document
+      console.log('🚀 [EnhancedBrandSetup] Fallback - creating consultation for strategy review');
       
-      // Save brand data to localStorage for generate page to pick up
       const brandData = {
         companyName,
         websiteUrl,
         colors,
-        logo, // Include logo URL
+        logo,
         extractionResults,
         source: 'brand_setup',
       };
       localStorage.setItem('pageconsult_brand_data', JSON.stringify(brandData));
       
-      // Navigate to generate with brand data in state (bypasses consultation)
-      navigate('/generate', {
+      // Navigate to strategy document — never skip directly to generate
+      navigate('/strategy-document', {
         replace: true,
         state: {
           fromBrandSetup: true,
