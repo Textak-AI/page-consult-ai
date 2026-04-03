@@ -294,18 +294,22 @@ export default function Signup() {
     return consultation.id;
   };
 
+  const [loadingMessage, setLoadingMessage] = useState("Creating your account...");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return; // Prevent double-submission
     setLoading(true);
+    setLoadingMessage("Creating your account...");
 
     try {
       // Check for pending session from Brand Intake flow
       const pendingSessionId = sessionStorage.getItem('pendingSessionId');
       
       // STREAMLINED FLOW: Try sign-in first, then signup if user doesn't exist
-      // This eliminates the need for users to click twice
       
       // Step 1: Try to sign in
+      setLoadingMessage("Checking your account...");
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -325,6 +329,7 @@ export default function Signup() {
             errorMsg.includes('no user found')) {
           
           console.log('👤 [Auth] User not found, attempting signup...');
+          setLoadingMessage("Creating your account...");
           
           // Try signup
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -351,6 +356,16 @@ export default function Signup() {
               return;
             }
             
+            if (signUpErrorMsg.includes('password') && signUpErrorMsg.includes('length')) {
+              toast({
+                title: "Password too short",
+                description: "Please use at least 6 characters for your password.",
+                variant: "destructive"
+              });
+              setLoading(false);
+              return;
+            }
+            
             // Other signup error
             toast({
               title: "Account creation failed",
@@ -365,8 +380,8 @@ export default function Signup() {
           isNewUser = true;
           
           toast({
-            title: isFromDemo ? "Trial started!" : "Account created!",
-            description: isFromDemo ? "Your strategy profile is ready." : "Welcome to PageConsult!"
+            title: isFromDemo ? "🚀 Trial started!" : "✅ Account created!",
+            description: isFromDemo ? "Setting up your workspace..." : "Welcome to PageConsult!"
           });
           
         } else if (errorMsg.includes('email not confirmed')) {
@@ -388,23 +403,29 @@ export default function Signup() {
           return;
         }
       } else {
-        // Sign-in successful
+        // Sign-in successful — existing user
         toast({
-          title: "Welcome back!",
-          description: "Redirecting..."
+          title: "👋 Welcome back!",
+          description: "Logging you in..."
         });
       }
       
       // Migrate anonymous session if exists
       if (sessionToken && authenticatedUser) {
+        setLoadingMessage("Restoring your progress...");
         await migrateAnonymousSession(sessionToken);
       }
       
       // Migrate guest session if exists
       if (authenticatedUser && hasGuestSession()) {
+        setLoadingMessage("Saving your consultation data...");
         const migrationResult = await handlePostAuthMigration(authenticatedUser.id);
         if (migrationResult?.success) {
           console.log('✅ [Auth] Guest session migrated');
+          toast({
+            title: "✅ Progress saved!",
+            description: "We saved your consultation progress."
+          });
         }
       }
       
@@ -412,6 +433,8 @@ export default function Signup() {
         navigate(redirectTo, { replace: true });
         return;
       }
+      
+      setLoadingMessage("Setting up your workspace...");
       
       // PRIORITY 1: If we have a session from URL or stored, use it
       if (sessionIdFromUrl) {
@@ -477,9 +500,10 @@ export default function Signup() {
       navigate(redirectTo, { replace: true });
       
     } catch (error: any) {
+      console.error('[Auth] Unexpected error:', error);
       toast({
-        title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
+        title: "Something went wrong",
+        description: "Please try again. If this keeps happening, try a different email or contact support.",
         variant: "destructive"
       });
     } finally {
