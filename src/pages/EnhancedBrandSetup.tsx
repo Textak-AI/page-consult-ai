@@ -1438,8 +1438,8 @@ export default function EnhancedBrandSetup() {
       
       // Fallback for low-readiness demo: still go to strategy document, not generate
       console.log('🚀 [EnhancedBrandSetup] Low-readiness demo - creating consultation for strategy review');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+      const { data: { user: demoUser } } = await supabase.auth.getUser();
+      if (demoUser) {
         const intel = demoSession.extracted_intelligence as any;
         const { data: newConsultation, error: createError } = await supabase
           .from('consultations')
