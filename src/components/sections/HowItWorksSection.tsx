@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useMemo, useRef, useEffect } from "react";
+import { useMemo, useRef, useEffect, memo } from "react";
 import { getTypography } from "@/lib/typographyScale";
 import { getIndustryPattern, type PatternConfig } from "@/lib/industryPatterns";
 import ProcessNumberedRows from './process/ProcessNumberedRows';
@@ -32,7 +32,7 @@ interface HowItWorksSectionProps {
   isEditing?: boolean;
 }
 
-export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSectionProps) {
+function HowItWorksSectionBase({ content, onUpdate, isEditing }: HowItWorksSectionProps) {
   // Art Director composition check
   const processLayout = (content as any)?.processLayout;
   if (processLayout === 'numbered-rows') {
@@ -437,3 +437,5 @@ export function HowItWorksSection({ content, onUpdate, isEditing }: HowItWorksSe
     </section>
   );
 }
+
+export const HowItWorksSection = memo(HowItWorksSectionBase);

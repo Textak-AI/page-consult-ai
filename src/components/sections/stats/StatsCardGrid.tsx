@@ -14,7 +14,6 @@ interface StatsCardGridProps {
 }
 
 export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCardGridProps) {
-  console.log('🎨 [ArtDirector] Stats: card-grid composition');
   const primaryColor = content.primaryColor || '#6366F1';
   const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'brand', primaryColor);
   const stats = content.statistics || [];

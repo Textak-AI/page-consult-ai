@@ -20,7 +20,6 @@ interface FAQAccordionHairlineProps {
 }
 
 export default function FAQAccordionHairline({ content, onUpdate, isEditing }: FAQAccordionHairlineProps) {
-  console.log('🎨 [ArtDirector] FAQ: accordion-hairline composition');
   const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'light', content.primaryColor);
   const primaryColor = content.primaryColor || '#6366F1';
   const items = content.items || content.faqs || [];

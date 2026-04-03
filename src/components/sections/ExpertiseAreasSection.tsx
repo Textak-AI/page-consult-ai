@@ -1,3 +1,4 @@
+import { memo } from "react";
 /**
  * Expertise Areas Section
  * 
@@ -27,7 +28,7 @@ interface ExpertiseAreasSectionProps {
   };
 }
 
-export function ExpertiseAreasSection({ content }: ExpertiseAreasSectionProps) {
+function ExpertiseAreasSectionBase({ content }: ExpertiseAreasSectionProps) {
   const { 
     headline = "Areas of Practice",
     subtitle = "Deep expertise across critical business domains",
@@ -181,4 +182,5 @@ export function ExpertiseAreasSection({ content }: ExpertiseAreasSectionProps) {
   );
 }
 
+export const ExpertiseAreasSection = memo(ExpertiseAreasSectionBase);
 export default ExpertiseAreasSection;

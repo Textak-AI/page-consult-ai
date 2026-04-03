@@ -1,7 +1,7 @@
 import { Clock, Star, Quote, User, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, memo } from "react";
 
 interface SocialProofSectionProps {
   content: {
@@ -91,7 +91,7 @@ function getSocialProofHeader(industry?: string, isConsulting?: boolean): { titl
   };
 }
 
-export function SocialProofSection({ content, onUpdate, isEditing }: SocialProofSectionProps) {
+function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSectionProps) {
   // Quality floor: if no real testimonials, don't render the section at all
   const testimonialData = content.testimonial;
   const hasRealTestimonial = testimonialData && 
@@ -781,3 +781,5 @@ export function SocialProofSection({ content, onUpdate, isEditing }: SocialProof
     </section>
   );
 }
+
+export const SocialProofSection = memo(SocialProofSectionBase);

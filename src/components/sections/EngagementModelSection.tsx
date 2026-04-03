@@ -1,3 +1,4 @@
+import { memo } from "react";
 /**
  * Engagement Model Section
  * 
@@ -27,7 +28,7 @@ interface EngagementModelSectionProps {
   };
 }
 
-export function EngagementModelSection({ content }: EngagementModelSectionProps) {
+function EngagementModelSectionBase({ content }: EngagementModelSectionProps) {
   const { 
     headline = "Our Engagement Model",
     subtitle = "A structured approach designed for your success",
@@ -182,4 +183,5 @@ export function EngagementModelSection({ content }: EngagementModelSectionProps)
   );
 }
 
+export const EngagementModelSection = memo(EngagementModelSectionBase);
 export default EngagementModelSection;

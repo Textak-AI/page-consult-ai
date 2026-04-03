@@ -98,17 +98,10 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     return resolveArchetypeFromStorage();
   }, [sections]);
   
-  console.log('🎯 [DesignProfile] Active:', archetypeProfile);
-  
-  // Debug logging for brand handoff - confirms data flow from Generate.tsx
-  console.log('🎨 [LivePreview] Received props:', {
-    colorMode,
-    industryVariant,
-    logoUrl: brandSettings?.logoUrl,
-    primaryColor: brandSettings?.primaryColor,
-    companyName: brandSettings?.companyName,
-    archetype: archetypeProfile,
-  });
+  // Stabilize brandSettings to prevent re-renders from object identity changes
+  const stableBrandPrimaryColor = brandSettings?.primaryColor || null;
+  const stableBrandLogoUrl = brandSettings?.logoUrl || null;
+  const stableBrandCompanyName = brandSettings?.companyName || null;
   
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [aiChatSection, setAiChatSection] = useState<{ index: number; type: string; content: any } | null>(null);
@@ -331,6 +324,15 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     );
   }, [getSectionLockStatus, handleUnlockAction, editingSection, handleEditSection, handleAIAssist, handleImageGenerate, handleLogoEdit]);
 
+  // Stable update handlers per section index - prevents new closure on every render
+  const updateSectionHandlers = useMemo(() => {
+    return sections.map((_, index) => (content: any) => {
+      const updated = [...sections];
+      updated[index].content = content;
+      onSectionsChange(updated);
+    });
+  }, [sections, onSectionsChange]);
+
   const renderSection = (section: Section, index: number) => {
     // Inject industryVariant, colorMode, and brand colors into section content if not already present
     const sectionContent = {
@@ -338,21 +340,14 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
       industryVariant: section.content?.industryVariant || industryVariant || 'default',
       mode: section.content?.mode || colorMode || 'dark',
       // Inject brand colors so section components can use them for CTAs/buttons
-      primaryColor: section.content?.primaryColor || brandSettings?.primaryColor || null,
-      logoUrl: section.content?.logoUrl || brandSettings?.logoUrl || null,
+      primaryColor: section.content?.primaryColor || stableBrandPrimaryColor,
+      logoUrl: section.content?.logoUrl || stableBrandLogoUrl,
       archetype: archetypeProfile, // Archetype design profile
     };
     
-    // Debug logging
-    console.log('🎨 [LivePreview] Rendering section:', section.type, 'industryVariant:', sectionContent.industryVariant, 'mode:', sectionContent.mode);
-    
     if (!section.visible) return null;
 
-    const updateSection = (content: any) => {
-      const updated = [...sections];
-      updated[index].content = content;
-      onSectionsChange(updated);
-    };
+    const updateSection = updateSectionHandlers[index];
 
     switch (section.type) {
       case "hero":
@@ -572,42 +567,36 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         );
       // Consulting-specific section types (from layout templates)
       case "credentials-bar":
-        console.log('🎨 [LivePreview] Rendering section: credentials-bar');
         return renderSectionWithToolbar(
           section,
           index,
           <CredentialsBarSection content={sectionContent} />
         );
       case "the-real-challenge":
-        console.log('🎨 [LivePreview] Rendering section: the-real-challenge');
         return renderSectionWithToolbar(
           section,
           index,
           <TheRealChallengeSection content={sectionContent} />
         );
       case "our-approach":
-        console.log('🎨 [LivePreview] Rendering section: our-approach');
         return renderSectionWithToolbar(
           section,
           index,
           <OurApproachSection content={sectionContent} />
         );
       case "expertise-areas":
-        console.log('🎨 [LivePreview] Rendering section: expertise-areas');
         return renderSectionWithToolbar(
           section,
           index,
           <ExpertiseAreasSection content={sectionContent} />
         );
       case "engagement-model":
-        console.log('🎨 [LivePreview] Rendering section: engagement-model');
         return renderSectionWithToolbar(
           section,
           index,
           <EngagementModelSection content={sectionContent} />
         );
       case "client-results": {
-        console.log('🎨 [LivePreview] Rendering section: client-results');
         const crResults = sectionContent.results || sectionContent.statistics || sectionContent.stats || [];
         const validResults = crResults.filter((s: any) => {
           const value = s.metric || s.value || '';

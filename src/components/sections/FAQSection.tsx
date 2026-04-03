@@ -478,7 +478,7 @@ function ensureQuestionFormat(text: string): string {
   return `What about ${trimmed.replace(/[.!]$/, '').toLowerCase()}?`;
 }
 
-export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
+function FAQSectionBase({ content, onUpdate, isEditing }: FAQSectionProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [editingItem, setEditingItem] = useState<number | null>(null);
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
@@ -984,3 +984,5 @@ export function FAQSection({ content, onUpdate, isEditing }: FAQSectionProps) {
     </section>
   );
 }
+
+export const FAQSection = memo(FAQSectionBase);

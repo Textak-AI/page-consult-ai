@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { formatStatValue, getTypography } from "@/lib/typographyScale";
 import { getArchetypeStatClass, type DesignProfile } from "@/lib/archetypeProfiles";
@@ -29,7 +30,7 @@ interface StatsBarSectionProps {
  * - Staggered hover animations
  * - Industry-specific color accents
  */
-export function StatsBarSection({ statistics, industryVariant, mode, archetype = 'precision', onUpdate, isEditing, ...rest }: StatsBarSectionProps & Record<string, any>) {
+function StatsBarSectionBase({ statistics, industryVariant, mode, archetype = 'precision', onUpdate, isEditing, ...rest }: StatsBarSectionProps & Record<string, any>) {
   // Art Director composition check
   const statsPresentation = rest.statsPresentation;
   if (statsPresentation === 'hairline-separated') {
@@ -608,3 +609,4 @@ export function StatsBarSection({ statistics, industryVariant, mode, archetype =
     </section>
   );
 }
+export const StatsBarSection = memo(StatsBarSectionBase);
