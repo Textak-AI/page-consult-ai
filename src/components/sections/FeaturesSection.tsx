@@ -85,10 +85,16 @@ function FeaturesSectionBase({ content, onUpdate, isEditing, iconStyle = "outlin
 
   // Get industry-specific headers from centralized system
   const sectionHeader = getSectionHeader(industryVariant, 'features');
-  const title = content.title || sectionHeader.title;
   
-  // Clean subtitle
-  const rawSubtitle = content.subtitle || sectionHeader.subtitle;
+  // Clean title — if content.title looks like raw audience text (>60 chars), demote to subtitle
+  const rawTitle = content.title || '';
+  const isRawAudienceTitle = rawTitle.length > 60 || /^the\s/i.test(rawTitle) || /directors|managers|vp\s/i.test(rawTitle);
+  const title = isRawAudienceTitle ? sectionHeader.title : (rawTitle || sectionHeader.title);
+  
+  // Clean subtitle — use demoted title as subtitle source if it was raw audience text
+  const rawSubtitle = isRawAudienceTitle 
+    ? cleanDisplayText(rawTitle, 120) 
+    : (content.subtitle || sectionHeader.subtitle);
   const industryLower = (industry || '').toLowerCase().replace(/[_-]/g, ' ');
   const PLACEHOLDER_NAMES = ['your company', 'company', ''];
   const isPlaceholder = !businessName || PLACEHOLDER_NAMES.includes(businessName.toLowerCase().trim());
