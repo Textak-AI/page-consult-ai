@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { getSectionBackgroundStyles } from '@/lib/artDirectorBrief';
+import { cleanDisplayText } from '@/lib/contentCleaner';
 
 interface FeaturesStoryBlocksProps {
   content: Record<string, any>;
@@ -24,11 +25,19 @@ export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: Fe
 
   const cols = validFeatures.length <= 4 ? 2 : 3;
 
+  // Clean title — reject raw audience text
+  const rawTitle = content.sectionTitle || content.headline || content.title || '';
+  const isRawAudience = rawTitle.length > 60 || /^the\s/i.test(rawTitle) || /directors|managers|vp\s/i.test(rawTitle);
+  const displayTitle = isRawAudience ? 'How we help' : (rawTitle || 'How we help');
+
   const handleFeatureBlur = (index: number, field: string, e: React.FocusEvent<HTMLElement>) => {
     const updated = [...features];
     updated[index] = { ...updated[index], [field]: e.currentTarget.textContent || updated[index][field] };
     onUpdate({ ...content, features: updated });
   };
+
+  // Calculate flex basis
+  const basisPercent = cols === 2 ? 'calc(50% - 14px)' : 'calc(33.333% - 19px)';
 
   return (
     <section style={{ backgroundColor: bgStyles.bg, padding: '96px clamp(24px, 6vw, 96px)' }}>
@@ -73,19 +82,22 @@ export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: Fe
             maxWidth: 500,
           }}
         >
-          {content.sectionTitle || content.headline || content.title || 'How we help'}
+          {displayTitle}
         </h2>
 
-        {/* Feature cards grid */}
+        {/* Feature cards — flex-wrap for centered incomplete rows */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${cols}, 1fr)`,
+          display: 'flex',
+          flexWrap: 'wrap' as const,
+          justifyContent: 'center',
           gap: 28,
         }}>
           {validFeatures.map((feature: any, i: number) => (
             <div
               key={i}
               style={{
+                flex: `0 1 ${basisPercent}`,
+                minWidth: 260,
                 display: 'flex',
                 backgroundColor: content.sectionBackground === 'dark' ? 'rgba(255,255,255,0.04)' : '#FFFFFF',
                 borderRadius: 12,

@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { getSectionBackgroundStyles } from '@/lib/artDirectorBrief';
+import { cleanDisplayText } from '@/lib/contentCleaner';
 
 interface FeaturesBentoGridProps {
   content: Record<string, any>;
@@ -26,11 +27,20 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
   const cols = validFeatures.length <= 4 ? 2 : 3;
   const useMonospace = content.numbering === 'monospace';
 
+  // Clean title — reject raw audience text
+  const rawTitle = content.sectionTitle || content.title || content.headline || '';
+  const isRawAudience = rawTitle.length > 60 || /^the\s/i.test(rawTitle) || /directors|managers|vp\s/i.test(rawTitle);
+  const displayTitle = isRawAudience ? 'What sets us apart' : (rawTitle || 'What sets us apart');
+
   const handleFeatureBlur = (index: number, field: string, e: React.FocusEvent<HTMLElement>) => {
     const updated = [...features];
     updated[index] = { ...updated[index], [field]: e.currentTarget.textContent || updated[index][field] };
     onUpdate({ ...content, features: updated });
   };
+
+  // Calculate flex basis for each card based on columns
+  const gapPx = 1;
+  const basisPercent = cols === 2 ? 'calc(50% - 1px)' : 'calc(33.333% - 1px)';
 
   return (
     <section style={{ backgroundColor: bgStyles.bg, padding: '96px clamp(24px, 6vw, 96px)' }}>
@@ -75,14 +85,15 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
             maxWidth: 500,
           }}
         >
-          {content.sectionTitle || content.title || content.headline || 'What sets us apart'}
+          {displayTitle}
         </h2>
 
-        {/* Bento Grid */}
+        {/* Bento Grid — flex-wrap for centered incomplete rows */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${cols}, 1fr)`,
-          gap: '1px',
+          display: 'flex',
+          flexWrap: 'wrap' as const,
+          justifyContent: 'center',
+          gap: gapPx,
           backgroundColor: bgStyles.border,
           border: `1px solid ${bgStyles.border}`,
         }}>
@@ -90,6 +101,8 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
             <div
               key={i}
               style={{
+                flex: `0 1 ${basisPercent}`,
+                minWidth: 240,
                 backgroundColor: bgStyles.bg,
                 padding: 'clamp(24px, 3vw, 40px)',
               }}
