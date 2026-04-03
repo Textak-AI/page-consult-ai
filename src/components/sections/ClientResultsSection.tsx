@@ -12,7 +12,7 @@ import { SectionWrapper } from './shared/SectionWrapper';
 import { SectionHeader } from './shared/SectionHeader';
 import { CardGrid } from './shared/CardGrid';
 import { StatDisplay } from './shared/StatDisplay';
-import { isCleanForDisplay } from '@/lib/contentCleaner';
+import { isCleanForDisplay, cleanDisplayText } from '@/lib/contentCleaner';
 
 interface ClientResultsSectionProps {
   content: {
