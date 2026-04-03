@@ -1082,40 +1082,43 @@ export function buildStatistics(sources: any, industryVariant: string): Array<{v
 }
 
 /**
- * Deduplicate stats by normalized value to prevent duplicate display
+ * Deduplicate and validate stats upstream before they reach components.
+ * Rejects garbage labels, deduplicates by numeric value AND label.
  */
 function deduplicateStats(stats: Array<{value: string, label: string}>): Array<{value: string, label: string}> {
   const seenNumeric = new Set<string>();
   const seenLabels = new Set<string>();
-  return stats.filter(stat => {
-    // Extract just the numeric portion for dedup (e.g., "94%" → "94", "$1.5M" → "15")
+
+  // Pre-clean labels
+  const cleaned = stats.map(stat => ({
+    ...stat,
+    label: stat.label
+      .replace(/\b[a-z]{2,}[A-Z][a-zA-Z]*/g, '')  // Strip camelCase tokens
+      .replace(/["{}[\]]/g, '')                       // Strip JSON syntax
+      .replace(/\s{2,}/g, ' ')                        // Collapse whitespace
+      .trim()
+  }));
+
+  return cleaned.filter(stat => {
+    // Basic validity
+    if (!stat.value || !stat.label || stat.label.length < 5) return false;
+    if (/[a-z][A-Z]/.test(stat.label)) return false; // camelCase leak
+    if (/[a-z]_[a-z]/i.test(stat.label)) return false; // snake_case leak
+
     const numericOnly = stat.value.replace(/[^0-9.]/g, '');
     const normalizedValue = stat.value.replace(/[^0-9a-z%$+x]/gi, '').toLowerCase();
-    
-    // Dedup by exact normalized value
-    if (seenNumeric.has(normalizedValue)) {
-      console.log('🔄 [deduplicateStats] Removing duplicate value:', stat.value, stat.label);
-      return false;
-    }
-    
-    // Also dedup by raw numeric portion (catches "94%" and "94% satisfaction" as same)
-    if (numericOnly && seenNumeric.has(numericOnly)) {
-      console.log('🔄 [deduplicateStats] Removing duplicate numeric:', stat.value, stat.label);
-      return false;
-    }
-    
-    // Dedup by similar label
+
+    if (seenNumeric.has(normalizedValue)) return false;
+    if (numericOnly && numericOnly.length >= 2 && seenNumeric.has(numericOnly)) return false;
+
     const normalizedLabel = stat.label.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (seenLabels.has(normalizedLabel)) {
-      console.log('🔄 [deduplicateStats] Removing duplicate label:', stat.label);
-      return false;
-    }
-    
+    if (seenLabels.has(normalizedLabel)) return false;
+
     seenNumeric.add(normalizedValue);
     if (numericOnly) seenNumeric.add(numericOnly);
     seenLabels.add(normalizedLabel);
     return true;
-  });
+  }).slice(0, 4);
 }
 
 /**
