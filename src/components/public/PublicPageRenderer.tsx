@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
+import { LeadCaptureModal } from './LeadCaptureModal';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { cn } from '@/lib/utils';
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from '@/lib/premiumPageEffects';
