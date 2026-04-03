@@ -1444,7 +1444,7 @@ export default function EnhancedBrandSetup() {
         const { data: newConsultation, error: createError } = await supabase
           .from('consultations')
           .insert({
-            user_id: user.id,
+            user_id: demoUser.id,
             industry: intel?.industry || null,
             business_name: companyName,
             website_url: websiteUrl,
