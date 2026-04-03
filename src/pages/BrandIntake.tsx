@@ -472,7 +472,7 @@ export default function BrandIntake() {
       navigate('/');
       return;
     }
-    navigate(`/generate?session=${sid}`);
+    navigate(`/brand-setup?session=${sid}`);
   };
   
   return (
