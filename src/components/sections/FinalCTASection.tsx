@@ -225,7 +225,7 @@ function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionPr
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("subtext", e)}
         >
-          {content.subtext || "No commitment required • Response within 24 hours"}
+          {cleanDisplayText(content.subtext || "No commitment required • Response within 24 hours", 120)}
         </motion.p>
 
         {/* Urgency Banner */}
