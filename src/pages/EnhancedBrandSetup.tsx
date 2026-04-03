@@ -1478,6 +1478,8 @@ export default function EnhancedBrandSetup() {
       }
       // Ultimate fallback if consultation creation fails
       navigate(`/strategy-document?session=${sessionId}`, { replace: true });
+      return;
+    } else {
       // No consultationId and no demo session - create consultation from brand data if we have extraction results
       const { data: { user } } = await supabase.auth.getUser();
       
