@@ -1474,7 +1474,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
                         : 'bg-brand-gradient shadow-brand-glow hover:shadow-brand-glow-lg'
                     } ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30" : ""}`;
                 
-                console.log('🎨 [HeroSection Default] primaryColor:', content.primaryColor);
+                
                 
                 return (
                   <Button 

@@ -324,6 +324,15 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     );
   }, [getSectionLockStatus, handleUnlockAction, editingSection, handleEditSection, handleAIAssist, handleImageGenerate, handleLogoEdit]);
 
+  // Stable update handlers per section index - prevents new closure on every render
+  const updateSectionHandlers = useMemo(() => {
+    return sections.map((_, index) => (content: any) => {
+      const updated = [...sections];
+      updated[index].content = content;
+      onSectionsChange(updated);
+    });
+  }, [sections, onSectionsChange]);
+
   const renderSection = (section: Section, index: number) => {
     // Inject industryVariant, colorMode, and brand colors into section content if not already present
     const sectionContent = {
@@ -331,21 +340,14 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
       industryVariant: section.content?.industryVariant || industryVariant || 'default',
       mode: section.content?.mode || colorMode || 'dark',
       // Inject brand colors so section components can use them for CTAs/buttons
-      primaryColor: section.content?.primaryColor || brandSettings?.primaryColor || null,
-      logoUrl: section.content?.logoUrl || brandSettings?.logoUrl || null,
+      primaryColor: section.content?.primaryColor || stableBrandPrimaryColor,
+      logoUrl: section.content?.logoUrl || stableBrandLogoUrl,
       archetype: archetypeProfile, // Archetype design profile
     };
     
-    // Debug logging
-    console.log('🎨 [LivePreview] Rendering section:', section.type, 'industryVariant:', sectionContent.industryVariant, 'mode:', sectionContent.mode);
-    
     if (!section.visible) return null;
 
-    const updateSection = (content: any) => {
-      const updated = [...sections];
-      updated[index].content = content;
-      onSectionsChange(updated);
-    };
+    const updateSection = updateSectionHandlers[index];
 
     switch (section.type) {
       case "hero":
