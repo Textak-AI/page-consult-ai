@@ -79,9 +79,18 @@ export function PublicPageRenderer({
   heroThumbnailUrl,
   designIntelligence,
   brandSettings,
-  showPoweredBy = false
+  showPoweredBy = false,
+  publishedPageId,
 }: PublicPageRendererProps) {
-  
+  const [leadCaptureOpen, setLeadCaptureOpen] = useState(false);
+  const [leadCaptureCtaText, setLeadCaptureCtaText] = useState('Get Started');
+
+  // CTA click handler for published pages with lead capture
+  const handleCtaClick = useCallback(() => {
+    if (publishedPageId) {
+      setLeadCaptureOpen(true);
+    }
+  }, [publishedPageId]);
   // Derive colorMode from design intelligence
   const colorMode = designIntelligence?.colorMode || 'dark';
   const industryVariant = designIntelligence?.industryVariant || 'default';
