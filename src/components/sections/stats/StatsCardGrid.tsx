@@ -21,8 +21,13 @@ export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCar
   const validStats = stats.filter((s: any) => {
     if (!s.value || !s.label) return false;
     if (!/\d/.test(s.value)) return false;
+    if (String(s.label).length < 5) return false;
+    if (/[a-z][A-Z]/.test(String(s.label))) return false;
+    if (/[a-z]_[a-z]/i.test(String(s.label))) return false;
+    if (/[{}[\]":]/.test(String(s.label))) return false;
     const genericLabels = ['consulting', 'services', 'business', 'growth', 'company', 'industry'];
     if (genericLabels.includes(String(s.label).toLowerCase().trim())) return false;
+    if (!/\s/.test(String(s.label).trim()) && String(s.label).length > 12) return false;
     return true;
   });
 
