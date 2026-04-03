@@ -725,6 +725,65 @@ export type Database = {
         }
         Relationships: []
       }
+      form_submissions: {
+        Row: {
+          company: string | null
+          custom_fields: Json | null
+          email: string
+          id: string
+          message: string | null
+          name: string | null
+          phone: string | null
+          published_page_id: string
+          source_url: string | null
+          status: string | null
+          submitted_at: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          company?: string | null
+          custom_fields?: Json | null
+          email: string
+          id?: string
+          message?: string | null
+          name?: string | null
+          phone?: string | null
+          published_page_id: string
+          source_url?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          company?: string | null
+          custom_fields?: Json | null
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string | null
+          phone?: string | null
+          published_page_id?: string
+          source_url?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_published_page_id_fkey"
+            columns: ["published_page_id"]
+            isOneToOne: false
+            referencedRelation: "published_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       generation_logs: {
         Row: {
           confidence_score: number | null
