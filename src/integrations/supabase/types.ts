@@ -1256,6 +1256,41 @@ export type Database = {
           },
         ]
       }
+      preview_links: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          expires_at: string
+          id: string
+          landing_page_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          landing_page_id: string
+          token: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          landing_page_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preview_links_landing_page_id_fkey"
+            columns: ["landing_page_id"]
+            isOneToOne: false
+            referencedRelation: "landing_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

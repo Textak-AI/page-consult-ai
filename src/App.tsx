@@ -57,6 +57,7 @@ import ProspectPage from "./pages/ProspectPage";
 import ProspectsDashboard from "./pages/ProspectsDashboard";
 import TryDemo from "./pages/TryDemo";
 import AdminResetData from "./pages/AdminResetData";
+import PreviewPage from "./pages/PreviewPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -166,6 +167,7 @@ const App = () => {
                 <Route path="/p/:slug" element={<PublicPage />} />
                 {/* Prospect personalized pages */}
                 <Route path="/for/:slug" element={<ProspectPage />} />
+                <Route path="/preview/:token" element={<PreviewPage />} />
                 <Route path="/try" element={<TryDemo />} />
                 <Route path="/demo" element={<Navigate to="/try" replace />} />
                 <Route path="/admin/reset-data" element={<AdminResetData />} />
