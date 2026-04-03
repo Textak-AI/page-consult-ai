@@ -106,6 +106,56 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Best-effort email notification to page owner via Loops
+    const loopsApiKey = Deno.env.get("LOOPS_API_KEY");
+    if (loopsApiKey) {
+      try {
+        const { data: pageOwner } = await supabase
+          .from("published_pages")
+          .select("user_id, page_title, slug")
+          .eq("id", publishedPageId)
+          .single();
+
+        if (pageOwner) {
+          const { data: ownerData } = await supabase.auth.admin.getUserById(pageOwner.user_id);
+          const ownerEmail = ownerData?.user?.email;
+
+          if (ownerEmail) {
+            await fetch("https://app.loops.so/api/v1/transactional", {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${loopsApiKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                transactionalId: "cm97cd4au006fl70pbxkfbkjn",
+                email: ownerEmail,
+                dataVariables: {
+                  leadName: name || "Someone",
+                  leadEmail: email,
+                  leadCompany: company || "Not provided",
+                  leadPhone: phone || "Not provided",
+                  leadMessage: message || "No message",
+                  pageName: pageOwner.page_title || "Your landing page",
+                  pageUrl: `https://pages.pageconsult.ai/p/${pageOwner.slug}`,
+                  submittedAt: new Date().toLocaleString("en-US", {
+                    timeZone: "America/New_York",
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  }),
+                },
+              }),
+            });
+            console.log("📧 Lead notification sent to", ownerEmail);
+          }
+        }
+      } catch (emailError) {
+        console.error("Notification email failed:", emailError);
+      }
+    } else {
+      console.warn("LOOPS_API_KEY not configured — skipping notification");
+    }
+
     return new Response(
       JSON.stringify({ success: true, submissionId: submission.id }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
