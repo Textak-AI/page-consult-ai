@@ -52,7 +52,6 @@ interface PublicPageRendererProps {
   metaTitle?: string | null;
   metaDescription?: string | null;
   heroThumbnailUrl?: string | null;
-  // Design intelligence for color mode and brand colors
   designIntelligence?: {
     colorMode?: 'light' | 'dark';
     industryVariant?: string;
@@ -62,14 +61,14 @@ interface PublicPageRendererProps {
       accent?: string;
     };
   } | null;
-  // Brand settings fallback
   brandSettings?: {
     companyName?: string | null;
     logoUrl?: string | null;
     primaryColor?: string | null;
   } | null;
-  // Show "Built with PageConsult" badge
   showPoweredBy?: boolean;
+  /** When set, CTA clicks open a lead capture form instead of navigating */
+  publishedPageId?: string | null;
 }
 
 export function PublicPageRenderer({ 
