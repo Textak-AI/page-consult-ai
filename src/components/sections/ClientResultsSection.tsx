@@ -12,7 +12,7 @@ import { SectionWrapper } from './shared/SectionWrapper';
 import { SectionHeader } from './shared/SectionHeader';
 import { CardGrid } from './shared/CardGrid';
 import { StatDisplay } from './shared/StatDisplay';
-import { isCleanForDisplay } from '@/lib/contentCleaner';
+import { isCleanForDisplay, cleanDisplayText } from '@/lib/contentCleaner';
 
 interface ClientResultsSectionProps {
   content: {
@@ -123,20 +123,20 @@ function ClientResultsSectionBase({ content }: ClientResultsSectionProps) {
                   accentColor={isLightMode ? accentColor : undefined}
                 />
               ) : (
-                <>
+              <>
                   <h3 className={`text-2xl font-bold mb-2 ${isLightMode ? '' : 'text-white'}`}
                     style={isLightMode ? { color: accentColor } : undefined}
                   >
-                    {result.metric}
+                    {cleanDisplayText(result.metric, 30)}
                   </h3>
                   <p className={`${typography?.body || 'text-base'} mb-4 ${isLightMode ? 'text-slate-600' : 'text-white/70'}`}>
-                    {result.description}
+                    {cleanDisplayText(result.description, 80)}
                   </p>
                   {(result.client || result.industry) && (
                     <div className={`text-sm font-medium ${isLightMode ? 'text-slate-500' : 'text-white/50'}`}>
-                      {result.client && <span>{result.client}</span>}
+                      {result.client && <span>{cleanDisplayText(result.client, 30)}</span>}
                       {result.client && result.industry && <span> • </span>}
-                      {result.industry && <span>{result.industry}</span>}
+                      {result.industry && <span>{cleanDisplayText(result.industry, 30)}</span>}
                     </div>
                   )}
                 </>
