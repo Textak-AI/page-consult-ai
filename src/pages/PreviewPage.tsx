@@ -111,7 +111,6 @@ export default function PreviewPage() {
         <PublicPageRenderer
           sections={pageData.sections || []}
           styles={pageData.styles || {}}
-          consultationData={pageData.consultation_data}
           designIntelligence={pageData.design_intelligence}
         />
       </div>
