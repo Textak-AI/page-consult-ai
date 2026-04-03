@@ -207,7 +207,7 @@ export function PublishModal({
 
   const handleUpdate = async () => {
     if (!existingPublish) return;
-    setPublishState('updating');
+    setIsUpdating(true);
 
     try {
       const { error } = await supabase
