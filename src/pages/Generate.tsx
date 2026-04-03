@@ -6042,6 +6042,14 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         }}
       />
 
+      {pageData?.id && (
+        <SharePreviewModal
+          open={sharePreviewOpen}
+          onOpenChange={setSharePreviewOpen}
+          landingPageId={pageData.id}
+        />
+      )}
+
       <AIConsultantSidebar
         isOpen={aiConsultantOpen}
         onClose={() => setAiConsultantOpen(false)}
