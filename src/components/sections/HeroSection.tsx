@@ -450,7 +450,7 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
       ? "px-8 py-6 text-lg font-semibold text-white rounded-xl shadow-lg hover:opacity-90 transition-opacity"
       : "px-8 py-6 text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl shadow-lg shadow-purple-500/25";
 
-    console.log('🎨 [HeroSection SaaS] primaryColor:', content.primaryColor, 'backgroundImage:', content.backgroundImage);
+    // primaryColor and backgroundImage resolved
 
     return (
       <section 
