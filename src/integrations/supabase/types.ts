@@ -1569,6 +1569,77 @@ export type Database = {
           },
         ]
       }
+      published_pages: {
+        Row: {
+          brand_settings: Json | null
+          design_intelligence: Json | null
+          favicon_url: string | null
+          id: string
+          landing_page_id: string
+          last_viewed_at: string | null
+          meta_description: string | null
+          og_image_url: string | null
+          page_content: Json
+          page_styles: Json | null
+          page_title: string | null
+          published_at: string | null
+          slug: string
+          status: string | null
+          unpublished_at: string | null
+          updated_at: string | null
+          user_id: string
+          view_count: number | null
+        }
+        Insert: {
+          brand_settings?: Json | null
+          design_intelligence?: Json | null
+          favicon_url?: string | null
+          id?: string
+          landing_page_id: string
+          last_viewed_at?: string | null
+          meta_description?: string | null
+          og_image_url?: string | null
+          page_content: Json
+          page_styles?: Json | null
+          page_title?: string | null
+          published_at?: string | null
+          slug: string
+          status?: string | null
+          unpublished_at?: string | null
+          updated_at?: string | null
+          user_id: string
+          view_count?: number | null
+        }
+        Update: {
+          brand_settings?: Json | null
+          design_intelligence?: Json | null
+          favicon_url?: string | null
+          id?: string
+          landing_page_id?: string
+          last_viewed_at?: string | null
+          meta_description?: string | null
+          og_image_url?: string | null
+          page_content?: Json
+          page_styles?: Json | null
+          page_title?: string | null
+          published_at?: string | null
+          slug?: string
+          status?: string | null
+          unpublished_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "published_pages_landing_page_id_fkey"
+            columns: ["landing_page_id"]
+            isOneToOne: false
+            referencedRelation: "landing_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean | null
@@ -1834,6 +1905,10 @@ export type Database = {
       increment_page_view: { Args: { page_id: string }; Returns: undefined }
       increment_prospect_page_views: {
         Args: { page_id: string }
+        Returns: undefined
+      }
+      increment_published_page_view: {
+        Args: { page_slug: string }
         Returns: undefined
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
