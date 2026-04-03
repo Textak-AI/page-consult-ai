@@ -1468,7 +1468,7 @@ export default function EnhancedBrandSetup() {
         if (!createError && newConsultation) {
           await supabase
             .from('demo_sessions')
-            .update({ claimed_by: user.id, claimed_at: new Date().toISOString(), continued_to_consultation: true })
+            .update({ claimed_by: demoUser.id, claimed_at: new Date().toISOString(), continued_to_consultation: true })
             .eq('session_id', sessionId)
             .is('claimed_by', null);
           
