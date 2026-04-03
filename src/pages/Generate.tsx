@@ -346,6 +346,7 @@ function GenerateContent() {
   const [pageData, setPageData] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [sharePreviewOpen, setSharePreviewOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
   const [stylePickerOpen, setStylePickerOpen] = useState(false);
