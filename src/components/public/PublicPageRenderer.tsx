@@ -426,7 +426,25 @@ export function PublicPageRenderer({
         })()}
 
         {/* Render all visible sections with tier wrappers */}
-        <div className="relative z-10">
+        <div 
+          className="relative z-10"
+          onClick={(e) => {
+            // Intercept CTA button clicks on published pages for lead capture
+            if (!publishedPageId) return;
+            const target = e.target as HTMLElement;
+            const button = target.closest('button, a[href="#contact"], a[href="#"]');
+            if (!button) return;
+            // Only intercept CTA-like buttons (not nav links, FAQ toggles, etc.)
+            const isCta = button.closest('[class*="final-cta"], [class*="FinalCTA"], section:last-of-type') ||
+              button.textContent?.match(/get started|contact|book|schedule|start|learn more|sign up|request|free/i);
+            if (isCta) {
+              e.preventDefault();
+              e.stopPropagation();
+              setLeadCaptureCtaText(button.textContent?.trim() || 'Get Started');
+              setLeadCaptureOpen(true);
+            }
+          }}
+        >
           {sortedSections.map((section, index) => {
             const tier = getSectionTier(section.type, index);
             const spacing = getSectionSpacing(section.type);
@@ -473,6 +491,17 @@ export function PublicPageRenderer({
             </svg>
             <span>Built with PageConsult</span>
           </a>
+        )}
+
+        {/* Lead Capture Modal for published pages */}
+        {publishedPageId && (
+          <LeadCaptureModal
+            open={leadCaptureOpen}
+            onOpenChange={setLeadCaptureOpen}
+            publishedPageId={publishedPageId}
+            ctaText={leadCaptureCtaText}
+            companyName={brandSettings?.companyName || undefined}
+          />
         )}
       </div>
     </>
