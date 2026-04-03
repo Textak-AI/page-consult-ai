@@ -5437,6 +5437,7 @@ function EditorContent({
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [strategyBriefOpen, setStrategyBriefOpen] = useState(false);
+  const [sharePreviewOpen, setSharePreviewOpen] = useState(false);
   
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
