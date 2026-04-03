@@ -224,12 +224,12 @@ export function PublishModal({
 
       if (error) throw error;
 
-      setPublishState('published');
+      setIsUpdating(false);
       toast.success("Published page updated");
     } catch (error: any) {
       console.error('Update error:', error);
       toast.error("Failed to update", { description: error.message });
-      setPublishState('published');
+      setIsUpdating(false);
     }
   };
 
