@@ -57,6 +57,7 @@ import ProspectPage from "./pages/ProspectPage";
 import ProspectsDashboard from "./pages/ProspectsDashboard";
 import TryDemo from "./pages/TryDemo";
 import AdminResetData from "./pages/AdminResetData";
+import PreviewPage from "./pages/PreviewPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
