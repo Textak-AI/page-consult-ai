@@ -5,6 +5,8 @@ import { ArrowRight, CheckCircle, Shield } from "lucide-react";
 import type { SDIPalette, SDISectionThemes, SDITypography } from '@/lib/designIntelligence/types';
 import { getArchetypeCtaClass, type DesignProfile } from "@/lib/archetypeProfiles";
 import CTACenteredMinimal from './final-cta/CTACenteredMinimal';
+import { SectionHeader } from './shared/SectionHeader';
+import { cleanDisplayText } from '@/lib/contentCleaner';
 
 interface FinalCTASectionProps {
   content: {

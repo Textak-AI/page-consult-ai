@@ -3,10 +3,16 @@ import { memo } from "react";
  * Client Results Section
  * 
  * Showcases client outcomes and measurable results using SDI dynamic design system.
+ * Uses shared layout primitives for consistent quality.
  */
 
 import { TrendingUp, Award, Users, CheckCircle2 } from 'lucide-react';
 import type { SDIPalette, SDISectionThemes, SDITypography } from '@/lib/designIntelligence/types';
+import { SectionWrapper } from './shared/SectionWrapper';
+import { SectionHeader } from './shared/SectionHeader';
+import { CardGrid } from './shared/CardGrid';
+import { StatDisplay } from './shared/StatDisplay';
+import { isCleanForDisplay } from '@/lib/contentCleaner';
 
 interface ClientResultsSectionProps {
   content: {
@@ -20,7 +26,6 @@ interface ClientResultsSectionProps {
     }>;
     industryVariant?: string;
     mode?: string;
-    // SDI Design System
     primaryColor?: string;
     palette?: SDIPalette;
     sectionThemes?: SDISectionThemes;
@@ -35,130 +40,112 @@ function ClientResultsSectionBase({ content }: ClientResultsSectionProps) {
     results = [],
   } = content;
   
-  // SDI Design System
   const theme = content.sectionThemes?.['client-results'] || 'tinted';
   const palette = content.palette;
   const typography = content.sdiTypography;
   
-  // Respect mode prop for light/dark
   const isLightMode = content.mode 
     ? (content.mode === 'light' || content.mode === 'warm')
     : theme !== 'dark';
 
-  // Helper functions for SDI-driven styling
-  const getSectionStyles = (): React.CSSProperties => {
-    if (isLightMode) {
-      return { backgroundColor: '#f8fafc' };
-    }
-    if (!palette) {
-      return { backgroundColor: '#0f172a' };
-    }
-    switch (theme) {
-      case 'dark':
-        return { backgroundColor: palette.darkSection };
-      case 'tinted':
-        return { backgroundColor: palette.primaryTint };
-      default:
-        return { backgroundColor: palette.lightSection };
-    }
-  };
+  const accentColor = content.primaryColor || palette?.primary || '#475569';
 
-  const getTextColorClass = () => {
-    return isLightMode ? 'text-gray-900' : 'text-white';
-  };
-
-  const getMutedTextColorClass = () => {
-    return isLightMode ? 'text-gray-600' : 'text-white/70';
-  };
-
-  const getCardStyles = () => {
-    if (!isLightMode) {
-      return 'bg-white/5 border border-white/10';
-    }
-    return 'bg-white shadow-md border border-gray-100';
-  };
-
-  const getIconStyles = (): React.CSSProperties => {
-    if (!isLightMode) {
-      return { backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff' };
-    }
-    const accentColor = content.primaryColor || palette?.primary || '#475569';
-    return { backgroundColor: `${accentColor}15`, color: accentColor };
-  };
-
-  const getMetricStyles = (): React.CSSProperties => {
-    const accentColor = content.primaryColor || palette?.primary;
-    if (isLightMode && accentColor) {
-      return { color: accentColor };
-    }
-    return {};
-  };
-
-  const getMetricColorClass = () => {
-    if (!isLightMode) return 'text-white';
-    return (content.primaryColor || palette?.primary) ? '' : 'text-gray-900';
-  };
-
-  // No fallback fabrication — if no results, hide the section
+  // Quality floor
   if (results.length < 2) {
     console.log('🎨 [ClientResultsSection] Quality floor: fewer than 2 results, hiding section');
     return null;
   }
-  const displayResults = results;
+
+  // SDI-driven section background
+  const getSectionBg = (): React.CSSProperties => {
+    if (isLightMode) return { backgroundColor: '#f8fafc' };
+    if (!palette) return { backgroundColor: '#0f172a' };
+    switch (theme) {
+      case 'dark': return { backgroundColor: palette.darkSection };
+      case 'tinted': return { backgroundColor: palette.primaryTint };
+      default: return { backgroundColor: palette.lightSection };
+    }
+  };
+
+  const getCardStyles = () => {
+    if (!isLightMode) return 'bg-white/5 border border-white/10';
+    return 'bg-white shadow-md border border-gray-100';
+  };
+
+  const getIconStyles = (): React.CSSProperties => {
+    if (!isLightMode) return { backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff' };
+    return { backgroundColor: `${accentColor}15`, color: accentColor };
+  };
 
   const icons = [TrendingUp, Award, Users, CheckCircle2];
 
   return (
-    <section 
-      className="py-24 md:py-32"
-      style={getSectionStyles()}
+    <SectionWrapper
+      background="transparent"
+      paddingY="lg"
+      style={getSectionBg()}
+      sectionType="client-results"
     >
-      <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto text-center mb-12">
-          <h2 className={`${typography?.sectionTitle || 'text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight'} mb-4 ${getTextColorClass()}`}>
-            {headline}
-          </h2>
-          <p className={`${typography?.sectionSubtitle || 'text-lg md:text-xl'} ${getMutedTextColorClass()}`}>
-            {subtitle}
-          </p>
-        </div>
+      <SectionHeader
+        eyebrow="RESULTS"
+        title={headline}
+        subtitle={subtitle}
+        lightMode={isLightMode}
+        accentColor={isLightMode ? accentColor : undefined}
+        titleClassName={typography?.sectionTitle}
+        subtitleClassName={typography?.sectionSubtitle}
+      />
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {displayResults.slice(0, 3).map((result, index) => {
-            const Icon = icons[index % icons.length];
-            return (
+      <CardGrid columns={3} gap="lg" maxCardWidth="380px">
+        {results.slice(0, 3).map((result, index) => {
+          const Icon = icons[index % icons.length];
+          const metricClean = isCleanForDisplay(result.metric);
+          
+          return (
+            <div 
+              key={index} 
+              className={`p-8 rounded-lg ${getCardStyles()}`}
+            >
               <div 
-                key={index} 
-                className={`p-8 rounded-lg ${getCardStyles()}`}
+                className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
+                style={getIconStyles()}
               >
-                <div 
-                  className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
-                  style={getIconStyles()}
-                >
-                  <Icon className="w-6 h-6" />
-                </div>
-                <h3 
-                  className={`text-2xl font-bold mb-2 ${getMetricColorClass()}`}
-                  style={getMetricStyles()}
-                >
-                  {result.metric}
-                </h3>
-                <p className={`${typography?.body || 'text-base'} mb-4 ${getMutedTextColorClass()}`}>
-                  {result.description}
-                </p>
-                {(result.client || result.industry) && (
-                  <div className={`text-sm font-medium ${theme === 'dark' ? 'text-white/50' : 'text-slate-500'}`}>
-                    {result.client && <span>{result.client}</span>}
-                    {result.client && result.industry && <span> • </span>}
-                    {result.industry && <span>{result.industry}</span>}
-                  </div>
-                )}
+                <Icon className="w-6 h-6" />
               </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
+              {metricClean ? (
+                <StatDisplay
+                  value={result.metric}
+                  label={result.description}
+                  detail={[result.client, result.industry].filter(Boolean).join(' • ')}
+                  size="sm"
+                  variant="inline"
+                  lightMode={isLightMode}
+                  accentColor={isLightMode ? accentColor : undefined}
+                />
+              ) : (
+                <>
+                  <h3 className={`text-2xl font-bold mb-2 ${isLightMode ? '' : 'text-white'}`}
+                    style={isLightMode ? { color: accentColor } : undefined}
+                  >
+                    {result.metric}
+                  </h3>
+                  <p className={`${typography?.body || 'text-base'} mb-4 ${isLightMode ? 'text-slate-600' : 'text-white/70'}`}>
+                    {result.description}
+                  </p>
+                  {(result.client || result.industry) && (
+                    <div className={`text-sm font-medium ${isLightMode ? 'text-slate-500' : 'text-white/50'}`}>
+                      {result.client && <span>{result.client}</span>}
+                      {result.client && result.industry && <span> • </span>}
+                      {result.industry && <span>{result.industry}</span>}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </CardGrid>
+    </SectionWrapper>
   );
 }
 
