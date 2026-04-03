@@ -5800,15 +5800,26 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             <span className="absolute left-0 top-0 w-1 h-full bg-cyan-500 rounded-l"></span>
             Preview
           </Button>
-          {/* Publish Toolbar - shows publish state and controls */}
+          {/* Share Preview + Publish Toolbar */}
           {pageData?.id && (
-            <PublishToolbar
-              pageId={pageData.id}
-              slug={pageData.slug}
-              isPublished={pageData.status === 'published' || pageData.is_published}
-              publishedAt={pageData.published_at}
-              onOpenPublishModal={() => setPublishModalOpen(true)}
-            />
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setSharePreviewOpen(true)}
+                className="border-white/10 text-white/70 hover:bg-white/10"
+              >
+                <Share2 className="w-4 h-4 mr-1" />
+                Share
+              </Button>
+              <PublishToolbar
+                pageId={pageData.id}
+                slug={pageData.slug}
+                isPublished={pageData.status === 'published' || pageData.is_published}
+                publishedAt={pageData.published_at}
+                onOpenPublishModal={() => setPublishModalOpen(true)}
+              />
+            </>
           )}
           
           {/* Fallback Publish button when page not yet saved */}
