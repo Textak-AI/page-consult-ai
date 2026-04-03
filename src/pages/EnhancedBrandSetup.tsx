@@ -1436,9 +1436,48 @@ export default function EnhancedBrandSetup() {
         }
       }
       
-      // Fallback: navigate to generate with session
-      navigate(`/generate?session=${sessionId}`);
-    } else {
+      // Fallback for low-readiness demo: still go to strategy document, not generate
+      console.log('🚀 [EnhancedBrandSetup] Low-readiness demo - creating consultation for strategy review');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const intel = demoSession.extracted_intelligence as any;
+        const { data: newConsultation, error: createError } = await supabase
+          .from('consultations')
+          .insert({
+            user_id: user.id,
+            industry: intel?.industry || null,
+            business_name: companyName,
+            website_url: websiteUrl,
+            extracted_intelligence: {
+              ...intel,
+              logoUrl: logo,
+              companyName,
+              websiteUrl,
+              brandColors: { primary: colors.primary, secondary: colors.secondary, accent: colors.accent },
+              source: 'demo',
+              migratedAt: new Date().toISOString(),
+            },
+            consultation_status: 'demo_complete',
+            status: 'in_progress',
+            readiness_score: demoSession.readiness || 10,
+            flow_state: 'brand_captured',
+          })
+          .select()
+          .single();
+        
+        if (!createError && newConsultation) {
+          await supabase
+            .from('demo_sessions')
+            .update({ claimed_by: user.id, claimed_at: new Date().toISOString(), continued_to_consultation: true })
+            .eq('session_id', sessionId)
+            .is('claimed_by', null);
+          
+          navigate(`/strategy-document?consultationId=${newConsultation.id}`, { replace: true });
+          return;
+        }
+      }
+      // Ultimate fallback if consultation creation fails
+      navigate(`/strategy-document?session=${sessionId}`, { replace: true });
       // No consultationId and no demo session - create consultation from brand data if we have extraction results
       const { data: { user } } = await supabase.auth.getUser();
       
