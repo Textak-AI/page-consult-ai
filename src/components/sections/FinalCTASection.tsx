@@ -5,6 +5,8 @@ import { ArrowRight, CheckCircle, Shield } from "lucide-react";
 import type { SDIPalette, SDISectionThemes, SDITypography } from '@/lib/designIntelligence/types';
 import { getArchetypeCtaClass, type DesignProfile } from "@/lib/archetypeProfiles";
 import CTACenteredMinimal from './final-cta/CTACenteredMinimal';
+import { SectionHeader } from './shared/SectionHeader';
+import { cleanDisplayText } from '@/lib/contentCleaner';
 
 interface FinalCTASectionProps {
   content: {
@@ -223,7 +225,7 @@ function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionPr
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("subtext", e)}
         >
-          {content.subtext || "No commitment required • Response within 24 hours"}
+          {cleanDisplayText(content.subtext || "No commitment required • Response within 24 hours", 120)}
         </motion.p>
 
         {/* Urgency Banner */}
