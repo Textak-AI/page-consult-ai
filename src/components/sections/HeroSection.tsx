@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
 import { LogoUploader } from "@/components/editor/LogoUploader";
-import { useState, useMemo } from "react";
+import { useState, useMemo } , memo } from "react";
 import { ImagePlus, Shield, Clock, Award, CheckCircle, ArrowRight, Sparkles, Camera, Star, Image, Layers, PlayCircle, Check, HeartPulse, Factory, TrendingUp, Lightbulb, Palette, GraduationCap, ShoppingBag, Scale, Home, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/industryVariants";
@@ -198,7 +198,7 @@ const logoSizeClasses: Record<LogoSize, string> = {
   large: 'h-16 md:h-20',
 };
 
-export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) {
+function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
   const [logoUploaderOpen, setLogoUploaderOpen] = useState(false);
   
@@ -1613,3 +1613,5 @@ export function HeroSection({ content, onUpdate, isEditing }: HeroSectionProps) 
     </section>
   );
 }
+
+export const HeroSection = memo(HeroSectionBase);

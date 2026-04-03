@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { 
   Zap, Target, Shield, TrendingUp, Users, Award, Grid, List, Headset, 
   DollarSign, Tag, Clock, CheckCircle, Heart, Star, Lightbulb, Rocket, 
@@ -61,7 +62,7 @@ const getIconComponent = (iconName: string): LucideIcon => {
   return CheckCircle;
 };
 
-export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "outline" }: FeaturesSectionProps) {
+function FeaturesSectionBase({ content, onUpdate, isEditing, iconStyle = "outline" }: FeaturesSectionProps) {
   // Art Director composition check
   const featureLayout = (content as any)?.featureLayout;
   if (featureLayout === 'bento-grid') {
@@ -609,3 +610,5 @@ export function FeaturesSection({ content, onUpdate, isEditing, iconStyle = "out
     </section>
   );
 }
+
+export const FeaturesSection = memo(FeaturesSectionBase);

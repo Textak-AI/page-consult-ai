@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle, Shield } from "lucide-react";
@@ -30,7 +31,7 @@ interface FinalCTASectionProps {
   isEditing?: boolean;
 }
 
-export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectionProps) {
+function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionProps) {
   // Art Director composition check
   const ctaLayout = (content as any)?.ctaLayout;
   if (ctaLayout === 'centered-minimal') {
@@ -352,4 +353,5 @@ export function FinalCTASection({ content, onUpdate, isEditing }: FinalCTASectio
   );
 }
 
+export const FinalCTASection = memo(FinalCTASectionBase);
 export default FinalCTASection;

@@ -1,3 +1,4 @@
+import { memo } from "react";
 /**
  * Credentials Bar Section
  * 
@@ -24,7 +25,7 @@ interface CredentialsBarSectionProps {
   };
 }
 
-export function CredentialsBarSection({ content }: CredentialsBarSectionProps) {
+function CredentialsBarSectionBase({ content }: CredentialsBarSectionProps) {
   const { credentials = [] } = content;
   
   // SDI Design System
@@ -116,4 +117,5 @@ export function CredentialsBarSection({ content }: CredentialsBarSectionProps) {
   );
 }
 
+export const CredentialsBarSection = memo(CredentialsBarSectionBase);
 export default CredentialsBarSection;

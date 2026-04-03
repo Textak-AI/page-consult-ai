@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { AlertTriangle, CheckCircle, ArrowRight, Sparkles, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { EyebrowBadge } from "@/components/ui/PremiumCard";
@@ -28,7 +29,7 @@ interface ProblemSolutionSectionProps {
   isEditing?: boolean;
 }
 
-export function ProblemSolutionSection({ content, onUpdate, isEditing }: ProblemSolutionSectionProps) {
+function ProblemSolutionSectionBase({ content, onUpdate, isEditing }: ProblemSolutionSectionProps) {
   // Art Director composition check
   const psComposition = (content as any)?.composition;
   if (psComposition === 'two-column') {
@@ -624,3 +625,5 @@ export function ProblemSolutionSection({ content, onUpdate, isEditing }: Problem
     </section>
   );
 }
+
+export const ProblemSolutionSection = memo(ProblemSolutionSectionBase);

@@ -1,3 +1,4 @@
+import { memo } from "react";
 /**
  * Our Approach Section
  * 
@@ -26,7 +27,7 @@ interface OurApproachSectionProps {
   };
 }
 
-export function OurApproachSection({ content }: OurApproachSectionProps) {
+function OurApproachSectionBase({ content }: OurApproachSectionProps) {
   const { 
     headline = "Our Approach",
     subtitle = "A proven methodology that delivers results",
@@ -155,4 +156,5 @@ export function OurApproachSection({ content }: OurApproachSectionProps) {
   );
 }
 
+export const OurApproachSection = memo(OurApproachSectionBase);
 export default OurApproachSection;

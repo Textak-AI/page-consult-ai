@@ -1,3 +1,4 @@
+import { memo } from "react";
 /**
  * The Real Challenge Section
  * 
@@ -27,7 +28,7 @@ interface TheRealChallengeSectionProps {
   };
 }
 
-export function TheRealChallengeSection({ content }: TheRealChallengeSectionProps) {
+function TheRealChallengeSectionBase({ content }: TheRealChallengeSectionProps) {
   const { 
     headline = "The Challenges You're Facing",
     challenges = [],
@@ -154,4 +155,5 @@ export function TheRealChallengeSection({ content }: TheRealChallengeSectionProp
   );
 }
 
+export const TheRealChallengeSection = memo(TheRealChallengeSectionBase);
 export default TheRealChallengeSection;

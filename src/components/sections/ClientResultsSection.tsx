@@ -1,3 +1,4 @@
+import { memo } from "react";
 /**
  * Client Results Section
  * 
@@ -27,7 +28,7 @@ interface ClientResultsSectionProps {
   };
 }
 
-export function ClientResultsSection({ content }: ClientResultsSectionProps) {
+function ClientResultsSectionBase({ content }: ClientResultsSectionProps) {
   const { 
     headline = "Client Success Stories",
     subtitle = "Measurable results that speak for themselves",
@@ -161,4 +162,5 @@ export function ClientResultsSection({ content }: ClientResultsSectionProps) {
   );
 }
 
+export const ClientResultsSection = memo(ClientResultsSectionBase);
 export default ClientResultsSection;
