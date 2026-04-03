@@ -2580,10 +2580,10 @@ export default function EnhancedBrandSetup() {
         {/* Footer */}
         <div className="flex items-center justify-between mt-12 pt-8 border-t border-slate-800">
           <button 
-            onClick={() => demoSession ? navigate(`/generate?session=${sessionId}`) : navigate('/wizard')}
+            onClick={() => navigate(demoSession ? `/strategy-document?session=${sessionId}` : '/wizard')}
             className="text-slate-500 hover:text-slate-400 text-sm transition-colors"
           >
-            {demoSession ? 'Skip brand setup' : 'Skip for now (use defaults)'}
+            {demoSession ? 'Skip to strategy review' : 'Skip for now (use defaults)'}
           </button>
           <Button
             onClick={handleContinue}
