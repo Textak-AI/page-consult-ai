@@ -5805,6 +5805,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
               slug={pageData.slug}
               isPublished={pageData.status === 'published' || pageData.is_published}
               publishedAt={pageData.published_at}
+              onOpenPublishModal={() => setPublishModalOpen(true)}
             />
           )}
           
