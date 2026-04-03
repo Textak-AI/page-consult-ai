@@ -98,17 +98,10 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     return resolveArchetypeFromStorage();
   }, [sections]);
   
-  console.log('🎯 [DesignProfile] Active:', archetypeProfile);
-  
-  // Debug logging for brand handoff - confirms data flow from Generate.tsx
-  console.log('🎨 [LivePreview] Received props:', {
-    colorMode,
-    industryVariant,
-    logoUrl: brandSettings?.logoUrl,
-    primaryColor: brandSettings?.primaryColor,
-    companyName: brandSettings?.companyName,
-    archetype: archetypeProfile,
-  });
+  // Stabilize brandSettings to prevent re-renders from object identity changes
+  const stableBrandPrimaryColor = brandSettings?.primaryColor || null;
+  const stableBrandLogoUrl = brandSettings?.logoUrl || null;
+  const stableBrandCompanyName = brandSettings?.companyName || null;
   
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [aiChatSection, setAiChatSection] = useState<{ index: number; type: string; content: any } | null>(null);
