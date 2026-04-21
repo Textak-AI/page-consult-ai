@@ -89,17 +89,19 @@ export function ProgressRail({ currentStep, flowState, className, onMilestone }:
     setTimeout(() => setShakingStep(null), 400);
   };
 
-  // Desktop height: 72px, Tablet: 64px, Mobile: 56px
-  const railHeight = isMobile ? 'h-14' : isTablet ? 'h-16' : 'h-[72px]';
+  // Content-driven height — avoids padding stealing from a fixed height and
+  // clipping the label/score badge below the circle.
+  const railMinHeight = isMobile ? 'min-h-28' : isTablet ? 'min-h-32' : 'min-h-36';
 
   return (
     <TooltipProvider delayDuration={200}>
       <div className={cn(
-        'w-full bg-gradient-to-b from-slate-900/80 to-transparent flex-shrink-0 pt-4 md:pt-5 lg:pt-6',
-        railHeight,
+        'w-full bg-gradient-to-b from-slate-900/80 to-transparent flex-shrink-0',
+        'pt-6 pb-10 md:pt-8 md:pb-12 lg:pt-10 lg:pb-14',
+        railMinHeight,
         className
       )}>
-        <div className="h-full max-w-4xl mx-auto px-6 flex items-center">
+        <div className="px-8 md:px-12 lg:px-16 flex items-center">
           <div className="flex items-center justify-between w-full">
             {steps.map((step, index) => {
               const status = stepStatuses[step.id];
@@ -224,7 +226,7 @@ export function ProgressRail({ currentStep, flowState, className, onMilestone }:
 
                         {/* Label - Desktop: always visible, Tablet: always visible, Mobile: current only */}
                         <span className={cn(
-                          'mt-1 text-xs font-medium transition-colors whitespace-nowrap',
+                          'mt-2 text-xs font-medium transition-colors whitespace-nowrap',
                           status.current && 'text-purple-300',
                           status.completed && !status.current && 'text-cyan-400',
                           status.available && !status.current && !status.completed && 'text-slate-300 group-hover:text-white',
