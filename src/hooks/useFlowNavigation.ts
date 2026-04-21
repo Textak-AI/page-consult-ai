@@ -56,18 +56,18 @@ export function useFlowNavigation(
   const stepStatuses = useMemo((): Record<FlowStep, StepStatus> => {
     const { consultationScore, brandVisited, strategyVisited } = flowState;
 
-    // Brand is the entry point - always available
-    const brandCompleted = brandVisited;
+    // A step can only be "completed" once the user has moved past it —
+    // being currently on a step means "in progress", not "done".
+    const isPast = (stepId: FlowStep) => currentStep !== stepId;
 
-    // Wizard unlocked once Brand has been visited
+    const brandCompleted = brandVisited && isPast('brand');
+
     const wizardUnlocked = brandVisited;
-    const wizardCompleted = consultationScore >= 70;
+    const wizardCompleted = consultationScore >= 70 && isPast('wizard');
 
-    // Huddle unlocked once wizard score reaches readiness threshold
     const huddleUnlocked = consultationScore >= 70;
-    const huddleCompleted = strategyVisited;
+    const huddleCompleted = strategyVisited && isPast('huddle');
 
-    // Generate unlocked once huddle has been visited
     const generateUnlocked = strategyVisited;
 
     return {

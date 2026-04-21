@@ -1597,24 +1597,22 @@ export default function EnhancedBrandSetup() {
   );
 
   // Build flow state for ProgressRail - MUST be before any conditional returns (Rules of Hooks)
-  // Extract primitive values for stable dependencies to avoid infinite re-renders
-  const demoReadiness = demoSession?.readiness;
-  const demoIntelReadiness = (demoSession?.extracted_intelligence as any)?.readinessScore;
   const consultationIdFromParams = searchParams.get('consultationId');
-  
+
   const flowState: FlowState = useMemo(() => {
-    // Get consultation score from demo session or consultation
-    const consultationScore = demoReadiness || demoIntelReadiness || 70; // Default to 70 if we're on brand setup (means consultation passed)
-    
+    // Brand Setup is the flow entry point — nothing downstream is done yet when
+    // the user first lands here. Leaving brandVisited=false here keeps the rail
+    // honest; useFlowNavigation additionally guards against "current && visited"
+    // being rendered as "completed".
     return {
-      consultationScore,
-      briefGenerated: true, // Brief was generated to reach brand setup
-      brandVisited: true, // We're on brand setup
+      consultationScore: 0,
+      briefGenerated: false,
+      brandVisited: false,
       strategyVisited: false,
       sessionId: sessionId || consultationIdFromParams,
       consultationId: consultationIdFromParams,
     };
-  }, [demoReadiness, demoIntelReadiness, sessionId, consultationIdFromParams]);
+  }, [sessionId, consultationIdFromParams]);
 
   // Show loading state while fetching session
   if (isLoadingSession) {
