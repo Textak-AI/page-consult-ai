@@ -1,13 +1,9 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
-interface DefaultHeroProps {
-  onStartConsultation: () => void;
-  isNavigating?: boolean;
-}
-
-export function DefaultHero({ onStartConsultation, isNavigating }: DefaultHeroProps) {
+export function DefaultHero() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -15,7 +11,7 @@ export function DefaultHero({ onStartConsultation, isNavigating }: DefaultHeroPr
       transition={{ duration: 0.5 }}
     >
       {/* Default headline */}
-      <h1 
+      <h1
         className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight antialiased mb-6 leading-[0.95]"
       >
         <span className="block">Landing Pages</span>
@@ -29,26 +25,35 @@ export function DefaultHero({ onStartConsultation, isNavigating }: DefaultHeroPr
           </span>
         </span>
       </h1>
-      
+
       {/* Default subheadline */}
       <p className="text-lg md:text-xl text-gray-300 leading-relaxed mb-8">
-        AI consultant asks intelligent questions, then builds professional
-        pages proven to convert. No templates. No guesswork.
+        Answer a few questions. Get a strategy-backed landing page built for your buyers — in minutes.
       </p>
-      
-      {/* CTA button */}
-      <div className="mb-6 p-2 -m-2">
+
+      {/* CTA buttons */}
+      <div className="mb-6 p-2 -m-2 flex flex-wrap items-center gap-4">
         <Button
-          onClick={onStartConsultation}
-          disabled={isNavigating}
-          size="lg" 
+          asChild
+          size="lg"
           className="group/btn text-lg px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white border-0 animate-pulse-glow hover:scale-105 rounded-xl font-semibold transition-all duration-300"
         >
-          <span className="relative z-10">Start Strategic Consultation</span>
-          <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover/btn:translate-x-1" />
+          <Link to="/brand-setup">
+            <span className="relative z-10">Analyze My Website Free</span>
+            <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover/btn:translate-x-1" />
+          </Link>
+        </Button>
+
+        <Button
+          asChild
+          variant="outline"
+          size="lg"
+          className="text-lg px-8 py-4 rounded-xl font-semibold border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white transition-all duration-300"
+        >
+          <a href="#how-it-works">See How It Works</a>
         </Button>
       </div>
-      
+
       {/* Credit card disclaimer */}
       <p className="text-gray-500 text-sm text-center sm:text-left">
         No credit card required • See results in 3 seconds

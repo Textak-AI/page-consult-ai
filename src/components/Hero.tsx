@@ -4,7 +4,6 @@ import { useContext, useState, useEffect } from "react";
 import IntelligenceContext from "@/contexts/IntelligenceContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { TrendingUp, Clock } from "lucide-react";
 import { DefaultHero } from "@/components/landing/DefaultHero";
 import { PersonalizedHero, type PersonalizedContent } from "@/components/landing/PersonalizedHero";
 import { GeneratingHero } from "@/components/landing/GeneratingHero";
@@ -202,10 +201,7 @@ const Hero = () => {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <DefaultHero
-                    onStartConsultation={handleStartConsultation}
-                    isNavigating={isNavigating}
-                  />
+                  <DefaultHero />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -221,34 +217,6 @@ const Hero = () => {
             <HeroFlowAnimation />
           </motion.div>
         </div>
-
-        {/* Stats row - BELOW grid, CENTERED */}
-        <motion.div 
-          className="flex flex-wrap justify-center gap-6 mt-16 max-w-2xl mx-auto"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-        >
-          <div className="flex items-center gap-3 bg-card/40 backdrop-blur-xl border border-border rounded-lg px-5 py-3">
-            <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-success" />
-            </div>
-            <div>
-              <div className="text-lg font-bold text-success">3.4x more conversions</div>
-              <div className="text-xs text-muted-foreground">with interactive tools</div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3 bg-card/40 backdrop-blur-xl border border-border rounded-lg px-5 py-3">
-            <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-secondary" />
-            </div>
-            <div>
-              <div className="text-lg font-bold text-secondary">10 min average</div>
-              <div className="text-xs text-muted-foreground">to build your page</div>
-            </div>
-          </div>
-        </motion.div>
 
         {/* Scroll indicator */}
         <div className="text-center mt-12">
