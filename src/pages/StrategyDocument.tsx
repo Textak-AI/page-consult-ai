@@ -468,7 +468,7 @@ export default function StrategyDocument() {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       {/* Progress Rail */}
-      <ProgressRail currentStep="strategy" flowState={flowState} data-pdf-ignore="true" />
+      <ProgressRail currentStep="huddle" flowState={flowState} data-pdf-ignore="true" />
       
       {/* Header Section */}
       <header className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-b border-purple-500/20 p-8" data-pdf-ignore="true">

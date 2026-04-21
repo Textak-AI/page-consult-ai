@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, FileText, Palette, Map, Rocket, Lock, Check, Sparkles } from 'lucide-react';
+import { MessageSquare, Palette, Map, Rocket, Lock, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useFlowNavigation, type FlowStep, type FlowState, FLOW_STEPS } from '@/hooks/useFlowNavigation';
+import { useFlowNavigation, type FlowStep, type FlowState } from '@/hooks/useFlowNavigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import confetti from 'canvas-confetti';
@@ -15,10 +15,9 @@ interface ProgressRailProps {
 }
 
 const STEP_ICONS: Record<FlowStep, React.ComponentType<{ className?: string }>> = {
-  consultation: MessageSquare,
-  brief: FileText,
   brand: Palette,
-  strategy: Map,
+  wizard: MessageSquare,
+  huddle: Map,
   generate: Rocket,
 };
 
@@ -56,12 +55,12 @@ export function ProgressRail({ currentStep, flowState, className, onMilestone }:
     // Find newly unlocked steps
     const newlyUnlocked = [...unlockedSteps].filter(step => !prevUnlockedSteps.has(step));
     
-    if (newlyUnlocked.includes('brief') && !hasTriggeredBriefMilestone.current) {
+    if (newlyUnlocked.includes('huddle') && !hasTriggeredBriefMilestone.current) {
       hasTriggeredBriefMilestone.current = true;
-      setCelebratingStep('brief');
+      setCelebratingStep('huddle');
       onMilestone?.('brief_unlocked');
-      
-      // Trigger confetti from the brief node
+
+      // Trigger confetti from the huddle node
       if (briefNodeRef.current && !prefersReducedMotion) {
         const rect = briefNodeRef.current.getBoundingClientRect();
         const x = (rect.left + rect.width / 2) / window.innerWidth;
@@ -141,7 +140,7 @@ export function ProgressRail({ currentStep, flowState, className, onMilestone }:
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <motion.button
-                        ref={step.id === 'brief' ? briefNodeRef : undefined}
+                        ref={step.id === 'huddle' ? briefNodeRef : undefined}
                         onClick={() => {
                           if (status.locked) {
                             handleLockedClick(step.id);
@@ -237,7 +236,7 @@ export function ProgressRail({ currentStep, flowState, className, onMilestone }:
                         </span>
 
                         {/* Score badge for completed consultation */}
-                        {step.id === 'consultation' && status.score && !status.current && (
+                        {step.id === 'wizard' && status.score && !status.current && (
                           <motion.span 
                             className={cn(
                               'mt-0.5 text-[10px] font-medium',

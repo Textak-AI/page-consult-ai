@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-export type FlowStep = 'consultation' | 'brief' | 'brand' | 'strategy' | 'generate';
+export type FlowStep = 'brand' | 'wizard' | 'huddle' | 'generate';
 
 export interface FlowStepInfo {
   id: FlowStep;
@@ -12,10 +12,9 @@ export interface FlowStepInfo {
 }
 
 export const FLOW_STEPS: FlowStepInfo[] = [
-  { id: 'consultation', label: 'Consultation', shortLabel: 'Consult', path: '/try', icon: '💬' },
-  { id: 'brief', label: 'Brief', shortLabel: 'Brief', path: '/brief', icon: '📋' },
   { id: 'brand', label: 'Brand Setup', shortLabel: 'Brand', path: '/brand-setup', icon: '🎨' },
-  { id: 'strategy', label: 'Strategy', shortLabel: 'Strategy', path: '/strategy-document', icon: '📋' },
+  { id: 'wizard', label: 'Consultation', shortLabel: 'Consult', path: '/wizard', icon: '💬' },
+  { id: 'huddle', label: 'Strategy', shortLabel: 'Strategy', path: '/huddle', icon: '🗺️' },
   { id: 'generate', label: 'Generate', shortLabel: 'Generate', path: '/generate', icon: '🚀' },
 ];
 
@@ -55,54 +54,43 @@ export function useFlowNavigation(
 
   // Calculate step statuses
   const stepStatuses = useMemo((): Record<FlowStep, StepStatus> => {
-    const { consultationScore, briefGenerated, brandVisited, strategyVisited } = flowState;
-    
-    // Consultation is always available
-    const consultationCompleted = consultationScore >= 70;
-    
-    // Brief unlocked when consultation score >= 70
-    const briefUnlocked = consultationScore >= 70;
-    const briefCompleted = briefGenerated;
-    
-    // Brand unlocked when brief is complete
-    const brandUnlocked = briefCompleted;
+    const { consultationScore, brandVisited, strategyVisited } = flowState;
+
+    // Brand is the entry point - always available
     const brandCompleted = brandVisited;
-    
-    // Strategy unlocked when brand step visited
-    const strategyUnlocked = brandVisited;
-    const strategyCompleted = strategyVisited;
-    
-    // Generate unlocked when strategy step visited
+
+    // Wizard unlocked once Brand has been visited
+    const wizardUnlocked = brandVisited;
+    const wizardCompleted = consultationScore >= 70;
+
+    // Huddle unlocked once wizard score reaches readiness threshold
+    const huddleUnlocked = consultationScore >= 70;
+    const huddleCompleted = strategyVisited;
+
+    // Generate unlocked once huddle has been visited
     const generateUnlocked = strategyVisited;
 
     return {
-      consultation: {
-        completed: consultationCompleted,
-        current: currentStep === 'consultation',
-        available: true,
-        locked: false,
-        score: consultationScore > 0 ? `${consultationScore} pts` : undefined,
-      },
-      brief: {
-        completed: briefCompleted,
-        current: currentStep === 'brief',
-        available: briefUnlocked,
-        locked: !briefUnlocked,
-        lockReason: 'Reach 70 pts to unlock',
-      },
       brand: {
         completed: brandCompleted,
         current: currentStep === 'brand',
-        available: brandUnlocked,
-        locked: !brandUnlocked,
-        lockReason: 'Generate brief to unlock',
+        available: true,
+        locked: false,
       },
-      strategy: {
-        completed: strategyCompleted,
-        current: currentStep === 'strategy',
-        available: strategyUnlocked,
-        locked: !strategyUnlocked,
+      wizard: {
+        completed: wizardCompleted,
+        current: currentStep === 'wizard',
+        available: wizardUnlocked,
+        locked: !wizardUnlocked,
+        score: consultationScore > 0 ? `${consultationScore} pts` : undefined,
         lockReason: 'Complete brand setup to unlock',
+      },
+      huddle: {
+        completed: huddleCompleted,
+        current: currentStep === 'huddle',
+        available: huddleUnlocked,
+        locked: !huddleUnlocked,
+        lockReason: 'Reach 70 pts to unlock',
       },
       generate: {
         completed: false, // Generate is the final step
@@ -128,8 +116,8 @@ export function useFlowNavigation(
     // Build URL with session ID
     let url = stepInfo.path;
     if (sessionIdentifier) {
-      if (step === 'strategy') {
-        // Strategy uses consultationId param
+      if (step === 'huddle') {
+        // Huddle uses consultationId param
         url = `${stepInfo.path}?consultationId=${sessionIdentifier}`;
       } else if (step === 'generate') {
         // Generate uses id param

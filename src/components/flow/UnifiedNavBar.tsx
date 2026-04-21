@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { MessageSquare, FileText, Palette, Map, Rocket, Lock, Check } from 'lucide-react';
+import { MessageSquare, Palette, Map, Rocket, Lock, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFlowNavigation, type FlowStep, type FlowState } from '@/hooks/useFlowNavigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -9,19 +9,14 @@ interface UnifiedNavBarProps {
   currentStep: FlowStep;
   flowState: FlowState;
   className?: string;
-  /** Custom handler for Brief step click - if provided, will be called instead of navigation */
-  onBriefClick?: () => void;
   /** Custom handler for Brand step click - if provided, will be called instead of navigation */
   onBrandClick?: () => void;
-  /** If true, Brief step is marked as complete */
-  briefComplete?: boolean;
 }
 
 const STEP_ICONS: Record<FlowStep, React.ComponentType<{ className?: string }>> = {
-  consultation: MessageSquare,
-  brief: FileText,
   brand: Palette,
-  strategy: Map,
+  wizard: MessageSquare,
+  huddle: Map,
   generate: Rocket,
 };
 
@@ -30,46 +25,21 @@ const prefersReducedMotion = typeof window !== 'undefined'
   ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
   : false;
 
-export function UnifiedNavBar({ 
-  currentStep, 
-  flowState, 
+export function UnifiedNavBar({
+  currentStep,
+  flowState,
   className,
-  onBriefClick,
   onBrandClick,
-  briefComplete = false,
 }: UnifiedNavBarProps) {
   const { steps, stepStatuses, navigateToStep } = useFlowNavigation(currentStep, flowState);
   const isMobile = useIsMobile();
-  
-  // Override Brief step status if briefComplete is passed
-  const adjustedStepStatuses = { ...stepStatuses };
-  if (briefComplete && adjustedStepStatuses.brief) {
-    adjustedStepStatuses.brief = {
-      ...adjustedStepStatuses.brief,
-      completed: true,
-      available: true,
-      locked: false,
-    };
-    // Also unlock Brand step when Brief is complete
-    if (adjustedStepStatuses.brand) {
-      adjustedStepStatuses.brand = {
-        ...adjustedStepStatuses.brand,
-        available: true,
-        locked: false,
-      };
-    }
-  }
 
-  // Handle step click with custom handlers for Brief and Brand
+  const adjustedStepStatuses = stepStatuses;
+
+  // Handle step click with custom handler for Brand
   const handleStepClick = (step: FlowStep) => {
     const status = stepStatuses[step];
     if (status.locked) return;
-
-    // Brief step: use custom handler if provided
-    if (step === 'brief' && onBriefClick) {
-      onBriefClick();
-      return;
-    }
 
     // Brand step: use custom handler if provided
     if (step === 'brand' && onBrandClick) {

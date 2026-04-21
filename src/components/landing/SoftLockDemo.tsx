@@ -556,17 +556,6 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
     };
   }, [state.conversation.length, score.totalScore, state.extracted, state.market]);
 
-  // Handle Brief step click from Progress Rail
-  const handleBriefClick = useCallback(() => {
-    // Brief click should trigger the same action as "Generate Your Brief" button
-    if (score.totalScore >= 70) {
-      handleGenerateClick();
-    } else {
-      // If not ready, show a toast or feedback
-      console.log('[Brief Click] Score too low:', score.totalScore);
-    }
-  }, [score.totalScore]);
-
   // Handle Brand step click from Progress Rail
   const handleBrandClick = useCallback(() => {
     // Only allow Brand step if Brief is complete (score >= 70)
@@ -661,12 +650,10 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
 
             {/* Progress Navigation Bar - Flow steps only */}
             <div className="flex-shrink-0">
-              <UnifiedNavBar 
-                currentStep="consultation" 
+              <UnifiedNavBar
+                currentStep="wizard"
                 flowState={flowState}
-                onBriefClick={handleBriefClick}
                 onBrandClick={handleBrandClick}
-                briefComplete={score.totalScore >= 70}
               />
             </div>
 
