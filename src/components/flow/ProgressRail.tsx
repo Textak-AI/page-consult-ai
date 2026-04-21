@@ -101,7 +101,7 @@ export function ProgressRail({ currentStep, flowState, className, onMilestone }:
         railMinHeight,
         className
       )}>
-        <div className="px-8 md:px-12 lg:px-16 flex items-center">
+        <div className="max-w-3xl mx-auto px-6 md:px-8 flex items-center">
           <div className="flex items-center justify-between w-full">
             {steps.map((step, index) => {
               const status = stepStatuses[step.id];
