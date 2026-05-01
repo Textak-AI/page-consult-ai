@@ -1946,7 +1946,7 @@ export default function EnhancedBrandSetup() {
                )}
 
               {/* Extraction error - contextual inline message */}
-              {extractionError && !isAnalyzing && !extractionResults && (
+              {hasAttemptedExtraction && extractionError && !isAnalyzing && !extractionResults && (
                 <div className="mt-4 p-4 bg-amber-500/10 rounded-xl border border-amber-500/30">
                   <p className="text-sm text-amber-200">
                     {extractionError}
