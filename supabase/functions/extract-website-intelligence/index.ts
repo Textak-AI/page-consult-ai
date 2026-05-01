@@ -949,24 +949,37 @@ serve(async (req) => {
     };
     
     // Priority 1: Favicon/Apple touch icon (strongest signal - set by site owner)
-    const faviconPatterns = [
-      /<link[^>]*rel=["'](?:icon|shortcut icon)["'][^>]*href=["']([^"']+)["']/i,
-      /<link[^>]*href=["']([^"']+)["'][^>]*rel=["'](?:icon|shortcut icon)["']/i,
-      /<link[^>]*rel=["']apple-touch-icon[^"']*["'][^>]*href=["']([^"']+)["']/i,
-      /<link[^>]*href=["']([^"']+)["'][^>]*rel=["']apple-touch-icon[^"']*["']/i,
-    ];
-    
-    for (const pattern of faviconPatterns) {
-      const match = html.match(pattern);
-      if (match && match[1] && !match[1].startsWith('data:') && !match[1].includes('favicon.ico')) {
-        // Prefer larger icons (apple-touch-icon, etc.) over tiny favicons
-        const url = match[1];
-        if (url.includes('apple-touch') || url.includes('180x180') || url.includes('192x192') || url.includes('512x512')) {
-          extractedData.logoUrl = url;
-          console.log('[extract] Logo from favicon/apple-touch-icon:', extractedData.logoUrl);
-          break;
-        }
+    // Match each <link rel="icon"|"apple-touch-icon"> tag, then check size hints in attrs OR url
+    const linkIconMatches = html.matchAll(/<link\b[^>]*rel=["'](?:icon|shortcut icon|apple-touch-icon[^"']*)["'][^>]*>/gi);
+    let bestIconUrl: string | null = null;
+    let bestIconScore = -1;
+    for (const m of linkIconMatches) {
+      const tag = m[0];
+      const hrefMatch = tag.match(/href=["']([^"']+)["']/i);
+      if (!hrefMatch) continue;
+      const url = hrefMatch[1];
+      if (url.startsWith('data:')) continue;
+      // Skip the default tiny favicon.ico unless nothing else found
+      const isTinyFavicon = /favicon\.ico(\?|$)/i.test(url);
+      // Score: explicit large sizes attr or known large urls > apple-touch > anything else > tiny favicon
+      const sizesAttr = tag.match(/sizes=["']([^"']+)["']/i)?.[1] || '';
+      const sizeNumber = parseInt(sizesAttr.split('x')[0], 10) || 0;
+      let score = 0;
+      if (sizeNumber >= 192) score = 100;
+      else if (sizeNumber >= 96) score = 80;
+      else if (/apple-touch/i.test(tag)) score = 70;
+      else if (/(192x192|512x512|180x180|256x256)/i.test(url)) score = 90;
+      else if (/icon\.(png|svg|webp)/i.test(url)) score = 60;
+      else if (isTinyFavicon) score = 5;
+      else score = 30;
+      if (score > bestIconScore) {
+        bestIconScore = score;
+        bestIconUrl = url;
       }
+    }
+    if (bestIconUrl && bestIconScore >= 30) {
+      extractedData.logoUrl = bestIconUrl;
+      console.log('[extract] Logo from favicon/apple-touch-icon (score=' + bestIconScore + '):', extractedData.logoUrl);
     }
     
     // Priority 2: Extract header/nav section first for targeted search
