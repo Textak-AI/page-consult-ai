@@ -235,6 +235,7 @@ export default function EnhancedBrandSetup() {
   const [extractionResults, setExtractionResults] = useState<ExtractionResults | null>(null);
   const [extractionSuccess, setExtractionSuccess] = useState(false);
   const [extractionError, setExtractionError] = useState<string | null>(null);
+  const [hasAttemptedExtraction, setHasAttemptedExtraction] = useState(false);
   const [logo, setLogo] = useState<string | null>(null);
   const [colors, setColors] = useState(DEFAULT_COLORS);
   const [fontSettings, setFontSettings] = useState({
@@ -759,12 +760,6 @@ export default function EnhancedBrandSetup() {
     }
   }, [detectedFonts, customFonts]);
 
-  // Track if auto-extraction has been triggered
-  const [autoExtractTriggered, setAutoExtractTriggered] = useState(false);
-  
-  // Store pending URL for auto-extraction (will be processed after handleAnalyzeWebsite is defined)
-  const pendingAutoExtractRef = useRef<string | null>(null);
-  
   // Ref to capture latest brand data for save-on-unmount (avoids stale closure issue)
   const brandDataRef = useRef<{
     logo: string | null;
@@ -803,24 +798,6 @@ export default function EnhancedBrandSetup() {
     };
   }, [logo, colors, companyName, tagline, websiteUrl, fontSettings, extractionResults, communicationStyle, styleInspiration]);
 
-  // Check if we should queue auto-extraction
-  useEffect(() => {
-    // Only run once per session and when data is ready
-    if (autoExtractTriggered || isLoadingSession || isAnalyzing) return;
-    
-    // Check if we have a URL but no brand data
-    const hasUrl = websiteUrl && websiteUrl.trim().length > 0;
-    const hasLogo = logo && logo !== '';
-    const hasCustomColors = colors.primary !== DEFAULT_COLORS.primary;
-    
-    // If we have a URL but no logo or custom colors, queue extraction
-    if (hasUrl && !hasLogo && !hasCustomColors) {
-      console.log('🚀 [EnhancedBrandSetup] Queuing auto-extraction for:', websiteUrl);
-      pendingAutoExtractRef.current = websiteUrl;
-      setAutoExtractTriggered(true);
-    }
-  }, [websiteUrl, logo, colors, isLoadingSession, autoExtractTriggered, isAnalyzing]);
-
   // Calculate brand completeness
   const brandCompleteness = useMemo(() => {
     let score = 0;
@@ -847,6 +824,7 @@ export default function EnhancedBrandSetup() {
       return;
     }
 
+    setHasAttemptedExtraction(true);
     setIsAnalyzing(true);
     setExtractionError(null);
     try {
@@ -1001,20 +979,6 @@ export default function EnhancedBrandSetup() {
       setIsAnalyzing(false);
     }
   };
-
-  // Effect to trigger auto-extraction after handleAnalyzeWebsite is defined
-  useEffect(() => {
-    if (pendingAutoExtractRef.current && !isAnalyzing) {
-      console.log('🚀 [EnhancedBrandSetup] Executing queued auto-extraction for:', pendingAutoExtractRef.current);
-      pendingAutoExtractRef.current = null;
-      
-      // Delay slightly to ensure UI is ready
-      setTimeout(() => {
-        handleAnalyzeWebsite();
-      }, 500);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoExtractTriggered]);
 
   // Extract communication style from website copy
   const extractCommunicationStyle = async (pageCopy: string, company: string, industry: string) => {
@@ -1982,7 +1946,7 @@ export default function EnhancedBrandSetup() {
                )}
 
               {/* Extraction error - contextual inline message */}
-              {extractionError && !isAnalyzing && !extractionResults && (
+              {hasAttemptedExtraction && extractionError && !isAnalyzing && !extractionResults && (
                 <div className="mt-4 p-4 bg-amber-500/10 rounded-xl border border-amber-500/30">
                   <p className="text-sm text-amber-200">
                     {extractionError}
