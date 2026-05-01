@@ -98,13 +98,18 @@ export function BrandExtractor({ onExtracted, onSkip }: BrandExtractorProps) {
       {extracted && (
         <div className="p-4 rounded-lg border border-border bg-card space-y-3 animate-fade-in">
           <div className="flex items-center gap-3">
-            {extracted.faviconUrl && (
+            {(extracted.logoUrl || extracted.faviconUrl) && (
               <img
-                src={extracted.faviconUrl}
+                src={extracted.logoUrl || extracted.faviconUrl!}
                 alt=""
-                className="w-8 h-8 rounded object-contain bg-muted"
+                className="h-8 max-w-[120px] rounded object-contain bg-muted px-1"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
+                  const img = e.target as HTMLImageElement;
+                  if (extracted.faviconUrl && img.src !== extracted.faviconUrl) {
+                    img.src = extracted.faviconUrl;
+                  } else {
+                    img.style.display = 'none';
+                  }
                 }}
               />
             )}
