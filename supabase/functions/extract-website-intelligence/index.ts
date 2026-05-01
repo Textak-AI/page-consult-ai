@@ -509,6 +509,43 @@ serve(async (req) => {
     
     const headerBgMatch = html.match(/<header[^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/i);
     if (headerBgMatch) addColor(headerBgMatch[1], 'heroBg', 1);
+
+    // HIGHEST PRIORITY (1): Inline SVG logo fill colors (modern Next.js/SPA sites)
+    // Look for SVG inside <header> or <nav> - the fills there are real brand colors
+    const headerForSvgMatch = html.match(/<(?:header|nav)[^>]*>([\s\S]*?)<\/(?:header|nav)>/i);
+    if (headerForSvgMatch) {
+      const headerHtml = headerForSvgMatch[1];
+      // Find the first SVG (likely the logo)
+      const svgMatch = headerHtml.match(/<svg[^>]*>([\s\S]*?)<\/svg>/i);
+      if (svgMatch) {
+        const svgContent = svgMatch[0];
+        // Extract fill / stroke colors from the SVG (skip white/black/none/currentColor)
+        const fillMatches = svgContent.matchAll(/(?:fill|stroke)=["'](#[0-9a-fA-F]{3,8}|rgb[a]?\([^)]+\))["']/gi);
+        const seenSvgColors = new Set<string>();
+        for (const m of fillMatches) {
+          const c = m[1];
+          if (seenSvgColors.has(c.toLowerCase())) continue;
+          seenSvgColors.add(c.toLowerCase());
+          addColor(c, 'svgLogo', 1);
+        }
+      }
+    }
+
+    // HIGHEST PRIORITY (1): Top-level inline-style backgrounds (Next.js/SPA root wrappers)
+    // Sites like Next.js often set page bg via style="background:#xxxxxx" on a top div
+    const topLevelBgPatterns = [
+      /<(?:div|section|main)[^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/gi,
+      /<nav[^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/gi,
+    ];
+    let topLevelBgCount = 0;
+    for (const pattern of topLevelBgPatterns) {
+      const matches = html.matchAll(pattern);
+      for (const match of matches) {
+        if (topLevelBgCount >= 5) break; // Only first few to avoid noise
+        addColor(match[1], 'inline', 2);
+        topLevelBgCount++;
+      }
+    }
     
     // HIGHEST PRIORITY (1): CTA/primary button background-color
     const buttonInlinePatterns = [
@@ -912,24 +949,37 @@ serve(async (req) => {
     };
     
     // Priority 1: Favicon/Apple touch icon (strongest signal - set by site owner)
-    const faviconPatterns = [
-      /<link[^>]*rel=["'](?:icon|shortcut icon)["'][^>]*href=["']([^"']+)["']/i,
-      /<link[^>]*href=["']([^"']+)["'][^>]*rel=["'](?:icon|shortcut icon)["']/i,
-      /<link[^>]*rel=["']apple-touch-icon[^"']*["'][^>]*href=["']([^"']+)["']/i,
-      /<link[^>]*href=["']([^"']+)["'][^>]*rel=["']apple-touch-icon[^"']*["']/i,
-    ];
-    
-    for (const pattern of faviconPatterns) {
-      const match = html.match(pattern);
-      if (match && match[1] && !match[1].startsWith('data:') && !match[1].includes('favicon.ico')) {
-        // Prefer larger icons (apple-touch-icon, etc.) over tiny favicons
-        const url = match[1];
-        if (url.includes('apple-touch') || url.includes('180x180') || url.includes('192x192') || url.includes('512x512')) {
-          extractedData.logoUrl = url;
-          console.log('[extract] Logo from favicon/apple-touch-icon:', extractedData.logoUrl);
-          break;
-        }
+    // Match each <link rel="icon"|"apple-touch-icon"> tag, then check size hints in attrs OR url
+    const linkIconMatches = html.matchAll(/<link\b[^>]*rel=["'](?:icon|shortcut icon|apple-touch-icon[^"']*)["'][^>]*>/gi);
+    let bestIconUrl: string | null = null;
+    let bestIconScore = -1;
+    for (const m of linkIconMatches) {
+      const tag = m[0];
+      const hrefMatch = tag.match(/href=["']([^"']+)["']/i);
+      if (!hrefMatch) continue;
+      const url = hrefMatch[1];
+      if (url.startsWith('data:')) continue;
+      // Skip the default tiny favicon.ico unless nothing else found
+      const isTinyFavicon = /favicon\.ico(\?|$)/i.test(url);
+      // Score: explicit large sizes attr or known large urls > apple-touch > anything else > tiny favicon
+      const sizesAttr = tag.match(/sizes=["']([^"']+)["']/i)?.[1] || '';
+      const sizeNumber = parseInt(sizesAttr.split('x')[0], 10) || 0;
+      let score = 0;
+      if (sizeNumber >= 192) score = 100;
+      else if (sizeNumber >= 96) score = 80;
+      else if (/apple-touch/i.test(tag)) score = 70;
+      else if (/(192x192|512x512|180x180|256x256)/i.test(url)) score = 90;
+      else if (/icon\.(png|svg|webp)/i.test(url)) score = 60;
+      else if (isTinyFavicon) score = 5;
+      else score = 30;
+      if (score > bestIconScore) {
+        bestIconScore = score;
+        bestIconUrl = url;
       }
+    }
+    if (bestIconUrl && bestIconScore >= 30) {
+      extractedData.logoUrl = bestIconUrl;
+      console.log('[extract] Logo from favicon/apple-touch-icon (score=' + bestIconScore + '):', extractedData.logoUrl);
     }
     
     // Priority 2: Extract header/nav section first for targeted search
