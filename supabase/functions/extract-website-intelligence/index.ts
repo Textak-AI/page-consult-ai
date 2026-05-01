@@ -509,6 +509,43 @@ serve(async (req) => {
     
     const headerBgMatch = html.match(/<header[^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/i);
     if (headerBgMatch) addColor(headerBgMatch[1], 'heroBg', 1);
+
+    // HIGHEST PRIORITY (1): Inline SVG logo fill colors (modern Next.js/SPA sites)
+    // Look for SVG inside <header> or <nav> - the fills there are real brand colors
+    const headerForSvgMatch = html.match(/<(?:header|nav)[^>]*>([\s\S]*?)<\/(?:header|nav)>/i);
+    if (headerForSvgMatch) {
+      const headerHtml = headerForSvgMatch[1];
+      // Find the first SVG (likely the logo)
+      const svgMatch = headerHtml.match(/<svg[^>]*>([\s\S]*?)<\/svg>/i);
+      if (svgMatch) {
+        const svgContent = svgMatch[0];
+        // Extract fill / stroke colors from the SVG (skip white/black/none/currentColor)
+        const fillMatches = svgContent.matchAll(/(?:fill|stroke)=["'](#[0-9a-fA-F]{3,8}|rgb[a]?\([^)]+\))["']/gi);
+        const seenSvgColors = new Set<string>();
+        for (const m of fillMatches) {
+          const c = m[1];
+          if (seenSvgColors.has(c.toLowerCase())) continue;
+          seenSvgColors.add(c.toLowerCase());
+          addColor(c, 'svgLogo', 1);
+        }
+      }
+    }
+
+    // HIGHEST PRIORITY (1): Top-level inline-style backgrounds (Next.js/SPA root wrappers)
+    // Sites like Next.js often set page bg via style="background:#xxxxxx" on a top div
+    const topLevelBgPatterns = [
+      /<(?:div|section|main)[^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/gi,
+      /<nav[^>]*style=["'][^"']*background(?:-color)?:\s*([^;"']+)/gi,
+    ];
+    let topLevelBgCount = 0;
+    for (const pattern of topLevelBgPatterns) {
+      const matches = html.matchAll(pattern);
+      for (const match of matches) {
+        if (topLevelBgCount >= 5) break; // Only first few to avoid noise
+        addColor(match[1], 'inline', 2);
+        topLevelBgCount++;
+      }
+    }
     
     // HIGHEST PRIORITY (1): CTA/primary button background-color
     const buttonInlinePatterns = [
