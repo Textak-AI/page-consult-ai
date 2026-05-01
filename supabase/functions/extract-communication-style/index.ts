@@ -75,12 +75,12 @@ serve(async (req) => {
       });
     }
 
-    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!ANTHROPIC_API_KEY) {
-      throw new Error('ANTHROPIC_API_KEY not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Truncate text to avoid token limits (roughly 4000 chars = ~1000 tokens)
+    // Truncate text to avoid token limits
     const truncatedText = websiteText.slice(0, 8000);
 
     const userPrompt = `Analyze the communication style of this website copy for ${companyName || 'a company'}${industry ? ` in the ${industry} industry` : ''}:
@@ -93,34 +93,30 @@ Extract the brand voice and communication patterns.`;
 
     console.log('[extract-communication-style] Analyzing text length:', truncatedText.length);
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'google/gemini-2.5-flash',
         max_tokens: 1024,
         messages: [
-          {
-            role: 'user',
-            content: userPrompt
-          }
-        ],
-        system: SYSTEM_PROMPT
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userPrompt }
+        ]
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[extract-communication-style] Anthropic API error:', response.status, errorText);
-      throw new Error(`Anthropic API error: ${response.status}`);
+      console.error('[extract-communication-style] AI Gateway error:', response.status, errorText);
+      throw new Error(`AI Gateway error: ${response.status}`);
     }
 
     const data = await response.json();
-    const content = data.content?.[0]?.text;
+    const content = data.choices?.[0]?.message?.content;
 
     if (!content) {
       throw new Error('No content in Anthropic response');
