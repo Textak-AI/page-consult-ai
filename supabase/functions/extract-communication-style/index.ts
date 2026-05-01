@@ -157,11 +157,12 @@ Extract the brand voice and communication patterns.`;
     console.error('[extract-communication-style] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to extract communication style';
     const origin = req.headers.get('Origin');
+    // Return 200 with success:false so this non-critical step never blocks brand setup
     return new Response(JSON.stringify({
       success: false,
       error: errorMessage
     }), {
-      status: 500,
+      status: 200,
       headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' }
     });
   }
