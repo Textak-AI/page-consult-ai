@@ -71,9 +71,9 @@ serve(async (req) => {
       console.log('Could not fetch about page');
     }
 
-    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!ANTHROPIC_API_KEY) {
-      throw new Error('ANTHROPIC_API_KEY not configured');
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
     const analysisPrompt = `You are a senior landing page strategist. Analyze this website and extract everything needed for a high-converting landing page.
