@@ -235,6 +235,7 @@ export default function EnhancedBrandSetup() {
   const [extractionResults, setExtractionResults] = useState<ExtractionResults | null>(null);
   const [extractionSuccess, setExtractionSuccess] = useState(false);
   const [extractionError, setExtractionError] = useState<string | null>(null);
+  const [hasAttemptedExtraction, setHasAttemptedExtraction] = useState(false);
   const [logo, setLogo] = useState<string | null>(null);
   const [colors, setColors] = useState(DEFAULT_COLORS);
   const [fontSettings, setFontSettings] = useState({
@@ -759,12 +760,6 @@ export default function EnhancedBrandSetup() {
     }
   }, [detectedFonts, customFonts]);
 
-  // Track if auto-extraction has been triggered
-  const [autoExtractTriggered, setAutoExtractTriggered] = useState(false);
-  
-  // Store pending URL for auto-extraction (will be processed after handleAnalyzeWebsite is defined)
-  const pendingAutoExtractRef = useRef<string | null>(null);
-  
   // Ref to capture latest brand data for save-on-unmount (avoids stale closure issue)
   const brandDataRef = useRef<{
     logo: string | null;
