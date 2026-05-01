@@ -440,7 +440,7 @@ export default function StrategyDocument() {
     consultationId: consultationId || undefined,
   }), [score.totalScore, consultationId]);
 
-  const { goBack } = useFlowNavigation('strategy', flowState);
+  const { goBack } = useFlowNavigation('huddle', flowState);
 
   if (loading) {
     return (
