@@ -798,24 +798,6 @@ export default function EnhancedBrandSetup() {
     };
   }, [logo, colors, companyName, tagline, websiteUrl, fontSettings, extractionResults, communicationStyle, styleInspiration]);
 
-  // Check if we should queue auto-extraction
-  useEffect(() => {
-    // Only run once per session and when data is ready
-    if (autoExtractTriggered || isLoadingSession || isAnalyzing) return;
-    
-    // Check if we have a URL but no brand data
-    const hasUrl = websiteUrl && websiteUrl.trim().length > 0;
-    const hasLogo = logo && logo !== '';
-    const hasCustomColors = colors.primary !== DEFAULT_COLORS.primary;
-    
-    // If we have a URL but no logo or custom colors, queue extraction
-    if (hasUrl && !hasLogo && !hasCustomColors) {
-      console.log('🚀 [EnhancedBrandSetup] Queuing auto-extraction for:', websiteUrl);
-      pendingAutoExtractRef.current = websiteUrl;
-      setAutoExtractTriggered(true);
-    }
-  }, [websiteUrl, logo, colors, isLoadingSession, autoExtractTriggered, isAnalyzing]);
-
   // Calculate brand completeness
   const brandCompleteness = useMemo(() => {
     let score = 0;
@@ -842,6 +824,7 @@ export default function EnhancedBrandSetup() {
       return;
     }
 
+    setHasAttemptedExtraction(true);
     setIsAnalyzing(true);
     setExtractionError(null);
     try {
@@ -996,20 +979,6 @@ export default function EnhancedBrandSetup() {
       setIsAnalyzing(false);
     }
   };
-
-  // Effect to trigger auto-extraction after handleAnalyzeWebsite is defined
-  useEffect(() => {
-    if (pendingAutoExtractRef.current && !isAnalyzing) {
-      console.log('🚀 [EnhancedBrandSetup] Executing queued auto-extraction for:', pendingAutoExtractRef.current);
-      pendingAutoExtractRef.current = null;
-      
-      // Delay slightly to ensure UI is ready
-      setTimeout(() => {
-        handleAnalyzeWebsite();
-      }, 500);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoExtractTriggered]);
 
   // Extract communication style from website copy
   const extractCommunicationStyle = async (pageCopy: string, company: string, industry: string) => {
