@@ -349,7 +349,76 @@ function extractFonts(html: string): { heading: string | null; body: string | nu
   return fonts;
 }
 
+function extractInlineSvgLogo(html: string): string | null {
+  // Find first <header> or <nav> block (modern sites put logo SVG inline here)
+  const containerMatch = html.match(/<(header|nav)[^>]*>([\s\S]*?)<\/\1>/i);
+  if (!containerMatch) return null;
+  const container = containerMatch[2];
+
+  // Find all SVGs inside the container
+  const svgMatches = [...container.matchAll(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi)];
+  if (svgMatches.length === 0) return null;
+
+  // Score SVGs: prefer wider ones (wordmarks) over square icons
+  let bestSvg: string | null = null;
+  let bestScore = -1;
+
+  for (const m of svgMatches) {
+    const svg = m[0];
+
+    // Skip tiny SVGs (likely icons: arrows, menu, social) — must have meaningful content
+    if (svg.length < 120) continue;
+
+    // Skip if it looks like a UI icon (single path, no fill colors, common icon viewBox)
+    const pathCount = (svg.match(/<(path|polygon|rect|circle|ellipse)\b/gi) || []).length;
+    if (pathCount < 2) continue;
+
+    // Parse viewBox to estimate aspect ratio
+    const viewBoxMatch = svg.match(/viewBox=["']([\d.\-\s]+)["']/i);
+    let aspectRatio = 1;
+    let area = 0;
+    if (viewBoxMatch) {
+      const parts = viewBoxMatch[1].trim().split(/\s+/).map(Number);
+      if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
+        aspectRatio = parts[2] / parts[3];
+        area = parts[2] * parts[3];
+      }
+    }
+
+    // Score: wider = more likely a wordmark logo; more paths = more detailed
+    let score = pathCount * 10;
+    if (aspectRatio > 2) score += 50;        // wordmark
+    else if (aspectRatio > 1.2) score += 20; // logo + text
+    if (area > 1000) score += 10;
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestSvg = svg;
+    }
+  }
+
+  if (!bestSvg) return null;
+
+  // Ensure xmlns is present (required for data URL rendering)
+  if (!/xmlns=/i.test(bestSvg)) {
+    bestSvg = bestSvg.replace(/<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+
+  // Encode as data URL
+  const encoded = encodeURIComponent(bestSvg)
+    .replace(/'/g, '%27')
+    .replace(/"/g, '%22');
+  return `data:image/svg+xml;utf8,${encoded}`;
+}
+
 function extractLogo(html: string, baseUrl: URL): string | null {
+  // Priority 0: Inline SVG logo in header/nav (modern Next.js, React sites)
+  const inlineSvg = extractInlineSvgLogo(html);
+  if (inlineSvg) {
+    console.log('[Brand Extraction] Found inline SVG logo');
+    return inlineSvg;
+  }
+
   // Priority 1: Logo in header/nav
   const headerLogoPatterns = [
     /<(?:header|nav)[^>]*>[\s\S]*?<img[^>]*src=["']([^"']+)["'][^>]*(?:class|alt)=["'][^"']*logo/i,
