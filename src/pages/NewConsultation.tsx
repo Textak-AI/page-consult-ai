@@ -554,10 +554,11 @@ export default function NewConsultation() {
         },
       });
     } catch (error) {
-      console.error("Error saving consultation:", error);
+      console.error("🚀 [StrategyBrief] Generation result: ERROR", error);
+      const message = error instanceof Error ? error.message : 'Failed to save consultation. Please try again.';
       toast({
-        title: "Error",
-        description: "Failed to save consultation. Please try again.",
+        title: "Couldn't generate page",
+        description: message,
         variant: "destructive",
       });
       console.log('🔄 setStage called:', 'brief-review', 'from: handleBriefApproved error');
