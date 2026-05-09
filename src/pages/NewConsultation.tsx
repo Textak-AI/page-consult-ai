@@ -441,8 +441,31 @@ export default function NewConsultation() {
 
   // Handle brief approval - navigate to generate with all data
   const handleBriefApproved = async () => {
-    if (!userId || !consultationData) return;
-    
+    console.log('🚀 [StrategyBrief] Approve & Generate clicked', {
+      hasUserId: !!userId,
+      hasConsultationData: !!consultationData,
+      hasStructuredBrief: !!structuredBrief,
+      timestamp: Date.now(),
+    });
+
+    if (!userId) {
+      toast({
+        title: 'Sign in required',
+        description: 'Please sign in to generate your page.',
+        variant: 'destructive',
+      });
+      navigate('/auth?redirect=/new-consultation');
+      return;
+    }
+    if (!consultationData) {
+      toast({
+        title: 'Missing brief data',
+        description: 'Your consultation data was lost. Please restart the wizard.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     console.log('🔄 setStage called:', 'generating', 'from: handleBriefApproved');
     setStage('generating');
     
