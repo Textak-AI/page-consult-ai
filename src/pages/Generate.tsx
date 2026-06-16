@@ -345,6 +345,7 @@ function GenerateContent() {
   const [consultation, setConsultation] = useState<any>(null);
   const [pageData, setPageData] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([]);
+  const [generationError, setGenerationError] = useState<string | null>(null);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
@@ -1366,6 +1367,7 @@ function GenerateContent() {
   const startGeneration = async (consultationData: any, userId: string) => {
     // Start generation immediately, show loading UI
     // Show unified generation flow
+    setGenerationError(null);
     setPhase("generating");
     setIsGenerating(true);
 
@@ -1380,12 +1382,13 @@ function GenerateContent() {
       setProgress(100);
     } catch (error) {
       clearInterval(progressInterval);
-      throw error;
+      setIsGenerating(false);
     }
   };
 
   // Dev mode generation - skips database operations
   const startDevGeneration = async (consultationData: any) => {
+    setGenerationError(null);
     setPhase("generating");
     setIsGenerating(true);
 
@@ -2054,10 +2057,11 @@ function GenerateContent() {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       toast({
         title: "Generation failed",
-        description: `Error: ${errorMessage}. Please try again.`,
+        description: "We couldn't generate your page. Please try again.",
         variant: "destructive",
       });
-      navigate("/#demo");
+      setGenerationError(errorMessage);
+      setIsGenerating(false);
     }
   };
 
@@ -2517,15 +2521,14 @@ function GenerateContent() {
         fullError: error,
       });
 
-      // Show error to user
       toast({
-        title: "AI Content Generation Failed",
-        description: `Error: ${errorMessage}. Using template content instead.`,
+        title: "Generation failed",
+        description: "We couldn't generate your page. Please try again.",
         variant: "destructive",
       });
 
-      // Fallback to template-based generation
-      return await generateFallbackSections(consultationData);
+      setGenerationError(errorMessage);
+      return [];
     }
   };
 
@@ -5154,60 +5157,61 @@ function GenerateContent() {
 
   // Handle full page regeneration - deletes existing page and triggers fresh generation
   const handleRegeneratePage = async () => {
-    if (!pageData?.id) {
-      console.log('🔄 [Generate] No existing page to regenerate');
-      return;
+    setGenerationError(null);
+
+    if (pageData?.id) {
+      const confirmed = window.confirm(
+        'This will delete the current page and generate a fresh one with the latest layout logic. Continue?'
+      );
+      if (!confirmed) return;
+
+      setIsRegenerating(true);
+      console.log('🔄 [Generate] User requested page regeneration');
+      console.log('🗑️ [Generate] Deleting page:', pageData.id);
+
+      try {
+        // Delete existing page
+        const { error } = await supabase
+          .from('landing_pages')
+          .delete()
+          .eq('id', pageData.id);
+
+        if (error) throw error;
+
+        console.log('✅ [Generate] Deleted existing page, triggering fresh generation');
+      } catch (err) {
+        console.error('❌ [Generate] Failed to delete page:', err);
+        toast({
+          title: "Failed to regenerate page",
+          description: "Could not delete existing page. Please try again.",
+          variant: "destructive",
+        });
+        setIsRegenerating(false);
+        return;
+      } finally {
+        setIsRegenerating(false);
+      }
     }
-    
-    const confirmed = window.confirm(
-      'This will delete the current page and generate a fresh one with the latest layout logic. Continue?'
-    );
-    if (!confirmed) return;
-    
-    setIsRegenerating(true);
-    console.log('🔄 [Generate] User requested page regeneration');
-    console.log('🗑️ [Generate] Deleting page:', pageData.id);
-    
-    try {
-      // Delete existing page
-      const { error } = await supabase
-        .from('landing_pages')
-        .delete()
-        .eq('id', pageData.id);
-      
-      if (error) throw error;
-      
-      console.log('✅ [Generate] Deleted existing page, triggering fresh generation');
-      console.log('🚀 [Generate] Starting fresh generation...');
-      
-      // Clear page data to trigger fresh generation
-      setPageData(null);
-      setExistingPageLoaded(false);
-      setSections([]);
-      
-      // Reset phase to generating
-      setPhase("generating");
-      setIsGenerating(true);
-      setProgress(0);
-      
-      // Re-navigate with force regenerate to trigger the generation flow
-      const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.set('regenerate', 'true');
-      window.history.replaceState({}, '', currentUrl.toString());
-      
-      // Force reload the component to trigger generation with new layout templates
-      window.location.reload();
-      
-    } catch (err) {
-      console.error('❌ [Generate] Failed to delete page:', err);
-      toast({
-        title: "Failed to regenerate page",
-        description: "Could not delete existing page. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRegenerating(false);
-    }
+
+    console.log('🚀 [Generate] Starting fresh generation...');
+
+    // Clear page data to trigger fresh generation
+    setPageData(null);
+    setExistingPageLoaded(false);
+    setSections([]);
+
+    // Reset phase to generating
+    setPhase("generating");
+    setIsGenerating(true);
+    setProgress(0);
+
+    // Re-navigate with force regenerate to trigger the generation flow
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('regenerate', 'true');
+    window.history.replaceState({}, '', currentUrl.toString());
+
+    // Force reload the component to trigger generation with new layout templates
+    window.location.reload();
   };
 
   // Handle regeneration of a single section
@@ -5341,6 +5345,34 @@ function GenerateContent() {
       window.open(`/preview/${pageData.slug}`, "_blank");
     }
   };
+
+  // Error state takes precedence over all other UI
+  if (generationError) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              We couldn't generate your page
+            </h1>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {generationError}
+            </p>
+          </div>
+          <Button
+            onClick={handleRegeneratePage}
+            className="inline-flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // Unified Generation Phase - single loading experience
   if (phase === "generating") {
