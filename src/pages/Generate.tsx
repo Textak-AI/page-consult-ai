@@ -5158,60 +5158,60 @@ function GenerateContent() {
   // Handle full page regeneration - deletes existing page and triggers fresh generation
   const handleRegeneratePage = async () => {
     setGenerationError(null);
-    if (!pageData?.id) {
-      console.log('🔄 [Generate] No existing page to regenerate');
-      return;
+
+    if (pageData?.id) {
+      const confirmed = window.confirm(
+        'This will delete the current page and generate a fresh one with the latest layout logic. Continue?'
+      );
+      if (!confirmed) return;
+
+      setIsRegenerating(true);
+      console.log('🔄 [Generate] User requested page regeneration');
+      console.log('🗑️ [Generate] Deleting page:', pageData.id);
+
+      try {
+        // Delete existing page
+        const { error } = await supabase
+          .from('landing_pages')
+          .delete()
+          .eq('id', pageData.id);
+
+        if (error) throw error;
+
+        console.log('✅ [Generate] Deleted existing page, triggering fresh generation');
+      } catch (err) {
+        console.error('❌ [Generate] Failed to delete page:', err);
+        toast({
+          title: "Failed to regenerate page",
+          description: "Could not delete existing page. Please try again.",
+          variant: "destructive",
+        });
+        setIsRegenerating(false);
+        return;
+      } finally {
+        setIsRegenerating(false);
+      }
     }
-    
-    const confirmed = window.confirm(
-      'This will delete the current page and generate a fresh one with the latest layout logic. Continue?'
-    );
-    if (!confirmed) return;
-    
-    setIsRegenerating(true);
-    console.log('🔄 [Generate] User requested page regeneration');
-    console.log('🗑️ [Generate] Deleting page:', pageData.id);
-    
-    try {
-      // Delete existing page
-      const { error } = await supabase
-        .from('landing_pages')
-        .delete()
-        .eq('id', pageData.id);
-      
-      if (error) throw error;
-      
-      console.log('✅ [Generate] Deleted existing page, triggering fresh generation');
-      console.log('🚀 [Generate] Starting fresh generation...');
-      
-      // Clear page data to trigger fresh generation
-      setPageData(null);
-      setExistingPageLoaded(false);
-      setSections([]);
-      
-      // Reset phase to generating
-      setPhase("generating");
-      setIsGenerating(true);
-      setProgress(0);
-      
-      // Re-navigate with force regenerate to trigger the generation flow
-      const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.set('regenerate', 'true');
-      window.history.replaceState({}, '', currentUrl.toString());
-      
-      // Force reload the component to trigger generation with new layout templates
-      window.location.reload();
-      
-    } catch (err) {
-      console.error('❌ [Generate] Failed to delete page:', err);
-      toast({
-        title: "Failed to regenerate page",
-        description: "Could not delete existing page. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRegenerating(false);
-    }
+
+    console.log('🚀 [Generate] Starting fresh generation...');
+
+    // Clear page data to trigger fresh generation
+    setPageData(null);
+    setExistingPageLoaded(false);
+    setSections([]);
+
+    // Reset phase to generating
+    setPhase("generating");
+    setIsGenerating(true);
+    setProgress(0);
+
+    // Re-navigate with force regenerate to trigger the generation flow
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('regenerate', 'true');
+    window.history.replaceState({}, '', currentUrl.toString());
+
+    // Force reload the component to trigger generation with new layout templates
+    window.location.reload();
   };
 
   // Handle regeneration of a single section
