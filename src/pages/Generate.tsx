@@ -345,6 +345,7 @@ function GenerateContent() {
   const [consultation, setConsultation] = useState<any>(null);
   const [pageData, setPageData] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([]);
+  const [generationError, setGenerationError] = useState<string | null>(null);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
@@ -1366,6 +1367,7 @@ function GenerateContent() {
   const startGeneration = async (consultationData: any, userId: string) => {
     // Start generation immediately, show loading UI
     // Show unified generation flow
+    setGenerationError(null);
     setPhase("generating");
     setIsGenerating(true);
 
@@ -1380,12 +1382,13 @@ function GenerateContent() {
       setProgress(100);
     } catch (error) {
       clearInterval(progressInterval);
-      throw error;
+      setIsGenerating(false);
     }
   };
 
   // Dev mode generation - skips database operations
   const startDevGeneration = async (consultationData: any) => {
+    setGenerationError(null);
     setPhase("generating");
     setIsGenerating(true);
 
