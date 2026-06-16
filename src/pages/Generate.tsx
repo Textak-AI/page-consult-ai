@@ -2057,10 +2057,11 @@ function GenerateContent() {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       toast({
         title: "Generation failed",
-        description: `Error: ${errorMessage}. Please try again.`,
+        description: "We couldn't generate your page. Please try again.",
         variant: "destructive",
       });
-      navigate("/#demo");
+      setGenerationError(errorMessage);
+      setIsGenerating(false);
     }
   };
 
@@ -2520,15 +2521,14 @@ function GenerateContent() {
         fullError: error,
       });
 
-      // Show error to user
       toast({
-        title: "AI Content Generation Failed",
-        description: `Error: ${errorMessage}. Using template content instead.`,
+        title: "Generation failed",
+        description: "We couldn't generate your page. Please try again.",
         variant: "destructive",
       });
 
-      // Fallback to template-based generation
-      return await generateFallbackSections(consultationData);
+      setGenerationError(errorMessage);
+      return [];
     }
   };
 
@@ -5157,6 +5157,7 @@ function GenerateContent() {
 
   // Handle full page regeneration - deletes existing page and triggers fresh generation
   const handleRegeneratePage = async () => {
+    setGenerationError(null);
     if (!pageData?.id) {
       console.log('🔄 [Generate] No existing page to regenerate');
       return;
