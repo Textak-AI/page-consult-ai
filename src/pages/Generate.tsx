@@ -5346,6 +5346,34 @@ function GenerateContent() {
     }
   };
 
+  // Error state takes precedence over all other UI
+  if (generationError) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              We couldn't generate your page
+            </h1>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {generationError}
+            </p>
+          </div>
+          <Button
+            onClick={handleRegeneratePage}
+            className="inline-flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Unified Generation Phase - single loading experience
   if (phase === "generating") {
     return (
