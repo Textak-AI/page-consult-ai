@@ -324,6 +324,14 @@ function patchSectionsWithConsultationData(
   });
 }
 
+// Strip taxonomy breadcrumbs that leak into business name fields
+const cleanBusinessName = (name?: string, industry?: string) => {
+  if (!name) return '';
+  const n = name.trim();
+  if (n.includes(' → ') || (industry && n === industry.trim())) return '';
+  return n;
+};
+
 export default function Generate() {
   return (
     <EditingProvider>
@@ -1904,15 +1912,18 @@ function GenerateContent() {
       const aiSeoData = consultationData.aiSeoData || consultationData.ai_seo_data;
       
       // Resolve company name with proper fallback chain
-      const companyName = strategicData?.consultationData?.businessName 
-        || consultationData.business_name 
-        || consultationData.businessName
-        || (consultationData.extracted_intelligence as any)?.companyName
+      const industryForClean = consultationData.industry;
+      const companyName = cleanBusinessName(strategicData?.consultationData?.businessName, industryForClean)
+        || cleanBusinessName(consultationData.business_name, industryForClean)
+        || cleanBusinessName(consultationData.businessName, industryForClean)
+        || cleanBusinessName((consultationData.extracted_intelligence as any)?.companyName, industryForClean)
         || null;
       
       // Build meta title with proper fallbacks to avoid "undefined"
-      const offerText = consultationData.offer || consultationData.service_type || consultationData.industry || 'Landing Page';
-      const industryText = consultationData.industry || '';
+      const rawIndustry = consultationData.industry || '';
+      const cleanIndustryLabel = rawIndustry.split(' → ')[0].trim();
+      const offerText = consultationData.offer || consultationData.service_type || cleanIndustryLabel || 'Landing Page';
+      const industryText = cleanIndustryLabel;
       
       let optimizedMeta = {
         title: companyName 
@@ -1949,7 +1960,7 @@ function GenerateContent() {
         session_id: isDemoSessionInsert ? consultationData.session_id : null,
         title: companyName 
           ? `${companyName} Landing Page`
-          : `${consultationData.industry || 'New'} Landing Page`,
+          : `${cleanIndustryLabel || 'New'} Landing Page`,
         slug,
         sections: generatedSections,
         meta_title: optimizedMeta.title,
@@ -2879,14 +2890,15 @@ function GenerateContent() {
     }
     
     // Use company name from extracted intelligence for subtitle/headline personalization
-    const companyName = extractedIntel?.companyName 
-      || consultationData?.company_name 
-      || consultationData?.business_name
-      || strategicConsultation?.businessName
+    const industryForClean = consultationData?.industry;
+    const companyName = cleanBusinessName(extractedIntel?.companyName, industryForClean)
+      || cleanBusinessName(consultationData?.company_name, industryForClean)
+      || cleanBusinessName(consultationData?.business_name, industryForClean)
+      || cleanBusinessName(strategicConsultation?.businessName, industryForClean)
       || (() => {
         try {
           const brandData = JSON.parse(localStorage.getItem('pageconsult_brand_data') || '{}');
-          return brandData.companyName || '';
+          return cleanBusinessName(brandData.companyName, industryForClean);
         } catch { return ''; }
       })();
     const businessName = companyName || strategicConsultation?.businessName || '';
