@@ -1960,7 +1960,7 @@ function GenerateContent() {
         session_id: isDemoSessionInsert ? consultationData.session_id : null,
         title: companyName 
           ? `${companyName} Landing Page`
-          : `${consultationData.industry || 'New'} Landing Page`,
+          : `${cleanIndustryLabel || 'New'} Landing Page`,
         slug,
         sections: generatedSections,
         meta_title: optimizedMeta.title,
