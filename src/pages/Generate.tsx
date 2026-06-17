@@ -324,6 +324,14 @@ function patchSectionsWithConsultationData(
   });
 }
 
+// Strip taxonomy breadcrumbs that leak into business name fields
+const cleanBusinessName = (name?: string, industry?: string) => {
+  if (!name) return '';
+  const n = name.trim();
+  if (n.includes(' → ') || (industry && n === industry.trim())) return '';
+  return n;
+};
+
 export default function Generate() {
   return (
     <EditingProvider>
