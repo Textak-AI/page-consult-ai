@@ -2890,14 +2890,15 @@ function GenerateContent() {
     }
     
     // Use company name from extracted intelligence for subtitle/headline personalization
-    const companyName = extractedIntel?.companyName 
-      || consultationData?.company_name 
-      || consultationData?.business_name
-      || strategicConsultation?.businessName
+    const industryForClean = consultationData?.industry;
+    const companyName = cleanBusinessName(extractedIntel?.companyName, industryForClean)
+      || cleanBusinessName(consultationData?.company_name, industryForClean)
+      || cleanBusinessName(consultationData?.business_name, industryForClean)
+      || cleanBusinessName(strategicConsultation?.businessName, industryForClean)
       || (() => {
         try {
           const brandData = JSON.parse(localStorage.getItem('pageconsult_brand_data') || '{}');
-          return brandData.companyName || '';
+          return cleanBusinessName(brandData.companyName, industryForClean);
         } catch { return ''; }
       })();
     const businessName = companyName || strategicConsultation?.businessName || '';
