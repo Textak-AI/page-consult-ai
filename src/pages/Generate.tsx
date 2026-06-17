@@ -1912,10 +1912,11 @@ function GenerateContent() {
       const aiSeoData = consultationData.aiSeoData || consultationData.ai_seo_data;
       
       // Resolve company name with proper fallback chain
-      const companyName = strategicData?.consultationData?.businessName 
-        || consultationData.business_name 
-        || consultationData.businessName
-        || (consultationData.extracted_intelligence as any)?.companyName
+      const industryForClean = consultationData.industry;
+      const companyName = cleanBusinessName(strategicData?.consultationData?.businessName, industryForClean)
+        || cleanBusinessName(consultationData.business_name, industryForClean)
+        || cleanBusinessName(consultationData.businessName, industryForClean)
+        || cleanBusinessName((consultationData.extracted_intelligence as any)?.companyName, industryForClean)
         || null;
       
       // Build meta title with proper fallbacks to avoid "undefined"
