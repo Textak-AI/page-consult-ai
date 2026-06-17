@@ -1920,8 +1920,10 @@ function GenerateContent() {
         || null;
       
       // Build meta title with proper fallbacks to avoid "undefined"
-      const offerText = consultationData.offer || consultationData.service_type || consultationData.industry || 'Landing Page';
-      const industryText = consultationData.industry || '';
+      const rawIndustry = consultationData.industry || '';
+      const cleanIndustryLabel = rawIndustry.split(' → ')[0].trim();
+      const offerText = consultationData.offer || consultationData.service_type || cleanIndustryLabel || 'Landing Page';
+      const industryText = cleanIndustryLabel;
       
       let optimizedMeta = {
         title: companyName 
