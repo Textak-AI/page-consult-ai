@@ -217,7 +217,22 @@ export default function NewConsultation() {
                 sessionId: extracted.sessionId,
               });
             }
-            
+
+            // Hydrate extractedBrand from persisted brand so re-run carries it through
+            const ei = (consultation.extracted_intelligence as any) || {};
+            if (ei.companyName || ei.logoUrl || ei.brandColors || (ei.colors && ei.colors.length)) {
+              setExtractedBrand({
+                domain: '', websiteUrl: null,
+                companyName: ei.companyName || null,
+                tagline: null, description: null, faviconUrl: null,
+                ogImage: ei.logoUrl || null,
+                logoUrl:  ei.logoUrl || null,
+                themeColor:     ei.brandColors?.primary   || ei.colors?.[0] || null,
+                secondaryColor: ei.brandColors?.secondary || ei.colors?.[1] || null,
+                accentColor:    ei.brandColors?.accent    || ei.colors?.[2] || null,
+              } as any);
+            }
+
             // Skip intro and brand extractor - go directly to consultation
             setSkipDraftLoad(true);
             console.log('🔄 setStage called:', 'consultation', 'from: consultationId loaded');
@@ -470,6 +485,17 @@ export default function NewConsultation() {
     setStage('generating');
     
     try {
+      // Resolve brand from in-memory sources (brandSettings → websiteIntelligence → localStorage)
+      const bs: any = (consultationData as any).brandSettings || {};
+      const wi: any = (consultationData as any).websiteIntelligence || {};
+      let ls: any = {};
+      try { ls = JSON.parse(localStorage.getItem('pageconsult_brand_data') || '{}'); } catch {}
+      const brandPrimary   = bs.primaryColor   || wi.primaryColor   || ls.colors?.primary   || null;
+      const brandSecondary = bs.secondaryColor || wi.secondaryColor || ls.colors?.secondary || null;
+      const brandAccent    = ls.colors?.accent || null;
+      const brandLogo      = bs.logoUrl || wi.logoUrl || ls.logo || null;
+      const brandName      = consultationData.businessName || wi.companyName || ls.companyName || null;
+
       // Create consultation record in database
       const { data: consultationRecord, error: consultationError } = await supabase
         .from("consultations")
@@ -485,6 +511,18 @@ export default function NewConsultation() {
           unique_value: consultationData.uniqueStrength,
           offer: consultationData.mainOffer,
           status: "completed",
+          business_name: brandName,
+          extracted_intelligence: {
+            ...((consultationData as any).extracted_intelligence || {}),
+            ...(brandName ? { companyName: brandName } : {}),
+            ...(brandLogo ? { logoUrl: brandLogo } : {}),
+            brandColors: {
+              ...(brandPrimary ? { primary: brandPrimary } : {}),
+              ...(brandSecondary ? { secondary: brandSecondary } : {}),
+              ...(brandAccent ? { accent: brandAccent } : {}),
+            },
+            colors: [brandPrimary, brandSecondary, brandAccent].filter(Boolean),
+          },
         })
         .select()
         .single();
