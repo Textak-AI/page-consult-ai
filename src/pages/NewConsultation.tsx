@@ -217,7 +217,22 @@ export default function NewConsultation() {
                 sessionId: extracted.sessionId,
               });
             }
-            
+
+            // Hydrate extractedBrand from persisted brand so re-run carries it through
+            const ei = (consultation.extracted_intelligence as any) || {};
+            if (ei.companyName || ei.logoUrl || ei.brandColors || (ei.colors && ei.colors.length)) {
+              setExtractedBrand({
+                domain: '', websiteUrl: null,
+                companyName: ei.companyName || null,
+                tagline: null, description: null, faviconUrl: null,
+                ogImage: ei.logoUrl || null,
+                logoUrl:  ei.logoUrl || null,
+                themeColor:     ei.brandColors?.primary   || ei.colors?.[0] || null,
+                secondaryColor: ei.brandColors?.secondary || ei.colors?.[1] || null,
+                accentColor:    ei.brandColors?.accent    || ei.colors?.[2] || null,
+              } as any);
+            }
+
             // Skip intro and brand extractor - go directly to consultation
             setSkipDraftLoad(true);
             console.log('🔄 setStage called:', 'consultation', 'from: consultationId loaded');
