@@ -1997,8 +1997,31 @@ function GenerateContent() {
       // This ensures multi-user isolation - each page has its own design intelligence
       const sdiDecisions = computeSDIDecisions(consultationData, strategicData, designIntelligence);
       if (sdiDecisions) {
-        insertData.design_intelligence = sdiDecisions;
+        // Merge brand identity into design_intelligence using the SAME source expressions
+        // as consultation_data (L1977-1981) so the two persisted copies cannot diverge.
+        // Zero-fabrication: omit any key whose source value is null/undefined/empty.
+        const brandPrimary =
+          strategicData?.brandSettings?.primaryColor || consultationData.primaryColor;
+        const brandSecondary =
+          strategicData?.brandSettings?.secondaryColor || consultationData.secondaryColor;
+        const brandLogoUrl =
+          strategicData?.brandSettings?.logoUrl || consultationData.logoUrl;
+
+        const designIntelToPersist: Record<string, any> = { ...sdiDecisions };
+
+        const brandColors: Record<string, string> = {};
+        if (brandPrimary) brandColors.primary = brandPrimary;
+        if (brandSecondary) brandColors.secondary = brandSecondary;
+        if (Object.keys(brandColors).length > 0) {
+          designIntelToPersist.brandColors = brandColors;
+        }
+        if (brandLogoUrl) {
+          designIntelToPersist.logoUrl = brandLogoUrl;
+        }
+
+        insertData.design_intelligence = designIntelToPersist;
         console.log("🎨 Including SDI decisions in page record:", sdiDecisions);
+        console.log("🎨 Final design_intelligence payload for landing_pages insert:", designIntelToPersist);
       }
       
       // NEW: Include layout_id from SDI if available
