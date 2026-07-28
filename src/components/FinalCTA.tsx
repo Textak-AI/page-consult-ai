@@ -62,10 +62,6 @@ const FinalCTA = () => {
               {buttonText}
             </Link>
           </Button>
-          
-          <p className="text-gray-400 mt-4 text-sm">
-            No credit card required • 14-day trial
-          </p>
         </div>
       </div>
     </GlossyBackground>

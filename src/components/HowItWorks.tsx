@@ -14,7 +14,7 @@ const steps = [
   {
     icon: Zap,
     number: "02",
-    title: "Instant Generation",
+    title: "AI Generation",
     description:
       "Your strategy brief transforms into a conversion-optimized page. Every section built on what you shared.",
     gradient: "from-cyan-500 to-cyan-600",
@@ -25,7 +25,7 @@ const steps = [
     number: "03",
     title: "Publish & Optimize",
     description:
-      "Go live instantly or refine with AI assistance. Built-in analytics show what's converting.",
+      "Publish when ready or refine with AI assistance.",
     gradient: "from-emerald-500 to-emerald-600",
     glowColor: "emerald",
   },
@@ -52,7 +52,7 @@ const HowItWorks = () => {
           <h2 className="text-4xl md:text-5xl font-bold text-white">
             From Strategy to Launch in{" "}
             <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              10 Minutes
+              A Few Minutes
             </span>
           </h2>
         </div>
