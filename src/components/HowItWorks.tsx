@@ -5,27 +5,27 @@ const steps = [
   {
     icon: MessageCircle,
     number: "01",
-    title: "Smart Discovery",
+    title: "Share your brand",
     description:
-      "Have a conversation with our AI strategist. It extracts positioning, audience insights, and competitive angles in real-time.",
+      "Drop in your website and we'll pull your logo, colors, and voice — or set them yourself.",
     gradient: "from-purple-500 to-purple-600",
     glowColor: "purple",
   },
   {
     icon: Zap,
     number: "02",
-    title: "AI Generation",
+    title: "Talk strategy",
     description:
-      "Your strategy brief transforms into a conversion-optimized page. Every section built on what you shared.",
+      "Answer a short consultation about your buyers, your offer, and your goal. Your answers become the page's strategy.",
     gradient: "from-cyan-500 to-cyan-600",
     glowColor: "cyan",
   },
   {
     icon: Target,
     number: "03",
-    title: "Publish & Optimize",
+    title: "We build it",
     description:
-      "Publish when ready or refine with AI assistance.",
+      "PageConsult turns your strategy into a complete landing page. Refine with AI assistance and publish when ready.",
     gradient: "from-emerald-500 to-emerald-600",
     glowColor: "emerald",
   },
@@ -47,14 +47,14 @@ const HowItWorks = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16 animate-fade-in">
           <p className="text-cyan-400 text-sm font-semibold tracking-wide uppercase mb-3">
-            The Process
+            Three Easy Steps
           </p>
           <h2 className="text-4xl md:text-5xl font-bold text-white">
-            From Strategy to Launch in{" "}
-            <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              A Few Minutes
-            </span>
+            How It Works
           </h2>
+          <p className="mt-6 text-lg md:text-xl text-white/70 max-w-2xl mx-auto font-medium">
+            The AI builds the page. It can't build the strategy. That's yours.
+          </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 items-stretch">
