@@ -2671,23 +2671,41 @@ function GenerateContent() {
       });
     }
 
-    // Social Proof with testimonial (no duplicate stats)
-    sections.push({
-      type: "social-proof",
-      order: order++,
-      visible: true,
-      content: {
-        stats: [], // Stats are shown in stats-bar section
-        industry: consultationData.industry,
-        testimonial: {
-          quote: content.socialProof || `${consultationData.industry} professionals across the region trust us for their most important needs.`,
-          name: "Sarah M.",
-          title: "Satisfied Customer",
-          company: "",
-          rating: 5,
-        },
-      },
+    // Social Proof — zero-fabrication: only render when a REAL testimonial exists.
+    // No default quote, no placeholder author, no example company.
+    const realTestimonials: any[] = Array.isArray(consultationData?.testimonials)
+      ? consultationData.testimonials
+      : Array.isArray(consultationData?.structuredBrief?.testimonials)
+        ? consultationData.structuredBrief.testimonials
+        : [];
+    const firstRealTestimonial = realTestimonials.find(
+      (t: any) => t && typeof (t.quote || t.text) === 'string' && (t.quote || t.text).trim().length > 0
+    );
+    const hasTestimonials = !!firstRealTestimonial;
+    console.log('🧪 [Generate] Credibility flags:', {
+      hasTestimonials,
+      testimonialCount: realTestimonials.length,
     });
+    if (hasTestimonials) {
+      sections.push({
+        type: "social-proof",
+        order: order++,
+        visible: true,
+        content: {
+          stats: [],
+          industry: consultationData.industry,
+          testimonial: {
+            quote: (firstRealTestimonial.quote || firstRealTestimonial.text).trim(),
+            name: firstRealTestimonial.name || firstRealTestimonial.author || '',
+            title: firstRealTestimonial.title || firstRealTestimonial.role || '',
+            company: firstRealTestimonial.company || '',
+            rating: typeof firstRealTestimonial.rating === 'number' ? firstRealTestimonial.rating : undefined,
+          },
+        },
+      });
+    } else {
+      console.log('🧪 [Generate] No real testimonial supplied — social-proof section hidden.');
+    }
 
     // FAQ Section (from aiSeoData if available)
     const aiSeoData = consultationData.aiSeoData || consultationData.ai_seo_data;
