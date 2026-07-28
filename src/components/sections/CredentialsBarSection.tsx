@@ -27,7 +27,22 @@ interface CredentialsBarSectionProps {
 
 function CredentialsBarSectionBase({ content }: CredentialsBarSectionProps) {
   const { credentials = [] } = content;
-  
+
+  // Zero-fabrication: render only real, non-empty credentials supplied via props.
+  // No defaults, no illustrative placeholders, no empty shell.
+  const displayCredentials = (credentials || []).filter(
+    (c) => c && typeof c.value === 'string' && c.value.trim().length > 0 && typeof c.label === 'string' && c.label.trim().length > 0
+  );
+
+  console.log('🧪 [CredentialsBar] Render check:', {
+    receivedCount: credentials?.length ?? 0,
+    validCount: displayCredentials.length,
+  });
+
+  if (displayCredentials.length === 0) {
+    return null;
+  }
+
   // SDI Design System
   const theme = content.sectionThemes?.['credentials-bar'] || 'light';
   const palette = content.palette;
@@ -37,7 +52,6 @@ function CredentialsBarSectionBase({ content }: CredentialsBarSectionProps) {
     if (!palette) {
       return { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#ffffff' };
     }
-    // Credentials bar is typically subtle - use light section or slight tint
     return { backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : palette.lightSection };
   };
 
@@ -70,12 +84,6 @@ function CredentialsBarSectionBase({ content }: CredentialsBarSectionProps) {
     return theme === 'dark' ? 'text-white/60' : 'text-slate-600';
   };
 
-  // Default credentials if none provided
-  const displayCredentials = credentials.length > 0 ? credentials : [
-    { value: '20+', label: 'Years Experience', icon: 'award' },
-    { value: 'Certified', label: 'Industry Expert', icon: 'badge' },
-    { value: 'Trusted', label: 'By Fortune 500', icon: 'shield' },
-  ];
 
   const renderIcon = (iconType: string | undefined) => {
     const iconStyle = getIconColorStyles();
