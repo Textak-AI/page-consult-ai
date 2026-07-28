@@ -29,7 +29,7 @@ const faqs = [
   {
     question: "How long does it take?",
     answer:
-      "A page can be generated in just a few minutes. But the magic is in the conversation — the more thoughtful your answers, the more strategic intelligence PageConsult has to work with. A rushed 3-minute session gets you a page. A thoughtful 10-minute conversation gets you a strategy.",
+      "A page can be generated quickly. The magic is in the conversation — the more thoughtful your answers, the more strategic intelligence PageConsult has to work with.",
   },
   {
     question: "Can I edit the page after it's generated?",

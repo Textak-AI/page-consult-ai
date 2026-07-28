@@ -46,12 +46,12 @@ export function HeroFlowAnimation() {
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-slate-400">Page Strength</span>
             <div className="flex items-center gap-1">
-              <span className="text-lg font-bold text-emerald-400">98%</span>
+              <span className="text-sm font-bold text-emerald-400">Strategy locked ✓</span>
               <Sparkles className="w-3 h-3 text-amber-400" />
             </div>
           </div>
           <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mb-4">
-            <div className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full w-[98%]" />
+            <div className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full w-full" />
           </div>
           <div className="space-y-1.5 flex-1">
             {[

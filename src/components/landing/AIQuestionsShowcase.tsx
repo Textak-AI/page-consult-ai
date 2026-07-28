@@ -28,10 +28,10 @@ const staticExamples: ExtractionExample[] = [
     ],
   },
   {
-    input: "Our clients usually see 2-3x increase in organic traffic within 6 months",
+    input: "We help clients grow organic traffic without paid ads",
     extractions: [
-      { label: "Proof Point", value: "2-3x traffic increase", color: "purple" },
-      { label: "Timeline", value: "6 months (realistic)", color: "cyan" },
+      { label: "Positioning", value: "Positioning captured", color: "purple" },
+      { label: "Channel Focus", value: "Organic / SEO-led", color: "cyan" },
       { label: "CTA Strategy", value: "Results-focused messaging", color: "emerald" },
       { label: "Calculator Idea", value: "Traffic growth estimator", color: "amber" },
     ],

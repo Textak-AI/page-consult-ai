@@ -249,7 +249,7 @@ const Pricing = () => {
         {/* Trust indicators */}
         <div className="mt-12 text-center">
           <p className="text-white/30 text-sm mb-4">
-            14-day free trial • Cancel anytime
+            Cancel anytime.
           </p>
           <Link 
             to="/pricing" 

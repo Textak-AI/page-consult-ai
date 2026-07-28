@@ -109,14 +109,14 @@ export function PersonalizedHero({
         </Button>
       </motion.div>
       
-      {/* Credit card disclaimer */}
+      {/* Truthful trust line */}
       <motion.p 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7, duration: 0.5 }}
         className="text-muted-foreground text-sm text-center sm:text-left"
       >
-        No credit card required • Full page ready in 10 minutes
+        Answer a few questions — get a complete draft you can refine.
       </motion.p>
     </div>
   );
