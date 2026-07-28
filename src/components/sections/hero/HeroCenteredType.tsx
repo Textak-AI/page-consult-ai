@@ -33,13 +33,20 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
     ...credibilityItems.map((c: any) => c.text || c),
     ...trustBadges,
     ...(content.credibilityItems || []).map((c: any) => c.text || c.label || c),
-  ].filter(Boolean).slice(0, 4);
+  ]
+    .filter((s: any) => typeof s === 'string' && s.trim().length > 0)
+    .slice(0, 4);
 
-  const trustSignals = allTrustSignals.length > 0 ? allTrustSignals : [
-    'Free consultation',
-    'No commitment required',
-    'Response within 48 hours',
-  ];
+  const trustSignals = allTrustSignals;
+
+  console.log('🧪 [HeroCenteredType] Render check:', {
+    receivedCount:
+      (credibilityItems?.length ?? 0) +
+      (trustBadges?.length ?? 0) +
+      ((content.credibilityItems as any[])?.length ?? 0),
+    validCount: trustSignals.length,
+  });
+
 
   const headingWeight = content.headingWeight || 400;
   const trackingStyle = content.trackingStyle || 'tight';

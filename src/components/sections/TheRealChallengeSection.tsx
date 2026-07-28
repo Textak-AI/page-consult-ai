@@ -85,24 +85,19 @@ function TheRealChallengeSectionBase({ content }: TheRealChallengeSectionProps) 
     return { backgroundColor: '#f1f5f9', color: '#475569' };
   };
 
-  // Default challenges if none provided
-  const displayChallenges = challenges.length > 0 ? challenges : [
-    { 
-      title: 'Unclear Strategy', 
-      description: 'Without a clear roadmap, opportunities slip away and resources are wasted.', 
-      impact: 'Costs you time and market position' 
-    },
-    { 
-      title: 'Execution Gaps', 
-      description: 'Great ideas stall without the right expertise to implement them.', 
-      impact: 'Slows your growth trajectory' 
-    },
-    { 
-      title: 'Market Uncertainty', 
-      description: 'Navigating changing landscapes without guidance increases risk.', 
-      impact: 'Creates competitive vulnerability' 
-    },
-  ];
+  // Zero-fabrication: only render challenges with real title + description
+  const displayChallenges = (challenges || []).filter(
+    (c) => c && typeof c.title === 'string' && c.title.trim().length > 0 &&
+           typeof c.description === 'string' && c.description.trim().length > 0
+  );
+
+  console.log('🧪 [TheRealChallengeSection] Render check:', {
+    receivedCount: challenges?.length ?? 0,
+    validCount: displayChallenges.length,
+  });
+
+  if (displayChallenges.length === 0) return null;
+
 
   const icons = [AlertTriangle, TrendingDown, Clock];
 

@@ -338,8 +338,8 @@ function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionPr
           </motion.div>
         )}
 
-        {/* Default trust text if no indicators */}
-        {trustIndicators.length === 0 && !guaranteeText && (
+        {/* Trust text — only when real user-supplied content exists */}
+        {trustIndicators.length === 0 && !guaranteeText && typeof content.trustText === 'string' && content.trustText.trim().length > 0 && (
           <motion.p 
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -347,9 +347,10 @@ function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionPr
             transition={{ duration: 0.5, delay: 0.3 }}
             className={`text-sm mt-6 ${getSubtleTextColorClass()}`}
           >
-            {content.trustText || "No credit card required • 14-day trial"}
+            {content.trustText}
           </motion.p>
         )}
+
       </div>
     </section>
   );

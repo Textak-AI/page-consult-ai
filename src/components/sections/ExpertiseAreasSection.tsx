@@ -87,33 +87,19 @@ function ExpertiseAreasSectionBase({ content }: ExpertiseAreasSectionProps) {
     return 'bg-slate-100 text-slate-600';
   };
 
-  // Default areas if none provided
-  const displayAreas = areas.length > 0 ? areas : [
-    { 
-      title: 'Strategic Advisory', 
-      description: 'Helping leadership navigate complex decisions with clarity and confidence.',
-      icon: 'briefcase',
-      examples: ['Market entry', 'M&A support', 'Growth strategy']
-    },
-    { 
-      title: 'Performance Optimization', 
-      description: 'Identifying and unlocking operational improvements that drive bottom-line results.',
-      icon: 'chart',
-      examples: ['Process redesign', 'Cost reduction', 'Efficiency gains']
-    },
-    { 
-      title: 'Organizational Excellence', 
-      description: 'Building high-performing teams and cultures that sustain competitive advantage.',
-      icon: 'users',
-      examples: ['Leadership development', 'Change management', 'Culture transformation']
-    },
-    { 
-      title: 'Digital Transformation', 
-      description: 'Guiding technology-enabled change that creates new value and capabilities.',
-      icon: 'layers',
-      examples: ['Digital strategy', 'Tech enablement', 'Data & analytics']
-    },
-  ];
+  // Zero-fabrication: only render areas with real title + description
+  const displayAreas = (areas || []).filter(
+    (a) => a && typeof a.title === 'string' && a.title.trim().length > 0 &&
+           typeof a.description === 'string' && a.description.trim().length > 0
+  );
+
+  console.log('🧪 [ExpertiseAreasSection] Render check:', {
+    receivedCount: areas?.length ?? 0,
+    validCount: displayAreas.length,
+  });
+
+  if (displayAreas.length === 0) return null;
+
 
   const iconMap: Record<string, typeof Briefcase> = {
     briefcase: Briefcase,

@@ -49,12 +49,11 @@ interface SocialProofSectionProps {
   isEditing?: boolean;
 }
 
-function getSocialProofHeader(industry?: string, isConsulting?: boolean): { title: string; subtitle: string; placeholderQuote: string } {
+function getSocialProofHeader(industry?: string, isConsulting?: boolean): { title: string; subtitle: string } {
   if (isConsulting) {
     return {
       title: 'Client Results',
       subtitle: 'What our clients say about working with us',
-      placeholderQuote: ''
     };
   }
   
@@ -64,7 +63,6 @@ function getSocialProofHeader(industry?: string, isConsulting?: boolean): { titl
     return { 
       title: 'Client Success Stories', 
       subtitle: 'Real experiences from our clients',
-      placeholderQuote: ''
     };
   }
   
@@ -72,7 +70,6 @@ function getSocialProofHeader(industry?: string, isConsulting?: boolean): { titl
     return { 
       title: 'Client Success Stories', 
       subtitle: 'Real experiences from our clients',
-      placeholderQuote: ''
     };
   }
   
@@ -80,16 +77,15 @@ function getSocialProofHeader(industry?: string, isConsulting?: boolean): { titl
     return { 
       title: 'What Customers Are Saying', 
       subtitle: 'Real experiences from our customers',
-      placeholderQuote: ''
     };
   }
   
   return { 
     title: 'What Our Clients Say', 
     subtitle: 'Real experiences from our clients',
-    placeholderQuote: ''
   };
 }
+
 
 function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSectionProps) {
   // Quality floor: if no real testimonials, don't render the section at all
@@ -119,13 +115,13 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
   console.log('🎨 [SocialProofSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', content.industryVariant, 'forcedLight:', isConsulting);
 
   
-  const testimonial = content.testimonial || {
-    quote: header.placeholderQuote,
-    name: "Sarah M.",
-    title: "Satisfied Customer",
-    company: "",
-    rating: 5
-  };
+  console.log('🧪 [SocialProofSection] Render check:', {
+    receivedCount: content.testimonial ? 1 : 0,
+    validCount: 1,
+  });
+
+  const testimonial = content.testimonial!;
+
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     if (field.startsWith('testimonial.')) {

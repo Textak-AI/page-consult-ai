@@ -92,33 +92,19 @@ function EngagementModelSectionBase({ content }: EngagementModelSectionProps) {
     return theme === 'dark' ? 'text-white/50' : 'text-slate-500';
   };
 
-  // Default steps if none provided
-  const displaySteps = steps.length > 0 ? steps : [
-    { 
-      number: 1, 
-      title: 'Discovery Conversation', 
-      description: 'We begin with a deep-dive session to understand your challenges, goals, and context.',
-      duration: 'Week 1'
-    },
-    { 
-      number: 2, 
-      title: 'Strategic Assessment', 
-      description: 'Our team analyzes your situation and develops tailored recommendations.',
-      duration: 'Weeks 2-3'
-    },
-    { 
-      number: 3, 
-      title: 'Implementation Support', 
-      description: 'We partner with you to execute the strategy, adjusting as needed.',
-      duration: 'Ongoing'
-    },
-    { 
-      number: 4, 
-      title: 'Results & Iteration', 
-      description: 'We measure outcomes, celebrate wins, and refine for continuous improvement.',
-      duration: 'Continuous'
-    },
-  ];
+  // Zero-fabrication: only render steps with real title + description
+  const displaySteps = (steps || []).filter(
+    (s) => s && typeof s.title === 'string' && s.title.trim().length > 0 &&
+           typeof s.description === 'string' && s.description.trim().length > 0
+  );
+
+  console.log('🧪 [EngagementModelSection] Render check:', {
+    receivedCount: steps?.length ?? 0,
+    validCount: displaySteps.length,
+  });
+
+  if (displaySteps.length === 0) return null;
+
 
   const icons = [MessageSquare, ClipboardList, Rocket, RefreshCw];
 

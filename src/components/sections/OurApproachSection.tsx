@@ -86,24 +86,19 @@ function OurApproachSectionBase({ content }: OurApproachSectionProps) {
     return { backgroundColor: '#f1f5f9', color: '#475569' };
   };
 
-  // Default principles if none provided
-  const displayPrinciples = principles.length > 0 ? principles : [
-    { 
-      title: 'Deep Discovery', 
-      description: 'We start by understanding your unique challenges, goals, and context before proposing solutions.',
-      icon: 'lightbulb'
-    },
-    { 
-      title: 'Strategic Alignment', 
-      description: 'Every recommendation ties directly to your business objectives and measurable outcomes.',
-      icon: 'target'
-    },
-    { 
-      title: 'Execution Excellence', 
-      description: 'We don\'t just advise—we partner with you to implement and iterate until goals are achieved.',
-      icon: 'rocket'
-    },
-  ];
+  // Zero-fabrication: only render principles with real title + description
+  const displayPrinciples = (principles || []).filter(
+    (p) => p && typeof p.title === 'string' && p.title.trim().length > 0 &&
+           typeof p.description === 'string' && p.description.trim().length > 0
+  );
+
+  console.log('🧪 [OurApproachSection] Render check:', {
+    receivedCount: principles?.length ?? 0,
+    validCount: displayPrinciples.length,
+  });
+
+  if (displayPrinciples.length === 0) return null;
+
 
   const iconMap: Record<string, typeof Lightbulb> = {
     lightbulb: Lightbulb,
