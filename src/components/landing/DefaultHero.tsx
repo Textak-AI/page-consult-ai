@@ -54,9 +54,9 @@ export function DefaultHero() {
         </Button>
       </div>
 
-      {/* Credit card disclaimer */}
+      {/* Truthful trust line */}
       <p className="text-gray-500 text-sm text-center sm:text-left">
-        No credit card required • See results in 3 seconds
+        Answer a few questions — get a complete draft you can refine.
       </p>
     </motion.div>
   );
