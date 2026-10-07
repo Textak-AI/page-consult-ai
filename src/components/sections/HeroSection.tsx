@@ -281,6 +281,18 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
 
   const credibilityItems = content.credibilityBar || [];
   const trustBadges = content.trustBadges || [];
+  const trustMicrocopy = [
+    ...(Array.isArray(credibilityItems) ? credibilityItems.map(item => item?.text) : []),
+    ...(Array.isArray(trustBadges) ? trustBadges : []),
+    ...(Array.isArray(content.credibilityItems) ? content.credibilityItems.map((item: any) => item?.text || item?.label || item) : []),
+    content.trustBadge,
+  ].filter((signal): signal is string => typeof signal === 'string' && signal.trim().length > 0);
+
+  console.log('🧪 [HeroSection] Render check:', {
+    industryVariant,
+    validCount: trustMicrocopy.length,
+    rendersTrustMicrocopy: trustMicrocopy.length > 0,
+  });
   
   // Single trust badge (credential) for consulting hero
   const trustBadge = content.trustBadge || content.fomo?.badge;
@@ -853,6 +865,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
             </motion.div>
             
             {/* Trust micro-copy */}
+            {trustMicrocopy.length > 0 && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -861,19 +874,14 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
                 hasBackgroundImage && showDarkOverlay ? 'text-slate-300' : 'text-slate-500'
               }`}
             >
-              <span className="flex items-center gap-1.5">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                Free consultation
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                No commitment required
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                Response within 24 hours
-              </span>
+              {trustMicrocopy.map((signal, index) => (
+                <span key={index} className="flex items-center gap-1.5">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  {signal}
+                </span>
+              ))}
             </motion.div>
+            )}
           </div>
         </div>
 
@@ -1084,23 +1092,23 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
               </motion.div>
               
               {/* Trust micro-copy */}
+              {trustMicrocopy.length > 0 && (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
-                className={`flex items-center gap-6 pt-2 text-sm ${
+                className={`flex flex-wrap items-center gap-6 pt-2 text-sm ${
                   hasBackgroundImage && showDarkOverlay ? 'text-slate-400' : 'text-slate-500'
                 }`}
               >
-                <span className="flex items-center gap-1.5">
-                  <Check className="w-4 h-4 text-green-500" />
-                  No credit card required
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Check className="w-4 h-4 text-green-500" />
-                  Free consultation
-                </span>
+                {trustMicrocopy.map((signal, index) => (
+                  <span key={index} className="flex items-center gap-1.5">
+                    <Check className="w-4 h-4 text-green-500" />
+                    {signal}
+                  </span>
+                ))}
               </motion.div>
+              )}
             </div>
             
             {/* Visual element - 5 columns: Brand Intelligence Card */}

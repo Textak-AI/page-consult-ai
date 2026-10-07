@@ -51,6 +51,14 @@ function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionPr
   const ctaText = content.ctaText || "Get Started";
   const trustIndicators = content.trustIndicators || [];
   const { urgencyText, guaranteeText, secondaryCta } = content;
+  const subtext = typeof content.subtext === 'string' && content.subtext.trim()
+    ? cleanDisplayText(content.subtext, 120)
+    : '';
+
+  console.log('🧪 [FinalCTASection] Render check:', {
+    rendersSubtext: Boolean(subtext),
+    trustIndicatorCount: trustIndicators.length,
+  });
 
   // Helper functions for SDI-driven styling
   // CTA section uses brand primary color as gradient background when available
@@ -213,6 +221,7 @@ function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionPr
         </motion.h2>
         
         {/* Subtext */}
+        {subtext && (
         <motion.p 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -225,8 +234,9 @@ function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionPr
           suppressContentEditableWarning
           onBlur={(e) => handleBlur("subtext", e)}
         >
-          {cleanDisplayText(content.subtext || "No commitment required • Response within 24 hours", 120)}
+          {subtext}
         </motion.p>
+        )}
 
         {/* Urgency Banner */}
         {urgencyText && (
