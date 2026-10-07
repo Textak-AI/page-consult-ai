@@ -2141,17 +2141,38 @@ function GenerateContent() {
       });
     }
     
+    // Gate 0 candidate: navState brief first, then DB-loaded consultationData brief.
+    // Strings (legacy markdown persistence) are never parsed or coerced.
+    const navBrief = strategicData?.structuredBrief;
+    const dataBrief = consultationData?.structuredBrief;
+    const candidateBrief = navBrief ?? dataBrief;
+    const candidateBriefSource = navBrief != null ? 'navState' : dataBrief != null ? 'consultationData' : null;
+    const candidateBriefValid = typeof candidateBrief === 'object' && candidateBrief !== null && isStructuredBriefContent(candidateBrief);
+    if (candidateBrief != null && !candidateBriefValid) {
+      const requiredKeys = ['headlines', 'messagingPillars', 'proofPoints', 'pageStructure'];
+      const isString = typeof candidateBrief === 'string';
+      const missingKeys = isString || typeof candidateBrief !== 'object'
+        ? requiredKeys
+        : requiredKeys.filter(k => !(k in candidateBrief));
+      console.log('🔴 [generateSections] structuredBrief present but invalid — missing keys:', missingKeys, { isString, source: candidateBriefSource });
+    }
+    // Outer strategicData may be absent on ?consultationId= loads; gate-0 body reads it unguarded.
+    const gate0StrategicData: any = strategicData ?? {};
+    
     try {
-      // PRIORITY 0: Use structuredBrief directly from strategic consultation
+      // PRIORITY 0: Use structuredBrief (navState or consultationData)
       // BRIEF-FIRST: The brief already contains all strategic content - NO AI REGENERATION
-      if (fromStrategicConsultation && strategicData?.structuredBrief && isStructuredBriefContent(strategicData.structuredBrief)) {
+      // A valid structured brief is itself sufficient evidence of a strategic consultation.
+      if (candidateBriefValid) {
+        const strategicData = gate0StrategicData;
+        const structuredBrief = candidateBrief as StructuredBrief;
+        console.log(`🧭 [generateSections] BRIEF-FIRST via ${candidateBriefSource}`);
         console.log('📋 BRIEF-FIRST: Using structuredBrief directly (NO AI call)');
-        console.log('📐 Page structure:', strategicData.structuredBrief.pageStructure);
-        console.log('📊 Proof points:', strategicData.structuredBrief.proofPoints);
-        console.log('🎯 Headlines:', strategicData.structuredBrief.headlines);
+        console.log('📐 Page structure:', structuredBrief.pageStructure);
+        console.log('📊 Proof points:', structuredBrief.proofPoints);
+        console.log('🎯 Headlines:', structuredBrief.headlines);
         
         // Generate design system from industry + tone + brand colors
-        const structuredBrief = strategicData.structuredBrief;
         // BRAND DATA PIPELINE: Resolve from priority chain
         // Priority 1: consultation.extracted_intelligence.colors & .logoUrl
         // Priority 2: strategicData.brandSettings / consultationData.brandSettings
