@@ -1,4 +1,4 @@
-import { briefDisplayValue } from "@/lib/briefEnvelope";
+import { briefObjectValue, isBriefEnvelope } from "@/lib/briefEnvelope";
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -70,7 +70,7 @@ export default function StrategyBrief() {
     }
 
     setConsultation(data as ConsultationData);
-    const briefData = briefDisplayValue(data.strategy_brief) as StrategyBriefData;
+    const briefData = briefObjectValue(data.strategy_brief) as StrategyBriefData;
     setBrief(briefData);
     
     // Use stored layout intelligence or compute from industry
@@ -112,10 +112,16 @@ export default function StrategyBrief() {
 
     setBrief(updatedBrief);
 
-    // Save to database - cast to Json for Supabase compatibility
+    // Save to database - preserve the envelope when present so edits never destroy markdown
+    const currentValue = (consultation as any)?.strategy_brief;
+    const envelopePreserved = isBriefEnvelope(currentValue);
+    const writeValue = envelopePreserved
+      ? { markdown: currentValue.markdown, structured: updatedBrief }
+      : updatedBrief;
+    console.log('💾 [brief-persist] Edit write-back — envelope preserved:', envelopePreserved);
     await supabase
       .from('consultations')
-      .update({ strategy_brief: updatedBrief as Json })
+      .update({ strategy_brief: writeValue as Json })
       .eq('id', consultationId);
 
     setEditingField(null);
