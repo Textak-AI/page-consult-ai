@@ -49,19 +49,38 @@ interface ExistingDraft {
 // Module-level flag to track if brand data exists on initial load
 let brandDataExistsOnLoad = false;
 
+// pageconsult_brand_data is a single-use, short-lived channel (Brand Setup → wizard hop).
+// Ignore AND remove it when older than 30 minutes so a prior session's brand
+// can't bleed into a new consultation.
+const BRAND_DATA_MAX_AGE_MS = 30 * 60 * 1000;
+
+const getFreshBrandData = (): any | null => {
+  const saved = localStorage.getItem('pageconsult_brand_data');
+  if (!saved) return null;
+  try {
+    const brandData = JSON.parse(saved);
+    if (brandData?.savedAt) {
+      const ageMs = Date.now() - new Date(brandData.savedAt).getTime();
+      if (ageMs > BRAND_DATA_MAX_AGE_MS) {
+        localStorage.removeItem('pageconsult_brand_data');
+        console.log(`🧹 ignored stale pageconsult_brand_data (age: ${Math.round(ageMs / 60000)}m)`);
+        return null;
+      }
+    }
+    return brandData;
+  } catch {
+    return null;
+  }
+};
+
 // Check localStorage synchronously to determine initial stage
 const getInitialStage = (): Stage => {
   if (typeof window !== 'undefined') {
-    const savedBrandData = localStorage.getItem('pageconsult_brand_data');
-    if (savedBrandData) {
-      try {
-        const brandData = JSON.parse(savedBrandData);
-        if (brandData.websiteUrl || brandData.logo || brandData.companyName) {
-          console.log('🚀 Initial stage set to consultation (brand data exists)');
-          brandDataExistsOnLoad = true; // Set module-level flag
-          return 'consultation';
-        }
-      } catch (e) {}
+    const brandData = getFreshBrandData();
+    if (brandData && (brandData.websiteUrl || brandData.logo || brandData.companyName)) {
+      console.log('🚀 Initial stage set to consultation (brand data exists)');
+      brandDataExistsOnLoad = true; // Set module-level flag
+      return 'consultation';
     }
   }
   brandDataExistsOnLoad = false;
@@ -123,44 +142,41 @@ export default function NewConsultation() {
 
   // Check for saved brand data from EnhancedBrandSetup (populate state, stage already set synchronously)
   useEffect(() => {
-    const savedBrandData = localStorage.getItem('pageconsult_brand_data');
-    if (savedBrandData) {
-      try {
-        const brandData = JSON.parse(savedBrandData);
-        console.log('📦 Loading brand data from EnhancedBrandSetup:', brandData);
+    const brandData = getFreshBrandData();
+    if (brandData) {
+      console.log('📦 Loading brand data from EnhancedBrandSetup:', brandData);
+      
+      // Apply saved brand data to extracted brand state
+      if (brandData.websiteUrl || brandData.logo || brandData.companyName) {
+        // Set the ref to prevent checkAuthAndDraft from overriding the stage
+        brandDataLoadedRef.current = true;
         
-        // Apply saved brand data to extracted brand state
-        if (brandData.websiteUrl || brandData.logo || brandData.companyName) {
-          // Set the ref to prevent checkAuthAndDraft from overriding the stage
-          brandDataLoadedRef.current = true;
-          
-          const brand: ExtractedBrand = {
-            domain: brandData.websiteUrl || '',
-            companyName: brandData.companyName || null,
-            tagline: brandData.tagline || null,
-            description: brandData.tagline || null,
-            faviconUrl: null,
-            ogImage: brandData.logo || null,
-            logoUrl: brandData.logo || null,
-            themeColor: brandData.colors?.primary || null,
-            secondaryColor: brandData.colors?.secondary || null,
-            accentColor: brandData.colors?.accent || null,
-            websiteUrl: brandData.websiteUrl || null,
-          };
-          console.log('🎨 Brand colors being set:', brandData.colors);
-          setExtractedBrand(brand);
-          setExtractedWebsiteUrl(brandData.websiteUrl || null);
-          
-          // Skip draft load since we have fresh brand data
-          setSkipDraftLoad(true);
-          // Stage is already set to 'consultation' synchronously via getInitialStage
-        }
+        const brand: ExtractedBrand = {
+          domain: brandData.websiteUrl || '',
+          companyName: brandData.companyName || null,
+          tagline: brandData.tagline || null,
+          description: brandData.tagline || null,
+          faviconUrl: null,
+          // A logo is never a hero background — ogImage stays null unless a real
+          // ogImage field is stored by Brand Setup (do not invent one).
+          ogImage: null,
+          logoUrl: brandData.logo || null,
+          themeColor: brandData.colors?.primary || null,
+          secondaryColor: brandData.colors?.secondary || null,
+          accentColor: brandData.colors?.accent || null,
+          websiteUrl: brandData.websiteUrl || null,
+        };
+        console.log('🎨 Brand colors being set:', brandData.colors);
+        setExtractedBrand(brand);
+        setExtractedWebsiteUrl(brandData.websiteUrl || null);
         
-        // Clear the stored data after loading
-        localStorage.removeItem('pageconsult_brand_data');
-      } catch (e) {
-        console.error('Error parsing brand data:', e);
+        // Skip draft load since we have fresh brand data
+        setSkipDraftLoad(true);
+        // Stage is already set to 'consultation' synchronously via getInitialStage
       }
+      
+      // Clear the stored data after loading
+      localStorage.removeItem('pageconsult_brand_data');
     }
   }, []);
 
