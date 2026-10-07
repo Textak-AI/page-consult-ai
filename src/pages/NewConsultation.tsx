@@ -368,7 +368,7 @@ export default function NewConsultation() {
       'pageconsult_consultation_data',
     ];
     keys.forEach(k => localStorage.removeItem(k));
-    console.log('籍烈士 [NewConsultation] Cleared stale brand state', { keys });
+    console.log('🧹 [NewConsultation] Cleared stale brand state', { keys });
   };
 
   const handleStartFresh = () => {
