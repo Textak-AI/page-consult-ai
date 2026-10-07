@@ -53,7 +53,7 @@ import {
 import { CreditDisplay, UpgradeDrawer } from "@/components/credits";
 import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid, generateSEOHeadData, type SEOHeadData } from "@/lib/aiSeoIntegration";
 import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief, type MappedPage } from "@/utils/sectionMapper";
-import { isBriefEnvelope, briefDisplayValue } from "@/lib/briefEnvelope";
+import { isBriefEnvelope } from "@/lib/briefEnvelope";
 import { applyArtDirectorDirectives } from "@/lib/artDirectorBrief";
 import { selectSectionsFromSDI } from "@/utils/sectionSelector";
 import { generateDesignSystem, designSystemToCSSVariables } from "@/config/designSystem";

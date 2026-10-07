@@ -1,3 +1,4 @@
+import { briefDisplayValue } from "@/lib/briefEnvelope";
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, Download, Edit, Loader2, Building2, Target, Mic, Brain, Layers, Palette, Zap } from 'lucide-react';
@@ -268,7 +269,7 @@ export default function StrategyDocument() {
           unique_value: data.unique_value,
           competitor_differentiator: data.competitor_differentiator,
           extracted_intelligence: data.extracted_intelligence as GenericIntelligence | null,
-          strategy_brief: data.strategy_brief,
+          strategy_brief: briefDisplayValue(data.strategy_brief),
         });
       }
 
