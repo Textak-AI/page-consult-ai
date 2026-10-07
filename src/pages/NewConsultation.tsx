@@ -359,8 +359,21 @@ export default function NewConsultation() {
     setStage('consultation');
   };
 
+  // Explicit clean-start: clear cross-consultation localStorage channels
+  const clearCrossConsultationState = () => {
+    const keys = [
+      'pageconsult_brand_data',
+      'pageconsult_extracted_intelligence',
+      'pageconsult_intelligence_accumulator',
+      'pageconsult_consultation_data',
+    ];
+    keys.forEach(k => localStorage.removeItem(k));
+    console.log('籍烈士 [NewConsultation] Cleared stale brand state', { keys });
+  };
+
   const handleStartFresh = () => {
     // Keep draft in DB but start new consultation
+    clearCrossConsultationState();
     setSkipDraftLoad(true); // Skip loading the draft
     setShowDraftModal(false);
     proceedToStart();
@@ -377,6 +390,7 @@ export default function NewConsultation() {
     
     // Clear localStorage too
     localStorage.removeItem('pageconsult_consultation_draft');
+    clearCrossConsultationState();
     
     setExistingDraft(null);
     setSkipDraftLoad(true);
