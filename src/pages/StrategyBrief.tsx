@@ -1,4 +1,4 @@
-import { briefObjectValue, isBriefEnvelope } from "@/lib/briefEnvelope";
+import { briefObjectValue, isBriefEnvelope, toBriefView, isStructuredBriefShape, STRUCTURED_EDIT_MAP } from "@/lib/briefEnvelope";
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -70,12 +70,16 @@ export default function StrategyBrief() {
     }
 
     setConsultation(data as ConsultationData);
-    const briefData = briefObjectValue(data.strategy_brief) as StrategyBriefData;
+    const briefData = toBriefView(data.strategy_brief, data as any) as StrategyBriefData | null;
     setBrief(briefData);
     
     // Use stored layout intelligence or compute from industry
     if (briefData?.pageStructure && briefData.pageStructure.length > 0) {
-      setPageStructure(briefData.pageStructure as PageStructureItem[]);
+      // Structured shape stores string labels — render labels only, no synthesized guidance
+      const items = (briefData.pageStructure as any[]).map((it) =>
+        typeof it === 'string' ? ({ section: it, guidance: '' } as unknown as PageStructureItem) : it,
+      );
+      setPageStructure(items as PageStructureItem[]);
       if (briefData.layoutIntelligence) {
         setLayoutIntelligence(briefData.layoutIntelligence as LayoutIntelligence);
       }
@@ -99,25 +103,41 @@ export default function StrategyBrief() {
 
     setSaving(true);
 
-    const updatedBrief = { ...brief };
-    
-    // Handle nested fields
-    if (editingField.includes('.')) {
-      const [parent, child] = editingField.split('.');
-      const parentObj = (updatedBrief as Record<string, unknown>)[parent] as Record<string, unknown> || {};
-      (updatedBrief as Record<string, unknown>)[parent] = { ...parentObj, [child]: editValue };
-    } else {
-      (updatedBrief as Record<string, unknown>)[editingField] = editValue;
-    }
-
-    setBrief(updatedBrief);
-
-    // Save to database - preserve the envelope when present so edits never destroy markdown
     const currentValue = (consultation as any)?.strategy_brief;
     const envelopePreserved = isBriefEnvelope(currentValue);
-    const writeValue = envelopePreserved
-      ? { markdown: currentValue.markdown, structured: updatedBrief }
-      : updatedBrief;
+    const rawObject = briefObjectValue(currentValue);
+    const isStructured = envelopePreserved || isStructuredBriefShape(rawObject);
+
+    const setPath = (target: Record<string, any>, path: string, val: string) => {
+      const keys = path.split('.');
+      if (keys.length === 1) { target[keys[0]] = val; return; }
+      target[keys[0]] = { ...(target[keys[0]] || {}), [keys[1]]: val };
+    };
+
+    // Update the view model
+    const updatedBrief = { ...brief } as Record<string, any>;
+    setPath(updatedBrief, editingField, editValue);
+
+    let writeValue: unknown;
+    if (isStructured) {
+      const canonical = STRUCTURED_EDIT_MAP[editingField];
+      if (!canonical) {
+        console.warn('🔒 [brief-persist] Field has no canonical structured home — read-only:', editingField);
+        setEditingField(null);
+        setEditValue('');
+        setSaving(false);
+        return;
+      }
+      const structured = { ...((envelopePreserved ? currentValue.structured : rawObject) || {}) } as Record<string, any>;
+      setPath(structured, canonical, editValue);
+      writeValue = envelopePreserved ? { markdown: currentValue.markdown, structured } : structured;
+      setConsultation((c) => (c ? ({ ...c, strategy_brief: writeValue } as any) : c));
+    } else {
+      writeValue = updatedBrief;
+    }
+
+    setBrief(updatedBrief as StrategyBriefData);
+
     console.log('💾 [brief-persist] Edit write-back — envelope preserved:', envelopePreserved);
     await supabase
       .from('consultations')
@@ -155,11 +175,14 @@ export default function StrategyBrief() {
     );
   }
 
+  const isStructuredRow = isBriefEnvelope((consultation as any)?.strategy_brief) ||
+    isStructuredBriefShape(briefObjectValue((consultation as any)?.strategy_brief));
+
   const EditableField = ({ label, field, value }: { label: string; field: string; value: string }) => (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-2">
         <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">{label}</label>
-        {editingField !== field && (
+        {editingField !== field && (!isStructuredRow || field in STRUCTURED_EDIT_MAP) && (
           <button 
             onClick={() => startEditing(field, value)}
             className="text-gray-500 hover:text-white transition-colors"
@@ -272,7 +295,7 @@ export default function StrategyBrief() {
                   </span>
                   <div>
                     <span className="text-white font-medium">{item.section}</span>
-                    <span className="text-gray-400"> — {item.guidance}</span>
+                    {item.guidance && <span className="text-gray-400"> — {item.guidance}</span>}
                   </div>
                 </div>
               ))}
