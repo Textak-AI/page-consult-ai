@@ -750,7 +750,11 @@ function GenerateContent() {
         
         // Transform consultation data to expected format
         const intel = consultationData.extracted_intelligence as any || {};
-        const brief = consultationData.strategy_brief as any || {};
+        const rawBrief = consultationData.strategy_brief as any;
+        const briefIsEnvelope = isBriefEnvelope(rawBrief);
+        console.log(`🧭 [Generate] Brief shape: ${briefIsEnvelope ? 'envelope' : 'legacy'}`);
+        const structuredFromEnvelope = (typeof rawBrief === 'object' && rawBrief?.structured) ? rawBrief.structured : null;
+        const brief = briefIsEnvelope ? (structuredFromEnvelope ?? rawBrief) : (rawBrief || {});
         
         // Generate SDI from consultation if available
         let sdiOutput: DesignIntelligenceOutput | null = null;
