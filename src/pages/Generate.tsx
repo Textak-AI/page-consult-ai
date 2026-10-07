@@ -53,6 +53,7 @@ import {
 import { CreditDisplay, UpgradeDrawer } from "@/components/credits";
 import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid, generateSEOHeadData, type SEOHeadData } from "@/lib/aiSeoIntegration";
 import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief, type MappedPage } from "@/utils/sectionMapper";
+import { isBriefEnvelope } from "@/lib/briefEnvelope";
 import { applyArtDirectorDirectives } from "@/lib/artDirectorBrief";
 import { selectSectionsFromSDI } from "@/utils/sectionSelector";
 import { generateDesignSystem, designSystemToCSSVariables } from "@/config/designSystem";
@@ -750,7 +751,11 @@ function GenerateContent() {
         
         // Transform consultation data to expected format
         const intel = consultationData.extracted_intelligence as any || {};
-        const brief = consultationData.strategy_brief as any || {};
+        const rawBrief = consultationData.strategy_brief as any;
+        const briefIsEnvelope = isBriefEnvelope(rawBrief);
+        console.log(`🧭 [Generate] Brief shape: ${briefIsEnvelope ? 'envelope' : 'legacy'}`);
+        const structuredFromEnvelope = (typeof rawBrief === 'object' && rawBrief?.structured) ? rawBrief.structured : null;
+        const brief = briefIsEnvelope ? (structuredFromEnvelope ?? rawBrief) : (rawBrief || {});
         
         // Generate SDI from consultation if available
         let sdiOutput: DesignIntelligenceOutput | null = null;

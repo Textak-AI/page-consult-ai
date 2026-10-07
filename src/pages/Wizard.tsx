@@ -1245,7 +1245,12 @@ Ready to build this? Or want to adjust the approach first?`,
           readiness_score: overallReadiness,
           status: 'completed' as const, // Valid: 'in_progress' or 'completed'
           consultation_status: 'wizard_complete' as const, // Valid: not_started, demo_started, demo_complete, wizard_in_progress, wizard_complete, generation_ready
-          strategy_brief: strategyBrief || null,
+          strategy_brief: (() => {
+            if (!strategyBrief && !structuredBrief) return null;
+            const hasStructured = !!structuredBrief && typeof structuredBrief === 'object';
+            console.log('💾 [brief-persist] Saving envelope — hasStructured:', hasStructured);
+            return { markdown: strategyBrief || null, structured: hasStructured ? structuredBrief : null };
+          })(),
           business_name: extractedData.businessName || null,
         };
         
