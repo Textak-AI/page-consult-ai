@@ -16,3 +16,8 @@ export function isBriefEnvelope(value: unknown): value is BriefEnvelope {
 export function briefDisplayValue(value: any): any {
   return isBriefEnvelope(value) ? value.markdown : value;
 }
+
+/** Object value: envelope → structured (when non-null); anything else → unchanged. */
+export function briefObjectValue(value: any): any {
+  return isBriefEnvelope(value) && value.structured != null ? value.structured : value;
+}
