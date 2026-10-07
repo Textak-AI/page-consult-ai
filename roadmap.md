@@ -1,0 +1,3 @@
+- [x] Report current trust rows and mapper reachability before editing.
+- [x] Gate live hero trust rows and final CTA subtext; delete live fabricated mapper indicators.
+- [ ] Verify zero-trust rendering and report available compiler/build results.

@@ -4325,11 +4325,6 @@ function GenerateContent() {
               secondaryCta,
               urgencyText,
               guaranteeText,
-              trustIndicators: [
-                { icon: 'check', text: 'No credit card required' },
-                { icon: 'check', text: 'Free consultation' },
-                { icon: 'check', text: 'Cancel anytime' },
-              ],
               brandColors: {
                 primary: extractedIntel?.colors?.[0] || null,
                 secondary: extractedIntel?.colors?.[1] || null,
@@ -4339,6 +4334,10 @@ function GenerateContent() {
               sectionThemes: sdi?.sectionThemes,
               sdiTypography: sdi?.sdiTypography,
             },
+          });
+          console.log('🧪 [mapLegacyStrategyContent] Final CTA render check:', {
+            trustIndicatorCount: 0,
+            rendersTrustIndicators: false,
           });
           break;
 
