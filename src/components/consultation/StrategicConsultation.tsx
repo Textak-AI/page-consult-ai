@@ -382,6 +382,17 @@ interface Props {
   websiteAnalysis?: WebsiteAnalysis | null;
 }
 
+// Brand fields are never persisted in drafts — they live only in React state for the current session
+const DRAFT_BRAND_FIELDS = ['heroBackgroundUrl', 'brandSettings', 'websiteIntelligence'] as const;
+function stripDraftBrandFields<T extends Record<string, any>>(value: T, phase: 'save' | 'restore'): T {
+  if (!value || typeof value !== 'object') return value;
+  const copy: Record<string, any> = { ...value };
+  const stripped = DRAFT_BRAND_FIELDS.filter((k) => k in copy);
+  DRAFT_BRAND_FIELDS.forEach((k) => delete copy[k]);
+  if (stripped.length) console.log(`🧹 [Draft] Brand fields stripped from ${phase}:`, stripped);
+  return copy as T;
+}
+
 export function StrategicConsultation({ onComplete, onBack, prefillData, extractedBrand, skipDraftLoad, websiteAnalysis }: Props) {
   // Check if dev mode is active
   const [isDevModeActive] = useDevMode();
@@ -825,7 +836,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         .maybeSingle();
       
       if (draft?.wizard_data && typeof draft.wizard_data === 'object') {
-        const savedData = draft.wizard_data as Partial<ConsultationData>;
+        const savedData = stripDraftBrandFields(draft.wizard_data as Partial<ConsultationData>, 'restore');
         setData(prev => ({ ...prev, ...savedData }));
         
         // Get the correct STEPS based on saved pageType
@@ -863,7 +874,8 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       try {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
-          const { currentStep: savedStep, data: savedData, timestamp } = parsed;
+          const { currentStep: savedStep, timestamp } = parsed;
+          const savedData = stripDraftBrandFields(parsed.data || {}, 'restore') as Partial<ConsultationData>;
         
           // Only restore if less than 24 hours old and has meaningful data
           const isRecent = Date.now() - timestamp < 24 * 60 * 60 * 1000;
@@ -898,13 +910,26 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     const timeoutId = setTimeout(() => {
       localStorage.setItem('pageconsult_consultation_draft', JSON.stringify({
         currentStep,
-        data,
+        data: stripDraftBrandFields(data, 'save'),
         timestamp: Date.now()
       }));
     }, 500);
     
     return () => clearTimeout(timeoutId);
   }, [currentStep, data]);
+
+  // A finished consultation leaves no draft row behind
+  const deleteDbDraftOnCompletion = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { error } = await supabase.from('consultation_drafts').delete().eq('user_id', user.id);
+      if (error) console.warn('⚠️ [Draft] Failed to delete consultation_drafts row:', error);
+      else console.log('🧹 [Draft] Deleted consultation_drafts row on completion');
+    } catch (e) {
+      console.warn('⚠️ [Draft] Draft deletion error:', e);
+    }
+  };
 
   // Manual save handler
   const handleSaveProgress = async () => {
@@ -914,7 +939,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       // Always save to localStorage
       localStorage.setItem('pageconsult_consultation_draft', JSON.stringify({
         currentStep,
-        data,
+        data: stripDraftBrandFields(data, 'save'),
         timestamp: Date.now()
       }));
       
@@ -923,7 +948,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         await supabase.from('consultation_drafts').upsert(
           {
             user_id: userId,
-            wizard_data: data as any,
+            wizard_data: stripDraftBrandFields(data, 'save') as any,
             updated_at: new Date().toISOString(),
           },
           { onConflict: 'user_id' }
@@ -1176,6 +1201,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       
       // Clear the draft since consultation is complete
       localStorage.removeItem('pageconsult_consultation_draft');
+      await deleteDbDraftOnCompletion();
       
       // Pass BOTH the text brief AND the structured JSON brief AND the classification
       onComplete(data as ConsultationData, strategyBriefText, aiSeoData, structuredBrief, classification);
@@ -1187,6 +1213,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       // Clear the draft since consultation is complete
       localStorage.removeItem('pageconsult_consultation_draft');
       console.log('🗑️ Cleared consultation draft');
+      await deleteDbDraftOnCompletion();
       
       // Fallback classification - use sync keyword match
       const fallbackClassification: IndustryClassification = {
@@ -2009,7 +2036,7 @@ ${d.ctaText}
                   size="sm"
                   onClick={() => {
                     setCurrentStep(pendingRestore.savedStep);
-                    setData(pendingRestore.savedData);
+                    setData(stripDraftBrandFields(pendingRestore.savedData, 'restore') as ConsultationData);
                     setShowRestorePrompt(false);
                     setPendingRestore(null);
                   }}

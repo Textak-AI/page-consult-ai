@@ -2789,36 +2789,14 @@ function GenerateContent() {
     } : null;
 
     // Priority 2: brandSettings from nav state
-    let navBrandSettings = strategicConsultation?.brandSettings 
+    const navBrandSettings = strategicConsultation?.brandSettings 
       || effectiveNavState?.strategicData?.brandSettings
       || effectiveNavState?.strategicData?.consultationData?.brandSettings
       || null;
     
-    // Priority 3: localStorage brand data
-    if (!navBrandSettings?.logoUrl && !navBrandSettings?.primaryColor) {
-      const localStorageBrandPaths = [
-        'pageconsult_brand_settings',
-        'brand_settings', 
-        'pageconsult_brand_data',
-        'consultation_brand_data'
-      ];
-      
-      for (const path of localStorageBrandPaths) {
-        try {
-          const stored = localStorage.getItem(path);
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            if (parsed?.primaryColor || parsed?.logoUrl) {
-              console.log(`🎨 [Brand Pipeline] Retrieved brand from localStorage "${path}"`);
-              navBrandSettings = { ...navBrandSettings, ...parsed };
-              break;
-            }
-          }
-        } catch (e) {
-          // Silently continue to next path
-        }
-      }
-    }
+    // 🧹 [Generate] Removed stale-brand localStorage fallback (pageconsult_brand_settings,
+    // brand_settings, pageconsult_brand_data, consultation_brand_data). The consultationId path
+    // must not inherit a previous Brand Setup's brand; when neither source has it, value is null.
 
     // Merge: extracted_intelligence > brandSettings > websiteIntelligence
     const logoUrl = extractedIntelBrand?.logoUrl
