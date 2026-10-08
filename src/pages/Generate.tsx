@@ -1285,6 +1285,8 @@ function GenerateContent() {
             founderPhoto: demoData.founderPhoto || null,
             // Design Intelligence - use sdiOutput directly (React state is async)
             designIntelligence: sdiOutput || designIntelligence,
+            // Live-nav handoff: pass the nav brief through verbatim (no parsing, no coercion)
+            structuredBrief: strategicData?.structuredBrief ?? null,
           };
 
           console.log('🔧 DEV MODE transformedData:', {
@@ -1327,6 +1329,8 @@ function GenerateContent() {
           created_at: demoData.timestamp,
           // Design Intelligence - use sdiOutput directly (React state is async)
           designIntelligence: sdiOutput || designIntelligence,
+          // Live-nav handoff: pass the nav brief through verbatim (no parsing, no coercion)
+          structuredBrief: strategicData?.structuredBrief ?? null,
         };
 
         setConsultation(transformedData);
