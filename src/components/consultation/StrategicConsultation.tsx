@@ -597,8 +597,13 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
 
   // Check if brand colors already exist from Brand Setup (PDF extraction or website analysis)
   // Also check extractedBrand prop for colors from EnhancedBrandSetup flow
+  // Saved-brand auto-apply visibility: applied = notice shown; dismissed = user chose "Change brand"
+  const [savedBrandApplied, setSavedBrandApplied] = useState(false);
+  const [savedBrandDismissed, setSavedBrandDismissed] = useState(false);
+  // Precedence: a fresh same-session extractedBrand always wins over the saved brandBrief
+  const hasFreshExtractedBrand = Boolean(extractedBrand?.themeColor || extractedBrand?.logoUrl);
   const hasBrandColors = Boolean(
-    brandBrief?.colors?.primary?.hex || 
+    (!savedBrandDismissed && brandBrief?.colors?.primary?.hex) ||
     extractedBrand?.themeColor || 
     extractedBrand?.logoUrl
   );
@@ -640,7 +645,9 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   
   // Sync brandBrief to brandSettings when brand is already loaded (skipping branding step)
   useEffect(() => {
-    if (hasBrandColors && brandBrief && !data.brandSettings) {
+    if (hasBrandColors && brandBrief && !data.brandSettings && !hasFreshExtractedBrand && !savedBrandDismissed) {
+      console.log('🎨 [Consultation] Saved brand auto-applied:', brandBrief.name || 'your saved brand');
+      setSavedBrandApplied(true);
       setData(prev => ({
         ...prev,
         brandSettings: {
@@ -653,7 +660,18 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         },
       }));
     }
-  }, [hasBrandColors, brandBrief, data.brandSettings]);
+  }, [hasBrandColors, brandBrief, data.brandSettings, hasFreshExtractedBrand, savedBrandDismissed]);
+
+  // "Change brand": clear the auto-applied saved brand for THIS consultation and route into the existing branding step
+  const handleChangeSavedBrand = useCallback(() => {
+    console.log('🎨 [Consultation] Saved brand cleared by user');
+    setSavedBrandDismissed(true);
+    setSavedBrandApplied(false);
+    // Neutral/unset — no default hex values substituted
+    setData(prev => ({ ...prev, brandSettings: undefined }));
+    // With hasBrandColors false, STEPS includes 'branding' as the first step
+    setCurrentStep(0);
+  }, []);
   
   // Hero background: Auto-rotate
   useEffect(() => {
@@ -665,7 +683,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   }, [heroImages.length, isHeroLocked]);
 
   // Hero background: Generate on industry select (combined: FLUX + brand scenes if logo available)
-  const logoUrl = data.brandSettings?.logoUrl || brandBrief?.logo_url;
+  const logoUrl = data.brandSettings?.logoUrl || (savedBrandDismissed ? undefined : brandBrief?.logo_url);
   
   useEffect(() => {
     if (data.industryCategory) {
@@ -1950,6 +1968,25 @@ ${d.ctaText}
       {/* Wizard Questions - floating above background */}
       <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-8">
         <div className="max-w-2xl mx-auto">
+      {/* Saved brand auto-apply notice (informational, non-blocking) */}
+      {savedBrandApplied && brandBrief && (
+        <div className="flex items-center gap-3 bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2 mb-4">
+          {brandBrief.logo_url ? (
+            <img src={brandBrief.logo_url} alt="" className="w-8 h-8 rounded object-contain bg-white/5 flex-shrink-0" />
+          ) : (
+            <div className="w-8 h-8 rounded bg-slate-700 flex items-center justify-center flex-shrink-0">
+              <Palette className="w-4 h-4 text-slate-300" />
+            </div>
+          )}
+          <p className="flex-1 text-sm text-slate-300 truncate">
+            Using {brandBrief.name ? <span className="text-white font-medium">{brandBrief.name}</span> : 'your saved brand'}
+            {brandBrief.name ? ' — your saved brand' : ''}
+          </p>
+          <Button size="sm" variant="outline" onClick={handleChangeSavedBrand} className="flex-shrink-0">
+            Change brand
+          </Button>
+        </div>
+      )}
       {/* Restore Prompt */}
       {showRestorePrompt && pendingRestore && (
         <motion.div
