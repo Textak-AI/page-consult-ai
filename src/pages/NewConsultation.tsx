@@ -18,6 +18,7 @@ import { ExtractedBrand } from "@/lib/brandExtraction";
 import type { AISeoData } from "@/services/intelligence/types";
 import type { IndustryClassification } from "@/lib/industryClassification";
 import { DraftRecoveryModal } from "@/components/consultation/DraftRecoveryModal";
+import { extractStructuredBrief } from "@/lib/extractStructuredBrief";
 
 type Stage = 'loading' | 'checking-draft' | 'brand-extractor' | 'website-analyzer' | 'intro' | 'consultation' | 'brief-review' | 'generating' | 'dev-loading';
 
@@ -526,6 +527,14 @@ export default function NewConsultation() {
       const brandLogo      = bs.logoUrl || wi.logoUrl || ls.logo || null;
       const brandName      = consultationData.businessName || wi.companyName || ls.companyName || null;
 
+      // Brief envelope — same shape as Wizard.tsx; never synthesize a structured brief
+      const envelopeMarkdown = strategyBrief || null;
+      const envelopeStructured = structuredBrief && typeof structuredBrief === 'object' ? structuredBrief : null;
+      const briefEnvelope = envelopeMarkdown || envelopeStructured
+        ? { markdown: envelopeMarkdown, structured: envelopeStructured }
+        : null;
+      console.log('💾 [brief-persist] Saving envelope — hasStructured:', !!envelopeStructured);
+
       // Create consultation record in database
       const { data: consultationRecord, error: consultationError } = await supabase
         .from("consultations")
@@ -542,6 +551,7 @@ export default function NewConsultation() {
           offer: consultationData.mainOffer,
           status: "completed",
           business_name: brandName,
+          strategy_brief: briefEnvelope as any,
           extracted_intelligence: {
             ...((consultationData as any).extracted_intelligence || {}),
             ...(brandName ? { companyName: brandName } : {}),
@@ -573,6 +583,7 @@ export default function NewConsultation() {
       
       navigate("/generate", {
         state: {
+          consultationId: consultationRecord.id,
           consultationData: {
             id: consultationRecord.id,
             industry: consultationData.industry === 'Other' 
@@ -637,6 +648,13 @@ export default function NewConsultation() {
   // Handle brief edit
   const handleBriefEdit = (editedBrief: string) => {
     setStrategyBrief(editedBrief);
+    const parsed = extractStructuredBrief(editedBrief);
+    if (parsed) {
+      setStructuredBrief(parsed);
+      console.log('💾 [brief-persist] structuredBrief re-synced from edit');
+    } else {
+      console.log('🔴 [brief-persist] edited markdown has no parseable JSON — structured left as-is');
+    }
   };
 
   // Handle restart

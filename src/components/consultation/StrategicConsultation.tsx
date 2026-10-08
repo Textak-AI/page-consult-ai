@@ -17,6 +17,7 @@ import type { AISeoData } from '@/services/intelligence/types';
 import { BrandCustomization, type BrandSettings, type WebsiteIntelligence } from './BrandCustomization';
 import { CollapsibleBriefPanel } from './CollapsibleBriefPanel';
 import { useBrandBrief } from '@/hooks/useBrandBrief';
+import { extractStructuredBrief } from '@/lib/extractStructuredBrief';
 import { AmbientHeroBackground } from './AmbientHeroBackground';
 import { generateHeroImages, regenerateHeroImages, generateCombinedHeroImages, regenerateCombinedHeroImages, type HeroImage } from '@/lib/heroImages';
 import { 
@@ -1197,7 +1198,16 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       
       // CRITICAL: Capture BOTH the text brief AND the structured JSON brief
       const strategyBriefText = briefResult.data.strategyBrief;
-      const structuredBrief = briefResult.data.structuredBrief;
+      let structuredBrief = briefResult.data.structuredBrief;
+      if (!structuredBrief && strategyBriefText) {
+        const recovered = extractStructuredBrief(strategyBriefText);
+        if (recovered) {
+          structuredBrief = recovered;
+          console.log('🧩 [StrategicConsultation] structuredBrief recovered client-side');
+        } else {
+          console.log('🔴 [StrategicConsultation] structuredBrief NULL — edge fn returned none and client re-extract failed');
+        }
+      }
       
       // Clear the draft since consultation is complete
       localStorage.removeItem('pageconsult_consultation_draft');
