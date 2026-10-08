@@ -2797,8 +2797,6 @@ function GenerateContent() {
     // 🧹 [Generate] Removed stale-brand localStorage fallback (pageconsult_brand_settings,
     // brand_settings, pageconsult_brand_data, consultation_brand_data). The consultationId path
     // must not inherit a previous Brand Setup's brand; when neither source has it, value is null.
-    const navBrandSettingsResolved = navBrandSettings;
-    void navBrandSettingsResolved;
 
     // Merge: extracted_intelligence > brandSettings > websiteIntelligence
     const logoUrl = extractedIntelBrand?.logoUrl
