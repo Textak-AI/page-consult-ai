@@ -1,3 +1,6 @@
 - [x] Report current trust rows and mapper reachability before editing.
 - [x] Gate live hero trust rows and final CTA subtext; delete live fabricated mapper indicators.
 - [x] Verify zero-trust and supplied-trust rendering in the live preview; report automatic build status and unavailable standalone checks.
+- [x] Report initial-generation versus Regenerate brief sources before changes.
+- [x] Read current router brief in live handoff and Gate 0 without parsing or coercion; add initial-generation diagnostic.
+- [ ] Verify initial-generation race regression and latest automatic build status.
