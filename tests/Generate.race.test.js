@@ -19,7 +19,7 @@ const brief = {
   pageStructure: ['hero', 'process', 'testimonials', 'credentials', 'cta-final'],
 };
 const valid = (value) =>
-  ['headlines', 'messagingPillars', 'proofPoints', 'pageStructure'].every(key => key in value);
+  !!value && typeof value === 'object' && ['headlines', 'messagingPillars', 'proofPoints', 'pageStructure'].every(key => key in value);
 const gate = (ref, snapshot = null) =>
   makeGate(ref, snapshot, valid, false, null, null, { log() {} });
 
