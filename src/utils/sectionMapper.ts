@@ -173,6 +173,52 @@ export interface MappedPage {
 }
 
 /**
+ * Canonical section-type labels handled by the switch in mapBriefToSections.
+ */
+export const CANONICAL_SECTION_TYPES = [
+  'hero',
+  'stats-bar',
+  'problem-solution',
+  'features',
+  'how-it-works',
+  'social-proof',
+  'faq',
+  'final-cta',
+  'credentials-bar',
+  'the-real-challenge',
+  'our-approach',
+  'expertise-areas',
+  'engagement-model',
+  'client-results',
+] as const;
+
+/**
+ * Ingestion aliases: section-type strings that arrive in structuredBrief.pageStructure
+ * but don't match a switch case label. Aliases only — no fuzzy matching, no guessing.
+ */
+const SECTION_TYPE_ALIASES: Record<string, string> = {
+  'cta-final': 'final-cta',
+  'cta': 'final-cta',
+  'process': 'how-it-works',
+  'testimonials': 'social-proof',
+  'proof': 'social-proof',
+  'credentials': 'credentials-bar',
+  'problem/solution': 'problem-solution',
+  'case-studies': 'client-results',
+};
+
+/**
+ * Normalizes a raw pageStructure entry to a canonical switch case label.
+ * Unmatched values are returned unchanged so they hit the default case and drop.
+ */
+export function normalizeSectionType(raw: string): string {
+  if (typeof raw !== 'string') return raw;
+  const normalized = raw.trim().toLowerCase();
+  const aliased = SECTION_TYPE_ALIASES[normalized] ?? normalized;
+  return (CANONICAL_SECTION_TYPES as readonly string[]).includes(aliased) ? aliased : normalized;
+}
+
+/**
  * Check if a testimonial is a placeholder (contains brackets or generic markers)
  */
 function isPlaceholderTestimonial(testimonial: { author: string; quote: string }): boolean {
@@ -337,9 +383,11 @@ export function mapBriefToSections(
   // Iterate through pageStructure and build sections in EXACT order
   for (const sectionType of pageStructure) {
     const order = sections.length;
+    // Ingestion fix: raw pageStructure entries are normalized to canonical case labels
+    const normalized = normalizeSectionType(sectionType);
     console.log('🎯 [sectionMapper] Creating section:', sectionType, 'with industryVariant:', industryVariant);
 
-    switch (sectionType) {
+    switch (normalized) {
       case 'hero': {
         // Use intelligent headline selection based on page goal
         const headlineSelection = selectBestHeadline(
@@ -710,9 +758,9 @@ export function mapBriefToSections(
       case 'client-results': {
         // These sections use stub components - pass through minimal content
         // The components will render with sensible defaults if data is missing
-        console.log(`📐 [sectionMapper] Creating consulting section: ${sectionType}`);
+        console.log(`📐 [sectionMapper] Creating consulting section: ${normalized}`);
         sections.push({
-          type: sectionType,
+          type: normalized,
           order,
           visible: true,
           content: {
@@ -740,7 +788,7 @@ export function mapBriefToSections(
       }
 
       default:
-        console.warn(`🧠 [sectionMapper] Unknown section type: ${sectionType}`);
+        console.warn('🔴 [sectionMapper] DROPPED unknown section type:', sectionType, '(normalized:', normalized, ')');
     }
   }
 
