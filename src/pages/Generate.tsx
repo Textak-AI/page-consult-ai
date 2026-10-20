@@ -402,6 +402,10 @@ function GenerateContent() {
     };
     fromStrategicConsultation?: boolean;
   } | null;
+
+  // Keep async generation closures pointed at the current router state.
+  const locationStateRef = useRef<NavigationStateType>(location.state);
+  locationStateRef.current = location.state;
   
   // Get navigation state from location.state or sessionStorage fallback
   const getInitialNavState = (): NavigationStateType => {
@@ -1286,7 +1290,7 @@ function GenerateContent() {
             // Design Intelligence - use sdiOutput directly (React state is async)
             designIntelligence: sdiOutput || designIntelligence,
             // Live-nav handoff: pass the nav brief through verbatim (no parsing, no coercion)
-            structuredBrief: strategicData?.structuredBrief ?? null,
+            structuredBrief: locationStateRef.current?.strategicData?.structuredBrief ?? strategicData?.structuredBrief ?? null,
           };
 
           console.log('🔧 DEV MODE transformedData:', {
@@ -1330,7 +1334,7 @@ function GenerateContent() {
           // Design Intelligence - use sdiOutput directly (React state is async)
           designIntelligence: sdiOutput || designIntelligence,
           // Live-nav handoff: pass the nav brief through verbatim (no parsing, no coercion)
-          structuredBrief: strategicData?.structuredBrief ?? null,
+          structuredBrief: locationStateRef.current?.strategicData?.structuredBrief ?? strategicData?.structuredBrief ?? null,
         };
 
         setConsultation(transformedData);
@@ -1394,6 +1398,10 @@ function GenerateContent() {
     }, 200);
 
     try {
+      console.log('🧪 [Generate] initial-gen brief check:', {
+        hasNavBrief: !!strategicData?.structuredBrief,
+        hasLocationStateBrief: !!locationStateRef.current?.strategicData?.structuredBrief,
+      });
       await animatePageBuild(consultationData, userId);
       clearInterval(progressInterval);
       setProgress(100);
@@ -2109,6 +2117,8 @@ function GenerateContent() {
   };
 
   const generateSections = async (consultationData: any): Promise<Section[]> => {
+    // Read current navigation data even when this function came from the mount render.
+    const strategicData = locationStateRef.current?.strategicData ?? effectiveNavState?.strategicData ?? null;
     // Content Generation Priority:
     // 0. NEW: Generate with strategy brief from strategic consultation (best, most strategic)
     // 1. Pre-generated content from wizard (fastest, already done)
@@ -2140,7 +2150,7 @@ function GenerateContent() {
       });
     }
     
-    if (strategicData?.structuredBrief) {
+    if (strategicData?.structuredBrief && typeof strategicData.structuredBrief === 'object') {
       console.log('📋 [generateSections] structuredBrief contents:', {
         hasHeadlines: 'headlines' in strategicData.structuredBrief,
         hasMessagingPillars: 'messagingPillars' in strategicData.structuredBrief,
