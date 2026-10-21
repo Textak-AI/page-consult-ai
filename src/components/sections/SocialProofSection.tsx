@@ -1,4 +1,4 @@
-import { Clock, Star, Quote, User, Camera } from "lucide-react";
+import { Clock, Quote, User, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useState, memo } from "react";
@@ -32,10 +32,9 @@ interface SocialProofSectionProps {
     sectionTitle?: string;
     testimonial?: {
       quote: string;
-      name: string;
-      title: string;
-      company: string;
-      rating?: number;
+      name?: string | null;
+      title?: string | null;
+      company?: string | null;
       avatarUrl?: string;
     };
     achievements?: string;
@@ -90,9 +89,9 @@ function getSocialProofHeader(industry?: string, isConsulting?: boolean): { titl
 function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSectionProps) {
   // Quality floor: if no real testimonials, don't render the section at all
   const testimonialData = content.testimonial;
-  const hasRealTestimonial = testimonialData && 
-    testimonialData.quote && testimonialData.quote.length > 10 && 
-    testimonialData.name && testimonialData.name.length > 0;
+  // Quality floor gates on the quote only — author may be null (attribution stays in the quote)
+  const hasRealTestimonial = !!testimonialData &&
+    testimonialData.quote && testimonialData.quote.length > 10;
 
   if (!hasRealTestimonial) {
     console.log('🎨 [SocialProofSection] Quality floor: no real testimonials, hiding section');
@@ -196,12 +195,6 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
             transition={{ duration: 0.6 }}
             className="bg-slate-800 border border-slate-700 p-10 rounded-2xl premium-gen-card"
           >
-            {/* Stars */}
-            <div className="flex gap-1 mb-6 justify-center">
-              {[...Array(testimonial.rating || 5)].map((_, i) => (
-                <Star key={i} className="w-6 h-6 fill-yellow-400 text-yellow-400" />
-              ))}
-            </div>
             
             {/* Quote */}
             <blockquote
@@ -213,20 +206,22 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               "{testimonial.quote}"
             </blockquote>
             
-            {/* Attribution */}
+            {/* Attribution — rendered only from user-supplied fields */}
+            {(testimonial.name || testimonial.title || testimonial.avatarUrl) && (
             <div className="flex items-center justify-center gap-4">
               <div className="w-14 h-14 rounded-full bg-slate-700 flex items-center justify-center overflow-hidden">
                 {testimonial.avatarUrl ? (
-                  <img src={testimonial.avatarUrl} alt={testimonial.name} className="w-full h-full object-cover" />
+                  <img src={testimonial.avatarUrl} alt={testimonial.name || ''} className="w-full h-full object-cover" />
                 ) : (
                   <User className="w-7 h-7 text-slate-500" />
                 )}
               </div>
               <div className="text-left">
-                <div className="font-bold text-white">{testimonial.name}</div>
-                <div className="text-slate-400">{testimonial.title}</div>
+                {testimonial.name && <div className="font-bold text-white">{testimonial.name}</div>}
+                {testimonial.title && <div className="text-slate-400">{testimonial.title}</div>}
               </div>
             </div>
+            )}
           </motion.div>
         </div>
       </section>
@@ -270,12 +265,6 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
             transition={{ duration: 0.6 }}
             className="bg-white p-10 md:p-12 rounded-2xl shadow-sm border border-slate-100"
           >
-            {/* Stars */}
-            <div className="flex gap-1 mb-6 justify-center">
-              {[...Array(testimonial.rating || 5)].map((_, i) => (
-                <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />
-              ))}
-            </div>
             
             {/* Quote */}
             <blockquote 
@@ -289,12 +278,13 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               "{testimonial.quote}"
             </blockquote>
             
-            {/* Attribution */}
+            {/* Attribution — rendered only from user-supplied fields */}
+            {(testimonial.name || testimonial.title || testimonial.avatarUrl) && (
             <div className="flex items-center justify-center gap-4">
               <div className="relative group">
                 <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
                   {testimonial.avatarUrl ? (
-                    <img src={testimonial.avatarUrl} alt={testimonial.name} className="w-full h-full object-cover" />
+                    <img src={testimonial.avatarUrl} alt={testimonial.name || ''} className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-7 h-7 text-slate-500" strokeWidth={1.5} />
                   )}
@@ -311,28 +301,33 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
                 )}
               </div>
               <div className="text-left">
-                <div 
-                  className={`font-bold text-slate-900 ${
-                    isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
-                  }`}
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning
-                  onBlur={(e) => handleBlur("testimonial.name", e)}
-                >
-                  {testimonial.name}
-                </div>
-                <div 
-                  className={`text-slate-600 ${
-                    isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
-                  }`}
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning
-                  onBlur={(e) => handleBlur("testimonial.title", e)}
-                >
-                  {testimonial.title}{testimonial.company && `, ${testimonial.company}`}
-                </div>
+                {testimonial.name && (
+                  <div 
+                    className={`font-bold text-slate-900 ${
+                      isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                    }`}
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleBlur("testimonial.name", e)}
+                  >
+                    {testimonial.name}
+                  </div>
+                )}
+                {testimonial.title && (
+                  <div 
+                    className={`text-slate-600 ${
+                      isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                    }`}
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleBlur("testimonial.title", e)}
+                  >
+                    {testimonial.title}{testimonial.company && `, ${testimonial.company}`}
+                  </div>
+                )}
               </div>
             </div>
+            )}
           </motion.div>
 
           {/* Achievements */}
@@ -393,11 +388,6 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
             transition={{ duration: 0.6 }}
             className="bg-white p-10 md:p-12 rounded-2xl shadow-md border border-gray-100"
           >
-            <div className="flex gap-1 mb-6 justify-center">
-              {[...Array(testimonial.rating || 5)].map((_, i) => (
-                <Star key={i} className="w-6 h-6 fill-amber-400 text-amber-400" />
-              ))}
-            </div>
             
             <blockquote 
               className={`text-xl md:text-2xl text-gray-800 leading-relaxed text-center mb-8 italic ${
@@ -410,11 +400,13 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               "{testimonial.quote}"
             </blockquote>
             
+            {/* Attribution — rendered only from user-supplied fields */}
+            {(testimonial.name || testimonial.title || testimonial.avatarUrl) && (
             <div className="flex items-center justify-center gap-4">
               <div className="relative group">
                 <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                   {testimonial.avatarUrl ? (
-                    <img src={testimonial.avatarUrl} alt={testimonial.name} className="w-full h-full object-cover" />
+                    <img src={testimonial.avatarUrl} alt={testimonial.name || ''} className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-7 h-7 text-gray-500" strokeWidth={1.5} />
                   )}
@@ -431,22 +423,27 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
                 )}
               </div>
               <div className="text-left">
-                <div className={`font-bold text-gray-900 ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""}`}
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning
-                  onBlur={(e) => handleBlur("testimonial.name", e)}
-                >
-                  {testimonial.name}
-                </div>
-                <div className={`text-gray-600 ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""}`}
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning
-                  onBlur={(e) => handleBlur("testimonial.title", e)}
-                >
-                  {testimonial.title}{testimonial.company && `, ${testimonial.company}`}
-                </div>
+                {testimonial.name && (
+                  <div className={`font-bold text-gray-900 ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""}`}
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleBlur("testimonial.name", e)}
+                  >
+                    {testimonial.name}
+                  </div>
+                )}
+                {testimonial.title && (
+                  <div className={`text-gray-600 ${isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""}`}
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleBlur("testimonial.title", e)}
+                  >
+                    {testimonial.title}{testimonial.company && `, ${testimonial.company}`}
+                  </div>
+                )}
               </div>
             </div>
+            )}
           </motion.div>
 
           {/* Stats Grid */}
@@ -549,16 +546,6 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               strokeWidth={1.5}
             />
             
-            {/* Star Rating */}
-            <div className="flex gap-1.5 mb-8">
-              {[...Array(testimonial.rating || 5)].map((_, i) => (
-                <Star 
-                  key={i} 
-                  className="w-6 h-6 md:w-7 md:h-7 fill-current"
-                  style={{ color: 'var(--color-warning)' }}
-                />
-              ))}
-            </div>
             
             <blockquote 
               className={`text-xl md:text-2xl lg:text-3xl mb-10 relative z-10 italic ${
@@ -577,6 +564,8 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               "{testimonial.quote}"
             </blockquote>
             
+            {/* Attribution — rendered only from user-supplied fields */}
+            {(testimonial.name || testimonial.title || testimonial.avatarUrl) && (
             <div className="flex items-center gap-5">
               <div className="relative group">
                 <div 
@@ -587,7 +576,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
                   }}
                 >
                   {testimonial.avatarUrl ? (
-                    <img src={testimonial.avatarUrl} alt={testimonial.name} className="w-full h-full object-cover" />
+                    <img src={testimonial.avatarUrl} alt={testimonial.name || ''} className="w-full h-full object-cover" />
                   ) : (
                     <User 
                       className="w-8 h-8 md:w-9 md:h-9"
@@ -608,37 +597,42 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
                 )}
               </div>
               <div>
-                <div 
-                  className={`text-lg md:text-xl ${
-                    isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
-                  }`}
-                  style={{ 
-                    color: 'var(--color-text-primary)',
-                    fontFamily: 'var(--font-heading)',
-                    fontWeight: 'var(--font-weight-heading)',
-                  }}
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning
-                  onBlur={(e) => handleBlur("testimonial.name", e)}
-                >
-                  {testimonial.name}
-                </div>
-                <div 
-                  className={`text-sm md:text-base ${
-                    isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
-                  }`}
-                  style={{ 
-                    color: 'var(--color-text-secondary)',
-                    fontFamily: 'var(--font-body)',
-                  }}
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning
-                  onBlur={(e) => handleBlur("testimonial.title", e)}
-                >
-                  {testimonial.title}{testimonial.company && `, ${testimonial.company}`}
-                </div>
+                {testimonial.name && (
+                  <div 
+                    className={`text-lg md:text-xl ${
+                      isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                    }`}
+                    style={{ 
+                      color: 'var(--color-text-primary)',
+                      fontFamily: 'var(--font-heading)',
+                      fontWeight: 'var(--font-weight-heading)',
+                    }}
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleBlur("testimonial.name", e)}
+                  >
+                    {testimonial.name}
+                  </div>
+                )}
+                {testimonial.title && (
+                  <div 
+                    className={`text-sm md:text-base ${
+                      isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-1" : ""
+                    }`}
+                    style={{ 
+                      color: 'var(--color-text-secondary)',
+                      fontFamily: 'var(--font-body)',
+                    }}
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleBlur("testimonial.title", e)}
+                  >
+                    {testimonial.title}{testimonial.company && `, ${testimonial.company}`}
+                  </div>
+                )}
               </div>
             </div>
+            )}
           </div>
         </motion.div>
 
