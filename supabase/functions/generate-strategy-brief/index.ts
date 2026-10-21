@@ -510,3 +510,54 @@ ${data.campaignTrigger ? `- Topic: ${data.campaignTrigger}` : ''}
   console.log('🎯 [Intelligence] Campaign context detected:', data.pagePurpose);
   return purposeDirectives[data.pagePurpose] || '';
 }
+
+// ---------------------------------------------------------------------------
+// Zero-fabrication guards: deterministic, applied after parse, before return.
+// ---------------------------------------------------------------------------
+function collectUserInputText(data: any): string {
+  const parts: string[] = [];
+  const walk = (v: unknown, depth: number) => {
+    if (v == null || depth > 4) return;
+    if (typeof v === 'string' || typeof v === 'number') { parts.push(String(v)); return; }
+    if (Array.isArray(v)) { v.forEach((x) => walk(x, depth + 1)); return; }
+    if (typeof v === 'object') Object.values(v as Record<string, unknown>).forEach((x) => walk(x, depth + 1));
+  };
+  walk(data, 0);
+  return parts.join(' ');
+}
+
+function extractNumbers(text: string): string[] {
+  return (text.match(/\d[\d,]*(?:\.\d+)?/g) || []).map((n) => n.replace(/,/g, ''));
+}
+
+function applyBriefGuards(brief: any, data: any): void {
+  // 1. Testimonials: only the user's own text, verbatim.
+  const userTestimonial = typeof data?.testimonialText === 'string' ? data.testimonialText.trim() : '';
+  const modelCount = Array.isArray(brief.testimonials) ? brief.testimonials.length : 0;
+  if (userTestimonial) {
+    brief.testimonials = [{ quote: userTestimonial, author: null, title: null }];
+    if (modelCount > 0) console.log('🛡️ [brief-guard] Removed fabricated testimonials — replaced model output with user-supplied testimonialText verbatim');
+  } else {
+    if (modelCount > 0) console.log(`🛡️ [brief-guard] Removed fabricated testimonials — ${modelCount} model-generated entr${modelCount === 1 ? 'y' : 'ies'}, no user testimonial supplied`);
+    brief.testimonials = [];
+  }
+
+  // 2. proofPoints.otherStats: drop entries whose numbers aren't in user inputs.
+  const pp = brief.proofPoints;
+  if (pp && typeof pp === 'object' && Array.isArray(pp.otherStats)) {
+    const userNumbers = new Set(extractNumbers(collectUserInputText(data)));
+    pp.otherStats = pp.otherStats.filter((stat: unknown) => {
+      if (typeof stat !== 'string') {
+        console.log('🛡️ [brief-guard] Removed fabricated proofPoints.otherStats — non-string entry');
+        return false;
+      }
+      const nums = extractNumbers(stat);
+      const unknown = nums.filter((n) => !userNumbers.has(n));
+      if (unknown.length > 0) {
+        console.log(`🛡️ [brief-guard] Removed fabricated proofPoints.otherStats — "${stat.slice(0, 60)}" contains numbers not in user inputs: ${unknown.join(', ')}`);
+        return false;
+      }
+      return true;
+    });
+  }
+}
