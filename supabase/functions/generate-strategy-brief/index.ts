@@ -168,6 +168,8 @@ ${layoutResult.config.trustPriorities.slice(0, 3).map((t, i) => `${i+1}. ${t}`).
 
 Your brief must be actionable, specific, and derived directly from the client's inputs. Never use generic placeholder text. If information is missing, acknowledge it and make strategic recommendations.
 
+ZERO FABRICATION: Never invent testimonials, quotes, named people, job titles, companies, ratings, or statistics. Only use testimonials and numbers that appear verbatim in the client's inputs. If none were provided, return "testimonials": [] and leave proof stats empty.
+
 CRITICAL: Your output will be used as the LITERAL BLUEPRINT for page generation. Every section you recommend will be built exactly as specified.
 
 Output the brief in clean markdown format with a STRUCTURED JSON block at the end for the page generator to parse.`;
@@ -378,6 +380,10 @@ Be specific. No generic advice. Everything should tie back to the actual consult
       } catch (e) {
         console.warn('[generate-strategy-brief] Could not parse structured JSON from brief');
       }
+    }
+
+    if (structuredBrief && typeof structuredBrief === 'object') {
+      applyBriefGuards(structuredBrief, consultationData);
     }
 
     return new Response(JSON.stringify({
