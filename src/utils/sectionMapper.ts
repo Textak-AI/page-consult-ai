@@ -78,8 +78,8 @@ export interface StructuredBrief {
   }> | null;
   testimonials: Array<{
     quote: string;
-    author: string;
-    title: string;
+    author: string | null;
+    title: string | null;
   }>;
   ctaText: string;
 }
@@ -566,8 +566,18 @@ export function mapBriefToSections(
 
       case 'social-proof': {
         // Use ranked testimonials for better ordering
-        const rankedTestimonials = rankTestimonials(brief.testimonials || []);
+        // Null-safe: the brief-guard emits author/title as null when the user
+        // left attribution inside the quote text, so normalize before ranking.
+        const rankedTestimonials = rankTestimonials(
+          (brief.testimonials || []).map(t => ({
+            quote: t.quote,
+            author: t.author || '',
+            title: t.title || '',
+          }))
+        );
+        // A testimonial is real when the user supplied a quote; author may be null
         const hasRealTestimonials = rankedTestimonials.length > 0 &&
+          !!rankedTestimonials[0].quote && rankedTestimonials[0].quote.trim().length > 10 &&
           !isPlaceholderTestimonial(rankedTestimonials[0]);
         
         const socialProofType = isBetaPage ? 'waitlist-proof' : 'social-proof';
@@ -578,12 +588,12 @@ export function mapBriefToSections(
         }
 
         // Extract the primary testimonial for the featured display
+        // No rating field: ratings are never user-supplied, so none is fabricated
         const primaryTestimonial = hasRealTestimonials ? {
           quote: rankedTestimonials[0].quote,
-          name: rankedTestimonials[0].author,
-          title: rankedTestimonials[0].title || '',
+          name: rankedTestimonials[0].author || null,
+          title: rankedTestimonials[0].title || null,
           company: '',
-          rating: 5,
         } : undefined;
 
         sections.push({
@@ -601,9 +611,8 @@ export function mapBriefToSections(
             testimonials: hasRealTestimonials
               ? rankedTestimonials.slice(0, 3).map(t => ({
                   quote: t.quote,
-                  author: t.author,
-                  title: t.title,
-                  rating: 5,
+                  author: t.author || null,
+                  title: t.title || null,
                   score: t.score,
                 }))
               : [],
