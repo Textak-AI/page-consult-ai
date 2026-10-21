@@ -372,14 +372,28 @@ Be specific. No generic advice. Everything should tie back to the actual consult
 
     // Extract the structured JSON from the brief
     let structuredBrief = null;
-    const jsonMatch = strategyBrief.match(/```json\s*([\s\S]*?)\s*```/);
-    if (jsonMatch) {
+    // Mirror src/lib/extractStructuredBrief.ts: prefer a ```json fence, fall
+    // back to the first bare ``` fence so applyBriefGuards always runs on
+    // anything the client could recover.
+    const candidates: string[] = [];
+    const jsonMatch = strategyBrief.match(/```json\s*([\s\S]*?)\s*```/i);
+    if (jsonMatch) candidates.push(jsonMatch[1]);
+    const bareMatch = strategyBrief.match(/```\s*\n([\s\S]*?)```/);
+    if (bareMatch) candidates.push(bareMatch[1]);
+    for (const candidate of candidates) {
       try {
-        structuredBrief = JSON.parse(jsonMatch[1]);
-        console.log('[generate-strategy-brief] Extracted structured brief');
+        const parsed = JSON.parse(candidate.trim());
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          structuredBrief = parsed;
+          console.log('[generate-strategy-brief] Extracted structured brief');
+          break;
+        }
       } catch (e) {
-        console.warn('[generate-strategy-brief] Could not parse structured JSON from brief');
+        // try next candidate
       }
+    }
+    if (!structuredBrief) {
+      console.warn('[generate-strategy-brief] Could not parse structured JSON from brief');
     }
 
     if (structuredBrief && typeof structuredBrief === 'object') {
