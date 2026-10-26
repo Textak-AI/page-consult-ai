@@ -17,6 +17,7 @@ interface PageData {
   slug: string;
   sections: Section[];
   styles: any;
+  businessName?: string | null;
   meta_title?: string | null;
   meta_description?: string | null;
 }
