@@ -266,7 +266,7 @@ You must respond with ONLY valid JSON, no other text:
 
     const publicUrl = `${
       Deno.env.get("PUBLIC_SITE_URL") || "https://pageconsult.ai"
-    }/p/${slug}`;
+    }/for/${slug}`;
 
     console.log("[generate-prospect-pivot] Creating prospect with slug:", slug);
 
