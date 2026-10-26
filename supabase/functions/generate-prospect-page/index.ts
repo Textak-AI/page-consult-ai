@@ -339,7 +339,8 @@ serve(async (req) => {
 
     console.log('[generate-prospect-page] Prospect page created:', prospectPage.id);
 
-    const publicUrl = `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovable.app')}/p/${prospectPage.unique_slug}`;
+    const siteUrl = Deno.env.get('PUBLIC_SITE_URL') || Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.lovable.app');
+    const publicUrl = `${siteUrl}/p/${prospectPage.unique_slug}`;
 
     return new Response(
       JSON.stringify({
