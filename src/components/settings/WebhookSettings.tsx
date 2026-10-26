@@ -88,10 +88,10 @@ export function WebhookSettings() {
     }
     setSaving(true);
     try {
+      // Upsert: older accounts may have no profiles row yet
       const { error } = await supabase
         .from("profiles")
-        .update({ lead_webhook_url: trimmed || null })
-        .eq("id", user.id);
+        .upsert({ id: user.id, lead_webhook_url: trimmed || null });
       if (error) throw error;
       setWebhookUrl(trimmed);
       toast.success(trimmed ? "Webhook URL saved" : "Webhook URL cleared");
