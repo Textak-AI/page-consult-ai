@@ -120,9 +120,9 @@ serve(async (req) => {
     }
 
     const { messages, pageContent, action }: ConsultRequest = validation.data;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 
-    if (!lovableApiKey) {
+    if (!anthropicApiKey) {
       return new Response(
         JSON.stringify({ error: 'API key not configured' }), 
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -132,18 +132,21 @@ serve(async (req) => {
     // Build system prompt based on action and page content
     const systemPrompt = buildSystemPrompt(action, pageContent);
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'x-api-key': anthropicApiKey,
+        'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...messages,
+        model: 'claude-sonnet-4-5',
+        max_tokens: 8192,
+        system: [
+          { type: 'text', text: systemPrompt },
+          ...messages.filter((m) => m.role === 'system').map((m) => ({ type: 'text', text: m.content })),
         ],
+        messages: messages.filter((m) => m.role !== 'system'),
         stream: true,
       }),
     });
@@ -180,8 +183,42 @@ serve(async (req) => {
         .eq('user_id', user.id);
     }
 
-    // Return the stream directly
-    return new Response(response.body, {
+    // Translate Anthropic text blocks into the existing OpenAI-style SSE contract.
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let finished = false;
+    const transport = new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        buffer += decoder.decode(chunk, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const event = JSON.parse(line.slice(6));
+          const text = event.type === 'content_block_start' && event.content_block?.type === 'text'
+            ? event.content_block.text
+            : event.type === 'content_block_delta' && event.delta?.type === 'text_delta'
+              ? event.delta.text
+              : '';
+          if (text) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`));
+          }
+          if (event.type === 'error') {
+            controller.error(new Error(event.error?.message || 'AI service error'));
+            return;
+          }
+          if (event.type === 'message_stop') {
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            finished = true;
+          }
+        }
+      },
+      flush(controller) {
+        if (!finished) controller.error(new Error('AI stream ended before message_stop'));
+      },
+    });
+    return new Response(response.body?.pipeThrough(transport), {
       headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
     });
 
