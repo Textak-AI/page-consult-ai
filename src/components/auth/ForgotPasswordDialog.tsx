@@ -17,6 +17,7 @@ export function ForgotPasswordDialog({ email, disabled = false, initiallyOpen = 
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    event.stopPropagation(); // Portal form must not submit the surrounding signup form.
     if (sending) return;
     setSending(true);
     await requestPasswordRecovery(supabase.auth, resetEmail, window.location.origin);
