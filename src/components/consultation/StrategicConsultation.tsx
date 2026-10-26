@@ -69,6 +69,8 @@ export interface ConsultationData {
     heroText: string | null;
     testimonials: string[];
     companyName: string | null;
+    headingFont?: string | null;
+    bodyFont?: string | null;
   };
   
   // Brand Settings (from BrandCustomization step)
@@ -670,6 +672,21 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
           bodyFont: brandBrief.typography?.bodyFont || 'Inter',
           modified: false,
         },
+        // Also feed the brand-match step (BrandCustomization reads websiteIntelligence)
+        websiteIntelligence: {
+          logoUrl: brandBrief.logo_url || prev.websiteIntelligence?.logoUrl || null,
+          brandColors: [brandBrief.colors?.primary?.hex, brandBrief.colors?.secondary?.hex].filter(Boolean) as string[],
+          primaryColor: brandBrief.colors?.primary?.hex || prev.websiteIntelligence?.primaryColor || null,
+          secondaryColor: brandBrief.colors?.secondary?.hex || prev.websiteIntelligence?.secondaryColor || null,
+          headingFont: brandBrief.typography?.headlineFont || null,
+          bodyFont: brandBrief.typography?.bodyFont || null,
+          title: prev.websiteIntelligence?.title || null,
+          tagline: prev.websiteIntelligence?.tagline || null,
+          description: prev.websiteIntelligence?.description || null,
+          heroText: prev.websiteIntelligence?.heroText || null,
+          testimonials: prev.websiteIntelligence?.testimonials || [],
+          companyName: prev.websiteIntelligence?.companyName || null,
+        },
       }));
     }
   }, [hasBrandColors, brandBrief, data.brandSettings, hasFreshExtractedBrand, savedBrandDismissed]);
@@ -679,8 +696,9 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     console.log('🎨 [Consultation] Saved brand cleared by user');
     setSavedBrandDismissed(true);
     setSavedBrandApplied(false);
-    // Neutral/unset — no default hex values substituted
-    setData(prev => ({ ...prev, brandSettings: undefined }));
+    // Neutral/unset — no default hex values substituted; also clear the auto-applied
+    // websiteIntelligence brand fields so the branding step doesn't keep showing them
+    setData(prev => ({ ...prev, brandSettings: undefined, websiteIntelligence: undefined }));
     // With hasBrandColors false, STEPS includes 'branding' as the first step
     setCurrentStep(0);
   }, []);
@@ -1972,6 +1990,8 @@ ${d.ctaText}
       secondaryColor: secondaryColor || undefined,
       companyName: data.websiteIntelligence?.companyName,
       tagline: data.websiteIntelligence?.tagline,
+      headingFont: data.websiteIntelligence?.headingFont || data.brandSettings?.headingFont,
+      bodyFont: data.websiteIntelligence?.bodyFont || data.brandSettings?.bodyFont,
     };
     
     return (
