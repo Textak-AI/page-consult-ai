@@ -29,21 +29,21 @@ const heroCta = (sections) =>
   sections.find(s => s.type === 'hero' || s.type === 'beta-hero-teaser')?.content.ctaText;
 
 describe('hero ctaText source precedence', () => {
-  test('brief.ctaText wins over consultation primaryCTA (consulting)', () => {
+  test('consultation primaryCTA wins over brief.ctaText (consulting)', () => {
     const sections = mapBriefToSections(
       briefWith({ ctaText: 'Book a Working Session' }),
       consulting({ consultationData: { primaryCTA: 'Talk to Kyle' } })
     );
     expect(sections).toHaveLength(1);
-    expect(heroCta(sections)).toBe('Book a Working Session');
+    expect(heroCta(sections)).toBe('Talk to Kyle');
   });
 
-  test('consultation primaryCTA is used when brief.ctaText is empty (consulting)', () => {
+  test('brief.ctaText is used when consultation primaryCTA is absent (consulting)', () => {
     const sections = mapBriefToSections(
-      briefWith({ ctaText: '' }),
-      consulting({ consultationData: { primaryCTA: 'Talk to Kyle' } })
+      briefWith({ ctaText: 'Book a Working Session' }),
+      consulting()
     );
-    expect(heroCta(sections)).toBe('Talk to Kyle');
+    expect(heroCta(sections)).toBe('Book a Working Session');
   });
 
   test('industry default only when both user sources are absent (consulting)', () => {
@@ -68,6 +68,7 @@ describe('hero ctaText source precedence', () => {
         )
       )
     ).toBe('Start Your Trial');
+    // CTA text is law: the typed button text outranks the brief's restatement
     expect(
       heroCta(
         mapBriefToSections(
@@ -75,6 +76,6 @@ describe('hero ctaText source precedence', () => {
           { ...saas, consultationData: { primaryCTA: 'Start Your Trial' } }
         )
       )
-    ).toBe('See It Working');
+    ).toBe('Start Your Trial');
   });
 });
