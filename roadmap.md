@@ -10,3 +10,5 @@
 - [x] Switch the five requested prospect/color/voice/FAQ/improvement transports to Anthropic; all five live 200 shapes verified, including a real-logo palette and disposable-record persistence/readback; test records removed.
 - [x] Update the eight requested dependencies to nearest secure versions, refresh npm/Bun lockfiles, and minimally adapt Zod error access without feature changes.
 - [x] Verify zero npm advisories including dev dependencies, zero production scan advisories, all 24 existing tests, compatibility smoke checks, and automatic build OK.
+- [ ] Switch demo-extract-intelligence, demo-generate-response, generate-page-content, and extract-style-inspiration to Anthropic transport only; leave generate-brand-scene untouched.
+- [ ] Deploy and verify live 200 contracts for all four, including real screenshot vision analysis.
