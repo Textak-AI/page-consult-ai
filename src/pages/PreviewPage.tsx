@@ -112,6 +112,7 @@ export default function PreviewPage() {
           sections={pageData.sections || []}
           styles={pageData.styles || {}}
           designIntelligence={pageData.design_intelligence}
+          businessName={pageData?.consultation_data?.businessName || null}
         />
       </div>
     </div>

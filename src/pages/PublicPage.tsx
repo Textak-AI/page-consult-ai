@@ -242,6 +242,7 @@ export default function PublicPage() {
       heroThumbnailUrl={page.hero_thumbnail_url}
       designIntelligence={designIntelligence as any}
       brandSettings={brandSettings}
+      businessName={page.consultation_data?.businessName || null}
       showPoweredBy={true}
       publishedPageId={publishedPageId}
     />
