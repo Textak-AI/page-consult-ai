@@ -103,7 +103,7 @@ export default function ProspectPage() {
             slug: basePage.slug,
             sections: personalizedSections,
             styles: basePage.styles,
-            businessName: basePage.consultation_data?.businessName || null,
+            businessName: (basePage.consultation_data as any)?.businessName || null,
             meta_title: basePage.meta_title,
             meta_description: basePage.meta_description,
           });
@@ -156,7 +156,7 @@ export default function ProspectPage() {
           slug: landingPage.slug,
           sections,
           styles: landingPage.styles,
-          businessName: landingPage.consultation_data?.businessName || null,
+          businessName: (landingPage.consultation_data as any)?.businessName || null,
           meta_title: landingPage.meta_title,
           meta_description: landingPage.meta_description,
         });
