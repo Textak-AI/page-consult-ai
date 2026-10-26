@@ -11,6 +11,7 @@ import { handlePostAuthMigration } from "@/lib/sessionMigration";
 import { hasGuestSession } from "@/lib/guestSession";
 import { getNextStep, updateFlowState } from "@/services/flowEngine";
 import { intelligenceConcierge, type ConsultationData } from "@/lib/intelligenceConcierge";
+import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 interface DemoIntelligence {
   sessionId: string;
   source: string;
@@ -950,6 +951,7 @@ export default function Signup() {
                   <p className="text-xs text-gray-400">
                     Must be at least 6 characters
                   </p>
+                  <ForgotPasswordDialog email={email} disabled={loading} initiallyOpen={searchParams.get('reset') === 'true'} />
                 </div>
 
                 <Button
@@ -1063,6 +1065,7 @@ export default function Signup() {
                 <p className="text-xs text-gray-400">
                   Must be at least 6 characters
                 </p>
+                <ForgotPasswordDialog email={email} disabled={loading} initiallyOpen={searchParams.get('reset') === 'true'} />
               </div>
 
               <Button
