@@ -415,7 +415,7 @@ export function mapBriefToSections(
           content: {
             headline: headlineSelection.primary,
             subheadline: brief.subheadline,
-            ctaText: brief.ctaText || options.consultationData?.primaryCTA || (isConsulting ? industryTokens.ctaDefaults.primary : getCtaByIndustry(industry).primary),
+            ctaText: options.consultationData?.primaryCTA || brief.ctaText || (isConsulting ? industryTokens.ctaDefaults.primary : getCtaByIndustry(industry).primary),
             ctaLink: '#contact',
             backgroundImage: heroImageUrl || null,
             trustBadges: trustBadges.length > 0 ? trustBadges : undefined,
