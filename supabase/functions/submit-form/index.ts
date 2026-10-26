@@ -207,9 +207,10 @@ Deno.serve(async (req: Request) => {
 
     // Run in the background when the runtime supports it; otherwise await it
     // (still failure-isolated — lead capture has already succeeded)
-    try {
-      (globalThis as any).EdgeRuntime?.waitUntil?.(webhookDelivery) ?? await webhookDelivery;
-    } catch {
+    const edgeRuntime = (globalThis as any).EdgeRuntime;
+    if (edgeRuntime?.waitUntil) {
+      edgeRuntime.waitUntil(webhookDelivery);
+    } else {
       await webhookDelivery;
     }
 
