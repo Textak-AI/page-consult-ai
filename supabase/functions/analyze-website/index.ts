@@ -71,9 +71,9 @@ serve(async (req) => {
       console.log('Could not fetch about page');
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!ANTHROPIC_API_KEY) {
+      throw new Error('ANTHROPIC_API_KEY not configured');
     }
 
     const analysisPrompt = `You are a senior landing page strategist. Analyze this website and extract everything needed for a high-converting landing page.
@@ -133,14 +133,15 @@ IMPORTANT:
 Return ONLY valid JSON.`;
 
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'claude-sonnet-4-5',
         max_tokens: 2000,
         messages: [{ role: 'user', content: analysisPrompt }]
       })
@@ -153,7 +154,7 @@ Return ONLY valid JSON.`;
     }
 
     const aiData = await aiResponse.json();
-    const analysisText = aiData.choices?.[0]?.message?.content || '';
+    const analysisText = aiData.content?.filter((block: any) => block.type === 'text').map((block: any) => block.text).join('') || '';
     let analysis;
     try {
       analysis = JSON.parse(analysisText);

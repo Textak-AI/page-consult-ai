@@ -212,8 +212,8 @@ serve(async (req) => {
       }
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
+    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!ANTHROPIC_API_KEY) {
       return new Response(
         JSON.stringify({ error: 'Service configuration error' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -228,34 +228,37 @@ serve(async (req) => {
     // Run both conversation response and extraction in parallel
     const [conversationResponse, extractionResponse] = await Promise.all([
       // Only get conversation response if not extractOnly
-      extractOnly ? Promise.resolve(null) : fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      extractOnly ? Promise.resolve(null) : fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
-          messages: [
-            { role: 'system', content: CONVERSATION_SYSTEM_PROMPT },
-            ...messages,
+          model: 'claude-sonnet-4-5',
+          system: [
+            { type: 'text', text: CONVERSATION_SYSTEM_PROMPT },
+            ...messages.filter((m: any) => m.role === 'system').map((m: any) => ({ type: 'text', text: m.content })),
           ],
+          messages: messages.filter((m: any) => m.role !== 'system'),
           max_tokens: 500,
           temperature: 0.8,
         }),
       }),
       
       // Always run extraction
-      fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: 'claude-sonnet-4-5',
+          system: EXTRACTION_SYSTEM_PROMPT,
           messages: [
-            { role: 'system', content: EXTRACTION_SYSTEM_PROMPT },
             { role: 'user', content: `Analyze this conversation and extract intelligence:\n\n${conversationText}` },
           ],
           max_tokens: 1000,
@@ -281,7 +284,7 @@ serve(async (req) => {
 
     if (extractionResponse.ok) {
       const extractionData = await extractionResponse.json();
-      const extractionText = extractionData.choices?.[0]?.message?.content || '';
+      const extractionText = extractionData.content?.filter((block: any) => block.type === 'text').map((block: any) => block.text).join('') || '';
       
       // Parse JSON from response
       try {
@@ -313,7 +316,7 @@ serve(async (req) => {
       }
       
       const conversationData = await conversationResponse.json();
-      message = conversationData.choices?.[0]?.message?.content || 'Could you repeat that?';
+      message = conversationData.content?.filter((block: any) => block.type === 'text').map((block: any) => block.text).join('') || 'Could you repeat that?';
     }
 
     console.log('✅ Response generated, readiness:', intelligence.overallReadiness);

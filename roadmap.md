@@ -5,3 +5,5 @@
 - [x] Read current router brief in live handoff and Gate 0 without parsing or coercion; add initial-generation diagnostic.
 - [x] Verify late-state regression and latest automatic build status; isolated browser reached BRIEF-FIRST, but authenticated five-section approval flow remains unverified.
 - [x] Normalize pageStructure section types before the sectionMapper switch; alias/unit tests pass and automatic build OK, but the authenticated five-section approve flow is still unverified end-to-end.
+- [x] Switch analyze-website, ai-consultant, consultant-suggestions, and intake-chat transports to direct Anthropic; prompt assertions and consultant SSE compatibility checks pass; three live responses verified.
+- [ ] Verify ai-consultant live 200: blocked by its unchanged authentication dependency returning 401 for a valid session; resolving authentication requires authorization to expand the transport-only scope.
