@@ -1301,6 +1301,7 @@ export type Database = {
           full_name: string | null
           id: string
           job_title: string | null
+          lead_webhook_url: string | null
           marketing_emails: boolean | null
           phone_number: string | null
           preferred_mode: string | null
@@ -1328,6 +1329,7 @@ export type Database = {
           full_name?: string | null
           id: string
           job_title?: string | null
+          lead_webhook_url?: string | null
           marketing_emails?: boolean | null
           phone_number?: string | null
           preferred_mode?: string | null
@@ -1355,6 +1357,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           job_title?: string | null
+          lead_webhook_url?: string | null
           marketing_emails?: boolean | null
           phone_number?: string | null
           preferred_mode?: string | null
@@ -1970,6 +1973,45 @@ export type Database = {
           trial_start?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_deliveries: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          error: string | null
+          event_type: string
+          id: string
+          payload: Json
+          response_status: number | null
+          status: string
+          user_id: string
+          webhook_url: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          error?: string | null
+          event_type?: string
+          id?: string
+          payload: Json
+          response_status?: number | null
+          status: string
+          user_id: string
+          webhook_url: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          error?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          response_status?: number | null
+          status?: string
+          user_id?: string
+          webhook_url?: string
         }
         Relationships: []
       }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, User, Mail, Bell, CreditCard, Shield, Link2 } from "lucide-react";
+import { ArrowLeft, User, Mail, Bell, CreditCard, Shield, Link2, Webhook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
@@ -10,8 +10,9 @@ import { NotificationSettings } from "@/components/settings/NotificationSettings
 import { BillingSettings } from "@/components/settings/BillingSettings";
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { ConnectedAccountsSettings } from "@/components/settings/ConnectedAccountsSettings";
+import { WebhookSettings } from "@/components/settings/WebhookSettings";
 
-type SettingsSection = "profile" | "signature" | "notifications" | "billing" | "security" | "connected";
+type SettingsSection = "profile" | "signature" | "notifications" | "billing" | "security" | "connected" | "webhooks";
 
 const sections = [
   { id: "profile" as const, label: "Profile", icon: User },
@@ -20,6 +21,7 @@ const sections = [
   { id: "billing" as const, label: "Billing", icon: CreditCard },
   { id: "security" as const, label: "Security", icon: Shield },
   { id: "connected" as const, label: "Connected Accounts", icon: Link2 },
+  { id: "webhooks" as const, label: "Webhooks", icon: Webhook },
 ];
 
 export default function Settings() {
@@ -40,6 +42,8 @@ export default function Settings() {
         return <SecuritySettings />;
       case "connected":
         return <ConnectedAccountsSettings />;
+      case "webhooks":
+        return <WebhookSettings />;
       default:
         return <ProfileSettings />;
     }
