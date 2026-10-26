@@ -8,6 +8,7 @@ import { HuddleCTAs } from '@/components/huddle/HuddleCTAs';
 import { updateFlowState } from '@/services/flowEngine';
 import { Loader2, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { extractStructuredBrief } from '@/lib/extractStructuredBrief';
 
 interface HuddleContent {
   recap: string;
@@ -284,7 +285,7 @@ export default function Huddle() {
   }
 
   async function handlePrimaryCTA() {
-    if (!consultation || !huddleContent) return;
+    if (!consultation || !huddleContent || !consultationId) return;
 
     setGenerating(true);
 
@@ -301,7 +302,8 @@ export default function Huddle() {
       const brief = await generateStrategyBrief(consultation, cardNotes);
 
       // Save brief to consultation and update flow state
-      await supabase
+      console.log('💾 [brief-persist] Saving envelope — hasStructured:', !!brief.structured);
+      const { error: briefSaveError } = await supabase
         .from('consultations')
         .update({
           strategy_brief: brief as unknown as import('@/integrations/supabase/types').Json,
@@ -310,11 +312,18 @@ export default function Huddle() {
             version: 1,
             generated_at: new Date().toISOString(),
             trigger: 'huddle_generation',
-            positioning_summary: String(brief.positioning || '')
+            positioning_summary: String(cardNotes.edge || consultation.competitor_differentiator || consultation.extracted_intelligence?.competitorDifferentiator || '')
           }] as unknown as import('@/integrations/supabase/types').Json,
           flow_state: 'brief_generated'
         })
         .eq('id', consultationId);
+
+      if (briefSaveError) {
+        console.error('🔴 [Huddle] Failed to persist brief envelope:', briefSaveError);
+        setError('Could not save your strategy brief. Please try again.');
+        setGenerating(false);
+        return;
+      }
 
       // Check if brand data already exists - skip brand setup if so
       const { data: consultationData } = await supabase
@@ -336,18 +345,56 @@ export default function Huddle() {
         navigate(`/brand-setup?consultationId=${consultationId}`);
       }
     } else if (action === 'generate_page') {
-      await updateFlowState(consultationId!, 'brief_generated', 'huddle_primary_cta');
+      await updateFlowState(consultationId, 'brief_generated', 'huddle_primary_cta');
       navigate(`/generate?consultationId=${consultationId}`);
     }
 
     setGenerating(false);
   }
 
-  async function generateStrategyBrief(consultation: ConsultationData, notes: Record<string, string>): Promise<Record<string, unknown>> {
+  async function generateStrategyBrief(consultation: ConsultationData, notes: Record<string, string>): Promise<{ markdown: string | null; structured: Record<string, unknown> | null }> {
+    const intel = consultation.extracted_intelligence || {};
+    const consultationData = {
+      ...intel,
+      ...consultation,
+      card_notes: notes,
+      businessName: intel.businessName || consultation.company_name || consultation.business_name || intel.companyName,
+      industry: notes.industry || consultation.industry || intel.industry,
+      idealClient: notes.audience || intel.idealClient || consultation.target_audience || intel.audience,
+      uniqueStrength: notes.edge || intel.uniqueStrength || consultation.competitor_differentiator || intel.competitorDifferentiator || consultation.unique_value || intel.valueProp,
+      mainOffer: intel.mainOffer || (consultation as ConsultationData & { offer?: string; service_type?: string }).offer || (consultation as ConsultationData & { service_type?: string }).service_type || consultation.unique_value || intel.valueProp,
+      clientFrustration: intel.clientFrustration || consultation.audience_pain_points?.join(', ') || (Array.isArray(intel.painPoints) ? intel.painPoints.join(', ') : intel.painPoints),
+      primaryGoal: notes.conversion_goal || intel.primaryGoal || (consultation as ConsultationData & { goal?: string }).goal,
+    };
+
+    try {
+      const briefResult = await supabase.functions.invoke('generate-strategy-brief', {
+        body: { consultationData }
+      });
+      if (briefResult.error) throw briefResult.error;
+
+      const strategyBriefText = briefResult.data?.strategyBrief;
+      if (typeof strategyBriefText !== 'string' || !strategyBriefText.trim()) {
+        throw new Error('No strategy brief returned');
+      }
+      let structuredBrief = briefResult.data.structuredBrief;
+      if (!structuredBrief) {
+        structuredBrief = extractStructuredBrief(strategyBriefText);
+      }
+      const envelopeMarkdown = strategyBriefText || null;
+      const envelopeStructured = structuredBrief && typeof structuredBrief === 'object' ? structuredBrief : null;
+      return { markdown: envelopeMarkdown, structured: envelopeStructured };
+    } catch (error) {
+      console.error('🔴 [Huddle] brief generation failed, template fallback (display only)', error);
+      return { markdown: generateFallbackBrief(consultation, notes), structured: null };
+    }
+  }
+
+  function generateFallbackBrief(consultation: ConsultationData, notes: Record<string, string>): string {
     // Build brief from consultation + notes
     const intel = (consultation.extracted_intelligence || {}) as Record<string, unknown>;
     
-    return {
+    const template = {
       positioning: notes.edge || consultation.competitor_differentiator || (intel.competitorDifferentiator as string) || '',
       targetAudience: notes.audience || consultation.target_audience || (intel.audience as string) || '',
       industry: notes.industry || consultation.industry || (intel.industry as string) || '',
@@ -364,6 +411,37 @@ export default function Huddle() {
       },
       cardNotes: notes
     };
+
+    return `# Strategy Brief
+
+## Positioning
+${template.positioning}
+
+## Target Audience
+${template.targetAudience}
+
+## Industry
+${template.industry}
+
+## Headline Recommendations
+${template.headlines.primary}
+${template.headlines.supporting}
+
+## Value Proposition
+${template.valueProps}
+
+## Proof Points
+${Array.isArray(template.proofPoints) ? template.proofPoints.join('\n') : template.proofPoints}
+
+## Objections
+${Array.isArray(template.objectionHandlers) ? template.objectionHandlers.join('\n') : template.objectionHandlers}
+
+## CTA Strategy
+${template.ctaStrategy.primary}
+${template.ctaStrategy.secondary}
+
+## Card Notes
+${Object.entries(template.cardNotes).map(([field, note]) => `${field}: ${note}`).join('\n')}`;
   }
 
   function handleSecondaryCTA() {
