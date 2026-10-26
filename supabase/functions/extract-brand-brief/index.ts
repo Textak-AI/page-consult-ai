@@ -51,7 +51,7 @@ serve(async (req) => {
     console.log('[extract-brand-brief] Calling Claude API...');
     
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5',
       max_tokens: 4096,
       messages: [{
         role: 'user',
