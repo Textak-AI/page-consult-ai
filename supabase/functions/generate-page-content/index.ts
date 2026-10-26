@@ -116,8 +116,8 @@ serve(async (req) => {
       );
     }
     
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
+    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!anthropicApiKey) {
       return new Response(
         JSON.stringify({ error: 'API key not configured' }), 
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -373,18 +373,20 @@ Offer: ${requestData.goal || 'Not specified'}
 Generate compelling content. Return valid JSON only.`;
     }
 
-    console.log('[generate-page-content] Calling AI Gateway...');
+    console.log('[generate-page-content] Calling Anthropic API...');
     
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'x-api-key': anthropicApiKey,
+        'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'claude-sonnet-4-5',
+        max_tokens: 8192,
+        system: systemPrompt,
         messages: [
-          { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
       }),
@@ -392,7 +394,7 @@ Generate compelling content. Return valid JSON only.`;
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[generate-page-content] AI Gateway error:', response.status, errorText);
+      console.error('[generate-page-content] Anthropic API error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -415,7 +417,7 @@ Generate compelling content. Return valid JSON only.`;
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    const content = data.content?.filter((block: { type: string; text?: string }) => block.type === "text").map((block: { text?: string }) => block.text || "").join("") || '';
     
     console.log('[generate-page-content] AI response received, parsing...');
     
