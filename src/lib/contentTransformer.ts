@@ -250,121 +250,26 @@ function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// Industry-specific feature generators
+// Feature generator — zero-fabrication: features are derived ONLY from the
+// consultation's own uniqueValue/challenge inputs. When extraction yields
+// nothing, returns the extracted subset or an empty array; sections handle
+// sparse input. No invented compliance, response-time, ROI, availability,
+// or security claims.
 export function generateIndustryFeatures(
   industry: string,
   uniqueValue?: string,
   challenge?: string
 ): Array<{title: string; description: string; icon: string}> {
-  
-  // First, try to extract features from unique value
-  const extractedFeatures = uniqueValue ? extractFeaturesFromValue(uniqueValue, industry) : [];
-  
-  const industryKey = industry?.toLowerCase().replace(/\s+/g, '_');
-  
-  // B2B SaaS specific features
-  if (industryKey?.includes('saas')) {
-    return [
-      {
-        title: extractedFeatures[0]?.title || 'Set Up in 5 Minutes',
-        description: extractedFeatures[0]?.description || 'Get started instantly with our intuitive platform. No technical knowledge required.',
-        icon: 'Zap',
-      },
-      {
-        title: extractedFeatures[1]?.title || 'Complete Visibility',
-        description: extractedFeatures[1]?.description || 'See every visitor, every action, every opportunity in real-time dashboard.',
-        icon: 'Target',
-      },
-      {
-        title: extractedFeatures[2]?.title || 'Save 10+ Hours Weekly',
-        description: extractedFeatures[2]?.description || 'Automated workflows handle repetitive tasks while you focus on closing deals.',
-        icon: 'TrendingUp',
-      },
-      {
-        title: 'Enterprise Security',
-        description: 'Bank-level encryption and SOC 2 compliance. Your data is always safe.',
-        icon: 'Shield',
-      },
-      {
-        title: '24/7 Expert Support',
-        description: 'Our team responds in under 2 hours. Get help whenever you need it.',
-        icon: 'Users',
-      },
-      {
-        title: 'Proven ROI',
-        description: 'Companies see average 3x return in first 90 days. Results you can measure.',
-        icon: 'Award',
-      },
-    ];
-  }
-  
-  // Professional Services features
-  if (industryKey?.includes('professional')) {
-    return [
-      {
-        title: 'Free Consultation',
-        description: 'Get expert advice with no obligation. We assess your needs and provide detailed quotes.',
-        icon: 'Zap',
-      },
-      {
-        title: 'Licensed & Insured',
-        description: 'Fully licensed and insured for your peace of mind. All work meets local codes.',
-        icon: 'Shield',
-      },
-      {
-        title: 'Local Expertise',
-        description: 'Years serving your community. We understand local needs and regulations.',
-        icon: 'Target',
-      },
-      {
-        title: 'Satisfaction Guarantee',
-        description: "We stand behind our work 100%. If you're not satisfied, we make it right.",
-        icon: 'Award',
-      },
-      {
-        title: 'Fast Response',
-        description: 'Quick scheduling and reliable service. We show up when promised.',
-        icon: 'TrendingUp',
-      },
-      {
-        title: 'Transparent Pricing',
-        description: "Clear, upfront pricing with no hidden fees. You'll know exactly what you're paying.",
-        icon: 'Users',
-      },
-    ];
-  }
-  
-  // Default features
-  return [
-    {
-      title: extractedFeatures[0]?.title || 'Expert Service',
-      description: extractedFeatures[0]?.description || 'Professional service from experienced specialists who care about your success.',
-      icon: 'Award',
-    },
-    {
-      title: extractedFeatures[1]?.title || 'Quality Guaranteed',
-      description: extractedFeatures[1]?.description || 'We stand behind our work with satisfaction guarantee and commitment to excellence.',
-      icon: 'Shield',
-    },
-    {
-      title: extractedFeatures[2]?.title || 'Fast Results',
-      description: extractedFeatures[2]?.description || 'Quick turnaround and responsive communication throughout your project.',
-      icon: 'Zap',
-    },
-    {
-      title: 'Competitive Pricing',
-      description: 'Fair, transparent pricing with no hidden fees. Great value for your investment.',
-      icon: 'Target',
-    },
-    {
-      title: 'Proven Track Record',
-      description: 'Success helping clients achieve goals and exceed expectations.',
-      icon: 'TrendingUp',
-    },
-    {
-      title: 'Ongoing Support',
-      description: 'Dedicated support ready to help every step of the way.',
-      icon: 'Users',
-    },
-  ];
+  const fromValue = uniqueValue ? extractFeaturesFromValue(uniqueValue, industry) : [];
+  const fromChallenge = challenge ? extractFeaturesFromValue(challenge, industry) : [];
+
+  const seen = new Set<string>();
+  return [...fromValue, ...fromChallenge]
+    .filter(f => {
+      const key = f.title.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .map(f => ({ title: f.title, description: f.description, icon: 'Target' }));
 }
