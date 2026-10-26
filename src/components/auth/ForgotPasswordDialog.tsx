@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Loader2, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { requestPasswordRecovery } from '@/lib/passwordRecovery';
