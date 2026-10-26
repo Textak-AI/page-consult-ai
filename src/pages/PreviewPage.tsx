@@ -56,37 +56,22 @@ export default function PreviewPage() {
     }
 
     const load = async () => {
-      // Fetch preview link
-      const { data: link, error: linkError } = await supabase
-        .from('preview_links')
-        .select('landing_page_id, expires_at')
-        .eq('token', token)
-        .maybeSingle();
+      // Token is resolved server-side; preview_links has no anonymous read access.
+      const { data, error } = await supabase.functions.invoke('get-preview-link', {
+        body: { token },
+      });
 
-      if (linkError || !link) {
-        setState('not_found');
-        return;
-      }
-
-      // Check expiry
-      if (new Date(link.expires_at) < new Date()) {
+      if (data?.status === 'expired') {
         setState('expired');
         return;
       }
 
-      // Fetch the landing page
-      const { data: page, error: pageError } = await supabase
-        .from('landing_pages')
-        .select('*')
-        .eq('id', link.landing_page_id)
-        .maybeSingle();
-
-      if (pageError || !page) {
+      if (error || data?.status !== 'ready' || !data?.page) {
         setState('not_found');
         return;
       }
 
-      setPageData(page);
+      setPageData(data.page);
       setState('ready');
     };
 

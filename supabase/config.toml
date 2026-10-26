@@ -197,3 +197,6 @@ verify_jwt = true
 
 [functions.classify-industry]
 verify_jwt = false
+
+[functions.get-preview-link]
+verify_jwt = false

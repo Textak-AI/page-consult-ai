@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Public can read preview links by token" ON public.preview_links;
