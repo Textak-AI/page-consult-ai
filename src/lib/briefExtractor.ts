@@ -123,11 +123,28 @@ export function extractAuthoritySignals(
 
   // Extract from yearsInBusiness
   if (proofPoints?.yearsInBusiness) {
-    const match = proofPoints.yearsInBusiness.match(/(\d+\+?)/);
-    if (match) {
+    const raw = String(proofPoints.yearsInBusiness).trim();
+    // "Since 2012" is a founding year, not a duration — the bare number would
+    // render as "2012 Years Experience". Only an actual year-count like
+    // "12 years" earns the "Years Experience" label; anything else with a
+    // number keeps the user's own words verbatim and no invented label.
+    const isYearCount = /\b\d+\s*\+?\s*(?:years?|yrs?)\b/i.test(raw);
+    const hasNumber = /\d/.test(raw);
+
+    if (isYearCount) {
+      const match = raw.match(/(\d+\+?)/);
+      if (match) {
+        signals.push({
+          value: match[1],
+          label: 'Years Experience',
+          type: 'credential',
+          strength: 7,
+        });
+      }
+    } else if (hasNumber) {
       signals.push({
-        value: match[1],
-        label: 'Years Experience',
+        value: raw,
+        label: '',
         type: 'credential',
         strength: 7,
       });
