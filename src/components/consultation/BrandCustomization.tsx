@@ -29,6 +29,8 @@ export interface WebsiteIntelligence {
   secondaryColor?: string;
   companyName?: string | null;
   tagline?: string | null;
+  headingFont?: string;
+  bodyFont?: string;
 }
 
 export interface BrandSettings {
@@ -169,8 +171,8 @@ export function BrandCustomization({
     websiteIntelligence.colors[1] || 
     '#E85D04'
   );
-  const [headingFont, setHeadingFont] = useState('Inter');
-  const [bodyFont, setBodyFont] = useState('Inter');
+  const [headingFont, setHeadingFont] = useState(websiteIntelligence.headingFont || 'Inter');
+  const [bodyFont, setBodyFont] = useState(websiteIntelligence.bodyFont || 'Inter');
   const [logoUrl, setLogoUrl] = useState<string | null>(websiteIntelligence.logoUrl || null);
   const [logoOption, setLogoOption] = useState<'extracted' | 'upload' | 'url'>('extracted');
   const [logoUrlInput, setLogoUrlInput] = useState('');
