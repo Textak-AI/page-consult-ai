@@ -19,9 +19,9 @@ serve(async (req) => {
   try {
     const { pageId, recommendationId, currentValue, suggestedAction } = await req.json() as RequestBody;
     
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) {
+      throw new Error("ANTHROPIC_API_KEY is not configured");
     }
     
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -87,16 +87,18 @@ Return ONLY the improved text, nothing else.`;
     }
     
     // Generate improved content using AI
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "claude-sonnet-4-5",
+        max_tokens: 4096,
+        system: "You are an expert copywriter specializing in AI-optimized content. Create clear, specific, citation-worthy copy.",
         messages: [
-          { role: "system", content: "You are an expert copywriter specializing in AI-optimized content. Create clear, specific, citation-worthy copy." },
           { role: "user", content: prompt },
         ],
       }),
@@ -109,7 +111,7 @@ Return ONLY the improved text, nothing else.`;
     }
     
     const aiResult = await response.json();
-    const improvedContent = aiResult.choices?.[0]?.message?.content?.trim() || "";
+    const improvedContent = aiResult.content?.filter((block: { type: string; text?: string }) => block.type === "text").map((block: { text?: string }) => block.text || "").join("")?.trim() || "";
     
     if (!improvedContent) {
       throw new Error("No content generated");
