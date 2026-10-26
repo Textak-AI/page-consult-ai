@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { deliverLeadWebhook } from "../_shared/leadWebhook.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -154,6 +155,62 @@ Deno.serve(async (req: Request) => {
       }
     } else {
       console.warn("LOOPS_API_KEY not configured — skipping notification");
+    }
+
+    // Lead webhook to the page owner's CRM — fires after a successful insert and
+    // must never block or fail lead capture (5s timeout, one retry, outcome logged)
+    const webhookDelivery = (async () => {
+      try {
+        const { data: ownerPage } = await supabase
+          .from("published_pages")
+          .select("user_id, page_title, slug")
+          .eq("id", publishedPageId)
+          .single();
+
+        if (!ownerPage) return;
+
+        const { data: ownerProfile } = await supabase
+          .from("profiles")
+          .select("lead_webhook_url")
+          .eq("id", ownerPage.user_id)
+          .maybeSingle();
+
+        const webhookUrl = ownerProfile?.lead_webhook_url;
+        if (!webhookUrl) return;
+
+        const result = await deliverLeadWebhook(supabase, {
+          userId: ownerPage.user_id,
+          url: webhookUrl,
+          payload: {
+            event: "lead.created",
+            page: { title: ownerPage.page_title || null, slug: ownerPage.slug || null },
+            lead: {
+              name,
+              email: email.slice(0, 255),
+              company,
+              phone,
+              message,
+              custom_fields: customFields,
+              source_url: sourceUrl,
+              utm_source: utmSource,
+              utm_medium: utmMedium,
+              utm_campaign: utmCampaign,
+            },
+            submitted_at: new Date().toISOString(),
+          },
+        });
+        console.log(`🔗 Lead webhook ${result.delivered ? "delivered" : "failed"} (${result.attempts} attempt(s))`);
+      } catch (webhookError) {
+        console.error("Lead webhook delivery error:", webhookError);
+      }
+    })();
+
+    // Run in the background when the runtime supports it; otherwise await it
+    // (still failure-isolated — lead capture has already succeeded)
+    try {
+      (globalThis as any).EdgeRuntime?.waitUntil?.(webhookDelivery) ?? await webhookDelivery;
+    } catch {
+      await webhookDelivery;
     }
 
     return new Response(
