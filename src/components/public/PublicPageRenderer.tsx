@@ -66,6 +66,8 @@ interface PublicPageRendererProps {
     logoUrl?: string | null;
     primaryColor?: string | null;
   } | null;
+  /** Explicit business name from the page record; wins over the sections-derived backstop */
+  businessName?: string | null;
   showPoweredBy?: boolean;
   /** When set, CTA clicks open a lead capture form instead of navigating */
   publishedPageId?: string | null;
@@ -79,6 +81,7 @@ export function PublicPageRenderer({
   heroThumbnailUrl,
   designIntelligence,
   brandSettings,
+  businessName: businessNameProp,
   showPoweredBy = false,
   publishedPageId,
 }: PublicPageRendererProps) {
@@ -482,7 +485,7 @@ export function PublicPageRenderer({
         <div className="relative z-10">
           <PageFooter 
             companyName={brandSettings?.companyName}
-            businessName={pageBusinessName}
+            businessName={businessNameProp || pageBusinessName}
             logoUrl={brandSettings?.logoUrl}
           />
         </div>
