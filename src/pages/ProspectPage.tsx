@@ -37,27 +37,18 @@ export default function ProspectPage() {
       }
 
       try {
-        // First try to find a prospect with this slug
-        const { data: prospect, error: prospectError } = await supabase
-          .from('prospects')
-          .select('*')
-          .eq('slug', slug)
-          .single();
+        const { data, error: lookupError } = await supabase.functions.invoke('get-prospect-page', {
+          body: { slug },
+        });
+        if (lookupError || !data?.page) {
+          setError('Not found');
+          setIsLoading(false);
+          return;
+        }
+        const basePage = data.page;
+        const prospect = data.prospect;
 
-        if (prospect && prospect.base_page_id) {
-          // Fetch the base landing page
-          const { data: basePage, error: pageError } = await supabase
-            .from('landing_pages')
-            .select('*')
-            .eq('id', prospect.base_page_id)
-            .single();
-
-          if (pageError || !basePage) {
-            setError('Not found');
-            setIsLoading(false);
-            return;
-          }
-
+        if (prospect) {
           // Parse sections from JSON
           const rawSections = basePage.sections;
           const baseSections: Section[] = Array.isArray(rawSections) 
@@ -103,7 +94,7 @@ export default function ProspectPage() {
             slug: basePage.slug,
             sections: personalizedSections,
             styles: basePage.styles,
-            businessName: (basePage.consultation_data as any)?.businessName || null,
+            businessName: basePage.businessName || null,
             meta_title: basePage.meta_title,
             meta_description: basePage.meta_description,
           });
@@ -125,19 +116,7 @@ export default function ProspectPage() {
           return;
         }
 
-        // If no prospect found, check if it's a regular published landing page
-        const { data: landingPage, error: lpError } = await supabase
-          .from('landing_pages')
-          .select('*')
-          .eq('slug', slug)
-          .eq('is_published', true)
-          .single();
-
-        if (lpError || !landingPage) {
-          setError('Not found');
-          setIsLoading(false);
-          return;
-        }
+        const landingPage = basePage;
 
         // Parse sections from JSON
         const rawSections = landingPage.sections;
@@ -156,7 +135,7 @@ export default function ProspectPage() {
           slug: landingPage.slug,
           sections,
           styles: landingPage.styles,
-          businessName: (landingPage.consultation_data as any)?.businessName || null,
+          businessName: landingPage.businessName || null,
           meta_title: landingPage.meta_title,
           meta_description: landingPage.meta_description,
         });
