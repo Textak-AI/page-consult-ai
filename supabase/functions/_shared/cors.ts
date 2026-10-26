@@ -4,6 +4,8 @@
 const ALLOWED_ORIGINS = [
   'https://page-consult-ai.lovable.app',
   'https://preview--page-consult-ai.lovable.app',
+  'https://pageconsult.app',
+  'https://www.pageconsult.app',
   'http://localhost:3000',
   'http://localhost:5173',
   'http://localhost:8080',
