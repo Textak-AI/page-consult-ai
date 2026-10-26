@@ -266,10 +266,10 @@ serve(async (req) => {
       }
     }
 
-    // GENERATE NEW SCENE using Lovable AI Gateway
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      console.error('LOVABLE_API_KEY is not configured');
+    // GENERATE NEW SCENE using Replicate
+    const REPLICATE_API_TOKEN = Deno.env.get('REPLICATE_API_TOKEN');
+    if (!REPLICATE_API_TOKEN) {
+      console.error('REPLICATE_API_TOKEN is not configured');
       return new Response(
         JSON.stringify({ error: 'AI service not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -282,35 +282,26 @@ serve(async (req) => {
 
     console.log('[brand-scene] Using scene template:', sceneTemplate.substring(0, 80) + '...');
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Token ${REPLICATE_API_TOKEN}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: prompt },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:${logo.mimeType};base64,${logo.data}`
-                }
-              }
-            ]
-          }
-        ],
-        modalities: ['image', 'text']
+        input: {
+          prompt,
+          input_image: `data:${logo.mimeType};base64,${logo.data}`,
+          aspect_ratio: '16:9',
+          output_format: 'png',
+          prompt_upsampling: false,
+        }
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[brand-scene] AI gateway error:', response.status, errorText);
+      console.error('[brand-scene] Replicate error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -320,7 +311,7 @@ serve(async (req) => {
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: 'AI credits exhausted. Please add credits to continue.' }),
+          JSON.stringify({ error: 'Replicate account has no credit. Enable billing at https://replicate.com/account/billing.' }),
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -331,13 +322,50 @@ serve(async (req) => {
       );
     }
 
-    const data = await response.json();
-    console.log('[brand-scene] AI response received');
+    const prediction = await response.json();
+    console.log('[brand-scene] Prediction created:', prediction.id);
 
-    // Extract the generated image
-    const images = data.choices?.[0]?.message?.images?.map(
-      (img: { image_url: { url: string } }) => img.image_url.url
-    ) || [];
+    let result = prediction;
+    let attempts = 0;
+    const maxAttempts = 60;
+    while (!['succeeded', 'failed', 'canceled'].includes(result.status) && attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, Math.min(1000 * 2 ** attempts, 5000)));
+      const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
+        headers: { 'Authorization': `Token ${REPLICATE_API_TOKEN}` },
+      });
+      if (!statusResponse.ok) {
+        const errorText = await statusResponse.text();
+        console.error('[brand-scene] Replicate polling error:', statusResponse.status, errorText);
+        return new Response(
+          JSON.stringify({ error: 'Failed to generate brand scene' }),
+          { status: statusResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      result = await statusResponse.json();
+      attempts++;
+    }
+
+    if (result.status !== 'succeeded') {
+      console.error('[brand-scene] Prediction did not succeed:', result.status, result.error);
+      return new Response(
+        JSON.stringify({ error: 'Failed to generate brand scene' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const outputUrls: string[] = (Array.isArray(result.output) ? result.output : [result.output])
+      .filter((url: unknown): url is string => typeof url === 'string' && url.length > 0);
+
+    // Replicate URLs expire; preserve durable image strings in the existing cache.
+    const images = await Promise.all(outputUrls.map(async (url) => {
+      const imageResponse = await fetch(url);
+      if (!imageResponse.ok) throw new Error(`Failed to fetch generated image: ${imageResponse.status}`);
+      const bytes = new Uint8Array(await imageResponse.arrayBuffer());
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const mimeType = (imageResponse.headers.get('content-type') || 'image/png').split(';')[0].trim();
+      return `data:${mimeType};base64,${btoa(binary)}`;
+    }));
 
     if (images.length === 0) {
       console.warn('[brand-scene] No images in response');

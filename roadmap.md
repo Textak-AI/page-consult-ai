@@ -12,3 +12,4 @@
 - [x] Verify zero npm advisories including dev dependencies, zero production scan advisories, all 24 existing tests, compatibility smoke checks, and automatic build OK.
 - [x] Switch demo-extract-intelligence, demo-generate-response, generate-page-content, and extract-style-inspiration to Anthropic transport only; generate-brand-scene untouched; prompt templates and parsing/return tails byte-identical.
 - [x] Deploy and verify all four live HTTP 200 contracts, including real pageconsult.app screenshot vision analysis; no test records created; existing 24 tests pass.
+- [ ] Port brand-scene generation to logo-capable Replicate; preserve prompts and table behavior, verify live image/cache, and search all functions for remaining gateway dependencies.
