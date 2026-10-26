@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -323,8 +323,8 @@ serve(async (req) => {
       );
     }
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    if (!ANTHROPIC_API_KEY) {
+      throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
     // Sanitize user message
@@ -417,9 +417,7 @@ Naturally weave a request for the user's website into the END of your response �
 At the END of your response, naturally ask for their email — something like "What email should I send your strategy brief to when we're done?" Keep it one sentence, conversational, after your main response.`;
     }
 
-    const messages: Array<{ role: string; content: string }> = [
-      { role: 'system', content: systemPrompt + context + captureInstructions },
-    ];
+    const messages: Array<{ role: string; content: string }> = [];
 
     // Add sanitized conversation history (last 6 messages for context)
     const historyToInclude = validHistory
@@ -433,14 +431,17 @@ At the END of your response, naturally ask for their email — something like "W
       });
     }
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1024,
+        system: systemPrompt + context + captureInstructions,
         messages,
       }),
     });
@@ -458,7 +459,7 @@ At the END of your response, naturally ask for their email — something like "W
     }
 
     const data = await response.json();
-    const aiResponse = data.choices?.[0]?.message?.content || "I'd love to learn more about your business. What specific problem do you solve, and for whom?";
+    const aiResponse = data.content?.filter((block: { type: string; text?: string }) => block.type === "text").map((block: { text?: string }) => block.text || "").join("") || "I'd love to learn more about your business. What specific problem do you solve, and for whom?";
 
     console.log('✅ Generated response for IP hash:', ipHash);
     console.log('📝 Response preview:', aiResponse.slice(0, 100) + '...');
