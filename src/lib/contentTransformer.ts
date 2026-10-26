@@ -153,13 +153,13 @@ export function extractFeaturesFromValue(uniqueValue: string, industry: string):
       features.push({
         title: 'AI-Powered Automation',
         description: cleaned,
-        benefit: 'Save 10+ hours every week',
+        benefit: 'Saves time every week',
       });
     } else if (cleaned.toLowerCase().includes('simple') || cleaned.toLowerCase().includes('easy')) {
       features.push({
         title: 'Dead Simple Setup',
         description: cleaned,
-        benefit: 'Up and running in 5 minutes',
+        benefit: 'Quick to get started',
       });
     } else if (cleaned.toLowerCase().includes('wholistic') || cleaned.toLowerCase().includes('complete') || cleaned.toLowerCase().includes('all-in-one')) {
       features.push({
@@ -179,7 +179,7 @@ export function extractFeaturesFromValue(uniqueValue: string, industry: string):
       features.push({
         title: capitalize(words.join(' ')),
         description: cleaned,
-        benefit: 'Proven results you can measure',
+        benefit: 'Results you can measure',
       });
     }
   });
