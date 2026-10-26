@@ -828,7 +828,7 @@ export function BrandCustomization({
                     className="text-3xl font-bold text-white leading-tight"
                     style={{ fontFamily: headingFont }}
                   >
-                    Your headline here
+                    {websiteIntelligence.companyName || 'Your headline here'}
                   </h2>
                   
                   {/* Subheadline */}
@@ -836,7 +836,7 @@ export function BrandCustomization({
                     className="text-slate-400"
                     style={{ fontFamily: bodyFont }}
                   >
-                    Your supporting copy previews here in your brand colors
+                    {websiteIntelligence.tagline || 'Your supporting copy previews here in your brand colors'}
                   </p>
                   
                   {/* CTA Buttons */}

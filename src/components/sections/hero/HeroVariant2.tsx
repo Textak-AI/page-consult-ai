@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Star } from "lucide-react";
 
 interface HeroVariant2Props {
   headline: string;
@@ -52,20 +51,7 @@ export function HeroVariant2({ headline, subheadline, ctaText, ctaLink, backgrou
             </Button>
           </div>
 
-          {/* Trust Signal - Star Rating */}
-          <div className="flex items-center justify-center gap-3 pt-8">
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-              ))}
-            </div>
-            <span 
-              className="text-white/95 font-medium"
-              style={{ textShadow: '2px 2px 12px rgba(0,0,0,0.9)' }}
-            >
-              4.9/5 from 2,500+ customers
-            </span>
-          </div>
+          {/* Social proof renders only from real user-supplied data; nothing fabricated */}
         </div>
       </div>
     </section>

@@ -54,7 +54,7 @@ export const INDUSTRY_PATTERNS: Record<string, IndustryPattern> = {
       'Enterprise-Grade Security',
       'Seamless Integrations',
       'Automated Workflows',
-      '24/7 Expert Support'
+      'Responsive Expert Support'
     ],
     headlinePatterns: [
       'Finally, [Solution] That Actually Works',

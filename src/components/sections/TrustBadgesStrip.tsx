@@ -36,7 +36,6 @@ const IconMap = {
 export const AVAILABLE_TRUST_BADGES: TrustBadge[] = [
   { id: 'satisfaction', icon: 'CheckCircle', label: '100% Satisfaction Guarantee', description: 'Full refund if not satisfied' },
   { id: 'secure', icon: 'Lock', label: 'Secure & Private', description: 'Your data is protected' },
-  { id: 'support', icon: 'Clock', label: '24/7 Support', description: 'Always here to help' },
   { id: 'money-back', icon: 'RefreshCw', label: 'Money-Back Guarantee', description: 'No questions asked' },
   { id: 'certified', icon: 'Award', label: 'Industry Certified', description: 'Recognized expertise' },
   { id: 'trusted', icon: 'Star', label: 'Trusted Partner', description: 'Proven reliability' },
@@ -53,7 +52,7 @@ interface TrustBadgesStripProps {
 }
 
 export function TrustBadgesStrip({ 
-  selectedBadgeIds = ['satisfaction', 'secure', 'support'],
+  selectedBadgeIds = ['satisfaction', 'secure'],
   variant = 'strip',
   showDescriptions = false
 }: TrustBadgesStripProps) {
