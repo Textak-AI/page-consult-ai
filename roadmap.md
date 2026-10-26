@@ -13,3 +13,5 @@
 - [x] Switch demo-extract-intelligence, demo-generate-response, generate-page-content, and extract-style-inspiration to Anthropic transport only; generate-brand-scene untouched; prompt templates and parsing/return tails byte-identical.
 - [x] Deploy and verify all four live HTTP 200 contracts, including real pageconsult.app screenshot vision analysis; no test records created; existing 24 tests pass.
 - [x] Port brand-scene generation to logo-capable Replicate; prompts and table behavior byte-identical, live HTTP 200 image/cache and generation-log readback verified, cache hit returns exact image, two tests pass, and zero gateway/key references remain in functions.
+- [ ] Add forgot-password request and recovery screens sharing /reset-password, with six-character minimum and account-neutral confirmation.
+- [ ] Verify password recovery and old/new login behavior; emailed-link verification requires authorized inbox access.
