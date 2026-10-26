@@ -292,7 +292,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (error instanceof z.ZodError) {
         toast({
           title: "Invalid email",
-          description: error.errors[0].message,
+          description: error.issues[0].message,
           variant: "destructive",
           duration: 3000
         });
