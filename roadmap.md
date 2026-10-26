@@ -8,5 +8,5 @@
 - [x] Switch analyze-website, ai-consultant, consultant-suggestions, and intake-chat transports to direct Anthropic; prompt assertions and consultant SSE compatibility checks pass; three live responses verified.
 - [ ] Verify ai-consultant live 200: blocked by its unchanged authentication dependency returning 401 for a valid session; resolving authentication requires authorization to expand the transport-only scope.
 - [x] Switch the five requested prospect/color/voice/FAQ/improvement transports to Anthropic; all five live 200 shapes verified, including a real-logo palette and disposable-record persistence/readback; test records removed.
-- [ ] Update the eight requested dependencies to nearest secure versions and refresh lockfiles without feature changes.
-- [ ] Verify dependency audit, existing test suites, and automatic build; report versions and any blockers.
+- [x] Update the eight requested dependencies to nearest secure versions, refresh npm/Bun lockfiles, and minimally adapt Zod error access without feature changes.
+- [x] Verify zero npm advisories including dev dependencies, zero production scan advisories, all 24 existing tests, compatibility smoke checks, and automatic build OK.
