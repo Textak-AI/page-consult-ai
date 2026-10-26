@@ -325,21 +325,30 @@ export default function Dashboard() {
 
       const { versions, ...pageData } = pageToDuplicate;
       
-      const { error } = await supabase
+      const { data: newPage, error } = await supabase
         .from('landing_pages')
         .insert({
           ...pageData,
           id: undefined,
           user_id: user.id,
-          title: `${pageData.title} (Copy)`,
-          slug: `${pageData.id}-copy-${Date.now()}`,
+          title: `${pageData.title} (copy)`,
+          slug: `${pageData.slug}-copy-${Date.now().toString(36)}`,
+          // Published state is never copied — the duplicate starts as an unpublished draft
+          status: 'draft',
+          is_published: false,
+          published_at: null,
+          published_url: null,
+          view_count: 0,
+          last_viewed_at: null,
           parent_page_id: null,
           version_number: 1,
           is_current_version: true,
           last_change_summary: 'Duplicated from existing page',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
 
@@ -349,6 +358,8 @@ export default function Dashboard() {
       });
 
       refetch();
+      // Route straight into the editor on the new page
+      if (newPage?.id) navigate(`/generate?id=${newPage.id}`);
     } catch (error) {
       console.error('Error duplicating page:', error);
       toast({
