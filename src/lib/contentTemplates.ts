@@ -50,7 +50,7 @@ export const contentTemplates: Record<IndustryType, ContentTemplate> = {
     features: [
       { title: 'Free 14-Day Trial', description: 'Try all premium features free for 14 days. No credit card required, cancel anytime.', icon: 'Zap' },
       { title: 'Easy Integration', description: 'Connects seamlessly with your existing tools. Full API access for custom workflows.', icon: 'Target' },
-      { title: '24/7 Support', description: 'Round-the-clock expert support via chat, email, and phone. Average response time under 2 hours.', icon: 'Users' },
+      { title: 'Responsive Support', description: 'Expert help via chat, email, and phone whenever you need it.', icon: 'Users' },
       { title: 'Enterprise Security', description: 'Bank-level encryption and SOC 2 compliance. Your data is always safe and secure.', icon: 'Shield' },
       { title: 'Automated Workflows', description: 'Save hours every week with intelligent automation. Set it up once and let it run.', icon: 'TrendingUp' },
       { title: 'Detailed Analytics', description: 'Real-time insights and reporting. Make data-driven decisions with confidence.', icon: 'Award' },
@@ -72,7 +72,7 @@ export const contentTemplates: Record<IndustryType, ContentTemplate> = {
       { title: '30-Day Returns', description: 'Not satisfied? Return it within 30 days for a full refund. No questions asked.', icon: 'Shield' },
       { title: 'Secure Checkout', description: 'Shop with confidence using our encrypted payment system. Your information is always protected.', icon: 'Target' },
       { title: 'Quality Guarantee', description: 'Every product is inspected for quality. We stand behind everything we sell.', icon: 'Award' },
-      { title: '24/7 Support', description: 'Have questions? Our customer service team is here to help anytime, day or night.', icon: 'Users' },
+      { title: 'Responsive Support', description: 'Have questions? Our customer service team is here to help.', icon: 'Users' },
       { title: 'Price Match Promise', description: 'Found it cheaper elsewhere? We\'ll match the price and give you 10% off.', icon: 'TrendingUp' },
     ],
     urgencyText: 'Shop now - limited time offer',
@@ -109,7 +109,7 @@ export const contentTemplates: Record<IndustryType, ContentTemplate> = {
     valueProps: ['quality', 'flexibility', 'affordability', 'support', 'outcomes', 'accreditation'],
     features: [
       { title: 'Expert Instructors', description: 'Learn from industry professionals with years of real-world experience.', icon: 'Award' },
-      { title: 'Flexible Learning', description: 'Study at your own pace with 24/7 access to course materials and recorded lectures.', icon: 'Zap' },
+      { title: 'Flexible Learning', description: 'Study at your own pace with on-demand access to course materials and recorded lectures.', icon: 'Zap' },
       { title: 'Hands-On Projects', description: 'Apply what you learn with practical projects and real-world case studies.', icon: 'Target' },
       { title: 'Career Support', description: 'Get help with job placement, resume review, and interview preparation.', icon: 'Users' },
       { title: 'Accredited Programs', description: 'Earn recognized certifications and credits that advance your career.', icon: 'Shield' },
