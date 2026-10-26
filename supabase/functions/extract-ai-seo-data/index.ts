@@ -30,7 +30,7 @@ interface AISeoData {
     industry: string;
     areaServed: string;
   };
-  authoritySignals: AuthoritySignal[];
+  authoritySignals: (AuthoritySignal | string)[];
   faqItems: FAQItem[];
   queryTargets: QueryTarget[];
   schemaReadiness: {
@@ -117,6 +117,7 @@ serve(async (req) => {
 
     const jsonStr = jsonMatch[1] || jsonMatch[0];
     const aiSeoData: AISeoData = JSON.parse(jsonStr);
+    applySeoGuards(aiSeoData, consultationData);
 
     console.log('✅ AI SEO data extracted successfully');
     console.log('   Entity type:', aiSeoData.entity.type);
@@ -180,8 +181,10 @@ Find ALL specific numbers, statistics, credentials, and achievements in the data
 For each signal:
 - Identify the type: statistic, credential, testimonial, achievement, or comparison
 - Extract the raw text as-is
-- Optimize it to be specific and quotable (e.g., "Over 100" → "127+")
+- Optimize it to be specific and quotable without changing any supplied numbers
 - Extract all numbers mentioned
+- Never invent numbers, counts, or percentages. Use only numbers present in the user's consultation inputs, in both raw and optimized text.
+- If no user-supplied numeric claims exist, omit numeric authority signals rather than inventing them.
 
 ### 3. FAQ Generation
 Transform objections, offer details, and process information into natural FAQ questions.
@@ -241,4 +244,43 @@ Respond with ONLY a JSON object in this exact structure:
 \`\`\`
 
 Be thorough in extracting ALL numbers and statistics - these are critical for AI SEO authority signals.`;
+}
+
+function collectUserInputText(data: unknown): string {
+  const parts: string[] = [];
+  const walk = (value: unknown, depth: number): void => {
+    if (value == null || depth > 4) return;
+    if (typeof value === 'string' || typeof value === 'number') {
+      parts.push(String(value));
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((item) => walk(item, depth + 1));
+      return;
+    }
+    if (typeof value === 'object') {
+      Object.values(value as Record<string, unknown>).forEach((item) => walk(item, depth + 1));
+    }
+  };
+  walk(data, 0);
+  return parts.join(' ');
+}
+
+function extractNumbers(text: string): string[] {
+  return (text.match(/\d[\d,]*(?:\.\d+)?/g) || []).map((number) => number.replace(/,/g, ''));
+}
+
+function applySeoGuards(aiSeoData: AISeoData, consultationData: unknown): void {
+  const userNumbers = new Set(extractNumbers(collectUserInputText(consultationData)));
+  aiSeoData.authoritySignals = aiSeoData.authoritySignals.filter((signal) => {
+    const texts = typeof signal === 'string'
+      ? [signal]
+      : [signal.raw, signal.optimized].filter((text): text is string => typeof text === 'string');
+    const fabricatedText = texts.find((text) => extractNumbers(text).some((number) => !userNumbers.has(number)));
+    if (fabricatedText !== undefined) {
+      console.log(`🛡️ [seo-guard] Removed fabricated authoritySignal — "${fabricatedText.slice(0, 100)}"`);
+      return false;
+    }
+    return true;
+  });
 }
