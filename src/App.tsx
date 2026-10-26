@@ -58,6 +58,7 @@ import ProspectsDashboard from "./pages/ProspectsDashboard";
 import TryDemo from "./pages/TryDemo";
 import AdminResetData from "./pages/AdminResetData";
 import PreviewPage from "./pages/PreviewPage";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -133,6 +134,7 @@ const App = () => {
                 <Route path="/wizard-choice" element={<Navigate to="/wizard" replace />} />
                 
                 <Route path="/signup" element={<Signup />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/generate" element={<Generate />} />
                 <Route path="/generate/:pageId" element={<Generate />} />
                 <Route path="/gallery-test" element={<GalleryTest />} />

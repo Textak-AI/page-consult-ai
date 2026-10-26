@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Shield, Key, Smartphone, Trash2, Loader2, Monitor, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { passwordRecoveryRedirect } from "@/lib/passwordRecovery";
 
 export function SecuritySettings() {
   const { user } = useAuth();
@@ -22,7 +23,7 @@ export function SecuritySettings() {
     setChangingPassword(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: passwordRecoveryRedirect(window.location.origin),
       });
 
       if (error) throw error;
