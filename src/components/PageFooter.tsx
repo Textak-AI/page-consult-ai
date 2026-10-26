@@ -2,20 +2,25 @@ import { Link } from 'react-router-dom';
 
 interface PageFooterProps {
   companyName?: string | null;
+  businessName?: string | null; // The page record's own company name
   logoUrl?: string | null;
-  showPoweredBy?: boolean; // Whether to show "Powered by PageConsult AI" 
+  showPoweredBy?: boolean; // Whether to show "Powered by PageConsult AI"
 }
 
 export function PageFooter({ 
   companyName, 
+  businessName,
   logoUrl,
   showPoweredBy = true,
 }: PageFooterProps) {
   const currentYear = new Date().getFullYear();
-  const displayName = companyName || 'PageConsult AI';
+  const displayName = companyName || businessName || 'PageConsult AI';
   
-  // Determine if we're showing brand (user's company) or PageConsult branding
-  const isUserBrand = !!companyName && companyName !== 'PageConsult AI';
+  // Determine if we're showing brand (user's company) or PageConsult branding.
+  // Any page carrying its own company name is a tenant page: it must never
+  // carry the app's icon mark, legal links, or support contacts.
+  const isUserBrand = !!((companyName && companyName !== 'PageConsult AI') ||
+    (businessName && businessName !== 'PageConsult AI'));
   
   return (
     <footer className="border-t border-slate-800 bg-slate-950 py-8">
@@ -29,13 +34,16 @@ export function PageFooter({
                 alt={displayName} 
                 className="h-6 w-auto object-contain" 
               />
-            ) : (
+            ) : !isUserBrand ? (
+              // The app icon mark is PageConsult's own identity: it renders only
+              // on PageConsult's own pages. A tenant page without a logo of its
+              // own shows the name text alone.
               <img 
                 src="/logo/whiteAsset_6iconmark_lightmode.svg" 
                 alt="PageConsult AI" 
                 className="h-6 w-6" 
               />
-            )}
+            ) : null}
             <span className="text-slate-400 text-sm">{displayName}</span>
           </div>
           

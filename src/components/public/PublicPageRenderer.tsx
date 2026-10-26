@@ -110,6 +110,14 @@ export function PublicPageRenderer({
       .sort((a, b) => a.order - b.order);
   }, [sections]);
 
+  // The page record's own company name, read from the sections it already has.
+  const pageBusinessName = useMemo(() => {
+    const withName = (sections || []).find(
+      (s) => typeof s.content?.businessName === 'string' && s.content.businessName.trim().length > 0
+    );
+    return withName ? withName.content.businessName : null;
+  }, [sections]);
+
   const renderSection = (section: Section, index: number) => {
     // Read-only render - no editing, no update callbacks
     const noOp = () => {};
@@ -474,6 +482,7 @@ export function PublicPageRenderer({
         <div className="relative z-10">
           <PageFooter 
             companyName={brandSettings?.companyName}
+            businessName={pageBusinessName}
             logoUrl={brandSettings?.logoUrl}
           />
         </div>

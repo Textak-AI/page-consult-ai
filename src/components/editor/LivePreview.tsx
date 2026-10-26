@@ -779,6 +779,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
         <div className="relative z-10">
           <PageFooter 
             companyName={brandSettings?.companyName}
+            businessName={strategyBrief?.businessName || null}
             logoUrl={brandSettings?.logoUrl}
           />
         </div>
