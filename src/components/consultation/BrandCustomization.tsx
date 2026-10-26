@@ -828,7 +828,7 @@ export function BrandCustomization({
                     className="text-3xl font-bold text-white leading-tight"
                     style={{ fontFamily: headingFont }}
                   >
-                    {websiteIntelligence.companyName || 'Your Company'}
+                    Your headline here
                   </h2>
                   
                   {/* Subheadline */}
@@ -836,7 +836,7 @@ export function BrandCustomization({
                     className="text-slate-400"
                     style={{ fontFamily: bodyFont }}
                   >
-                    {websiteIntelligence.tagline || 'Transform your business with our innovative solutions that deliver real results.'}
+                    Your supporting copy previews here in your brand colors
                   </p>
                   
                   {/* CTA Buttons */}
@@ -862,21 +862,19 @@ export function BrandCustomization({
                     </button>
                   </div>
                   
-                  {/* Stats Preview */}
+                  {/* Stats Preview - structural placeholder, no metrics */}
                   <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-700/50">
-                    {['500+', '98%', '24/7'].map((stat, i) => (
+                    {[primaryColor, secondaryColor, primaryColor].map((color, i) => (
                       <div key={i} className="text-center">
-                        <div 
-                          className="text-2xl font-bold"
-                          style={{ color: primaryColor, fontFamily: headingFont }}
-                        >
-                          {stat}
-                        </div>
-                        <div 
+                        <div
+                          className="h-8 rounded-lg mx-auto mb-2"
+                          style={{ backgroundColor: color }}
+                        />
+                        <div
                           className="text-xs text-slate-500"
                           style={{ fontFamily: bodyFont }}
                         >
-                          {['Clients', 'Satisfaction', 'Support'][i]}
+                          Stat
                         </div>
                       </div>
                     ))}
