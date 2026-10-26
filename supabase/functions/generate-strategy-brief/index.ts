@@ -17,9 +17,9 @@ serve(async (req) => {
     console.log('[generate-strategy-brief] Received consultationData:', JSON.stringify(consultationData, null, 2));
     console.log('[generate-strategy-brief] Generating brief for:', consultationData.businessName || 'Unknown business');
 
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!anthropicApiKey) {
+      throw new Error('ANTHROPIC_API_KEY is not configured');
     }
 
     // Convert consultation to intelligence format and get layout recommendation
@@ -336,16 +336,19 @@ After the markdown brief, include a JSON block that the page generator will pars
 
 Be specific. No generic advice. Everything should tie back to the actual consultation data provided.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'x-api-key': anthropicApiKey,
+        'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'claude-sonnet-4-5',
+        max_tokens: 8192,
+        temperature: 0.7,
+        system: systemPrompt,
         messages: [
-          { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
       })
@@ -353,7 +356,7 @@ Be specific. No generic advice. Everything should tie back to the actual consult
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[generate-strategy-brief] AI Gateway error:', errorText);
+      console.error('[generate-strategy-brief] Anthropic API error:', errorText);
       
       if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please try again.');
@@ -362,11 +365,14 @@ Be specific. No generic advice. Everything should tie back to the actual consult
         throw new Error('AI credits depleted. Please add credits.');
       }
       
-      throw new Error(`AI Gateway error: ${response.status}`);
+      throw new Error(`Anthropic API error: ${response.status}`);
     }
 
     const result = await response.json();
-    const strategyBrief = result.choices?.[0]?.message?.content || '';
+    const strategyBrief = (result.content || [])
+      .filter((block: { type: string; text?: string }) => block.type === 'text')
+      .map((block: { text?: string }) => block.text || '')
+      .join('');
 
     console.log('[generate-strategy-brief] Brief generated successfully');
 
