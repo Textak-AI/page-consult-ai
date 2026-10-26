@@ -18,9 +18,9 @@ serve(async (req) => {
   try {
     const { pageId, currentFaqCount, targetCount } = await req.json() as RequestBody;
     
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) {
+      throw new Error("ANTHROPIC_API_KEY is not configured");
     }
     
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -74,16 +74,18 @@ Generate FAQs that address:
 
 Return ONLY a JSON array of objects with "question" and "answer" fields. Each answer should be 2-3 sentences.`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "claude-sonnet-4-5",
+        max_tokens: 4096,
+        system: "You are an expert at creating FAQ content that helps businesses get discovered by AI assistants. Generate clear, concise FAQs.",
         messages: [
-          { role: "system", content: "You are an expert at creating FAQ content that helps businesses get discovered by AI assistants. Generate clear, concise FAQs." },
           { role: "user", content: prompt },
         ],
       }),
@@ -96,7 +98,7 @@ Return ONLY a JSON array of objects with "question" and "answer" fields. Each an
     }
     
     const aiResult = await response.json();
-    const content = aiResult.choices?.[0]?.message?.content || "";
+    const content = aiResult.content?.filter((block: { type: string; text?: string }) => block.type === "text").map((block: { text?: string }) => block.text || "").join("") || "";
     
     // Parse the JSON from the response
     let newFaqItems = [];

@@ -127,9 +127,9 @@ serve(async (req) => {
       "Learn More";
 
     // Generate with Lovable AI
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) {
+      throw new Error("ANTHROPIC_API_KEY not configured");
     }
 
     // Fetch user's signature settings
@@ -208,21 +208,19 @@ You must respond with ONLY valid JSON, no other text:
     console.log("[generate-prospect-pivot] Calling Lovable AI...");
 
     const aiResponse = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      "https://api.anthropic.com/v1/messages",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "claude-sonnet-4-5",
+          max_tokens: 4096,
+          system: "You are an expert conversion copywriter. Always respond with valid JSON only.",
           messages: [
-            {
-              role: "system",
-              content:
-                "You are an expert conversion copywriter. Always respond with valid JSON only.",
-            },
             { role: "user", content: prompt },
           ],
         }),
@@ -236,7 +234,7 @@ You must respond with ONLY valid JSON, no other text:
     }
 
     const aiData = await aiResponse.json();
-    const responseText = aiData.choices?.[0]?.message?.content || "";
+    const responseText = aiData.content?.filter((block: { type: string; text?: string }) => block.type === "text").map((block: { text?: string }) => block.text || "").join("") || "";
 
     console.log("[generate-prospect-pivot] AI response:", responseText);
 
