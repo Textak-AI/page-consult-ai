@@ -60,8 +60,9 @@ export function PublishModal({
       if (data) {
         setExistingPublish(data);
         setSlug(data.slug);
-        setPageTitle(data.page_title || "");
-        setMetaDescription(data.meta_description || "");
+        // The page's current edited SEO values win over the stale snapshot
+        setPageTitle(pageData?.meta_title || data.page_title || "");
+        setMetaDescription(pageData?.meta_description || data.meta_description || "");
         setPublishState(data.status === 'published' ? 'published' : 'idle');
       } else {
         // Pre-fill from page data — the owner's edited SEO values win,
