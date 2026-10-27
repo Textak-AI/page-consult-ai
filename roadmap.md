@@ -16,3 +16,6 @@
 - [x] Add forgot-password request and recovery screens sharing /reset-password, with six-character minimum and account-neutral confirmation; five rule tests and automatic build pass; browser checks cover prefill, mismatch, expired links, and simulated update/dashboard routing.
 - [ ] Verify emailed-link recovery and old/new login behavior: real-account request returned HTTP 200 (repeat HTTP 429); blocked by unavailable inbox and old-password access; no real password changed.
 - [x] Wire billing actions to the authenticated Stripe Customer Portal; deployed, four security/account-resolution tests pass, automatic build OK, live invalid-auth 401 and signed-in no-account 404/toast verified. Subscriber redirect remains unverified because the requesting account has no Stripe customer; standalone typecheck not run under the automatic-check workflow.
+- [ ] Inventory and reroute anonymous browser access on the four session tables through token-validated service functions.
+- [ ] Remove only documented session caller-trust policies and unused anonymous session inserts after dependent paths are secured; preserve signed-in policies and all other tables.
+- [ ] Verify fresh guest consultation/resume/signup migration and signed-out demo chat; report call sites, policies, and remaining verification limits.
