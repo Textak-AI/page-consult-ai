@@ -402,9 +402,10 @@ export default function Signup() {
       }
       
       // Migrate anonymous session if exists
-      if (sessionToken && authenticatedUser) {
+      const pendingSessionToken = sessionToken || localStorage.getItem('pageconsult_consultation_session_token');
+      if (pendingSessionToken && authenticatedUser) {
         setLoadingMessage("Restoring your progress...");
-        await migrateAnonymousSession(sessionToken);
+        await migrateAnonymousSession(pendingSessionToken);
       }
       
       // Migrate guest session if exists
