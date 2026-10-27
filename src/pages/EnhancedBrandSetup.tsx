@@ -480,11 +480,10 @@ export default function EnhancedBrandSetup() {
         if (!foundWebsiteUrl && consultationData.guest_session_id) {
           console.log('📂 [EnhancedBrandSetup] No websiteUrl in consultation, checking demo_sessions via guest_session_id...');
           
-          const { data: demoFallback } = await supabase
-            .from('demo_sessions')
-            .select('messages, extracted_intelligence')
-            .eq('id', consultationData.guest_session_id)
-            .maybeSingle();
+          const storedDemoToken = searchParams.get('session') || localStorage.getItem('pageconsult_session_id');
+          const { data: demoFallback } = storedDemoToken
+            ? await readDemoSession(storedDemoToken)
+            : { data: null };
           
           if (demoFallback) {
             const demoIntel = demoFallback.extracted_intelligence as any;
