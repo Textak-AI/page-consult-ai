@@ -205,13 +205,132 @@ Deno.serve(async (req: Request) => {
       }
     })();
 
+    // First-lead email to the page owner — fires only when this is the page's
+    // first ever lead. Idempotent via landing_pages.first_lead_email_sent_at
+    // (service-role written). Same isolation rules as the webhook: 5s timeout,
+    // try/catch isolated, never blocks or fails lead capture.
+    const firstLeadEmail = (async () => {
+      try {
+        const { count } = await supabase
+          .from("form_submissions")
+          .select("id", { count: "exact", head: true })
+          .eq("published_page_id", publishedPageId);
+
+        if (count !== 1) return;
+
+        const { data: ownerPage } = await supabase
+          .from("published_pages")
+          .select("user_id, page_title, landing_page_id")
+          .eq("id", publishedPageId)
+          .single();
+
+        if (!ownerPage?.landing_page_id) return;
+
+        const { data: landingPage } = await supabase
+          .from("landing_pages")
+          .select("first_lead_email_sent_at")
+          .eq("id", ownerPage.landing_page_id)
+          .maybeSingle();
+
+        if (landingPage?.first_lead_email_sent_at) return;
+
+        const resendApiKey = Deno.env.get("RESEND_API_KEY");
+        if (!resendApiKey) {
+          console.warn("RESEND_API_KEY not configured — skipping first-lead email");
+          return;
+        }
+
+        const { data: ownerData } = await supabase.auth.admin.getUserById(ownerPage.user_id);
+        const ownerEmail = ownerData?.user?.email;
+        if (!ownerEmail) return;
+
+        const siteUrl = (Deno.env.get("PUBLIC_SITE_URL") || "https://pageconsult.ai").replace(/\/$/, "");
+        const leadsUrl = `${siteUrl}/`;
+        const pageTitle = ownerPage.page_title || "Your page";
+        const leadDescription = company ? `${name || "A visitor"} from ${company}` : (name || "A visitor");
+
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 5000);
+        let resendResponse: Response;
+        try {
+          resendResponse = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${resendApiKey}`,
+              "Content-Type": "application/json",
+            },
+            signal: controller.signal,
+            body: JSON.stringify({
+              from: "PageConsult AI <hello@pageconsult.ai>",
+              to: [ownerEmail],
+              subject: "Your page just got its first lead",
+              html: `
+                <!DOCTYPE html>
+                <html>
+                <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+                <body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; padding: 40px 20px;">
+                    <tr><td align="center">
+                      <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px;">
+                        <tr><td style="padding: 0 0 24px;">
+                          <p style="margin: 0; color: #0f172a; font-size: 18px; font-weight: 600;">PageConsult AI</p>
+                        </td></tr>
+                        <tr><td style="padding: 0 0 24px;">
+                          <p style="margin: 0; color: #334155; font-size: 16px; line-height: 1.6;">
+                            ${leadDescription} just submitted the form on &quot;${pageTitle}&quot; — your page's first lead.
+                          </p>
+                        </td></tr>
+                        <tr><td style="padding: 0 0 32px;">
+                          <a href="${leadsUrl}"
+                             style="display: inline-block; padding: 12px 28px; background-color: #0f172a; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px;">
+                            View your leads
+                          </a>
+                        </td></tr>
+                        <tr><td style="border-top: 1px solid #e2e8f0; padding: 24px 0 0;">
+                          <p style="margin: 0; color: #64748b; font-size: 13px;">— PageConsult AI</p>
+                        </td></tr>
+                      </table>
+                    </td></tr>
+                  </table>
+                </body>
+                </html>
+              `,
+              text: `${leadDescription} just submitted the form on "${pageTitle}" — your page's first lead. View your leads: ${leadsUrl}\n\n— PageConsult AI`,
+              tags: [{ name: "type", value: "first-lead" }],
+            }),
+          });
+        } finally {
+          clearTimeout(timer);
+        }
+
+        if (!resendResponse.ok) {
+          const errorBody = await resendResponse.text();
+          console.error(`First-lead email failed [${resendResponse.status}]: ${errorBody}`);
+          return;
+        }
+
+        // Mark sent — only if still null, so a concurrent send can't double-fire
+        const { error: updateError } = await supabase
+          .from("landing_pages")
+          .update({ first_lead_email_sent_at: new Date().toISOString() })
+          .eq("id", ownerPage.landing_page_id)
+          .is("first_lead_email_sent_at", null);
+        if (updateError) console.error("first_lead_email_sent_at update failed:", updateError);
+
+        console.log(`📧 First-lead email sent to ${ownerEmail}`);
+      } catch (firstLeadError) {
+        console.error("First-lead email error:", firstLeadError);
+      }
+    })();
+
     // Run in the background when the runtime supports it; otherwise await it
     // (still failure-isolated — lead capture has already succeeded)
+    const backgroundWork = Promise.allSettled([webhookDelivery, firstLeadEmail]);
     const edgeRuntime = (globalThis as any).EdgeRuntime;
     if (edgeRuntime?.waitUntil) {
-      edgeRuntime.waitUntil(webhookDelivery);
+      edgeRuntime.waitUntil(backgroundWork);
     } else {
-      await webhookDelivery;
+      await backgroundWork;
     }
 
     return new Response(
