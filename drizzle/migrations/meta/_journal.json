@@ -29,6 +29,13 @@
       "when": 1793065561293,
       "tag": "0003_secure_anonymous_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793068828084,
+      "tag": "0004_lifecycle_email_idempotency",
+      "breakpoints": true
     }
   ]
 }
