@@ -319,7 +319,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           isEditing={editingSection === index}
         />
         
-        {sectionElement}
+        <GazeReveal sectionType={section.type}>{sectionElement}</GazeReveal>
       </div>
     );
   }, [getSectionLockStatus, handleUnlockAction, editingSection, handleEditSection, handleAIAssist, handleImageGenerate, handleLogoEdit]);
