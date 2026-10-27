@@ -44,6 +44,7 @@ interface PageWithVersions {
   status?: string;
   updated_at: string;
   view_count?: number;
+  last_viewed_at?: string | null;
   published_url?: string;
   sections?: any;
   consultation_data?: any;

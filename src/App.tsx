@@ -162,6 +162,7 @@ const App = () => {
                 <Route path="/dev" element={<Dev />} />
                 <Route path="/trust-center" element={<TrustCenter />} />
                 <Route path="/prospects" element={<ProspectsDashboard />} />
+                <Route path="/leads" element={<Leads />} />
                 <Route path="/dev" element={<Dev />} />
                 
                 {/* Public page routes - accessible without authentication */}

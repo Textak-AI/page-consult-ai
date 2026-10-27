@@ -18,6 +18,7 @@ interface PageItemProps {
     sections?: { hero?: { headline?: string } };
     updated_at: string;
     view_count?: number;
+    last_viewed_at?: string | null;
     published_url?: string;
     slug?: string;
     consultation_id?: string;

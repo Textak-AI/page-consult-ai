@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, LogOut, Settings, ChevronDown, Zap, LayoutDashboard, Users, AlertTriangle } from "lucide-react";
+import { Plus, LogOut, Settings, ChevronDown, Zap, LayoutDashboard, Users, Inbox, AlertTriangle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
