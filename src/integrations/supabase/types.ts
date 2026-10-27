@@ -1025,6 +1025,7 @@ export type Database = {
           consultation_id: string | null
           created_at: string
           design_intelligence: Json | null
+          first_lead_email_sent_at: string | null
           hero_thumbnail_url: string | null
           id: string
           industry: string | null
@@ -1063,6 +1064,7 @@ export type Database = {
           consultation_id?: string | null
           created_at?: string
           design_intelligence?: Json | null
+          first_lead_email_sent_at?: string | null
           hero_thumbnail_url?: string | null
           id?: string
           industry?: string | null
@@ -1101,6 +1103,7 @@ export type Database = {
           consultation_id?: string | null
           created_at?: string
           design_intelligence?: Json | null
+          first_lead_email_sent_at?: string | null
           hero_thumbnail_url?: string | null
           id?: string
           industry?: string | null
@@ -1319,6 +1322,7 @@ export type Database = {
           updated_at: string | null
           website: string | null
           weekly_summary_emails: boolean | null
+          welcome_email_sent_at: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -1347,6 +1351,7 @@ export type Database = {
           updated_at?: string | null
           website?: string | null
           weekly_summary_emails?: boolean | null
+          welcome_email_sent_at?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -1375,6 +1380,7 @@ export type Database = {
           updated_at?: string | null
           website?: string | null
           weekly_summary_emails?: boolean | null
+          welcome_email_sent_at?: string | null
         }
         Relationships: []
       }
