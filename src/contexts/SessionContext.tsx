@@ -6,6 +6,7 @@ import { emailSchema, sessionTokenSchema } from '@/lib/validationSchemas';
 import { z } from 'zod';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SESSION_TOKEN_KEY = 'pageconsult_consultation_session_token';
 
 type SessionContextType = {
   sessionToken: string | null;
@@ -44,35 +45,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     // This avoids unnecessary 401 errors for demo/anonymous users
     const { data: { session: authSession } } = await supabase.auth.getSession();
     
-    let response: Response | null = null;
-    
-    // Only call get-session if we might have a session cookie (authenticated or returning user)
-    if (authSession?.user?.id || document.cookie.includes('session_token')) {
-      // Try to get existing session from httpOnly cookie via edge function
-      // A 401/404 response is EXPECTED for first-time users (no cookie exists)
-      // This is not an error - we simply proceed to create a new session
-      response = await fetch(`${SUPABASE_URL}/functions/v1/get-session`, {
-        method: 'GET',
-        credentials: 'include', // Important: includes cookies
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).catch(() => null); // Network errors result in null, proceed to create session
-    }
-
-    if (response?.ok) {
-      try {
-        const data = await response.json();
-        setSessionToken(data.session_token);
+    const storedToken = localStorage.getItem(SESSION_TOKEN_KEY);
+    if (storedToken) {
+      const { data, error } = await supabase.functions.invoke('get-session', { body: { session_token: storedToken } });
+      if (!error && data?.session_id) {
+        setSessionToken(storedToken);
         setSessionId(data.session_id);
         setUserEmailState(data.user_email);
         setCurrentStep(data.current_step || 'consultation');
-        return; // Session found and restored, we're done
-      } catch {
-        // JSON parse error, proceed to create new session
+        return;
       }
+      localStorage.removeItem(SESSION_TOKEN_KEY);
     }
-    
+
     // No existing session (401/404 or network error) - this is normal for new users
     // Proceed to create a new session
 
@@ -106,6 +91,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      localStorage.setItem(SESSION_TOKEN_KEY, token);
       setSessionToken(token);
       setSessionId(data.id);
     } else {
@@ -135,7 +121,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
 
         const data = await response.json();
-        setSessionToken(token);
+        localStorage.setItem(SESSION_TOKEN_KEY, token);
+      setSessionToken(token);
         setSessionId(data.session_id);
       } catch (error) {
         if (import.meta.env.DEV) {
@@ -176,7 +163,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     
     // For anonymous users, the session data was already loaded via get-session edge function
     // during initializeSession. Return null here to avoid direct DB queries.
-    return null;
+    const { data, error } = await supabase.functions.invoke('get-session', { body: { session_token: token } });
+    return error ? null : data;
   };
 
   const saveSession = async (updates: Partial<SessionData>) => {
@@ -368,6 +356,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    localStorage.removeItem(SESSION_TOKEN_KEY);
     setSessionToken(null);
     setSessionId(null);
     setUserEmailState(null);

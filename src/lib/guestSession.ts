@@ -14,13 +14,6 @@ export interface GuestSession {
   expiresAt: string;
 }
 
-// Generate a secure random token
-function generateSessionToken(): string {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return Array.from(array, b => b.toString(16).padStart(2, '0')).join('');
-}
-
 // Helper to map DB row to interface
 function mapToGuestSession(row: any): GuestSession {
   return {
@@ -43,13 +36,9 @@ export async function getOrCreateGuestSession(): Promise<GuestSession> {
   
   if (existingToken) {
     // Try to fetch existing session
-    const { data, error } = await supabase
-      .from('guest_sessions')
-      .select('*')
-      .eq('session_token', existingToken)
-      .gt('expires_at', new Date().toISOString())
-      .single();
-    
+    const { data: result, error } = await supabase.functions.invoke('guest-session', { body: { operation: 'read', session_token: existingToken } });
+    const data = result?.session;
+
     if (data && !error) {
       return mapToGuestSession(data);
     }
@@ -58,22 +47,11 @@ export async function getOrCreateGuestSession(): Promise<GuestSession> {
     localStorage.removeItem(GUEST_SESSION_KEY);
   }
   
-  // Create new session
-  const newToken = generateSessionToken();
-  
-  const { data, error } = await supabase
-    .from('guest_sessions')
-    .insert({
-      session_token: newToken
-    })
-    .select()
-    .single();
-  
-  if (error) throw error;
-  
-  // Store token in localStorage
-  localStorage.setItem(GUEST_SESSION_KEY, newToken);
-  
+  const { data: result, error } = await supabase.functions.invoke('guest-session', { body: { operation: 'create' } });
+  if (error || !result?.session) throw error || new Error('Session creation failed');
+  const data = result.session;
+  localStorage.setItem(GUEST_SESSION_KEY, data.session_token);
+
   return mapToGuestSession(data);
 }
 
@@ -95,13 +73,12 @@ export async function updateGuestSession(
   if (updates.email !== undefined) updatePayload.email = updates.email;
   if (updates.consultationData !== undefined) updatePayload.consultation_data = updates.consultationData;
   if (updates.intelligenceState !== undefined) updatePayload.intelligence_state = updates.intelligenceState;
-  if (updates.generatedBriefId !== undefined) updatePayload.generated_brief_id = updates.generatedBriefId;
-  if (updates.generatedPageId !== undefined) updatePayload.generated_page_id = updates.generatedPageId;
+
+
   
-  const { error } = await supabase
-    .from('guest_sessions')
-    .update(updatePayload)
-    .eq('session_token', token);
+  const { error } = await supabase.functions.invoke('guest-session', {
+    body: { operation: 'update', session_token: token, updates: updatePayload },
+  });
   
   if (error) throw error;
 }
@@ -111,13 +88,9 @@ export async function getCurrentGuestSession(): Promise<GuestSession | null> {
   const token = localStorage.getItem(GUEST_SESSION_KEY);
   if (!token) return null;
   
-  const { data, error } = await supabase
-    .from('guest_sessions')
-    .select('*')
-    .eq('session_token', token)
-    .gt('expires_at', new Date().toISOString())
-    .single();
-  
+  const { data: result, error } = await supabase.functions.invoke('guest-session', { body: { operation: 'read', session_token: token } });
+  const data = result?.session;
+
   if (error || !data) return null;
   
   return mapToGuestSession(data);
