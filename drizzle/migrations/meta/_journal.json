@@ -22,6 +22,13 @@
       "when": 1793055729883,
       "tag": "0002_lead_webhooks",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793065561293,
+      "tag": "0003_secure_anonymous_sessions",
+      "breakpoints": true
     }
   ]
 }

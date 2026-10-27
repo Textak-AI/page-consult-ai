@@ -1,3 +1,4 @@
+import { readDemoSession, claimDemoSession } from '@/lib/anonymousSessions';
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,11 +137,7 @@ export default function Signup() {
   const loadDemoSessionFromDatabase = async (sessionId: string): Promise<DemoIntelligence | null> => {
     console.log('📥 [Signup] Loading demo session from database:', sessionId);
     
-    const { data: demoSession, error } = await supabase
-      .from('demo_sessions')
-      .select('*')
-      .eq('session_id', sessionId)
-      .maybeSingle();
+    const { data: demoSession, error } = await readDemoSession(sessionId);
     
     if (error || !demoSession) {
       console.error('❌ [Signup] Failed to load demo session from DB:', error);
@@ -278,14 +275,7 @@ export default function Signup() {
     // Claim the demo session
     const sessionId = intel.sessionId;
     if (sessionId) {
-      await supabase
-        .from('demo_sessions')
-        .update({ 
-          claimed_by: userId, 
-          claimed_at: new Date().toISOString() 
-        })
-        .eq('session_id', sessionId)
-        .is('claimed_by', null);
+      await claimDemoSession(sessionId);
     }
     
     // Clean up sessionStorage
@@ -412,9 +402,10 @@ export default function Signup() {
       }
       
       // Migrate anonymous session if exists
-      if (sessionToken && authenticatedUser) {
+      const pendingSessionToken = sessionToken || localStorage.getItem('pageconsult_consultation_session_token');
+      if (pendingSessionToken && authenticatedUser) {
         setLoadingMessage("Restoring your progress...");
-        await migrateAnonymousSession(sessionToken);
+        await migrateAnonymousSession(pendingSessionToken);
       }
       
       // Migrate guest session if exists
@@ -530,14 +521,7 @@ export default function Signup() {
       
       try {
         // Claim the demo session
-        const { error: claimError } = await supabase
-          .from('demo_sessions')
-          .update({ 
-            claimed_by: userId, 
-            claimed_at: new Date().toISOString() 
-          })
-          .eq('session_id', sessionId)
-          .is('claimed_by', null);
+        const { error: claimError } = await claimDemoSession(sessionId);
         
         if (claimError) {
           console.error('⚠️ [Signup] Failed to claim session:', claimError);
@@ -644,14 +628,7 @@ export default function Signup() {
     try {
       // Claim the demo session for this user
       if (sessionId) {
-        const { error: claimError } = await supabase
-          .from('demo_sessions')
-          .update({ 
-            claimed_by: userId, 
-            claimed_at: new Date().toISOString() 
-          })
-          .eq('session_id', sessionId)
-          .is('claimed_by', null);
+        const { error: claimError } = await claimDemoSession(sessionId);
         
         if (!claimError) {
           console.log('✅ [Signup] Demo session claimed successfully');

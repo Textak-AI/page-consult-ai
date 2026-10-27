@@ -1,3 +1,5 @@
+import { readDemoSession } from '@/lib/anonymousSessions';
+import { consultationAccess } from '@/lib/consultationAccess';
 /**
  * 🔍 PageConsult Debug Helper
  * 
@@ -13,11 +15,7 @@ export const debugPageConsult = {
    */
   checkDemoSession: async (sessionId: string) => {
     console.log('🔍 [Debug] Fetching demo session:', sessionId);
-    const { data, error } = await supabase
-      .from('demo_sessions')
-      .select('*')
-      .eq('session_id', sessionId)
-      .single();
+    const { data, error } = await readDemoSession(sessionId);
     
     if (error) {
       console.error('🔍 [Debug] Error fetching demo session:', error);
@@ -74,8 +72,7 @@ export const debugPageConsult = {
    */
   checkConsultation: async (consultationId: string) => {
     console.log('🔍 [Debug] Fetching consultation:', consultationId);
-    const { data, error } = await supabase
-      .from('consultations')
+    const { data, error } = await consultationAccess()
       .select('*')
       .eq('id', consultationId)
       .single();
@@ -121,10 +118,13 @@ export const debugPageConsult = {
    * List recent demo sessions for the current user
    */
   listRecentDemoSessions: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
     console.log('🔍 [Debug] Fetching recent demo sessions...');
     const { data, error } = await supabase
       .from('demo_sessions')
       .select('session_id, created_at, readiness, completed, continued_to_consultation')
+      .eq('claimed_by', user.id)
       .order('created_at', { ascending: false })
       .limit(10);
     

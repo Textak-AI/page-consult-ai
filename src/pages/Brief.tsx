@@ -1,3 +1,4 @@
+import { readDemoSession, updateDemoSession } from '@/lib/anonymousSessions';
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -97,11 +98,7 @@ const Brief = () => {
       }
 
       try {
-        const { data, error: fetchError } = await supabase
-          .from('demo_sessions')
-          .select('id, session_id, extracted_intelligence, market_research, brand_assets, readiness, created_at')
-          .eq('session_id', sessionId)
-          .maybeSingle();
+        const { data, error: fetchError } = await readDemoSession(sessionId);
 
         if (fetchError) {
           console.error('Error fetching brief:', fetchError);
@@ -119,13 +116,10 @@ const Brief = () => {
         setBriefData(data as BriefData);
         
         // Mark brief as viewed
-        await supabase
-          .from('demo_sessions')
-          .update({ 
+        await updateDemoSession(sessionId, { 
             completed: true,
             brief_viewed_at: new Date().toISOString()
-          })
-          .eq('session_id', sessionId);
+          });
           
       } catch (err) {
         console.error('Error:', err);

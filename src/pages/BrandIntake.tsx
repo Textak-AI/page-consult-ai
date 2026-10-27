@@ -1,3 +1,4 @@
+import { readDemoSession, updateDemoSession, claimDemoSession } from '@/lib/anonymousSessions';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -358,9 +359,7 @@ export default function BrandIntake() {
       }
       
       // Save brand assets to session
-      const { error: updateError } = await supabase
-        .from('demo_sessions')
-        .update({ 
+      const { error: updateError } = await updateDemoSession(sid, { 
           brand_assets: {
             websiteUrl,
             logoUrl,
@@ -372,8 +371,7 @@ export default function BrandIntake() {
           },
           brand_intake_completed: true,
           brand_intake_at: new Date().toISOString()
-        })
-        .eq('session_id', sid);
+        });
       
       if (updateError) throw updateError;
       
@@ -382,11 +380,7 @@ export default function BrandIntake() {
       
       if (user) {
         // Fetch demo session to check readiness
-        const { data: demoSession } = await supabase
-          .from('demo_sessions')
-          .select('*')
-          .eq('session_id', sid)
-          .maybeSingle();
+        const { data: demoSession } = await readDemoSession(sid);
         
         const readiness = demoSession?.readiness || 0;
         const hasIntelligence = !!demoSession?.extracted_intelligence;
@@ -429,14 +423,7 @@ export default function BrandIntake() {
           
           if (!createError && newConsultation) {
             // Claim the demo session
-            await supabase
-              .from('demo_sessions')
-              .update({
-                claimed_by: user.id,
-                claimed_at: new Date().toISOString(),
-              })
-              .eq('session_id', sid)
-              .is('claimed_by', null);
+            await claimDemoSession(sid);
             
             console.log('✅ [BrandIntake] Created consultation from demo:', newConsultation.id);
             navigate(`/huddle?type=pre_brief&consultationId=${newConsultation.id}`, { replace: true });

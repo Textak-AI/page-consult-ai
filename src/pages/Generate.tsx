@@ -1,3 +1,5 @@
+import { consultationAccess } from '@/lib/consultationAccess';
+import { readDemoSession } from '@/lib/anonymousSessions';
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -730,8 +732,7 @@ function GenerateContent() {
           return;
         }
         
-        const { data: consultationData, error: consultationError } = await supabase
-          .from('consultations')
+        const { data: consultationData, error: consultationError } = await consultationAccess()
           .select('*')
           .eq('id', consultationIdParam)
           .single();
@@ -829,11 +830,7 @@ function GenerateContent() {
       if (sessionParam) {
         console.log('🎨 [Generate] Loading from session:', sessionParam);
         
-        const { data: demoSession, error: sessionError } = await supabase
-          .from('demo_sessions')
-          .select('*')
-          .eq('session_id', sessionParam)
-          .maybeSingle();
+        const { data: demoSession, error: sessionError } = await readDemoSession(sessionParam);
         
         if (sessionError || !demoSession) {
           console.error('❌ Demo session not found:', sessionError);
@@ -1351,8 +1348,7 @@ function GenerateContent() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("consultations")
+      const { data, error } = await consultationAccess()
         .select("*")
         .eq("user_id", user.id)
         .in("status", ["completed", "in_progress"]) // Valid: 'in_progress' or 'completed'

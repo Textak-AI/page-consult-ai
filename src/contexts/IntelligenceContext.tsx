@@ -1,3 +1,4 @@
+import { readDemoSession, createDemoSession } from '@/lib/anonymousSessions';
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -360,7 +361,14 @@ const initialState: IntelligenceState = {
 // CONTEXT
 // ============================================
 
-const IntelligenceContext = createContext<IntelligenceContextValue | null>(null);
+// Keep provider and consumers on the same context identity during Vite updates.
+// This module exports both components and helpers, so an update can otherwise
+// recreate the context while an existing provider is still mounted.
+const IntelligenceContext: React.Context<IntelligenceContextValue | null> =
+  import.meta.hot?.data.intelligenceContext ?? createContext<IntelligenceContextValue | null>(null);
+if (import.meta.hot) {
+  import.meta.hot.data.intelligenceContext = IntelligenceContext;
+}
 
 export { IntelligenceContext };
 
@@ -502,11 +510,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // ----------------------------------------
   const loadExistingSession = async (sessionId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('demo_sessions')
-        .select('*')
-        .eq('session_id', sessionId)
-        .maybeSingle();
+      const { data, error } = await readDemoSession(sessionId);
 
       if (error) {
         console.error('❌ [IntelligenceContext] Error loading session:', error);
@@ -812,15 +816,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
     console.log('📝 [IntelligenceContext] Creating database session:', sessionId);
     
     try {
-      const { error } = await supabase
-        .from('demo_sessions')
-        .insert({
-          session_id: sessionId,
-          extracted_intelligence: {},
-          readiness: 0,
-          message_count: 0,
-          messages: [],
-        });
+      const { error } = await createDemoSession(sessionId);
 
       // Helper to add session to URL and localStorage
       const addSessionToUrlAndStorage = () => {

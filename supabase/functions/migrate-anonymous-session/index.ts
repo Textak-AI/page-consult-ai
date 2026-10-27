@@ -1,30 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
+import { getCorsHeaders } from '../_shared/cors.ts';
 
 const MigrateSessionSchema = z.object({
   session_token: z.string().uuid('Invalid session token format'),
 });
-
-// CORS with origin whitelist for security
-const allowedOrigins = [
-  'https://page-consult-ai.lovable.app',
-  'https://preview--page-consult-ai.lovable.app',
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://localhost:8080',
-];
-
-function getCorsHeaders(origin: string | null): Record<string, string> {
-  const allowedOrigin = origin && allowedOrigins.some(o => origin.startsWith(o.replace(/\/$/, '')))
-    ? origin 
-    : allowedOrigins[0];
-  
-  return {
-    'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  };
-}
 
 serve(async (req) => {
   const origin = req.headers.get('Origin');
@@ -109,6 +90,16 @@ serve(async (req) => {
       );
     }
 
+    if (Date.parse(anonymousSession.created_at) + 7 * 86400000 <= Date.now()) {
+      return new Response(JSON.stringify({ error: 'Session expired' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    // Claim conditionally before creating records so another user cannot race a claim.
+    const { data: claimed, error: claimError } = await supabaseClient.from('consultation_sessions')
+      .update({ user_id: user.id }).eq('id', anonymousSession.id).is('user_id', null).select('id').maybeSingle();
+    if (claimError || !claimed) {
+      return new Response(JSON.stringify({ error: 'Session already claimed' }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // Check if there's already consultation data saved
     const { data: existingConsultation } = await supabaseClient
       .from('consultations')
@@ -157,6 +148,7 @@ serve(async (req) => {
       .single();
 
     if (insertError) {
+      await supabaseClient.from('consultation_sessions').update({ user_id: null }).eq('id', anonymousSession.id).eq('user_id', user.id);
       console.error('Migration error:', insertError);
       return new Response(
         JSON.stringify({ error: 'Failed to migrate session data' }),

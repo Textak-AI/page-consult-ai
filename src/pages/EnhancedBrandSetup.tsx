@@ -1,3 +1,5 @@
+import { consultationAccess } from '@/lib/consultationAccess';
+import { readDemoSession, claimDemoSession } from '@/lib/anonymousSessions';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
@@ -412,8 +414,7 @@ export default function EnhancedBrandSetup() {
       console.log('📂 [EnhancedBrandSetup] Loading data for:', { consultationId, sessionParam, idToLoad });
       
       // Try consultations table first
-      let { data: consultationData, error: consultationError } = await supabase
-        .from('consultations')
+      let { data: consultationData, error: consultationError } = await consultationAccess()
         .select('*')
         .eq('id', idToLoad)
         .maybeSingle();
@@ -479,11 +480,10 @@ export default function EnhancedBrandSetup() {
         if (!foundWebsiteUrl && consultationData.guest_session_id) {
           console.log('📂 [EnhancedBrandSetup] No websiteUrl in consultation, checking demo_sessions via guest_session_id...');
           
-          const { data: demoFallback } = await supabase
-            .from('demo_sessions')
-            .select('messages, extracted_intelligence')
-            .eq('id', consultationData.guest_session_id)
-            .maybeSingle();
+          const storedDemoToken = searchParams.get('session') || localStorage.getItem('pageconsult_session_id');
+          const { data: demoFallback } = storedDemoToken
+            ? await readDemoSession(storedDemoToken)
+            : { data: null };
           
           if (demoFallback) {
             const demoIntel = demoFallback.extracted_intelligence as any;
@@ -542,11 +542,7 @@ export default function EnhancedBrandSetup() {
         consultationIdFromUrl: searchParams.get('consultationId'),
       });
       
-      const { data: demoData, error: demoError } = await supabase
-        .from('demo_sessions')
-        .select('*')
-        .eq('session_id', idToLoad)
-        .maybeSingle();
+      const { data: demoData, error: demoError } = await readDemoSession(idToLoad);
 
       // Log the query result for debugging
       console.log('📂 [EnhancedBrandSetup] Demo query result:', {
@@ -1235,8 +1231,7 @@ export default function EnhancedBrandSetup() {
     
     if (consultationId) {
       // Fetch existing extracted_intelligence to merge brand data
-      const { data: existingConsultation } = await supabase
-        .from('consultations')
+      const { data: existingConsultation } = await consultationAccess()
         .select('extracted_intelligence')
         .eq('id', consultationId)
         .single();
@@ -1262,8 +1257,7 @@ export default function EnhancedBrandSetup() {
       };
       
       // Save brand data and communication style to consultation
-      await supabase
-        .from('consultations')
+      await consultationAccess()
         .update({ 
           communication_style: communicationStyle as any,
           business_name: companyName,
@@ -1276,8 +1270,7 @@ export default function EnhancedBrandSetup() {
       await updateFlowState(consultationId, 'brand_captured', 'brand_setup_complete');
       
       // Check if this consultation has high readiness (demo user) - go to huddle for "I listened" moment
-      const { data: consultation } = await supabase
-        .from('consultations')
+      const { data: consultation } = await consultationAccess()
         .select('readiness_score, strategy_brief')
         .eq('id', consultationId)
         .single();
@@ -1346,8 +1339,7 @@ export default function EnhancedBrandSetup() {
           });
           
           // Create consultation from demo intelligence with ALL data
-          const { data: newConsultation, error: createError } = await supabase
-            .from('consultations')
+          const { data: newConsultation, error: createError } = await consultationAccess()
             .insert({
               user_id: user.id,
               industry: intel.industry,
@@ -1380,15 +1372,7 @@ export default function EnhancedBrandSetup() {
           
           if (!createError && newConsultation) {
             // Claim the demo session
-            await supabase
-              .from('demo_sessions')
-              .update({
-                claimed_by: user.id,
-                claimed_at: new Date().toISOString(),
-                continued_to_consultation: true,
-              })
-              .eq('session_id', sessionId)
-              .is('claimed_by', null);
+            await claimDemoSession(sessionId);
             
             console.log('✅ [EnhancedBrandSetup] Created consultation from demo with full intelligence:', newConsultation.id);
             console.log('✅ [EnhancedBrandSetup] Readiness score:', readiness, 'Market research included:', !!marketResearch);
@@ -1405,8 +1389,7 @@ export default function EnhancedBrandSetup() {
       const { data: { user: demoUser } } = await supabase.auth.getUser();
       if (demoUser) {
         const intel = demoSession.extracted_intelligence as any;
-        const { data: newConsultation, error: createError } = await supabase
-          .from('consultations')
+        const { data: newConsultation, error: createError } = await consultationAccess()
           .insert({
             user_id: demoUser.id,
             industry: intel?.industry || null,
@@ -1430,11 +1413,7 @@ export default function EnhancedBrandSetup() {
           .single();
         
         if (!createError && newConsultation) {
-          await supabase
-            .from('demo_sessions')
-            .update({ claimed_by: demoUser.id, claimed_at: new Date().toISOString(), continued_to_consultation: true })
-            .eq('session_id', sessionId)
-            .is('claimed_by', null);
+          await claimDemoSession(sessionId);
           
           navigate(`/strategy-document?consultationId=${newConsultation.id}`, { replace: true });
           return;
@@ -1466,8 +1445,7 @@ export default function EnhancedBrandSetup() {
           migratedAt: new Date().toISOString(),
         };
         
-        const { data: newConsultation, error: createError } = await supabase
-          .from('consultations')
+        const { data: newConsultation, error: createError } = await consultationAccess()
           .insert({
             user_id: user.id,
             industry: (extractionResults as any)?.inferredIndustry || extractionResults?.industry || null,

@@ -1,3 +1,4 @@
+import { consultationAccess } from '@/lib/consultationAccess';
 import { briefObjectValue, isBriefEnvelope, toBriefView, isStructuredBriefShape, STRUCTURED_EDIT_MAP } from "@/lib/briefEnvelope";
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -58,8 +59,7 @@ export default function StrategyBrief() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('consultations')
+    const { data, error } = await consultationAccess()
       .select('*')
       .eq('id', consultationId)
       .single();
@@ -139,8 +139,7 @@ export default function StrategyBrief() {
     setBrief(updatedBrief as StrategyBriefData);
 
     console.log('💾 [brief-persist] Edit write-back — envelope preserved:', envelopePreserved);
-    await supabase
-      .from('consultations')
+    await consultationAccess()
       .update({ strategy_brief: writeValue as Json })
       .eq('id', consultationId);
 

@@ -1,3 +1,4 @@
+import { consultationAccess } from '@/lib/consultationAccess';
 import { briefObjectValue } from "@/lib/briefEnvelope";
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -255,8 +256,7 @@ export default function StrategyDocument() {
       }
 
       // Load consultation
-      const { data, error } = await supabase
-        .from('consultations')
+      const { data, error } = await consultationAccess()
         .select('*')
         .eq('id', consultationId)
         .maybeSingle();

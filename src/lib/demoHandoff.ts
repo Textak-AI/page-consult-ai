@@ -1,3 +1,4 @@
+import { claimDemoSession } from '@/lib/anonymousSessions';
 /**
  * Demo Handoff Utility
  * Handles persistence and migration of demo intelligence data across signup flow
@@ -246,14 +247,7 @@ export async function migrateDemoToUser(userId: string): Promise<{
 
     // Claim the demo session
     if (handoff.sessionId) {
-      await supabase
-        .from('demo_sessions')
-        .update({
-          claimed_by: userId,
-          claimed_at: new Date().toISOString(),
-        })
-        .eq('session_id', handoff.sessionId)
-        .is('claimed_by', null);
+      await claimDemoSession(handoff.sessionId);
     }
 
     console.log('[Demo Handoff] Migration complete:', {
