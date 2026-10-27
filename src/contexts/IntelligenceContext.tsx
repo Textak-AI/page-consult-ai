@@ -361,7 +361,14 @@ const initialState: IntelligenceState = {
 // CONTEXT
 // ============================================
 
-const IntelligenceContext = createContext<IntelligenceContextValue | null>(null);
+// Keep provider and consumers on the same context identity during Vite updates.
+// This module exports both components and helpers, so an update can otherwise
+// recreate the context while an existing provider is still mounted.
+const IntelligenceContext: React.Context<IntelligenceContextValue | null> =
+  import.meta.hot?.data.intelligenceContext ?? createContext<IntelligenceContextValue | null>(null);
+if (import.meta.hot) {
+  import.meta.hot.data.intelligenceContext = IntelligenceContext;
+}
 
 export { IntelligenceContext };
 
