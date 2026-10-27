@@ -11,3 +11,4 @@
 - Billing actions share create-portal-session; it validates the user and resolves only their stored Stripe customer ID, with a server-configured return URL, so clients cannot select another billing account or redirect target.
 - Anonymous session access uses explicit bearer capabilities checked against service-side rows and expiry; demo tokens are session_id values (not record IDs), claimed sessions require their authenticated owner, and consultationAccess keeps authenticated queries unchanged while routing guest ID-scoped queries through guest-session.
 - IntelligenceContext preserves its React context identity in Vite hot-update data because mixed component/helper exports can otherwise detach refreshed consumers from a mounted provider.
+- Product-page entrance motion goes through GazeReveal with tokens in src/lib/motion; elements are hidden only after it mounts so content is never stuck invisible without JS or with reduced motion.
