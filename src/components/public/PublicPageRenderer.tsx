@@ -1,3 +1,4 @@
+import { GazeReveal } from '@/components/motion/GazeReveal';
 import { useMemo, useState, useCallback } from 'react';
 import { LeadCaptureModal } from './LeadCaptureModal';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';

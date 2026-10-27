@@ -1,3 +1,4 @@
+import { GazeReveal } from '@/components/motion/GazeReveal';
 import { useState, useCallback, useMemo, memo } from "react";
 import { sanitizeFullCSS } from "@/lib/sanitizeCSS";
 import { HeroSection } from "@/components/sections/HeroSection";
