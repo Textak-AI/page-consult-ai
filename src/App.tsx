@@ -59,6 +59,7 @@ import TryDemo from "./pages/TryDemo";
 import AdminResetData from "./pages/AdminResetData";
 import PreviewPage from "./pages/PreviewPage";
 import ResetPassword from "./pages/ResetPassword";
+import Leads from "./pages/Leads";
 
 const queryClient = new QueryClient({
   defaultOptions: {

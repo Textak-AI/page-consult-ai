@@ -130,6 +130,13 @@ const Header = () => {
                 <span className="text-sm">Prospects</span>
               </Link>
               <Link
+                to="/leads"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 rounded-lg hover:bg-muted"
+              >
+                <Inbox className="w-4 h-4" />
+                <span className="text-sm">Leads</span>
+              </Link>
+              <Link
                 to="/brand-setup"
                 className="flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 rounded-lg hover:bg-muted"
               >
