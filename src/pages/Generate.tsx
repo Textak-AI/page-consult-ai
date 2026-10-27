@@ -13,6 +13,7 @@ import { PersonaInsightsPanel } from "@/components/editor/PersonaInsightsPanel";
 import { SectionManager } from "@/components/editor/SectionManager";
 import { LivePreview } from "@/components/editor/LivePreview";
 import { PublishModal } from "@/components/editor/PublishModal";
+import { SeoPanel } from "@/components/editor/SeoPanel";
 import { AIConsultantSidebar } from "@/components/editor/AIConsultantSidebar";
 import { CalculatorUpgradeModal } from "@/components/editor/CalculatorUpgradeModal";
 import { StylePicker } from "@/components/editor/StylePicker";
@@ -358,6 +359,7 @@ function GenerateContent() {
   const [sections, setSections] = useState<Section[]>([]);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [seoPanelOpen, setSeoPanelOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
   const [stylePickerOpen, setStylePickerOpen] = useState(false);
@@ -5910,6 +5912,15 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
                 <Share2 className="w-4 h-4 mr-1" />
                 Share
               </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setSeoPanelOpen(true)}
+                className="border-white/10 text-white/70 hover:bg-white/10"
+              >
+                <Search className="w-4 h-4 mr-1" />
+                SEO
+              </Button>
               <PublishToolbar
                 pageId={pageData.id}
                 slug={pageData.slug}
@@ -6137,6 +6148,16 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           logoUrl: pageData?.consultation_data?.logoUrl,
           primaryColor: pageData?.consultation_data?.brandColors?.primary,
         }}
+      />
+
+      <SeoPanel
+        open={seoPanelOpen}
+        onOpenChange={setSeoPanelOpen}
+        pageData={pageData}
+        sections={sections}
+        onSaved={(metaTitle, metaDescription) =>
+          setPageData((prev: any) => prev ? { ...prev, meta_title: metaTitle, meta_description: metaDescription } : prev)
+        }
       />
 
       {pageData?.id && (

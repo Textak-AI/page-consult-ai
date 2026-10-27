@@ -64,12 +64,13 @@ export function PublishModal({
         setMetaDescription(data.meta_description || "");
         setPublishState(data.status === 'published' ? 'published' : 'idle');
       } else {
-        // Pre-fill from page data
+        // Pre-fill from page data — the owner's edited SEO values win,
+        // then the page's real title and hero copy, never synthesized text
         const heroSection = sections?.find((s: any) => s.type === 'hero' && s.visible);
         const companyName = brandSettings?.companyName || pageData?.title || "";
         setSlug(generateCleanSlug(companyName));
-        setPageTitle(heroSection?.content?.headline || pageData?.title || "");
-        setMetaDescription(heroSection?.content?.subheadline || pageData?.meta_description || "");
+        setPageTitle(pageData?.meta_title || heroSection?.content?.headline || pageData?.title || "");
+        setMetaDescription(pageData?.meta_description || heroSection?.content?.subheadline || "");
         setPublishState('idle');
         setExistingPublish(null);
       }
@@ -183,7 +184,8 @@ export function PublishModal({
         setExistingPublish(newPublish);
       }
 
-      // Also update the landing_pages record for backward compat
+      // Also update the landing_pages record for backward compat, carrying
+      // the edited SEO values so the server-rendered head reflects them
       await supabase
         .from('landing_pages')
         .update({
@@ -192,6 +194,8 @@ export function PublishModal({
           published_at: new Date().toISOString(),
           published_url: `/p/${slug}`,
           slug,
+          meta_title: pageTitle.trim() || null,
+          meta_description: metaDescription.trim() || null,
         })
         .eq('id', pageData.id);
 
