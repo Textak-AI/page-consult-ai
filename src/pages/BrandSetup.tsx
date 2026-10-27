@@ -1,3 +1,4 @@
+import { readDemoSession } from '@/lib/anonymousSessions';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -174,11 +175,7 @@ export default function BrandSetup() {
       
       console.log('📂 [BrandSetup] Loading demo session:', sessionId);
       
-      const { data, error } = await supabase
-        .from('demo_sessions')
-        .select('*')
-        .eq('session_id', sessionId)
-        .single();
+      const { data, error } = await readDemoSession(sessionId);
       
       if (data && !error) {
         console.log('✅ [BrandSetup] Demo session loaded:', {

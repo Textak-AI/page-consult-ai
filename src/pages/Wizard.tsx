@@ -1,3 +1,4 @@
+import { readDemoSession, updateDemoSession, claimDemoSession } from '@/lib/anonymousSessions';
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -539,11 +540,7 @@ export default function Wizard() {
             } else {
               console.log('📂 [Wizard] Fetching session data after auth (no cache)');
               try {
-                const { data, error } = await supabase
-                  .from('demo_sessions')
-                  .select('*')
-                  .eq('session_id', sessionId)
-                  .maybeSingle();
+                const { data, error } = await readDemoSession(sessionId);
                 
                 console.log('📂 [Wizard] Fetched session:', { hasData: !!data, error: error?.message });
                 
@@ -656,11 +653,7 @@ export default function Wizard() {
       console.log('📂 [Wizard] Loading session from Supabase:', sessionId);
       
       try {
-        const { data, error } = await supabase
-          .from('demo_sessions')
-          .select('*')
-          .eq('session_id', sessionId)
-          .maybeSingle();
+        const { data, error } = await readDemoSession(sessionId);
         
         if (error) {
           console.error('Failed to load demo session:', error);
@@ -681,10 +674,7 @@ export default function Wizard() {
         // Claim session for authenticated user
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id && !data.claimed_by) {
-          await supabase
-            .from('demo_sessions')
-            .update({ claimed_by: user.id, claimed_at: new Date().toISOString() })
-            .eq('session_id', sessionId);
+          await claimDemoSession(sessionId);
           console.log('🔒 [Wizard] Session claimed by user:', user.id);
         }
         
@@ -943,15 +933,12 @@ ${conversationText}` }
       if (sessionIdToUse) {
         // Save research data to session
         console.log('💾 [Wizard] Saving research to session:', sessionIdToUse);
-        await supabase
-          .from('demo_sessions')
-          .update({ 
+        await updateDemoSession(sessionIdToUse, { 
             market_research: marketResearchData,
             extracted_intelligence: extractedIntel,
             readiness: overallReadiness,
             completed: true
-          })
-          .eq('session_id', sessionIdToUse);
+          });
         
         // Navigate to Brief page
         console.log('🚀 [Wizard] Navigating to Brief page');

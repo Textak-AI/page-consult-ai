@@ -1,3 +1,4 @@
+import { readDemoSession, claimDemoSession } from '@/lib/anonymousSessions';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
@@ -542,11 +543,7 @@ export default function EnhancedBrandSetup() {
         consultationIdFromUrl: searchParams.get('consultationId'),
       });
       
-      const { data: demoData, error: demoError } = await supabase
-        .from('demo_sessions')
-        .select('*')
-        .eq('session_id', idToLoad)
-        .maybeSingle();
+      const { data: demoData, error: demoError } = await readDemoSession(idToLoad);
 
       // Log the query result for debugging
       console.log('📂 [EnhancedBrandSetup] Demo query result:', {
@@ -1380,15 +1377,7 @@ export default function EnhancedBrandSetup() {
           
           if (!createError && newConsultation) {
             // Claim the demo session
-            await supabase
-              .from('demo_sessions')
-              .update({
-                claimed_by: user.id,
-                claimed_at: new Date().toISOString(),
-                continued_to_consultation: true,
-              })
-              .eq('session_id', sessionId)
-              .is('claimed_by', null);
+            await claimDemoSession(sessionId);
             
             console.log('✅ [EnhancedBrandSetup] Created consultation from demo with full intelligence:', newConsultation.id);
             console.log('✅ [EnhancedBrandSetup] Readiness score:', readiness, 'Market research included:', !!marketResearch);
@@ -1430,11 +1419,7 @@ export default function EnhancedBrandSetup() {
           .single();
         
         if (!createError && newConsultation) {
-          await supabase
-            .from('demo_sessions')
-            .update({ claimed_by: demoUser.id, claimed_at: new Date().toISOString(), continued_to_consultation: true })
-            .eq('session_id', sessionId)
-            .is('claimed_by', null);
+          await claimDemoSession(sessionId);
           
           navigate(`/strategy-document?consultationId=${newConsultation.id}`, { replace: true });
           return;

@@ -1,3 +1,4 @@
+import { readDemoSession } from '@/lib/anonymousSessions';
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -829,11 +830,7 @@ function GenerateContent() {
       if (sessionParam) {
         console.log('🎨 [Generate] Loading from session:', sessionParam);
         
-        const { data: demoSession, error: sessionError } = await supabase
-          .from('demo_sessions')
-          .select('*')
-          .eq('session_id', sessionParam)
-          .maybeSingle();
+        const { data: demoSession, error: sessionError } = await readDemoSession(sessionParam);
         
         if (sessionError || !demoSession) {
           console.error('❌ Demo session not found:', sessionError);

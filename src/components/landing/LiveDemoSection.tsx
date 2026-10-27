@@ -1,3 +1,4 @@
+import { updateDemoSession } from '@/lib/anonymousSessions';
 import { useState, useEffect, useRef } from "react";
 import { useIntelligence } from "@/contexts/IntelligenceContext";
 import { useNavigate } from "react-router-dom";
@@ -271,7 +272,7 @@ export default function LiveDemoSection() {
 
     try {
       // Use upsert instead of insert since the session may already exist
-      const { error } = await supabase.from("demo_sessions").upsert([sessionData], { onConflict: 'session_id' });
+      const { error } = await updateDemoSession(sessionId, sessionData);
       // 💾 Log Supabase save result
       console.log("💾 [LiveDemo] Supabase save result:", {
         success: !error,

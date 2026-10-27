@@ -1,3 +1,4 @@
+import { readDemoSession } from '@/lib/anonymousSessions';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -98,11 +99,7 @@ export default function Huddle() {
     // If not found in consultations, check demo_sessions table
     if (!data) {
       console.log('📂 [Huddle] Not in consultations, checking demo_sessions...');
-      const { data: demoSession, error: demoError } = await supabase
-        .from('demo_sessions')
-        .select('*')
-        .eq('session_id', consultationId)
-        .maybeSingle();
+      const { data: demoSession, error: demoError } = await readDemoSession(consultationId);
 
       if (demoSession) {
         console.log('✅ [Huddle] Found demo_session, converting to consultation format');
