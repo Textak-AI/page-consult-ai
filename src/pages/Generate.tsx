@@ -6311,6 +6311,16 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           />
         </DialogContent>
       </Dialog>
+
+      {/* Editor footer */}
+      <footer className="h-8 shrink-0 border-t border-white/10 bg-white/5 backdrop-blur-md flex items-center justify-center relative z-10">
+        <a
+          href="mailto:support@pageconsult.ai"
+          className="text-xs text-slate-400 hover:text-cyan-400 transition-colors"
+        >
+          Send feedback
+        </a>
+      </footer>
     </div>
   );
 }
