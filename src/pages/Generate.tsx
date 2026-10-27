@@ -1,3 +1,4 @@
+import { consultationAccess } from '@/lib/consultationAccess';
 import { readDemoSession } from '@/lib/anonymousSessions';
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
@@ -731,8 +732,7 @@ function GenerateContent() {
           return;
         }
         
-        const { data: consultationData, error: consultationError } = await supabase
-          .from('consultations')
+        const { data: consultationData, error: consultationError } = await consultationAccess()
           .select('*')
           .eq('id', consultationIdParam)
           .single();
@@ -1348,8 +1348,7 @@ function GenerateContent() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("consultations")
+      const { data, error } = await consultationAccess()
         .select("*")
         .eq("user_id", user.id)
         .in("status", ["completed", "in_progress"]) // Valid: 'in_progress' or 'completed'

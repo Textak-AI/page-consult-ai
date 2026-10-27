@@ -1,3 +1,4 @@
+import { consultationAccess } from '@/lib/consultationAccess';
 import { readDemoSession } from '@/lib/anonymousSessions';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -90,8 +91,7 @@ export default function Huddle() {
     }
 
     // First try consultations table
-    let { data, error: consultationError } = await supabase
-      .from('consultations')
+    let { data, error: consultationError } = await consultationAccess()
       .select('*')
       .eq('id', consultationId)
       .maybeSingle();
@@ -146,8 +146,7 @@ export default function Huddle() {
 
     // Only update if we have a real consultation record
     if (data.id && !data.id.includes('-')) {
-      await supabase
-        .from('consultations')
+      await consultationAccess()
         .update({
           last_huddle_type: huddleType,
           last_huddle_at: new Date().toISOString()
@@ -270,8 +269,7 @@ export default function Huddle() {
     setCardNotes(newNotes);
 
     // Save to database
-    await supabase
-      .from('consultations')
+    await consultationAccess()
       .update({ card_notes: newNotes })
       .eq('id', consultationId);
 
@@ -290,8 +288,7 @@ export default function Huddle() {
 
     if (action === 'generate_brief') {
       // Save card notes first
-      await supabase
-        .from('consultations')
+      await consultationAccess()
         .update({ card_notes: cardNotes })
         .eq('id', consultationId);
 
@@ -300,8 +297,7 @@ export default function Huddle() {
 
       // Save brief to consultation and update flow state
       console.log('💾 [brief-persist] Saving envelope — hasStructured:', !!brief.structured);
-      const { error: briefSaveError } = await supabase
-        .from('consultations')
+      const { error: briefSaveError } = await consultationAccess()
         .update({
           strategy_brief: brief as unknown as import('@/integrations/supabase/types').Json,
           active_brief_version: 1,
@@ -323,8 +319,7 @@ export default function Huddle() {
       }
 
       // Check if brand data already exists - skip brand setup if so
-      const { data: consultationData } = await supabase
-        .from('consultations')
+      const { data: consultationData } = await consultationAccess()
         .select('extracted_intelligence, website_url, business_name')
         .eq('id', consultationId)
         .single();

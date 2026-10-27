@@ -1,3 +1,4 @@
+import { consultationAccess } from '@/lib/consultationAccess';
 import { supabase } from '@/integrations/supabase/client';
 
 export type FlowState = 
@@ -27,8 +28,7 @@ export async function updateFlowState(
   newState: FlowState, 
   trigger: string
 ): Promise<void> {
-  const { data: consultation } = await supabase
-    .from('consultations')
+  const { data: consultation } = await consultationAccess()
     .select('flow_history')
     .eq('id', consultationId)
     .single();
@@ -40,8 +40,7 @@ export async function updateFlowState(
     trigger
   });
 
-  await supabase
-    .from('consultations')
+  await consultationAccess()
     .update({ 
       flow_state: newState,
       flow_history: history
@@ -50,8 +49,7 @@ export async function updateFlowState(
 }
 
 export async function getNextStep(consultationId: string): Promise<FlowDecision> {
-  const { data: consultation, error } = await supabase
-    .from('consultations')
+  const { data: consultation, error } = await consultationAccess()
     .select('*')
     .eq('id', consultationId)
     .single();

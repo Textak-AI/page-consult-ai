@@ -1,3 +1,4 @@
+import { consultationAccess } from '@/lib/consultationAccess';
 /**
  * Intelligent Industry Classification System
  * 
@@ -407,8 +408,7 @@ export async function storeClassificationOnConsultation(
   console.log('💾 [industryClassification] Storing classification on consultation:', consultationId);
   
   // First, get existing intelligence to merge
-  const { data: existing } = await supabase
-    .from('consultations')
+  const { data: existing } = await consultationAccess()
     .select('extracted_intelligence')
     .eq('id', consultationId)
     .single();
@@ -424,8 +424,7 @@ export async function storeClassificationOnConsultation(
     classifiedAt: classification.classifiedAt || new Date().toISOString()
   };
   
-  const { error } = await supabase
-    .from('consultations')
+  const { error } = await consultationAccess()
     .update({
       extracted_intelligence: {
         ...currentIntelligence,
