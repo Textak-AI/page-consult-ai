@@ -73,8 +73,8 @@ export async function updateGuestSession(
   if (updates.email !== undefined) updatePayload.email = updates.email;
   if (updates.consultationData !== undefined) updatePayload.consultation_data = updates.consultationData;
   if (updates.intelligenceState !== undefined) updatePayload.intelligence_state = updates.intelligenceState;
-
-
+  if (updates.generatedBriefId !== undefined) updatePayload.generated_brief_id = updates.generatedBriefId;
+  if (updates.generatedPageId !== undefined) updatePayload.generated_page_id = updates.generatedPageId;
   
   const { error } = await supabase.functions.invoke('guest-session', {
     body: { operation: 'update', session_token: token, updates: updatePayload },

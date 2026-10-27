@@ -5,7 +5,7 @@ import { sessionClient, sessionTokenSchema, lookupSession, readSessionBody, auth
 const Body = z.object({
   operation: z.enum(["create", "read", "update", "migrate", "read-consultation", "update-consultation"]),
   session_token: sessionTokenSchema.optional(), consultation_id: z.string().uuid().optional(),
-  updates: z.object({ email: z.string().email().max(255).optional(), consultation_data: jsonRecord.optional(), intelligence_state: jsonRecord.optional() }).optional(),
+  updates: z.object({ email: z.string().email().max(255).optional(), consultation_data: jsonRecord.optional(), intelligence_state: jsonRecord.optional(), generated_brief_id: z.string().uuid().optional(), generated_page_id: z.string().uuid().optional() }).optional(),
   consultation_updates: z.object({
     industry: z.string().max(500).optional(), goal: z.string().max(5000).optional(), target_audience: z.string().max(5000).optional(),
     challenge: z.string().max(20000).optional(), unique_value: z.string().max(20000).optional(),
@@ -13,6 +13,8 @@ const Body = z.object({
     flow_state: z.string().max(100).optional(), flow_history: z.array(jsonRecord).max(500).optional(),
     last_huddle_type: z.string().max(100).optional(), last_huddle_at: z.string().datetime().optional(),
     readiness_score: z.number().min(0).max(100).optional(),
+    communication_style: jsonRecord.optional(), business_name: z.string().max(255).optional(), website_url: z.string().url().max(2048).optional(),
+    card_notes: jsonRecord.optional(), active_brief_version: z.number().int().min(0).optional(), brief_versions: z.array(jsonRecord).max(100).optional(),
   }).optional(),
 });
 Deno.serve(async (req: Request) => {
@@ -37,6 +39,15 @@ Deno.serve(async (req: Request) => {
     if (body.operation === "read") return json({ session });
     if (body.operation === "update") {
       if (session.converted_to_user_id) return json({ error: "Session already migrated" }, 403);
+      for (const pageId of [body.updates?.generated_brief_id, body.updates?.generated_page_id]) {
+        if (!pageId) continue;
+        const { data: page, error: pageError } = await client.from("landing_pages").select("consultation_id").eq("id", pageId).maybeSingle();
+        if (pageError) throw pageError;
+        if (!page?.consultation_id) return json({ error: "Page not linked to guest session" }, 403);
+        const { data: linked, error: linkError } = await client.from("consultations").select("id").eq("id", page.consultation_id).eq("guest_session_id", session.id).is("user_id", null).maybeSingle();
+        if (linkError) throw linkError;
+        if (!linked) return json({ error: "Page not linked to guest session" }, 403);
+      }
       const { data, error } = await client.from("guest_sessions").update(body.updates ?? {}).eq("id", session.id).is("converted_to_user_id", null).select("*").maybeSingle();
       if (error) throw error;
       if (!data) return json({ error: "Session unavailable" }, 409);
