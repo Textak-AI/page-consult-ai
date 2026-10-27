@@ -26,7 +26,6 @@
 - [ ] Verify leads/analytics live using the two existing webhook-test-lead@example.com form_submissions rows as fixtures; do not create new test leads.
 - [x] Leads view: no in-app view existed; added /leads (Leads.tsx), nav link in Header, route in App.tsx. Verified live as kyle@textak.ai: webhook-test row renders with page badge, email, date, filter.
 - [x] PageItem: published pages now always show "N views" (0 included) plus "Last viewed …" when present.
-- [ ] Verify view counts render on dashboard for a published page (kyle@textak.ai has only drafts; will verify during SEO publish test).
-- [ ] SEO panel in page editor: editable meta title/description, prefilled from page meta fields, char hints ~60/~160, persist to landing_pages under owner RLS, publish carries values into published_pages snapshot, served head reflects them. No invented defaults; cleared fields fall back to real title/first-section copy. Do not touch index.html.
-- [ ] Verify SEO live: edit meta on a draft, publish, check served head, unpublish, restore.
+- [x] View counts verified live: '0 views' rendered on the dashboard while Fernhill was published during the SEO test.
+- [x] SEO panel done: SeoPanel.tsx + SEO button in editor toolbar; persists to landing_pages under owner RLS; PublishModal prefill prefers edited values (fixed stale-snapshot overwrite on republish) and writes meta back to landing_pages on publish. Verified live: edit → publish → SPA <title> carried edited value, per-page description/og tags emitted via Helmet (static index.html fallbacks remain first in document order — stack-inherent, SSR function serves edited values to crawlers) → unpublished → original meta restored.
 - [ ] Report: Header "Dashboard" nav link points to /dashboard which has no route (404) — pre-existing, out of scope.
