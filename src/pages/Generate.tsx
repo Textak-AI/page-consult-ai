@@ -43,7 +43,7 @@ import { ShareableAchievementCard } from '@/components/consultation/ShareableAch
 import { ConsultantChat } from '@/components/consultation/ConsultantChat';
 import { LockedSectionOverlay } from '@/components/sections/LockedSectionOverlay';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Trophy, Share2 } from 'lucide-react';
+import { Trophy, Share2, Search } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { StylePresetName } from "@/styles/presets";
 import {
@@ -5473,6 +5473,7 @@ function GenerateContent() {
         handlePreview={handlePreview}
         publishModalOpen={publishModalOpen}
         setPublishModalOpen={setPublishModalOpen}
+        setSeoPanelOpen={setSeoPanelOpen}
         aiConsultantOpen={aiConsultantOpen}
         setAiConsultantOpen={setAiConsultantOpen}
         stylePickerOpen={stylePickerOpen}
@@ -5510,6 +5511,7 @@ function EditorContent({
   handlePreview,
   publishModalOpen,
   setPublishModalOpen,
+  setSeoPanelOpen,
   aiConsultantOpen,
   setAiConsultantOpen,
   stylePickerOpen,
@@ -6150,15 +6152,6 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         }}
       />
 
-      <SeoPanel
-        open={seoPanelOpen}
-        onOpenChange={setSeoPanelOpen}
-        pageData={pageData}
-        sections={sections}
-        onSaved={(metaTitle, metaDescription) =>
-          setPageData((prev: any) => prev ? { ...prev, meta_title: metaTitle, meta_description: metaDescription } : prev)
-        }
-      />
 
       {pageData?.id && (
         <SharePreviewModal
