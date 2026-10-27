@@ -369,6 +369,12 @@ export default function Signup() {
           
           authenticatedUser = signUpData?.user;
           isNewUser = true;
+
+          // Welcome email — fire-and-forget, must never block or fail signup.
+          // The function itself is idempotent (profiles.welcome_email_sent_at).
+          supabase.functions.invoke('send-welcome-email').catch((err) => {
+            console.warn('Welcome email invoke failed (non-blocking):', err);
+          });
           
           toast({
             title: isFromDemo ? "🚀 Trial started!" : "✅ Account created!",
