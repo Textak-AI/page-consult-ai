@@ -59,6 +59,7 @@ import TryDemo from "./pages/TryDemo";
 import AdminResetData from "./pages/AdminResetData";
 import PreviewPage from "./pages/PreviewPage";
 import ResetPassword from "./pages/ResetPassword";
+import Leads from "./pages/Leads";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -161,6 +162,7 @@ const App = () => {
                 <Route path="/dev" element={<Dev />} />
                 <Route path="/trust-center" element={<TrustCenter />} />
                 <Route path="/prospects" element={<ProspectsDashboard />} />
+                <Route path="/leads" element={<Leads />} />
                 <Route path="/dev" element={<Dev />} />
                 
                 {/* Public page routes - accessible without authentication */}

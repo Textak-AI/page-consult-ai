@@ -18,6 +18,7 @@ interface PageItemProps {
     sections?: { hero?: { headline?: string } };
     updated_at: string;
     view_count?: number;
+    last_viewed_at?: string | null;
     published_url?: string;
     slug?: string;
     consultation_id?: string;
@@ -61,9 +62,14 @@ export function PageItem({
             <>
               <span className="text-emerald-400 font-medium">Live</span>
               <span>·</span>
-              {(page.view_count ?? 0) > 0 && (
+              {/* Real counts only — a page with 0 views shows 0, never hidden */}
+              <span>{page.view_count ?? 0} views</span>
+              <span>·</span>
+              {page.last_viewed_at && (
                 <>
-                  <span>{page.view_count} views</span>
+                  <span>
+                    Last viewed {formatDistanceToNow(new Date(page.last_viewed_at), { addSuffix: true })}
+                  </span>
                   <span>·</span>
                 </>
               )}

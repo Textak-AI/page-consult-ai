@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, LogOut, Settings, ChevronDown, Zap, LayoutDashboard, Users, AlertTriangle } from "lucide-react";
+import { Plus, LogOut, Settings, ChevronDown, Zap, LayoutDashboard, Users, Inbox, AlertTriangle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -128,6 +128,13 @@ const Header = () => {
               >
                 <Users className="w-4 h-4" />
                 <span className="text-sm">Prospects</span>
+              </Link>
+              <Link
+                to="/leads"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 rounded-lg hover:bg-muted"
+              >
+                <Inbox className="w-4 h-4" />
+                <span className="text-sm">Leads</span>
               </Link>
               <Link
                 to="/brand-setup"
