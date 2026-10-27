@@ -112,7 +112,7 @@ async function trackView(supabase: any, pageId: string) {
 }
 
 function getSiteUrl(): string {
-  return Deno.env.get('PUBLIC_SITE_URL') || 'https://pageconsult.ai'
+  return Deno.env.get('PUBLIC_SITE_URL') || 'https://pageconsult.app'
 }
 
 function generateSchema(page: any, consultation: any): string {

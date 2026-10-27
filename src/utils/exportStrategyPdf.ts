@@ -127,7 +127,7 @@
    // Footer on cover
    pdf.setFontSize(10);
    pdf.setTextColor(71, 85, 105); // Slate-600
-   pdf.text('pageconsult.ai', margin, pageHeight - 40);
+   pdf.text('pageconsult.app', margin, pageHeight - 40);
    pdf.text('Strategy-first landing pages powered by AI', margin, pageHeight - 28);
  
    // Confidential notice
@@ -195,7 +195,7 @@
      pdf.setFont('helvetica', 'normal');
      pdf.setFontSize(8);
      pdf.setTextColor(71, 85, 105);
-     pdf.text('pageconsult.ai', margin, pageHeight - 20);
+     pdf.text('pageconsult.app', margin, pageHeight - 20);
      pdf.text(
        `Page ${page + 2} of ${totalPages + 1}`, // +1 for cover page
        pageWidth - margin - pdf.getTextWidth(`Page ${page + 2} of ${totalPages + 1}`),

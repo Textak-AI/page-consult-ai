@@ -456,8 +456,8 @@ const Terms = () => {
             </p>
             <p>
               Website:{" "}
-              <a href="https://pageconsult.ai" className="text-cyan-400 hover:text-cyan-300" target="_blank" rel="noopener noreferrer">
-                https://pageconsult.ai
+              <a href="https://pageconsult.app" className="text-cyan-400 hover:text-cyan-300" target="_blank" rel="noopener noreferrer">
+                https://pageconsult.app
               </a>
             </p>
           </div>
