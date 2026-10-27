@@ -138,7 +138,7 @@ Deno.serve(async (req: Request) => {
                   leadPhone: phone || "Not provided",
                   leadMessage: message || "No message",
                   pageName: pageOwner.page_title || "Your landing page",
-                  pageUrl: `https://pages.pageconsult.ai/p/${pageOwner.slug}`,
+                  pageUrl: `https://pages.pageconsult.app/p/${pageOwner.slug}`,
                   submittedAt: new Date().toLocaleString("en-US", {
                     timeZone: "America/New_York",
                     dateStyle: "medium",
@@ -244,7 +244,7 @@ Deno.serve(async (req: Request) => {
         const ownerEmail = ownerData?.user?.email;
         if (!ownerEmail) return;
 
-        const siteUrl = (Deno.env.get("PUBLIC_SITE_URL") || "https://pageconsult.ai").replace(/\/$/, "");
+        const siteUrl = (Deno.env.get("PUBLIC_SITE_URL") || "https://pageconsult.app").replace(/\/$/, "");
         const leadsUrl = `${siteUrl}/`;
         const pageTitle = ownerPage.page_title || "Your page";
         const leadDescription = company ? `${name || "A visitor"} from ${company}` : (name || "A visitor");

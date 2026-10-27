@@ -567,7 +567,7 @@ export function PageScorePanel({
             variant="outline"
             className="flex-1 bg-slate-800/50 border-slate-600/50 hover:bg-slate-700/50 text-slate-300"
             onClick={() => {
-              window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://pageconsult.ai')}`, '_blank');
+              window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://pageconsult.app')}`, '_blank');
             }}
           >
             <Linkedin className="w-3.5 h-3.5 mr-1" />

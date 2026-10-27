@@ -58,7 +58,7 @@ export function PageFooter({
                 <span className="text-slate-600">
                   Powered by{' '}
                   <a 
-                    href="https://pageconsult.ai" 
+                    href="https://pageconsult.app" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="hover:text-cyan-400 transition-colors"

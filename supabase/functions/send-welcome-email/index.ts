@@ -49,7 +49,7 @@ Deno.serve(async (req: Request) => {
       return json({ sent: false, reason: "already_sent" });
     }
 
-    const siteUrl = (Deno.env.get("PUBLIC_SITE_URL") || "https://pageconsult.ai").replace(/\/$/, "");
+    const siteUrl = (Deno.env.get("PUBLIC_SITE_URL") || "https://pageconsult.app").replace(/\/$/, "");
     const dashboardUrl = `${siteUrl}/dashboard`;
 
     const controller = new AbortController();

@@ -102,7 +102,7 @@ serve(async (req) => {
     // Fetch the webpage
     const response = await fetch(sanitizedUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; PageConsult/1.0; +https://pageconsult.ai)',
+        'User-Agent': 'Mozilla/5.0 (compatible; PageConsult/1.0; +https://pageconsult.app)',
         'Accept': 'text/html,application/xhtml+xml',
       },
       redirect: 'follow',

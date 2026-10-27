@@ -79,7 +79,7 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    const requestOrigin = origin || "https://pageconsult.ai";
+    const requestOrigin = origin || "https://pageconsult.app";
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
@@ -101,7 +101,7 @@ serve(async (req) => {
       },
       custom_text: {
         terms_of_service_acceptance: {
-          message: "I agree to the [Terms of Service](https://pageconsult.ai/terms) and [Privacy Policy](https://pageconsult.ai/privacy)",
+          message: "I agree to the [Terms of Service](https://pageconsult.app/terms) and [Privacy Policy](https://pageconsult.app/privacy)",
         },
       },
     });

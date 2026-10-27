@@ -212,5 +212,5 @@ ${businessName}`
 
 export function generateRequestPageUrl(businessName: string): string {
   const slug = businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  return `https://pageconsult.ai/review/${slug}`;
+  return `https://pageconsult.app/review/${slug}`;
 }

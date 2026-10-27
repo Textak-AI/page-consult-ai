@@ -61,7 +61,7 @@ serve(async (req) => {
       });
     }
 
-    const siteUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://pageconsult.ai";
+    const siteUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://pageconsult.app";
 
     // Track view (async)
     trackView(supabase, prospect);

@@ -493,7 +493,7 @@ export function PublicPageRenderer({
         {/* "Built with PageConsult" badge */}
         {showPoweredBy && (
           <a 
-            href="https://pageconsult.ai" 
+            href="https://pageconsult.app" 
             target="_blank" 
             rel="noopener noreferrer"
             className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 bg-slate-900/90 backdrop-blur-sm border border-slate-700/50 rounded-full text-xs text-slate-400 hover:text-white hover:border-purple-500/50 transition-all duration-200 shadow-lg"
