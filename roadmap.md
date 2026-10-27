@@ -15,3 +15,4 @@
 - [x] Port brand-scene generation to logo-capable Replicate; prompts and table behavior byte-identical, live HTTP 200 image/cache and generation-log readback verified, cache hit returns exact image, two tests pass, and zero gateway/key references remain in functions.
 - [x] Add forgot-password request and recovery screens sharing /reset-password, with six-character minimum and account-neutral confirmation; five rule tests and automatic build pass; browser checks cover prefill, mismatch, expired links, and simulated update/dashboard routing.
 - [ ] Verify emailed-link recovery and old/new login behavior: real-account request returned HTTP 200 (repeat HTTP 429); blocked by unavailable inbox and old-password access; no real password changed.
+- [ ] Wire billing actions to the authenticated Stripe Customer Portal; verify owner-only lookup, deployment, and existing automatic checks without modifying checkout or policies.
