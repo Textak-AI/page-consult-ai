@@ -5493,6 +5493,15 @@ function GenerateContent() {
         designSystem={designSystem}
         seoData={seoData}
       />
+      <SeoPanel
+        open={seoPanelOpen}
+        onOpenChange={setSeoPanelOpen}
+        pageData={pageData}
+        sections={sections}
+        onSaved={(metaTitle, metaDescription) =>
+          setPageData((prev: any) => prev ? { ...prev, meta_title: metaTitle, meta_description: metaDescription } : prev)
+        }
+      />
     </EditingProvider>
   );
 }
