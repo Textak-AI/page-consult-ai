@@ -6,10 +6,40 @@ import { Separator } from "@/components/ui/separator";
 import { useCredits } from "@/hooks/useCredits";
 import { useAuth } from "@/hooks/useAuth";
 import { CreditCard, Zap, TrendingUp, ExternalLink, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export function BillingSettings() {
   const { user } = useAuth();
   const { credits, isLoading } = useCredits(user?.id || null);
+  const { toast } = useToast();
+  const [pendingAction, setPendingAction] = useState<"payment" | "history" | "cancel" | null>(null);
+
+  const openBillingPortal = async (action: "payment" | "history" | "cancel") => {
+    if (pendingAction) return;
+    setPendingAction(action);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-portal-session", { body: {} });
+      if (error) {
+        const response = "context" in error ? error.context : null;
+        if (response instanceof Response && response.status === 404) {
+          const body = await response.clone().json().catch(() => null);
+          if (body?.error === "no_billing_account") {
+            toast({ title: "No billing account yet - this appears after your first subscription." });
+            return;
+          }
+        }
+        throw error;
+      }
+      if (typeof data?.url !== "string" || !data.url) throw new Error("No portal URL returned");
+      window.location.href = data.url;
+    } catch {
+      toast({ title: "Unable to open billing portal", description: "Please try again.", variant: "destructive" });
+    } finally {
+      setPendingAction(null);
+    }
+  };
 
   const getPlanBadgeVariant = (plan: string) => {
     switch (plan) {
@@ -110,18 +140,19 @@ export function BillingSettings() {
         {/* Billing Actions */}
         <Separator />
         <div className="grid gap-3">
-          <Button variant="outline" className="justify-start gap-2">
-            <CreditCard className="h-4 w-4" />
+          <Button variant="outline" className="justify-start gap-2" disabled={pendingAction !== null} onClick={() => openBillingPortal("payment")}>
+            {pendingAction === "payment" ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
             Manage Payment Methods
             <ExternalLink className="h-3 w-3 ml-auto" />
           </Button>
-          <Button variant="outline" className="justify-start gap-2">
-            <ExternalLink className="h-4 w-4" />
+          <Button variant="outline" className="justify-start gap-2" disabled={pendingAction !== null} onClick={() => openBillingPortal("history")}>
+            {pendingAction === "history" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
             View Billing History
             <ExternalLink className="h-3 w-3 ml-auto" />
           </Button>
           {plan !== "starter" && (
-            <Button variant="ghost" className="justify-start gap-2 text-muted-foreground">
+            <Button variant="ghost" className="justify-start gap-2 text-muted-foreground" disabled={pendingAction !== null} onClick={() => openBillingPortal("cancel")}>
+              {pendingAction === "cancel" && <Loader2 className="h-4 w-4 animate-spin" />}
               Cancel Subscription
             </Button>
           )}
