@@ -1,3 +1,4 @@
+import { GazeReveal } from '@/components/motion/GazeReveal';
 import { useState, useCallback, useMemo, memo } from "react";
 import { sanitizeFullCSS } from "@/lib/sanitizeCSS";
 import { HeroSection } from "@/components/sections/HeroSection";
@@ -319,7 +320,7 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
           isEditing={editingSection === index}
         />
         
-        {sectionElement}
+        <GazeReveal sectionType={section.type}>{sectionElement}</GazeReveal>
       </div>
     );
   }, [getSectionLockStatus, handleUnlockAction, editingSection, handleEditSection, handleAIAssist, handleImageGenerate, handleLogoEdit]);

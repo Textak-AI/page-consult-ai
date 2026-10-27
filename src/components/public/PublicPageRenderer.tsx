@@ -1,3 +1,4 @@
+import { GazeReveal } from '@/components/motion/GazeReveal';
 import { useMemo, useState, useCallback } from 'react';
 import { LeadCaptureModal } from './LeadCaptureModal';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
@@ -472,11 +473,13 @@ export function PublicPageRenderer({
                 )}
               >
                 <div className="relative z-10">
-                  {renderSection(section, index)}
+                  <GazeReveal sectionType={section.type}>{renderSection(section, index)}</GazeReveal>
                 </div>
               </div>
             ) : (
-              renderSection(section, index)
+              <GazeReveal key={`gaze-${index}`} sectionType={section.type}>
+                {renderSection(section, index)}
+              </GazeReveal>
             );
           })}
         </div>

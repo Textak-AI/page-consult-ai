@@ -1,0 +1,69 @@
+import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { animate } from 'framer-motion';
+import { MOTION } from '@/lib/motion/tokens';
+import { resolveGazeOrder } from '@/lib/motion/gazeMap';
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * Plays a section's entrance once, in gaze order, when it first scrolls into view.
+ * Progressive safety: elements are hidden only after this mounts in a browser;
+ * without JS, IntersectionObserver, or with reduced motion, content stays visible.
+ */
+export function GazeReveal({ sectionType, children }: { sectionType: string; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const root = ref.current;
+    if (!root || prefersReducedMotion() || typeof IntersectionObserver === 'undefined') return;
+
+    const beats = resolveGazeOrder(root, sectionType);
+    const els = beats.flat();
+    if (!els.length) return;
+
+    const reset = (el: HTMLElement) => {
+      el.style.opacity = '';
+      el.style.transform = '';
+      el.style.willChange = '';
+    };
+    els.forEach((el) => {
+      el.style.opacity = '0';
+      el.style.transform = `translateY(${MOTION.distance}px)`;
+      el.style.willChange = 'opacity, transform';
+    });
+
+    const controls: { stop: () => void }[] = [];
+    let played = false;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (played || !entries.some((e) => e.isIntersecting)) return;
+        played = true;
+        io.disconnect();
+        beats.forEach((beat, i) =>
+          beat.forEach((el) => {
+            const c = animate(
+              el,
+              { opacity: [0, 1], transform: [`translateY(${MOTION.distance}px)`, 'translateY(0px)'] },
+              { duration: MOTION.duration.md, ease: MOTION.ease, delay: i * MOTION.stagger },
+            );
+            controls.push(c);
+            c.then(() => reset(el));
+          }),
+        );
+      },
+      { threshold: 0.15 },
+    );
+    io.observe(root);
+
+    return () => {
+      io.disconnect();
+      controls.forEach((c) => c.stop());
+      els.forEach(reset);
+    };
+    // Play once per mount; content edits after reveal are not re-hidden.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sectionType]);
+
+  return <div ref={ref}>{children}</div>;
+}
