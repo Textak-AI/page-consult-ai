@@ -24,3 +24,8 @@
 - [ ] Leads view: check whether form_submissions are visible to page owners anywhere in-app; if not, add a Leads section (all submissions across owner's pages, newest first, per-page filter, plain empty state).
 - [ ] Per-page analytics: show real view_count and last_viewed_at on dashboard page cards; 0 views shows 0, no placeholders.
 - [ ] Verify leads/analytics live using the two existing webhook-test-lead@example.com form_submissions rows as fixtures; do not create new test leads.
+- [x] Leads view: no in-app view existed; added /leads (Leads.tsx), nav link in Header, route in App.tsx. Verified live as kyle@textak.ai: webhook-test row renders with page badge, email, date, filter.
+- [x] PageItem: published pages now always show "N views" (0 included) plus "Last viewed …" when present.
+- [x] View counts verified live: '0 views' rendered on the dashboard while Fernhill was published during the SEO test.
+- [x] SEO panel done: SeoPanel.tsx + SEO button in editor toolbar; persists to landing_pages under owner RLS; PublishModal prefill prefers edited values (fixed stale-snapshot overwrite on republish) and writes meta back to landing_pages on publish. Verified live: edit → publish → SPA <title> carried edited value, per-page description/og tags emitted via Helmet (static index.html fallbacks remain first in document order — stack-inherent, SSR function serves edited values to crawlers) → unpublished → original meta restored.
+- [ ] Report: Header "Dashboard" nav link points to /dashboard which has no route (404) — pre-existing, out of scope.
