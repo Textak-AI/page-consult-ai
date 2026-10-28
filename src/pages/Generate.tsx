@@ -5820,6 +5820,15 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           >
             <Redo2 className="w-4 h-4" />
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setStylePickerOpen(true)}
+            className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10"
+          >
+            <Palette className="w-4 h-4" />
+            Style
+          </Button>
           <div className="w-px h-6 bg-white/10 mx-1" />
           <Button
             variant="outline"
