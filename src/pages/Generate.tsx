@@ -23,6 +23,7 @@ import { UnifiedGenerationFlow } from "@/components/editor/UnifiedGenerationFlow
 import { StrategyBriefPanel } from "@/components/builder/StrategyBriefPanel";
 import { ConsultantPanel } from "@/components/editor/ConsultantPanel";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
+import { useEditorSession } from "@/hooks/useEditorSession";
 import { generateIntelligentContent, runIntelligencePipeline } from "@/services/intelligence";
 import { generateIntelligentContent as generateIntelligentContentLegacy } from "@/lib/generateIntelligentContent";
 import { 
@@ -44,7 +45,7 @@ import { ShareableAchievementCard } from '@/components/consultation/ShareableAch
 import { ConsultantChat } from '@/components/consultation/ConsultantChat';
 import { LockedSectionOverlay } from '@/components/sections/LockedSectionOverlay';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Trophy, Share2, Search } from 'lucide-react';
+import { Trophy, Share2, Search, Palette } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { StylePresetName } from "@/styles/presets";
 import {
@@ -350,7 +351,7 @@ function GenerateContent() {
   const location = useLocation();
   const { pageId } = useParams();
   const { toast } = useToast();
-  const { pushHistory, undo, redo, canUndo, canRedo, clearHistory } = useEditing();
+  const { pageStyle, setPageStyle } = useEditing();
   const [phase, setPhase] = useState<Phase>("generating");
   const [isGenerating, setIsGenerating] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -365,10 +366,18 @@ function GenerateContent() {
   const [aiConsultantOpen, setAiConsultantOpen] = useState(false);
   const [stylePickerOpen, setStylePickerOpen] = useState(false);
   const [calculatorUpgradeOpen, setCalculatorUpgradeOpen] = useState(false);
-  const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastSavedSectionsRef = useRef<string>('');
-  const [isSaving, setIsSaving] = useState(false);
   const [existingPageLoaded, setExistingPageLoaded] = useState(false);
+  // One undo history + autosave for the whole editing session.
+  const editorSession = useEditorSession({
+    active: phase === "editor",
+    pageId: pageData?.id,
+    baseStyles: pageData?.styles,
+    sections,
+    setSections,
+    pageStyle,
+    setPageStyle,
+  });
+  const { canUndo, canRedo, saveStatus, saveNow, setSectionsNow } = editorSession;
   
   // Intelligence data from wizard or strategic consultation - type definition
   type NavigationStateType = {
@@ -566,56 +575,6 @@ function GenerateContent() {
   useEffect(() => {
     loadConsultation();
   }, []);
-
-  // Auto-save when sections change (with debounce and change detection)
-  useEffect(() => {
-    if (phase !== "editor" || !pageData || sections.length === 0) return;
-    
-    // Compare sections to last saved - skip if no actual changes
-    const sectionsJson = JSON.stringify(sections);
-    if (sectionsJson === lastSavedSectionsRef.current) return;
-
-    // Clear existing timeout
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-
-    // Set new timeout for auto-save after 3 seconds of no changes
-    autoSaveTimeoutRef.current = setTimeout(async () => {
-      // Double-check sections changed before saving
-      const currentSectionsJson = JSON.stringify(sections);
-      if (currentSectionsJson === lastSavedSectionsRef.current) return;
-      
-      setIsSaving(true);
-      const { error } = await supabase
-        .from("landing_pages")
-        .update({ sections, updated_at: new Date().toISOString() })
-        .eq("id", pageData.id);
-
-      if (error) {
-        console.error("Auto-save failed:", error);
-      } else {
-        console.log("✓ Auto-saved");
-        lastSavedSectionsRef.current = currentSectionsJson;
-      }
-      
-      setTimeout(() => setIsSaving(false), 1500);
-    }, 3000);
-
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-  }, [sections, phase, pageData]);
-
-  // Initialize history when sections first load
-  useEffect(() => {
-    if (phase === "editor" && sections.length > 0 && !canUndo && !canRedo) {
-      clearHistory();
-      pushHistory(sections);
-    }
-  }, [phase]);
 
   // Auto-trigger hero image generation for Art Director compositions
   const heroImageTriggered = useRef(false);
@@ -5345,9 +5304,7 @@ function GenerateContent() {
             ? { ...section, content: { ...section.content, ...data.content } }
             : section
         ));
-        
-        // Save to undo history
-        pushHistory(sections);
+        // Captured automatically by the editor session history.
         
         toast({
           title: 'Section Regenerated',
@@ -5371,52 +5328,26 @@ function GenerateContent() {
 
   const handleSave = async () => {
     if (!pageData) return;
-
-    const { error } = await supabase
-      .from("landing_pages")
-      .update({ sections, updated_at: new Date().toISOString() })
-      .eq("id", pageData.id);
-
-    if (error) {
+    // Always serializes the latest editor state (never a render-time copy).
+    const ok = await saveNow();
+    if (!ok) {
       toast({
         title: "Save failed",
-        description: "Could not save changes. Please try again.",
+        description: "Could not save changes. Use Retry to try again.",
         variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "✓ Saved",
-        description: "Your changes have been saved.",
       });
     }
   };
 
   const handleUndo = () => {
-    const previousState = undo();
-    if (previousState) {
-      setSections(previousState);
-      toast({
-        title: "Undone",
-        description: "Reverted to previous version",
-      });
-    }
+    editorSession.undo();
   };
 
   const handleRedo = () => {
-    const nextState = redo();
-    if (nextState) {
-      setSections(nextState);
-      toast({
-        title: "Redone",
-        description: "Restored next version",
-      });
-    }
+    editorSession.redo();
   };
 
-  const updateSections = (newSections: Section[]) => {
-    setSections(newSections);
-    pushHistory(newSections);
-  };
+  const updateSections = setSectionsNow;
 
   const handlePreview = () => {
     if (pageData) {
@@ -5468,7 +5399,7 @@ function GenerateContent() {
 
   // Phase 3: Editor
   return (
-    <EditingProvider>
+    <>
       <EditorContent
         consultation={consultation}
         pageData={pageData}
@@ -5479,7 +5410,7 @@ function GenerateContent() {
         handleRedo={handleRedo}
         canUndo={canUndo}
         canRedo={canRedo}
-        isSaving={isSaving}
+        saveStatus={saveStatus}
         handlePreview={handlePreview}
         publishModalOpen={publishModalOpen}
         setPublishModalOpen={setPublishModalOpen}
@@ -5512,7 +5443,7 @@ function GenerateContent() {
           setPageData((prev: any) => prev ? { ...prev, meta_title: metaTitle, meta_description: metaDescription } : prev)
         }
       />
-    </EditingProvider>
+    </>
   );
 }
 
@@ -5526,7 +5457,7 @@ function EditorContent({
   handleRedo,
   canUndo,
   canRedo,
-  isSaving,
+  saveStatus,
   handlePreview,
   publishModalOpen,
   setPublishModalOpen,
@@ -5745,10 +5676,14 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      // Leave native undo to text fields while the user is typing in them.
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      const key = e.key.toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && key === 'z' && !e.shiftKey) {
         e.preventDefault();
         if (canUndo) handleUndo();
-      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+      } else if ((e.ctrlKey || e.metaKey) && (key === 'y' || (key === 'z' && e.shiftKey))) {
         e.preventDefault();
         if (canRedo) handleRedo();
       }
@@ -5870,6 +5805,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             disabled={!canUndo}
             className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 disabled:opacity-30"
             title="Undo (Ctrl+Z)"
+            aria-label="Undo"
           >
             <Undo2 className="w-4 h-4" />
           </Button>
@@ -5879,9 +5815,19 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             onClick={handleRedo}
             disabled={!canRedo}
             className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 disabled:opacity-30"
-            title="Redo (Ctrl+Y)"
+            title="Redo (Shift+Ctrl+Z)"
+            aria-label="Redo"
           >
             <Redo2 className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setStylePickerOpen(true)}
+            className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10"
+          >
+            <Palette className="w-4 h-4" />
+            Style
           </Button>
           <div className="w-px h-6 bg-white/10 mx-1" />
           <Button
@@ -5894,14 +5840,20 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             <Sparkles className="w-4 h-4" />
             Generate Variant
           </Button>
+          {saveStatus === "failed" && (
+            <span role="alert" className="text-xs whitespace-nowrap text-destructive">Save failed</span>
+          )}
           <Button
             variant="outline"
             size="sm"
             onClick={handleSave}
+            disabled={saveStatus === "saving"}
+            data-save-status={saveStatus}
+            aria-live="polite"
             className="relative pl-5 builder-button save-draft-btn bg-white/5 border-white/10 text-white hover:bg-white/10"
           >
             <span className="absolute left-0 top-0 w-1 h-full bg-yellow-500 rounded-l"></span>
-            {isSaving ? "Saving..." : "Save Draft"}
+            {{ saved: "Saved", unsaved: "Save Draft", saving: "Saving…", failed: "Retry save" }[saveStatus as string] ?? "Save Draft"}
           </Button>
           {/* Regenerate button - only shows for existing loaded pages */}
           {pageData?.id && (
