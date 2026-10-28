@@ -1,3 +1,4 @@
+import { auditLogo, LOGO_REJECTION_TEXT } from '@/lib/logoAudit';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Palette, Check, Upload, AlertCircle, Pipette, Edit, Sparkles, ZoomIn, Link as LinkIcon, Loader2 } from 'lucide-react';
@@ -173,7 +174,37 @@ export function BrandCustomization({
   );
   const [headingFont, setHeadingFont] = useState(websiteIntelligence.headingFont || 'Inter');
   const [bodyFont, setBodyFont] = useState(websiteIntelligence.bodyFont || 'Inter');
-  const [logoUrl, setLogoUrl] = useState<string | null>(websiteIntelligence.logoUrl || null);
+  const [logoUrl, setLogoUrlRaw] = useState<string | null>(websiteIntelligence.logoUrl || null);
+  // Logo audit: the extracted candidate and anything uploaded/linked pass the same check.
+  const [extractedLogoOk, setExtractedLogoOk] = useState<boolean | null>(websiteIntelligence.logoUrl ? null : false);
+  const [logoRejection, setLogoRejection] = useState<string | null>(null);
+  const [continueWithoutLogo, setContinueWithoutLogo] = useState(false);
+  useEffect(() => {
+    const candidate = websiteIntelligence.logoUrl;
+    if (!candidate) { setExtractedLogoOk(false); return; }
+    let live = true;
+    auditLogo(candidate).then((v) => {
+      if (!live) return;
+      setExtractedLogoOk(v.ok);
+      if (!v.ok) {
+        setLogoUrlRaw((cur) => (cur === candidate ? null : cur));
+        setLogoRejection(v.reason ? LOGO_REJECTION_TEXT[v.reason] : null);
+      }
+    });
+    return () => { live = false; };
+  }, [websiteIntelligence.logoUrl]);
+  const extractedLogo = extractedLogoOk ? websiteIntelligence.logoUrl || null : null;
+  const setLogoUrl = (url: string | null) => {
+    if (!url) { setLogoUrlRaw(null); return; }
+    auditLogo(url).then((v) => {
+      if (v.ok) { setLogoUrlRaw(url); setLogoRejection(null); setContinueWithoutLogo(false); }
+      else {
+        const msg = v.reason ? LOGO_REJECTION_TEXT[v.reason] : "That image can't be used as a logo.";
+        setLogoRejection(msg);
+        toast.error(msg);
+      }
+    });
+  };
   const [logoOption, setLogoOption] = useState<'extracted' | 'upload' | 'url'>('extracted');
   const [logoUrlInput, setLogoUrlInput] = useState('');
   const [hasModified, setHasModified] = useState(false);
@@ -380,13 +411,13 @@ export function BrandCustomization({
               </Label>
               
               {/* Extracted logo preview if available */}
-              {websiteIntelligence.logoUrl && (
+              {extractedLogo && (
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-24 h-16 bg-slate-700/50 rounded-lg flex items-center justify-center p-2 relative overflow-hidden">
                     {/* Checkerboard background for transparency preview */}
                     <div className="absolute inset-0 bg-checkerboard opacity-30" />
                     <img 
-                      src={websiteIntelligence.logoUrl} 
+                      src={extractedLogo} 
                       alt="Extracted logo"
                       className="max-w-full max-h-full object-contain relative z-10"
                       onError={(e) => {
@@ -402,7 +433,7 @@ export function BrandCustomization({
               )}
 
               {/* Current logo preview (if different from extracted) */}
-              {logoUrl && logoUrl !== websiteIntelligence.logoUrl && (
+              {logoUrl && logoUrl !== extractedLogo && (
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-24 h-16 bg-slate-700/50 rounded-lg flex items-center justify-center p-2 relative overflow-hidden">
                     <div className="absolute inset-0 bg-checkerboard opacity-30" />
@@ -417,10 +448,40 @@ export function BrandCustomization({
                 </div>
               )}
 
+              {!logoUrl && extractedLogoOk !== null && (
+                <div className="mb-4 rounded-xl border border-slate-700 bg-slate-900/40 p-4" data-testid="no-usable-logo">
+                  <p className="text-sm font-medium text-white">We couldn't find a usable logo</p>
+                  {logoRejection && <p className="mt-1 text-xs text-slate-400">{logoRejection}</p>}
+                  {continueWithoutLogo ? (
+                    <p className="mt-1 text-xs text-slate-400" data-testid="continuing-without-logo">Continuing without a logo — your business name will be shown instead.</p>
+                  ) : (
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload a logo
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setContinueWithoutLogo(true)}
+                        className="text-slate-300 hover:text-white"
+                      >
+                        Continue without a logo
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Logo options */}
               <div className="space-y-4">
                 {/* Use extracted logo option */}
-                {websiteIntelligence.logoUrl && (
+                {extractedLogo && (
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
@@ -428,7 +489,7 @@ export function BrandCustomization({
                       checked={logoOption === 'extracted'}
                       onChange={() => {
                         setLogoOption('extracted');
-                        setLogoUrl(websiteIntelligence.logoUrl || null);
+                        setLogoUrl(extractedLogo);
                       }}
                       className="w-4 h-4 text-cyan-500"
                     />
