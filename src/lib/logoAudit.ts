@@ -165,7 +165,7 @@ export const LOGO_REJECTION_TEXT: Record<LogoRejection, string> = {
   'not-an-image-url': "That isn't an image link.",
   'social-preview-image': 'That looks like a social-sharing image, not a logo.',
   'failed-to-load': "That image couldn't be loaded.",
-  'too-small': `That image is too small to use as a logo (needs at least ${LOGO_RULES.minLongSide}×${LOGO_RULES.minShortSide}px).`,
+  'too-small': `That image is too small to use as a logo (it needs to be at least ${LOGO_RULES.minLongSide}px on its longest side).`,
   'fully-transparent': 'That image is completely transparent.',
   'solid-color': 'That image is a single solid colour.',
 };
