@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { pdf } from '@react-pdf/renderer';
 import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import StrategyBriefPDF, { StrategyBriefData } from './StrategyBriefPDF';
+// The PDF engine (~fonts + brotli decoder) is loaded on click, not at app start.
+import type { StrategyBriefData } from './StrategyBriefPDF';
 
 interface ExportBriefButtonProps {
   brief: StrategyBriefData;
@@ -42,6 +42,10 @@ const ExportBriefButton = ({
     await new Promise(resolve => requestAnimationFrame(resolve));
 
     try {
+      const [{ pdf }, { default: StrategyBriefPDF }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('./StrategyBriefPDF'),
+      ]);
       const blob = await pdf(
         <StrategyBriefPDF
           brief={brief}

@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ExportBriefButton, StrategyBriefData } from "@/components/export";
+import ExportBriefButton from "@/components/export/ExportBriefButton";
+import type { StrategyBriefData } from "@/components/export/StrategyBriefPDF";
 import { CreateProspectPageModal } from "@/components/prospect";
 
 interface BriefData {
