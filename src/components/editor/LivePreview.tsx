@@ -770,11 +770,11 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
                   )}
                 >
                   <div className="relative z-10">
-                    {renderSection(section, index)}
+                    {renderSection(section, arrayIndex)}
                   </div>
                 </div>
               ) : (
-                renderSection(section, index)
+                renderSection(section, arrayIndex)
               );
             })}
         </div>

@@ -24,6 +24,7 @@ import { StrategyBriefPanel } from "@/components/builder/StrategyBriefPanel";
 import { ConsultantPanel } from "@/components/editor/ConsultantPanel";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
 import { useEditorSession } from "@/hooks/useEditorSession";
+import { normalize as normalizeSections } from "@/lib/editor/sectionOps";
 import { generateIntelligentContent, runIntelligencePipeline } from "@/services/intelligence";
 import { generateIntelligentContent as generateIntelligentContentLegacy } from "@/lib/generateIntelligentContent";
 import { 
@@ -1143,7 +1144,8 @@ function GenerateContent() {
           ...existingPage,
           design_intelligence: correctedDesignIntelligence,
         });
-        setSections(patchedSections);
+        // Array order == render order, so editor indices match what's shown.
+        setSections(normalizeSections(patchedSections));
         setExistingPageLoaded(true);
         console.log('📦 [Generate] Loaded existing page:', existingPage.id);
         console.log('💡 [Generate] Use Regenerate button to create fresh page with latest layout logic');
