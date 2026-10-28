@@ -1,3 +1,4 @@
+import { truncateAtBoundary } from '@/lib/text/truncate';
 /**
  * INTELLIGENT BRIEF EXTRACTION
  * 
@@ -382,7 +383,7 @@ export function enhanceMessagingPillars(
   return pillars.map((pillar) => {
     const firstSentence = pillar.description.split(/[.!?]/)[0];
     const hook = firstSentence.length > 60 
-      ? firstSentence.substring(0, 57) + '...'
+      ? truncateAtBoundary(firstSentence, 60, { ellipsis: true })
       : firstSentence;
 
     const relevantSignal = authoritySignals.find(signal => {

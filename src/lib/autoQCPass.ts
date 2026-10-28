@@ -1,3 +1,4 @@
+import { truncateAtBoundary } from '@/lib/text/truncate';
 /**
  * Auto-QC Review Pass
  * 
@@ -136,7 +137,7 @@ function capitalize(str: string): string {
 function extractFirstPain(painText: string): string {
   if (!painText) return 'your biggest challenge';
   const parts = painText.split(/[;|,]/).map(s => s.trim()).filter(s => s.length > 5);
-  return parts[0]?.slice(0, 60) || painText.slice(0, 60);
+  return truncateAtBoundary(parts[0] || painText, 60);
 }
 
 /**
