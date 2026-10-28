@@ -186,7 +186,7 @@ export function SectionManager({
               )}
               {/* Title - no emoji, just text */}
               <span className={cn(
-                "flex-1 text-sm font-medium",
+                "flex-1 min-w-0 truncate text-sm font-medium",
                 section.visible ? "text-white" : "text-gray-500"
               )}>
                 {getSectionTitle(section.type)}
