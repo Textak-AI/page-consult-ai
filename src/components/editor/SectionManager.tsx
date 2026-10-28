@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Trash2, RefreshCw, Calculator, Loader2, Zap } from "lucide-react";
+import { Eye, EyeOff, Trash2, RefreshCw, Calculator, Loader2, Zap, ChevronUp, ChevronDown, GripVertical, Plus, Lock } from "lucide-react";
 import { useState } from "react";
 import { useEditing } from "@/contexts/EditingContext";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { canMove, isPinned, move, moveTo, removeAt, toggleVisibleAt } from "@/lib/editor/sectionOps";
 
 type Section = {
   type: string;
@@ -17,6 +18,8 @@ interface SectionManagerProps {
   onSectionsChange: (sections: Section[]) => void;
   onSave: () => void;
   onAddCalculator?: () => void;
+  /** Opens the Add Section menu, optionally preselecting an insert position. */
+  onAddSection?: (insertAt?: number) => void;
   onRegenerateSection?: (sectionType: string) => void;
   isRegenerating?: boolean;
   actionCost?: number;
@@ -27,6 +30,7 @@ export function SectionManager({
   onSectionsChange,
   onSave,
   onAddCalculator,
+  onAddSection,
   onRegenerateSection,
   isRegenerating,
   actionCost = 1,
@@ -35,17 +39,29 @@ export function SectionManager({
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const { setEditingSection } = useEditing();
 
+  const [dragFrom, setDragFrom] = useState<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
+
+  // All list changes are immutable and flow through onSectionsChange, so the
+  // editor's undo history and autosave capture them.
   const toggleVisibility = (index: number) => {
-    const updated = [...sections];
-    updated[index].visible = !updated[index].visible;
-    onSectionsChange(updated);
+    onSectionsChange(toggleVisibleAt(sections, index));
     onSave();
   };
 
   const deleteSection = (index: number) => {
-    const updated = sections.filter((_, i) => i !== index);
-    onSectionsChange(updated);
+    const removed = sections[index];
+    onSectionsChange(removeAt(sections, index));
     onSave();
+    toast({
+      title: `${getSectionTitle(removed?.type || '')} removed`,
+      description: "Press Ctrl+Z (Cmd+Z) or Undo to bring it back.",
+    });
+  };
+
+  const moveSection = (index: number, dir: -1 | 1) => {
+    if (!canMove(sections, index, dir)) return;
+    onSectionsChange(move(sections, index, dir));
   };
 
   const handleRegenerate = async (sectionType: string) => {
@@ -120,11 +136,32 @@ export function SectionManager({
         {sections.map((section, index) => {
           const isCurrentlyRegenerating = regeneratingSection === section.type;
           const isActive = activeSection === section.type;
+          const pinned = isPinned(sections, index);
           return (
             <div
               key={index}
+              draggable={!pinned}
+              onDragStart={(e) => {
+                if (pinned) return;
+                setDragFrom(index);
+                e.dataTransfer.effectAllowed = "move";
+              }}
+              onDragOver={(e) => {
+                if (dragFrom === null) return;
+                e.preventDefault();
+                setDragOver(index);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (dragFrom !== null && dragFrom !== index) onSectionsChange(moveTo(sections, dragFrom, index));
+                setDragFrom(null);
+                setDragOver(null);
+              }}
+              onDragEnd={() => { setDragFrom(null); setDragOver(null); }}
+              data-section-row={section.type}
               className={cn(
                 "group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all cursor-pointer",
+                dragOver === index && dragFrom !== index && "ring-2 ring-cyan-400/40",
                 section.visible 
                   ? "bg-white/5 hover:bg-white/10 border border-white/10" 
                   : "bg-white/[0.02] opacity-50 border border-white/5",
@@ -132,6 +169,11 @@ export function SectionManager({
               )}
               onClick={() => handleSectionClick(section, index)}
             >
+              {pinned ? (
+                <Lock className="w-3.5 h-3.5 text-gray-500 shrink-0" aria-label="Position fixed" />
+              ) : (
+                <GripVertical className="w-3.5 h-3.5 text-gray-500 shrink-0 cursor-grab" aria-hidden />
+              )}
               {/* Title - no emoji, just text */}
               <span className={cn(
                 "flex-1 text-sm font-medium",
@@ -142,6 +184,29 @@ export function SectionManager({
 
               {/* Action Buttons */}
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Reorder */}
+                {!pinned && (
+                  <>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); moveSection(index, -1); }}
+                      disabled={!canMove(sections, index, -1)}
+                      className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors disabled:opacity-30"
+                      title="Move section up"
+                      aria-label="Move section up"
+                    >
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); moveSection(index, 1); }}
+                      disabled={!canMove(sections, index, 1)}
+                      className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors disabled:opacity-30"
+                      title="Move section down"
+                      aria-label="Move section down"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                )}
                 {/* Regenerate */}
                 <button
                   onClick={(e) => {
@@ -195,9 +260,21 @@ export function SectionManager({
         })}
       </div>
 
-      {/* Add Calculator Button */}
-      {onAddCalculator && (
-        <div className="p-3 border-t border-white/10">
+      {/* Add Section / Calculator */}
+      {(onAddSection || onAddCalculator) && (
+        <div className="p-3 border-t border-white/10 space-y-2">
+          {onAddSection && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10"
+              onClick={() => onAddSection()}
+            >
+              <Plus className="w-4 h-4 text-cyan-400" />
+              <span>Add Section</span>
+            </Button>
+          )}
+          {onAddCalculator && (
           <Button 
             variant="outline"
             size="sm"
@@ -208,6 +285,7 @@ export function SectionManager({
             <span>Add Calculator</span>
             <span className="ml-auto text-xs text-purple-400/70">PRO</span>
           </Button>
+          )}
         </div>
       )}
     </div>
