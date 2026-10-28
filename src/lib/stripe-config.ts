@@ -23,3 +23,10 @@ export const PLAN_DETAILS = {
     priceId: STRIPE_PRICES.agency,
   },
 } as const;
+
+// One-time AI action packs (Stripe one-time prices; must match ACTION_PACKS in planLimits.ts).
+export const ACTION_PACK_PRICES = [
+  { priceId: 'price_1SfXziFqTTK3LcBFAuEAkGCN', actions: 10, price: 5 },
+  { priceId: 'price_1SfXziFqTTK3LcBFS8DPaQoe', actions: 25, price: 10 },
+  { priceId: 'price_1SfXziFqTTK3LcBFw64XlRyF', actions: 50, price: 18 },
+] as const;

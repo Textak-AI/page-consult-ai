@@ -1884,30 +1884,42 @@ export type Database = {
         Row: {
           action_cost: number
           action_type: Database["public"]["Enums"]["ai_action_type"]
+          charged_monthly: number
+          charged_pack: number
+          charged_rollover: number
           created_at: string
           description: string | null
           id: string
           page_id: string | null
+          refunded_at: string | null
           section_type: string | null
           user_id: string
         }
         Insert: {
           action_cost: number
           action_type: Database["public"]["Enums"]["ai_action_type"]
+          charged_monthly?: number
+          charged_pack?: number
+          charged_rollover?: number
           created_at?: string
           description?: string | null
           id?: string
           page_id?: string | null
+          refunded_at?: string | null
           section_type?: string | null
           user_id: string
         }
         Update: {
           action_cost?: number
           action_type?: Database["public"]["Enums"]["ai_action_type"]
+          charged_monthly?: number
+          charged_pack?: number
+          charged_rollover?: number
           created_at?: string
           description?: string | null
           id?: string
           page_id?: string | null
+          refunded_at?: string | null
           section_type?: string | null
           user_id?: string
         }
@@ -2087,6 +2099,7 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      refund_ai_action: { Args: { p_log_id: string }; Returns: Json }
       reset_api_calls: { Args: never; Returns: undefined }
       reset_monthly_usage: { Args: never; Returns: undefined }
       track_ai_action: {

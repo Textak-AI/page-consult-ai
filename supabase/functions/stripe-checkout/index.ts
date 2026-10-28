@@ -3,7 +3,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
-import { ACTION_PACKS, validSubscriptionPriceIds } from '../_shared/planLimits.ts';
+import { ACTION_PACKS, validSubscriptionPriceIds, checkoutSessionParams } from '../_shared/planLimits.ts';
 import { createClient as createServiceClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 serve(async (req) => {
@@ -62,7 +62,6 @@ serve(async (req) => {
     console.log('📋 Checkout request:', { priceId, mode, userId: user.id });
 
     // Validate price ID
-    const isPack = priceId in ACTION_PACKS;
     const validPriceIds = [...Object.keys(ACTION_PACKS), ...validSubscriptionPriceIds()];
     if (!validPriceIds.includes(priceId)) {
       return new Response(JSON.stringify({ error: 'Invalid price ID' }), {
@@ -104,23 +103,14 @@ serve(async (req) => {
       console.log('✅ Created new Stripe customer:', customerId);
     }
 
-    // Determine checkout mode
-    // Mode derives from the price, never the client
-    const checkoutMode = isPack ? 'payment' : 'subscription';
-
     console.log('🔧 Creating checkout session...');
-    // Create checkout session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      line_items: [{ price: priceId, quantity: 1 }],
-      mode: checkoutMode,
-      success_url: successUrl || `${req.headers.get('origin')}/generate?checkout=success`,
-      cancel_url: cancelUrl || `${req.headers.get('origin')}/generate?checkout=cancelled`,
-      metadata: {
-        user_id: user.id,
-        price_id: priceId,
-      },
-    });
+    const session = await stripe.checkout.sessions.create(checkoutSessionParams({
+      priceId,
+      customerId,
+      userId: user.id,
+      successUrl: successUrl || `${req.headers.get('origin')}/generate?checkout=success`,
+      cancelUrl: cancelUrl || `${req.headers.get('origin')}/generate?checkout=cancelled`,
+    }));
 
     console.log('✅ Created checkout session:', session.id, 'URL:', session.url);
 
