@@ -43,6 +43,13 @@
       "when": 1793224418713,
       "tag": "0005_enforce_usage_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793224817877,
+      "tag": "0006_pack_balance_persists_and_refunds",
+      "breakpoints": true
     }
   ]
 }
