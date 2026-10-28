@@ -1696,3 +1696,9 @@ All colors MUST be HSL.
 .animate-header-glow {
   animation: header-complete-glow 2s ease-in-out infinite;
 }
+
+/* A section whose quality floor rendered nothing must not reserve space:
+   collapse its tier wrapper (padding, background, divider) entirely. */
+[class*="section-tier-"]:has([data-gaze-section]:empty) {
+  display: none;
+}
