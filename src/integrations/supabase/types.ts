@@ -1893,6 +1893,7 @@ export type Database = {
           page_id: string | null
           refunded_at: string | null
           section_type: string | null
+          used_free_build: boolean
           user_id: string
         }
         Insert: {
@@ -1907,6 +1908,7 @@ export type Database = {
           page_id?: string | null
           refunded_at?: string | null
           section_type?: string | null
+          used_free_build?: boolean
           user_id: string
         }
         Update: {
@@ -1921,6 +1923,7 @@ export type Database = {
           page_id?: string | null
           refunded_at?: string | null
           section_type?: string | null
+          used_free_build?: boolean
           user_id?: string
         }
         Relationships: []
@@ -1967,6 +1970,7 @@ export type Database = {
           billing_period_end: string | null
           billing_period_start: string
           created_at: string
+          free_page_build_used_at: string | null
           grace_actions_given: boolean
           id: string
           plan_tier: Database["public"]["Enums"]["plan_tier"]
@@ -1986,6 +1990,7 @@ export type Database = {
           billing_period_end?: string | null
           billing_period_start?: string
           created_at?: string
+          free_page_build_used_at?: string | null
           grace_actions_given?: boolean
           id?: string
           plan_tier?: Database["public"]["Enums"]["plan_tier"]
@@ -2005,6 +2010,7 @@ export type Database = {
           billing_period_end?: string | null
           billing_period_start?: string
           created_at?: string
+          free_page_build_used_at?: string | null
           grace_actions_given?: boolean
           id?: string
           plan_tier?: Database["public"]["Enums"]["plan_tier"]
@@ -2062,6 +2068,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      charge_page_build: {
+        Args: { p_cost: number; p_page_id?: string; p_user_id: string }
+        Returns: Json
+      }
       get_consultation_policies: {
         Args: never
         Returns: {
@@ -2127,6 +2137,9 @@ export type Database = {
         | "revision"
         | "calculator"
         | "copy_improve"
+        | "section_chat"
+        | "image_generation"
+        | "prospect_page"
       app_role: "super_admin" | "admin" | "support"
       plan_tier: "starter" | "pro" | "agency"
     }
@@ -2268,6 +2281,9 @@ export const Constants = {
         "revision",
         "calculator",
         "copy_improve",
+        "section_chat",
+        "image_generation",
+        "prospect_page",
       ],
       app_role: ["super_admin", "admin", "support"],
       plan_tier: ["starter", "pro", "agency"],

@@ -50,6 +50,13 @@
       "when": 1793224817877,
       "tag": "0006_pack_balance_persists_and_refunds",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793225166485,
+      "tag": "0007_first_page_free_and_new_action_types",
+      "breakpoints": true
     }
   ]
 }
