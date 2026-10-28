@@ -45,7 +45,7 @@ import { ShareableAchievementCard } from '@/components/consultation/ShareableAch
 import { ConsultantChat } from '@/components/consultation/ConsultantChat';
 import { LockedSectionOverlay } from '@/components/sections/LockedSectionOverlay';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Trophy, Share2, Search } from 'lucide-react';
+import { Trophy, Share2, Search, Palette } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { StylePresetName } from "@/styles/presets";
 import {
