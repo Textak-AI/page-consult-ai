@@ -1,5 +1,3 @@
-import BrandMatchHarness from "./pages/__BrandMatchHarness";
-import LogoHarness from "./pages/__LogoHarness";
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -165,8 +163,6 @@ const App = () => {
                 <Route path="/trust-center" element={<TrustCenter />} />
                 <Route path="/prospects" element={<ProspectsDashboard />} />
                 <Route path="/leads" element={<Leads />} />
-                <Route path="/__logo-harness" element={<LogoHarness />} />
-                <Route path="/__brand-harness" element={<BrandMatchHarness />} />
                 <Route path="/dev" element={<Dev />} />
                 
                 {/* Public page routes - accessible without authentication */}
