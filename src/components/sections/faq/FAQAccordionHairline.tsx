@@ -52,7 +52,7 @@ export default function FAQAccordionHairline({ content, onUpdate, isEditing }: F
           color: primaryColor,
           textAlign: 'center' as const,
           marginBottom: 16,
-          fontFamily: '"DM Sans", system-ui, sans-serif',
+          fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
         }}>
           {content.sectionLabel || content.eyebrow || 'FAQ'}
         </div>
@@ -69,8 +69,8 @@ export default function FAQAccordionHairline({ content, onUpdate, isEditing }: F
             color: bgStyles.text,
             lineHeight: 1.2,
             fontFamily: isSerif
-              ? '"Instrument Serif", Georgia, serif'
-              : '"DM Sans", system-ui, sans-serif',
+              ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
+              : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
             letterSpacing: content.trackingStyle === 'tight' ? '-0.02em' : '0',
             textAlign: 'center' as const,
             margin: '0 auto 56px',
@@ -94,7 +94,7 @@ export default function FAQAccordionHairline({ content, onUpdate, isEditing }: F
                   fontSize: 15,
                   fontWeight: 500,
                   color: bgStyles.text,
-                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                  fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                   padding: '20px 0',
                   textAlign: 'left' as const,
                 }}
@@ -119,7 +119,7 @@ export default function FAQAccordionHairline({ content, onUpdate, isEditing }: F
                     fontSize: 14,
                     lineHeight: 1.7,
                     color: bgStyles.textMuted,
-                    fontFamily: '"DM Sans", system-ui, sans-serif',
+                    fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                     margin: 0,
                     paddingBottom: 8,
                   }}

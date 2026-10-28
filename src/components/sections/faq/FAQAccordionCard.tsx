@@ -48,7 +48,7 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
           color: primaryColor,
           marginBottom: 16,
           textAlign: 'center' as const,
-          fontFamily: '"DM Sans", system-ui, sans-serif',
+          fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
         }}>
           {content.eyebrow || 'FAQ'}
         </div>
@@ -60,8 +60,8 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
           color: bgStyles.text,
           lineHeight: 1.2,
           fontFamily: content.typographyPairing === 'serif-sans'
-            ? '"Instrument Serif", Georgia, serif'
-            : '"DM Sans", system-ui, sans-serif',
+            ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
+            : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
           textAlign: 'center' as const,
           margin: '0 auto 48px',
         }}>
@@ -110,7 +110,7 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
                       fontSize: 15,
                       fontWeight: 600,
                       color: isOpen ? primaryColor : bgStyles.text,
-                      fontFamily: '"DM Sans", system-ui, sans-serif',
+                      fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                       transition: 'color 0.2s ease',
                       flex: 1,
                     }}
@@ -145,7 +145,7 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
                         lineHeight: 1.75,
                         color: bgStyles.textMuted,
                         margin: '12px 0 0',
-                        fontFamily: '"DM Sans", system-ui, sans-serif',
+                        fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                       }}
                     >
                       {item.answer}

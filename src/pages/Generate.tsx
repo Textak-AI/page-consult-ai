@@ -1,3 +1,4 @@
+import { truncateAtBoundary } from '@/lib/text/truncate';
 import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import { consultationAccess } from '@/lib/consultationAccess';
 import { readDemoSession } from '@/lib/anonymousSessions';
@@ -301,10 +302,10 @@ function patchSectionsWithConsultationData(
                                null;
       
       // Derive subtext from unique strength or value proposition
-      const derivedSubtext = consultationData.uniqueStrength?.slice(0, 150) ||
-                             consultationData.uniqueValue?.slice(0, 150) ||
-                             consultationData.unique_value?.slice(0, 150) ||
-                             consultationData.valueProposition?.slice(0, 150) ||
+      const derivedSubtext = truncateAtBoundary(consultationData.uniqueStrength, 150) ||
+                             truncateAtBoundary(consultationData.uniqueValue, 150) ||
+                             truncateAtBoundary(consultationData.unique_value, 150) ||
+                             truncateAtBoundary(consultationData.valueProposition, 150) ||
                              section.content?.subtext;
       
       console.log('🔄 [Patch] Derived CTA values:', {
@@ -3338,7 +3339,7 @@ function GenerateContent() {
       if (painPoints && typeof painPoints === 'string' && challenges.length < 3) {
         challenges.push({
           title: 'Core Challenge',
-          description: painPoints.slice(0, 200),
+          description: truncateAtBoundary(painPoints, 200),
           impact: 'Requires expert guidance',
         });
       }
@@ -3387,7 +3388,7 @@ function GenerateContent() {
         if (valueProp) {
           principles.push({
             title: 'Value-Driven Results',
-            description: valueProp.slice(0, 200),
+            description: truncateAtBoundary(valueProp, 200),
             icon: 'target',
           });
         }
@@ -3499,7 +3500,7 @@ function GenerateContent() {
           const metricMatch = caseStudy.match(/(\d+%|\$[\d,.]+[kmb]?|\d+x)/i);
           addUniqueResult({
             metric: metricMatch ? metricMatch[1] : 'Success',
-            description: caseStudy.slice(0, 150),
+            description: truncateAtBoundary(caseStudy, 150),
             client: 'Client Case Study',
           });
         }
@@ -3560,8 +3561,8 @@ function GenerateContent() {
               label = label
                 .replace(/^of\s+(our\s+)?/i, '')
                 .replace(/^we\s+/i, '')
-                .replace(/\s+$/g, '')
-                .slice(0, 40);
+                .replace(/\s+$/g, '');
+              label = truncateAtBoundary(label, 40);
               if (label.length < 3) label = 'Success Rate';
               label = label.charAt(0).toUpperCase() + label.slice(1);
               stats.push({ value: match[1], label });
@@ -3575,7 +3576,7 @@ function GenerateContent() {
             const match = stat.match(/(\$[\d,.]+[kmb]?)/i);
             if (match) {
               let label = stat.replace(match[1], '').trim();
-              label = label.replace(/^in\s+/i, '').slice(0, 40);
+              label = truncateAtBoundary(label.replace(/^in\s+/i, ''), 40);
               if (label.length < 3) label = 'Value Delivered';
               label = label.charAt(0).toUpperCase() + label.slice(1);
               stats.push({ value: match[1], label });
@@ -4198,8 +4199,8 @@ function GenerateContent() {
                                 null;
           
           const ctaSubtext = content.solutionStatement?.split(".")[0] ||
-                             consultationData.uniqueValue?.slice(0, 150) ||
-                             consultationData.unique_value?.slice(0, 150) ||
+                             truncateAtBoundary(consultationData.uniqueValue, 150) ||
+                             truncateAtBoundary(consultationData.unique_value, 150) ||
                              null;
           
           sections.push({
@@ -4270,7 +4271,7 @@ function GenerateContent() {
                 
                 if (solution && audience) {
                   const firstSentence = solution.split(/[.!]/)[0].trim();
-                  const shortSentence = firstSentence.length > 150 ? firstSentence.slice(0, 150) + '...' : firstSentence;
+                  const shortSentence = truncateAtBoundary(firstSentence, 150, { ellipsis: true });
                   return `${shortSentence} — built for ${audience.split(',')[0].trim()} who demand results.`;
                 }
                 

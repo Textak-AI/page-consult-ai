@@ -80,7 +80,7 @@ export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCar
                 fontWeight: 700,
                 color: primaryColor,
                 letterSpacing: '-0.02em',
-                fontFamily: '"DM Sans", system-ui, sans-serif',
+                fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
@@ -97,7 +97,7 @@ export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCar
                 color: 'rgba(26,26,46,0.6)',
                 marginTop: 8,
                 lineHeight: 1.5,
-                fontFamily: '"DM Sans", system-ui, sans-serif',
+                fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
               }}
             >
               {stat.label}

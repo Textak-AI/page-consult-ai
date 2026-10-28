@@ -56,8 +56,8 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
             color: bgStyles.text,
             lineHeight: 1.15,
             fontFamily: isSerif
-              ? '"Instrument Serif", Georgia, serif'
-              : '"DM Sans", system-ui, sans-serif',
+              ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
+              : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
             letterSpacing: '-0.02em',
             marginBottom: 16,
           }}
@@ -76,7 +76,7 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
               fontSize: 16,
               lineHeight: 1.6,
               color: bgStyles.textMuted,
-              fontFamily: '"DM Sans", system-ui, sans-serif',
+              fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
               marginBottom: 32,
             }}
           >

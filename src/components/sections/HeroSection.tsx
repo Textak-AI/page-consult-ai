@@ -466,7 +466,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
 
     return (
       <section 
-        className="relative min-h-screen flex flex-col overflow-hidden"
+        className="relative md:min-h-screen flex flex-col overflow-hidden"
         style={{
           background: !hasBackgroundImage 
             ? 'linear-gradient(135deg, hsl(265, 80%, 15%) 0%, hsl(220, 40%, 8%) 50%, hsl(210, 50%, 12%) 100%)'
@@ -474,7 +474,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
         }}
       >
         {/* Minimal Top Nav Bar */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-8 py-5">
+        <div className="relative md:absolute md:top-0 md:left-0 md:right-0 z-20 flex items-center justify-between gap-4 px-6 md:px-8 py-5">
           <span className="text-white font-bold text-lg">
             {(content as any).companyName || 'Product'}
           </span>
@@ -531,7 +531,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
         )}
         
         {/* Content - Centered with max width */}
-        <div className="relative max-w-5xl mx-auto px-6 pt-24 pb-32 z-10 text-center flex-1 flex flex-col justify-center">
+        <div className="relative max-w-5xl mx-auto px-6 pt-8 md:pt-24 pb-16 md:pb-32 z-10 text-center flex-1 flex flex-col justify-center">
           {/* Logo - only show standalone in editing mode (nav bar handles display mode) */}
           {isEditing && (
             <div className="mb-8">
@@ -665,7 +665,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
     
     return (
       <section 
-        className={`relative min-h-[85vh] flex items-center overflow-hidden ${
+        className={`relative py-20 md:py-0 md:min-h-[85vh] flex items-center overflow-hidden ${
           content.backgroundImage 
             ? '' 
             : 'bg-gradient-to-br from-white via-slate-50 to-white'
@@ -906,7 +906,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
   if (isHealthcare) {
     return (
       <section 
-        className={`relative min-h-[85vh] flex items-center overflow-hidden ${
+        className={`relative py-20 md:py-0 md:min-h-[85vh] flex items-center overflow-hidden ${
           content.backgroundImage 
             ? '' 
             : 'bg-gradient-to-br from-slate-50 via-white to-slate-50'

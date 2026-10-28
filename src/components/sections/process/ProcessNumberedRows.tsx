@@ -47,7 +47,7 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
           color: primaryColor,
           textAlign: 'center' as const,
           marginBottom: 16,
-          fontFamily: '"DM Sans", system-ui, sans-serif',
+          fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
         }}>
           {content.sectionLabel || content.eyebrow || 'Process'}
         </div>
@@ -64,8 +64,8 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
             color: bgStyles.text,
             lineHeight: 1.2,
             fontFamily: isSerif
-              ? '"Instrument Serif", Georgia, serif'
-              : '"DM Sans", system-ui, sans-serif',
+              ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
+              : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
             letterSpacing: content.trackingStyle === 'tight' ? '-0.02em' : '0',
             textAlign: 'center' as const,
             margin: '0 auto 56px',
@@ -90,7 +90,7 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
               {/* Number */}
               <div style={{
                 fontSize: useMonospace ? 14 : 24,
-                fontFamily: useMonospace ? '"JetBrains Mono", monospace' : '"DM Sans", system-ui, sans-serif',
+                fontFamily: useMonospace ? '"JetBrains Mono", monospace' : '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                 color: useMonospace ? bgStyles.textMuted : primaryColor,
                 fontWeight: useMonospace ? 400 : 600,
                 minWidth: 40,
@@ -111,7 +111,7 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
                     fontWeight: 600,
                     color: bgStyles.text,
                     margin: '0 0 8px',
-                    fontFamily: '"DM Sans", system-ui, sans-serif',
+                    fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                   }}
                 >
                   {step.title}
@@ -126,7 +126,7 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
                     lineHeight: 1.7,
                     color: bgStyles.textMuted,
                     margin: 0,
-                    fontFamily: '"DM Sans", system-ui, sans-serif',
+                    fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                   }}
                 >
                   {step.description}

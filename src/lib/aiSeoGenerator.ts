@@ -1,3 +1,4 @@
+import { truncateAtBoundary } from '@/lib/text/truncate';
 /**
  * AI SEO GENERATOR
  * Generates Schema.org JSON-LD and E-E-A-T optimized meta tags
@@ -160,8 +161,8 @@ export function generateAISEOMetaTags(
   // Title: Primary keyword + benefit (under 60 chars)
   const primaryHeadline = brief.headlines?.optionA || brief.headlines?.optionB || '';
   const title = primaryHeadline.length > 55 
-    ? `${primaryHeadline.slice(0, 52)}...`
-    : `${primaryHeadline} | ${businessName}`.slice(0, 60);
+    ? truncateAtBoundary(primaryHeadline, 55, { ellipsis: true })
+    : truncateAtBoundary(`${primaryHeadline} | ${businessName}`, 60);
   
   // Description: Value prop + E-E-A-T signal (under 160 chars)
   let description = brief.subheadline || '';
@@ -179,7 +180,7 @@ export function generateAISEOMetaTags(
     description = `${description} ${authorityParts[0]}`;
   }
   
-  description = description.slice(0, 160);
+  description = truncateAtBoundary(description, 160);
   
   // Keywords: Extract from pillars and headline
   const keywordSources = [

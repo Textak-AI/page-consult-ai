@@ -1702,3 +1702,66 @@ All colors MUST be HSL.
 [class*="section-tier-"]:has([data-gaze-section]:empty) {
   display: none;
 }
+
+/* Metric-matched fallbacks for product-page section fonts, so text laid out
+   before the web font arrives occupies the same space and the swap doesn't
+   move content. Values from @capsizecss/metrics (DM Sans vs Arial,
+   Instrument Serif vs Times New Roman). DM Sans is an optical-size font:
+   it runs ~2% wider than Arial at body sizes and ~8% narrower at heading
+   sizes (opsz caps at 40), so headings use their own fallback. Separate bold faces map to the real
+   bold local font; synthetic bold of a regular face is far narrower. Ratios were
+   measured in-browser against Liberation Sans (Arial-metric). */
+@font-face {
+  font-family: "DM Sans Fallback";
+  font-weight: 100 500;
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"), local("Helvetica");
+  size-adjust: 102%;
+  ascent-override: 97.25%;
+  descent-override: 30.4%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "DM Sans Fallback";
+  font-weight: 600 900;
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("Arimo Bold"), local("Helvetica Bold");
+  size-adjust: 102%;
+  ascent-override: 97.25%;
+  descent-override: 30.4%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "DM Sans Heading Fallback";
+  font-weight: 100 500;
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"), local("Helvetica");
+  size-adjust: 92%;
+  ascent-override: 107.83%;
+  descent-override: 33.7%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "DM Sans Heading Fallback";
+  font-weight: 600 900;
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("Arimo Bold"), local("Helvetica Bold");
+  size-adjust: 92%;
+  ascent-override: 107.83%;
+  descent-override: 33.7%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Instrument Serif Fallback";
+  font-weight: 100 500;
+  src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Liberation Serif"), local("Tinos"), local("Times");
+  size-adjust: 83.94%;
+  ascent-override: 117.94%;
+  descent-override: 36.93%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Instrument Serif Fallback";
+  font-weight: 600 900;
+  src: local("Times New Roman Bold"), local("TimesNewRomanPS-BoldMT"), local("Liberation Serif Bold"), local("Tinos Bold"), local("Times Bold");
+  size-adjust: 83.94%;
+  ascent-override: 117.94%;
+  descent-override: 36.93%;
+  line-gap-override: 0%;
+}

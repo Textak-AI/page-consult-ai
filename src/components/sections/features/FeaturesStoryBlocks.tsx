@@ -57,7 +57,7 @@ export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: Fe
           color: primaryColor,
           marginBottom: 16,
           textAlign: 'center' as const,
-          fontFamily: '"DM Sans", system-ui, sans-serif',
+          fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
         }}>
           {content.sectionLabel || content.eyebrow || 'What We Offer'}
         </div>
@@ -74,8 +74,8 @@ export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: Fe
             color: bgStyles.text,
             lineHeight: 1.2,
             fontFamily: content.typographyPairing === 'serif-sans'
-              ? '"Instrument Serif", Georgia, serif'
-              : '"DM Sans", system-ui, sans-serif',
+              ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
+              : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
             letterSpacing: content.trackingStyle === 'tight' ? '-0.02em' : '0',
             textAlign: 'center' as const,
             margin: '0 auto 56px',
@@ -125,7 +125,7 @@ export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: Fe
                     fontWeight: 600,
                     color: bgStyles.text,
                     margin: '0 0 8px',
-                    fontFamily: '"DM Sans", system-ui, sans-serif',
+                    fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                   }}
                 >
                   {feature.title}
@@ -141,7 +141,7 @@ export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: Fe
                     lineHeight: 1.75,
                     color: bgStyles.textMuted,
                     margin: 0,
-                    fontFamily: '"DM Sans", system-ui, sans-serif',
+                    fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                   }}
                 >
                   {feature.description}
