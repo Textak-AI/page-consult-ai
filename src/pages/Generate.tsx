@@ -1,3 +1,4 @@
+import { fontIdFromStack, HERO_LAYOUTS, type PageTheme } from '@/lib/editor/pageTheme';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import { consultationAccess } from '@/lib/consultationAccess';
@@ -372,6 +373,7 @@ function GenerateContent() {
   const [stylePickerOpen, setStylePickerOpen] = useState(false);
   const [calculatorUpgradeOpen, setCalculatorUpgradeOpen] = useState(false);
   const [existingPageLoaded, setExistingPageLoaded] = useState(false);
+  const [pageTheme, setPageTheme] = useState<PageTheme>({});
   // One undo history + autosave for the whole editing session.
   const editorSession = useEditorSession({
     active: phase === "editor",
@@ -381,6 +383,8 @@ function GenerateContent() {
     setSections,
     pageStyle,
     setPageStyle,
+    theme: pageTheme,
+    setTheme: setPageTheme,
   });
   const { canUndo, canRedo, saveStatus, saveNow, setSectionsNow } = editorSession;
   
@@ -5416,6 +5420,8 @@ function GenerateContent() {
         pageData={pageData}
         sections={sections}
         setSections={updateSections}
+        pageTheme={pageTheme}
+        setPageTheme={setPageTheme}
         handleSave={handleSave}
         handleUndo={handleUndo}
         handleRedo={handleRedo}
@@ -5491,6 +5497,8 @@ function EditorContent({
   cssVariables,
   designSystem,
   seoData,
+  pageTheme,
+  setPageTheme,
 }: any) {
   const { toast } = useToast();
   const { pageStyle, setPageStyle } = useEditing();
@@ -5968,17 +5976,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             <Palette className="w-4 h-4" />
             Style
           </Button>
-          <div className="w-px h-6 bg-white/10 mx-1" />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setVariantModalOpen(true)}
-            className="gap-2 relative pl-5 builder-button bg-white/5 border-white/10 text-white hover:bg-white/10"
-          >
-            <span className="absolute left-0 top-0 w-1 h-full bg-purple-500 rounded-l"></span>
-            <Sparkles className="w-4 h-4" />
-            Generate Variant
-          </Button>
+          {/* "Generate Variant" hidden: its handler is a placeholder (see roadmap.md). */}
           {saveStatus === "failed" && (
             <span role="alert" className="text-xs whitespace-nowrap text-destructive">Save failed</span>
           )}
@@ -6157,6 +6155,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           industryVariant={previewIndustryVariant}
           colorMode={previewColorMode}
           brandSettings={previewBrandSettings}
+          pageTheme={pageTheme}
           getSectionLockStatus={pageBuilder.getSectionLockStatus}
         />
         </DevicePreviewFrame>
@@ -6187,7 +6186,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         onOpenChange={setPublishModalOpen}
         pageData={pageData}
         sections={sections}
-        styles={pageData?.styles}
+        styles={{ ...(pageData?.styles || {}), pagePreset: pageStyle, theme: pageTheme }}
         designIntelligence={pageData?.design_intelligence}
         brandSettings={{
           companyName: pageData?.consultation_data?.businessName || pageData?.title,
@@ -6237,6 +6236,25 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         onOpenChange={setStylePickerOpen}
         currentStyle={pageStyle}
         onStyleSelect={handleStyleChangeWithUsage}
+        design={{
+          theme: pageTheme,
+          onThemeChange: setPageTheme,
+          seedPrimary: previewBrandSettings?.primaryColor,
+          seedSecondary: previewBrandSettings?.secondaryColor,
+          seedHeadingFont: fontIdFromStack(designSystem?.typography?.headingFont) || fontIdFromStack(cssVariables?.match(/--font-heading:\s*([^;]+)/)?.[1]),
+          seedBodyFont: fontIdFromStack(designSystem?.typography?.bodyFont) || fontIdFromStack(cssVariables?.match(/--font-body:\s*([^;]+)/)?.[1]),
+          heroLayout: (() => { const c = sections.find((s: any) => s.type === 'hero')?.content?.composition; return HERO_LAYOUTS.find((l) => l.composition === c)?.id || 'standard'; })(),
+          hasHero: sections.some((s: any) => s.type === 'hero'),
+          onHeroLayoutChange: (id: string) => {
+            const layout = HERO_LAYOUTS.find((l) => l.id === id);
+            if (!layout) return;
+            setSections(sections.map((s: any) => {
+              if (s.type !== 'hero') return s;
+              const { composition: _old, ...rest } = s.content || {};
+              return { ...s, content: layout.composition ? { ...rest, composition: layout.composition } : rest };
+            }));
+          },
+        }}
       />
 
       <VariantGeneratorModal

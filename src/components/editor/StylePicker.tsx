@@ -7,13 +7,27 @@ import {
 } from "@/components/ui/dialog";
 import { PageStyle } from "@/contexts/EditingContext";
 import { StylePresetName, stylePresetInfo } from "@/styles/presets";
-import { Check, Sparkles, Minus, Zap, Crown } from "lucide-react";
+import { Check, Sparkles, Minus, Zap, Crown, RotateCcw } from "lucide-react";
+import { CURATED_FONTS, HERO_LAYOUTS, type PageTheme } from "@/lib/editor/pageTheme";
+
+export interface DesignControlsProps {
+  theme: PageTheme;
+  onThemeChange: (t: PageTheme) => void;
+  seedPrimary?: string | null;
+  seedSecondary?: string | null;
+  seedHeadingFont?: string;
+  seedBodyFont?: string;
+  heroLayout: string;
+  hasHero: boolean;
+  onHeroLayoutChange: (id: string) => void;
+}
 
 interface StylePickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentStyle: PageStyle;
   onStyleSelect: (style: PageStyle) => void;
+  design?: DesignControlsProps;
 }
 
 const styleIcons: Record<StylePresetName, React.ElementType> = {
@@ -81,6 +95,7 @@ export function StylePicker({
   onOpenChange,
   currentStyle,
   onStyleSelect,
+  design,
 }: StylePickerProps) {
   const handleSelect = (style: PageStyle) => {
     onStyleSelect(style);
@@ -89,7 +104,7 @@ export function StylePicker({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl bg-[#1a1332] border-white/20 text-white">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-[#1a1332] border-white/20 text-white">
         <DialogHeader>
           <DialogTitle className="text-white text-xl">Choose Page Style</DialogTitle>
           <DialogDescription className="text-gray-400">
@@ -155,7 +170,101 @@ export function StylePicker({
             sections including typography, colors, spacing, and effects for a cohesive design.
           </p>
         </div>
+        {design && <DesignControls {...design} />}
       </DialogContent>
     </Dialog>
+  );
+}
+
+const HEX = /^#[0-9a-fA-F]{6}$/;
+const toHex = (v?: string | null) => {
+  if (!v) return undefined;
+  const t = v.trim();
+  if (HEX.test(t)) return t.toLowerCase();
+  if (/^#[0-9a-fA-F]{3}$/.test(t)) return ("#" + t.slice(1).split("").map((c) => c + c).join("")).toLowerCase();
+  return undefined;
+};
+
+function DesignControls({ theme, onThemeChange, seedPrimary, seedSecondary, seedHeadingFont, seedBodyFont, heroLayout, hasHero, onHeroLayoutChange }: DesignControlsProps) {
+  const set = (patch: Partial<PageTheme>) => {
+    const next: PageTheme = { ...theme, ...patch };
+    (Object.keys(next) as (keyof PageTheme)[]).forEach((k) => next[k] === undefined && delete next[k]);
+    onThemeChange(next);
+  };
+  const colorRow = (label: string, key: "primaryColor" | "secondaryColor", seed?: string | null) => {
+    const value = theme[key] || toHex(seed) || "#000000";
+    return (
+      <div className="flex items-center gap-3">
+        <input
+          type="color"
+          aria-label={`${label} colour`}
+          value={value}
+          onChange={(e) => set({ [key]: e.target.value.toLowerCase() })}
+          className="h-9 w-12 cursor-pointer rounded border border-white/20 bg-transparent"
+        />
+        <div className="flex-1">
+          <div className="text-sm text-white">{label}</div>
+          <div className="text-xs text-gray-400">{theme[key] ? value : toHex(seed) ? `${value} (page default)` : "Page default"}</div>
+        </div>
+        {theme[key] && (
+          <button type="button" onClick={() => set({ [key]: undefined })} className="text-xs text-gray-400 hover:text-white inline-flex items-center gap-1">
+            <RotateCcw className="w-3 h-3" /> Reset
+          </button>
+        )}
+      </div>
+    );
+  };
+  const fontRow = (label: string, key: "headingFont" | "bodyFont", seed?: string) => (
+    <label className="flex items-center gap-3">
+      <span className="w-20 text-sm text-white">{label}</span>
+      <select
+        aria-label={`${label} font`}
+        value={theme[key] || ""}
+        onChange={(e) => set({ [key]: e.target.value || undefined })}
+        className="flex-1 h-9 rounded-md border border-white/20 bg-white/5 px-2 text-sm text-white"
+      >
+        <option value="" className="bg-slate-900">
+          Page default{seed ? ` (${CURATED_FONTS.find((f) => f.id === seed)?.label})` : ""}
+        </option>
+        {CURATED_FONTS.map((f) => (
+          <option key={f.id} value={f.id} className="bg-slate-900" style={{ fontFamily: f.stack }}>
+            {f.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+  return (
+    <div className="mt-6 grid gap-6 border-t border-white/10 pt-5 md:grid-cols-3">
+      <div className="space-y-3">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400">Brand colours</h4>
+        {colorRow("Primary", "primaryColor", seedPrimary)}
+        {colorRow("Secondary", "secondaryColor", seedSecondary)}
+      </div>
+      <div className="space-y-3">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400">Fonts</h4>
+        {fontRow("Headings", "headingFont", seedHeadingFont)}
+        {fontRow("Body", "bodyFont", seedBodyFont)}
+      </div>
+      {hasHero && (
+        <div className="space-y-3">
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-400">Hero layout</h4>
+          <div role="radiogroup" aria-label="Hero layout" className="flex flex-col gap-2">
+            {HERO_LAYOUTS.map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                role="radio"
+                aria-checked={heroLayout === l.id}
+                onClick={() => onHeroLayoutChange(l.id)}
+                className={`h-9 rounded-md border px-3 text-left text-sm transition-colors ${heroLayout === l.id ? "border-cyan-500 bg-cyan-500/10 text-white" : "border-white/10 text-gray-300 hover:border-white/30"}`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

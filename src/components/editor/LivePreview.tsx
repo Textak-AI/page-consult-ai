@@ -1,3 +1,4 @@
+import { resolveColors, themeFontCss, type PageTheme } from '@/lib/editor/pageTheme';
 import { GazeReveal } from '@/components/motion/GazeReveal';
 import { useState, useCallback, useMemo, memo } from "react";
 import { sanitizeFullCSS } from "@/lib/sanitizeCSS";
@@ -77,6 +78,8 @@ interface LivePreviewProps {
     secondaryColor?: string | null;
     accentColor?: string | null;
   };
+  /** Owner overrides from styles.theme; win over brandSettings and section/industry colours. */
+  pageTheme?: PageTheme;
   getSectionLockStatus?: (sectionType: string) => {
     status: 'unlocked' | 'partial' | 'locked';
     isLocked: boolean;
@@ -86,9 +89,14 @@ interface LivePreviewProps {
   };
 }
 
-function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode = 'dark', industryVariant, brandSettings, getSectionLockStatus }: LivePreviewProps) {
+function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode = 'dark', industryVariant, brandSettings: rawBrandSettings, pageTheme, getSectionLockStatus }: LivePreviewProps) {
   const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();
   const currentStyle = styleVariants[pageStyle];
+  const brandSettings = useMemo(() => {
+    const c = resolveColors(pageTheme || {}, { primary: rawBrandSettings?.primaryColor, secondary: rawBrandSettings?.secondaryColor });
+    return { ...(rawBrandSettings || {}), primaryColor: c.primary, secondaryColor: c.secondary };
+  }, [rawBrandSettings, pageTheme]);
+  const themeCss = useMemo(() => themeFontCss('.live-preview-container', pageTheme || {}), [pageTheme]);
   
   // Resolve archetype design profile from sections or localStorage bridge
   const archetypeProfile = useMemo<DesignProfile>(() => {
@@ -341,7 +349,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
       industryVariant: section.content?.industryVariant || industryVariant || 'default',
       mode: section.content?.mode || colorMode || 'dark',
       // Inject brand colors so section components can use them for CTAs/buttons
-      primaryColor: section.content?.primaryColor || stableBrandPrimaryColor,
+      primaryColor: pageTheme?.primaryColor || section.content?.primaryColor || stableBrandPrimaryColor,
       logoUrl: section.content?.logoUrl || stableBrandLogoUrl,
       archetype: archetypeProfile, // Archetype design profile
     };
@@ -687,6 +695,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
           100% { opacity: 0; }
         }
       `}</style>
+      {themeCss && <style>{themeCss}</style>}
       {isEditing && (
         <EditingToolbar onSave={handleSaveEdit} onCancel={handleCancelEdit} />
       )}
