@@ -46,6 +46,7 @@ const plans = [
       "Early access to new features",
       "Advanced analytics",
       "Custom domains",
+      "Remove the PageConsult badge",
     ],
     buttonText: "Claim Founding Spot",
     priceId: STRIPE_PRICES.founding_member,

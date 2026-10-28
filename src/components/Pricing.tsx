@@ -41,6 +41,7 @@ const plans = [
       "Priority support",
       "Lock in this price forever",
       "Advanced analytics",
+      "Remove the PageConsult badge",
     ],
     buttonText: "Lock In Founding Price",
     priceId: STRIPE_PRICES.founding_member,

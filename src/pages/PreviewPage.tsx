@@ -48,6 +48,7 @@ export default function PreviewPage() {
   const { token } = useParams<{ token: string }>();
   const [state, setState] = useState<'loading' | 'expired' | 'not_found' | 'ready'>('loading');
   const [pageData, setPageData] = useState<any>(null);
+  const [showBadge, setShowBadge] = useState(true);
 
   useEffect(() => {
     if (!token) {
@@ -71,6 +72,7 @@ export default function PreviewPage() {
         return;
       }
 
+      setShowBadge(data.showBadge !== false);
       setPageData(data.page);
       setState('ready');
     };
@@ -98,6 +100,7 @@ export default function PreviewPage() {
           styles={pageData.styles || {}}
           designIntelligence={pageData.design_intelligence}
           businessName={pageData?.consultation_data?.businessName || null}
+          showBadge={showBadge}
         />
       </div>
     </div>
