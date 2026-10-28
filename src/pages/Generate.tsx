@@ -2490,7 +2490,6 @@ function GenerateContent() {
         });
         
         if (isLimitReached(error)) {
-          setZeroBalanceModalOpen(true);
           throw new Error(LIMIT_REACHED_MESSAGE);
         }
         if (error) {
@@ -2563,7 +2562,6 @@ function GenerateContent() {
           console.log('✅ Intelligence-generated content:', result.content);
           return await mapGeneratedContentToSections(result.content, consultationData);
         } else if ((result as any).limitReached) {
-          setZeroBalanceModalOpen(true);
           throw new Error(LIMIT_REACHED_MESSAGE);
         } else {
           console.warn('⚠️ Intelligence generation failed, falling back:', result.error);
