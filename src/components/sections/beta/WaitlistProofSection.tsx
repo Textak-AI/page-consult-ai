@@ -1,3 +1,4 @@
+import { spacing } from '@/lib/design/tokens';
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { Users, TrendingUp, AlertTriangle, MapPin } from 'lucide-react';
@@ -140,7 +141,7 @@ export const WaitlistProofSection: React.FC<Props> = ({
       className="relative overflow-hidden"
       style={{ 
         backgroundColor: 'hsl(217, 33%, 5%)',
-        padding: '80px 24px',
+        ...spacing.section,
       }}
     >
       {/* Background */}

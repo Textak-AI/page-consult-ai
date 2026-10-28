@@ -1,3 +1,4 @@
+import { spacing, shape } from '@/lib/design/tokens';
 import { memo } from "react";
 import { AlertTriangle, CheckCircle, ArrowRight, Sparkles, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
@@ -424,7 +425,7 @@ function ProblemSolutionSectionBase({ content, onUpdate, isEditing }: ProblemSol
       className={`relative overflow-hidden ${isEditing ? "relative" : ""}`}
       style={{
         backgroundColor: sectionBg,
-        padding: '96px 24px',
+        ...spacing.section,
       }}
     >
       {/* Background Elements */}
@@ -475,7 +476,7 @@ function ProblemSolutionSectionBase({ content, onUpdate, isEditing }: ProblemSol
             className="relative overflow-hidden rounded-2xl p-8"
             style={{ 
               backgroundColor: cardBg, 
-              border: `1px solid ${cardBorder}`,
+              border: `${shape.hairline}px solid ${cardBorder}`,
             }}
           >
             {/* Red accent gradient */}
@@ -541,7 +542,7 @@ function ProblemSolutionSectionBase({ content, onUpdate, isEditing }: ProblemSol
             className="relative overflow-hidden rounded-2xl p-8"
             style={{ 
               backgroundColor: cardBg, 
-              border: `1px solid ${cardBorder}`,
+              border: `${shape.hairline}px solid ${cardBorder}`,
             }}
           >
             {/* Cyan accent gradient */}

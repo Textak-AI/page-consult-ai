@@ -1,3 +1,4 @@
+import { spacing } from '@/lib/design/tokens';
 import { motion } from "framer-motion";
 import { useMemo, useRef, useEffect, memo } from "react";
 import { getTypography } from "@/lib/typographyScale";
@@ -272,7 +273,7 @@ function HowItWorksSectionBase({ content, onUpdate, isEditing }: HowItWorksSecti
     <section 
       className={`relative overflow-hidden ${isEditing ? '' : ''}`}
       style={{ 
-        padding: '96px 24px',
+        ...spacing.section,
         backgroundColor: isLightMode ? '#ffffff' : undefined,
       }}
     >

@@ -1,3 +1,4 @@
+import { typeScale, spacing, space, shape } from '@/lib/design/tokens';
 /**
  * FeaturesStoryBlocks — Emotional Connector features presentation
  * 
@@ -40,22 +41,22 @@ export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: Fe
   const basisPercent = cols === 2 ? 'calc(50% - 14px)' : 'calc(33.333% - 19px)';
 
   return (
-    <section style={{ backgroundColor: bgStyles.bg, padding: '96px clamp(24px, 6vw, 96px)' }}>
+    <section style={{ backgroundColor: bgStyles.bg, ...spacing.section }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');`}</style>
 
       {isEditing && (
         <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-20" />
       )}
 
-      <div style={{ maxWidth: 920, margin: '0 auto' }}>
+      <div style={{ maxWidth: 920, ...spacing.center }}>
         {/* Section label */}
         <div style={{
-          fontSize: 11,
+          ...typeScale.eyebrow,
           fontWeight: 600,
           textTransform: 'uppercase' as const,
           letterSpacing: '0.2em',
           color: primaryColor,
-          marginBottom: 16,
+          marginBottom: space.sm,
           textAlign: 'center' as const,
           fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
         }}>
@@ -69,16 +70,15 @@ export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: Fe
           onBlur={(e) => onUpdate({ ...content, sectionTitle: e.currentTarget.textContent })}
           className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-2' : ''}
           style={{
-            fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
+            ...typeScale.h2,
             fontWeight: content.typographyPairing === 'serif-sans' ? 400 : 600,
             color: bgStyles.text,
-            lineHeight: 1.2,
             fontFamily: content.typographyPairing === 'serif-sans'
               ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
               : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
             letterSpacing: content.trackingStyle === 'tight' ? '-0.02em' : '0',
             textAlign: 'center' as const,
-            margin: '0 auto 56px',
+            ...spacing.headerBlock,
             maxWidth: 500,
           }}
         >
@@ -100,7 +100,7 @@ export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: Fe
                 minWidth: 260,
                 display: 'flex',
                 backgroundColor: content.sectionBackground === 'dark' ? 'rgba(255,255,255,0.04)' : '#FFFFFF',
-                borderRadius: 12,
+                borderRadius: shape.radiusCard,
                 overflow: 'hidden',
                 boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
               }}
@@ -114,17 +114,17 @@ export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: Fe
               }} />
 
               {/* Content */}
-              <div style={{ padding: 24, flex: 1 }}>
+              <div style={{ padding: space.card, flex: 1 }}>
                 <h3
                   contentEditable={isEditing}
                   suppressContentEditableWarning
                   onBlur={(e) => handleFeatureBlur(i, 'title', e)}
                   className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
                   style={{
-                    fontSize: 16,
+                    ...typeScale.h3,
                     fontWeight: 600,
                     color: bgStyles.text,
-                    margin: '0 0 8px',
+                    ...spacing.titleGap,
                     fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                   }}
                 >
@@ -137,8 +137,7 @@ export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: Fe
                   onBlur={(e) => handleFeatureBlur(i, 'description', e)}
                   className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
                   style={{
-                    fontSize: 14,
-                    lineHeight: 1.75,
+                    ...typeScale.body,
                     color: bgStyles.textMuted,
                     margin: 0,
                     fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',

@@ -1,3 +1,4 @@
+import { typeScale, spacing, space, shape } from '@/lib/design/tokens';
 /**
  * FeaturesBentoGrid — Analytical Validator features layout
  * 
@@ -43,23 +44,23 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
   const basisPercent = cols === 2 ? 'calc(50% - 1px)' : 'calc(33.333% - 1px)';
 
   return (
-    <section style={{ backgroundColor: bgStyles.bg, padding: '96px clamp(24px, 6vw, 96px)' }}>
+    <section style={{ backgroundColor: bgStyles.bg, ...spacing.section }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap');`}</style>
 
       {isEditing && (
         <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-20" />
       )}
 
-      <div style={{ maxWidth: 920, margin: '0 auto' }}>
+      <div style={{ maxWidth: 920, ...spacing.center }}>
         {/* Section label */}
         <div style={{
-          fontSize: 11,
+          ...typeScale.eyebrow,
           fontWeight: 600,
           textTransform: 'uppercase' as const,
           letterSpacing: '0.2em',
           color: primaryColor,
           textAlign: 'center' as const,
-          marginBottom: 16,
+          marginBottom: space.sm,
           fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
         }}>
           {content.sectionLabel || content.eyebrow || 'Capabilities'}
@@ -72,16 +73,15 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
           onBlur={(e) => onUpdate({ ...content, sectionTitle: e.currentTarget.textContent })}
           className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-2' : ''}
           style={{
-            fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
+            ...typeScale.h2,
             fontWeight: isSerif ? 400 : (content.headingWeight || 600),
             color: bgStyles.text,
-            lineHeight: 1.2,
             fontFamily: isSerif
               ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
               : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
             letterSpacing: content.trackingStyle === 'tight' ? '-0.02em' : '0',
             textAlign: 'center' as const,
-            margin: '0 auto 56px',
+            ...spacing.headerBlock,
             maxWidth: 500,
           }}
         >
@@ -95,7 +95,7 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
           justifyContent: 'center',
           gap: gapPx,
           backgroundColor: bgStyles.border,
-          border: `1px solid ${bgStyles.border}`,
+          border: `${shape.hairline}px solid ${bgStyles.border}`,
         }}>
           {validFeatures.map((feature: any, i: number) => (
             <div
@@ -104,15 +104,15 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
                 flex: `0 1 ${basisPercent}`,
                 minWidth: 240,
                 backgroundColor: bgStyles.bg,
-                padding: 'clamp(24px, 3vw, 40px)',
+                padding: space.card,
               }}
             >
               {useMonospace && (
                 <div style={{
-                  fontSize: 12,
+                  ...typeScale.indexMono,
                   fontFamily: '"JetBrains Mono", monospace',
                   color: bgStyles.textMuted,
-                  marginBottom: 16,
+                  marginBottom: space.sm,
                   letterSpacing: '0.05em',
                 }}>
                   {String(i + 1).padStart(2, '0')}
@@ -125,10 +125,10 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
                 onBlur={(e) => handleFeatureBlur(i, 'title', e)}
                 className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
                 style={{
-                  fontSize: 17,
+                  ...typeScale.h3,
                   fontWeight: 600,
                   color: bgStyles.text,
-                  margin: '0 0 8px',
+                  ...spacing.titleGap,
                   letterSpacing: '-0.01em',
                   fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                 }}
@@ -142,8 +142,7 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
                 onBlur={(e) => handleFeatureBlur(i, 'description', e)}
                 className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
                 style={{
-                  fontSize: 13,
-                  lineHeight: 1.6,
+                  ...typeScale.body,
                   color: bgStyles.textMuted,
                   margin: 0,
                   fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',

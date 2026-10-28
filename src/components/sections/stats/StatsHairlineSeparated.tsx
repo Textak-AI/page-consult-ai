@@ -1,3 +1,4 @@
+import { typeScale, spacing, space, shape } from '@/lib/design/tokens';
 /**
  * StatsHairlineSeparated — Analytical Validator stats presentation
  * 
@@ -43,7 +44,7 @@ export default function StatsHairlineSeparated({ content, onUpdate, isEditing }:
   };
 
   return (
-    <section style={{ backgroundColor: bgStyles.bg, padding: '96px clamp(24px, 6vw, 96px)' }}>
+    <section style={{ backgroundColor: bgStyles.bg, ...spacing.section }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');`}</style>
 
       {isEditing && (
@@ -53,7 +54,7 @@ export default function StatsHairlineSeparated({ content, onUpdate, isEditing }:
       <div
         style={{
           maxWidth: 920,
-          margin: '0 auto',
+          ...spacing.center,
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'flex-start',
@@ -66,8 +67,8 @@ export default function StatsHairlineSeparated({ content, onUpdate, isEditing }:
             style={{
               flex: 1,
               textAlign: 'center',
-              padding: '0 clamp(16px, 3vw, 48px)',
-              borderLeft: i > 0 ? `1px solid ${bgStyles.border}` : 'none',
+              ...spacing.statColumn,
+              borderLeft: i > 0 ? `${shape.hairline}px solid ${bgStyles.border}` : 'none',
             }}
           >
             <div
@@ -76,7 +77,7 @@ export default function StatsHairlineSeparated({ content, onUpdate, isEditing }:
               onBlur={(e) => handleStatBlur(i, 'value', e)}
               className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
               style={{
-                fontSize: 'clamp(2rem, 3.5vw, 2.75rem)',
+                ...typeScale.stat,
                 fontWeight: 600,
                 color: primaryColor,
                 letterSpacing: '-0.02em',
@@ -93,10 +94,9 @@ export default function StatsHairlineSeparated({ content, onUpdate, isEditing }:
               onBlur={(e) => handleStatBlur(i, 'label', e)}
               className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
               style={{
-                fontSize: 13,
+                ...typeScale.small,
                 color: bgStyles.textMuted,
-                marginTop: 8,
-                lineHeight: 1.4,
+                marginTop: space.xs,
                 fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
               }}
             >

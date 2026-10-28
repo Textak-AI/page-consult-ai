@@ -1,3 +1,4 @@
+import { typeScale, spacing, space, shape } from '@/lib/design/tokens';
 /**
  * StatsCardGrid — Emotional Connector stats presentation
  * 
@@ -45,7 +46,7 @@ export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCar
   const sectionBg = isBrandBg ? primaryColor : bgStyles.bg;
 
   return (
-    <section style={{ backgroundColor: sectionBg, padding: '96px clamp(24px, 6vw, 96px)' }}>
+    <section style={{ backgroundColor: sectionBg, ...spacing.section }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');`}</style>
 
       {isEditing && (
@@ -54,7 +55,7 @@ export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCar
 
       <div style={{
         maxWidth: 920,
-        margin: '0 auto',
+        ...spacing.center,
         display: 'grid',
         gridTemplateColumns: `repeat(${Math.min(validStats.length, 4)}, 1fr)`,
         gap: 24,
@@ -64,8 +65,8 @@ export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCar
             key={i}
             style={{
               backgroundColor: '#FFFFFF',
-              borderRadius: 12,
-              padding: 28,
+              borderRadius: shape.radiusCard,
+              padding: space.card,
               textAlign: 'center' as const,
               boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
             }}
@@ -76,7 +77,7 @@ export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCar
               onBlur={(e) => handleStatBlur(i, 'value', e)}
               className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
               style={{
-                fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
+                ...typeScale.stat,
                 fontWeight: 700,
                 color: primaryColor,
                 letterSpacing: '-0.02em',
@@ -93,10 +94,9 @@ export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCar
               onBlur={(e) => handleStatBlur(i, 'label', e)}
               className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
               style={{
-                fontSize: 13,
+                ...typeScale.body,
                 color: 'rgba(26,26,46,0.6)',
-                marginTop: 8,
-                lineHeight: 1.5,
+                marginTop: space.xs,
                 fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
               }}
             >

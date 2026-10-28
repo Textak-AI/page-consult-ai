@@ -1,3 +1,4 @@
+import { spacing } from '@/lib/design/tokens';
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -106,7 +107,7 @@ export function BetaFinalCTASection({
   return (
     <section 
       className="relative overflow-hidden"
-      style={{ backgroundColor: 'hsl(217, 33%, 6%)', padding: '120px 24px' }}
+      style={{ backgroundColor: 'hsl(217, 33%, 6%)', ...spacing.section }}
     >
       {/* Dramatic Background */}
       <div className="absolute inset-0">

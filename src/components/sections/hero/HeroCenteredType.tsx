@@ -1,3 +1,4 @@
+import { typeScale, typeClass } from '@/lib/design/tokens';
 /**
  * HeroCenteredType — Analytical Validator / Precision hero
  * 
@@ -122,12 +123,12 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
           contentEditable={isEditing}
           suppressContentEditableWarning
           onBlur={(e) => handleBlur('headline', e)}
-          className={`leading-[1.08] mb-8 ${isEditing ? 'outline-dashed outline-2 outline-cyan-500/30 rounded px-2' : ''}`}
+          className={`${typeClass.leadingDisplay} mb-8 ${isEditing ? 'outline-dashed outline-2 outline-cyan-500/30 rounded px-2' : ''}`}
           style={{
             color: bgStyles.text,
             fontWeight: headingWeight,
             letterSpacing: trackingValue,
-            fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
+            ...typeScale.display,
             fontFamily: isSerif ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, "Times New Roman", serif' : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
           }}
         >

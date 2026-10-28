@@ -1,3 +1,4 @@
+import { typeScale, spacing, space } from '@/lib/design/tokens';
 /**
  * ProblemSolutionTwoColumn — Two-column problem/solution layout
  * 
@@ -23,25 +24,24 @@ export default function ProblemSolutionTwoColumn({ content, onUpdate, isEditing 
   };
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 11,
+    ...typeScale.eyebrow,
     fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: '0.2em',
     color: primaryColor,
-    marginBottom: 16,
+    marginBottom: space.sm,
     fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
   };
 
   const bodyStyle: React.CSSProperties = {
-    fontSize: 15,
-    lineHeight: 1.7,
+    ...typeScale.body,
     color: bgStyles.textMuted,
     fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
     margin: 0,
   };
 
   return (
-    <section style={{ backgroundColor: bgStyles.bg, padding: '96px clamp(24px, 6vw, 96px)' }}>
+    <section style={{ backgroundColor: bgStyles.bg, ...spacing.section }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');`}</style>
 
       {isEditing && (
@@ -50,7 +50,7 @@ export default function ProblemSolutionTwoColumn({ content, onUpdate, isEditing 
 
       <div style={{
         maxWidth: 920,
-        margin: '0 auto',
+        ...spacing.center,
         display: 'grid',
         gridTemplateColumns: 'repeat(2, 1fr)',
         gap: 'clamp(32px, 5vw, 64px)',

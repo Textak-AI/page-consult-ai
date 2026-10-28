@@ -1,0 +1,65 @@
+/**
+ * Product-page type & spacing tokens — the only place section components get
+ * font sizes, line heights, margins and padding from. Values were taken from the
+ * dominant usage across src/components/sections (unification, not redesign).
+ * Marketing-site components do not use this module.
+ */
+
+/** Spacing rhythm in px. */
+export const space = {
+  xxs: 4,
+  xs: 8,
+  smx: 12,
+  sm: 16,
+  row: 20, // list rows (FAQ, process steps)
+  card: 24, // card inner padding
+  lg: 32,
+  header: 56, // section header → content
+  sectionY: 96, // section vertical padding
+  gutter: 'clamp(24px, 6vw, 96px)', // section horizontal padding
+} as const;
+
+/** Ready-made spacing style fragments. */
+export const spacing = {
+  section: { padding: `${space.sectionY}px ${space.gutter}` },
+  center: { margin: '0 auto' },
+  headerBlock: { margin: `0 auto ${space.header}px` },
+  titleGap: { margin: `0 0 ${space.xs}px` },
+  rowY: { padding: `${space.row}px 0` },
+  cardRow: { padding: `${space.row}px ${space.card}px` },
+  cardRowBody: { padding: `0 ${space.card}px ${space.row}px` },
+  statColumn: { padding: '0 clamp(16px, 3vw, 48px)' },
+} as const;
+
+/**
+ * Type scale. clamp() values are fluid between breakpoints (375 → 1280+);
+ * the *Class variants are the Tailwind per-breakpoint equivalents for class-based heroes.
+ */
+export const typeScale = {
+  display: { fontSize: 'clamp(2.5rem, 5vw, 4.5rem)', lineHeight: 1.08 },
+  h1: { fontSize: 'clamp(2rem, 4vw, 3.5rem)', lineHeight: 1.15 },
+  h2: { fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', lineHeight: 1.2 },
+  h3: { fontSize: 17, fontWeight: 600 }, // line-height inherits (unchanged)
+  lead: { fontSize: 16, lineHeight: 1.7 },
+  body: { fontSize: 14, lineHeight: 1.7 },
+  small: { fontSize: 13, lineHeight: 1.5 },
+  eyebrow: { fontSize: 11 },
+  index: { fontSize: 24 },
+  indexMono: { fontSize: 14 },
+  stat: { fontSize: 'clamp(2rem, 3.5vw, 2.75rem)' },
+  statCommand: { fontSize: 'clamp(3rem, 8vw, 6rem)' },
+  statArchetype: { fontSize: 'var(--archetype-stat-size, 2.5rem)' },
+} as const;
+
+export const typeClass = {
+  display: 'text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]',
+  leadLarge: 'text-lg md:text-xl leading-[1.75]',
+  leadingDisplay: 'leading-[1.08]',
+  leadingH1: 'leading-[1.15]',
+} as const;
+
+/** Radius & hairline conventions. */
+export const shape = {
+  radiusCard: 12,
+  hairline: 1,
+} as const;

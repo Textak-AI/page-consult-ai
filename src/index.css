@@ -1765,3 +1765,11 @@ All colors MUST be HSL.
   descent-override: 36.93%;
   line-gap-override: 0%;
 }
+
+/* Product-page headline guard (editor preview + published pages): long headlines
+   wrap onto balanced lines inside their box, never overflow or shrink. */
+:is(.live-preview-container, .page-theme-root) :is(h1, h2, h3) {
+  overflow-wrap: break-word;
+  text-wrap: balance;
+  max-width: 100%;
+}

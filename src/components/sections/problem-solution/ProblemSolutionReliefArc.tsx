@@ -1,3 +1,4 @@
+import { typeScale, spacing, space } from '@/lib/design/tokens';
 /**
  * ProblemSolutionReliefArc — Emotional Connector problem/solution
  * 
@@ -21,17 +22,16 @@ export default function ProblemSolutionReliefArc({ content, onUpdate, isEditing 
   };
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 11,
+    ...typeScale.eyebrow,
     fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: '0.2em',
-    marginBottom: 16,
+    marginBottom: space.sm,
     fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
   };
 
   const bodyStyle: React.CSSProperties = {
-    fontSize: 16,
-    lineHeight: 1.75,
+    ...typeScale.lead,
     fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
     margin: 0,
   };
@@ -47,9 +47,9 @@ export default function ProblemSolutionReliefArc({ content, onUpdate, isEditing 
       {/* Problem — muted/cool */}
       <div style={{
         backgroundColor: '#F1F0EE',
-        padding: '72px clamp(24px, 6vw, 96px)',
+        ...spacing.section,
       }}>
-        <div style={{ maxWidth: 680, margin: '0 auto' }}>
+        <div style={{ maxWidth: 680, ...spacing.center }}>
           <div style={{ ...labelStyle, color: 'rgba(26,26,46,0.4)' }}>The Challenge</div>
           <p
             contentEditable={isEditing}
@@ -72,9 +72,9 @@ export default function ProblemSolutionReliefArc({ content, onUpdate, isEditing 
       {/* Solution — warm/bright */}
       <div style={{
         backgroundColor: '#FFFFFF',
-        padding: '72px clamp(24px, 6vw, 96px)',
+        ...spacing.section,
       }}>
-        <div style={{ maxWidth: 680, margin: '0 auto' }}>
+        <div style={{ maxWidth: 680, ...spacing.center }}>
           <div style={{ ...labelStyle, color: primaryColor }}>Our Approach</div>
           <p
             contentEditable={isEditing}

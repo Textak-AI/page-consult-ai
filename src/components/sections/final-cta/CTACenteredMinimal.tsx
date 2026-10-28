@@ -1,3 +1,4 @@
+import { typeScale, spacing, space } from '@/lib/design/tokens';
 /**
  * CTACenteredMinimal — Analytical Validator final CTA
  * 
@@ -27,7 +28,7 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
   return (
     <section
       className="relative overflow-hidden"
-      style={{ backgroundColor: bgStyles.bg, padding: '96px clamp(24px, 6vw, 96px)' }}
+      style={{ backgroundColor: bgStyles.bg, ...spacing.section }}
     >
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');`}</style>
 
@@ -43,7 +44,7 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
         />
       )}
 
-      <div className="relative z-10" style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' as const }}>
+      <div className="relative z-10" style={{ maxWidth: 600, ...spacing.center, textAlign: 'center' as const }}>
         {/* Headline */}
         <h2
           contentEditable={isEditing}
@@ -51,15 +52,14 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
           onBlur={(e) => handleBlur('headline', e)}
           className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-2' : ''}
           style={{
-            fontSize: 'clamp(1.75rem, 3.5vw, 2.5rem)',
+            ...typeScale.h2,
             fontWeight: isSerif ? 400 : 600,
             color: bgStyles.text,
-            lineHeight: 1.15,
             fontFamily: isSerif
               ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
               : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
             letterSpacing: '-0.02em',
-            marginBottom: 16,
+            marginBottom: space.sm,
           }}
         >
           {content.headline || 'Ready to get started?'}
@@ -73,11 +73,10 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
             onBlur={(e) => handleBlur('subtext', e)}
             className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-2' : ''}
             style={{
-              fontSize: 16,
-              lineHeight: 1.6,
+              ...typeScale.lead,
               color: bgStyles.textMuted,
               fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
-              marginBottom: 32,
+              marginBottom: space.lg,
             }}
           >
             {content.subtext || content.trustText}

@@ -1,3 +1,4 @@
+import { typeClass } from '@/lib/design/tokens';
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -147,7 +148,7 @@ export function BetaHeroTeaserSection({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] font-bold tracking-tight leading-[1.1] max-w-4xl ${
+            className={`${typeClass.display} max-w-4xl ${
               isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
             }`}
             contentEditable={isEditing}

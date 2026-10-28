@@ -1,3 +1,4 @@
+import { spacing } from '@/lib/design/tokens';
 import { Clock, Quote, User, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -479,7 +480,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
       className={`relative overflow-hidden ${(content as any)?.patternClass || 'section-pattern-lines'} ${(content as any)?.glowClass || ''} ${isEditing ? '' : ''}`}
       style={{ 
         backgroundColor: 'var(--color-surface)',
-        padding: '96px 24px',
+        ...spacing.section,
         '--glow-color': 'hsla(189, 95%, 43%, 0.06)',
         '--glow-top': '10%',
         '--glow-right': '-8%',

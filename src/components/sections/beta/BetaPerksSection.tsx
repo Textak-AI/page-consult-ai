@@ -1,3 +1,4 @@
+import { spacing } from '@/lib/design/tokens';
 import { motion } from "framer-motion";
 import { 
   DollarSign, 
@@ -107,7 +108,7 @@ export function BetaPerksSection({ content }: BetaPerksSectionProps) {
       className="relative overflow-hidden"
       style={{ 
         backgroundColor: 'hsl(217, 33%, 6%)',
-        padding: '120px 24px',
+        ...spacing.section,
       }}
     >
       {/* Background */}

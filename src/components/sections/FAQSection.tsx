@@ -1,3 +1,4 @@
+import { spacing } from '@/lib/design/tokens';
 import { useState, useCallback, memo, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { ChevronDown, MessageSquare, Edit3, Trash2, GripVertical, Plus } from 'lucide-react';
@@ -885,7 +886,7 @@ function FAQSectionBase({ content, onUpdate, isEditing }: FAQSectionProps) {
     <section 
       className={`relative overflow-hidden ${(content as any)?.patternClass || 'section-pattern-dots'} ${(content as any)?.glowClass || 'section-glow-edge'}`}
       style={{ 
-        padding: '96px 24px',
+        ...spacing.section,
         '--glow-color': 'hsla(189, 95%, 43%, 0.06)',
         '--glow-top': '40%',
         '--glow-right': '-5%',

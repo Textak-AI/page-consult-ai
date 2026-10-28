@@ -32,3 +32,4 @@
 - [x] Editor part 6: brand colour + font controls and hero layout switcher in the Style dialog, stored in page styles.theme / hero composition; undo, autosave, publish.
 - [ ] Post-migration candidate: "Generate Variant" (VariantGeneratorModal) — button hidden; handler only shows a "coming soon" toast.
 - [ ] Post-migration candidate: AI consultant "apply suggestion" — handler is a console.log stub; no visible button currently renders it.
+- [ ] Styling scaffold part 2 candidate: ~46 legacy Tailwind section components still use standard Tailwind scale classes (py-20/py-24/text-3xl…) directly rather than tokens.
