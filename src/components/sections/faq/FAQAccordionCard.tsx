@@ -1,3 +1,4 @@
+import { typeScale, spacing, space, shape } from '@/lib/design/tokens';
 /**
  * FAQAccordionCard — Emotional Connector FAQ presentation
  * 
@@ -31,22 +32,22 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
   };
 
   return (
-    <section style={{ backgroundColor: bgStyles.bg, padding: '96px clamp(24px, 6vw, 96px)' }}>
+    <section style={{ backgroundColor: bgStyles.bg, ...spacing.section }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');`}</style>
 
       {isEditing && (
         <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-20" />
       )}
 
-      <div style={{ maxWidth: 680, margin: '0 auto' }}>
+      <div style={{ maxWidth: 680, ...spacing.center }}>
         {/* Section label */}
         <div style={{
-          fontSize: 11,
+          ...typeScale.eyebrow,
           fontWeight: 600,
           textTransform: 'uppercase' as const,
           letterSpacing: '0.2em',
           color: primaryColor,
-          marginBottom: 16,
+          marginBottom: space.sm,
           textAlign: 'center' as const,
           fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
         }}>
@@ -55,15 +56,14 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
 
         {/* Section title */}
         <h2 style={{
-          fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
+          ...typeScale.h2,
           fontWeight: content.typographyPairing === 'serif-sans' ? 400 : 600,
           color: bgStyles.text,
-          lineHeight: 1.2,
           fontFamily: content.typographyPairing === 'serif-sans'
             ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
             : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
           textAlign: 'center' as const,
-          margin: '0 auto 48px',
+          ...spacing.headerBlock,
         }}>
           {content.headline || 'Common Questions'}
         </h2>
@@ -77,7 +77,7 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
                 key={i}
                 style={{
                   backgroundColor: '#FFFFFF',
-                  borderRadius: 12,
+                  borderRadius: shape.radiusCard,
                   boxShadow: isOpen
                     ? `0 4px 24px rgba(0,0,0,0.08), 0 0 0 1px ${primaryColor}20`
                     : '0 2px 12px rgba(0,0,0,0.04)',
@@ -90,7 +90,7 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
                   onClick={() => setOpenIndex(isOpen ? null : i)}
                   style={{
                     width: '100%',
-                    padding: '20px 24px',
+                    ...spacing.cardRow,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -107,7 +107,7 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
                     onClick={(e) => isEditing && e.stopPropagation()}
                     className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
                     style={{
-                      fontSize: 15,
+                      ...typeScale.h3,
                       fontWeight: 600,
                       color: isOpen ? primaryColor : bgStyles.text,
                       fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
@@ -124,7 +124,7 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
                       transform: isOpen ? 'rotate(180deg)' : 'rotate(0)',
                       transition: 'transform 0.25s ease, color 0.2s ease',
                       flexShrink: 0,
-                      marginLeft: 16,
+                      marginLeft: space.sm,
                     }}
                   />
                 </button>
@@ -132,8 +132,8 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
                 {/* Answer */}
                 {isOpen && (
                   <div style={{
-                    padding: '0 24px 20px',
-                    borderTop: `1px solid ${primaryColor}10`,
+                    ...spacing.cardRowBody,
+                    borderTop: `${shape.hairline}px solid ${primaryColor}10`,
                   }}>
                     <p
                       contentEditable={isEditing}
@@ -141,10 +141,9 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
                       onBlur={(e) => handleItemBlur(i, 'answer', e)}
                       className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
                       style={{
-                        fontSize: 14,
-                        lineHeight: 1.75,
+                        ...typeScale.body,
                         color: bgStyles.textMuted,
-                        margin: '12px 0 0',
+                        marginTop: space.smx, marginBottom: 0,
                         fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                       }}
                     >

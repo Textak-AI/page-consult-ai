@@ -1,3 +1,4 @@
+import { typeClass } from '@/lib/design/tokens';
 import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
 import { LogoUploader } from "@/components/editor/LogoUploader";
@@ -299,7 +300,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
   
   // SDI Typography - use passed typography or fallback
   const sdiTypography = content.sdiTypography;
-  const heroHeadlineClass = sdiTypography?.heroHeadline || 'text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]';
+  const heroHeadlineClass = sdiTypography?.heroHeadline || typeClass.display;
   const heroSubheadlineClass = sdiTypography?.sectionSubtitle || 'text-lg md:text-xl lg:text-2xl leading-relaxed';
 
   console.log('🎨 [HeroSection] SDI Typography:', {

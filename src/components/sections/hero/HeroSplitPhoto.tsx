@@ -1,3 +1,4 @@
+import { typeScale, typeClass, shape } from '@/lib/design/tokens';
 /**
  * HeroSplitPhoto — Emotional Connector / Warmth hero
  * 
@@ -73,11 +74,11 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur('headline', e)}
-              className={`leading-[1.15] ${isEditing ? 'outline-dashed outline-2 outline-cyan-500/30 rounded px-2' : ''}`}
+              className={`${typeClass.leadingH1} ${isEditing ? 'outline-dashed outline-2 outline-cyan-500/30 rounded px-2' : ''}`}
               style={{
                 color: bgStyles.text,
                 fontWeight: headingWeight,
-                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+                ...typeScale.h1,
                 fontFamily: usesSerif ? 'Georgia, "Times New Roman", serif' : 'inherit',
               }}
             >
@@ -89,7 +90,7 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
               contentEditable={isEditing}
               suppressContentEditableWarning
               onBlur={(e) => handleBlur('subheadline', e)}
-              className={`text-lg md:text-xl leading-[1.75] max-w-xl ${isEditing ? 'outline-dashed outline-2 outline-cyan-500/30 rounded px-2' : ''}`}
+              className={`${typeClass.leadLarge} max-w-xl ${isEditing ? 'outline-dashed outline-2 outline-cyan-500/30 rounded px-2' : ''}`}
               style={{ color: bgStyles.textMuted }}
             >
               {content.subheadline}
@@ -147,7 +148,7 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
                 className="relative rounded-2xl aspect-[4/5] flex items-center justify-center overflow-hidden"
                 style={{
                   background: `linear-gradient(135deg, ${primaryColor}18 0%, ${primaryColor}08 50%, ${primaryColor}20 100%)`,
-                  border: `1px solid ${bgStyles.border}`,
+                  border: `${shape.hairline}px solid ${bgStyles.border}`,
                 }}
               >
                 {/* Shimmer animation */}

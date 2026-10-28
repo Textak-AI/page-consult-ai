@@ -1,3 +1,4 @@
+import { spacing, space, shape } from '@/lib/design/tokens';
 /**
  * Industry-Aware Section Wrapper
  * 
@@ -148,7 +149,7 @@ export function IndustrySection({
       className={`relative overflow-hidden ${className}`}
       style={{
         ...styles,
-        padding: `${tokens.spacing.sectionPadding} 24px`,
+        paddingBlock: tokens.spacing.sectionPadding, paddingInline: space.gutter,
       }}
       data-industry={industryVariant}
       data-mode={tokens.mode}

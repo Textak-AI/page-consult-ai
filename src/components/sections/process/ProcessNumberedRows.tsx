@@ -1,3 +1,4 @@
+import { typeScale, spacing, space, shape } from '@/lib/design/tokens';
 /**
  * ProcessNumberedRows — Analytical Validator process layout
  * 
@@ -30,23 +31,23 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
   };
 
   return (
-    <section style={{ backgroundColor: bgStyles.bg, padding: '96px clamp(24px, 6vw, 96px)' }}>
+    <section style={{ backgroundColor: bgStyles.bg, ...spacing.section }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap');`}</style>
 
       {isEditing && (
         <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-20" />
       )}
 
-      <div style={{ maxWidth: 760, margin: '0 auto' }}>
+      <div style={{ maxWidth: 760, ...spacing.center }}>
         {/* Section label */}
         <div style={{
-          fontSize: 11,
+          ...typeScale.eyebrow,
           fontWeight: 600,
           textTransform: 'uppercase' as const,
           letterSpacing: '0.2em',
           color: primaryColor,
           textAlign: 'center' as const,
-          marginBottom: 16,
+          marginBottom: space.sm,
           fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
         }}>
           {content.sectionLabel || content.eyebrow || 'Process'}
@@ -59,16 +60,15 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
           onBlur={(e) => onUpdate({ ...content, title: e.currentTarget.textContent })}
           className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-2' : ''}
           style={{
-            fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
+            ...typeScale.h2,
             fontWeight: isSerif ? 400 : (content.headingWeight || 600),
             color: bgStyles.text,
-            lineHeight: 1.2,
             fontFamily: isSerif
               ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
               : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
             letterSpacing: content.trackingStyle === 'tight' ? '-0.02em' : '0',
             textAlign: 'center' as const,
-            margin: '0 auto 56px',
+            ...spacing.headerBlock,
             maxWidth: 500,
           }}
         >
@@ -79,22 +79,22 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
         {validSteps.map((step: any, i: number) => (
           <div key={i}>
             {i > 0 && (
-              <div style={{ borderTop: `1px solid ${bgStyles.border}` }} />
+              <div style={{ borderTop: `${shape.hairline}px solid ${bgStyles.border}` }} />
             )}
             <div style={{
               display: 'flex',
               alignItems: 'flex-start',
               gap: 'clamp(16px, 3vw, 32px)',
-              padding: '32px 0',
+              ...spacing.rowY,
             }}>
               {/* Number */}
               <div style={{
-                fontSize: useMonospace ? 14 : 24,
+                fontSize: useMonospace ? typeScale.indexMono.fontSize : typeScale.index.fontSize,
                 fontFamily: useMonospace ? '"JetBrains Mono", monospace' : '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                 color: useMonospace ? bgStyles.textMuted : primaryColor,
                 fontWeight: useMonospace ? 400 : 600,
                 minWidth: 40,
-                paddingTop: useMonospace ? 4 : 0,
+                paddingTop: useMonospace ? space.xxs : 0,
                 letterSpacing: useMonospace ? '0.05em' : '0',
               }}>
                 {useMonospace ? String(i + 1).padStart(2, '0') : String(i + 1)}
@@ -107,10 +107,10 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
                   onBlur={(e) => handleStepBlur(i, 'title', e)}
                   className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
                   style={{
-                    fontSize: 17,
+                    ...typeScale.h3,
                     fontWeight: 600,
                     color: bgStyles.text,
-                    margin: '0 0 8px',
+                    ...spacing.titleGap,
                     fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                   }}
                 >
@@ -122,8 +122,7 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
                   onBlur={(e) => handleStepBlur(i, 'description', e)}
                   className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
                   style={{
-                    fontSize: 14,
-                    lineHeight: 1.7,
+                    ...typeScale.body,
                     color: bgStyles.textMuted,
                     margin: 0,
                     fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',

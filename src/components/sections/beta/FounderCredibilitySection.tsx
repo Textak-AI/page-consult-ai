@@ -1,3 +1,4 @@
+import { spacing } from '@/lib/design/tokens';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Twitter, Linkedin, Globe, Quote, BadgeCheck } from 'lucide-react';
@@ -52,7 +53,7 @@ export const FounderCredibilitySection: React.FC<Props> = ({
       className="relative overflow-hidden"
       style={{ 
         backgroundColor: 'hsl(217, 33%, 6%)',
-        padding: '120px 24px',
+        ...spacing.section,
       }}
     >
       {/* Background */}

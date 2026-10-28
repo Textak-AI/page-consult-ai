@@ -1,3 +1,4 @@
+import { typeScale } from '@/lib/design/tokens';
 import { memo } from 'react';
 
 interface StatDisplayProps {
@@ -62,7 +63,7 @@ function StatDisplayBase({
         className={`${sizeMap[size]} font-bold ${valueColor} ${editClass}`}
         style={{
           ...valueStyle,
-          fontSize: 'var(--archetype-stat-size)',
+          fontSize: typeScale.statArchetype.fontSize,
           fontWeight: 'var(--archetype-heading-weight, 700)' as any,
         }}
         contentEditable={isEditing}
