@@ -1707,7 +1707,7 @@ All colors MUST be HSL.
    before the web font arrives occupies the same space and the swap doesn't
    move content. Values from @capsizecss/metrics (DM Sans vs Arial,
    Instrument Serif vs Times New Roman). DM Sans is an optical-size font:
-   it runs ~2% wider than Arial at body sizes and ~7.5% narrower at heading
+   it runs ~2% wider than Arial at body sizes and ~8% narrower at heading
    sizes (opsz caps at 40), so headings use their own fallback. Ratios were
    measured in-browser against Liberation Sans (Arial-metric). */
 @font-face {
@@ -1721,9 +1721,9 @@ All colors MUST be HSL.
 @font-face {
   font-family: "DM Sans Heading Fallback";
   src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"), local("Helvetica");
-  size-adjust: 92.4%;
-  ascent-override: 107.36%;
-  descent-override: 33.55%;
+  size-adjust: 92%;
+  ascent-override: 107.83%;
+  descent-override: 33.7%;
   line-gap-override: 0%;
 }
 @font-face {
