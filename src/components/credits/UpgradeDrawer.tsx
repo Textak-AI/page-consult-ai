@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { STRIPE_PRICES } from '@/lib/stripe-config';
+import { STRIPE_PRICES, ACTION_PACK_PRICES } from '@/lib/stripe-config';
 
 interface UpgradeDrawerProps {
   open: boolean;
@@ -139,6 +139,30 @@ export function UpgradeDrawer({
       }
     } catch (error) {
       console.error('❌ Checkout error:', error);
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  // One-time packs go through stripe-checkout, which uses payment mode for pack prices.
+  const handlePackCheckout = async (priceId: string) => {
+    setIsLoading(priceId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Please sign in to buy actions');
+        return;
+      }
+      const back = `${window.location.origin}${window.location.pathname}`;
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: { priceId, successUrl: `${back}?checkout=success`, cancelUrl: `${back}?checkout=cancelled` },
+      });
+      if (error) throw error;
+      if (!data?.url) throw new Error('No checkout URL returned');
+      window.location.href = data.url;
+    } catch (error) {
+      console.error('❌ Pack checkout error:', error);
       toast.error('Failed to start checkout. Please try again.');
     } finally {
       setIsLoading(null);
@@ -302,6 +326,36 @@ export function UpgradeDrawer({
                 })}
               </div>
               
+              <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-3">
+                  <h3 className="text-sm font-semibold text-white">Need a few more actions?</h3>
+                  <p className="text-xs text-slate-400">One-time purchase · Never expire · Used after your monthly allowance</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {ACTION_PACK_PRICES.map((pack) => (
+                    <Button
+                      key={pack.priceId}
+                      variant="ghost"
+                      className="h-auto justify-between bg-white/10 hover:bg-white/20 text-white py-3"
+                      disabled={isLoading !== null}
+                      onClick={() => handlePackCheckout(pack.priceId)}
+                    >
+                      {isLoading === pack.priceId ? (
+                        <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                      ) : (
+                        <>
+                          <span className="flex items-center gap-2">
+                            <Zap className="w-4 h-4 text-cyan-400" />
+                            {pack.actions} AI actions
+                          </span>
+                          <span className="font-bold">${pack.price}</span>
+                        </>
+                      )}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
               <p className="text-xs text-slate-500 text-center mt-6">
                 14-day free trial • Cancel anytime • 30-day money-back guarantee
               </p>
