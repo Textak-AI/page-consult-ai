@@ -1,8 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Replicate from 'https://esm.sh/replicate@0.25.2'
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts'
+import { withCharge } from '../_shared/planLimits.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 
-serve(async (req) => {
+const handle = async (req: Request, userId: string): Promise<Response> => {
   // Handle CORS preflight
   const corsResponse = handleCorsPreflightRequest(req)
   if (corsResponse) return corsResponse
@@ -103,4 +105,7 @@ Mood: Confident, trustworthy, innovative.`
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   }
-})
+};
+
+// Charged server-side before work; refunded on failure (see _shared/planLimits.ts).
+serve((req) => withCharge(req, 'image_generation', getCorsHeaders(req.headers.get('Origin')), (userId) => handle(req, userId), { createClient }));

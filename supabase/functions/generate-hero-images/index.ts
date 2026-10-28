@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { withCharge } from '../_shared/planLimits.ts';
 
 interface GenerateRequest {
   prompts: string[];
@@ -8,7 +9,7 @@ interface GenerateRequest {
   forceRegenerate?: boolean;
 }
 
-serve(async (req) => {
+const handle = async (req: Request, userId: string): Promise<Response> => {
   // Handle CORS preflight requests
   const corsResponse = handleCorsPreflightRequest(req);
   if (corsResponse) return corsResponse;
@@ -163,4 +164,7 @@ serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-});
+};
+
+// Charged server-side before work; refunded on failure (see _shared/planLimits.ts).
+serve((req) => withCharge(req, 'image_generation', getCorsHeaders(req.headers.get('Origin')), (userId) => handle(req, userId), { createClient, shouldCharge: async (r) => { try { return (await r.json())?.forceRegenerate === true; } catch { return false; } } }));

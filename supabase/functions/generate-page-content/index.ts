@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { withCharge } from '../_shared/planLimits.ts';
 
 // Helper function to build brand context from brand brief
 function buildBrandContext(brief: any): string {
@@ -92,7 +93,7 @@ const GenerateContentRequestSchema = z.object({
   }).optional(),
 });
 
-serve(async (req) => {
+const handle = async (req: Request, userId: string): Promise<Response> => {
   // Handle CORS preflight requests
   const corsResponse = handleCorsPreflightRequest(req);
   if (corsResponse) return corsResponse;
@@ -483,4 +484,7 @@ Generate compelling content. Return valid JSON only.`;
       { status: 500, headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' } }
     );
   }
-});
+};
+
+// Charged server-side before work; refunded on failure (see _shared/planLimits.ts).
+serve((req) => withCharge(req, 'page_build', getCorsHeaders(req.headers.get('Origin')), (userId) => handle(req, userId), { createClient }));
