@@ -201,6 +201,8 @@ export async function withCharge(
   },
 ): Promise<Response> {
   if (req.method === 'OPTIONS') return handler('');
+  // Non-generating requests (e.g. cache reads) run without auth or charge, as before.
+  if (deps.shouldCharge && !(await deps.shouldCharge(req.clone()))) return handler('');
   const authHeader = req.headers.get('Authorization') ?? '';
   const url = Deno.env.get('SUPABASE_URL')!;
   const userClient = deps.createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, {
@@ -213,7 +215,6 @@ export async function withCharge(
       status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
-  if (deps.shouldCharge && !(await deps.shouldCharge(req.clone()))) return handler(user.id);
 
   const meta = deps.meta ? await deps.meta(req.clone()).catch(() => ({})) : {};
   const { refused, logId } = await chargeAction(userClient, user.id, action, corsHeaders, meta);
