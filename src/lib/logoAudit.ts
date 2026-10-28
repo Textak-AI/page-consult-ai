@@ -5,9 +5,9 @@
  */
 
 export const LOGO_RULES = {
-  /** Shorter side must be at least this many natural pixels (rejects 16/32px favicons, 1×1 pixels). */
-  minShortSide: 40,
-  /** Longer side must be at least this many natural pixels. */
+  /** Shorter side must be at least this many natural pixels (rejects 1×1 tracking pixels and slivers). */
+  minShortSide: 16,
+  /** Longer side must be at least this many natural pixels (rejects 16/32/48px favicons). */
   minLongSide: 64,
   /** Social-preview images (OG/Twitter cards) are photos, not logos. */
   socialMinWidth: 1000,
