@@ -127,8 +127,18 @@ export function SectionManager({
   return (
     <div className="flex flex-col h-full">
       {/* Section List Header */}
-      <div className="px-4 py-3 border-b border-white/10">
+      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
         <h2 className="font-semibold text-sm text-white tracking-wide">PAGE SECTIONS</h2>
+        {onAddSection && (
+          <button
+            onClick={() => onAddSection()}
+            className="flex items-center gap-1 text-xs font-medium text-cyan-400 hover:text-cyan-300 px-2 py-1 rounded hover:bg-white/10 transition-colors"
+            aria-label="Add Section"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add
+          </button>
+        )}
       </div>
 
       {/* Sections List */}
@@ -183,7 +193,7 @@ export function SectionManager({
               </span>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-1 opacity-0 max-w-0 overflow-hidden group-hover:opacity-100 group-hover:max-w-none group-focus-within:opacity-100 group-focus-within:max-w-none transition-opacity">
                 {/* Reorder */}
                 {!pinned && (
                   <>
@@ -261,19 +271,8 @@ export function SectionManager({
       </div>
 
       {/* Add Section / Calculator */}
-      {(onAddSection || onAddCalculator) && (
+      {onAddCalculator && (
         <div className="p-3 border-t border-white/10 space-y-2">
-          {onAddSection && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10"
-              onClick={() => onAddSection()}
-            >
-              <Plus className="w-4 h-4 text-cyan-400" />
-              <span>Add Section</span>
-            </Button>
-          )}
           {onAddCalculator && (
           <Button 
             variant="outline"
