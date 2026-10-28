@@ -2109,6 +2109,7 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      page_shows_badge: { Args: { page_slug: string }; Returns: boolean }
       refund_ai_action: { Args: { p_log_id: string }; Returns: Json }
       reset_api_calls: { Args: never; Returns: undefined }
       reset_monthly_usage: { Args: never; Returns: undefined }

@@ -47,6 +47,7 @@ const plans = [
       'Priority AI generation',
       'Priority support',
       'Lock in price forever',
+      'Remove the PageConsult badge',
     ],
     recommended: true,
     discountBadge: '30% off for life',

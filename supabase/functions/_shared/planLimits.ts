@@ -222,3 +222,16 @@ export async function withCharge(
   const admin = deps.createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   return runChargedWork(() => handler(user.id), (reason) => refundCharge(admin, logId, `${action}:${reason}`));
 }
+
+/** "Powered by PageConsult AI" badge: shown for free/starter owners, hidden for pro, founding (pro tier) and agency. */
+export function showsBadgeForTier(tier: string | null | undefined): boolean {
+  return !tier || tier === 'starter';
+}
+
+/** Looks up the page owner's plan server-side (service-role client) and returns the badge decision. */
+// deno-lint-ignore no-explicit-any
+export async function ownerShowsBadge(serviceClient: any, ownerId: string | null | undefined): Promise<boolean> {
+  if (!ownerId) return true;
+  const { data } = await serviceClient.from('user_usage').select('plan_tier').eq('user_id', ownerId).maybeSingle();
+  return showsBadgeForTier(data?.plan_tier);
+}

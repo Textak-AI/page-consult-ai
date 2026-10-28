@@ -70,6 +70,8 @@ interface PublicPageRendererProps {
   /** Explicit business name from the page record; wins over the sections-derived backstop */
   businessName?: string | null;
   showPoweredBy?: boolean;
+  /** Server-derived from the page owner's plan: false hides the PageConsult badge (paid tiers). */
+  showBadge?: boolean;
   /** When set, CTA clicks open a lead capture form instead of navigating */
   publishedPageId?: string | null;
 }
@@ -84,6 +86,7 @@ export function PublicPageRenderer({
   brandSettings,
   businessName: businessNameProp,
   showPoweredBy = false,
+  showBadge = true,
   publishedPageId,
 }: PublicPageRendererProps) {
   const [leadCaptureOpen, setLeadCaptureOpen] = useState(false);
@@ -490,11 +493,12 @@ export function PublicPageRenderer({
             companyName={brandSettings?.companyName}
             businessName={businessNameProp || pageBusinessName}
             logoUrl={brandSettings?.logoUrl}
+            showPoweredBy={showBadge}
           />
         </div>
         
         {/* "Built with PageConsult" badge */}
-        {showPoweredBy && (
+        {showPoweredBy && showBadge && (
           <a 
             href="https://pageconsult.app" 
             target="_blank" 

@@ -26,6 +26,7 @@ export default function ProspectPage() {
   const { slug } = useParams<{ slug: string }>();
   const [pageData, setPageData] = useState<PageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showBadge, setShowBadge] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,6 +47,7 @@ export default function ProspectPage() {
           return;
         }
         const basePage = data.page;
+        setShowBadge(data.showBadge !== false);
         const prospect = data.prospect;
 
         if (prospect) {
@@ -220,6 +222,7 @@ export default function ProspectPage() {
       metaTitle={pageData.meta_title}
       metaDescription={pageData.meta_description}
       businessName={pageData.businessName || null}
+      showBadge={showBadge}
     />
   );
 }

@@ -12,7 +12,7 @@ test('new CRM prospects are public through display-only projection, without priv
   const page = { id: 'base', user_id: 'owner', title: 'Base', slug: 'base', sections: [], styles: {}, consultation_data: { businessName: 'Base Company', ...privateFields } };
   const filters = [];
   runInNewContext(executable, {
-    serve: cb => { handler = cb; }, Response, handleCorsPreflightRequest: () => null, getCorsHeaders: () => ({}),
+    serve: cb => { handler = cb; }, Response, ownerShowsBadge: async (_c, owner) => owner !== 'owner', handleCorsPreflightRequest: () => null, getCorsHeaders: () => ({}),
     Deno: { env: { get: () => 'test-only' } },
     createClient: () => ({ from: table => {
       const query = { select: () => query, eq: (key, value) => { filters.push([table, key, value]); return query; }, maybeSingle: async () => ({ data: table === 'prospects' ? prospect : page, error: null }) };
@@ -24,6 +24,7 @@ test('new CRM prospects are public through display-only projection, without priv
   const payload = await response.json();
   expect(Object.keys(payload.prospect).sort()).toEqual(['company', 'first_name', 'job_title', 'personalized_cta_text', 'personalized_headline', 'personalized_subhead']);
   expect(payload.page.businessName).toBe('Base Company');
+  expect(payload.showBadge).toBe(false);
   for (const key of Object.keys(privateFields)) expect(JSON.stringify(payload)).not.toContain(`"${key}"`);
   expect(filters).toContainEqual(['landing_pages', 'user_id', 'owner']);
   expect(filters.some(([, key]) => key === 'status')).toBe(false);

@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { ownerShowsBadge } from '../_shared/planLimits.ts';
 
 // Public preview lookup: resolves exactly one token server-side so the
 // preview_links table never needs an anonymous read policy.
@@ -24,13 +25,14 @@ serve(async (req) => {
     if (new Date(link.expires_at) < new Date()) return respond({ status: 'expired' });
 
     const { data: page, error: pageError } = await client.from('landing_pages')
-      .select('sections, styles, design_intelligence, consultation_data')
+      .select('user_id, sections, styles, design_intelligence, consultation_data')
       .eq('id', link.landing_page_id).maybeSingle();
     if (pageError) throw pageError;
     if (!page) return respond({ status: 'not_found' }, 404);
 
     return respond({
       status: 'ready',
+      showBadge: await ownerShowsBadge(client, page.user_id),
       page: {
         sections: page.sections,
         styles: page.styles,
