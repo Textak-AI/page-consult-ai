@@ -77,6 +77,18 @@ export async function chargeOrRefuse(
   corsHeaders: Record<string, string>,
   meta: { pageId?: string | null; sectionType?: string | null } = {},
 ): Promise<Response | null> {
+  return (await chargeAction(userClient, userId, action, corsHeaders, meta)).refused;
+}
+
+/** Same as chargeOrRefuse, but also returns the usage_log id of the charge so it can be refunded. */
+// deno-lint-ignore no-explicit-any
+export async function chargeAction(
+  userClient: any,
+  userId: string,
+  action: ChargedAction,
+  corsHeaders: Record<string, string>,
+  meta: { pageId?: string | null; sectionType?: string | null } = {},
+): Promise<{ refused: Response | null; logId: string | null }> {
   const { data, error } = await userClient.rpc('track_ai_action', {
     p_user_id: userId,
     p_action_type: action,
@@ -86,19 +98,63 @@ export async function chargeOrRefuse(
   });
   if (error) {
     console.error('💳 [usage] charge failed:', error.message);
-    return new Response(JSON.stringify({ success: false, error: 'usage_check_failed' }), {
+    return { logId: null, refused: new Response(JSON.stringify({ success: false, error: 'usage_check_failed' }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    }) };
   }
   if (!data?.allowed) {
     console.warn(`💳 [usage] ${LIMIT_REACHED_ERROR} user=${userId} action=${action} remaining=${data?.remaining}`);
-    return new Response(JSON.stringify({
+    return { logId: null, refused: new Response(JSON.stringify({
       success: false,
       error: LIMIT_REACHED_ERROR,
       message: "You've used all your AI actions this billing period.",
       remaining: data?.remaining ?? 0,
       cost: ACTION_COSTS[action],
-    }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }) };
   }
-  return null;
+  return { refused: null, logId: data?.log_id ?? null };
+}
+
+/** Returns a charge via the service-role-only refund_ai_action (restores rollover/monthly/pack buckets). */
+// deno-lint-ignore no-explicit-any
+export async function refundCharge(serviceClient: any, logId: string | null, reason: string): Promise<boolean> {
+  if (!logId) return false;
+  const { data, error } = await serviceClient.rpc('refund_ai_action', { p_log_id: logId });
+  if (error) {
+    console.error(`💳 [usage] REFUND FAILED log=${logId} reason=${reason}:`, error.message);
+    return false;
+  }
+  console.log(`💳 [usage] refunded ${data?.actions ?? 0} actions log=${logId} reason=${reason} refunded=${!!data?.refunded}`);
+  return !!data?.refunded;
+}
+
+/** Runs charged AI work; any thrown error or non-2xx response refunds the charge so failures never consume allowance. */
+export async function runChargedWork(
+  work: () => Promise<Response>,
+  refund: (reason: string) => Promise<unknown>,
+): Promise<Response> {
+  let res: Response;
+  try {
+    res = await work();
+  } catch (e) {
+    await refund(e instanceof Error ? e.message : 'exception');
+    throw e;
+  }
+  if (!res.ok) await refund(`status_${res.status}`);
+  return res;
+}
+
+/** Stripe Checkout params: mode derives from the price (packs = one-time payment), never from the client. */
+export function checkoutSessionParams(opts: {
+  priceId: string; customerId: string; userId: string; successUrl: string; cancelUrl: string;
+}) {
+  const isPack = opts.priceId in ACTION_PACKS;
+  return {
+    customer: opts.customerId,
+    line_items: [{ price: opts.priceId, quantity: 1 }],
+    mode: (isPack ? 'payment' : 'subscription') as 'payment' | 'subscription',
+    success_url: opts.successUrl,
+    cancel_url: opts.cancelUrl,
+    metadata: { user_id: opts.userId, price_id: opts.priceId },
+  };
 }

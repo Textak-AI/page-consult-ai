@@ -3,7 +3,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import Anthropic from "https://esm.sh/@anthropic-ai/sdk@0.30.1";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { chargeOrRefuse } from '../_shared/planLimits.ts';
+import { chargeAction, refundCharge, runChargedWork } from '../_shared/planLimits.ts';
 
 // Request validation
 const ConsultationDataSchema = z.object({
@@ -99,15 +99,19 @@ serve(async (req) => {
         return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
-      const refused = await chargeOrRefuse(userClient, user.id,
+      const { refused, logId } = await chargeAction(userClient, user.id,
         action === 'regenerate_page' ? 'page_generation' : 'section_regeneration',
         corsHeaders, { sectionType: sectionType ?? null });
       if (refused) return refused;
 
-      if (action === 'regenerate_page') {
-        return await handleContentGeneration(anthropic, consultationData, intelligenceContext, corsHeaders);
-      }
-      return await handleSectionRegeneration(anthropic, sectionType!, consultationData, intelligenceContext, currentContent, corsHeaders);
+      // A failed generation must never consume allowance: refund server-side on throw or non-2xx.
+      const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+      return await runChargedWork(
+        () => action === 'regenerate_page'
+          ? handleContentGeneration(anthropic, consultationData, intelligenceContext, corsHeaders)
+          : handleSectionRegeneration(anthropic, sectionType!, consultationData, intelligenceContext, currentContent, corsHeaders),
+        (reason) => refundCharge(admin, logId, `${action}:${reason}`),
+      );
     }
 
     return new Response(
