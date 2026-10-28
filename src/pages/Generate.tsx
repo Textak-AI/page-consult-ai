@@ -24,6 +24,9 @@ import { StrategyBriefPanel } from "@/components/builder/StrategyBriefPanel";
 import { ConsultantPanel } from "@/components/editor/ConsultantPanel";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
 import { useEditorSession } from "@/hooks/useEditorSession";
+import { normalize as normalizeSections, insertAt as insertSectionAt } from "@/lib/editor/sectionOps";
+import { ADDABLE_SECTION_TYPES, buildSectionContent, type BriefSource } from "@/lib/editor/sectionFactory";
+import { AddSectionDialog } from "@/components/editor/AddSectionDialog";
 import { generateIntelligentContent, runIntelligencePipeline } from "@/services/intelligence";
 import { generateIntelligentContent as generateIntelligentContentLegacy } from "@/lib/generateIntelligentContent";
 import { 
@@ -1143,7 +1146,8 @@ function GenerateContent() {
           ...existingPage,
           design_intelligence: correctedDesignIntelligence,
         });
-        setSections(patchedSections);
+        // Array order == render order, so editor indices match what's shown.
+        setSections(normalizeSections(patchedSections));
         setExistingPageLoaded(true);
         console.log('📦 [Generate] Loaded existing page:', existingPage.id);
         console.log('💡 [Generate] Use Regenerate button to create fresh page with latest layout logic');
@@ -5571,6 +5575,38 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
   // Removed showDigitalChampion toggle - using single consistent design
   const [variantModalOpen, setVariantModalOpen] = useState(false);
 
+  // Add Section menu: content comes from the saved strategy brief when present.
+  const [addSectionOpen, setAddSectionOpen] = useState(false);
+  const [addSectionAt, setAddSectionAt] = useState<number | undefined>(undefined);
+  const [addBrief, setAddBrief] = useState<BriefSource | null>(null);
+  useEffect(() => {
+    if (!addSectionOpen || addBrief) return;
+    const fromState = strategicData?.structuredBrief as BriefSource | undefined;
+    if (fromState) { setAddBrief(fromState); return; }
+    const consultationId = pageData?.consultation_id;
+    if (!consultationId) return;
+    supabase.from("consultations").select("strategy_brief").eq("id", consultationId).maybeSingle()
+      .then(({ data }) => {
+        const raw: any = data?.strategy_brief;
+        const structured = raw && typeof raw === "object" ? (raw.structured ?? raw) : null;
+        if (structured && typeof structured === "object") setAddBrief(structured);
+      });
+  }, [addSectionOpen, addBrief, strategicData?.structuredBrief, pageData?.consultation_id]);
+
+  const sectionTitleFor = (type: string) =>
+    ({ hero: "Hero", "final-cta": "Final CTA" } as Record<string, string>)[type] ||
+    ADDABLE_SECTION_TYPES.find((t) => t.type === type)?.label ||
+    type.replace(/[-_]/g, " ");
+
+  const handleAddSection = (type: string, at: number) => {
+    const content = buildSectionContent(type, addBrief, {
+      uniqueValue: (pageData?.consultation_data as any)?.uniqueValue || consultation?.unique_value || null,
+    });
+    setSections(insertSectionAt(sections, { type, visible: true, content }, at));
+    setAddSectionOpen(false);
+    toast({ title: `${sectionTitleFor(type)} added`, description: "Replace anything in [brackets] with your own words." });
+  };
+
 
   // LivePreview inputs, memoized so the (memo'd) preview skips unrelated EditorContent renders.
   const previewIndustryVariant = useMemo(() => (// PRIORITY 1: Read from persisted pageData.design_intelligence
@@ -6096,6 +6132,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
               onSectionsChange={setSections}
               onSave={handleSave}
               onAddCalculator={() => setCalculatorUpgradeOpen(true)}
+              onAddSection={(at) => { setAddSectionAt(at); setAddSectionOpen(true); }}
               onRegenerateSection={handleRegenerateSectionWithUsage}
               isRegenerating={isRegenerating}
               actionCost={1}
@@ -6173,6 +6210,15 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           // TODO: Implement applying AI suggestions
           console.log("Apply suggestion:", suggestion);
         }}
+      />
+
+      <AddSectionDialog
+        open={addSectionOpen}
+        onOpenChange={setAddSectionOpen}
+        sections={sections}
+        defaultInsertAt={addSectionAt}
+        titleFor={sectionTitleFor}
+        onAdd={handleAddSection}
       />
 
       <StylePicker

@@ -749,8 +749,11 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
         {/* Sections with tier wrappers */}
         <div className="relative z-10">
           {sections
-            .sort((a, b) => a.order - b.order)
-            .map((section, index) => {
+            // Copy before sorting (never mutate the editor's state array) and keep
+            // each section's array index, which is what edit handlers are keyed by.
+            .map((section, arrayIndex) => ({ section, arrayIndex }))
+            .sort((a, b) => a.section.order - b.section.order)
+            .map(({ section, arrayIndex }, index) => {
               if (!section.visible) return null;
               const tier = getSectionTier(section.type, index);
               const spacing = getSectionSpacing(section.type);
@@ -767,11 +770,11 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
                   )}
                 >
                   <div className="relative z-10">
-                    {renderSection(section, index)}
+                    {renderSection(section, arrayIndex)}
                   </div>
                 </div>
               ) : (
-                renderSection(section, index)
+                renderSection(section, arrayIndex)
               );
             })}
         </div>
