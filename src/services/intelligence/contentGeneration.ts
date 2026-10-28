@@ -20,7 +20,8 @@ import { getPersonaInsights } from './personaSynthesis';
  */
 export async function generateIntelligentContent(
   consultationData: ConsultationData,
-  intelligence: PersonaIntelligence | null
+  intelligence: PersonaIntelligence | null,
+  options: { action?: 'generate_content' | 'regenerate_page' } = {}
 ): Promise<ContentGenerationResponse> {
 
   try {
@@ -59,7 +60,7 @@ export async function generateIntelligentContent(
     // Call edge function with intelligence context
     const { data, error } = await supabase.functions.invoke('generate-content', {
       body: {
-        action: 'generate_content',
+        action: options.action ?? 'generate_content',
         consultationData,
         intelligenceContext
       }
@@ -67,6 +68,9 @@ export async function generateIntelligentContent(
 
     if (error) {
       console.error('❌ Content generation failed:', error);
+      if ((error as any)?.context?.status === 402) {
+        return { success: false, error: 'limit_reached', limitReached: true } as ContentGenerationResponse;
+      }
       return { success: false, error: error.message };
     }
 
