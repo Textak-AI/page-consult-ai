@@ -12,6 +12,7 @@
  */
 
 import { 
+import { truncateAtBoundary } from '@/lib/text/truncate';
   detectIndustryVariant as detectIndustryVariantLegacy, 
   getIndustryTokens as getIndustryTokensLegacy, 
   type IndustryVariant as IndustryVariantLegacy,
@@ -705,7 +706,7 @@ export function mapBriefToSections(
         // Extract subtext - prefer uniqueValue from consultation, then intelligent headers
         const ctaSubtext = isBetaPage 
           ? '' 
-          : (consultation.uniqueValue?.slice(0, 150) || 
+          : (truncateAtBoundary(consultation.uniqueValue, 150) || 
              intelligentHeaders.cta?.subtitle || 
              intelligentHeaders.cta?.subtitle || '');
 
