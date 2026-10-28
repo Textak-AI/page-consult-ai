@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import Anthropic from "https://esm.sh/@anthropic-ai/sdk@0.30.1";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { chargeOrRefuse } from '../_shared/planLimits.ts';
 
 // Request validation
 const ConsultationDataSchema = z.object({
@@ -33,7 +35,7 @@ const MarketContextSchema = z.object({
 });
 
 const RequestSchema = z.object({
-  action: z.enum(['generate_content', 'synthesize_persona', 'regenerate_section']),
+  action: z.enum(['generate_content', 'synthesize_persona', 'regenerate_section', 'regenerate_page']),
   consultationData: ConsultationDataSchema.optional(),
   intelligenceContext: z.object({
     persona: PersonaContextSchema.partial(),
@@ -86,7 +88,25 @@ serve(async (req) => {
       return await handleContentGeneration(anthropic, consultationData, intelligenceContext, corsHeaders);
     }
 
-    if (action === 'regenerate_section') {
+    // Credit-consuming actions: authenticate and charge server-side BEFORE any AI work.
+    if (action === 'regenerate_page' || action === 'regenerate_section') {
+      const authHeader = req.headers.get('Authorization') ?? '';
+      const userClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user } } = await userClient.auth.getUser(authHeader.replace('Bearer ', ''));
+      if (!user) {
+        return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      const refused = await chargeOrRefuse(userClient, user.id,
+        action === 'regenerate_page' ? 'page_generation' : 'section_regeneration',
+        corsHeaders, { sectionType: sectionType ?? null });
+      if (refused) return refused;
+
+      if (action === 'regenerate_page') {
+        return await handleContentGeneration(anthropic, consultationData, intelligenceContext, corsHeaders);
+      }
       return await handleSectionRegeneration(anthropic, sectionType!, consultationData, intelligenceContext, currentContent, corsHeaders);
     }
 
