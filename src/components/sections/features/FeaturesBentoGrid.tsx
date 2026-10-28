@@ -78,7 +78,7 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
             lineHeight: 1.2,
             fontFamily: isSerif
               ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
-              : '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
+              : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
             letterSpacing: content.trackingStyle === 'tight' ? '-0.02em' : '0',
             textAlign: 'center' as const,
             margin: '0 auto 56px',

@@ -57,7 +57,7 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
             lineHeight: 1.15,
             fontFamily: isSerif
               ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
-              : '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
+              : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
             letterSpacing: '-0.02em',
             marginBottom: 16,
           }}

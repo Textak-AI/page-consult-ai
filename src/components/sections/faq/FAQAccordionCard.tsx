@@ -61,7 +61,7 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
           lineHeight: 1.2,
           fontFamily: content.typographyPairing === 'serif-sans'
             ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
-            : '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
+            : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
           textAlign: 'center' as const,
           margin: '0 auto 48px',
         }}>

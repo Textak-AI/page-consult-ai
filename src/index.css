@@ -1706,13 +1706,24 @@ All colors MUST be HSL.
 /* Metric-matched fallbacks for product-page section fonts, so text laid out
    before the web font arrives occupies the same space and the swap doesn't
    move content. Values from @capsizecss/metrics (DM Sans vs Arial,
-   Instrument Serif vs Times New Roman). */
+   Instrument Serif vs Times New Roman). DM Sans is an optical-size font:
+   it runs ~2% wider than Arial at body sizes and ~7.5% narrower at heading
+   sizes (opsz caps at 40), so headings use their own fallback. Ratios were
+   measured in-browser against Liberation Sans (Arial-metric). */
 @font-face {
   font-family: "DM Sans Fallback";
   src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"), local("Helvetica");
-  size-adjust: 104.53%;
-  ascent-override: 94.9%;
-  descent-override: 29.66%;
+  size-adjust: 102%;
+  ascent-override: 97.25%;
+  descent-override: 30.4%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "DM Sans Heading Fallback";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"), local("Helvetica");
+  size-adjust: 92.4%;
+  ascent-override: 107.36%;
+  descent-override: 33.55%;
   line-gap-override: 0%;
 }
 @font-face {
