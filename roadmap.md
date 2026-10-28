@@ -29,3 +29,6 @@
 - [x] View counts verified live: '0 views' rendered on the dashboard while Fernhill was published during the SEO test.
 - [x] SEO panel done: SeoPanel.tsx + SEO button in editor toolbar; persists to landing_pages under owner RLS; PublishModal prefill prefers edited values (fixed stale-snapshot overwrite on republish) and writes meta back to landing_pages on publish. Verified live: edit → publish → SPA <title> carried edited value, per-page description/og tags emitted via Helmet (static index.html fallbacks remain first in document order — stack-inherent, SSR function serves edited values to crawlers) → unpublished → original meta restored.
 - [ ] Report: Header "Dashboard" nav link points to /dashboard which has no route (404) — pre-existing, out of scope.
+- [x] Editor part 6: brand colour + font controls and hero layout switcher in the Style dialog, stored in page styles.theme / hero composition; undo, autosave, publish.
+- [ ] Post-migration candidate: "Generate Variant" (VariantGeneratorModal) — button hidden; handler only shows a "coming soon" toast.
+- [ ] Post-migration candidate: AI consultant "apply suggestion" — handler is a console.log stub; no visible button currently renders it.
