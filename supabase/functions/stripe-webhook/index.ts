@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { PLAN_ALLOWANCES, FREE_ALLOWANCE, ACTION_PACKS, planFromPriceId } from "../_shared/planLimits.ts";
 
 serve(async (req) => {
   const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
@@ -43,22 +44,10 @@ serve(async (req) => {
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  // Map price IDs to plan names using environment variables
-  const priceToplan: Record<string, string> = {
-    [Deno.env.get('STRIPE_PRICE_STARTER') || '']: 'starter',
-    [Deno.env.get('STRIPE_PRICE_FOUNDING') || '']: 'founding',
-    [Deno.env.get('STRIPE_PRICE_PRO') || '']: 'pro',
-    [Deno.env.get('STRIPE_PRICE_AGENCY') || '']: 'agency',
-  };
-
-  // Legacy price IDs for backwards compatibility
-  const legacyPrices: Record<string, string> = {
-    'price_1SfXwOFqTTK3LcBFMXRpEVcS': 'starter',
-    'price_1SfXziFqTTK3LcBFhv0PykBc': 'pro',
-  };
-
-  const getPlanFromPriceId = (priceId: string): string => {
-    return priceToplan[priceId] || legacyPrices[priceId] || 'pro';
+  const getPlanFromPriceId = (priceId: string) => {
+    const plan = planFromPriceId(priceId);
+    if (!plan) console.error(`❌ Unknown subscription price ${priceId} — no paid allowance granted`);
+    return plan;
   };
 
   try {
@@ -66,6 +55,26 @@ serve(async (req) => {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         
+        if (session.mode === 'payment') {
+          const userId = session.metadata?.user_id;
+          const priceId = session.metadata?.price_id ?? '';
+          const actions = ACTION_PACKS[priceId];
+          if (!userId || !actions) {
+            console.error('❌ Payment session without known pack price/user', { priceId, userId });
+            break;
+          }
+          if (session.payment_status !== 'paid') {
+            console.warn(`⚠️ Pack session ${session.id} not paid (${session.payment_status}) — not credited`);
+            break;
+          }
+          const { data: granted, error: packErr } = await supabase.rpc('grant_action_pack', {
+            p_session_id: session.id, p_user_id: userId, p_price_id: priceId, p_actions: actions,
+          });
+          if (packErr) throw packErr;
+          console.log(granted ? `✅ Credited ${actions} actions to ${userId}` : `↩️ Pack ${session.id} already credited`);
+          break;
+        }
+
         if (session.mode === 'subscription' && session.subscription) {
           const subscription = await stripe.subscriptions.retrieve(
             session.subscription as string
@@ -87,7 +96,7 @@ serve(async (req) => {
             stripe_subscription_id: subscription.id,
             stripe_price_id: priceId,
             status: subscription.status,
-            plan,
+            plan: plan ?? 'unknown',
             current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
             cancel_at_period_end: subscription.cancel_at_period_end,
@@ -99,8 +108,9 @@ serve(async (req) => {
           }
 
           // Also update user_usage table for backwards compatibility
-          const actionsLimit = plan === 'agency' ? 999999 : plan === 'founding' ? 999999 : plan === 'pro' ? 150 : 30;
-          const planTier = plan === 'agency' ? 'agency' : plan === 'founding' || plan === 'pro' ? 'pro' : 'starter';
+          const allowance = plan ? PLAN_ALLOWANCES[plan] : FREE_ALLOWANCE;
+          const actionsLimit = allowance.actionsLimit;
+          const planTier = allowance.tier;
 
           await supabase
             .from('user_usage')
@@ -135,7 +145,7 @@ serve(async (req) => {
             .update({
               status: subscription.status,
               stripe_price_id: priceId,
-              plan,
+              plan: plan ?? 'unknown',
               current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
               cancel_at_period_end: subscription.cancel_at_period_end,
               updated_at: new Date().toISOString(),
@@ -143,14 +153,15 @@ serve(async (req) => {
             .eq('stripe_subscription_id', subscription.id);
 
           // Update user_usage for backwards compatibility
-          const actionsLimit = plan === 'agency' ? 999999 : plan === 'founding' ? 999999 : plan === 'pro' ? 150 : 30;
-          const planTier = plan === 'agency' ? 'agency' : plan === 'founding' || plan === 'pro' ? 'pro' : 'starter';
+          const allowance = plan ? PLAN_ALLOWANCES[plan] : FREE_ALLOWANCE;
+          const actionsLimit = allowance.actionsLimit;
+          const planTier = allowance.tier;
 
           await supabase
             .from('user_usage')
             .update({
-              plan_tier: subscription.status === 'active' ? planTier : 'starter',
-              ai_actions_limit: subscription.status === 'active' ? actionsLimit : 30,
+              plan_tier: subscription.status === 'active' ? planTier : FREE_ALLOWANCE.tier,
+              ai_actions_limit: subscription.status === 'active' ? actionsLimit : FREE_ALLOWANCE.actionsLimit,
               updated_at: new Date().toISOString(),
             })
             .eq('user_id', existingSub.user_id);
@@ -182,8 +193,8 @@ serve(async (req) => {
           await supabase
             .from('user_usage')
             .update({
-              plan_tier: 'starter',
-              ai_actions_limit: 30,
+              plan_tier: FREE_ALLOWANCE.tier,
+              ai_actions_limit: FREE_ALLOWANCE.actionsLimit,
               stripe_subscription_id: null,
               updated_at: new Date().toISOString(),
             })
