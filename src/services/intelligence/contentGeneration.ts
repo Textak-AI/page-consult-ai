@@ -69,7 +69,7 @@ export async function generateIntelligentContent(
     if (error) {
       console.error('❌ Content generation failed:', error);
       if ((error as any)?.context?.status === 402) {
-        return { success: false, error: 'limit_reached', limitReached: true } as ContentGenerationResponse;
+        return { success: false, error: 'limit_reached', limitReached: true };
       }
       return { success: false, error: error.message };
     }

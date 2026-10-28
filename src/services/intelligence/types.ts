@@ -263,4 +263,6 @@ export interface ContentGenerationResponse {
   content?: GeneratedContent;
   log?: GenerationLog;
   error?: string;
+  /** Server refused: AI-action allowance exhausted (HTTP 402). */
+  limitReached?: boolean;
 }

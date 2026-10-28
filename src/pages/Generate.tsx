@@ -5183,8 +5183,11 @@ function GenerateContent() {
           uniqueValue: consultationData.unique_value,
           offer: consultationData.offer,
         },
-        intelligence
+        intelligence,
+        { action: 'regenerate_page' }
       );
+
+      if (result.limitReached) return 'limit_reached';
 
       if (result.success && result.content) {
         const newSections = await mapGeneratedContentToSections(result.content, consultationData);
@@ -5326,6 +5329,7 @@ function GenerateContent() {
         }
       });
       
+      if ((error as any)?.context?.status === 402) return 'limit_reached';
       if (error) throw error;
       
       if (data?.success && data?.content) {
@@ -5603,7 +5607,7 @@ function EditorContent({
   const [pendingAction, setPendingAction] = useState<{
     type: AIActionType;
     cost: number;
-    callback: () => void;
+    callback: () => unknown;
     sectionType?: string;
   } | null>(null);
 const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
@@ -5639,18 +5643,42 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
     }
   }, [pageBuilder.isConversionReady, hasShownConversionReady]);
 
+  // Actions charged server-side by the edge function itself (never double-charge from the client).
+  const SERVER_CHARGED: AIActionType[] = ['page_generation', 'section_regeneration'];
+
+  // Runs the action; for server-charged actions the edge function deducts credits and
+  // returns 'limit_reached' (HTTP 402) when the allowance is exhausted.
+  const runAction = async (actionType: AIActionType, callback: () => unknown, sectionType?: string) => {
+    if (SERVER_CHARGED.includes(actionType)) {
+      const outcome = await callback();
+      await aiActions.refreshUsage();
+      if (outcome === 'limit_reached') setZeroBalanceModalOpen(true);
+      return;
+    }
+    const result = await aiActions.trackAction(actionType, pageData?.id, sectionType);
+    if (result.allowed) {
+      await callback();
+    } else {
+      setZeroBalanceModalOpen(true);
+    }
+  };
+
   // Wrapper function to check and track AI actions
   const executeWithUsageCheck = async (
     actionType: AIActionType,
-    callback: () => void,
+    callback: () => unknown,
     sectionType?: string
   ) => {
-    // DEV MODE or Agency tier: Always allow, skip confirmation
+    // DEV MODE or Agency tier: skip confirmation (server still records/enforces)
     if (aiActions.devMode || aiActions.isUnlimited) {
       if (aiActions.devMode) {
-        console.log(`[DEV MODE] Executing ${actionType} without credit check`);
+        console.log(`[DEV MODE] Executing ${actionType} without client credit check`);
       }
-      callback();
+      if (SERVER_CHARGED.includes(actionType)) {
+        await runAction(actionType, callback, sectionType);
+      } else {
+        await callback();
+      }
       return;
     }
 
@@ -5661,18 +5689,11 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
       return;
     }
 
-    // Skip confirmation if user opted out
     if (aiActions.dontShowConfirm) {
-      const result = await aiActions.trackAction(actionType, pageData?.id, sectionType);
-      if (result.allowed) {
-        callback();
-      } else {
-        setZeroBalanceModalOpen(true);
-      }
+      await runAction(actionType, callback, sectionType);
       return;
     }
 
-    // Show confirmation modal
     setPendingAction({
       type: actionType,
       cost: check.cost,
@@ -5684,22 +5705,10 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
 
   const handleConfirmAction = async () => {
     if (!pendingAction) return;
-    
     setConfirmModalOpen(false);
-    
-    const result = await aiActions.trackAction(
-      pendingAction.type,
-      pageData?.id,
-      pendingAction.sectionType
-    );
-    
-    if (result.allowed) {
-      pendingAction.callback();
-    } else {
-      setZeroBalanceModalOpen(true);
-    }
-    
+    const action = pendingAction;
     setPendingAction(null);
+    await runAction(action.type, action.callback, action.sectionType);
   };
 
   // Wrapped handlers with usage tracking
@@ -6142,7 +6151,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         onRegenerate={async (updatedData) => {
           // Trigger page regeneration with updated data
           console.log('Regenerating with updated brief:', updatedData);
-          handleRegenerate();
+          handleRegenerateWithUsage();
         }}
         onOpenChange={setStrategyBriefOpen}
       />
