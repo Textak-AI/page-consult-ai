@@ -608,6 +608,30 @@ export type Database = {
           },
         ]
       }
+      credit_pack_grants: {
+        Row: {
+          actions: number
+          created_at: string
+          price_id: string
+          stripe_session_id: string
+          user_id: string
+        }
+        Insert: {
+          actions: number
+          created_at?: string
+          price_id: string
+          stripe_session_id: string
+          user_id: string
+        }
+        Update: {
+          actions?: number
+          created_at?: string
+          price_id?: string
+          stripe_session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       demo_leads: {
         Row: {
           converted_to_user: boolean | null
@@ -2036,6 +2060,15 @@ export type Database = {
         }[]
       }
       get_public_landing_page: { Args: { page_slug: string }; Returns: Json }
+      grant_action_pack: {
+        Args: {
+          p_actions: number
+          p_price_id: string
+          p_session_id: string
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       grant_grace_actions: { Args: { p_user_id: string }; Returns: Json }
       has_role: {
         Args: {
