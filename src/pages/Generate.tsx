@@ -5304,9 +5304,7 @@ function GenerateContent() {
             ? { ...section, content: { ...section.content, ...data.content } }
             : section
         ));
-        
-        // Save to undo history
-        pushHistory(sections);
+        // Captured automatically by the editor session history.
         
         toast({
           title: 'Section Regenerated',

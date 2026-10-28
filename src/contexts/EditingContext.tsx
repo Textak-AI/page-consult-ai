@@ -17,7 +17,7 @@ interface EditingContextType {
   pageStyle: PageStyle;
   setPageStyle: (style: PageStyle) => void;
   styles: StylePreset;
-  // History management
+  // DEPRECATED: editor undo lives in useEditorSession; kept for compatibility.
   history: Section[][];
   historyIndex: number;
   canUndo: boolean;
