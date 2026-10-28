@@ -29,14 +29,14 @@ export default function ProblemSolutionTwoColumn({ content, onUpdate, isEditing 
     letterSpacing: '0.2em',
     color: primaryColor,
     marginBottom: 16,
-    fontFamily: '"DM Sans", system-ui, sans-serif',
+    fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
   };
 
   const bodyStyle: React.CSSProperties = {
     fontSize: 15,
     lineHeight: 1.7,
     color: bgStyles.textMuted,
-    fontFamily: '"DM Sans", system-ui, sans-serif',
+    fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
     margin: 0,
   };
 

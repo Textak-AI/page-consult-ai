@@ -26,13 +26,13 @@ export default function ProblemSolutionReliefArc({ content, onUpdate, isEditing 
     textTransform: 'uppercase',
     letterSpacing: '0.2em',
     marginBottom: 16,
-    fontFamily: '"DM Sans", system-ui, sans-serif',
+    fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
   };
 
   const bodyStyle: React.CSSProperties = {
     fontSize: 16,
     lineHeight: 1.75,
-    fontFamily: '"DM Sans", system-ui, sans-serif',
+    fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
     margin: 0,
   };
 

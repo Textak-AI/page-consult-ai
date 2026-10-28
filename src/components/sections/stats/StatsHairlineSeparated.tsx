@@ -80,7 +80,7 @@ export default function StatsHairlineSeparated({ content, onUpdate, isEditing }:
                 fontWeight: 600,
                 color: primaryColor,
                 letterSpacing: '-0.02em',
-                fontFamily: '"DM Sans", system-ui, sans-serif',
+                fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
@@ -97,7 +97,7 @@ export default function StatsHairlineSeparated({ content, onUpdate, isEditing }:
                 color: bgStyles.textMuted,
                 marginTop: 8,
                 lineHeight: 1.4,
-                fontFamily: '"DM Sans", system-ui, sans-serif',
+                fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
               }}
             >
               {stat.label}

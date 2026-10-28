@@ -60,7 +60,7 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
           color: primaryColor,
           textAlign: 'center' as const,
           marginBottom: 16,
-          fontFamily: '"DM Sans", system-ui, sans-serif',
+          fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
         }}>
           {content.sectionLabel || content.eyebrow || 'Capabilities'}
         </div>
@@ -77,8 +77,8 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
             color: bgStyles.text,
             lineHeight: 1.2,
             fontFamily: isSerif
-              ? '"Instrument Serif", Georgia, serif'
-              : '"DM Sans", system-ui, sans-serif',
+              ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif'
+              : '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
             letterSpacing: content.trackingStyle === 'tight' ? '-0.02em' : '0',
             textAlign: 'center' as const,
             margin: '0 auto 56px',
@@ -130,7 +130,7 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
                   color: bgStyles.text,
                   margin: '0 0 8px',
                   letterSpacing: '-0.01em',
-                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                  fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                 }}
               >
                 {feature.title}
@@ -146,7 +146,7 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
                   lineHeight: 1.6,
                   color: bgStyles.textMuted,
                   margin: 0,
-                  fontFamily: '"DM Sans", system-ui, sans-serif',
+                  fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                 }}
               >
                 {feature.description}

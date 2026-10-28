@@ -128,7 +128,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
             fontWeight: headingWeight,
             letterSpacing: trackingValue,
             fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
-            fontFamily: isSerif ? '"Instrument Serif", Georgia, "Times New Roman", serif' : '"DM Sans", system-ui, sans-serif',
+            fontFamily: isSerif ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, "Times New Roman", serif' : '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
           }}
         >
           {content.headline}
@@ -140,7 +140,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
           suppressContentEditableWarning
           onBlur={(e) => handleBlur('subheadline', e)}
           className={`max-w-2xl mx-auto leading-relaxed mb-12 text-lg md:text-xl ${isEditing ? 'outline-dashed outline-2 outline-cyan-500/30 rounded px-2' : ''}`}
-          style={{ color: bgStyles.textMuted, fontFamily: '"DM Sans", system-ui, sans-serif' }}
+          style={{ color: bgStyles.textMuted, fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif' }}
         >
           {content.subheadline}
         </p>
