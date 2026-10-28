@@ -243,6 +243,7 @@ export default function EnhancedBrandSetup() {
   // Logo audit: every logo source (extraction, saved data, upload) passes the same check before it is accepted.
   const [logoRejection, setLogoRejection] = useState<string | null>(null);
   const [continueWithoutLogo, setContinueWithoutLogo] = useState(false);
+  const [logoSearchFailed, setLogoSearchFailed] = useState(false);
   const logoRequestRef = useRef(0);
   const setLogo = useCallback((url: string | null) => {
     const req = ++logoRequestRef.current;
@@ -250,7 +251,7 @@ export default function EnhancedBrandSetup() {
     void auditLogo(url).then((v) => {
       if (req !== logoRequestRef.current) return;
       if (v.ok) { setLogoRaw(url); setLogoRejection(null); setContinueWithoutLogo(false); }
-      else { setLogoRaw(null); setLogoRejection(v.reason ? LOGO_REJECTION_TEXT[v.reason] : null); }
+      else { setLogoRaw(null); setLogoSearchFailed(true); setLogoRejection(v.reason ? LOGO_REJECTION_TEXT[v.reason] : null); }
     });
   }, []);
   const [colors, setColors] = useState(DEFAULT_COLORS);
@@ -1963,7 +1964,7 @@ export default function EnhancedBrandSetup() {
                 </div>
               </div>
 
-              {!logo && !continueWithoutLogo && (
+              {!logo && logoSearchFailed && !continueWithoutLogo && (
                 <div className="mb-4 rounded-xl border border-slate-700 bg-slate-900/40 p-4" data-testid="no-usable-logo">
                   <p className="text-sm font-medium text-white">We couldn't find a usable logo</p>
                   {logoRejection && <p className="mt-1 text-xs text-slate-400">{logoRejection}</p>}
@@ -1977,7 +1978,7 @@ export default function EnhancedBrandSetup() {
                   </button>
                 </div>
               )}
-              {!logo && continueWithoutLogo && (
+              {!logo && logoSearchFailed && continueWithoutLogo && (
                 <p className="mb-4 text-sm text-slate-400" data-testid="continuing-without-logo">Continuing without a logo. You can still upload one below.</p>
               )}
               {!logo ? (
