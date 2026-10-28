@@ -1,3 +1,4 @@
+import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Rocket, Check, Loader2, Users } from 'lucide-react';
@@ -32,6 +33,7 @@ interface Props {
 }
 
 export function HeroTeaserSection({ content, onEmailSubmit, styles }: Props) {
+  const usableLogo = useUsableLogo(content.logoUrl);
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -118,9 +120,9 @@ export function HeroTeaserSection({ content, onEmailSubmit, styles }: Props) {
       {/* Content */}
       <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
         {/* Logo */}
-        {content.logoUrl && (
+        {usableLogo && (
           <motion.img
-            src={content.logoUrl}
+            src={usableLogo}
             alt="Logo"
             className={`h-12 mx-auto mb-8${shouldInvertLogo(content.logoUrl) ? ' brightness-0 invert' : ''}`}
             initial={{ opacity: 0, y: -20 }}

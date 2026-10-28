@@ -1,3 +1,4 @@
+import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeClass } from '@/lib/design/tokens';
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -35,6 +36,7 @@ export function BetaHeroTeaserSection({
   onEmailSubmit,
   isEditing 
 }: BetaHeroTeaserSectionProps) {
+  const usableLogo = useUsableLogo(content.logoUrl);
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -111,14 +113,14 @@ export function BetaHeroTeaserSection({
         <div className="flex flex-col items-center gap-8">
           
           {/* Logo */}
-          {content.logoUrl && (
+          {usableLogo && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
               <img 
-                src={content.logoUrl} 
+                src={usableLogo} 
                 alt="Company logo" 
                 className={`h-12 md:h-16 object-contain${shouldInvertLogo(content.logoUrl) ? ' brightness-0 invert' : ''}`}
                 onError={(e) => {
