@@ -49,6 +49,7 @@ import { ConsultantChat } from '@/components/consultation/ConsultantChat';
 import { LockedSectionOverlay } from '@/components/sections/LockedSectionOverlay';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Trophy, Share2, Search, Palette } from 'lucide-react';
+import { DevicePreviewFrame, DeviceToggle, type PreviewDevice } from '@/components/editor/DevicePreviewFrame';
 import confetti from 'canvas-confetti';
 import { StylePresetName } from "@/styles/presets";
 import {
@@ -5577,6 +5578,8 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
 
   // Add Section menu: content comes from the saved strategy brief when present.
   const [addSectionOpen, setAddSectionOpen] = useState(false);
+  // Per-session editor convenience; never persisted to the page.
+  const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
   const [addSectionAt, setAddSectionAt] = useState<number | undefined>(undefined);
   const [addBrief, setAddBrief] = useState<BriefSource | null>(null);
   useEffect(() => {
@@ -6140,6 +6143,11 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           </div>
         </div>
         
+<div className="flex-1 min-w-0 flex flex-col relative">
+        <div className="absolute top-2 right-3 z-30">
+          <DeviceToggle value={previewDevice} onChange={setPreviewDevice} />
+        </div>
+        <DevicePreviewFrame device={previewDevice}>
 <LivePreview 
           sections={sections} 
           onSectionsChange={setSections} 
@@ -6150,6 +6158,8 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           brandSettings={previewBrandSettings}
           getSectionLockStatus={pageBuilder.getSectionLockStatus}
         />
+        </DevicePreviewFrame>
+        </div>
       </div>
 
       {/* Strategy Brief Panel - Fixed to right edge */}
