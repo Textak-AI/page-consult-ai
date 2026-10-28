@@ -92,14 +92,15 @@ function EmulatedViewport({ width, children }: { width: number; children: ReactN
   }, []);
 
   return (
+    <>
     <iframe
       ref={iframeRef}
       title="Device preview"
       className="h-full border-x border-border bg-background"
       style={{ width, maxWidth: "100%" }}
-    >
-      {mount && createPortal(children, mount)}
-    </iframe>
+    />
+    {mount && createPortal(children, mount)}
+    </>
   );
 }
 
