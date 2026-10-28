@@ -1,3 +1,4 @@
+import { PageBuildCost } from '@/components/usage/PageBuildCost';
 import { consultationAccess } from '@/lib/consultationAccess';
 import { briefObjectValue } from "@/lib/briefEnvelope";
 import { useState, useEffect, useMemo } from 'react';
@@ -1122,6 +1123,7 @@ export default function StrategyDocument() {
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
+            <PageBuildCost className="mt-3" />
           </div>
         </section>
       </main>

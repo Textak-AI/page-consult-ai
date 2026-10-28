@@ -29,6 +29,9 @@ const ACTION_LABELS: Record<string, string> = {
   ai_improvement: 'AI Improvement',
   intelligence_refresh: 'Refresh Intelligence',
   style_change: 'Change Style',
+  section_chat: 'Section AI Chat',
+  image_generation: 'Generate Image',
+  prospect_page: 'QuickPivot Prospect Page',
 };
 
 export function ActionConfirmModal({

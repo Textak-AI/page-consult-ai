@@ -15,6 +15,10 @@ export const ACTION_COSTS = {
   ai_improvement: 1,
   intelligence_refresh: 2,
   style_change: 1,
+  page_build: 3,
+  section_chat: 1,
+  image_generation: 2,
+  prospect_page: 2,
 } as const;
 
 export type ExtendedActionType = keyof typeof ACTION_COSTS;

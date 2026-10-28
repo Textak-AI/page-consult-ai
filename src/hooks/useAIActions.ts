@@ -7,7 +7,10 @@ export type AIActionType =
   | 'section_regeneration' 
   | 'ai_improvement' 
   | 'intelligence_refresh' 
-  | 'style_change';
+  | 'style_change'
+  | 'section_chat'
+  | 'image_generation'
+  | 'prospect_page';
 
 export type PlanTier = 'starter' | 'pro' | 'agency';
 
@@ -46,6 +49,9 @@ const ACTION_COSTS: Record<AIActionType, number> = {
   ai_improvement: 1,
   intelligence_refresh: 2,
   style_change: 1,
+  section_chat: 1,
+  image_generation: 2,
+  prospect_page: 2,
 };
 
 export function useAIActions(userId: string | null, userEmail?: string | null) {
@@ -61,7 +67,7 @@ export function useAIActions(userId: string | null, userEmail?: string | null) {
   const available = devMode 
     ? DEV_MODE_CREDITS 
     : (usage 
-        ? (usage.ai_actions_limit ?? 30) - usage.ai_actions_used + usage.ai_actions_rollover 
+        ? Math.max((usage.ai_actions_limit ?? 30) - usage.ai_actions_used, 0) + usage.ai_actions_rollover + ((usage as any).actions_purchased ?? 0) 
         : 0);
   
   const limit = devMode ? DEV_MODE_CREDITS : (usage?.ai_actions_limit ?? 30);

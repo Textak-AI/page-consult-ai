@@ -36,6 +36,9 @@ const ACTION_ICONS: Record<AIActionType, typeof Zap> = {
   ai_improvement: Wand2,
   intelligence_refresh: Brain,
   style_change: Palette,
+  section_chat: Wand2,
+  image_generation: Palette,
+  prospect_page: FileText,
 };
 
 const ACTION_LABELS: Record<AIActionType, string> = {
@@ -44,6 +47,9 @@ const ACTION_LABELS: Record<AIActionType, string> = {
   ai_improvement: 'AI improvement',
   intelligence_refresh: 'Refreshed intelligence',
   style_change: 'Changed style',
+  section_chat: 'Section AI chat',
+  image_generation: 'Generated image',
+  prospect_page: 'QuickPivot prospect page',
 };
 
 export function UsageHistoryModal({
