@@ -36,7 +36,6 @@ import AILoaderPreview from "./pages/AILoaderPreview";
 import IntroPreview from "./pages/IntroPreview";
 import DesignSystemTest from "./pages/DesignSystemTest";
 import TestPage from "./pages/TestPage";
-import HeroHarness from "./pages/HeroHarness";
 import Settings from "./pages/Settings";
 import BrandSetup from "./pages/BrandSetup";
 import TestimonialRequest from "./pages/TestimonialRequest";
@@ -148,7 +147,6 @@ const App = () => {
                 <Route path="/intro-preview" element={<IntroPreview />} />
                 <Route path="/design-system-test" element={<DesignSystemTest />} />
                 <Route path="/test-page" element={<TestPage />} />
-                <Route path="/__hero-harness" element={<HeroHarness />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/settings/brand" element={<Settings />} />
                 <Route path="/review/:businessSlug" element={<TestimonialRequest />} />
