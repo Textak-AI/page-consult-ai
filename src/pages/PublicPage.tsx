@@ -66,6 +66,10 @@ export default function PublicPage() {
         return;
       }
 
+      // Badge decision is made server-side from the page owner's plan.
+      const badgePromise = supabase.rpc('page_shows_badge', { page_slug: slug })
+        .then(({ data, error }) => (error || typeof data !== 'boolean' ? true : data));
+
       try {
         // First check published_pages table (new snapshot-based system)
         const { data: publishedData } = await supabase
@@ -102,6 +106,7 @@ export default function PublicPage() {
               brandColors: { primary: bs.primaryColor },
             };
           }
+          setShowBadge(await badgePromise);
           setPage(mapped);
           setPublishedPageId(publishedData.id);
           supabase.rpc('increment_published_page_view', { page_slug: slug } as any).then(() => {});
@@ -124,6 +129,7 @@ export default function PublicPage() {
             hasDesignIntelligence: !!directData.design_intelligence,
             colorMode: (directData.design_intelligence as any)?.colorMode,
           });
+          setShowBadge(await badgePromise);
           setPage(directData as ExtendedPublicPage);
           
           // Track the view (fire and forget)
@@ -144,6 +150,7 @@ export default function PublicPage() {
         }
 
         const pageData = rpcData as unknown as PublicLandingPage;
+        setShowBadge(await badgePromise);
         setPage(pageData as ExtendedPublicPage);
 
         // Track the view (fire and forget)
@@ -244,6 +251,7 @@ export default function PublicPage() {
       brandSettings={brandSettings}
       businessName={page.consultation_data?.businessName || null}
       showPoweredBy={true}
+      showBadge={showBadge}
       publishedPageId={publishedPageId}
     />
   );
