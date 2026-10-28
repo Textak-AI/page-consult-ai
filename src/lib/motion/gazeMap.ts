@@ -31,13 +31,16 @@ const visible = (el: Element) => {
 };
 
 /** Top-down, then left-to-right reading order. */
-export const readingOrder = (els: HTMLElement[]) =>
-  [...els].sort((a, b) => {
-    const ra = a.getBoundingClientRect();
-    const rb = b.getBoundingClientRect();
+export const readingOrder = (els: HTMLElement[]) => {
+  // Read each rect once (sort would otherwise measure O(n log n) times).
+  const rects = new Map(els.map((el) => [el, el.getBoundingClientRect()]));
+  return [...els].sort((a, b) => {
+    const ra = rects.get(a)!;
+    const rb = rects.get(b)!;
     if (Math.abs(ra.top - rb.top) > 8) return ra.top - rb.top;
     return ra.left - rb.left;
   });
+};
 
 const all = (root: HTMLElement, sel: string) =>
   Array.from(root.querySelectorAll<HTMLElement>(sel)).filter(visible);
