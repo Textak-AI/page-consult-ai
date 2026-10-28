@@ -254,6 +254,10 @@ export default function EnhancedBrandSetup() {
       else { setLogoRaw(null); setLogoSearchFailed(true); setLogoRejection(v.reason ? LOGO_REJECTION_TEXT[v.reason] : null); }
     });
   }, []);
+  // Website extraction finished (with or without a logo) → the "no usable logo" state may apply.
+  useEffect(() => {
+    if (extractionResults || extractionError) setLogoSearchFailed(true);
+  }, [extractionResults, extractionError]);
   const [colors, setColors] = useState(DEFAULT_COLORS);
   const [fontSettings, setFontSettings] = useState({
     h1: 'Inter',
