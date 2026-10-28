@@ -18,21 +18,18 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
     const root = ref.current;
     if (!root || prefersReducedMotion() || typeof IntersectionObserver === 'undefined') return;
 
-    const beats = resolveGazeOrder(root, sectionType);
-    const els = beats.flat();
-    if (!els.length) return;
+    // Mount does a single style write and no layout reads. DOM measurement
+    // (resolveGazeOrder) is deferred until the section actually scrolls into
+    // view, so loading a page never runs layout-thrashing work for every
+    // section synchronously before first paint.
+    root.style.opacity = '0';
 
     const reset = (el: HTMLElement) => {
       el.style.opacity = '';
       el.style.transform = '';
       el.style.willChange = '';
     };
-    els.forEach((el) => {
-      el.style.opacity = '0';
-      el.style.transform = `translateY(${MOTION.distance}px)`;
-      el.style.willChange = 'opacity, transform';
-    });
-
+    let els: HTMLElement[] = [];
     const controls: { stop: () => void }[] = [];
     let played = false;
     const io = new IntersectionObserver(
@@ -40,6 +37,15 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
         if (played || !entries.some((e) => e.isIntersecting)) return;
         played = true;
         io.disconnect();
+        const beats = resolveGazeOrder(root, sectionType);
+        els = beats.flat();
+        // Hide children and unhide the wrapper in the same frame: no flash.
+        els.forEach((el) => {
+          el.style.opacity = '0';
+          el.style.transform = `translateY(${MOTION.distance}px)`;
+          el.style.willChange = 'opacity, transform';
+        });
+        root.style.opacity = '';
         beats.forEach((beat, i) =>
           beat.forEach((el) => {
             const c = animate(
@@ -60,6 +66,7 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
       io.disconnect();
       controls.forEach((c) => c.stop());
       els.forEach(reset);
+      root.style.opacity = '';
     };
     // Play once per mount; content edits after reveal are not re-hidden.
     // eslint-disable-next-line react-hooks/exhaustive-deps
