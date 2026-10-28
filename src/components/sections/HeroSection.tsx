@@ -474,7 +474,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
         }}
       >
         {/* Minimal Top Nav Bar */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-8 py-5">
+        <div className="relative md:absolute md:top-0 md:left-0 md:right-0 z-20 flex items-center justify-between gap-4 px-6 md:px-8 py-5">
           <span className="text-white font-bold text-lg">
             {(content as any).companyName || 'Product'}
           </span>
@@ -531,7 +531,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
         )}
         
         {/* Content - Centered with max width */}
-        <div className="relative max-w-5xl mx-auto px-6 pt-24 pb-16 md:pb-32 z-10 text-center flex-1 flex flex-col justify-center">
+        <div className="relative max-w-5xl mx-auto px-6 pt-8 md:pt-24 pb-16 md:pb-32 z-10 text-center flex-1 flex flex-col justify-center">
           {/* Logo - only show standalone in editing mode (nav bar handles display mode) */}
           {isEditing && (
             <div className="mb-8">
