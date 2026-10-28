@@ -48,14 +48,14 @@ export function PageFooter({
           </div>
           
           {/* Links */}
-          <div className="flex flex-wrap items-center justify-center gap-x-1 text-sm text-slate-500">
+          <div className={`flex flex-wrap items-center justify-center gap-x-1 gap-y-1 text-sm text-slate-500 ${isUserBrand ? "flex-col sm:flex-row" : ""}`}>
             <span>© {currentYear} {isUserBrand ? displayName : 'Hyperbrand Creative, Ltd'}</span>
             
             {/* Show powered by when using user's brand */}
             {isUserBrand && showPoweredBy && (
               <>
                 <span className="whitespace-nowrap">
-                <span className="mx-2">•</span>
+                <span className="mx-2 hidden sm:inline">•</span>
                 <span className="text-slate-600">
                   Powered by{' '}
                   <a 
