@@ -96,7 +96,7 @@ function EmulatedViewport({ width, children }: { width: number; children: ReactN
     <iframe
       ref={iframeRef}
       title="Device preview"
-      className="h-full border-x border-border bg-background"
+      className="h-full box-content border-x border-border bg-background"
       style={{ width, maxWidth: "100%" }}
     />
     {mount && createPortal(children, mount)}
