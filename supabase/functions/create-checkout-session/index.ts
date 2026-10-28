@@ -1,3 +1,4 @@
+import { validSubscriptionPriceIds } from '../_shared/planLimits.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -39,12 +40,7 @@ serve(async (req) => {
     console.log("Creating checkout session for user:", user.id, "price:", priceId);
 
     // Validate price ID against environment variables
-    const validPrices = [
-      Deno.env.get("STRIPE_PRICE_STARTER"),
-      Deno.env.get("STRIPE_PRICE_FOUNDING"),
-      Deno.env.get("STRIPE_PRICE_PRO"),
-      Deno.env.get("STRIPE_PRICE_AGENCY"),
-    ].filter(Boolean);
+    const validPrices = validSubscriptionPriceIds();
 
     if (!validPrices.includes(priceId)) {
       throw new Error("Invalid price ID");

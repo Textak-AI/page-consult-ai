@@ -3,13 +3,8 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
-const STRIPE_PRICES = {
-  pro_monthly: 'price_1SfXwOFqTTK3LcBFMXRpEVcS',
-  agency_monthly: 'price_1SfXziFqTTK3LcBFhv0PykBc',
-  actions_10: 'price_1SfXziFqTTK3LcBFAuEAkGCN',
-  actions_25: 'price_1SfXziFqTTK3LcBFS8DPaQoe',
-  actions_50: 'price_1SfXziFqTTK3LcBFw64XlRyF',
-};
+import { ACTION_PACKS, validSubscriptionPriceIds } from '../_shared/planLimits.ts';
+import { createClient as createServiceClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 serve(async (req) => {
   console.log('🛒 Stripe checkout request received');
@@ -67,7 +62,8 @@ serve(async (req) => {
     console.log('📋 Checkout request:', { priceId, mode, userId: user.id });
 
     // Validate price ID
-    const validPriceIds = Object.values(STRIPE_PRICES);
+    const isPack = priceId in ACTION_PACKS;
+    const validPriceIds = [...Object.keys(ACTION_PACKS), ...validSubscriptionPriceIds()];
     if (!validPriceIds.includes(priceId)) {
       return new Response(JSON.stringify({ error: 'Invalid price ID' }), {
         status: 400,
@@ -94,7 +90,9 @@ serve(async (req) => {
       });
       customerId = customer.id;
 
-      const { error: updateError } = await supabase
+      // Billing columns are server-only (guard trigger) — write with the service role.
+      const admin = createServiceClient(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+      const { error: updateError } = await admin
         .from('user_usage')
         .update({ stripe_customer_id: customerId })
         .eq('user_id', user.id);
@@ -107,7 +105,8 @@ serve(async (req) => {
     }
 
     // Determine checkout mode
-    const checkoutMode = mode === 'subscription' ? 'subscription' : 'payment';
+    // Mode derives from the price, never the client
+    const checkoutMode = isPack ? 'payment' : 'subscription';
 
     console.log('🔧 Creating checkout session...');
     // Create checkout session
