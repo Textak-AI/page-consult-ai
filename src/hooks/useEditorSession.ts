@@ -2,12 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import * as H from '@/lib/editor/history';
 import { stylePresets, type StylePresetName } from '@/styles/presets';
+import { cleanTheme, type PageTheme } from '@/lib/editor/pageTheme';
 
 export type SaveStatus = 'saved' | 'unsaved' | 'saving' | 'failed';
 
 interface Snapshot {
   sections: any[];
   pageStyle: StylePresetName;
+  theme: PageTheme;
 }
 
 const HISTORY_COALESCE_MS = 400;
@@ -29,12 +31,14 @@ export function useEditorSession(opts: {
   setSections: (s: any[]) => void;
   pageStyle: StylePresetName;
   setPageStyle: (s: StylePresetName) => void;
+  theme: PageTheme;
+  setTheme: (t: PageTheme) => void;
 }) {
-  const { active, pageId, sections, pageStyle } = opts;
+  const { active, pageId, sections, pageStyle, theme } = opts;
 
   // ---- latest state (read by save; updated synchronously by setSectionsNow) ----
-  const latest = useRef<Snapshot>({ sections, pageStyle });
-  latest.current = { sections, pageStyle };
+  const latest = useRef<Snapshot>({ sections, pageStyle, theme });
+  latest.current = { sections, pageStyle, theme };
   const baseStylesRef = useRef(opts.baseStyles);
   baseStylesRef.current = opts.baseStyles;
   const pageIdRef = useRef(pageId);
@@ -47,7 +51,7 @@ export function useEditorSession(opts: {
   const pendingRecord = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initializedFor = useRef<string | null>(null);
 
-  const serialize = (s: Snapshot) => JSON.stringify({ sections: s.sections, pageStyle: s.pageStyle });
+  const serialize = (s: Snapshot) => JSON.stringify({ sections: s.sections, pageStyle: s.pageStyle, theme: s.theme });
 
   const flushRecord = useCallback(() => {
     if (pendingRecord.current) clearTimeout(pendingRecord.current);
@@ -83,7 +87,7 @@ export function useEditorSession(opts: {
           .from('landing_pages')
           .update({
             sections: snap.sections,
-            styles: { ...(baseStylesRef.current || {}), pagePreset: snap.pageStyle },
+            styles: { ...(baseStylesRef.current || {}), pagePreset: snap.pageStyle, theme: snap.theme },
             updated_at: new Date().toISOString(),
           })
           .eq('id', id)
@@ -111,7 +115,9 @@ export function useEditorSession(opts: {
     const saved = opts.baseStyles?.pagePreset;
     const style = isPreset(saved) ? saved : pageStyle;
     if (style !== pageStyle) opts.setPageStyle(style);
-    latest.current = { sections, pageStyle: style };
+    const savedTheme = cleanTheme(opts.baseStyles?.theme);
+    opts.setTheme(savedTheme);
+    latest.current = { sections, pageStyle: style, theme: savedTheme };
     const json = serialize(latest.current);
     lastSaved.current = json;
     const h = H.resetHistory(json);
@@ -134,7 +140,7 @@ export function useEditorSession(opts: {
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => void saveNow(), AUTOSAVE_MS);
     }
-  }, [sections, pageStyle, active, pageId, flushRecord, saveNow]);
+  }, [sections, pageStyle, theme, active, pageId, flushRecord, saveNow]);
 
   const apply = (h: H.History) => {
     historyRef.current = h;
@@ -144,6 +150,7 @@ export function useEditorSession(opts: {
     latest.current = snap;
     opts.setSections(snap.sections);
     opts.setPageStyle(snap.pageStyle);
+    opts.setTheme(snap.theme || {});
   };
 
   const undo = useCallback(() => {
