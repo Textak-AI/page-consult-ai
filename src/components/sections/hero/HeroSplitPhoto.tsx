@@ -1,3 +1,4 @@
+import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeScale, typeClass, shape } from '@/lib/design/tokens';
 /**
  * HeroSplitPhoto — Emotional Connector / Warmth hero
@@ -18,6 +19,8 @@ interface HeroSplitPhotoProps {
 
 export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSplitPhotoProps) {
   const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'light', content.primaryColor);
+  // Render-time logo guard: a missing/broken/blank logo collapses the slot.
+  const usableLogo = useUsableLogo(content.logoUrl);
   const primaryColor = content.primaryColor || '#6366F1';
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
@@ -54,9 +57,9 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
           {/* Text content — left 55% */}
           <div className="lg:col-span-7 space-y-8">
             {/* Logo */}
-            {content.logoUrl ? (
+            {usableLogo ? (
               <img
-                src={content.logoUrl}
+                src={usableLogo}
                 alt={content.businessName || 'Logo'}
                 className="h-10 md:h-12 mb-4"
               />
@@ -168,9 +171,9 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
                   className="absolute w-32 h-32 rounded-full blur-xl"
                   style={{ backgroundColor: `${primaryColor}20`, bottom: '25%', right: '15%' }}
                 />
-                {content.logoUrl && (
+                {usableLogo && (
                   <img
-                    src={content.logoUrl}
+                    src={usableLogo}
                     alt=""
                     className="relative z-10 h-16 md:h-20 opacity-30"
                   />

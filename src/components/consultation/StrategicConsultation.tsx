@@ -422,7 +422,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       // Apply brand settings from extracted brand
       if (extractedBrand?.themeColor || extractedBrand?.logoUrl) {
         initial.brandSettings = {
-          logoUrl: extractedBrand.logoUrl || extractedBrand.faviconUrl || null,
+          logoUrl: extractedBrand.logoUrl || null,
           primaryColor: extractedBrand.themeColor || '',
           secondaryColor: extractedBrand.secondaryColor || '',
           headingFont: 'Inter',
@@ -436,7 +436,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       // Build website intelligence with explicit primary/secondary for BrandCustomization
       const brandColors = [extractedBrand?.themeColor, extractedBrand?.secondaryColor].filter(Boolean) as string[];
       initial.websiteIntelligence = {
-        logoUrl: extractedBrand?.logoUrl || extractedBrand?.faviconUrl || null,
+        logoUrl: extractedBrand?.logoUrl || null,
         brandColors,
         primaryColor: extractedBrand?.themeColor || brandColors[0] || null,
         secondaryColor: extractedBrand?.secondaryColor || brandColors[1] || null,
@@ -466,7 +466,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       }
       if (extractedBrand.themeColor || extractedBrand.logoUrl) {
         initial.brandSettings = {
-          logoUrl: extractedBrand.logoUrl || extractedBrand.faviconUrl || null,
+          logoUrl: extractedBrand.logoUrl || null,
           primaryColor: extractedBrand.themeColor || '',
           secondaryColor: extractedBrand.secondaryColor || '',
           headingFont: 'Inter',
@@ -481,7 +481,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       // Build website intelligence from extracted brand with explicit primary/secondary for BrandCustomization
       const brandColors = [extractedBrand.themeColor, extractedBrand.secondaryColor].filter(Boolean) as string[];
       initial.websiteIntelligence = {
-        logoUrl: extractedBrand.logoUrl || extractedBrand.faviconUrl || null,
+        logoUrl: extractedBrand.logoUrl || null,
         brandColors,
         primaryColor: extractedBrand.themeColor || brandColors[0] || null,
         secondaryColor: extractedBrand.secondaryColor || brandColors[1] || null,
@@ -632,7 +632,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         brandSettings: {
           primaryColor: extractedBrand.themeColor || prev.brandSettings?.primaryColor || '#7C3AED',
           secondaryColor: extractedBrand.secondaryColor || prev.brandSettings?.secondaryColor || '#4F46E5',
-          logoUrl: extractedBrand.logoUrl || extractedBrand.ogImage || prev.brandSettings?.logoUrl || null,
+          logoUrl: extractedBrand.logoUrl || prev.brandSettings?.logoUrl || null,
           headingFont: prev.brandSettings?.headingFont || 'Inter',
           bodyFont: prev.brandSettings?.bodyFont || 'Inter',
           modified: true,
@@ -640,7 +640,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         // Website intelligence
         websiteIntelligence: {
           ...prev.websiteIntelligence,
-          logoUrl: extractedBrand.logoUrl || extractedBrand.ogImage || prev.websiteIntelligence?.logoUrl || null,
+          logoUrl: extractedBrand.logoUrl || prev.websiteIntelligence?.logoUrl || null,
           brandColors: [extractedBrand.themeColor, extractedBrand.secondaryColor, extractedBrand.accentColor].filter(Boolean) as string[],
           primaryColor: extractedBrand.themeColor || null,
           secondaryColor: extractedBrand.secondaryColor || null,

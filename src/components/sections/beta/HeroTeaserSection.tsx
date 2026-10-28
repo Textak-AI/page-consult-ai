@@ -1,3 +1,4 @@
+import { useUsableLogo } from '@/hooks/useUsableLogo';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Check, Mail } from 'lucide-react';
@@ -44,6 +45,7 @@ export const HeroTeaserSection: React.FC<Props> = ({
   currentSignups = 0,
   onSignupSuccess,
 }) => {
+  const usableLogo = useUsableLogo(content.logoUrl);
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -128,9 +130,9 @@ export const HeroTeaserSection: React.FC<Props> = ({
           className="max-w-3xl mx-auto"
         >
           {/* Logo */}
-          {content.logoUrl && (
+          {usableLogo && (
             <motion.img
-              src={content.logoUrl}
+              src={usableLogo}
               alt="Logo"
               className={`h-12 md:h-16 mx-auto mb-8${shouldInvertLogo(content.logoUrl) ? ' brightness-0 invert' : ''}`}
               initial={{ opacity: 0, scale: 0.8 }}

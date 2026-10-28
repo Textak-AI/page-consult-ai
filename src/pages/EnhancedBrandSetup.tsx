@@ -1,3 +1,4 @@
+import { auditLogo, LOGO_REJECTION_TEXT } from '@/lib/logoAudit';
 import { consultationAccess } from '@/lib/consultationAccess';
 import { readDemoSession, claimDemoSession } from '@/lib/anonymousSessions';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
@@ -238,7 +239,25 @@ export default function EnhancedBrandSetup() {
   const [extractionSuccess, setExtractionSuccess] = useState(false);
   const [extractionError, setExtractionError] = useState<string | null>(null);
   const [hasAttemptedExtraction, setHasAttemptedExtraction] = useState(false);
-  const [logo, setLogo] = useState<string | null>(null);
+  const [logo, setLogoRaw] = useState<string | null>(null);
+  // Logo audit: every logo source (extraction, saved data, upload) passes the same check before it is accepted.
+  const [logoRejection, setLogoRejection] = useState<string | null>(null);
+  const [continueWithoutLogo, setContinueWithoutLogo] = useState(false);
+  const [logoSearchFailed, setLogoSearchFailed] = useState(false);
+  const logoRequestRef = useRef(0);
+  const setLogo = useCallback((url: string | null) => {
+    const req = ++logoRequestRef.current;
+    if (!url) { setLogoRaw(null); return; }
+    void auditLogo(url).then((v) => {
+      if (req !== logoRequestRef.current) return;
+      if (v.ok) { setLogoRaw(url); setLogoRejection(null); setContinueWithoutLogo(false); }
+      else { setLogoRaw(null); setLogoSearchFailed(true); setLogoRejection(v.reason ? LOGO_REJECTION_TEXT[v.reason] : null); }
+    });
+  }, []);
+  // Website extraction finished (with or without a logo) → the "no usable logo" state may apply.
+  useEffect(() => {
+    if (extractionResults || extractionError) setLogoSearchFailed(true);
+  }, [extractionResults, extractionError]);
   const [colors, setColors] = useState(DEFAULT_COLORS);
   const [fontSettings, setFontSettings] = useState({
     h1: 'Inter',
@@ -1949,6 +1968,23 @@ export default function EnhancedBrandSetup() {
                 </div>
               </div>
 
+              {!logo && logoSearchFailed && !continueWithoutLogo && (
+                <div className="mb-4 rounded-xl border border-slate-700 bg-slate-900/40 p-4" data-testid="no-usable-logo">
+                  <p className="text-sm font-medium text-white">We couldn't find a usable logo</p>
+                  {logoRejection && <p className="mt-1 text-xs text-slate-400">{logoRejection}</p>}
+                  <p className="mt-1 text-xs text-slate-400">Upload one below, or continue without a logo — your business name will be shown instead.</p>
+                  <button
+                    type="button"
+                    onClick={() => setContinueWithoutLogo(true)}
+                    className="mt-3 text-sm text-cyan-400 hover:text-cyan-300 underline-offset-2 hover:underline"
+                  >
+                    Continue without a logo
+                  </button>
+                </div>
+              )}
+              {!logo && logoSearchFailed && continueWithoutLogo && (
+                <p className="mb-4 text-sm text-slate-400" data-testid="continuing-without-logo">Continuing without a logo. You can still upload one below.</p>
+              )}
               {!logo ? (
                 <label
                   onDrop={handleLogoDrop}

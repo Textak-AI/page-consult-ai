@@ -1,3 +1,4 @@
+import { usableLogoOrNull } from '@/lib/logoAudit';
 import { readDemoSession, updateDemoSession, claimDemoSession } from '@/lib/anonymousSessions';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -119,7 +120,8 @@ export default function BrandIntake() {
       }
       
       const results: DetectionResults = {
-        logo: data?.brand?.logoUrl || data?.brand?.faviconUrl,
+        // Logo audit: keep the first candidate that passes; never store a failing one.
+        logo: (await usableLogoOrNull(data?.brand?.logoUrl)) || (await usableLogoOrNull(data?.brand?.faviconUrl)) || undefined,
         colors: extractedColorList,
         fonts: fontList,
         companyName: data?.brand?.companyName

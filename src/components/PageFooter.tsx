@@ -1,3 +1,4 @@
+import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { Link } from 'react-router-dom';
 
 interface PageFooterProps {
@@ -14,6 +15,7 @@ export function PageFooter({
   showPoweredBy = true,
 }: PageFooterProps) {
   const currentYear = new Date().getFullYear();
+  const usableLogo = useUsableLogo(logoUrl);
   const displayName = companyName || businessName || 'PageConsult AI';
   
   // Determine if we're showing brand (user's company) or PageConsult branding.
@@ -28,9 +30,9 @@ export function PageFooter({
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Logo / Brand */}
           <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
-            {logoUrl ? (
+            {usableLogo ? (
               <img 
-                src={logoUrl} 
+                src={usableLogo} 
                 alt={displayName} 
                 className="h-6 w-auto object-contain" 
               />

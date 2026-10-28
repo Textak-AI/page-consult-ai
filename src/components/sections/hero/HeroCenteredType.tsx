@@ -1,3 +1,4 @@
+import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeScale, typeClass } from '@/lib/design/tokens';
 /**
  * HeroCenteredType — Analytical Validator / Precision hero
@@ -18,6 +19,8 @@ interface HeroCenteredTypeProps {
 
 export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroCenteredTypeProps) {
   const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'dark', content.primaryColor);
+  // Render-time logo guard: a missing/broken/blank logo collapses the slot.
+  const usableLogo = useUsableLogo(content.logoUrl);
   const primaryColor = content.primaryColor || '#6366F1';
   const isSerif = content.typographyPairing === 'serif-sans';
 
@@ -102,12 +105,11 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
       {/* Content */}
       <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
         {/* Logo / brand name */}
-        {content.logoUrl ? (
+        {usableLogo ? (
           <img
-            src={content.logoUrl}
+            src={usableLogo}
             alt={content.businessName || 'Logo'}
-            className="h-8 md:h-10 mx-auto mb-12 opacity-70"
-            style={{ filter: 'brightness(0) invert(1)' }}
+            className="h-8 md:h-10 w-auto object-contain mx-auto mb-12"
           />
         ) : content.businessName ? (
           <p
