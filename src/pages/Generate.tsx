@@ -5840,26 +5840,20 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             <Sparkles className="w-4 h-4" />
             Generate Variant
           </Button>
-          <span
-            role="status"
-            aria-live="polite"
-            data-save-status={saveStatus}
-            className={`text-xs whitespace-nowrap ${saveStatus === "failed" ? "text-destructive" : "text-white/60"}`}
-          >
-            {saveStatus === "saved" && "All changes saved"}
-            {saveStatus === "unsaved" && "Unsaved changes"}
-            {saveStatus === "saving" && "Saving…"}
-            {saveStatus === "failed" && "Save failed"}
-          </span>
+          {saveStatus === "failed" && (
+            <span role="alert" className="text-xs whitespace-nowrap text-destructive">Save failed</span>
+          )}
           <Button
             variant="outline"
             size="sm"
             onClick={handleSave}
             disabled={saveStatus === "saving"}
+            data-save-status={saveStatus}
+            aria-live="polite"
             className="relative pl-5 builder-button save-draft-btn bg-white/5 border-white/10 text-white hover:bg-white/10"
           >
             <span className="absolute left-0 top-0 w-1 h-full bg-yellow-500 rounded-l"></span>
-            {saveStatus === "failed" ? "Retry save" : "Save Draft"}
+            {{ saved: "Saved", unsaved: "Save Draft", saving: "Saving…", failed: "Retry save" }[saveStatus as string] ?? "Save Draft"}
           </Button>
           {/* Regenerate button - only shows for existing loaded pages */}
           {pageData?.id && (
