@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { ownerShowsBadge } from '../_shared/planLimits.ts';
 
 const PAGE_FIELDS = 'id,user_id,title,slug,sections,styles,meta_title,meta_description,consultation_data';
 
@@ -50,6 +51,7 @@ serve(async (req) => {
           personalized_cta_text: prospect.personalized_cta_text,
         },
         page: displayPage(page),
+        showBadge: await ownerShowsBadge(client, page.user_id),
       });
     }
     // Preserve the route's existing published-landing-page fallback.
@@ -57,7 +59,7 @@ serve(async (req) => {
       .eq('slug', input.slug).eq('is_published', true).maybeSingle();
     if (error) throw error;
     if (!page) return respond({ error: 'Not found' }, 404);
-    return respond({ prospect: null, page: displayPage(page) });
+    return respond({ prospect: null, page: displayPage(page), showBadge: await ownerShowsBadge(client, page.user_id) });
   } catch {
     return respond({ error: 'Unable to load page' }, 500);
   }
