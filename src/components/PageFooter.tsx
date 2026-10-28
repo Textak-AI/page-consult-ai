@@ -27,7 +27,7 @@ export function PageFooter({
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Logo / Brand */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
             {logoUrl ? (
               <img 
                 src={logoUrl} 
@@ -48,13 +48,14 @@ export function PageFooter({
           </div>
           
           {/* Links */}
-          <div className="flex flex-wrap items-center justify-center gap-x-1 text-sm text-slate-500">
+          <div className={`flex flex-wrap items-center justify-center gap-x-1 gap-y-1 text-sm text-slate-500 ${isUserBrand ? "flex-col sm:flex-row" : ""}`}>
             <span>© {currentYear} {isUserBrand ? displayName : 'Hyperbrand Creative, Ltd'}</span>
             
             {/* Show powered by when using user's brand */}
             {isUserBrand && showPoweredBy && (
               <>
-                <span className="mx-2">•</span>
+                <span className="whitespace-nowrap">
+                <span className="mx-2 hidden sm:inline">•</span>
                 <span className="text-slate-600">
                   Powered by{' '}
                   <a 
@@ -66,20 +67,17 @@ export function PageFooter({
                     PageConsult AI
                   </a>
                 </span>
+                </span>
               </>
             )}
             
             {/* Only show legal links for PageConsult branding */}
             {!isUserBrand && (
               <>
-                <span className="mx-2">•</span>
-                <Link to="/terms" className="hover:text-cyan-400 transition-colors">Terms</Link>
-                <span className="mx-2">•</span>
-                <Link to="/privacy" className="hover:text-cyan-400 transition-colors">Privacy</Link>
-                <span className="mx-2">•</span>
-                <Link to="/trust-center" className="hover:text-cyan-400 transition-colors">Trust & Security</Link>
-                <span className="mx-2">•</span>
-                <a href="mailto:support@pageconsult.ai" className="hover:text-cyan-400 transition-colors">Support</a>
+                <span className="whitespace-nowrap"><span className="mx-2">•</span><Link to="/terms" className="hover:text-cyan-400 transition-colors">Terms</Link></span>
+                <span className="whitespace-nowrap"><span className="mx-2">•</span><Link to="/privacy" className="hover:text-cyan-400 transition-colors">Privacy</Link></span>
+                <span className="whitespace-nowrap"><span className="mx-2">•</span><Link to="/trust-center" className="hover:text-cyan-400 transition-colors">Trust & Security</Link></span>
+                <span className="whitespace-nowrap"><span className="mx-2">•</span><a href="mailto:support@pageconsult.ai" className="hover:text-cyan-400 transition-colors">Support</a></span>
               </>
             )}
           </div>

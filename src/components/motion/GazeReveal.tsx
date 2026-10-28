@@ -72,5 +72,5 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sectionType]);
 
-  return <div ref={ref}>{children}</div>;
+  return <div ref={ref} data-gaze-section="">{children}</div>;
 }

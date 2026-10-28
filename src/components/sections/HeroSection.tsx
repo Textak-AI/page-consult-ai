@@ -1280,7 +1280,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
 
       {/* Content Layer */}
       <div className={`container mx-auto max-w-5xl text-center relative z-10 px-6 ${
-        isConsulting ? 'py-32' : 'py-32 min-h-screen flex items-center'
+        isConsulting ? 'py-20 md:py-32' : 'py-20 md:py-32 md:min-h-screen flex items-center'
       }`}>
         <div className="flex flex-col items-center gap-8 w-full">
           
