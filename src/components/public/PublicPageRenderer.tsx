@@ -1,3 +1,4 @@
+import { cleanTheme, themeFontCss } from '@/lib/editor/pageTheme';
 import { GazeReveal } from '@/components/motion/GazeReveal';
 import { useMemo, useState, useCallback } from 'react';
 import { LeadCaptureModal } from './LeadCaptureModal';
@@ -100,6 +101,8 @@ export function PublicPageRenderer({
   }, [publishedPageId]);
   // Derive colorMode from design intelligence
   const colorMode = designIntelligence?.colorMode || 'dark';
+  const theme = useMemo(() => cleanTheme(styles?.theme), [styles]);
+  const themeCss = useMemo(() => themeFontCss('.page-theme-root', theme), [theme]);
   const industryVariant = designIntelligence?.industryVariant || 'default';
   
   // Resolve archetype design profile
@@ -129,7 +132,11 @@ export function PublicPageRenderer({
     // Read-only render - no editing, no update callbacks
     const noOp = () => {};
     // Inject archetype into section content for archetype-aware rendering
-    const enrichedContent = { ...section.content, archetype: archetypeProfile };
+    const enrichedContent = {
+      ...section.content,
+      archetype: archetypeProfile,
+      ...(theme.primaryColor ? { primaryColor: theme.primaryColor } : {}),
+    };
     switch (section.type) {
       case 'hero':
         return (
@@ -393,6 +400,7 @@ export function PublicPageRenderer({
       {styles?.cssVariables && (
         <style dangerouslySetInnerHTML={{ __html: sanitizeFullCSS(styles.cssVariables) }} />
       )}
+      {themeCss && <style>{themeCss}</style>}
 
       <div 
         data-mode={colorMode}
@@ -401,17 +409,17 @@ export function PublicPageRenderer({
         className={cn(
           colorMode === 'light' ? 'min-h-screen bg-white' : 'min-h-screen bg-slate-950',
           colorMode === 'dark' && 'page-noise-overlay',
-          'relative'
+          'relative page-theme-root'
         )}
         style={(() => {
           const styles: React.CSSProperties = {};
-          const primaryColor = designIntelligence?.brandColors?.primary || brandSettings?.primaryColor;
+          const primaryColor = theme.primaryColor || designIntelligence?.brandColors?.primary || brandSettings?.primaryColor;
           if (primaryColor) {
             styles['--color-brand' as any] = primaryColor;
             styles['--color-primary' as any] = primaryColor;
             styles['--brand-primary' as any] = primaryColor;
           }
-          const secondaryColor = designIntelligence?.brandColors?.secondary;
+          const secondaryColor = theme.secondaryColor || designIntelligence?.brandColors?.secondary;
           if (secondaryColor) {
             styles['--color-secondary' as any] = secondaryColor;
             styles['--brand-secondary' as any] = secondaryColor;
