@@ -86,7 +86,7 @@ interface LivePreviewProps {
   };
 }
 
-export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode = 'dark', industryVariant, brandSettings, getSectionLockStatus }: LivePreviewProps) {
+function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode = 'dark', industryVariant, brandSettings, getSectionLockStatus }: LivePreviewProps) {
   const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();
   const currentStyle = styleVariants[pageStyle];
   
@@ -882,3 +882,6 @@ export function LivePreview({ sections, onSectionsChange, cssVariables, iconStyl
     </div>
   );
 }
+
+// Memoized: the editor shell re-renders on unrelated state (credits, user, modals).
+export const LivePreview = memo(LivePreviewInner);

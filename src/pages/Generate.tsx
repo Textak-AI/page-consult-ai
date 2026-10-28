@@ -494,12 +494,6 @@ function GenerateContent() {
   
   // Messaging Architecture from Archetype Optimizer (SDI Layer 1.5)
   // Initialize from nav state if available, then localStorage fallback
-  // __RENDER_PROBE__
-  {
-    const __v: Record<string, any> = { phase, isGenerating, progress, buildStep, consultation, pageData, sections, existingPageLoaded, intelligence, preGeneratedContent, landingPageBestPractices, isRegenerating, designSystem, cssVariables, industryTokens, industryVariantState, proofStack, seoData, designIntelligence, pageStyle, saveStatus: editorSession.saveStatus, canUndo: editorSession.canUndo, location };
-    const w = window as any; const prev = w.__rp || {}; const ch = Object.keys(__v).filter(k => prev[k] !== __v[k]);
-    w.__rp = __v; console.log('RENDERPROBE', ch.join(','));
-  }
   const [messagingArchitecture, setMessagingArchitecture] = useState<any>(() => {
     // 1. Try nav state
     if (effectiveNavState?.strategicData?.messagingArchitecture) {
@@ -578,7 +572,12 @@ function GenerateContent() {
     applyBrand();
   }, [effectiveNavState]);
 
+  // Load once per mount; a ref survives StrictMode's dev double-invoke so the
+  // whole load (network + state batch) is not run twice.
+  const loadStartedRef = useRef(false);
   useEffect(() => {
+    if (loadStartedRef.current) return;
+    loadStartedRef.current = true;
     loadConsultation();
   }, []);
 
@@ -5523,10 +5522,21 @@ function EditorContent({
     }));
   }, [setSections]);
 
+  // Stable inputs: fresh arrays/objects per render made the page-score helpers
+  // recompute and hand LivePreview new callbacks on every unrelated render.
+  const sectionsLite = useMemo(
+    () => sections.map((s: any) => ({ type: s.type, content: s.content })),
+    [sections]
+  );
+  const consultantConsultationData = useMemo(
+    () => strategicData?.consultationData || consultation || {},
+    [strategicData?.consultationData, consultation]
+  );
+
   // Consultant integration for AI-powered copy suggestions  
   const consultantIntegration = useConsultantIntegration({
-    consultationData: strategicData?.consultationData || consultation || {},
-    sections: sections.map((s: any) => ({ type: s.type, content: s.content })),
+    consultationData: consultantConsultationData,
+    sections: sectionsLite,
     onApplyChange: handleApplyConsultantChange,
     debounceMs: 2500,
     enabled: sections.length > 0
@@ -5534,8 +5544,8 @@ function EditorContent({
 
   // Page builder integration for completeness tracking
   const pageBuilder = usePageBuilder({
-    consultationData: strategicData?.consultationData || consultation || {},
-    sections: sections.map((s: any) => ({ type: s.type, content: s.content })),
+    consultationData: consultantConsultationData,
+    sections: sectionsLite,
     onSectionsChange: setSections,
     consultantEnabled: false // Using consultantIntegration separately
   });
@@ -5560,6 +5570,89 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
   const [hasShownConversionReady, setHasShownConversionReady] = useState(false);
   // Removed showDigitalChampion toggle - using single consistent design
   const [variantModalOpen, setVariantModalOpen] = useState(false);
+
+
+  // LivePreview inputs, memoized so the (memo'd) preview skips unrelated EditorContent renders.
+  const previewIndustryVariant = useMemo(() => (// PRIORITY 1: Read from persisted pageData.design_intelligence
+            (pageData?.design_intelligence as any)?.industryVariant ||
+            // PRIORITY 2: Derive from consultation industry
+            consultation?.industryCategory ||
+            consultation?.industry ||
+            strategicData?.consultationData?.industryCategory ||
+            strategicData?.consultationData?.industry ||
+            'default'), [pageData, consultation, strategicData]);
+  const previewColorMode = useMemo(() => (() => {
+            // PRIORITY 1: Read from persisted pageData.design_intelligence (multi-user safe)
+            const persistedMode = (pageData?.design_intelligence as any)?.colorMode;
+            if (persistedMode) {
+              return (persistedMode === 'light' || persistedMode === 'warm') ? 'light' : 'dark';
+            }
+            // PRIORITY 2: Fallback to consultation/strategicData (during generation before save)
+            const mode = consultation?.designIntelligence?.colors?.mode ||
+                        consultation?.colorMode ||
+                        strategicData?.consultationData?.colorMode ||
+                        'dark';
+            return (mode === 'light' || mode === 'warm') ? 'light' : 'dark';
+          })(), [pageData, consultation, strategicData]);
+  const previewBrandSettings = useMemo(() => (() => {
+            // Helper to get extracted_intelligence colors array
+            const extractedIntel = consultation?.extracted_intelligence as any || {};
+            const colorsArray = extractedIntel.colors || [];
+            
+            const resolved = {
+              // PRIORITY: strategicData > pageData > consultation.websiteIntelligence > extracted_intelligence > hero section
+              companyName: 
+                strategicData?.consultationData?.businessName ||
+                (pageData?.consultation_data as any)?.businessName ||
+                (pageData?.website_intelligence as any)?.companyName ||
+                consultation?.businessName ||
+                consultation?.business_name ||
+                (consultation?.websiteIntelligence as any)?.companyName ||
+                extractedIntel.companyName ||
+                null,
+              logoUrl:
+                strategicData?.brandSettings?.logoUrl ||
+                strategicData?.consultationData?.websiteIntelligence?.logoUrl ||
+                (pageData?.website_intelligence as any)?.logoUrl ||
+                (pageData?.consultation_data as any)?.websiteIntelligence?.logoUrl ||
+                (consultation?.websiteIntelligence as any)?.logoUrl ||
+                extractedIntel.logoUrl ||
+                sections.find(s => s.type === 'hero')?.content?.logoUrl ||
+                null,
+              primaryColor:
+                strategicData?.brandSettings?.primaryColor ||
+                (pageData?.design_intelligence as any)?.brandColors?.primary ||
+                (consultation?.websiteIntelligence as any)?.primaryColor ||
+                colorsArray[0] || // extracted_intelligence.colors[0]
+                extractedIntel.brandColors?.primary ||
+                designSystem?.colors?.primary ||
+                null,
+              secondaryColor:
+                strategicData?.brandSettings?.secondaryColor ||
+                (pageData?.design_intelligence as any)?.brandColors?.secondary ||
+                (consultation?.websiteIntelligence as any)?.secondaryColor ||
+                colorsArray[1] || // extracted_intelligence.colors[1]
+                extractedIntel.brandColors?.secondary ||
+                designSystem?.colors?.secondary ||
+                null,
+              accentColor:
+                (pageData?.design_intelligence as any)?.brandColors?.accent ||
+                (consultation?.websiteIntelligence as any)?.accentColor ||
+                colorsArray[2] || // extracted_intelligence.colors[2]
+                extractedIntel.brandColors?.accent ||
+                designSystem?.colors?.accent ||
+                null,
+            };
+            
+            console.log('🎨 [LivePreview] Resolved brandSettings:', {
+              logoUrl: resolved.logoUrl,
+              primaryColor: resolved.primaryColor,
+              secondaryColor: resolved.secondaryColor,
+              hasColorsArray: colorsArray.length > 0,
+            });
+            
+            return resolved;
+          })(), [pageData, consultation, strategicData, designSystem, sections]);
 
   // Show low balance alert when needed
   useEffect(() => {
@@ -6015,88 +6108,9 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           onSectionsChange={setSections} 
           cssVariables={cssVariables}
           iconStyle={designSystem?.components?.iconStyle}
-          industryVariant={
-            // PRIORITY 1: Read from persisted pageData.design_intelligence
-            (pageData?.design_intelligence as any)?.industryVariant ||
-            // PRIORITY 2: Derive from consultation industry
-            consultation?.industryCategory ||
-            consultation?.industry ||
-            strategicData?.consultationData?.industryCategory ||
-            strategicData?.consultationData?.industry ||
-            'default'
-          }
-          colorMode={(() => {
-            // PRIORITY 1: Read from persisted pageData.design_intelligence (multi-user safe)
-            const persistedMode = (pageData?.design_intelligence as any)?.colorMode;
-            if (persistedMode) {
-              return (persistedMode === 'light' || persistedMode === 'warm') ? 'light' : 'dark';
-            }
-            // PRIORITY 2: Fallback to consultation/strategicData (during generation before save)
-            const mode = consultation?.designIntelligence?.colors?.mode ||
-                        consultation?.colorMode ||
-                        strategicData?.consultationData?.colorMode ||
-                        'dark';
-            return (mode === 'light' || mode === 'warm') ? 'light' : 'dark';
-          })()}
-          brandSettings={(() => {
-            // Helper to get extracted_intelligence colors array
-            const extractedIntel = consultation?.extracted_intelligence as any || {};
-            const colorsArray = extractedIntel.colors || [];
-            
-            const resolved = {
-              // PRIORITY: strategicData > pageData > consultation.websiteIntelligence > extracted_intelligence > hero section
-              companyName: 
-                strategicData?.consultationData?.businessName ||
-                (pageData?.consultation_data as any)?.businessName ||
-                (pageData?.website_intelligence as any)?.companyName ||
-                consultation?.businessName ||
-                consultation?.business_name ||
-                (consultation?.websiteIntelligence as any)?.companyName ||
-                extractedIntel.companyName ||
-                null,
-              logoUrl:
-                strategicData?.brandSettings?.logoUrl ||
-                strategicData?.consultationData?.websiteIntelligence?.logoUrl ||
-                (pageData?.website_intelligence as any)?.logoUrl ||
-                (pageData?.consultation_data as any)?.websiteIntelligence?.logoUrl ||
-                (consultation?.websiteIntelligence as any)?.logoUrl ||
-                extractedIntel.logoUrl ||
-                sections.find(s => s.type === 'hero')?.content?.logoUrl ||
-                null,
-              primaryColor:
-                strategicData?.brandSettings?.primaryColor ||
-                (pageData?.design_intelligence as any)?.brandColors?.primary ||
-                (consultation?.websiteIntelligence as any)?.primaryColor ||
-                colorsArray[0] || // extracted_intelligence.colors[0]
-                extractedIntel.brandColors?.primary ||
-                designSystem?.colors?.primary ||
-                null,
-              secondaryColor:
-                strategicData?.brandSettings?.secondaryColor ||
-                (pageData?.design_intelligence as any)?.brandColors?.secondary ||
-                (consultation?.websiteIntelligence as any)?.secondaryColor ||
-                colorsArray[1] || // extracted_intelligence.colors[1]
-                extractedIntel.brandColors?.secondary ||
-                designSystem?.colors?.secondary ||
-                null,
-              accentColor:
-                (pageData?.design_intelligence as any)?.brandColors?.accent ||
-                (consultation?.websiteIntelligence as any)?.accentColor ||
-                colorsArray[2] || // extracted_intelligence.colors[2]
-                extractedIntel.brandColors?.accent ||
-                designSystem?.colors?.accent ||
-                null,
-            };
-            
-            console.log('🎨 [LivePreview] Resolved brandSettings:', {
-              logoUrl: resolved.logoUrl,
-              primaryColor: resolved.primaryColor,
-              secondaryColor: resolved.secondaryColor,
-              hasColorsArray: colorsArray.length > 0,
-            });
-            
-            return resolved;
-          })()}
+          industryVariant={previewIndustryVariant}
+          colorMode={previewColorMode}
+          brandSettings={previewBrandSettings}
           getSectionLockStatus={pageBuilder.getSectionLockStatus}
         />
       </div>
