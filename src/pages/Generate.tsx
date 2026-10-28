@@ -494,6 +494,12 @@ function GenerateContent() {
   
   // Messaging Architecture from Archetype Optimizer (SDI Layer 1.5)
   // Initialize from nav state if available, then localStorage fallback
+  // __RENDER_PROBE__
+  {
+    const __v: Record<string, any> = { phase, isGenerating, progress, buildStep, consultation, pageData, sections, existingPageLoaded, intelligence, preGeneratedContent, landingPageBestPractices, isRegenerating, designSystem, cssVariables, industryTokens, industryVariantState, proofStack, seoData, designIntelligence, pageStyle, saveStatus: editorSession.saveStatus, canUndo: editorSession.canUndo, location };
+    const w = window as any; const prev = w.__rp || {}; const ch = Object.keys(__v).filter(k => prev[k] !== __v[k]);
+    w.__rp = __v; console.log('RENDERPROBE', ch.join(','));
+  }
   const [messagingArchitecture, setMessagingArchitecture] = useState<any>(() => {
     // 1. Try nav state
     if (effectiveNavState?.strategicData?.messagingArchitecture) {
