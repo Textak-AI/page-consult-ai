@@ -34,7 +34,7 @@ export function useEditorSession(opts: {
 
   // ---- latest state (read by save; updated synchronously by setSectionsNow) ----
   const latest = useRef<Snapshot>({ sections, pageStyle });
-  latest.current = { sections, pageStyle: latest.current.pageStyle === pageStyle ? pageStyle : pageStyle };
+  latest.current = { sections, pageStyle };
   const baseStylesRef = useRef(opts.baseStyles);
   baseStylesRef.current = opts.baseStyles;
   const pageIdRef = useRef(pageId);
@@ -193,7 +193,8 @@ export function useEditorSession(opts: {
   return {
     undo,
     redo,
-    canUndo: H.canUndo(history) || (pendingRecord.current !== null && H.canUndo({ ...history, past: [history.present ?? ''] })),
+    // An edit still inside the coalescing window is undoable too.
+    canUndo: H.canUndo(history) || (history.present !== null && serialize(latest.current) !== history.present),
     canRedo: H.canRedo(history),
     saveStatus: status,
     saveNow,
