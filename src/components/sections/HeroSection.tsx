@@ -1,3 +1,4 @@
+import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeClass } from '@/lib/design/tokens';
 import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
@@ -202,6 +203,8 @@ const logoSizeClasses: Record<LogoSize, string> = {
 function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
   const [logoUploaderOpen, setLogoUploaderOpen] = useState(false);
+  // Render-time logo guard: a missing/broken/blank logo collapses the slot.
+  const usableLogo = useUsableLogo(content.logoUrl);
   
   // Get industry tokens
   const industryVariant = content.industryVariant || 'default';
@@ -331,12 +334,12 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className="text-center">
             {/* Logo */}
-            {(content.logoUrl || isEditing) && (
+            {(usableLogo || isEditing) && (
               <div className="mb-6">
-                {content.logoUrl ? (
+                {usableLogo ? (
                   <div className="relative inline-block">
                     <LogoImage 
-                      src={content.logoUrl} 
+                      src={usableLogo} 
                       alt="Logo" 
                       className={logoSizeClasses[logoSize] + " object-contain mx-auto"} 
                       isDarkMode={!isLightMode}
@@ -536,10 +539,10 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
           {/* Logo - only show standalone in editing mode (nav bar handles display mode) */}
           {isEditing && (
             <div className="mb-8">
-              {content.logoUrl ? (
+              {usableLogo ? (
                 <div className="relative inline-block">
                   <LogoImage 
-                    src={content.logoUrl} 
+                    src={usableLogo} 
                     alt="Logo" 
                     className={`${logoSizeClasses[logoSize]} object-contain mx-auto`}
                     isDarkMode={!isLightMode}
@@ -732,17 +735,17 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
         <div className="max-w-6xl mx-auto px-6 lg:px-12 relative z-10">
           <div className="max-w-3xl">
             {/* Logo */}
-            {(content.logoUrl || isEditing) && (
+            {(usableLogo || isEditing) && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
                 className="mb-8"
               >
-                {content.logoUrl ? (
+                {usableLogo ? (
                   <div className="relative inline-block">
                     <LogoImage 
-                      src={content.logoUrl} 
+                      src={usableLogo} 
                       alt="Logo" 
                       className={`${logoSizeClasses[logoSize]} object-contain`} 
                       isDarkMode={hasBackgroundImage && showDarkOverlay}
@@ -958,17 +961,17 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
             <div className="lg:col-span-7 space-y-8">
               
               {/* Logo */}
-              {(content.logoUrl || isEditing) && (
+              {(usableLogo || isEditing) && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                   className="mb-2"
                 >
-                  {content.logoUrl ? (
+                  {usableLogo ? (
                     <div className="relative inline-block">
                       <LogoImage 
-                        src={content.logoUrl} 
+                        src={usableLogo} 
                         alt="Logo" 
                         className={`${logoSizeClasses[logoSize]} object-contain`} 
                         isDarkMode={!isLightMode}
@@ -1286,17 +1289,17 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
         <div className="flex flex-col items-center gap-8 w-full">
           
           {/* Logo - positioned above trust badge (or add logo button if in edit mode) */}
-          {(content.logoUrl || isEditing) && (
+          {(usableLogo || isEditing) && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className="mb-2 relative"
             >
-              {content.logoUrl ? (
+              {usableLogo ? (
                 <div className="relative inline-flex flex-col items-center gap-2">
                   <LogoImage 
-                    src={content.logoUrl} 
+                    src={usableLogo} 
                     alt="Logo" 
                     className={`${logoSizeClasses[logoSize]} mx-auto object-contain`} 
                     isDarkMode={!isLightMode}

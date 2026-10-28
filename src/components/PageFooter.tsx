@@ -28,9 +28,9 @@ export function PageFooter({
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Logo / Brand */}
           <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
-            {logoUrl ? (
+            {usableLogo ? (
               <img 
-                src={logoUrl} 
+                src={usableLogo} 
                 alt={displayName} 
                 className="h-6 w-auto object-contain" 
               />
