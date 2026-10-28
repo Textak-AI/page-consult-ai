@@ -1,3 +1,4 @@
+import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mic, MicOff, Loader2, Check, Copy, ExternalLink, Send, ArrowRight } from 'lucide-react';
@@ -142,6 +143,7 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
         },
       });
 
+      if (isLimitReached(error)) throw new Error(LIMIT_REACHED_MESSAGE);
       if (error) throw error;
       if (!data.success) throw new Error(data.error);
 

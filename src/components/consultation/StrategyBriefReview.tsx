@@ -1,3 +1,4 @@
+import { PageBuildCost } from '@/components/usage/PageBuildCost';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Edit3, RotateCcw, ArrowRight, CheckCircle2, ChevronRight } from 'lucide-react';
@@ -141,7 +142,7 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, messag
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="flex flex-col sm:flex-row gap-4 justify-center"
+        className="flex flex-col sm:flex-row sm:flex-wrap gap-4 justify-center"
       >
         <Button
           variant="outline"
@@ -169,6 +170,7 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, messag
           Approve & Generate Page
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
+        <PageBuildCost className="basis-full text-center" />
       </motion.div>
     </div>
   );

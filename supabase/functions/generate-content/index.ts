@@ -84,12 +84,8 @@ serve(async (req) => {
       return await handlePersonaSynthesis(anthropic, inputs, marketResearch, corsHeaders);
     }
 
-    if (action === 'generate_content') {
-      return await handleContentGeneration(anthropic, consultationData, intelligenceContext, corsHeaders);
-    }
-
     // Credit-consuming actions: authenticate and charge server-side BEFORE any AI work.
-    if (action === 'regenerate_page' || action === 'regenerate_section') {
+    if (action === 'generate_content' || action === 'regenerate_page' || action === 'regenerate_section') {
       const authHeader = req.headers.get('Authorization') ?? '';
       const userClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
         global: { headers: { Authorization: authHeader } },
@@ -100,14 +96,14 @@ serve(async (req) => {
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       const { refused, logId } = await chargeAction(userClient, user.id,
-        action === 'regenerate_page' ? 'page_generation' : 'section_regeneration',
+        action === 'generate_content' ? 'page_build' : action === 'regenerate_page' ? 'page_generation' : 'section_regeneration',
         corsHeaders, { sectionType: sectionType ?? null });
       if (refused) return refused;
 
       // A failed generation must never consume allowance: refund server-side on throw or non-2xx.
       const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
       return await runChargedWork(
-        () => action === 'regenerate_page'
+        () => action !== 'regenerate_section'
           ? handleContentGeneration(anthropic, consultationData, intelligenceContext, corsHeaders)
           : handleSectionRegeneration(anthropic, sectionType!, consultationData, intelligenceContext, currentContent, corsHeaders),
         (reason) => refundCharge(admin, logId, `${action}:${reason}`),

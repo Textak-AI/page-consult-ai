@@ -1,3 +1,4 @@
+import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import { supabase } from "@/integrations/supabase/client";
 import { getPromptVariations } from "./industryPrompts";
 import { generateBrandScene } from "./brandSceneGeneration";
@@ -160,6 +161,7 @@ export async function regenerateHeroImages(
     },
   });
   
+  if (isLimitReached(error)) throw new Error(LIMIT_REACHED_MESSAGE);
   if (error) {
     console.error('Error regenerating hero images:', error);
     throw new Error('Failed to regenerate hero images');

@@ -1,3 +1,4 @@
+import { PageBuildCost } from '@/components/usage/PageBuildCost';
 import { readDemoSession } from '@/lib/anonymousSessions';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -1215,6 +1216,7 @@ export default function BrandSetup() {
                 Generate My Page
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
+              <PageBuildCost className="text-center mt-2" />
               
               {!hasBrandData && (
                 <p className="text-center text-muted-foreground text-sm mt-3">

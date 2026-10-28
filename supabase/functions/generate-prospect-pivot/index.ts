@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { withCharge } from '../_shared/planLimits.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,7 +8,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+const handle = async (req: Request, userId: string): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -331,4 +332,7 @@ You must respond with ONLY valid JSON, no other text:
       }
     );
   }
-});
+};
+
+// Charged server-side before work; refunded on failure (see _shared/planLimits.ts).
+serve((req) => withCharge(req, 'prospect_page', corsHeaders, (userId) => handle(req, userId), { createClient }));

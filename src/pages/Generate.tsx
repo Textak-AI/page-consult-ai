@@ -1,3 +1,4 @@
+import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import { consultationAccess } from '@/lib/consultationAccess';
 import { readDemoSession } from '@/lib/anonymousSessions';
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -2488,6 +2489,9 @@ function GenerateContent() {
           }
         });
         
+        if (isLimitReached(error)) {
+          throw new Error(LIMIT_REACHED_MESSAGE);
+        }
         if (error) {
           console.warn('⚠️ Strategy brief generation failed:', error);
         } else if (result?.success && result?.content) {
@@ -2557,6 +2561,8 @@ function GenerateContent() {
         if (result.success && result.content) {
           console.log('✅ Intelligence-generated content:', result.content);
           return await mapGeneratedContentToSections(result.content, consultationData);
+        } else if ((result as any).limitReached) {
+          throw new Error(LIMIT_REACHED_MESSAGE);
         } else {
           console.warn('⚠️ Intelligence generation failed, falling back:', result.error);
         }

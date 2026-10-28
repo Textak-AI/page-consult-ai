@@ -1,3 +1,4 @@
+import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { RefreshCw, Loader2 } from 'lucide-react';
@@ -134,6 +135,7 @@ export function AISeoScoreDashboard({
       },
     });
     
+    if (isLimitReached(error)) throw new Error(LIMIT_REACHED_MESSAGE);
     if (error) throw error;
     return data;
   }
