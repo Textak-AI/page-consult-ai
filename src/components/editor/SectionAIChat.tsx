@@ -1,3 +1,4 @@
+import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import { useState } from "react";
 import { Sparkles, Send, RotateCcw, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -75,6 +76,7 @@ export function SectionAIChat({
         }
       });
 
+      if (isLimitReached(fnError)) throw new Error(LIMIT_REACHED_MESSAGE);
       if (fnError) {
         throw new Error(fnError.message || 'Failed to call AI service');
       }

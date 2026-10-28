@@ -1,3 +1,4 @@
+import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import { useState, useRef } from "react";
 import { Sparkles, Zap, Loader2, RefreshCw, Check, X, Upload, ImageIcon, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -135,6 +136,7 @@ export function SectionImageGenerator({
         }
       });
 
+      if (isLimitReached(fnError)) throw new Error(LIMIT_REACHED_MESSAGE);
       if (fnError) throw fnError;
       
       if (data.success && data.images) {
