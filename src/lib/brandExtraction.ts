@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { auditLogo } from '@/lib/logoAudit';
 
 export interface ExtractedBrand {
   domain: string;
@@ -14,6 +15,8 @@ export interface ExtractedBrand {
   websiteUrl?: string | null;
   isMinimalBrand?: boolean;
   extractionConfidence?: 'high' | 'medium' | 'low';
+  /** Set once logoUrl has passed (or been cleared by) the logo audit. */
+  logoAudited?: boolean;
 }
 
 export async function extractBrandFromUrl(url: string): Promise<{
@@ -27,6 +30,15 @@ export async function extractBrandFromUrl(url: string): Promise<{
     });
 
     if (error) throw error;
+    // Logo audit: the first candidate (logo, then favicon) that passes is kept; failures are discarded.
+    if (data?.brand) {
+      const candidates = [data.brand.logoUrl, data.brand.faviconUrl].filter(Boolean) as string[];
+      let accepted: string | null = null;
+      for (const c of candidates) {
+        if ((await auditLogo(c)).ok) { accepted = c; break; }
+      }
+      data.brand = { ...data.brand, logoUrl: accepted, logoAudited: true };
+    }
     return data;
   } catch (error) {
     console.error('Brand extraction error:', error);
