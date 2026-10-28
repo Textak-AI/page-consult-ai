@@ -1,3 +1,4 @@
+import { fontIdFromStack, HERO_LAYOUTS, type PageTheme } from '@/lib/editor/pageTheme';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import { consultationAccess } from '@/lib/consultationAccess';
