@@ -24,8 +24,25 @@ export const ACTION_COSTS = {
   ai_improvement: 1,
   intelligence_refresh: 2,
   style_change: 1,
+  page_build: 3, // new page build; the account's first build is free (charge_page_build)
+  section_chat: 1,
+  image_generation: 2,
+  prospect_page: 2,
 } as const;
 export type ChargedAction = keyof typeof ACTION_COSTS;
+
+// usage_log action_type recorded for each charged action.
+const LOG_ACTION_TYPE: Record<ChargedAction, string> = {
+  page_generation: 'page_generation',
+  section_regeneration: 'section_regeneration',
+  ai_improvement: 'ai_improvement',
+  intelligence_refresh: 'intelligence_refresh',
+  style_change: 'style_change',
+  page_build: 'page_generation',
+  section_chat: 'section_chat',
+  image_generation: 'image_generation',
+  prospect_page: 'prospect_page',
+};
 
 // One-time action packs (price IDs previously hardcoded in stripe-checkout).
 export const ACTION_PACKS: Record<string, number> = {
@@ -89,13 +106,18 @@ export async function chargeAction(
   corsHeaders: Record<string, string>,
   meta: { pageId?: string | null; sectionType?: string | null } = {},
 ): Promise<{ refused: Response | null; logId: string | null }> {
-  const { data, error } = await userClient.rpc('track_ai_action', {
-    p_user_id: userId,
-    p_action_type: action,
-    p_action_cost: ACTION_COSTS[action],
-    p_page_id: meta.pageId ?? null,
-    p_section_type: meta.sectionType ?? null,
-  });
+  const { data, error } = action === 'page_build'
+    ? await userClient.rpc('charge_page_build', {
+      p_user_id: userId, p_cost: ACTION_COSTS.page_build, p_page_id: meta.pageId ?? null,
+    })
+    : await userClient.rpc('track_ai_action', {
+      p_user_id: userId,
+      p_action_type: LOG_ACTION_TYPE[action],
+      p_action_cost: ACTION_COSTS[action],
+      p_page_id: meta.pageId ?? null,
+      p_section_type: meta.sectionType ?? null,
+    });
+  if (data?.free) console.log(`💳 [usage] first page build free user=${userId}`);
   if (error) {
     console.error('💳 [usage] charge failed:', error.message);
     return { logId: null, refused: new Response(JSON.stringify({ success: false, error: 'usage_check_failed' }), {
@@ -157,4 +179,45 @@ export function checkoutSessionParams(opts: {
     cancel_url: opts.cancelUrl,
     metadata: { user_id: opts.userId, price_id: opts.priceId },
   };
+}
+
+// deno-lint-ignore no-explicit-any
+type ClientFactory = (url: string, key: string, opts?: any) => any;
+
+/**
+ * Wraps a credit-consuming edge-function handler: authenticates the caller, charges BEFORE the work
+ * (402 limit_reached when exhausted), and refunds on throw or non-2xx. OPTIONS passes straight through.
+ * `shouldCharge` lets a function skip charging for non-generating requests (e.g. cache reads).
+ */
+export async function withCharge(
+  req: Request,
+  action: ChargedAction,
+  corsHeaders: Record<string, string>,
+  handler: (userId: string) => Promise<Response>,
+  deps: {
+    createClient: ClientFactory;
+    shouldCharge?: (req: Request) => Promise<boolean>;
+    meta?: (req: Request) => Promise<{ pageId?: string | null; sectionType?: string | null }>;
+  },
+): Promise<Response> {
+  if (req.method === 'OPTIONS') return handler('');
+  const authHeader = req.headers.get('Authorization') ?? '';
+  const url = Deno.env.get('SUPABASE_URL')!;
+  const userClient = deps.createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: authData } = await userClient.auth.getUser(authHeader.replace('Bearer ', ''));
+  const user = authData?.user;
+  if (!user) {
+    return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  if (deps.shouldCharge && !(await deps.shouldCharge(req.clone()))) return handler(user.id);
+
+  const meta = deps.meta ? await deps.meta(req.clone()).catch(() => ({})) : {};
+  const { refused, logId } = await chargeAction(userClient, user.id, action, corsHeaders, meta);
+  if (refused) return refused;
+  const admin = deps.createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  return runChargedWork(() => handler(user.id), (reason) => refundCharge(admin, logId, `${action}:${reason}`));
 }
