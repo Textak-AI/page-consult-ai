@@ -109,8 +109,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
           <img
             src={usableLogo}
             alt={content.businessName || 'Logo'}
-            className="h-8 md:h-10 mx-auto mb-12 opacity-70"
-            style={{ filter: 'brightness(0) invert(1)' }}
+            className="h-8 md:h-10 w-auto object-contain mx-auto mb-12"
           />
         ) : content.businessName ? (
           <p
