@@ -1,10 +1,10 @@
+import { truncateAtBoundary } from '@/lib/text/truncate';
 /**
  * AI SEO GENERATOR
  * Generates Schema.org JSON-LD and E-E-A-T optimized meta tags
  */
 
 import type { AuthoritySignal, OptimizedFAQ } from './briefExtractor';
-import { truncateAtBoundary } from '@/lib/text/truncate';
 
 // ============================================
 // TYPES

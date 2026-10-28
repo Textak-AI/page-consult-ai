@@ -1,5 +1,5 @@
-import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import { truncateAtBoundary } from '@/lib/text/truncate';
+import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import { consultationAccess } from '@/lib/consultationAccess';
 import { readDemoSession } from '@/lib/anonymousSessions';
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";

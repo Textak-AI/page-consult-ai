@@ -1,3 +1,4 @@
+import { truncateAtBoundary } from '@/lib/text/truncate';
 /**
  * Brief-First Section Mapper with Intelligent Extraction
  * 
@@ -12,7 +13,6 @@
  */
 
 import { 
-import { truncateAtBoundary } from '@/lib/text/truncate';
   detectIndustryVariant as detectIndustryVariantLegacy, 
   getIndustryTokens as getIndustryTokensLegacy, 
   type IndustryVariant as IndustryVariantLegacy,
