@@ -47,4 +47,8 @@
 - [x] Audit all 92 pages owned by the two specified accounts; remove unsupported offer terms, closing repetition, Saltbox brief fifty-account claim and Fernhill mistaken app logo via owner sessions.
 - [x] Remove tenant offer-term injections; extend shared numeric provenance to brief prose/JSON and generated page/section copy; 222 Bun tests pass, preview build OK.
 - [x] Verify actual Saltbox/Fernhill editors using ?id= at desktop/375; Saltbox three-up benefits; Fernhill tenant-only footer. Published Fernhill route is unavailable because unpublished; no snapshot or publication changes.
-- [ ] Clean 68 affected pages owned by other accounts: requires their owner-session permission and stated-input audit; no privileged cross-owner writes performed.
+- [ ] Migration runbook: clean 68 other-owner pages in the planned migration pass (user-managed; no cross-owner writes in this task).
+## Saltbox publication and hero durability
+- [ ] Publish cleaned Saltbox through its owner session and verify live closing, problem arc, hero photo and credit.
+- [ ] Persist generated hero bytes durably before cache/page responses; retain Unsplash authentication fixes.
+- [ ] Audit existing hero links and verify expired-image collapse; report affected page counts and schema needs.
