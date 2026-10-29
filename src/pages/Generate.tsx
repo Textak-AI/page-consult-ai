@@ -1960,6 +1960,7 @@ function GenerateContent() {
         // Always populate consultation_data with available intelligence and brand context
         consultation_data: {
           ...(strategicData?.consultationData || {}),
+          communicationStrategy: strategicData?.structuredBrief?.communicationStrategy || consultationData.structuredBrief?.communicationStrategy || null,
           industry: consultationData.industry,
           offer: consultationData.offer,
           uniqueValue: consultationData.unique_value || consultationData.uniqueValue,

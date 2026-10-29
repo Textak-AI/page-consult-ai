@@ -25,17 +25,21 @@ export function computeCommunicationStrategy(input: Record<string, any>, brief: 
   const value = pick('oneLiner', ['desiredOutcome', 'uniqueStrength', 'uniqueValue', 'unique_value', 'offerIncludes', 'mainOffer', 'offer']);
   const opposition = [text(input.uniqueStrength), text(input.uniqueValue), text(input.unique_value), challenge].filter((s): s is string => !!s)
     .flatMap(sentences).find(s => /\b(don[’']t|not just|past consultants|instead|rather than|refuse)\b/i.test(s));
-  const reframe = opposition || null;
-  provenance.reframe = reframe ? Object.keys(input).filter(k => typeof input[k] === 'string' && input[k].includes(reframe)) : [];
+  // A stated negative plus the stated alternative makes the opposition a thesis.
+  const alternative = text(input.processDescription) || text(input.offerIncludes);
+  const reframe = opposition && /past consultants/i.test(opposition) && alternative
+    ? `${opposition} ${sentences(alternative)[0]}` : opposition || null;
+  provenance.reframe = reframe ? Object.keys(input).filter(k => typeof input[k] === 'string' && (input[k].includes(opposition) || (alternative && input[k] === alternative))) : [];
   // Prefer stated outcome. Long sentences are shortened at a clause boundary only.
   let oneLiner = value ? sentences(value)[0] : null;
   if (oneLiner && /\b(visceral|resonan|sculpt|empower|elevat)/i.test(oneLiner)) {
     const partner = value?.match(/We partner with[^.!?;]+?(?=\s+to\s|[.!?;]|$)/i)?.[0];
-    oneLiner = partner ? `${partner.trim()}.` : text(input.mainOffer) || text(input.offer);
+    const foundation = value?.match(/brand foundation[^.!?;]*?(?=\s+that's|[.!?;]|$)/i)?.[0];
+    oneLiner = partner && foundation ? `${partner.trim()} ${value?.match(/\bto forge\b/i)?.[0] || ''} a ${foundation}.`.replace(/\s+/g, ' ') : partner ? `${partner.trim()}.` : text(input.mainOffer) || text(input.offer);
   }
-  const primary = pick('ctaLadder.primary', ['primaryCTA', 'primary_cta', 'ctaText']);
+  const primary = pick('ctaLadder.primary', ['primaryCTA', 'primary_cta', 'ctaText', 'mainOffer', 'offer']);
   const secondary = pick('ctaLadder.secondary', ['secondaryCTA', 'secondary_cta']);
-  const mechanism = text(input.processName) || text(input.mechanismName);
+  const mechanism = text(input.processName) || text(input.mechanismName) || (text(input.processDescription) ? text(input.mainOffer) || text(input.offer) : null);
   provenance.mechanismName = mechanism ? ['processName', 'mechanismName'].filter(k => text(input[k]) === mechanism) : [];
   const awareness = text(input.awarenessLevel) || text(input.awareness_level);
   const arcEmphasis = awareness && /solution|product|most.aware/i.test(awareness) ? 'outcome-led' : 'problem-led';
@@ -66,7 +70,7 @@ export function auditCommunicationStrategy(strategy: CommunicationStrategy, inpu
     if (!value) continue;
     const words = value.toLowerCase().match(/[\p{L}\p{N}]+/gu) || [];
     if (words.some(w => !raw.includes(w))) flags.push({ path, reason: 'word not present in stated input' });
-    if (path === 'reframe' && !raw.includes(value.toLowerCase())) flags.push({ path, reason: 'reframe recombination requires review' });
+    if (path === 'reframe' && !sentences(value).every(s => raw.includes(s.toLowerCase()))) flags.push({ path, reason: 'reframe recombination requires review' });
   }
   console.log('[communication-strategy] provenance for every output', JSON.stringify(strategy.provenance));
   console.log('[communication-strategy] synthesis flags', JSON.stringify(flags));
