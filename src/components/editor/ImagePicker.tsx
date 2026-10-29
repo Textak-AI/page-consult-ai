@@ -226,7 +226,7 @@ export function ImagePicker({ open, onClose, onSelect, defaultQuery, clientImage
 
           {/* Attribution */}
           <p className="text-xs text-muted-foreground text-center pt-4 border-t">
-            Images provided by{' '}
+            Stock search provided by{' '}
             <a
               href="https://unsplash.com"
               target="_blank"

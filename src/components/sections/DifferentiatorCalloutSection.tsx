@@ -3,6 +3,10 @@ import { getSectionBackgroundStyles } from '@/lib/artDirectorBrief';
 import { useUsableImage } from '@/hooks/useUsableImage';
 import { ChapterEyebrow } from '@/components/signature/elements';
 import { TreatedImage } from './TreatedImage';
+import { Button } from '@/components/ui/button';
+import { ImagePlus } from 'lucide-react';
+import { ImagePicker } from '@/components/editor/ImagePicker';
+import { useState } from 'react';
 
 interface DifferentiatorCalloutProps {
   content: {
@@ -21,7 +25,8 @@ interface DifferentiatorCalloutProps {
  * Pull-quote: the business's own sentence about its own work, attributed to the
  * business. Deliberately not a testimonial — no quote marks, avatar or person.
  */
-export function DifferentiatorCalloutSection({ content }: DifferentiatorCalloutProps) {
+export function DifferentiatorCalloutSection({ content, onUpdate, isEditing = false }: DifferentiatorCalloutProps & { onUpdate?: (content: any) => void; isEditing?: boolean }) {
+  const [picker, setPicker] = useState(false);
   const image = useUsableImage(content?.supportingImage);
   if (!content?.text) return null;
   const bg = getSectionBackgroundStyles(content.sectionBackground || 'dark', content.primaryColor);
@@ -85,6 +90,7 @@ export function DifferentiatorCalloutSection({ content }: DifferentiatorCalloutP
         </div>
       )}
       </div>
+      {isEditing && onUpdate && <><Button variant="outline" onClick={() => setPicker(true)}><ImagePlus />Change supporting image</Button><ImagePicker open={picker} onClose={() => setPicker(false)} onSelect={image => onUpdate({ ...content, supportingImage: image.urls.regular, supportingImageAsset: image.asset, imageCredit: image.user ? { name: image.user.name, link: image.user.link } : undefined })} /></>}
     </section>
   );
 }

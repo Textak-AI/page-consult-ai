@@ -25,7 +25,8 @@ export function collectClientImages(...contexts: any[]): ClientImage[] {
 }
 export function composeClientImages<T extends { type: string; content: any }>(sections: T[], candidates: ClientImage[]): T[] {
   if (!candidates.length) return sections;
-  const hero = preferredImage(candidates);
+  const existingHero = sections.find(s => s.type === 'hero')?.content?.backgroundImage;
+  const hero = candidates.find(i => i.url === existingHero) || preferredImage(candidates);
   let changed = false;
   const result = sections.map(s => {
     if (s.type !== 'hero' && s.type !== 'differentiator-callout') return s;
@@ -34,9 +35,10 @@ export function composeClientImages<T extends { type: string; content: any }>(se
     const selected = s.type === 'hero' ? hero : preferredImage(candidates.filter(i => i.url !== hero?.url));
     const existing = s.content?.[field] || (s.type === 'hero' && s.content?.heroImage);
     const sameCandidates = JSON.stringify(s.content?.clientImages) === JSON.stringify(candidates);
-    if (sameCandidates && (existing || !selected)) return s;
+    const existingAsset = candidates.find(i => i.url === existing);
+    if (sameCandidates && (existing || !selected) && (!existingAsset || s.content?.[assetField]?.url === existingAsset.url)) return s;
     changed = true;
-    return { ...s, content: { ...s.content, clientImages: candidates, ...(!existing && selected ? { [field]: selected.url, [assetField]: selected, imageCredit: undefined, imageAttribution: undefined } : {}) } };
+    return { ...s, content: { ...s.content, clientImages: candidates, ...(existingAsset ? { [assetField]: existingAsset, imageCredit: undefined, imageAttribution: undefined } : {}), ...(!existing && selected ? { [field]: selected.url, [assetField]: selected, imageCredit: undefined, imageAttribution: undefined } : {}) } };
   });
   return changed ? result : sections;
 }
