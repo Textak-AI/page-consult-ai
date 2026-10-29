@@ -1289,24 +1289,6 @@ export function buildProcessSteps(consultationData: any, industryVariant: string
 }
 
 /**
- * Build testimonials from consultation data
- */
-export function buildTestimonials(consultationData: any, industryVariant: string): Array<{quote: string, author: string, title: string, rating: number}> {
-  const testimonials = consultationData?.testimonials;
-  if (testimonials && Array.isArray(testimonials) && testimonials.length > 0) {
-    return testimonials.filter((t: any) => !isPlaceholderTestimonial(t)).map((t: any) => ({
-      quote: t.quote,
-      author: t.author || t.name,
-      title: t.title || '',
-      rating: t.rating || 5,
-    }));
-  }
-  
-  // Return empty - don't fabricate testimonials
-  return [];
-}
-
-/**
  * Default page structure including all recommended sections
  */
 export const DEFAULT_PAGE_STRUCTURE = [
