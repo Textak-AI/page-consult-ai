@@ -213,7 +213,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
             <div className="flex items-center justify-center gap-4">
               <div className="w-14 h-14 rounded-full bg-slate-700 flex items-center justify-center overflow-hidden">
                 {testimonial.avatarUrl ? (
-                  <img src={testimonial.avatarUrl} alt={testimonial.name || ''} className="w-full h-full object-cover" />
+                  <TreatedImage src={testimonial.avatarUrl} alt={testimonial.name || ''} className="w-full h-full object-cover" />
                 ) : (
                   <User className="w-7 h-7 text-slate-500" />
                 )}
@@ -286,7 +286,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               <div className="relative group">
                 <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
                   {testimonial.avatarUrl ? (
-                    <img src={testimonial.avatarUrl} alt={testimonial.name || ''} className="w-full h-full object-cover" />
+                    <TreatedImage src={testimonial.avatarUrl} alt={testimonial.name || ''} className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-7 h-7 text-slate-500" strokeWidth={1.5} />
                   )}
@@ -408,7 +408,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               <div className="relative group">
                 <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                   {testimonial.avatarUrl ? (
-                    <img src={testimonial.avatarUrl} alt={testimonial.name || ''} className="w-full h-full object-cover" />
+                    <TreatedImage src={testimonial.avatarUrl} alt={testimonial.name || ''} className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-7 h-7 text-gray-500" strokeWidth={1.5} />
                   )}
@@ -578,7 +578,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
                   }}
                 >
                   {testimonial.avatarUrl ? (
-                    <img src={testimonial.avatarUrl} alt={testimonial.name || ''} className="w-full h-full object-cover" />
+                    <TreatedImage src={testimonial.avatarUrl} alt={testimonial.name || ''} className="w-full h-full object-cover" />
                   ) : (
                     <User 
                       className="w-8 h-8 md:w-9 md:h-9"
