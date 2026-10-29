@@ -39,13 +39,10 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
         played = true;
         let beats = resolveGazeOrder(root, sectionType);
         if (isHero) {
-          let largest: HTMLElement | null = null;
-          let area = 0;
-          beats.flat().forEach((el) => {
-            const r = el.getBoundingClientRect();
-            if (r.width * r.height > area) { area = r.width * r.height; largest = el; }
-          });
-          beats = beats.map((b) => b.filter((el) => el !== largest && !el.contains(largest))).filter((b) => b.length);
+          const all = beats.flat();
+          const areas = all.map((el) => { const r = el.getBoundingClientRect(); return r.width * r.height; });
+          const largest = all[areas.indexOf(Math.max(0, ...areas))];
+          if (largest) beats = beats.map((b) => b.filter((el) => el !== largest && !el.contains(largest))).filter((b) => b.length);
         }
         els = beats.flat();
         // Hide children and unhide the wrapper in the same frame: no flash.
