@@ -33,4 +33,4 @@
 - [ ] Post-migration candidate: "Generate Variant" (VariantGeneratorModal) — button hidden; handler only shows a "coming soon" toast.
 - [ ] Post-migration candidate: AI consultant "apply suggestion" — handler is a console.log stub; no visible button currently renders it.
 - [ ] Styling scaffold part 2 candidate: ~46 legacy Tailwind section components still use standard Tailwind scale classes (py-20/py-24/text-3xl…) directly rather than tokens.
-- [ ] QuickPivot: additive server capture, owner-only Leads listing/filter, isolated webhook and first-lead email; signed-out request-bin verification and cleanup.
+- [x] QuickPivot: additive server capture for CRM and prospect_pages formats; owner-only Leads label/filter; isolated webhook and first-lead email. Signed-out captures verified with HTTP 200/503 webhook outcomes and email accepted/idempotency skipped. Two disposable prospects and three leads removed; original webhook restored; request bin deleted. Three delivery audit rows remain (data-change tool disabled).
