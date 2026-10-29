@@ -1,4 +1,5 @@
 import { typeScale, spacing, space } from '@/lib/design/tokens';
+import { accentFor } from '@/lib/design/tokens';
 /**
  * ProblemSolutionTwoColumn — Two-column problem/solution layout
  * 
@@ -28,7 +29,7 @@ export default function ProblemSolutionTwoColumn({ content, onUpdate, isEditing 
     fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: '0.2em',
-    color: primaryColor,
+    color: accentFor('eyebrow', primaryColor),
     marginBottom: space.sm,
     fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
   };

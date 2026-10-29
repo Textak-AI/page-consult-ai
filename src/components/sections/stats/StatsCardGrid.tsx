@@ -80,7 +80,7 @@ export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCar
               style={{
                 ...typeScale.stat,
                 fontWeight: 700,
-                color: primaryColor,
+                color: bgStyles.text,
                 letterSpacing: '-0.02em',
                 fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                 fontVariantNumeric: 'tabular-nums',

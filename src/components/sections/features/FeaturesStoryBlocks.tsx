@@ -1,9 +1,10 @@
 import { typeScale, spacing, space, shape } from '@/lib/design/tokens';
+import { accentFor } from '@/lib/design/tokens';
 /**
  * FeaturesStoryBlocks — Emotional Connector features presentation
  * 
  * Accent-bar feature cards on light/tinted background.
- * Each card has a 4px colored left bar using primaryColor.
+ * Each card has a 4px neutral left bar (accent discipline).
  */
 
 import React from 'react';
@@ -55,7 +56,7 @@ export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: Fe
           fontWeight: 600,
           textTransform: 'uppercase' as const,
           letterSpacing: '0.2em',
-          color: primaryColor,
+          color: accentFor('eyebrow', primaryColor),
           marginBottom: space.sm,
           textAlign: 'center' as const,
           fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
@@ -109,7 +110,7 @@ export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: Fe
               <div style={{
                 width: 4,
                 flexShrink: 0,
-                backgroundColor: primaryColor,
+                backgroundColor: bgStyles.border,
                 borderRadius: '4px 0 0 4px',
               }} />
 

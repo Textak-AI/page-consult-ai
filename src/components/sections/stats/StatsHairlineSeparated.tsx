@@ -79,7 +79,7 @@ export default function StatsHairlineSeparated({ content, onUpdate, isEditing }:
               style={{
                 ...typeScale.stat,
                 fontWeight: 600,
-                color: primaryColor,
+                color: bgStyles.text,
                 letterSpacing: '-0.02em',
                 fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                 fontVariantNumeric: 'tabular-nums',

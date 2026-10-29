@@ -1,4 +1,5 @@
 import { typeScale, spacing, space } from '@/lib/design/tokens';
+import { accentFor } from '@/lib/design/tokens';
 /**
  * CTACenteredMinimal — Analytical Validator final CTA
  * 
@@ -37,12 +38,6 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
       )}
 
       {/* Optional accent glow */}
-      {content.hasAccentGlow && (
-        <div
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-3xl pointer-events-none"
-          style={{ backgroundColor: `${primaryColor}10` }}
-        />
-      )}
 
       <div className="relative z-10" style={{ maxWidth: 600, ...spacing.center, textAlign: 'center' as const }}>
         {/* Headline */}
@@ -89,7 +84,7 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
           size="lg"
           className="text-base px-8 py-6 font-medium shadow-lg transition-all duration-300 hover:scale-[1.02]"
           style={{
-            backgroundColor: primaryColor,
+            backgroundColor: accentFor('cta', primaryColor),
             color: '#FFFFFF',
             borderRadius: 'var(--archetype-card-radius, 8px)',
           }}
