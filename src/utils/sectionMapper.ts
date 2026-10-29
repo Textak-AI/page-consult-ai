@@ -542,6 +542,8 @@ export function mapBriefToSections(
                 : arcSrc.offer?.trim() || (intelligentHeaders.features?.title || industryTokens.sectionHeaders.features.title),
               subtitle: (() => {
                 if (isBetaPage) return 'What you get by joining early';
+                // Outcome slot titled with the client's stated offer: no generic header copy.
+                if (arcSrc.offer?.trim()) return undefined;
                 if (intelligentHeaders.features?.subtitle) return intelligentHeaders.features.subtitle;
                 // Never use raw industry string as subtitle
                 const defaultSub = industryTokens.sectionHeaders.features.subtitle;
