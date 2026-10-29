@@ -27,7 +27,7 @@ test('first-lead claim is once per prospect, server-only, for both prospect form
   expect(await claim(legacyLead)).toBe(true);
   expect(await claim(legacyLead)).toBe(false);
   expect((await db.query("SELECT has_function_privilege('authenticated','claim_quickpivot_first_lead(uuid)','EXECUTE') AS allowed")).rows[0].allowed).toBe(false);
-  await db.exec('GRANT UPDATE ON prospects TO authenticated; SET ROLE authenticated;');
+  await db.exec('GRANT SELECT, UPDATE ON prospects TO authenticated; SET ROLE authenticated;');
   await expect(db.query('UPDATE prospects SET first_lead_email_sent_at = null WHERE id=$1',[crm])).rejects.toThrow('server-written');
   await db.close();
 });
