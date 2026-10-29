@@ -43,11 +43,9 @@ function harness(path, { webhook = 'https://webhook.test', outcome = 'ok', forma
   const webhookFns = loadEdgeSource('_shared/leadWebhook.ts', { fetch }, ['deliverLeadWebhook']).exports;
   const captureFns = loadEdgeSource('_shared/quickpivotCapture.ts', {}, ['captureQuickPivotLead','parseQuickPivotLead']).exports;
   const deliveryFns = loadEdgeSource('_shared/quickpivotDelivery.ts', { ...webhookFns, fetch, Deno }, ['deliverQuickPivotWebhook','sendQuickPivotFirstLead']).exports;
+  let handler;
   const edge = loadEdgeSource(`${path}/index.ts`, { ...webhookFns, ...captureFns, ...deliveryFns, fetch,
     createClient: () => db.client, corsHeaders: {}, Deno: { ...Deno, serve: cb => { handler = cb; } } });
-  let handler;
-  // Deno.serve is captured by the callback above during load; lexical initialization
-  // is supplied by the function-scoped declaration below.
   return { ...edge, handler: () => handler, state, queries: db.queries, claims };
 }
 const request = path => new Request('https://app.test/capture', { method: 'POST', body: JSON.stringify({
