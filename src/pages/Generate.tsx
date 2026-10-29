@@ -6168,6 +6168,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
 
       {/* Strategy Brief Panel - Fixed to right edge */}
       <StrategyBriefPanel
+        communicationStrategy={strategicData?.structuredBrief?.communicationStrategy || (pageData?.consultation_data as any)?.communicationStrategy || (consultation as any)?.structuredBrief?.communicationStrategy}
         brief={strategicData?.strategyBrief || (pageData?.strategy_brief as string | null) || null}
         businessName={strategicData?.consultationData?.businessName || (pageData?.consultation_data as any)?.businessName}
         consultationData={strategicData?.consultationData || (pageData?.consultation_data as any) || consultation}

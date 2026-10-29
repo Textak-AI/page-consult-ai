@@ -8,9 +8,12 @@ import { AISeoPanel } from '@/components/consultation/AISeoPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { AISeoData } from '@/services/intelligence/types';
+import { CommunicationStrategyPanel } from '@/components/strategy-brief/CommunicationStrategyPanel';
+import { briefObjectValue } from '@/lib/briefEnvelope';
 
 interface Props {
   brief: string | null;
+  communicationStrategy?: import('@/lib/composition/communicationStrategy').CommunicationStrategy | null;
   businessName?: string;
   consultationData?: any;
   consultationId?: string;
@@ -22,6 +25,7 @@ interface Props {
 
 export function StrategyBriefPanel({ 
   brief, 
+  communicationStrategy,
   businessName, 
   consultationData,
   consultationId,
@@ -157,6 +161,7 @@ export function StrategyBriefPanel({
 
               {/* Brief Content */}
               <div className="flex-1 overflow-auto p-6 space-y-6">
+                <CommunicationStrategyPanel strategy={communicationStrategy || consultationData?.communicationStrategy || briefObjectValue(consultationData?.strategy_brief)?.communicationStrategy} />
                 {/* Main Strategy Brief */}
                 <div className="prose prose-invert prose-sm max-w-none">
                   <ReactMarkdown

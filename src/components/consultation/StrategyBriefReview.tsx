@@ -8,6 +8,8 @@ import { AISeoPanel } from './AISeoPanel';
 import { MessagingArchitecturePanel, type MessagingArchitecturePanelProps } from './MessagingArchitecturePanel';
 import type { ConsultationData } from './StrategicConsultation';
 import type { AISeoData } from '@/services/intelligence/types';
+import { CommunicationStrategyPanel } from '@/components/strategy-brief/CommunicationStrategyPanel';
+import { extractStructuredBrief } from '@/lib/extractStructuredBrief';
 
 interface Props {
   brief: string;
@@ -31,6 +33,7 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, messag
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <CommunicationStrategyPanel strategy={extractStructuredBrief(brief)?.communicationStrategy} />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

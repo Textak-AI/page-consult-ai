@@ -7,8 +7,10 @@ import { Loader2, Edit2, Check, X, Phone, MousePointer } from 'lucide-react';
 import { updateFlowState } from '@/services/flowEngine';
 import { getClientLayoutIntelligence, PageStructureItem, LayoutIntelligence } from '@/lib/layoutIntelligence';
 import type { Json } from '@/integrations/supabase/types';
+import { CommunicationStrategyPanel } from '@/components/strategy-brief/CommunicationStrategyPanel';
 
 interface StrategyBriefData {
+  communicationStrategy?: import('@/lib/composition/communicationStrategy').CommunicationStrategy;
   positioning?: string;
   targetAudience?: string;
   industry?: string;
@@ -249,6 +251,7 @@ export default function StrategyBrief() {
         </div>
 
         {/* Layout Intelligence Badge */}
+        <CommunicationStrategyPanel strategy={brief.communicationStrategy} />
         {layoutIntelligence && (
           <div className="bg-[#1a1a2e] rounded-xl p-6 border border-gray-700/50 mb-8">
             <div className="flex items-center justify-between mb-4">
