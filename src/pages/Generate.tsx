@@ -2372,6 +2372,7 @@ function GenerateContent() {
           industryClassification: storedClassification,
           // SDI Layer 1.5: Messaging architecture for section reordering/suppression
           messagingArchitecture: messagingArchitecture?.primary || null,
+          arcSource: { challenge: consultationData.challenge, offer: consultationData.offer, uniqueValue: consultationData.unique_value || consultationData.uniqueValue },
         });
         
         console.log('📊 aiSearchOptimization passed to mapper:', strategicData.aiSeoData ? 'from strategicData.aiSeoData' : strategicData.consultationData?.ai_seo_data ? 'from consultationData.ai_seo_data' : 'null');
@@ -2858,6 +2859,7 @@ function GenerateContent() {
         serviceType: consultationData.service_type, // For industry variant detection
         aiSearchOptimization,                       // For authority signal extraction
         messagingArchitecture: messagingArchitecture?.primary || null,
+        arcSource: { challenge: consultationData.challenge, offer: consultationData.offer, uniqueValue: consultationData.unique_value || consultationData.uniqueValue },
       });
       
       console.log(`✅ Brief-first mapper built ${sections.length} sections with intelligent extraction`);

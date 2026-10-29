@@ -1,3 +1,4 @@
+import { composeArc } from '@/lib/composition/arc';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 /**
  * Brief-First Section Mapper with Intelligent Extraction
@@ -45,7 +46,8 @@ import {
 import type { DesignIntelligenceOutput } from '@/lib/designIntelligence';
 import { generateArtDirectorBrief, archetypeFromStorage, applyArtDirectorDirectives } from '@/lib/artDirectorBrief';
 
-// Type definitions
+// Type definitionsimport { composeArc } from '@/lib/composition/arc';
+
 export interface StructuredBrief {
   headlines: {
     optionA: string;
@@ -120,6 +122,8 @@ export interface MapBriefOptions {
     clientCount?: string;
     ctaLink?: string;
   };
+  // Story arc sources from the consultation (user's own words)
+  arcSource?: { challenge?: string | null; offer?: string | null; uniqueValue?: string | null } | null;
   // Available proof for optimal proof stack
   availableProof?: {
     hasLogos?: boolean;
@@ -178,6 +182,7 @@ export interface MappedPage {
  */
 export const CANONICAL_SECTION_TYPES = [
   'hero',
+  'differentiator-callout',
   'stats-bar',
   'problem-solution',
   'features',
@@ -321,6 +326,20 @@ export function mapBriefToSections(
   }
   
   console.log('🧠 [sectionMapper] Final page structure source:', layoutSource);
+
+  // STORY ARC: problem → guide → plan → outcome → CTA, filled only from existing fields.
+  const arcSrc = options.arcSource || {};
+  const arc = composeArc(pageStructure.map(normalizeSectionType), {
+    challenge: arcSrc.challenge,
+    problemStatement: brief.problemStatement,
+    solutionStatement: brief.solutionStatement,
+    uniqueValue: arcSrc.uniqueValue ?? options.consultationData?.uniqueValue,
+    processSteps: brief.processSteps,
+    messagingPillars: brief.messagingPillars,
+    offer: arcSrc.offer,
+  });
+  console.log('📖 [sectionMapper] Arc composition log:', arc.log);
+  pageStructure = arc.structure;
   
   const isBetaPage = pageType === 'beta-prelaunch';
   
@@ -472,20 +491,32 @@ export function mapBriefToSections(
       }
 
       case 'problem-solution': {
-        if (brief.problemStatement && brief.solutionStatement) {
+        // Problem is named in the client's own framing when they stated it.
+        const statedChallenge = arcSrc.challenge?.trim() || brief.problemStatement;
+        if (statedChallenge && brief.solutionStatement) {
           sections.push({
             type: 'problem-solution',
             order,
             visible: true,
             content: {
               problemTitle: 'The Challenge',
-              problem: brief.problemStatement,
+              problem: statedChallenge,
               solutionTitle: 'Our Solution',
               solution: brief.solutionStatement,
               industryVariant: industryVariant,
               mode: sdiMode,
             },
           });
+        }
+        break;
+      }
+
+      case 'differentiator-callout': {
+        const text = (arcSrc.uniqueValue ?? options.consultationData?.uniqueValue)?.trim();
+        if (text) {
+          sections.push({ type: 'differentiator-callout', order, visible: true, content: { text, industryVariant, mode: sdiMode } });
+        } else {
+          console.log('📖 [sectionMapper] differentiator-callout skipped: no unique_value');
         }
         break;
       }
@@ -508,9 +539,11 @@ export function mapBriefToSections(
             content: {
               title: isBetaPage 
                 ? 'Early Adopter Perks' 
-                : (intelligentHeaders.features?.title || industryTokens.sectionHeaders.features.title),
+                : arcSrc.offer?.trim() || (intelligentHeaders.features?.title || industryTokens.sectionHeaders.features.title),
               subtitle: (() => {
                 if (isBetaPage) return 'What you get by joining early';
+                // Outcome slot titled with the client's stated offer: no generic header copy.
+                if (arcSrc.offer?.trim()) return undefined;
                 if (intelligentHeaders.features?.subtitle) return intelligentHeaders.features.subtitle;
                 // Never use raw industry string as subtitle
                 const defaultSub = industryTokens.sectionHeaders.features.subtitle;
