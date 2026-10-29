@@ -1,3 +1,4 @@
+import { useUsableImage } from '@/hooks/useUsableImage';
 import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeScale, typeClass, shape } from '@/lib/design/tokens';
 /**
@@ -40,7 +41,7 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
   const headingWeight = content.headingWeight || 500;
   const usesSerif = content.typographyPairing === 'serif-sans';
 
-  const heroImage = content.backgroundImage || content.heroImage;
+  const heroImage = useUsableImage(content.backgroundImage || content.heroImage);
 
   return (
     <section

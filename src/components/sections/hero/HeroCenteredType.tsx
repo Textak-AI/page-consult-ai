@@ -1,3 +1,4 @@
+import { useUsableImage } from '@/hooks/useUsableImage';
 import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeScale, typeClass } from '@/lib/design/tokens';
 /**
@@ -56,7 +57,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
   const trackingStyle = content.trackingStyle || 'tight';
   const trackingValue = trackingStyle === 'tight' ? '-0.03em' : '0';
 
-  const heroImage = content.backgroundImage || content.heroImage;
+  const heroImage = useUsableImage(content.backgroundImage || content.heroImage);
 
   return (
     <>
