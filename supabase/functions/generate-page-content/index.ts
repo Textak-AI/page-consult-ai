@@ -4,6 +4,7 @@ import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { withCharge } from '../_shared/planLimits.ts';
+import { COPY_REGISTER_RULES, logRegisterViolations } from "../_shared/copyRegister.ts";
 
 // Helper function to build brand context from brand brief
 function buildBrandContext(brief: any): string {
@@ -386,7 +387,7 @@ Generate compelling content. Return valid JSON only.`;
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
         max_tokens: 8192,
-        system: systemPrompt,
+        system: `${systemPrompt}\n\n${COPY_REGISTER_RULES}`,
         messages: [
           { role: 'user', content: userPrompt }
         ],
@@ -435,6 +436,8 @@ Generate compelling content. Return valid JSON only.`;
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    logRegisterViolations('generate-page-content', parsedContent);
 
     // Validate required fields
     if (!parsedContent.headline || !parsedContent.features || !Array.isArray(parsedContent.features)) {

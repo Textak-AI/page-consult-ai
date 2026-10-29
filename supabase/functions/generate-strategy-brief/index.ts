@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { getLayoutRecommendation, consultationToIntelligence } from '../_shared/industryLayouts/index.ts';
+import { COPY_REGISTER_RULES, logRegisterViolations } from "../_shared/copyRegister.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -244,7 +245,7 @@ Generate a STRATEGY BRIEF with these sections:
 
 2. **Target Audience Profile** (Synthesize who we're speaking to - their role, frustrations, desires)
 
-3. **Core Value Proposition** (One powerful statement that captures the unique value - this becomes the hero subheadline)
+3. **Core Value Proposition** (One plain, specific statement that captures the unique value - this becomes the hero subheadline)
 
 4. **Key Messaging Pillars** (3-4 main themes to emphasize - these become FEATURE CARDS)
    - For each pillar: Title, Benefit Description, Icon suggestion (Zap, Target, Shield, Award, TrendingUp, Users, CheckCircle, Clock, Heart, Star)
@@ -347,7 +348,7 @@ Be specific. No generic advice. Everything should tie back to the actual consult
         model: 'claude-sonnet-4-5',
         max_tokens: 8192,
         temperature: 0.7,
-        system: systemPrompt,
+        system: `${systemPrompt}\n\n${COPY_REGISTER_RULES}`,
         messages: [
           { role: 'user', content: userPrompt }
         ],
@@ -404,6 +405,7 @@ Be specific. No generic advice. Everything should tie back to the actual consult
 
     if (structuredBrief && typeof structuredBrief === 'object') {
       applyBriefGuards(structuredBrief, consultationData);
+      logRegisterViolations('generate-strategy-brief', structuredBrief);
     }
 
     return new Response(JSON.stringify({

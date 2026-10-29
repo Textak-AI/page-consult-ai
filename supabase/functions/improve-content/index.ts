@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { withCharge } from '../_shared/planLimits.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { COPY_REGISTER_RULES, logRegisterViolations } from "../_shared/copyRegister.ts";
 
 interface RequestBody {
   pageId: string;
@@ -102,7 +103,7 @@ Return ONLY the improved text, nothing else.`;
       body: JSON.stringify({
         model: "claude-sonnet-4-5",
         max_tokens: 4096,
-        system: "You are an expert copywriter specializing in AI-optimized content. Create clear, specific, citation-worthy copy.",
+        system: "You are an expert copywriter specializing in AI-optimized content. Create clear, specific, citation-worthy copy.\n\n" + COPY_REGISTER_RULES,
         messages: [
           { role: "user", content: prompt },
         ],
@@ -121,6 +122,7 @@ Return ONLY the improved text, nothing else.`;
     if (!improvedContent) {
       throw new Error("No content generated");
     }
+    logRegisterViolations("improve-content", improvedContent);
     
     // Update the page sections with improved content
     let updatedSections = sections;

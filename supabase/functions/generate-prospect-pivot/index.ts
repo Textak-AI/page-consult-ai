@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { withCharge } from '../_shared/planLimits.ts';
+import { COPY_REGISTER_RULES, logRegisterViolations } from "../_shared/copyRegister.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -220,7 +221,7 @@ You must respond with ONLY valid JSON, no other text:
         body: JSON.stringify({
           model: "claude-sonnet-4-5",
           max_tokens: 4096,
-          system: "You are an expert conversion copywriter. Always respond with valid JSON only.",
+          system: "You are an expert conversion copywriter. Always respond with valid JSON only.\n\n" + COPY_REGISTER_RULES,
           messages: [
             { role: "user", content: prompt },
           ],
@@ -244,6 +245,7 @@ You must respond with ONLY valid JSON, no other text:
     if (!jsonMatch) throw new Error("Failed to parse AI response");
 
     const generated = JSON.parse(jsonMatch[0]);
+    logRegisterViolations("generate-prospect-pivot", generated);
 
     // Generate slug
     let slug = custom_slug;
