@@ -531,7 +531,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
         return renderSectionWithToolbar(
           section,
           index,
-          <DifferentiatorCalloutSection content={sectionContent} />
+          <DifferentiatorCalloutSection content={sectionContent} onUpdate={(content: any) => handleContentUpdate(index, content)} isEditing={isSectionEditing} />
         );
       case "audience-fit":
         return renderSectionWithToolbar(
