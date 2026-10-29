@@ -35,6 +35,7 @@ test('source-backed terms survive verbatim, malformed and fabricated citations d
  expect(sourced({text:'No obligation',source:'No obligation',field:'terms'})).toBe(true);
  expect(sourced({text:'No obligation',source:'Book a visit',field:'terms'})).toBe(false);
  expect(sourced({text:34,source:34,field:'terms'})).toBe(false);
+ expect(selectSignature(strategy,sections,{ctaTerms:[{text:'Cancel anytime',source:'Cancel anytime',field:'terms'}]}).terms).toEqual([]);
 });
 test('applying signature is immutable and never rewrites content or CTAs',()=>{
  const before=JSON.stringify(sections);const next=applySignatureStrategy(sections,strategy);

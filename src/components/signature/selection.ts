@@ -31,14 +31,15 @@ export function payoffPhrase(headline: string, preferred?: string | null) {
 export function selectSignature(strategy: CommunicationStrategy, sections: { type: string; content: any }[], input: Record<string, unknown> = {}): SignaturePlan {
   const intensity = strategy.visualIntensity;
   const reframe = reframeHalves(strategy.reframe);
-  const stats = Array.isArray(input.signatureStats) ? (input.signatureStats as SignatureStat[]).filter(validStat) : [];
-  const terms = Array.isArray(input.ctaTerms) ? input.ctaTerms.filter(sourced) : [];
-  const microline = sourced(input.ctaMicroline) ? input.ctaMicroline : null;
+  const fromInput = (value: unknown): value is SourceText => sourced(value) && input[value.field] === value.source;
+  const stats = Array.isArray(input.signatureStats) ? (input.signatureStats as SignatureStat[]).filter(stat => validStat(stat) && fromInput(stat.evidence)) : [];
+  const terms = Array.isArray(input.ctaTerms) ? input.ctaTerms.filter(fromInput) : [];
+  const microline = fromInput(input.ctaMicroline) ? input.ctaMicroline : null;
   const candidates: SignatureElement[] = ['chapter'];
   const payoff = payoffPhrase(strategy.reframe || strategy.oneLiner || '');
   if (payoff) candidates.push('gradient');
   if (sections.some(s => s.type === 'how-it-works' && s.content.steps?.length >= 3 && s.content.industryVariant !== 'saas')) candidates.push('timeline');
-  if (reframe) candidates.push('reframe');
+  if (reframe && sections.some(s => s.type === 'problem-solution')) candidates.push('reframe');
   if (strategy.ctaLadder.primary && strategy.ctaLadder.secondary) candidates.push('fork');
   if (stats.length) candidates.push('stats');
   if (sections.some(s => s.type === 'features' && s.content.features?.length >= 3)) candidates.push('glass');
