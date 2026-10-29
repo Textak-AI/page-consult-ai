@@ -1,0 +1,20 @@
+import { describe, it, expect } from 'vitest';
+import { judgeLogo } from '../src/lib/logoAudit';
+import { WORK_SAMPLE_RULES, uploadedSamples, moveSample, pairSamples, sampleGroups } from '../src/lib/workSamples';
+import { composeArc, slotOf } from '../src/lib/composition/arc';
+import { buildSectionContent } from '../src/lib/editor/sectionFactory';
+const origin = 'https://storage.example';
+const owner = '11111111-1111-1111-1111-111111111111';
+const sample = n => { const id = `22222222-2222-2222-2222-${String(n).padStart(12, '0')}`; const storagePath = `${owner}/work-samples/${id}.png`; return { id, source: 'client-upload', storagePath, url: `${origin}/storage/v1/object/public/brand-assets/${storagePath}`, width: 800, height: 600, caption: `Client caption ${n}` }; };
+describe('upload-only work samples', () => {
+  it('requires 2 images and caps at 6', () => { expect(WORK_SAMPLE_RULES.min).toBe(2); expect(uploadedSamples(Array.from({length: 8}, (_,i) => sample(i)), origin)).toHaveLength(6); });
+  it('never accepts stock, generated or URL-only images', () => { expect(uploadedSamples([{...sample(1), source:'stock'}, {...sample(2), source:'generated'}, {...sample(3), url:'https://stock.example/a.jpg'}, {url:sample(4).url}],origin)).toEqual([]); });
+  it('never seeds captions or images from the brief', () => expect(buildSectionContent('work-samples', {samples:[sample(1)]})).toEqual({samples:[]}));
+  it('reuses 16px short and 64px long side minima', () => { expect(judgeLogo({url:'blob:test',purpose:'work-sample',width:64,height:16}).ok).toBe(true); expect(judgeLogo({url:'blob:test',purpose:'work-sample',width:64,height:15}).ok).toBe(false); expect(judgeLogo({url:'blob:test',purpose:'work-sample',width:63,height:16}).ok).toBe(false); });
+  it('rejects transparent and opaque blank uploads', () => { expect(judgeLogo({url:'blob:test',purpose:'work-sample',width:64,height:64,pixels:new Uint8ClampedArray([0,0,0,0])}).reason).toBe('fully-transparent'); expect(judgeLogo({url:'blob:test',purpose:'work-sample',width:64,height:64,pixels:new Uint8ClampedArray([100,100,100,255,110,110,110,255])}).reason).toBe('solid-color'); });
+  it('allows landscape product shots rejected by logo-specific aspect checks', () => expect(judgeLogo({url:'blob:test',purpose:'work-sample',width:1200,height:630}).ok).toBe(true));
+  it('reorders immutably and preserves client captions', () => { const a=[sample(1),sample(2)]; const b=moveSample(a,0,1); expect(b.map(s=>s.caption)).toEqual(['Client caption 2','Client caption 1']); expect(a[0].id).toBe(sample(1).id); });
+  it('pairs only selected uploads in before/after order; no change claims', () => { const a=[sample(1),sample(2)]; const b=pairSamples(a,a[1].id,a[0].id,'pair'); expect(sampleGroups(b)[0].map(s=>s.pairRole)).toEqual(['before','after']); expect(b.map(s=>s.caption)).toEqual(a.map(s=>s.caption)); });
+  it('keeps a surviving half unlabelled', () => { const b=pairSamples([sample(1),sample(2)],sample(1).id,sample(2).id,'pair'); expect(sampleGroups(b.slice(0,1))).toEqual([[b[0]]]); });
+  it('composes work samples in proof before CTA', () => { expect(slotOf('work-samples')).toBe('proof'); expect(composeArc(['final-cta','work-samples','hero'],{}).structure).toEqual(['hero','work-samples','final-cta']); });
+});
