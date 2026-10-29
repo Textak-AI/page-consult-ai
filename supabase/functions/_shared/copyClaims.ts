@@ -40,12 +40,18 @@ export function guardCopyClaims<T>(output: T, input: unknown, label = 'copy-guar
       const terms = stripUnsupportedOfferTerms(value, input, removed);
       if (removed.length) console.log(`[${label}] Removed unsupported offer terms at ${path}`, JSON.stringify(removed));
       // Discard the whole unsupported sentence/line, never just its number.
-      return (terms.match(/[^\n]+(?:\n|$)/g) || []).map(line => (line.match(/[^.!?]+(?:[.!?](?=\s|$)|$)/g) || [line]).filter(sentence => {
+      return (terms.match(/[^\n]+(?:\n|$)/g) || []).map(line => {
+        // Document/list indices describe structure, not a claim about the client.
+        const prefix = line.match(/^(?:#{1,6}\s+)?\d+\.\s+/)?.[0] || '';
+        const body = line.slice(prefix.length);
+        const guarded = (body.match(/[^.!?]+(?:[.!?](?=\s|$)|$)/g) || [body]).filter(sentence => {
         const unknown = numbersIn(sentence).filter(n => !allowed.has(n));
         if (!unknown.length) return true;
         console.log(`[${label}] Removed unsupported numeric copy at ${path}`, JSON.stringify({ sentence: sentence.trim(), numbers: unknown }));
         return false;
-      }).join('')).join('').trim();
+        }).join('');
+        return guarded.trim() ? prefix + guarded : '';
+      }).join('').trim();
     }
     if (Array.isArray(value)) return value.map((v,i) => walk(v, `${path}[${i}]`)).filter(v => v !== '');
     if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k,v]) => [k, walk(v, `${path}.${k}`, k)]));
