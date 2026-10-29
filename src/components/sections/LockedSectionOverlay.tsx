@@ -41,7 +41,7 @@ const SECTION_CONFIGS: Record<string, LockedSectionConfig> = {
     currentScore: 65,
     estimatedNewScore: 85,
     actionButtonText: 'Add Testimonials',
-    benefitHint: 'Social proof increases conversions by 34% on average'
+    benefitHint: 'Add a client quote to strengthen this page'
   },
   'social-proof': {
     sectionTypeName: 'Social Proof',
@@ -52,7 +52,7 @@ const SECTION_CONFIGS: Record<string, LockedSectionConfig> = {
     currentScore: 65,
     estimatedNewScore: 85,
     actionButtonText: 'Add Testimonials',
-    benefitHint: 'Social proof increases conversions by 34% on average'
+    benefitHint: 'Add a client quote to strengthen this page'
   },
   'calculator': {
     sectionTypeName: 'ROI Calculator',
@@ -63,7 +63,7 @@ const SECTION_CONFIGS: Record<string, LockedSectionConfig> = {
     currentScore: 70,
     estimatedNewScore: 86,
     actionButtonText: 'Add ROI Data',
-    benefitHint: 'Interactive calculators boost engagement by 2x'
+    benefitHint: 'Let visitors work out their own numbers'
   },
   'case-study': {
     sectionTypeName: 'Case Study',
