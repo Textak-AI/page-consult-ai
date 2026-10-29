@@ -1,5 +1,7 @@
 # Architecture rules
 
+- Communication Strategy Phase A is extractive and stored inside the existing structured brief/page consultation JSON; the mapper applies it after legacy heuristics, and mechanism suggestions never enter page copy, preserving input provenance and CTA text.
+
 - Edge-handler regression tests evaluate unchanged Deno source in isolated VM contexts with injected imports and local-only DB/provider fakes, so billing/privacy paths are exercised without production exports, credentials, or live side effects.
 
 - Password recovery shares the /reset-password route and redirect helper; only recovery-link/event sessions validated by getUser may show the reset form, and recovery updateUser omits current_password because recovery sessions are exempt.

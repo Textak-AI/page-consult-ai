@@ -3,6 +3,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { getLayoutRecommendation, consultationToIntelligence } from '../_shared/industryLayouts/index.ts';
 import { COPY_REGISTER_RULES, PROVENANCE_RULES, logRegisterViolations, logProvenanceViolations } from "../_shared/copyRegister.ts";
+import { computeCommunicationStrategy, auditCommunicationStrategy } from '../_shared/communicationStrategy.ts';
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { z } from 'npm:zod@4';
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -13,7 +16,43 @@ serve(async (req) => {
   const corsHeaders = getCorsHeaders(origin);
 
   try {
-    const { consultationData } = await req.json();
+    const body = await req.json();
+    // Re-synthesize an existing brief without regenerating its substrate or copy.
+    if (body.mode === 'communication-strategy') {
+      const parsed = z.object({ mode: z.literal('communication-strategy'), consultationId: z.uuid(), pageId: z.uuid().optional() }).safeParse(body);
+      if (!parsed.success) return new Response(JSON.stringify({ error: 'Invalid strategy request' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      const client = createClient(Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '');
+      const token = req.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
+      if (!token) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+      const { data: auth, error: authError } = await client.auth.getUser(token);
+      if (authError || !auth.user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
+      const { data: consultation, error } = await client.from('consultations').select('*').eq('id', parsed.data.consultationId).eq('user_id', auth.user.id).single();
+      if (error || !consultation) return new Response(JSON.stringify({ error: 'Consultation not found' }), { status: 404, headers: corsHeaders });
+      let page = null;
+      if (parsed.data.pageId) {
+        const result = await client.from('landing_pages').select('id,consultation_data').eq('id', parsed.data.pageId).eq('user_id', auth.user.id).eq('consultation_id', consultation.id).single();
+        if (result.error || !result.data) return new Response(JSON.stringify({ error: 'Page not found' }), { status: 404, headers: corsHeaders });
+        page = result.data;
+      }
+      const stored = consultation.strategy_brief;
+      const structured = stored?.structured ?? stored;
+      if (!structured || typeof structured !== 'object') return new Response(JSON.stringify({ error: 'Structured brief required' }), { status: 422, headers: corsHeaders });
+      const input = { ...(consultation.extracted_intelligence || {}), ...(page?.consultation_data || {}), challenge: consultation.challenge, unique_value: consultation.unique_value, offer: consultation.offer, primary_cta: consultation.primary_cta, secondary_cta: consultation.secondary_cta, credentials: consultation.credentials, client_count: consultation.client_count, case_study_highlight: consultation.case_study_highlight };
+      const communicationStrategy = computeCommunicationStrategy(input, structured);
+      const flags = auditCommunicationStrategy(communicationStrategy, input);
+      logRegisterViolations('communication-strategy', communicationStrategy);
+      logProvenanceViolations('communication-strategy', { reframe: communicationStrategy.reframe, stakes: communicationStrategy.stakes, oneLiner: communicationStrategy.oneLiner, proofPlan: communicationStrategy.proofPlan }, JSON.stringify(input));
+      const updated = { ...structured, communicationStrategy };
+      const strategy_brief = stored?.structured ? { ...stored, structured: updated } : updated;
+      const saved = await client.from('consultations').update({ strategy_brief }).eq('id', consultation.id).eq('user_id', auth.user.id);
+      if (saved.error) throw saved.error;
+      if (page) {
+        const result = await client.from('landing_pages').update({ consultation_data: { ...(page.consultation_data || {}), communicationStrategy } }).eq('id', page.id).eq('user_id', auth.user.id);
+        if (result.error) throw result.error;
+      }
+      return new Response(JSON.stringify({ success: true, communicationStrategy, flags }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const { consultationData } = body;
     
     console.log('[generate-strategy-brief] Received consultationData:', JSON.stringify(consultationData, null, 2));
     console.log('[generate-strategy-brief] Generating brief for:', consultationData.businessName || 'Unknown business');
@@ -370,7 +409,7 @@ Be specific. No generic advice. Everything should tie back to the actual consult
     }
 
     const result = await response.json();
-    const strategyBrief = (result.content || [])
+    let strategyBrief = (result.content || [])
       .filter((block: { type: string; text?: string }) => block.type === 'text')
       .map((block: { text?: string }) => block.text || '')
       .join('');
@@ -405,6 +444,11 @@ Be specific. No generic advice. Everything should tie back to the actual consult
 
     if (structuredBrief && typeof structuredBrief === 'object') {
       applyBriefGuards(structuredBrief, consultationData);
+      structuredBrief.communicationStrategy = computeCommunicationStrategy(consultationData, structuredBrief);
+      auditCommunicationStrategy(structuredBrief.communicationStrategy, consultationData);
+      logRegisterViolations('communication-strategy', structuredBrief.communicationStrategy);
+      // Keep recovery-from-markdown paths identical to the structured response.
+      strategyBrief = strategyBrief.replace(/```json\s*[\s\S]*?\s*```/i, () => '```json\n' + JSON.stringify(structuredBrief, null, 2) + '\n```');
       logRegisterViolations('generate-strategy-brief', structuredBrief);
     logProvenanceViolations('generate-strategy-brief', structuredBrief, JSON.stringify(consultationData));
     }

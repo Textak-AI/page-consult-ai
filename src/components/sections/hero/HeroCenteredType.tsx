@@ -169,6 +169,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
 
         {/* Single CTA */}
         <div className="mb-12">
+          {content.ctaText && <>
           <Button
             asChild
             size="lg"
@@ -183,6 +184,8 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
               {content.ctaText || 'Get Started'}
             </a>
           </Button>
+          </>}
+          {content.secondaryCta && <Button asChild variant="link" className="block mx-auto mt-3 text-foreground"><a href={content.secondaryCtaLink || '#contact'}>{content.secondaryCta}</a></Button>}
         </div>
 
         {/* Inline trust signals */}

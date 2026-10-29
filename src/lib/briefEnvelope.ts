@@ -24,6 +24,7 @@ export function briefObjectValue(value: any): any {
 
 /** Display shape rendered by the Review Brief page (StrategyBrief.tsx). */
 export interface BriefView {
+  communicationStrategy?: import('./composition/communicationStrategy').CommunicationStrategy;
   positioning?: string;
   targetAudience?: string;
   industry?: string;
@@ -74,6 +75,7 @@ export function toBriefView(
   }
 
   return {
+    communicationStrategy: obj.communicationStrategy,
     positioning: str(obj.solutionStatement),
     targetAudience: str(consultation?.target_audience),
     industry: str(consultation?.industry),

@@ -1,4 +1,5 @@
 import { composeArc } from '@/lib/composition/arc';
+import { applyCommunicationStrategy, type CommunicationStrategy } from '@/lib/composition/communicationStrategy';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 /**
  * Brief-First Section Mapper with Intelligent Extraction
@@ -49,6 +50,7 @@ import { generateArtDirectorBrief, archetypeFromStorage, applyArtDirectorDirecti
 // Type definitionsimport { composeArc } from '@/lib/composition/arc';
 
 export interface StructuredBrief {
+  communicationStrategy?: CommunicationStrategy;
   headlines: {
     optionA: string;
     optionB: string;
@@ -913,6 +915,8 @@ export function mapBriefToSections(
 
   // ── Apply Art Director Compositional Brief ──────────────────────
   sections = applyArtDirectorDirectives(sections, options.messagingArchitecture);
+
+  if (brief.communicationStrategy) sections = applyCommunicationStrategy(sections, brief.communicationStrategy);
 
   return sections;
 }
