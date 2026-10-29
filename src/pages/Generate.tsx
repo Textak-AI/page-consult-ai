@@ -95,6 +95,7 @@ import { PublishToolbar } from "@/components/editor/PublishToolbar";
 import { SharePreviewModal } from "@/components/editor/SharePreviewModal";
 import { autoQCPass } from "@/lib/autoQCPass";
 import { buildResolvedPalette, injectPaletteIntoContent } from "@/lib/resolvedPalette";
+import { collectClientImages, composeClientImages, preferredImage } from '@/lib/clientImages';
 
 // Helper functions for transforming problem/solution statements
 function transformProblemStatement(challenge?: string): string {
@@ -586,6 +587,13 @@ function GenerateContent() {
   }, []);
 
   // Auto-trigger hero image generation for Art Director compositions
+  useEffect(() => {
+    if (phase !== 'editor') return;
+    const candidates = collectClientImages(consultation, effectiveNavState?.strategicData, sections);
+    const composed = composeClientImages(sections, candidates);
+    if (composed !== sections) setSections(composed);
+  }, [phase, consultation, effectiveNavState, sections]);
+
   const heroImageTriggered = useRef(false);
   useEffect(() => {
     if (phase !== 'editor' || sections.length === 0 || heroImageTriggered.current) return;
@@ -597,6 +605,7 @@ function GenerateContent() {
     const isArtDirector = composition === 'centered-type' || composition === 'split-photo';
     if (!isArtDirector || imageStyle === 'none') return;
     if (backgroundImage || heroImage) return; // Already has an image
+    if (preferredImage(collectClientImages(consultation, effectiveNavState?.strategicData, sections))) return;
 
     heroImageTriggered.current = true;
 
@@ -2251,7 +2260,7 @@ function GenerateContent() {
         
         // AI hero images disabled — use CSS gradient backgrounds instead
         // Only use user-selected images (manual picks via editor)
-        const heroImageUrl = userSelectedHeroImage || '';
+        const heroImageUrl = userSelectedHeroImage || preferredImage(collectClientImages(strategicData, consultationData))?.url || '';
         console.log('🖼️ [Generate] Hero image disabled — using CSS gradient. User-selected:', !!userSelectedHeroImage);
         
         // Get brand settings for passing to sections
@@ -4725,6 +4734,8 @@ function GenerateContent() {
 
   // Fetch hero image - DISABLED: returns empty to use CSS gradient backgrounds instead
   const fetchHeroImage = async (query: string, industry?: string): Promise<string> => {
+    const owned = preferredImage(collectClientImages(consultation, effectiveNavState?.strategicData, sections));
+    if (owned) return owned.url;
     if (!ENABLE_AI_HERO_IMAGES) {
       console.log('🖼️ [fetchHeroImage] AI hero images DISABLED — using CSS gradient background');
       return "";

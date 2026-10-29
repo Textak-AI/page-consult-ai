@@ -1,5 +1,7 @@
 import { resolveColors, themeFontCss, type PageTheme } from '@/lib/editor/pageTheme';
 import { SignatureSection } from '@/components/signature/SignatureSection';
+import { ClientImageContext } from './ClientImageContext';
+import { collectClientImages } from '@/lib/clientImages';
 import { GazeReveal } from '@/components/motion/GazeReveal';
 import { useState, useCallback, useMemo, memo } from "react";
 import { sanitizeFullCSS } from "@/lib/sanitizeCSS";
@@ -646,7 +648,9 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
   };
 
   return (
+    <ClientImageContext.Provider value={collectClientImages(sections, strategyBrief)}>
     <div 
+      data-image-intensity={strategyBrief?.communicationStrategy?.visualIntensity || sections.find(s => s.content?.signature)?.content.signature.intensity || 'restrained'}
       className="flex-1 bg-muted/30 overflow-y-auto transition-all duration-500"
       style={{
         '--style-primary': currentStyle.colors.primary,
