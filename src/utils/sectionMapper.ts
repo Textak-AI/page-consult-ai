@@ -181,6 +181,7 @@ export interface MappedPage {
  */
 export const CANONICAL_SECTION_TYPES = [
   'hero',
+  'differentiator-callout',
   'stats-bar',
   'problem-solution',
   'features',
