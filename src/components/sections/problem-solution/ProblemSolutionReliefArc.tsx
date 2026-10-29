@@ -66,7 +66,7 @@ export default function ProblemSolutionReliefArc({ content, onUpdate, isEditing 
       {/* Gradient transition line */}
       <div style={{
         height: 3,
-        background: `linear-gradient(to right, transparent, ${bgStyles.border}, transparent)`,
+        background: `linear-gradient(to right, transparent, rgba(148,163,184,0.35), transparent)`,
       }} />
 
       {/* Solution — warm/bright */}
