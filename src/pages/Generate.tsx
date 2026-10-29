@@ -4682,23 +4682,7 @@ function GenerateContent() {
             },
           };
         case "final_cta":
-          // Determine appropriate trust text based on industry/page type
-          const industry = consultationData.industry?.toLowerCase() || '';
-          const pageTypeForTrust = consultationData.pageType || '';
-          
-          let trustText = 'No credit card required · Free to start'; // default for SaaS
-          
-          if (pageTypeForTrust === 'beta-prelaunch' || pageTypeForTrust === 'waitlist') {
-            trustText = 'No spam · Unsubscribe anytime';
-          } else if (
-            industry.includes('consulting') ||
-            industry.includes('manufacturing') ||
-            industry.includes('services') ||
-            industry.includes('agency') ||
-            industry.includes('professional')
-          ) {
-            trustText = 'Free consultation · No obligation';
-          }
+          const trustText = consultationData.guaranteeOffer || '';
             
           return {
             type: isBetaPage ? "beta-final-cta" : "final-cta",

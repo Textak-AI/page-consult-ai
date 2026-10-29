@@ -5,6 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { withCharge } from '../_shared/planLimits.ts';
 import { COPY_REGISTER_RULES, PROVENANCE_RULES, logRegisterViolations, logProvenanceViolations } from "../_shared/copyRegister.ts";
+import { guardCopyClaims } from '../_shared/copyClaims.ts';
 
 // Helper function to build brand context from brand brief
 function buildBrandContext(brief: any): string {
@@ -437,6 +438,7 @@ Generate compelling content. Return valid JSON only.`;
       );
     }
 
+    parsedContent = guardCopyClaims(parsedContent, { ...requestData, strategyBrief: undefined, structuredBrief: undefined }, 'page-copy-guard');
     logRegisterViolations('generate-page-content', parsedContent);
     logProvenanceViolations('generate-page-content', parsedContent, JSON.stringify({ ...requestData, strategyBrief: undefined, structuredBrief: undefined }));
 

@@ -4,6 +4,7 @@ import Anthropic from "https://esm.sh/@anthropic-ai/sdk@0.30.1";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { chargeAction, refundCharge, runChargedWork } from '../_shared/planLimits.ts';
+import { guardCopyClaims } from '../_shared/copyClaims.ts';
 
 // Request validation
 const ConsultationDataSchema = z.object({
@@ -362,13 +363,14 @@ CRITICAL RULES:
       throw new Error('Unexpected response type');
     }
 
-    const generated = parseJSON(content.text);
+    let generated = parseJSON(content.text);
     
     // Ensure statistics are included even if AI didn't generate them
     if (!generated.statistics || generated.statistics.length === 0) {
       generated.statistics = statisticsToInclude;
     }
     
+    generated = guardCopyClaims(generated, consultationData, 'generated-copy-guard');
     console.log('✅ Content generated:', {
       headline: generated.headline?.substring(0, 50),
       features: generated.features?.length,
@@ -418,10 +420,7 @@ Based on the industry above, use ONLY these exact CTA button labels:
 - Healthcare / medical → "Book a Consultation"
 - All others → "Get Started"
 
-For trust indicator micro-copy beneath the CTA button:
-- SaaS / fintech / payment / developer → "Free to start · Pay as you go · No contracts"
-- Consulting / services → "Free consultation · No commitment · Cancel anytime"
-- All others → "No credit card required · Free to start · Cancel anytime"
+For trust indicator micro-copy beneath the CTA button, use only commitment terms explicitly supplied by the client. Otherwise return empty trust indicators. Never infer free pricing, cancellation rights, contracts, or obligations from industry.
 
 Never use "Schedule Strategic [anything]" as a button label.
 
@@ -515,7 +514,7 @@ Return ONLY the JSON for this specific section type.`;
       throw new Error('Unexpected response type');
     }
 
-    const sectionContent = parseJSON(content.text);
+    const sectionContent = guardCopyClaims(parseJSON(content.text), consultationData, 'section-copy-guard');
     
     console.log('✅ Section regenerated:', sectionType);
 

@@ -6,6 +6,7 @@ import { COPY_REGISTER_RULES, PROVENANCE_RULES, logRegisterViolations, logProven
 import { computeCommunicationStrategy, auditCommunicationStrategy } from '../_shared/communicationStrategy.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@4';
+import { guardCopyClaims } from '../_shared/copyClaims.ts';
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -444,11 +445,12 @@ Be specific. No generic advice. Everything should tie back to the actual consult
 
     if (structuredBrief && typeof structuredBrief === 'object') {
       applyBriefGuards(structuredBrief, consultationData);
+      structuredBrief = guardCopyClaims(structuredBrief, consultationData, 'brief-guard');
       structuredBrief.communicationStrategy = computeCommunicationStrategy(consultationData, structuredBrief);
       auditCommunicationStrategy(structuredBrief.communicationStrategy, consultationData);
       logRegisterViolations('communication-strategy', structuredBrief.communicationStrategy);
       // Keep recovery-from-markdown paths identical to the structured response.
-      strategyBrief = strategyBrief.replace(/```json\s*[\s\S]*?\s*```/i, () => '```json\n' + JSON.stringify(structuredBrief, null, 2) + '\n```');
+      strategyBrief = guardCopyClaims(strategyBrief.replace(/```(?:json)?\s*\n[\s\S]*?```/i, ''), consultationData, 'brief-prose-guard') + '\n\n```json\n' + JSON.stringify(structuredBrief, null, 2) + '\n```';
       logRegisterViolations('generate-strategy-brief', structuredBrief);
     logProvenanceViolations('generate-strategy-brief', structuredBrief, JSON.stringify(consultationData));
     }

@@ -48,7 +48,7 @@ export const SECTION_HEADERS: Record<string, Record<SectionHeaderType, SectionHe
     process: { title: 'How It Works', subtitle: 'Get started in minutes' },
     proof: { title: 'Trusted By', subtitle: 'Companies that rely on us' },
     testimonials: { title: 'Customer Stories', subtitle: 'Success in their own words' },
-    cta: { title: 'Start Free Trial', subtitle: 'No credit card required' },
+    cta: { title: 'Start Free Trial', subtitle: '' },
     gallery: { title: 'Product Screenshots', subtitle: 'See it in action' },
     serviceArea: { title: 'Global Availability', subtitle: 'Available worldwide' },
     faq: { title: 'Frequently Asked Questions', subtitle: 'Get answers fast' },

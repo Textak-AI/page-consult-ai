@@ -738,12 +738,8 @@ export function mapBriefToSections(
              goalHeadlines[effectivePageGoal] || 
              industryTokens.sectionHeaders.cta.title);
 
-        // Extract subtext - prefer uniqueValue from consultation, then intelligent headers
-        const ctaSubtext = isBetaPage 
-          ? '' 
-          : (truncateAtBoundary(consultation.uniqueValue, 150) || 
-             intelligentHeaders.cta?.subtitle || 
-             intelligentHeaders.cta?.subtitle || '');
+        // Differentiation belongs in the guide slot, not repeated beneath the ask.
+        const ctaSubtext = '';
 
         // Build trust signal from top authority signal
         const trustSignal = consultation.clientCount 
@@ -770,13 +766,7 @@ export function mapBriefToSections(
           urgencyText,
           guaranteeText,
           trustSignal,
-          trustIndicators: ctaTrustIndicators.length > 0 ? ctaTrustIndicators : (() => {
-            const saasKeywords = ['saas', 'software', 'platform', 'app', 'developer', 'devtools', 'api', 'fintech', 'payment', 'processing', 'automation', 'analytics', 'cloud', 'ai', 'tech'];
-            const isSaasIndustry = industry && saasKeywords.some(kw => industry.toLowerCase().includes(kw));
-            return isSaasIndustry
-              ? [{ text: 'Free to start' }, { text: 'Pay as you go' }, { text: 'No contracts' }]
-              : [{ text: 'No credit card required' }, { text: 'Free to start' }, { text: 'Cancel anytime' }];
-          })(),
+          trustIndicators: ctaTrustIndicators,
           primaryColor: primaryColor || null,
           industryVariant: industryVariant,
           mode: sdiMode,

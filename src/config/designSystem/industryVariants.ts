@@ -335,7 +335,7 @@ export const saasVariant: IndustryDesignTokens = {
     cta: {
       title: 'Ready to get started?',
       ctaText: 'Start your free trial',
-      subtext: 'No credit card required • Cancel anytime',
+      subtext: '',
     },
     faq: {
       title: 'Frequently asked questions',
@@ -417,7 +417,7 @@ export const healthcareVariant: IndustryDesignTokens = {
     cta: {
       title: 'Ready to Secure Your Organization?',
       ctaText: 'Schedule Assessment',
-      subtext: 'Free consultation • No obligation',
+      subtext: '',
     },
     faq: {
       title: 'Frequently Asked Questions',
@@ -493,7 +493,7 @@ export const defaultVariant: IndustryDesignTokens = {
     cta: {
       title: 'Ready to Start?',
       ctaText: 'Get Started',
-      subtext: 'No credit card required • Free to start',
+      subtext: '',
     },
     faq: {
       title: 'Frequently Asked Questions',
