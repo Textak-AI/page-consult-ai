@@ -1,0 +1,1 @@
+GRANT UPDATE ON public.prospect_pages, public.prospects TO authenticated;

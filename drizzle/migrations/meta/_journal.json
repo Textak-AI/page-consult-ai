@@ -71,6 +71,13 @@
       "when": 1793235552493,
       "tag": "0009_quickpivot_lead_capture",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793235587303,
+      "tag": "0010_preserve_prospect_update_grants",
+      "breakpoints": true
     }
   ]
 }
