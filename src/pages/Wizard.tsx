@@ -16,6 +16,8 @@ import { ReadyToGeneratePanel } from "@/components/wizard/ReadyToGeneratePanel";
 import { WizardIntelligenceProfile, tilesToIntelligence, mapDemoToConsultation, ExtractedIntelligence } from "@/components/wizard/WizardIntelligenceProfile";
 import PrefillBanner from "@/components/wizard/PrefillBanner";
 import { cn } from "@/lib/utils";
+import { BuyerObjectionChecklist } from '@/components/consultation/BuyerObjectionChecklist';
+import { consultationObjections } from '../../supabase/functions/_shared/buyerObjections';
 
 type Message = {
   id: string;
@@ -1146,6 +1148,7 @@ Ready to build this? Or want to adjust the approach first?`,
         
         // Meta
         conversationHistory: messages.map(m => ({ role: m.role, content: m.content })),
+        objections: consultationObjections({ ...collectedInfo, industry: tiles.find(t => t.id === 'industry')?.insight, conversationHistory: messages }),
         overallReadiness: overallReadiness,
       };
       
@@ -1186,6 +1189,7 @@ Ready to build this? Or want to adjust the approach first?`,
               mainOffer: extractedData.offer,
               primaryGoal: extractedData.goal,
               achievements: extractedData.competitivePosition,
+              objections: extractedData.objections,
               // Pass conversation for additional context
               conversationContext: extractedData.conversationHistory
                 .filter(m => m.role === 'user')
@@ -1228,7 +1232,7 @@ Ready to build this? Or want to adjust the approach first?`,
           challenge: extractedData.challenge || null,
           offer: extractedData.offer || null,
           goal: extractedData.goal || null,
-          extracted_intelligence: JSON.parse(JSON.stringify(extractedIntelligence || extractedData)),
+          extracted_intelligence: JSON.parse(JSON.stringify({ ...(extractedIntelligence || extractedData), objections: extractedData.objections })),
           readiness_score: overallReadiness,
           status: 'completed' as const, // Valid: 'in_progress' or 'completed'
           consultation_status: 'wizard_complete' as const, // Valid: not_started, demo_started, demo_complete, wizard_in_progress, wizard_complete, generation_ready
@@ -1288,6 +1292,7 @@ Ready to build this? Or want to adjust the approach first?`,
               goal: extractedData.goal,
               challenge: extractedData.challenge,
               offer: extractedData.offer,
+              objections: extractedData.objections,
             },
             strategyBrief: strategyBrief,
             structuredBrief: structuredBrief,
@@ -1578,6 +1583,8 @@ Ready to build this? Or want to adjust the approach first?`,
           <div className="border-t border-white/10 bg-black/30 backdrop-blur-xl">
             <div className="max-w-2xl mx-auto px-4 py-4">
               {phase === "strategy" ? (
+                <div className="space-y-4">
+                <BuyerObjectionChecklist value={collectedInfo.objections} context={{ ...collectedInfo, industry: tiles.find(t => t.id === 'industry')?.insight }} onChange={objections => setCollectedInfo(prev => ({ ...prev, objections }))} />
                 <div className="flex gap-3 justify-center">
                   <Button
                     variant="outline"
@@ -1597,6 +1604,7 @@ Ready to build this? Or want to adjust the approach first?`,
                     Build My Page
                     <ArrowRight className="w-5 h-5" />
                   </Button>
+                </div>
                 </div>
               ) : (phase === "intake" || phase === "presenting") && (
                 <>

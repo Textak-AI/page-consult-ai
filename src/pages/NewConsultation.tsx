@@ -554,6 +554,7 @@ export default function NewConsultation() {
           strategy_brief: briefEnvelope as any,
           extracted_intelligence: {
             ...((consultationData as any).extracted_intelligence || {}),
+            objections: consultationData.objections || [],
             ...(brandName ? { companyName: brandName } : {}),
             ...(brandLogo ? { logoUrl: brandLogo } : {}),
             brandColors: {
@@ -607,6 +608,7 @@ export default function NewConsultation() {
             processDescription: consultationData.processDescription,
             ctaText: consultationData.ctaText,
             objectionsToOvercome: consultationData.objectionsToOvercome,
+            objections: consultationData.objections || [],
             // Brand settings from customization
             brandSettings: consultationData.brandSettings,
             // Hero background from AI carousel

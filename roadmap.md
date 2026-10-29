@@ -39,6 +39,8 @@
 - [ ] Standalone dead-code-sweep typecheck confirmation: no separate automatic result is exposed and this environment prohibits manual project typechecks; automatic build OK is verified, not substituted for typecheck evidence.
 
 ## Communication Strategy (Phase A)
+- [x] Buyer objections: compact skippable five-topic checklist in Page Goals and chat confirmation, answered-only verbatim brief/FAQ/proofPlan; no schema/policy/transport changes.
+- [x] Fresh owner consultation → live brief → approval → saved editor: exactly three supplied FAQ answers and proof entries, skipped questions absent from stored page/brief; live SEO also exactly three. Test page/consultation/draft removed; 253 tests pass; report in Buyer Objection Coverage Report.md.
 - [x] Extractive communicationStrategy after brief, stored in existing structured brief/page JSON; service-side owner-validated re-synthesis mode; all outputs provenance-logged.
 - [x] Mapper reads hero, stakes, arc emphasis, proof placement and input CTAs after legacy heuristics; mechanism remains UI-only suggestion.
 - [x] Communication Strategy panel in review, standalone brief and editor brief views.

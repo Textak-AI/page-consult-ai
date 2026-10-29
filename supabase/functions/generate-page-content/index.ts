@@ -6,6 +6,7 @@ import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { withCharge } from '../_shared/planLimits.ts';
 import { COPY_REGISTER_RULES, PROVENANCE_RULES, logRegisterViolations, logProvenanceViolations } from "../_shared/copyRegister.ts";
 import { guardCopyClaims } from '../_shared/copyClaims.ts';
+import { consultationObjections } from '../_shared/buyerObjections.ts';
 
 // Helper function to build brand context from brand brief
 function buildBrandContext(brief: any): string {
@@ -91,6 +92,7 @@ const GenerateContentRequestSchema = z.object({
     primaryGoal: z.string().optional(),
     ctaText: z.string().optional(),
     objectionsToOvercome: z.string().optional(),
+    objections: z.array(z.object({ topic: z.enum(['pricing', 'timeline', 'effort', 'fit', 'materials']).optional(), question: z.string(), answer: z.string() })).optional(),
     pageType: z.string().optional(),
   }).optional(),
 });
@@ -203,7 +205,7 @@ CRITICAL: THE BRIEF IS YOUR BLUEPRINT
    - Use "problemStatement" and "solutionStatement" directly
 
 6. FAQ - Use Section 8 (Objection Handling)
-   - Each objection becomes a FAQ item
+   - Only explicit client-answered objections become FAQ items; skipped topics never appear. Answers remain verbatim, no defaults.
    - Use question as the FAQ question, answer as the FAQ answer
 
 7. TONE - Apply Section 7 Throughout
@@ -322,7 +324,7 @@ INSTRUCTIONS
 1. Use the pageStructure array to determine section order
 2. Pull headlines from the headlines object (pick the best option)
 3. Build features from messagingPillars
-4. Create FAQ from objections
+4. Create FAQ only from answered client objections; never infer rebuttals from concerns or research.
 5. Apply the specified tone throughout
 ${brandContext ? `6. STRICTLY follow the brand guidelines provided below` : ''}
 
@@ -439,6 +441,10 @@ Generate compelling content. Return valid JSON only.`;
     }
 
     parsedContent = guardCopyClaims(parsedContent, { ...requestData, strategyBrief: undefined, structuredBrief: undefined }, 'page-copy-guard');
+    const answered = consultationObjections(requestData.strategicConsultation || {});
+    parsedContent.faqItems = answered.length >= 2 ? answered.map(({ question, answer }) => ({ question, answer })) : [];
+    if ('faq' in parsedContent) parsedContent.faq = parsedContent.faqItems;
+    if ('objections' in parsedContent) parsedContent.objections = parsedContent.faqItems;
     logRegisterViolations('generate-page-content', parsedContent);
     logProvenanceViolations('generate-page-content', parsedContent, JSON.stringify({ ...requestData, strategyBrief: undefined, structuredBrief: undefined }));
 

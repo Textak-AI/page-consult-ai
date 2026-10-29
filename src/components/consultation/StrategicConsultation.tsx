@@ -51,6 +51,8 @@ import {
   type RewardTier
 } from './beta';
 import { useDevMode } from '@/components/dev/DevToolbar';
+import { BuyerObjectionChecklist } from './BuyerObjectionChecklist';
+import type { BuyerObjection } from '../../../supabase/functions/_shared/buyerObjections';
 
 export interface ConsultationData {
   // Page Type
@@ -124,6 +126,7 @@ export interface ConsultationData {
   primaryGoal: string;
   ctaText: string;
   objectionsToOvercome: string;
+  objections?: BuyerObjection[];
   
   // NEW: Calculator Context (when calculator is enabled)
   calculatorTypicalResults?: string;
@@ -1114,9 +1117,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       if (!data.proofStoryContext?.trim()) skippedFields.push('proofStoryContext');
       if (!data.achievements?.trim()) skippedFields.push('achievements');
     }
-    if (currentStepId === 'goals') {
-      if (!data.objectionsToOvercome?.trim()) skippedFields.push('objectionsToOvercome');
-    }
+    // Buyer questions are explicitly skippable; no coaching re-asks a skipped topic.
     
     if (skippedFields.length > 0) {
       const coaching = getSkipCoaching(skippedFields, coachingContext);
@@ -1948,21 +1949,7 @@ ${d.ctaText}
                 />
               </div>
               
-              <div>
-                <Label htmlFor="objectionsToOvercome" className="text-slate-400 inline-flex items-center">
-                  Any specific objections or concerns you need to address on this page?
-                  <QuestionExplainer {...QUESTION_EXPLAINERS.objectionsToOvercome} />
-                </Label>
-                <Textarea
-                  id="objectionsToOvercome"
-                  placeholder="e.g., Price concerns, trust issues with new vendors, comparison to DIY options, timing/availability concerns..."
-                  value={data.objectionsToOvercome || ''}
-                  onChange={(e) => updateData({ objectionsToOvercome: e.target.value })}
-                  onBlur={() => triggerConsultantBlur('objectionsToOvercome')}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
-                />
-                <InlineConsultant fieldKey="objectionsToOvercome" fieldValue={data.objectionsToOvercome || ''} fieldLabel="Objections" context={coachingContext} isOptional skipCoaching={skipCoachingResult} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('objectionsToOvercome', handler)} />
-              </div>
+              <BuyerObjectionChecklist value={data.objections} context={data} onChange={objections => updateData({ objections, objectionsToOvercome: objections.filter(o => o.answer.trim()).map(o => `${o.question}\n${o.answer}`).join('\n\n') })} />
             </div>
           </div>
         );

@@ -1,11 +1,12 @@
 // Phase A is deliberately extractive: words may be selected/recombined, never invented.
+import { consultationObjections } from './buyerObjections.ts';
 export interface CommunicationStrategy {
   reframe: string | null;
   stakes: string | null;
   oneLiner: string | null;
   mechanismName: { name: string; status: 'suggestion'; approved: false } | null;
   arcEmphasis: 'problem-led' | 'outcome-led';
-  proofPlan: { sectionType: string; claimSlot: 'guide' | 'outcome'; claim: string; evidence: string; sourceField: string }[];
+  proofPlan: { sectionType: string; claimSlot: 'guide' | 'outcome' | 'proof'; claim: string; evidence: string; sourceField: string; objectionTopic?: string }[];
   ctaLadder: { primary: string | null; secondary: string | null };
   register: string;
   visualIntensity: 'restrained' | 'balanced' | 'expressive';
@@ -59,6 +60,7 @@ export function computeCommunicationStrategy(input: Record<string, any>, brief: 
     if (!words.some(w => evidence.toLowerCase().includes(w))) continue;
     proofPlan.push({ sectionType, claimSlot: 'outcome', claim, evidence, sourceField: field });
   }
+  consultationObjections(input).forEach((o, i) => proofPlan.push({ sectionType: 'faq', claimSlot: 'proof', claim: o.question, evidence: o.answer, sourceField: `objections.${i}`, ...(o.topic ? { objectionTopic: o.topic } : {}) }));
   provenance.proofPlan = proofPlan.map(p => p.sourceField);
   provenance.register = ['policy:COPY_REGISTER_RULES'];
   return { reframe, stakes: challenge, oneLiner, mechanismName: mechanism ? { name: mechanism, status: 'suggestion', approved: false } : null, arcEmphasis, proofPlan, ctaLadder: { primary, secondary }, register: 'plain, concrete, input-only; at most two subheadline clauses; no hype or dash chains', visualIntensity, provenance };
