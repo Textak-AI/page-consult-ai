@@ -39,6 +39,9 @@
 - [ ] Standalone dead-code-sweep typecheck confirmation: no separate automatic result is exposed and this environment prohibits manual project typechecks; automatic build OK is verified, not substituted for typecheck evidence.
 
 ## Communication Strategy (Phase A)
+- [x] Harvest validated own-site images into existing owner storage and carry candidates to editor/composition; no policies/providers/schema changes.
+- [x] Shared photographic treatment and upload > harvest > brand scene > Unsplash ranking; explicit choices preserved and work samples remain upload-only.
+- [x] Fresh hyperbrand.ai extraction correctly returns zero (no images); linked client-owned hyperbrandcreative.com yields four, verified picker/save/public desktop/375. CLS <0.001, no overflow/errors; test page/link/four files removed. Report documents exact-site limitation and other residuals.
 - [x] Buyer objections: compact skippable five-topic checklist in Page Goals and chat confirmation, answered-only verbatim brief/FAQ/proofPlan; no schema/policy/transport changes.
 - [x] Fresh owner consultation → live brief → approval → saved editor: exactly three supplied FAQ answers and proof entries, skipped questions absent from stored page/brief; live SEO also exactly three. Test page/consultation/draft removed; 253 tests pass; report in Buyer Objection Coverage Report.md.
 - [x] Extractive communicationStrategy after brief, stored in existing structured brief/page JSON; service-side owner-validated re-synthesis mode; all outputs provenance-logged.

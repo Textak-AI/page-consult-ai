@@ -4,19 +4,16 @@
  * and at render time (stored logos that no longer load collapse instead of breaking).
  */
 
+import { IMAGE_RULES, judgeImageFacts } from '../../supabase/functions/_shared/imageAudit';
 export const LOGO_RULES = {
+  ...IMAGE_RULES,
   /** Shorter side must be at least this many natural pixels (rejects 1×1 tracking pixels and slivers). */
-  minShortSide: 16,
   /** Longer side must be at least this many natural pixels (rejects 16/32/48px favicons). */
-  minLongSide: 64,
   /** Social-preview images (OG/Twitter cards) are photos, not logos. */
   socialMinWidth: 1000,
   socialAspect: [1.85, 1.95] as const,
   /** Pixel check: a pixel is "visible" above this alpha (0–255). */
-  visibleAlpha: 16,
   /** Pixel check: visible pixels whose channels all stay within this range count as one solid colour. */
-  solidTolerance: 12,
-  timeoutMs: 8000,
 } as const;
 
 const SOCIAL_URL = /(og[-_]?image|opengraph|open-graph|twitter[-_]?(card|image)|social[-_]?(share|preview|card)|share[-_]?image)/i;
@@ -60,13 +57,14 @@ export function judgeLogo(f: {
   const base = f.purpose === 'work-sample' ? { ok: true } : judgeLogoUrl(f.url);
   if (!base.ok) return base;
   const { width: w, height: h } = f;
+  if (f.purpose === 'work-sample') return judgeImageFacts(w, h, f.pixels);
   const sized = w > 0 && h > 0;
   if (!sized && !f.isVector) return { ok: false, reason: 'too-small', width: w, height: h };
   if (sized) {
     if (Math.min(w, h) < LOGO_RULES.minShortSide || Math.max(w, h) < LOGO_RULES.minLongSide)
       return { ok: false, reason: 'too-small', width: w, height: h };
     const ratio = w / h;
-    if (f.purpose !== 'work-sample' && w >= LOGO_RULES.socialMinWidth && ratio >= LOGO_RULES.socialAspect[0] && ratio <= LOGO_RULES.socialAspect[1])
+    if (w >= LOGO_RULES.socialMinWidth && ratio >= LOGO_RULES.socialAspect[0] && ratio <= LOGO_RULES.socialAspect[1])
       return { ok: false, reason: 'social-preview-image', width: w, height: h };
   }
   if (f.pixels) {

@@ -1,4 +1,5 @@
 # Architecture rules
+- Site harvest extends website extraction with owner-JWT storage writes and public-host-checked fetches; candidates retain source URLs in existing JSON. clientImages owns automatic source ranking, TreatedImage and design tokens own photographic geometry/treatment; work samples stay upload-only.
 - Buyer objection prompts and answered-only selectors live in _shared/buyerObjections; wizard drafts and existing JSON retain pairs, brief/page guards restore verbatim answers, and FAQ proof entries stay beside the final ask.
 - Work samples use upload-only structured section content and a shared audited gallery in both renderers; owner-prefixed brand-assets paths preserve existing policies, and detached files are retained for undo/snapshots rather than deleted on section removal.
 - Signature presentation lives in src/components/signature; its pure selector stores plans in section content so undo/autosave/publish share the same treatments. Both renderers use SignatureSection; unsourced stats, kickers and CTA terms never render.

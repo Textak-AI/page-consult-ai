@@ -1,5 +1,7 @@
 import { resolveColors, themeFontCss, type PageTheme } from '@/lib/editor/pageTheme';
 import { SignatureSection } from '@/components/signature/SignatureSection';
+import { ClientImageContext } from './ClientImageContext';
+import { collectClientImages, type ClientImage } from '@/lib/clientImages';
 import { GazeReveal } from '@/components/motion/GazeReveal';
 import { useState, useCallback, useMemo, memo } from "react";
 import { sanitizeFullCSS } from "@/lib/sanitizeCSS";
@@ -177,7 +179,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
     setAiChatSection(null);
   };
 
-  const handleApplyImage = (imageUrl: string) => {
+  const handleApplyImage = (imageUrl: string, asset?: ClientImage) => {
     console.log('handleApplyImage called with:', imageUrl);
     console.log('imageGenSection:', imageGenSection);
     
@@ -188,11 +190,18 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
       // Apply image based on section type
       if (imageGenSection.type === 'hero') {
         content.backgroundImage = imageUrl;
+        content.imageAsset = asset;
+        content.imageCredit = undefined;
+        content.imageAttribution = undefined;
         console.log('Setting hero backgroundImage to:', imageUrl);
       } else if (imageGenSection.type === 'photo-gallery') {
         // Add to gallery images
-        content.images = [...(content.images || []), { url: imageUrl, alt: 'AI Generated' }];
+        content.images = [...(content.images || []), imageUrl];
         console.log('Added image to photo-gallery');
+      } else if (imageGenSection.type === 'differentiator-callout') {
+        content.supportingImage = imageUrl;
+        content.supportingImageAsset = asset;
+        content.imageCredit = undefined;
       } else {
         // For features, problem-solution, etc - set as main image
         content.image = imageUrl;
@@ -522,7 +531,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
         return renderSectionWithToolbar(
           section,
           index,
-          <DifferentiatorCalloutSection content={sectionContent} />
+          <DifferentiatorCalloutSection content={sectionContent} onUpdate={updateSection} isEditing={editingSection === index} />
         );
       case "audience-fit":
         return renderSectionWithToolbar(
@@ -646,7 +655,9 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
   };
 
   return (
+    <ClientImageContext.Provider value={collectClientImages(sections, strategyBrief)}>
     <div 
+      data-image-intensity={strategyBrief?.communicationStrategy?.visualIntensity || sections.find(s => s.content?.signature)?.content.signature.intensity || 'restrained'}
       className="flex-1 bg-muted/30 overflow-y-auto transition-all duration-500"
       style={{
         '--style-primary': currentStyle.colors.primary,
@@ -902,6 +913,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
       />
       */}
     </div>
+    </ClientImageContext.Provider>
   );
 }
 

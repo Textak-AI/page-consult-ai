@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ImagePicker } from "@/components/editor/ImagePicker";
 import { useState } from "react";
 import { ImagePlus, X, Image as ImageIcon } from "lucide-react";
+import { TreatedImage } from './TreatedImage';
 
 interface PhotoGallerySectionProps {
   content: {
@@ -83,7 +84,7 @@ export function PhotoGallerySection({ content, onUpdate, isEditing }: PhotoGalle
               key={index}
               className="relative group aspect-square overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-shadow"
             >
-              <img
+              <TreatedImage
                 src={imageUrl}
                 alt={`Gallery image ${index + 1}`}
                 className="w-full h-full object-cover transition-transform group-hover:scale-105"

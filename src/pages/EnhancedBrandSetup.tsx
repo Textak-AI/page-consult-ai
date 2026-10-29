@@ -91,6 +91,7 @@ function persistBrandDataToStorage(brandData: {
         },
         companyName: brandData.companyName,
         tagline: brandData.tagline,
+        harvestedImages: brandData.extractionResults?.harvestedImages || [],
       },
       updatedAt: new Date().toISOString(),
     };
@@ -212,6 +213,7 @@ const findFontMatch = (detectedFont: string): { original: string; match: string;
 };
 
 interface ExtractionResults {
+  harvestedImages?: import('@/lib/clientImages').ClientImage[];
   logoUrl: string | null;
   colors: string[];
   companyName: string | null;
@@ -945,6 +947,7 @@ export default function EnhancedBrandSetup() {
         }
 
         const results: ExtractionResults = {
+          harvestedImages: extracted.harvestedImages || [],
           logoUrl: extracted.logoUrl || null,
           colors: extracted.brandColors || [extracted.primary, extracted.secondary, extracted.accent].filter(Boolean),
           companyName: name || null,
@@ -1260,6 +1263,7 @@ export default function EnhancedBrandSetup() {
       // Merge brand data into extracted_intelligence
       const updatedIntelligence = {
         ...existingIntel,
+        harvestedImages: extractionResults?.harvestedImages || [],
         logoUrl: logo,
         companyName: companyName,
         websiteUrl: websiteUrl,

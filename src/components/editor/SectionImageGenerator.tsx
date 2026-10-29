@@ -14,6 +14,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { useClientImages } from './ClientImageContext';
+import { auditWorkSample } from '@/lib/workSamples';
+import type { ClientImage } from '@/lib/clientImages';
+import { TreatedImage } from '@/components/sections/TreatedImage';
 
 interface SectionImageGeneratorProps {
   isOpen: boolean;
@@ -22,7 +26,7 @@ interface SectionImageGeneratorProps {
   sectionContent: any;
   strategyBrief: any;
   industryContext?: string;
-  onApplyImage: (imageUrl: string) => void;
+  onApplyImage: (imageUrl: string, asset?: ClientImage) => void;
 }
 
 const getImageSuggestions = (sectionType: string, industry: string): string[] => {
@@ -93,6 +97,8 @@ export function SectionImageGenerator({
   industryContext,
   onApplyImage
 }: SectionImageGeneratorProps) {
+  const clientImages = useClientImages();
+  const [imageAssets, setImageAssets] = useState<ClientImage[]>([]);
   const [prompt, setPrompt] = useState("");
   const [quality, setQuality] = useState<'quick' | 'standard'>('quick');
   const [isLoading, setIsLoading] = useState(false);
@@ -157,7 +163,7 @@ export function SectionImageGenerator({
     console.log('selectedImage:', selectedImage);
     if (selectedImage) {
       console.log('Calling onApplyImage with:', selectedImage);
-      onApplyImage(selectedImage);
+      onApplyImage(selectedImage, [...clientImages, ...imageAssets].find(i => i.url === selectedImage) || { id: crypto.randomUUID(), source: 'brand-scene', url: selectedImage });
       // Reset state after successful apply
       handleReset();
       onClose();
@@ -188,6 +194,10 @@ export function SectionImageGenerator({
       const newUploadedImages: string[] = [];
 
       for (const file of Array.from(files)) {
+        const blobUrl = URL.createObjectURL(file);
+        const verdict = await auditWorkSample(blobUrl);
+        URL.revokeObjectURL(blobUrl);
+        if (!verdict.ok) throw new Error('This image did not pass the image audit.');
         // Validate file type
         if (!file.type.startsWith('image/')) {
           toast({
@@ -231,6 +241,7 @@ export function SectionImageGenerator({
           .getPublicUrl(data.path);
 
         newUploadedImages.push(publicUrl);
+        setImageAssets(prev => [...prev, { id: crypto.randomUUID(), source: 'client-upload', url: publicUrl, storagePath: data.path, width: verdict.width, height: verdict.height }]);
       }
 
       if (newUploadedImages.length > 0) {
@@ -358,6 +369,7 @@ export function SectionImageGenerator({
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
+          {clientImages.length > 0 && <section aria-label="Your website images"><h3 className="text-sm font-medium mb-3">Your images</h3><div className="grid grid-cols-2 gap-3">{clientImages.map((image, i) => <div key={image.url}><Button variant="outline" aria-label={`Select client image ${i + 1}`} className="h-auto p-0 w-full" onClick={async () => { if ((await auditWorkSample(image.url)).ok) setSelectedImage(image.url); else setError('That image is no longer available.'); }}><TreatedImage src={image.url} alt="" className="w-full" /></Button>{image.sourcePageUrl && <a href={image.sourcePageUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground underline break-all">From your website</a>}</div>)}</div></section>}
           {/* Hidden file input */}
           <input
             ref={fileInputRef}

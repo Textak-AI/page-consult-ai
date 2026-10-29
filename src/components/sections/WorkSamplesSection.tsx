@@ -7,6 +7,7 @@ import { LOGO_REJECTION_TEXT } from '@/lib/logoAudit';
 import { auditWorkSample, uploadedSamples, moveSample, pairSamples, sampleGroups, WORK_SAMPLE_RULES, type WorkSample } from '@/lib/workSamples';
 import { shape, spacing, space, signatureTokens, typeScale } from '@/lib/design/tokens';
 import { GazeReveal } from '@/components/motion/GazeReveal';
+import { TreatedImage } from './TreatedImage';
 
 interface Props { content: { samples?: WorkSample[] }; onUpdate?: (content: any) => void; editor?: boolean }
 const storageOrigin = import.meta.env.VITE_SUPABASE_URL;
@@ -68,7 +69,7 @@ export function WorkSamplesSection({ content, onUpdate, editor = false }: Props)
   const figure = (s: WorkSample, label?: string) => <figure key={s.id} className="min-w-0">
     {label && <p className="mb-2 font-medium" style={typeScale.small}>{label}</p>}
     <div className="overflow-hidden" style={{ aspectRatio: shape.sampleAspectRatio, borderRadius: shape.radiusImage }}>
-      <img src={s.url} alt={typeof s.caption === 'string' ? s.caption : ''} width={s.width} height={s.height} loading="lazy" decoding="async" className="h-full w-full object-contain" onError={() => setFailed(v => [...v, s.url])} />
+      <TreatedImage contain src={s.url} alt={typeof s.caption === 'string' ? s.caption : ''} width={s.width} height={s.height} className="h-full w-full" onError={() => setFailed(v => [...v, s.url])} />
     </div>
     {typeof s.caption === 'string' && s.caption.trim() && <figcaption className="mt-2 break-words whitespace-pre-wrap" style={typeScale.small}>{s.caption}</figcaption>}
   </figure>;

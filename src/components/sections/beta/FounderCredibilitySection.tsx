@@ -1,4 +1,5 @@
 import { spacing } from '@/lib/design/tokens';
+import { TreatedImage } from '../TreatedImage';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Twitter, Linkedin, Globe, Quote, BadgeCheck } from 'lucide-react';
@@ -93,7 +94,7 @@ export const FounderCredibilitySection: React.FC<Props> = ({
               {/* Photo / Avatar */}
               <div className="mb-6">
                 {content.photo ? (
-                  <img
+                  <TreatedImage
                     src={content.photo}
                     alt={content.name}
                     className="w-32 h-32 rounded-full mx-auto object-cover border-2 border-white/10"

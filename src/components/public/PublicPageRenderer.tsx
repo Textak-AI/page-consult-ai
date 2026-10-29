@@ -407,6 +407,7 @@ export function PublicPageRenderer({
       {themeCss && <style>{themeCss}</style>}
 
       <div 
+        data-image-intensity={sections.find(s => s.content?.signature)?.content.signature.intensity || 'restrained'}
         data-mode={colorMode}
         data-industry={industryVariant}
         data-archetype={archetypeProfile}

@@ -13,6 +13,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { IndustryVariant } from '@/lib/industryDesignSystem';
 import { getAmbientHeroGradient } from '@/lib/industryPatterns';
+import { preferredImage, type ClientImage } from '@/lib/clientImages';
 
 export interface HeroImageResolutionResult {
   imageUrl: string | null;
@@ -24,6 +25,7 @@ export interface HeroImageResolutionResult {
 }
 
 export interface HeroImageResolutionOptions {
+  clientImages?: ClientImage[];
   userSelectedUrl?: string | null;
   consultationId?: string;
   sessionId?: string;
@@ -117,6 +119,8 @@ export function useHeroImageResolution() {
     const mode = opts.colorMode || 'dark';
     const ambientGradient = getAmbientHeroGradient(variant as any, mode);
     
+    const owned = preferredImage(opts.clientImages || []);
+    if (!opts.userSelectedUrl && owned) return { imageUrl: owned.url, ambientGradient, isLoading: false, isFromCache: false, isAIGenerated: false, error: null };
     // Priority 1: User-selected hero image
     if (opts.userSelectedUrl) {
       console.log('🖼️ [HeroResolution] Using user-selected image');
@@ -221,6 +225,8 @@ export async function resolveHeroImageUrl(
   const ambientGradient = getAmbientHeroGradient(variant as any, mode);
   
   // Priority 1: User-selected
+  const owned = preferredImage(opts.clientImages || []);
+  if (!opts.userSelectedUrl && owned) return { imageUrl: owned.url, ambientGradient, isFromCache: false };
   if (opts.userSelectedUrl) {
     console.log('🖼️ [resolveHeroImageUrl] Using user-selected image');
     return { imageUrl: opts.userSelectedUrl, ambientGradient, isFromCache: false };

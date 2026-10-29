@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { TreatedImage } from '../TreatedImage';
 import { Linkedin, ExternalLink } from 'lucide-react';
 
 interface TeamMember {
@@ -76,7 +77,7 @@ export function TeamSection({
                 }}
               >
                 {member.imageUrl ? (
-                  <img 
+                  <TreatedImage
                     src={member.imageUrl} 
                     alt={member.name}
                     className="w-full h-full rounded-full object-cover"

@@ -1024,10 +1024,11 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       
       if (error) throw error;
       
-      if (result.success && result.data) {
+      const extracted = result?.data || result;
+      if (extracted?.success) {
         updateData({
-          websiteIntelligence: result.data,
-          businessName: result.data.companyName || data.businessName || ''
+          websiteIntelligence: extracted,
+          businessName: extracted.companyName || data.businessName || ''
         });
       } else {
         setAnalyzeError(result.error || 'Could not analyze website');

@@ -68,6 +68,9 @@ export const shape = {
   hairline: 1,
 } as const;
 
+/** Every photographic slot shares geometry; chroma lives in global semantic CSS. */
+export const imageTreatment = { radius: shape.radiusImage, aspectRatio: shape.sampleAspectRatio, overlay: { restrained: 0, balanced: 0.06, expressive: 0.1 } } as const;
+
 /**
  * Section surface rhythm. Each section type declares its surface; the tier
  * wrapper paints it so transitions are flush. Dark runs alternate deep /

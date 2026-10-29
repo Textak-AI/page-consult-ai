@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { harvestSiteImages } from '../_shared/siteImages.ts';
 
 // ============================================
 // COLOR UTILITY FUNCTIONS
@@ -1316,9 +1318,16 @@ serve(async (req) => {
       hasDesignDNA: !!designDNA,
     });
 
+    const authorization = req.headers.get('Authorization') || '';
+    const ownerClient = createClient(Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_ANON_KEY') || '', { global: { headers: { Authorization: authorization } } });
+    const { data: { user } } = await ownerClient.auth.getUser(authorization.replace(/^Bearer\s+/i, '')).catch(() => ({ data: { user: null } }));
+    const harvestedImages = await harvestSiteImages(html, response.url || normalizedUrl, extractedData.logoUrl, ownerClient, user?.id || null);
+
     // Build enhanced response with backward compatibility
     const responseData = {
       success: true,
+      harvestedImages,
+      harvestStatus: user ? 'complete' : 'sign-in-required',
       // ===== BACKWARD COMPATIBLE FIELDS =====
       companyName: extractedData.companyName,
       logoUrl: extractedData.logoUrl,

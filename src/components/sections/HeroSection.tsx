@@ -1,4 +1,5 @@
 import { useUsableImage } from '@/hooks/useUsableImage';
+import { TreatedImage } from './TreatedImage';
 import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeClass } from '@/lib/design/tokens';
 import { Button } from "@/components/ui/button";
@@ -254,10 +255,12 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
     onUpdate({
       ...content,
       backgroundImage: image.urls.regular,
-      imageAttribution: {
+      imageAsset: image.asset || { id: image.id, source: 'unsplash', url: image.urls.regular },
+      imageCredit: image.user ? { name: image.user.name, link: image.user.link } : undefined,
+      imageAttribution: image.user ? {
         photographerName: image.user.name,
         photographerLink: image.user.link,
-      },
+      } : undefined,
       darkOverlay: true, // Auto-enable overlay when adding bg image
     });
   };
@@ -316,11 +319,11 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
   const composition = content?.composition;
   if (composition === 'centered-type') {
     console.log('🎨 [ArtDirector] Hero: centered-type composition');
-    return <HeroCenteredType content={content} onUpdate={onUpdate} isEditing={isEditing} />;
+    return <><HeroCenteredType content={content} onUpdate={onUpdate} isEditing={isEditing} />{isEditing && <Button variant="outline" onClick={() => setImagePickerOpen(true)}><ImagePlus />Change Background</Button>}<ImagePicker open={imagePickerOpen} onClose={() => setImagePickerOpen(false)} onSelect={handleImageSelect} /></>;
   }
   if (composition === 'split-photo') {
     console.log('🎨 [ArtDirector] Hero: split-photo composition');
-    return <HeroSplitPhoto content={content} onUpdate={onUpdate} isEditing={isEditing} />;
+    return <><HeroSplitPhoto content={content} onUpdate={onUpdate} isEditing={isEditing} />{isEditing && <Button variant="outline" onClick={() => setImagePickerOpen(true)}><ImagePlus />Change Background</Button>}<ImagePicker open={imagePickerOpen} onClose={() => setImagePickerOpen(false)} onSelect={handleImageSelect} /></>;
   }
 
   // Local Services variant: Light mode, trust-forward, phone-prominent
@@ -329,7 +332,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
       <section className={`relative py-20 md:py-28 overflow-hidden ${isLightMode ? 'bg-white' : 'bg-slate-950'}`}>
         {heroImg && (
           <div className="absolute inset-0 z-0" aria-hidden="true">
-            <img src={heroImg} alt="" className="w-full h-full object-cover" fetchPriority="high" />
+            <TreatedImage background priority src={heroImg} alt="" />
             <div className={`absolute inset-0 ${isLightMode ? 'bg-white/85' : 'bg-slate-950/80'}`} />
           </div>
         )}
@@ -498,14 +501,8 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
 
         {/* Background Image Layer (if provided) - FULL BLEED */}
         {hasBackgroundImage && (
-          <div 
-            className="absolute inset-0 z-0"
-            style={{
-              backgroundImage: `url(${heroImg})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          >
+          <div className="absolute inset-0 z-0">
+            <TreatedImage background priority src={heroImg || undefined} alt="" />
             {/* Gradient overlay for text readability */}
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
           </div>
@@ -683,14 +680,8 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
       >
         {/* Background Image Layer (if provided) */}
         {heroImg && (
-          <div 
-            className="absolute inset-0 z-0"
-            style={{
-              backgroundImage: `url(${heroImg})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          >
+          <div className="absolute inset-0 z-0">
+            <TreatedImage background priority src={heroImg || undefined} alt="" />
             {showDarkOverlay && (
               <>
                 <div className="absolute inset-0 bg-black/40" />
@@ -925,7 +916,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
         {/* Background Image Layer (if provided) — atmospheric with strong text-readability gradient */}
         {heroImg && (
           <div className="absolute inset-0 z-0">
-            <img 
+            <TreatedImage background priority
               src={heroImg} 
               alt="" 
               className="w-full h-full object-cover"
@@ -1235,14 +1226,8 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
 
       {/* Background Image Layer (if provided) */}
       {heroImg && (
-        <div 
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: `url(${heroImg})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
+        <div className="absolute inset-0 z-0">
+            <TreatedImage background priority src={heroImg || undefined} alt="" />
           {showDarkOverlay && (
             <>
               {/* Base overlay */}
