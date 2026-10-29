@@ -3,6 +3,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ADDABLE_SECTION_TYPES } from "@/lib/editor/sectionFactory";
 import { movableRange, type EditorSection } from "@/lib/editor/sectionOps";
+import { Button } from '@/components/ui/button';
+import { slotOf } from '@/lib/composition/arc';
 
 interface AddSectionDialogProps {
   open: boolean;
@@ -18,9 +20,11 @@ export function AddSectionDialog({ open, onOpenChange, sections, defaultInsertAt
   const { min, max } = movableRange(sections);
   const lastSlot = max + 1;
   const [insertAt, setInsertAt] = useState<number>(lastSlot);
+  const [positionChosen, setPositionChosen] = useState(false);
+  const proofIndex = sections.findIndex(s => slotOf(s.type) === 'proof');
 
   useEffect(() => {
-    if (open) setInsertAt(Math.max(min, Math.min(lastSlot, defaultInsertAt ?? lastSlot)));
+    if (open) { setInsertAt(Math.max(min, Math.min(lastSlot, defaultInsertAt ?? lastSlot))); setPositionChosen(false); }
   }, [open, defaultInsertAt, min, lastSlot]);
 
   // Position options: "after <section>" for each slot in the movable range.
@@ -41,7 +45,7 @@ export function AddSectionDialog({ open, onOpenChange, sections, defaultInsertAt
 
         <div className="space-y-2">
           <label className="text-sm text-muted-foreground" htmlFor="add-section-position">Position</label>
-          <Select value={String(insertAt)} onValueChange={(v) => setInsertAt(Number(v))}>
+          <Select value={String(insertAt)} onValueChange={(v) => { setInsertAt(Number(v)); setPositionChosen(true); }}>
             <SelectTrigger id="add-section-position" aria-label="Position">
               <SelectValue />
             </SelectTrigger>
@@ -55,16 +59,16 @@ export function AddSectionDialog({ open, onOpenChange, sections, defaultInsertAt
 
         <div className="grid grid-cols-2 gap-2 max-h-[50vh] overflow-y-auto" role="list">
           {ADDABLE_SECTION_TYPES.map((t) => (
-            <button
+            <Button variant="outline"
               key={t.type}
               role="listitem"
               data-add-type={t.type}
-              onClick={() => onAdd(t.type, insertAt)}
-              className="text-left rounded-lg border border-border bg-muted/30 hover:bg-muted/60 px-3 py-2 transition-colors"
+              onClick={() => onAdd(t.type, t.type === 'work-samples' && !positionChosen && defaultInsertAt === undefined ? Math.max(min, proofIndex >= 0 ? proofIndex : lastSlot) : insertAt)}
+              className="text-left h-auto block whitespace-normal px-3 py-2"
             >
               <div className="text-sm font-medium text-foreground">{t.label}</div>
               <div className="text-xs text-muted-foreground">{t.description}</div>
-            </button>
+            </Button>
           ))}
         </div>
       </DialogContent>

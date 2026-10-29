@@ -11,6 +11,7 @@ import { SocialProofSection } from "@/components/sections/SocialProofSection";
 import { FinalCTASection } from "@/components/sections/FinalCTASection";
 import { ThreeStageShowcase } from "@/components/sections/ThreeStageShowcase";
 import { PhotoGallerySection } from "@/components/sections/PhotoGallerySection";
+import { WorkSamplesSection } from '@/components/sections/WorkSamplesSection';
 import { StatsBarSection } from "@/components/sections/StatsBarSection";
 import { FAQSection } from "@/components/sections/FAQSection";
 import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
@@ -340,7 +341,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
   const updateSectionHandlers = useMemo(() => {
     return sections.map((_, index) => (content: any) => {
       const updated = [...sections];
-      updated[index].content = content;
+      updated[index] = { ...updated[index], content };
       onSectionsChange(updated);
     });
   }, [sections, onSectionsChange]);
@@ -363,6 +364,8 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
     const updateSection = updateSectionHandlers[index];
 
     switch (section.type) {
+      case 'work-samples':
+        return <WorkSamplesSection key={index} content={section.content} onUpdate={updateSection} editor />;
       case "hero":
         return renderSectionWithToolbar(
           section,
@@ -770,6 +773,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
             .sort((a, b) => a.section.order - b.section.order)
             .map(({ section, arrayIndex }, index) => {
               if (!section.visible) return null;
+              if (section.type === 'work-samples') return renderSection(section, arrayIndex);
               const tier = getSectionTier(section.type, index);
               const spacing = getSectionSpacing(section.type);
               const divider = getSectionDivider(section.type, index);
