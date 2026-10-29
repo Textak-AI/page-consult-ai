@@ -273,6 +273,7 @@ function patchSectionsWithConsultationData(
     return sections;
   }
   
+  const hasPullQuote = sections.some(s => s.type === 'differentiator-callout' && s.visible !== false);
   return sections.map(section => {
     // Patch Final CTA with fresh consultation data
     if (section.type === 'final-cta') {
@@ -303,7 +304,8 @@ function patchSectionsWithConsultationData(
                                null;
       
       // Derive subtext from unique strength or value proposition
-      const derivedSubtext = truncateAtBoundary(consultationData.uniqueStrength, 150) ||
+      // The unique value renders once, as the pull-quote, when the page has one.
+      const derivedSubtext = hasPullQuote ? section.content?.subtext : truncateAtBoundary(consultationData.uniqueStrength, 150) ||
                              truncateAtBoundary(consultationData.uniqueValue, 150) ||
                              truncateAtBoundary(consultationData.unique_value, 150) ||
                              truncateAtBoundary(consultationData.valueProposition, 150) ||

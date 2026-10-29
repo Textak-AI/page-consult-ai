@@ -114,7 +114,9 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
     
-    const { data: { user }, error: authError } = await verifyClient.auth.getUser();
+    // Pass the bearer token explicitly: this gotrue version has no stored session
+    // server-side, so a bare getUser() always failed with AuthSessionMissingError.
+    const { data: { user }, error: authError } = await verifyClient.auth.getUser(authHeader.replace(/^Bearer\s+/i, ''));
     if (authError || !user) {
       console.error('Auth verification failed:', authError);
       return new Response(

@@ -1,4 +1,4 @@
-import { typeScale, spacing, space, shape } from '@/lib/design/tokens';
+import { typeScale, spacing, space, shape, featureType, accentFor } from '@/lib/design/tokens';
 /**
  * ProcessNumberedRows — Analytical Validator process layout
  * 
@@ -45,7 +45,7 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
           fontWeight: 600,
           textTransform: 'uppercase' as const,
           letterSpacing: '0.2em',
-          color: primaryColor,
+          color: accentFor('eyebrow', primaryColor),
           textAlign: 'center' as const,
           marginBottom: space.sm,
           fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
@@ -75,65 +75,98 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
           {content.title || 'How It Works'}
         </h2>
 
-        {/* Steps */}
-        {validSteps.map((step: any, i: number) => (
-          <div key={i}>
-            {i > 0 && (
-              <div style={{ borderTop: `${shape.hairline}px solid ${bgStyles.border}` }} />
-            )}
-            <div style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 'clamp(16px, 3vw, 32px)',
-              ...spacing.rowY,
-            }}>
-              {/* Number */}
-              <div style={{
-                fontSize: useMonospace ? typeScale.indexMono.fontSize : typeScale.index.fontSize,
-                fontFamily: useMonospace ? '"JetBrains Mono", monospace' : '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
-                color: useMonospace ? bgStyles.textMuted : primaryColor,
-                fontWeight: useMonospace ? 400 : 600,
-                minWidth: 40,
-                paddingTop: useMonospace ? space.xxs : 0,
-                letterSpacing: useMonospace ? '0.05em' : '0',
-              }}>
-                {useMonospace ? String(i + 1).padStart(2, '0') : String(i + 1)}
-              </div>
-
-              <div style={{ flex: 1 }}>
-                <h3
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning
-                  onBlur={(e) => handleStepBlur(i, 'title', e)}
-                  className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
-                  style={{
-                    ...typeScale.h3,
-                    fontWeight: 600,
-                    color: bgStyles.text,
-                    ...spacing.titleGap,
-                    fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
-                  }}
-                >
-                  {step.title}
-                </h3>
-                <p
-                  contentEditable={isEditing}
-                  suppressContentEditableWarning
-                  onBlur={(e) => handleStepBlur(i, 'description', e)}
-                  className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
-                  style={{
-                    ...typeScale.body,
-                    color: bgStyles.textMuted,
-                    margin: 0,
-                    fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
-                  }}
-                >
-                  {step.description}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
+        {/* Steps — vertical timeline: oversized numeral, accent marker, connector */}
+        <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          {validSteps.map((step: any, i: number) => {
+            const last = i === validSteps.length - 1;
+            return (
+              <li
+                key={i}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'clamp(64px, 12vw, 112px) 1fr',
+                  columnGap: 'clamp(16px, 3vw, 32px)',
+                }}
+              >
+                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      ...featureType.timelineNumeral,
+                      fontFamily: useMonospace ? '"JetBrains Mono", monospace' : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
+                      fontWeight: useMonospace ? 400 : 700,
+                      letterSpacing: '-0.04em',
+                      color: bgStyles.text,
+                      opacity: 0.18,
+                    }}
+                  >
+                    {String(i + 1).padStart(2, '0')}
+                  </div>
+                  {/* marker sits on the connector, right edge of the gutter */}
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      position: 'absolute',
+                      right: -(space.sm + 6),
+                      top: space.sm,
+                      width: 12,
+                      height: 12,
+                      borderRadius: 999,
+                      backgroundColor: accentFor('timelineMarker', primaryColor),
+                      boxShadow: `0 0 0 4px ${bgStyles.bg}`,
+                      zIndex: 1,
+                    }}
+                  />
+                  {!last && (
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        position: 'absolute',
+                        right: -(space.sm + 1),
+                        top: space.sm + 12,
+                        bottom: 0,
+                        width: shape.hairline * 2,
+                        backgroundColor: bgStyles.border,
+                      }}
+                    />
+                  )}
+                </div>
+                <div style={{ paddingLeft: space.sm, paddingBottom: last ? 0 : space.lg + space.sm, paddingTop: space.xs }}>
+                  <h3
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleStepBlur(i, 'title', e)}
+                    className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
+                    style={{
+                      ...typeScale.h3,
+                      fontSize: 20,
+                      fontWeight: 600,
+                      color: bgStyles.text,
+                      ...spacing.titleGap,
+                      fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
+                    }}
+                  >
+                    {step.title}
+                  </h3>
+                  <p
+                    contentEditable={isEditing}
+                    suppressContentEditableWarning
+                    onBlur={(e) => handleStepBlur(i, 'description', e)}
+                    className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
+                    style={{
+                      ...typeScale.lead,
+                      color: bgStyles.textMuted,
+                      margin: 0,
+                      fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
+                    }}
+                  >
+                    {step.description}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
       </div>
     </section>
   );
