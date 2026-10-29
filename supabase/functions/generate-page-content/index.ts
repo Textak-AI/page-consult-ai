@@ -6,6 +6,7 @@ import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { withCharge } from '../_shared/planLimits.ts';
 import { COPY_REGISTER_RULES, PROVENANCE_RULES, logRegisterViolations, logProvenanceViolations } from "../_shared/copyRegister.ts";
 import { guardCopyClaims } from '../_shared/copyClaims.ts';
+import { consultationObjections } from '../_shared/buyerObjections.ts';
 
 // Helper function to build brand context from brand brief
 function buildBrandContext(brief: any): string {
@@ -440,6 +441,9 @@ Generate compelling content. Return valid JSON only.`;
     }
 
     parsedContent = guardCopyClaims(parsedContent, { ...requestData, strategyBrief: undefined, structuredBrief: undefined }, 'page-copy-guard');
+    const answered = consultationObjections(requestData.strategicConsultation || {});
+    parsedContent.faq = answered.length >= 2 ? answered.map(({ question, answer }) => ({ question, answer })) : [];
+    if ('objections' in parsedContent) parsedContent.objections = parsedContent.faq;
     logRegisterViolations('generate-page-content', parsedContent);
     logProvenanceViolations('generate-page-content', parsedContent, JSON.stringify({ ...requestData, strategyBrief: undefined, structuredBrief: undefined }));
 

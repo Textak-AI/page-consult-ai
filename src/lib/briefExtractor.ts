@@ -1,4 +1,5 @@
 import { truncateAtBoundary } from '@/lib/text/truncate';
+import { answeredObjections } from '../../supabase/functions/_shared/buyerObjections';
 /**
  * INTELLIGENT BRIEF EXTRACTION
  * 
@@ -326,7 +327,7 @@ export function optimizeFAQs(
     return [];
   }
 
-  const categorized = objections.map(obj => {
+  const categorized = answeredObjections(objections).map(obj => {
     let category: OptimizedFAQ['category'] = 'general';
     
     const q = obj.question.toLowerCase();
@@ -351,7 +352,7 @@ export function optimizeFAQs(
     if (selected.length >= maxFAQs) break;
     
     const count = categoryCount[faq.category] || 0;
-    if (count < 2) {
+    if (faq.answer.trim() && (count < 2 || 'topic' in faq)) {
       selected.push(faq);
       categoryCount[faq.category] = count + 1;
     }

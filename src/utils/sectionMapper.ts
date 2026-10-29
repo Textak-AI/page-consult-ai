@@ -2,6 +2,7 @@ import { composeArc } from '@/lib/composition/arc';
 import { applySignatureStrategy } from '@/components/signature/selection';
 import { applyCommunicationStrategy, type CommunicationStrategy } from '@/lib/composition/communicationStrategy';
 import { truncateAtBoundary } from '@/lib/text/truncate';
+import { answeredObjections } from '../../supabase/functions/_shared/buyerObjections';
 /**
  * Brief-First Section Mapper with Intelligent Extraction
  * 
@@ -670,7 +671,7 @@ export function mapBriefToSections(
         // Use optimized FAQs with categorization and prioritization
         const optimizedFAQs = optimizeFAQs(brief.objections || [], 6);
 
-        if (optimizedFAQs.length > 0) {
+        if (optimizedFAQs.length >= 2) {
           sections.push({
             type: 'faq',
             order,
@@ -1240,18 +1241,7 @@ export function buildFAQs(sources: any, industryVariant: string): Array<{questio
   if (objectionsData && Array.isArray(objectionsData)) {
     console.log('✅ [buildFAQs] Found objections array:', objectionsData.length, 'items');
     
-    objectionsData.slice(0, 5).forEach((item: any) => {
-      // Handle different formats
-      const question = item.question || item.objection || convertToQuestion(item);
-      const answer = item.answer || item.response || item;
-      
-      if (question && answer && typeof answer === 'string') {
-        faqs.push({ 
-          question: question.endsWith('?') ? question : question + '?',
-          answer: answer 
-        });
-      }
-    });
+    faqs.push(...answeredObjections(objectionsData).slice(0, 5).map(({ question, answer }) => ({ question, answer })));
   }
   
   if (faqs.length < 2) {

@@ -554,6 +554,7 @@ export default function NewConsultation() {
           strategy_brief: briefEnvelope as any,
           extracted_intelligence: {
             ...((consultationData as any).extracted_intelligence || {}),
+            objections: consultationData.objections || [],
             ...(brandName ? { companyName: brandName } : {}),
             ...(brandLogo ? { logoUrl: brandLogo } : {}),
             brandColors: {

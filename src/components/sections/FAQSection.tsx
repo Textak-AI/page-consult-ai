@@ -1,4 +1,5 @@
 import { spacing } from '@/lib/design/tokens';
+import { answeredObjections } from '../../../supabase/functions/_shared/buyerObjections';
 import { useState, useCallback, memo, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { ChevronDown, MessageSquare, Edit3, Trash2, GripVertical, Plus } from 'lucide-react';
@@ -486,18 +487,20 @@ function FAQSectionBase({ content, onUpdate, isEditing }: FAQSectionProps) {
 
   // Art Director composition check (after hooks)
   const faqLayout = (content as any)?.faqLayout;
+  const answered = answeredObjections(content.items);
+  if (answered.length < 2 && !isEditing) return null;
   if (faqLayout === 'accordion-hairline') {
-    return <FAQAccordionHairline content={content as any} onUpdate={onUpdate as any} isEditing={isEditing} />;
+    return <FAQAccordionHairline content={{ ...content, items: answered } as any} onUpdate={onUpdate as any} isEditing={isEditing} />;
   }
   if (faqLayout === 'accordion-card') {
-    return <FAQAccordionCard content={content as any} onUpdate={onUpdate as any} isEditing={isEditing} />;
+    return <FAQAccordionCard content={{ ...content, items: answered } as any} onUpdate={onUpdate as any} isEditing={isEditing} />;
   }
 
   const headline = content.headline || 'Frequently Asked Questions';
   const eyebrow = content.eyebrow || 'Common Questions';
-  const items = (content.items || []).map(item => ({
+  const items = answered.map(item => ({
     ...item,
-    question: ensureQuestionFormat(item.question)
+    question: item.question
   }));
   const isConsulting = content.industryVariant === 'consulting';
   const isHealthcare = content.industryVariant === 'healthcare';
