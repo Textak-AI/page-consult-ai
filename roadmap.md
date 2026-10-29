@@ -37,3 +37,9 @@
 - [x] Test-only money/privacy regressions: 72 new tests; Bun 126→198 plus unchanged Deno 7, total 133→205 passing. Fixture-driven Stripe, exact public projections, session boundaries, isolated lead delivery/idempotency and real SQL free-build/refund buckets covered; named limitations documented in tests/REGRESSION_COVERAGE.md. No production code, schema, RLS, deployment or live data changes.
 - [x] Conservative dead-code sweep: eight proven-unused files plus buildTestimonials removed (−1,668 physical code lines); orchestrator-research/pack checkout/configured external endpoints retained. All 205 tests pass, automatic build OK, homepage renders without errors, 129 protected file hashes unchanged; full audit in DEAD_CODE_SWEEP.md.
 - [ ] Standalone dead-code-sweep typecheck confirmation: no separate automatic result is exposed and this environment prohibits manual project typechecks; automatic build OK is verified, not substituted for typecheck evidence.
+
+## Queued: Communication Strategy (Phase A)
+- [ ] communicationStrategy object after brief (reframe, stakes, oneLiner, mechanismName suggestion, arcEmphasis, proofPlan, ctaLadder, register, visualIntensity) with provenance logging
+- [ ] Composer reads strategy (hero from reframe+oneLiner, arc from arcEmphasis, proof adjacent per proofPlan, CTA from ctaLadder)
+- [ ] Strategy Brief UI "Communication Strategy" panel
+- [ ] Verify Saltbox + HyperBrand; Saltbox hero before/after
