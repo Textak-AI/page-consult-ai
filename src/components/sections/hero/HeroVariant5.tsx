@@ -22,7 +22,7 @@ export function HeroVariant5({ headline, subheadline, ctaText, ctaLink, backgrou
 
   return (
     <section 
-      className="py-20 md:py-20 px-6 min-h-[650px] flex items-center"
+      className="py-20 md:py-20 px-6 flex items-center"
       style={backgroundStyle}
     >
       <div className="container mx-auto max-w-4xl text-center">

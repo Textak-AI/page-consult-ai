@@ -1626,14 +1626,13 @@ All colors MUST be HSL.
 }
 
 /* Section generous spacing */
-[data-mode="dark"] .section-spacing-generous {
-  padding-top: 6rem;
-  padding-bottom: 6rem;
-}
-
+/* Tier wrappers carry no padding: each section owns its vertical padding
+   (src/lib/design/tokens.ts), so section backgrounds meet edge to edge and
+   the wrapper/page colour can never show as a band between them. */
+[data-mode="dark"] .section-spacing-generous,
 [data-mode="dark"] .section-spacing-compact {
-  padding-top: 4rem;
-  padding-bottom: 4rem;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 /* Reduced motion for ambient orbs */

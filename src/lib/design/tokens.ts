@@ -15,13 +15,15 @@ export const space = {
   card: 24, // card inner padding
   lg: 32,
   header: 56, // section header → content
-  sectionY: 96, // section vertical padding
+  sectionY: 96, // section vertical padding (content-dense sections)
+  sectionYCompact: 56, // sparse sections: headline + line + button
   gutter: 'clamp(24px, 6vw, 96px)', // section horizontal padding
 } as const;
 
 /** Ready-made spacing style fragments. */
 export const spacing = {
   section: { padding: `${space.sectionY}px ${space.gutter}` },
+  sectionCompact: { padding: `${space.sectionYCompact}px ${space.gutter}` },
   center: { margin: '0 auto' },
   headerBlock: { margin: `0 auto ${space.header}px` },
   titleGap: { margin: `0 0 ${space.xs}px` },
@@ -63,3 +65,22 @@ export const shape = {
   radiusCard: 12,
   hairline: 1,
 } as const;
+
+/**
+ * Section surface rhythm. Each section type declares its surface; the tier
+ * wrapper paints it so transitions are flush. Dark runs alternate deep /
+ * elevated tiers so consecutive dark sections never read as one slab.
+ * Section components that paint their own background override this.
+ */
+export type SectionSurface = 'deep' | 'elevated' | 'accent';
+export const sectionSurface: Record<string, SectionSurface> = {
+  hero: 'deep',
+  'final-cta': 'deep',
+  'beta-final-cta': 'deep',
+  'problem-solution': 'accent',
+  'the-real-challenge': 'accent',
+  'stakes-amplify': 'accent',
+};
+
+/** Sparse section types get the compact padding step. */
+export const sparseSectionTypes = new Set(['final-cta', 'beta-final-cta', 'stats-bar', 'credentials-bar']);

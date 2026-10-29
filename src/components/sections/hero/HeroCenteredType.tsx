@@ -62,7 +62,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
     <>
     <style>{`@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap');`}</style>
     <section
-      className="relative py-16 md:py-0 md:min-h-screen flex items-center justify-center overflow-hidden"
+      className="relative py-16 md:py-32 flex items-center justify-center overflow-hidden"
       style={{ backgroundColor: bgStyles.bg }}
     >
       {/* Editing outline */}

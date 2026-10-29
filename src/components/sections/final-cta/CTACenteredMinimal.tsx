@@ -28,7 +28,7 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
   return (
     <section
       className="relative overflow-hidden"
-      style={{ backgroundColor: bgStyles.bg, ...spacing.section }}
+      style={{ backgroundColor: bgStyles.bg, ...spacing.sectionCompact }}
     >
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');`}</style>
 
