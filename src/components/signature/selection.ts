@@ -49,7 +49,8 @@ export function selectSignature(strategy: CommunicationStrategy, sections: { typ
   const terms = Array.isArray(input.ctaTerms) ? input.ctaTerms.filter(fromInput) : [];
   const microline = fromInput(input.ctaMicroline) ? input.ctaMicroline : null;
   const candidates: SignatureElement[] = ['chapter'];
-  const payoff = payoffPhrase(strategy.reframe || strategy.oneLiner || '');
+  const heroHeadline = sections.find(s => s.type === 'hero')?.content?.headline;
+  const payoff = typeof heroHeadline === 'string' ? payoffPhrase(heroHeadline, payoffPhrase(strategy.reframe || '')) : null;
   if (payoff) candidates.push('gradient');
   if (sections.some(s => s.type === 'how-it-works' && s.content.steps?.length >= 3 && s.content.industryVariant !== 'saas')) candidates.push('timeline');
   if (reframe && sections.some(s => s.type === 'problem-solution')) candidates.push('reframe');

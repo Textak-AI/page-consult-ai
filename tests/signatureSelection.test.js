@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { selectSignature, reframeHalves, payoffPhrase, validStat, sourced, inputStats, applySignatureStrategy } from '../src/components/signature/selection.ts';
 const strategy = { visualIntensity: 'balanced', reframe: 'Past consultants left a report. The partner works your dock.', oneLiner: null, ctaLadder: {primary:'Request a Site Visit',secondary:null} };
-const sections = [{type:'hero',content:{}},{type:'how-it-works',content:{steps:[{},{},{}]}},{type:'features',content:{features:[{},{},{}]}}];
+const sections = [{type:'hero',content:{headline:strategy.reframe}},{type:'how-it-works',content:{steps:[{},{},{}]}},{type:'features',content:{features:[{},{},{}]}}];
 test('intensity limits exactly 3, 5 and 6 treatments, with no quota padding',()=>{
  for (const [visualIntensity,limit] of [['restrained',3],['balanced',5],['expressive',6]]) {
   expect(selectSignature({...strategy,visualIntensity},sections).elements.length).toBeLessThanOrEqual(limit);
