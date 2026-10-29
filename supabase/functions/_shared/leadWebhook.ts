@@ -6,6 +6,8 @@ const TIMEOUT_MS = 5000;
 
 export interface LeadWebhookPayload {
   event: string;
+  source?: 'quickpivot';
+  prospect_slug?: string;
   page: { title: string | null; slug: string | null };
   lead: Record<string, unknown>;
   submitted_at: string;

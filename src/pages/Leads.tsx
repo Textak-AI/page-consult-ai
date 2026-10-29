@@ -30,6 +30,12 @@ interface FormSubmissionRow {
   submitted_at: string;
 }
 
+interface ProspectLeadRow {
+  id: string; prospect_id: string | null; prospect_page_id: string | null;
+  prospect_slug: string; page_title: string | null; name: string | null;
+  email: string; company: string | null; message: string | null; submitted_at: string;
+}
+
 export default function Leads() {
   const { user } = useAuth();
   const [pageFilter, setPageFilter] = useState<string>('all');
@@ -38,14 +44,44 @@ export default function Leads() {
   const { data: pages } = useQuery({
     queryKey: ['leads-pages', user?.id],
     queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from('published_pages')
         .select('id, page_title, slug')
-        .eq('user_id', user!.id);
+        .eq('user_id', user.id);
       if (error) throw error;
       return (data || []) as PublishedPageRow[];
     },
     enabled: !!user?.id,
+  });
+
+  const { data: prospectPages = [] } = useQuery({
+    queryKey: ['leads-prospect-pages', user?.id], enabled: !!user,
+    queryFn: async () => {
+      if (!user) return [];
+      const [crm, legacy] = await Promise.all([
+        supabase.from('prospects').select('id,slug,company').eq('user_id', user.id),
+        supabase.from('prospect_pages').select('id,unique_slug,prospect_company').eq('user_id', user.id),
+      ]);
+      if (crm.error) throw crm.error;
+      if (legacy.error) throw legacy.error;
+      return [
+        ...(crm.data || []).map(p => ({ id: `quickpivot:${p.id}`, title: p.company || p.slug })),
+        ...(legacy.data || []).map(p => ({ id: `quickpivot:${p.id}`, title: p.prospect_company || p.unique_slug })),
+      ];
+    },
+  });
+
+  const { data: prospectLeads = [], isLoading: prospectLoading, error: prospectError } = useQuery({
+    queryKey: ['leads-quickpivot', user?.id], enabled: !!user,
+    queryFn: async () => {
+      if (!user) return [] as ProspectLeadRow[];
+      const { data, error } = await supabase.from('quickpivot_leads')
+        .select('id,prospect_id,prospect_page_id,prospect_slug,page_title,name,email,company,message,submitted_at')
+        .eq('user_id', user.id).order('submitted_at', { ascending: false });
+      if (error) throw error;
+      return data as ProspectLeadRow[];
+    },
   });
 
   const pageIds = useMemo(() => (pages || []).map(p => p.id), [pages]);
@@ -72,10 +108,13 @@ export default function Leads() {
   });
 
   const filteredLeads = useMemo(() => {
-    const all = submissions || [];
+    const all = [
+      ...(submissions || []).map(l => ({ ...l, pageKey: l.published_page_id, pageTitle: pageTitleById.get(l.published_page_id), source: 'Page' })),
+      ...prospectLeads.map(l => ({ ...l, pageKey: `quickpivot:${l.prospect_id || l.prospect_page_id}`, pageTitle: l.page_title || l.prospect_slug, source: 'QuickPivot / prospect' })),
+    ].sort((a, b) => Date.parse(b.submitted_at) - Date.parse(a.submitted_at));
     if (pageFilter === 'all') return all;
-    return all.filter(l => l.published_page_id === pageFilter);
-  }, [submissions, pageFilter]);
+    return all.filter(l => l.pageKey === pageFilter);
+  }, [submissions, prospectLeads, pageFilter, pageTitleById]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,7 +134,7 @@ export default function Leads() {
               </p>
             </div>
 
-            {(pages || []).length > 0 && (
+            {((pages || []).length > 0 || prospectPages.length > 0) && (
               <Select value={pageFilter} onValueChange={setPageFilter}>
                 <SelectTrigger className="w-56 bg-card border-border">
                   <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
@@ -108,12 +147,15 @@ export default function Leads() {
                       {p.page_title || p.slug}
                     </SelectItem>
                   ))}
+                  {prospectPages.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.title} — QuickPivot / prospect</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             )}
           </div>
 
-          {isLoading ? (
+          {prospectError ? <p className="text-destructive">Could not load prospect leads. Please try again.</p> : isLoading || prospectLoading ? (
             <div className="text-center py-16">
               <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
               <p className="text-muted-foreground">Loading leads...</p>
@@ -123,7 +165,7 @@ export default function Leads() {
               <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
                 <Inbox className="w-10 h-10 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">No leads yet</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">No leads yet.</h3>
               <p className="text-muted-foreground max-w-md mx-auto">
                 When someone submits a form on one of your published pages, they'll show up here.
               </p>
@@ -142,8 +184,9 @@ export default function Leads() {
                           {lead.name || 'Unnamed'}
                         </p>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                          {pageTitleById.get(lead.published_page_id) || 'Unknown page'}
+                          {lead.pageTitle || 'Unknown page'}
                         </span>
+                        <span className="text-xs text-muted-foreground">{lead.source}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1 flex-wrap">
                         <a href={`mailto:${lead.email}`} className="hover:text-foreground transition-colors">

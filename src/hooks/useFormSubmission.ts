@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 
 interface FormSubmissionData {
-  publishedPageId: string;
+  publishedPageId?: string;
+  prospectSlug?: string;
   email: string;
   name?: string;
   phone?: string;
@@ -35,7 +36,8 @@ export function useFormSubmission(): UseFormSubmissionReturn {
       const utmCampaign = params.get('utm_campaign') || undefined;
 
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const url = `https://${projectId}.supabase.co/functions/v1/submit-form`;
+      const functionName = data.prospectSlug ? 'submit-prospect-form' : 'submit-form';
+      const url = `https://${projectId}.supabase.co/functions/v1/${functionName}`;
 
       const response = await fetch(url, {
         method: 'POST',

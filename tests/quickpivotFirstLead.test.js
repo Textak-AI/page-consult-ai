@@ -1,0 +1,33 @@
+import { expect, test } from 'bun:test';
+import { PGlite } from '@electric-sql/pglite';
+import { readFileSync } from 'node:fs';
+
+test('first-lead claim is once per prospect, server-only, for both prospect formats', async () => {
+  const db = new PGlite();
+  await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;
+    CREATE SCHEMA auth; CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS 'SELECT NULL::uuid';
+    CREATE TABLE prospects (id uuid PRIMARY KEY, first_lead_email_sent_at timestamptz);
+    CREATE TABLE prospect_pages (id uuid PRIMARY KEY, first_lead_email_sent_at timestamptz);`);
+  const sql = readFileSync(new URL('../drizzle/migrations/0009_quickpivot_lead_capture.sql', import.meta.url), 'utf8');
+  await db.exec(sql.slice(sql.indexOf('CREATE TABLE public.quickpivot_leads')));
+  const owner='00000000-0000-0000-0000-000000000001';
+  const crm='00000000-0000-0000-0000-000000000002';
+  const legacy='00000000-0000-0000-0000-000000000003';
+  const first='00000000-0000-0000-0000-000000000004';
+  const second='00000000-0000-0000-0000-000000000005';
+  const legacyLead='00000000-0000-0000-0000-000000000006';
+  await db.query('INSERT INTO prospects(id) VALUES ($1)',[crm]);
+  await db.query('INSERT INTO prospect_pages(id) VALUES ($1)',[legacy]);
+  await db.query(`INSERT INTO quickpivot_leads(id,user_id,prospect_id,prospect_slug,email,submitted_at) VALUES ($1,$2,$3,'crm','test@example.com','2026-10-29'),($4,$2,$3,'crm','test@example.com','2026-10-30')`,[first,owner,crm,second]);
+  await db.query(`INSERT INTO quickpivot_leads(id,user_id,prospect_page_id,prospect_slug,email) VALUES ($1,$2,$3,'legacy','test@example.com')`,[legacyLead,owner,legacy]);
+  const claim=async id=>(await db.query('SELECT claim_quickpivot_first_lead($1) AS claimed',[id])).rows[0].claimed;
+  expect(await claim(second)).toBe(false);
+  expect(await claim(first)).toBe(true);
+  expect(await claim(first)).toBe(false);
+  expect(await claim(legacyLead)).toBe(true);
+  expect(await claim(legacyLead)).toBe(false);
+  expect((await db.query("SELECT has_function_privilege('authenticated','claim_quickpivot_first_lead(uuid)','EXECUTE') AS allowed")).rows[0].allowed).toBe(false);
+  await db.exec('GRANT SELECT, UPDATE ON prospects TO authenticated; SET ROLE authenticated;');
+  await expect(db.query('UPDATE prospects SET first_lead_email_sent_at = null WHERE id=$1',[crm])).rejects.toThrow('server-written');
+  await db.close();
+});
