@@ -49,6 +49,8 @@
 - [x] Verify actual Saltbox/Fernhill editors using ?id= at desktop/375; Saltbox three-up benefits; Fernhill tenant-only footer. Published Fernhill route is unavailable because unpublished; no snapshot or publication changes.
 - [ ] Migration runbook: clean 68 other-owner pages in the planned migration pass (user-managed; no cross-owner writes in this task).
 ## Saltbox publication and hero durability
+- [ ] Signature library v1: eight parametric frontend treatments, client tokens/intensity selection and input-only evidence guards.
+- [ ] Apply signature selection to saved Saltbox/HyperBrand editors; verify desktop/375, reveals, flush surfaces and CLS; no publication.
 - [x] Publish cleaned Saltbox through its owner session; live /p/ shows problem, decoded warehouse photo, Lance Chang/Unsplash credit and honest closing after renderer deployment.
 - [x] Persist generated hero bytes as durable data URLs before cache/page responses; upgrade legacy cache on server reads and bypass temporary client cache hits; retain Unsplash authentication fixes. No schema/storage/policy changes.
 - [x] Audit 187 hero records: 45 saved pages unavailable (37 HTTP 404 provider links, 8 malformed provider links), zero active published snapshots affected after Saltbox update; 19 distinct failed URLs. Existing fallback verified on expired saved editor and forced photo failure. 227 Bun tests pass.
