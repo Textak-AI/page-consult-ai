@@ -27,8 +27,10 @@ export function computeCommunicationStrategy(input: Record<string, any>, brief: 
     .flatMap(sentences).find(s => /\b(don[’']t|not just|past consultants|instead|rather than|refuse)\b/i.test(s));
   // A stated negative plus the stated alternative makes the opposition a thesis.
   const alternative = text(input.processDescription) || text(input.offerIncludes);
+  const negative = opposition?.split(/,\s+and\s+/i)[0];
+  const positive = alternative?.split(/,?\s+then\s+/i).find(s => /partner works/i.test(s))?.replace(/^the\s+/i, 'The');
   const reframe = opposition && /past consultants/i.test(opposition) && alternative
-    ? `${opposition} ${sentences(alternative)[0]}` : opposition || null;
+    ? `${negative}. ${positive || sentences(alternative)[0]}.`.replace(/\.{2,}/g, '.') : opposition || null;
   provenance.reframe = reframe ? Object.keys(input).filter(k => typeof input[k] === 'string' && (input[k].includes(opposition) || (alternative && input[k] === alternative))) : [];
   // Prefer stated outcome. Long sentences are shortened at a clause boundary only.
   let oneLiner = value ? sentences(value)[0] : null;
@@ -40,7 +42,7 @@ export function computeCommunicationStrategy(input: Record<string, any>, brief: 
   const primary = pick('ctaLadder.primary', ['primaryCTA', 'primary_cta', 'ctaText', 'mainOffer', 'offer']);
   const secondary = pick('ctaLadder.secondary', ['secondaryCTA', 'secondary_cta']);
   const mechanism = text(input.processName) || text(input.mechanismName) || (text(input.processDescription) ? text(input.mainOffer) || text(input.offer) : null);
-  provenance.mechanismName = mechanism ? ['processName', 'mechanismName'].filter(k => text(input[k]) === mechanism) : [];
+  provenance.mechanismName = mechanism ? ['processName', 'mechanismName', 'mainOffer', 'offer'].filter(k => text(input[k]) === mechanism) : [];
   const awareness = text(input.awarenessLevel) || text(input.awareness_level);
   const arcEmphasis = awareness && /solution|product|most.aware/i.test(awareness) ? 'outcome-led' : 'problem-led';
   provenance.arcEmphasis = awareness ? ['awarenessLevel', 'awareness_level'] : ['default:problem-led (awareness not supplied)'];

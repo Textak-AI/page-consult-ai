@@ -79,6 +79,7 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
         )}
 
         {/* CTA Button */}
+        {content.ctaText && <>
         <Button
           asChild
           size="lg"
@@ -93,6 +94,8 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
             {content.ctaText || 'Get Started'}
           </a>
         </Button>
+        </>}
+        {content.secondaryCta && <Button asChild variant="link" className="block mx-auto mt-3 text-foreground"><a href={content.secondaryCtaLink || '#contact'}>{content.secondaryCta}</a></Button>}
       </div>
     </section>
   );

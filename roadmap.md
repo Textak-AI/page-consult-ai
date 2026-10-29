@@ -38,8 +38,8 @@
 - [x] Conservative dead-code sweep: eight proven-unused files plus buildTestimonials removed (−1,668 physical code lines); orchestrator-research/pack checkout/configured external endpoints retained. All 205 tests pass, automatic build OK, homepage renders without errors, 129 protected file hashes unchanged; full audit in DEAD_CODE_SWEEP.md.
 - [ ] Standalone dead-code-sweep typecheck confirmation: no separate automatic result is exposed and this environment prohibits manual project typechecks; automatic build OK is verified, not substituted for typecheck evidence.
 
-## Queued: Communication Strategy (Phase A)
-- [ ] communicationStrategy object after brief (reframe, stakes, oneLiner, mechanismName suggestion, arcEmphasis, proofPlan, ctaLadder, register, visualIntensity) with provenance logging
-- [ ] Composer reads strategy (hero from reframe+oneLiner, arc from arcEmphasis, proof adjacent per proofPlan, CTA from ctaLadder)
-- [ ] Strategy Brief UI "Communication Strategy" panel
-- [ ] Verify Saltbox + HyperBrand; Saltbox hero before/after
+## Communication Strategy (Phase A)
+- [x] Extractive communicationStrategy after brief, stored in existing structured brief/page JSON; service-side owner-validated re-synthesis mode; all outputs provenance-logged.
+- [x] Mapper reads hero, stakes, arc emphasis, proof placement and input CTAs after legacy heuristics; mechanism remains UI-only suggestion.
+- [x] Communication Strategy panel in review, standalone brief and editor brief views.
+- [x] Saltbox and HyperBrand computed/stored; owner readback and Saltbox desktop/375 editor screenshots; no AI charges or publication.
