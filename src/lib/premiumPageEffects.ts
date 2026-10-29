@@ -3,15 +3,13 @@
  * Shared between LivePreview (editor) and PublicPageRenderer (public)
  */
 
+import { sectionSurface } from '@/lib/design/tokens';
+
 export type SectionTier = 'deep' | 'elevated' | 'accent';
 
 export function getSectionTier(sectionType: string, index: number): SectionTier {
-  if (sectionType === 'hero') return 'deep';
-  if (sectionType === 'final-cta') return 'deep';
-  if (sectionType === 'beta-final-cta') return 'deep';
-  if (sectionType === 'problem-solution') return 'accent';
-  if (sectionType === 'the-real-challenge') return 'accent';
-  if (sectionType === 'stakes-amplify') return 'accent';
+  const declared = sectionSurface[sectionType];
+  if (declared) return declared;
   return index % 2 === 0 ? 'elevated' : 'deep';
 }
 

@@ -470,7 +470,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
 
     return (
       <section 
-        className="relative md:min-h-screen flex flex-col overflow-hidden"
+        className="relative flex flex-col overflow-hidden"
         style={{
           background: !hasBackgroundImage 
             ? 'linear-gradient(135deg, hsl(265, 80%, 15%) 0%, hsl(220, 40%, 8%) 50%, hsl(210, 50%, 12%) 100%)'
@@ -669,7 +669,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
     
     return (
       <section 
-        className={`relative py-20 md:py-0 md:min-h-[85vh] flex items-center overflow-hidden ${
+        className={`relative py-20 md:py-32 flex items-center overflow-hidden ${
           content.backgroundImage 
             ? '' 
             : 'bg-gradient-to-br from-white via-slate-50 to-white'
@@ -910,7 +910,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
   if (isHealthcare) {
     return (
       <section 
-        className={`relative py-20 md:py-0 md:min-h-[85vh] flex items-center overflow-hidden ${
+        className={`relative py-20 md:py-32 flex items-center overflow-hidden ${
           content.backgroundImage 
             ? '' 
             : 'bg-gradient-to-br from-slate-50 via-white to-slate-50'
@@ -1284,7 +1284,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
 
       {/* Content Layer */}
       <div className={`container mx-auto max-w-5xl text-center relative z-10 px-6 ${
-        isConsulting ? 'py-20 md:py-32' : 'py-20 md:py-32 md:min-h-screen flex items-center'
+        isConsulting ? 'py-20 md:py-32' : 'py-20 md:py-32 flex items-center'
       }`}>
         <div className="flex flex-col items-center gap-8 w-full">
           

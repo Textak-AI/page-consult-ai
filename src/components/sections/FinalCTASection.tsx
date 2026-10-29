@@ -159,7 +159,7 @@ function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionPr
 
   return (
     <section 
-      className={`py-24 md:py-32 relative overflow-hidden ${(content as any).patternClass || 'section-pattern-mesh'} ${(content as any).glowClass || 'section-glow-orb'}`}
+      className={`py-14 relative overflow-hidden ${(content as any).patternClass || 'section-pattern-mesh'} ${(content as any).glowClass || 'section-glow-orb'}`}
       style={{
         ...getSectionStyles(),
         '--glow-color': palette?.primary ? `${palette.primary}14` : 'hsla(189, 95%, 43%, 0.08)',

@@ -44,7 +44,7 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
 
   return (
     <section
-      className="relative min-h-[85vh] flex items-center overflow-hidden"
+      className="relative py-16 md:py-24 md:min-h-[560px] flex items-center overflow-hidden"
       style={{ backgroundColor: bgStyles.bg }}
     >
       {/* Editing outline */}
