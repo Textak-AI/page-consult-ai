@@ -4,7 +4,9 @@
  * and at render time (stored logos that no longer load collapse instead of breaking).
  */
 
+import { IMAGE_RULES, judgeImageFacts } from '../../supabase/functions/_shared/imageAudit';
 export const LOGO_RULES = {
+  ...IMAGE_RULES,
   /** Shorter side must be at least this many natural pixels (rejects 1×1 tracking pixels and slivers). */
   minShortSide: 16,
   /** Longer side must be at least this many natural pixels (rejects 16/32/48px favicons). */
@@ -60,6 +62,7 @@ export function judgeLogo(f: {
   const base = f.purpose === 'work-sample' ? { ok: true } : judgeLogoUrl(f.url);
   if (!base.ok) return base;
   const { width: w, height: h } = f;
+  if (f.purpose === 'work-sample') return judgeImageFacts(w, h, f.pixels);
   const sized = w > 0 && h > 0;
   if (!sized && !f.isVector) return { ok: false, reason: 'too-small', width: w, height: h };
   if (sized) {
