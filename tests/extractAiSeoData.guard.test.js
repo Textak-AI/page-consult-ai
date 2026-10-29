@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
+import { consultationObjections } from '../supabase/functions/_shared/buyerObjections.ts';
 
 const source = readFileSync(new URL('../supabase/functions/extract-ai-seo-data/index.ts', import.meta.url), 'utf8');
 const executable = new Bun.Transpiler({ loader: 'ts' }).transformSync(source.replace(/^import .*;\r?\n/gm, ''));
@@ -17,6 +18,7 @@ async function extract(consultationData, authoritySignals) {
     schemaReadiness: { score: 0 },
   };
   runInNewContext(executable, {
+    consultationObjections,
     serve: (callback) => { handler = callback; },
     handleCorsPreflightRequest: () => null,
     getCorsHeaders: () => ({}),
