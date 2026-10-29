@@ -514,7 +514,7 @@ export function mapBriefToSections(
       case 'differentiator-callout': {
         const text = (arcSrc.uniqueValue ?? options.consultationData?.uniqueValue)?.trim();
         if (text) {
-          sections.push({ type: 'differentiator-callout', order, visible: true, content: { text, industryVariant, mode: sdiMode } });
+          sections.push({ type: 'differentiator-callout', order, visible: true, content: { text, businessName, industryVariant, mode: sdiMode, sectionBackground: 'dark' } });
         } else {
           console.log('📖 [sectionMapper] differentiator-callout skipped: no unique_value');
         }

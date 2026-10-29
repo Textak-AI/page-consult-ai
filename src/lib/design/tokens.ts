@@ -84,3 +84,17 @@ export const sectionSurface: Record<string, SectionSurface> = {
 
 /** Sparse section types get the compact padding step. */
 export const sparseSectionTypes = new Set(['final-cta', 'beta-final-cta', 'stats-bar', 'credentials-bar']);
+
+/** Visual-interest type steps (fluid, 375 → 1280+). */
+export const featureType = {
+  timelineNumeral: { fontSize: 'clamp(2.75rem, 6vw, 4.5rem)', lineHeight: 1 },
+  pullQuote: { fontSize: 'clamp(1.5rem, 3.4vw, 2.5rem)', lineHeight: 1.3 },
+} as const;
+
+/**
+ * Accent discipline: the brand accent colour is used ONLY in these slots.
+ * Components take the accent from the page's primaryColor and apply it only here.
+ */
+export const ACCENT_SLOTS = ['eyebrow', 'timelineMarker', 'pullQuoteRule', 'cta'] as const;
+export type AccentSlot = (typeof ACCENT_SLOTS)[number];
+export const accentFor = (slot: AccentSlot, color: string) => (ACCENT_SLOTS.includes(slot) ? color : undefined);

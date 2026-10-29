@@ -1,34 +1,55 @@
-import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { featureType, spacing, space, typeScale, accentFor } from '@/lib/design/tokens';
+import { getSectionBackgroundStyles } from '@/lib/artDirectorBrief';
 
 interface DifferentiatorCalloutProps {
   content: {
     text: string;
+    businessName?: string;
+    primaryColor?: string;
+    sectionBackground?: string;
   };
 }
 
+/**
+ * Pull-quote: the business's own sentence about its own work, attributed to the
+ * business. Deliberately not a testimonial — no quote marks, avatar or person.
+ */
 export function DifferentiatorCalloutSection({ content }: DifferentiatorCalloutProps) {
   if (!content?.text) return null;
+  const bg = getSectionBackgroundStyles(content.sectionBackground || 'dark', content.primaryColor);
+  const rule = accentFor('pullQuoteRule', content.primaryColor || '#6366F1');
 
   return (
-    <section className="relative py-8 overflow-hidden">
-      {/* Subtle gradient background using brand color */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[hsl(var(--color-brand-hsl)/0.1)] to-transparent" />
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="relative max-w-4xl mx-auto px-6"
-      >
-        <div className="flex items-center justify-center gap-3 text-center">
-          <Sparkles className="w-5 h-5 text-brand flex-shrink-0" />
-          <p className="text-lg md:text-xl font-medium text-foreground">
-            {content.text}
-          </p>
-          <Sparkles className="w-5 h-5 text-brand flex-shrink-0" />
-        </div>
-      </motion.div>
+    <section style={{ backgroundColor: bg.bg, ...spacing.section }}>
+      <figure style={{ maxWidth: 820, ...spacing.center, margin: '0 auto' }}>
+        <div aria-hidden="true" style={{ width: 56, height: 3, backgroundColor: rule, marginBottom: space.lg }} />
+        <blockquote
+          style={{
+            ...featureType.pullQuote,
+            margin: 0,
+            color: bg.text,
+            fontFamily: '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif',
+            fontWeight: 400,
+            letterSpacing: '-0.01em',
+          }}
+        >
+          {content.text}
+        </blockquote>
+        {content.businessName && (
+          <figcaption
+            style={{
+              ...typeScale.small,
+              marginTop: space.card,
+              color: bg.textMuted,
+              textTransform: 'uppercase',
+              letterSpacing: '0.16em',
+              fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
+            }}
+          >
+            {content.businessName}
+          </figcaption>
+        )}
+      </figure>
     </section>
   );
 }

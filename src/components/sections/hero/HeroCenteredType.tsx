@@ -71,20 +71,38 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
       )}
 
       {/* AI-generated ambient background image at low opacity */}
+      {/* Image-bearing hero: a place/mood photo under a scrim. A missing or
+          failing image simply hides, leaving the typographic fallback. */}
       {heroImage && (
-        <div
-          className="absolute inset-0 z-0 transition-opacity duration-1000"
-          style={{
-            backgroundImage: `url(${heroImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: 0.15,
-          }}
-        />
+        <>
+          <img
+            src={heroImage}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 z-0 h-full w-full object-cover"
+            style={{ opacity: 0.5 }}
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+          <div
+            className="absolute inset-0 z-0 pointer-events-none"
+            style={{ background: `linear-gradient(180deg, ${bgStyles.bg}cc 0%, ${bgStyles.bg}99 45%, ${bgStyles.bg} 100%)` }}
+          />
+        </>
+      )}
+      {heroImage && content.imageCredit?.name && (
+        <a
+          href={content.imageCredit.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute bottom-3 right-4 z-10"
+          style={{ ...typeScale.small, fontSize: 11, color: bgStyles.textMuted, opacity: 0.7 }}
+        >
+          Photo: {content.imageCredit.name} / Unsplash
+        </a>
       )}
 
-      {/* Grid texture overlay */}
-      {content.hasGridTexture && (
+      {/* Grid texture overlay (typographic fallback only) */}
+      {!heroImage && content.hasGridTexture && (
         <div
           className="absolute inset-0 pointer-events-none z-0"
           style={{
