@@ -1,4 +1,5 @@
 import { useUsableImage } from '@/hooks/useUsableImage';
+import { ChapterEyebrow, GradientPayoff } from '@/components/signature/elements';
 import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeScale, typeClass } from '@/lib/design/tokens';
 /**
@@ -140,6 +141,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
         ) : null}
 
         {/* Headline */}
+        {content.signature?.elements.includes('chapter') && <ChapterEyebrow slot="hero" />}
         <h1
           contentEditable={isEditing}
           suppressContentEditableWarning
@@ -153,7 +155,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
             fontFamily: isSerif ? '"Instrument Serif", "Instrument Serif Fallback", Georgia, "Times New Roman", serif' : '"DM Sans", "DM Sans Heading Fallback", system-ui, sans-serif',
           }}
         >
-          {content.headline}
+          {content.signature && !isEditing ? <GradientPayoff text={content.headline || ''} phrase={content.signature.payoff} enabled={content.signature.elements.includes('gradient')} /> : content.headline}
         </h1>
 
         {/* Subheadline */}

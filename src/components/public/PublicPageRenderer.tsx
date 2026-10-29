@@ -1,4 +1,5 @@
 import { cleanTheme, themeFontCss } from '@/lib/editor/pageTheme';
+import { SignatureSection } from '@/components/signature/SignatureSection';
 import { GazeReveal } from '@/components/motion/GazeReveal';
 import { useMemo, useState, useCallback } from 'react';
 import { LeadCaptureModal } from './LeadCaptureModal';
@@ -413,13 +414,13 @@ export function PublicPageRenderer({
         )}
         style={(() => {
           const styles: React.CSSProperties = {};
-          const primaryColor = theme.primaryColor || designIntelligence?.brandColors?.primary || brandSettings?.primaryColor;
+          const primaryColor = theme.primaryColor || designIntelligence?.brandColors?.primary || brandSettings?.primaryColor || sections[0]?.content?.primaryColor;
           if (primaryColor) {
             styles['--color-brand' as any] = primaryColor;
             styles['--color-primary' as any] = primaryColor;
             styles['--brand-primary' as any] = primaryColor;
           }
-          const secondaryColor = theme.secondaryColor || designIntelligence?.brandColors?.secondary;
+          const secondaryColor = theme.secondaryColor || designIntelligence?.brandColors?.secondary || sections[0]?.content?.secondaryColor;
           if (secondaryColor) {
             styles['--color-secondary' as any] = secondaryColor;
             styles['--brand-secondary' as any] = secondaryColor;
@@ -484,12 +485,12 @@ export function PublicPageRenderer({
                 )}
               >
                 <div className="relative z-10">
-                  <GazeReveal sectionType={section.type}>{renderSection(section, index)}</GazeReveal>
+                  <GazeReveal sectionType={section.type}><SignatureSection type={section.type} content={section.content}>{renderSection(section, index)}</SignatureSection></GazeReveal>
                 </div>
               </div>
             ) : (
               <GazeReveal key={`gaze-${index}`} sectionType={section.type}>
-                {renderSection(section, index)}
+                <SignatureSection type={section.type} content={section.content}>{renderSection(section, index)}</SignatureSection>
               </GazeReveal>
             );
           })}

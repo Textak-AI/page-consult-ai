@@ -95,6 +95,14 @@ export const featureType = {
  * Accent discipline: the brand accent colour is used ONLY in these slots.
  * Components take the accent from the page's primaryColor and apply it only here.
  */
-export const ACCENT_SLOTS = ['eyebrow', 'timelineMarker', 'pullQuoteRule', 'cta'] as const;
+export const ACCENT_SLOTS = ['eyebrow', 'timelineMarker', 'pullQuoteRule', 'cta', 'payoff', 'kicker', 'ambient'] as const;
 export type AccentSlot = (typeof ACCENT_SLOTS)[number];
 export const accentFor = (slot: AccentSlot, color: string) => (ACCENT_SLOTS.includes(slot) ? color : undefined);
+
+/** Signature selection is a ceiling, not a quota: sparse input never earns filler. */
+export const signatureTokens = {
+  limits: { restrained: 3, balanced: 5, expressive: 6 },
+  labels: { hero: 'The Opportunity', problem: 'The Challenge', guide: 'The Approach', plan: 'The Plan', outcome: 'The Payoff', proof: 'The Evidence', cta: 'The Next Step' },
+  radius: 8,
+  maxWidth: 1120,
+} as const;

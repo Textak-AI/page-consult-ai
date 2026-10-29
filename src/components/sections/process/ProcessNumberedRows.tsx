@@ -1,4 +1,5 @@
 import { typeScale, spacing, space, shape, featureType, accentFor } from '@/lib/design/tokens';
+import { ChapterEyebrow, ChromaticMarker } from '@/components/signature/elements';
 /**
  * ProcessNumberedRows — Analytical Validator process layout
  * 
@@ -40,7 +41,7 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
 
       <div style={{ maxWidth: 760, ...spacing.center }}>
         {/* Section label */}
-        <div style={{
+        {content.signature?.elements.includes('chapter') ? <ChapterEyebrow slot="plan" className="text-center" /> : <div style={{
           ...typeScale.eyebrow,
           fontWeight: 600,
           textTransform: 'uppercase' as const,
@@ -51,7 +52,7 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
           fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
         }}>
           {content.sectionLabel || content.eyebrow || 'Process'}
-        </div>
+        </div>}
 
         {/* Section title */}
         <h2
@@ -103,7 +104,7 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
                     {String(i + 1).padStart(2, '0')}
                   </div>
                   {/* marker sits on the connector, right edge of the gutter */}
-                  <span
+                  {content.signature?.elements.includes('timeline') ? <ChromaticMarker index={i} total={validSteps.length} /> : <span
                     aria-hidden="true"
                     style={{
                       position: 'absolute',
@@ -116,7 +117,7 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
                       boxShadow: `0 0 0 4px ${bgStyles.bg}`,
                       zIndex: 1,
                     }}
-                  />
+                  />}
                   {!last && (
                     <span
                       aria-hidden="true"

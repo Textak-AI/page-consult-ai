@@ -1,4 +1,5 @@
 # Architecture rules
+- Signature presentation lives in src/components/signature; its pure selector stores plans in section content so undo/autosave/publish share the same treatments. Both renderers use SignatureSection; unsourced stats, kickers and CTA terms never render.
 - Generated brief prose/JSON and page/section outputs use `_shared/copyClaims.ts` against raw input only; unsupported digit/spelled-number sentences and unstated commitment terms are removed and logged, so generated briefs cannot authorize their own claims.
 
 - Communication Strategy Phase A is extractive and stored inside the existing structured brief/page consultation JSON; the mapper applies it after legacy heuristics, and mechanism suggestions never enter page copy, preserving input provenance and CTA text.

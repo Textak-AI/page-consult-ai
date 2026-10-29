@@ -1,4 +1,5 @@
 import { resolveColors, themeFontCss, type PageTheme } from '@/lib/editor/pageTheme';
+import { SignatureSection } from '@/components/signature/SignatureSection';
 import { GazeReveal } from '@/components/motion/GazeReveal';
 import { useState, useCallback, useMemo, memo } from "react";
 import { sanitizeFullCSS } from "@/lib/sanitizeCSS";
@@ -281,6 +282,8 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
     const lockStatus = getSectionLockStatus?.(section.type);
     const isLocked = lockStatus?.isLocked ?? false;
     const justUpdated = (section as any)._justUpdated;
+    // Signature pages do not turn absent proof into a large decorative band.
+    if (section.content?.signature && section.type === 'social-proof' && !(section.content.testimonials || []).some((t: any) => typeof t.quote === 'string' && t.quote.trim().length > 10)) return null;
     
     // If locked, show the gamified overlay
     if (isLocked) {
@@ -328,7 +331,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
           isEditing={editingSection === index}
         />
         
-        <GazeReveal sectionType={section.type}>{sectionElement}</GazeReveal>
+        <GazeReveal sectionType={section.type}><SignatureSection type={section.type} content={section.content} editing={editingSection === index}>{sectionElement}</SignatureSection></GazeReveal>
       </div>
     );
   }, [getSectionLockStatus, handleUnlockAction, editingSection, handleEditSection, handleAIAssist, handleImageGenerate, handleLogoEdit]);
@@ -350,6 +353,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
       mode: section.content?.mode || colorMode || 'dark',
       // Inject brand colors so section components can use them for CTAs/buttons
       primaryColor: pageTheme?.primaryColor || section.content?.primaryColor || stableBrandPrimaryColor,
+      secondaryColor: pageTheme?.secondaryColor || brandSettings?.secondaryColor || section.content?.secondaryColor,
       logoUrl: section.content?.logoUrl || stableBrandLogoUrl,
       archetype: archetypeProfile, // Archetype design profile
     };
@@ -718,14 +722,16 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
         )}
         style={(() => {
           const styles: React.CSSProperties = {};
-          if (brandSettings?.primaryColor) {
-            styles['--color-brand' as any] = brandSettings.primaryColor;
-            styles['--color-primary' as any] = brandSettings.primaryColor;
-            styles['--brand-primary' as any] = brandSettings.primaryColor;
+          const primary = brandSettings?.primaryColor || sections[0]?.content?.primaryColor;
+          if (primary) {
+            styles['--color-brand' as any] = primary;
+            styles['--color-primary' as any] = primary;
+            styles['--brand-primary' as any] = primary;
           }
-          if (brandSettings?.secondaryColor) {
-            styles['--color-secondary' as any] = brandSettings.secondaryColor;
-            styles['--brand-secondary' as any] = brandSettings.secondaryColor;
+          const secondary = brandSettings?.secondaryColor || sections[0]?.content?.secondaryColor;
+          if (secondary) {
+            styles['--color-secondary' as any] = secondary;
+            styles['--brand-secondary' as any] = secondary;
           }
           if (brandSettings?.accentColor) {
             styles['--color-accent' as any] = brandSettings.accentColor;
