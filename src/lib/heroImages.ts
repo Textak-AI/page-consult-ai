@@ -138,8 +138,11 @@ async function checkCache(cacheKey: string): Promise<string[] | null> {
     return null;
   }
   
-  // Check if cache is still valid (7 days)
-  return data.images as string[];
+  // Temporary legacy links must pass through the server's byte-persistence path.
+  const images = Array.isArray(data.images) ? data.images : [];
+  return images.length > 0 && images.every((url: unknown) => typeof url === 'string' && url.startsWith('data:image/'))
+    ? images as string[]
+    : null;
 }
 
 /**
