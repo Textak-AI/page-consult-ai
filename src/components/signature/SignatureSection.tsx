@@ -11,16 +11,13 @@ export function SignatureSection({ type, content, children, editing = false }: {
   const surface = content.sectionBackground === 'light' ? 'light' : 'deep';
   let body = children;
   if (!editing && type === 'problem-solution' && has('reframe') && plan.reframe) {
-    body = <section className="signature-band" data-surface={surface}><div className="signature-inner"><ReframeColumns reframe={plan.reframe} />{content.problem && content.problem !== plan.reframe.refused && <div className="signature-stakes"><p>{content.problem}</p></div>}</div></section>;
+    body = <section className="signature-band" data-surface={surface}><div className="signature-inner"><ReframeColumns reframe={plan.reframe} />{content.problem && content.problem !== plan.reframe.refused && <div className="signature-stakes"><p>{content.problem}</p></div>}{content.solution && <div className="signature-stakes"><p>{content.solution}</p></div>}</div></section>;
   }
   if (!editing && type === 'features' && has('glass') && content.features?.length >= 3) {
     body = <section className="signature-band" data-surface={surface}><div className="signature-inner"><ChapterEyebrow slot="outcome" />{content.title && <h2>{content.title}</h2>}<div className="signature-card-grid">{content.features.map((feature: any, i: number) => <GlassCardWithKicker key={i} kicker={feature.signatureKicker}><h3>{feature.title}</h3><p>{feature.description}</p></GlassCardWithKicker>)}</div></div></section>;
   }
   if (!editing && type === 'final-cta' && has('fork') && plan.primary && plan.secondary) {
     body = <section className="signature-band signature-compact" data-surface={surface}><div className="signature-inner"><ChapterEyebrow slot="cta" />{content.headline && <h2>{content.headline}</h2>}<CtaFork plan={plan} primaryHref={content.ctaLink} secondaryHref={content.secondaryCtaLink} /></div></section>;
-  }
-  if (!editing && type === 'how-it-works' && has('glass') && content.steps?.length >= 3 && content.steps.some((step: any) => sourced(step.signatureKicker))) {
-    body = <section className="signature-band" data-surface={surface}><div className="signature-inner"><ChapterEyebrow slot="plan" />{content.title && <h2>{content.title}</h2>}<div className="signature-card-grid">{content.steps.map((step: any, i: number) => <GlassCardWithKicker key={i} kicker={step.signatureKicker}><h3>{step.title}</h3><p>{step.description}</p></GlassCardWithKicker>)}</div></div></section>;
   }
   const ambient = has('ambient') && (type === 'differentiator-callout' || type === 'final-cta') && surface === 'deep';
   return <div className="signature-scope" data-signature={type} data-intensity={plan.intensity} data-elements={plan.elements.join(' ')}>{ambient && <AmbientLayer motif={plan.intensity === 'expressive'} />}<div className="signature-content">{body}{type === 'hero' && has('stats') && <InversionStatStrip stats={plan.stats} />}</div></div>;

@@ -20,7 +20,20 @@ export function sourced(value: unknown): value is SourceText {
 export function validStat(stat: SignatureStat) {
   if (!stat || !sourced(stat.evidence) || typeof stat.label !== 'string' || typeof stat.value !== 'string' || !stat.label.trim()) return false;
   if (stat.value === '0') return new RegExp(`\\b(?:no|zero|without|never)\\s+${stat.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(stat.evidence.text);
-  return /\d/.test(stat.value) && stat.evidence.text.includes(stat.value) && stat.evidence.text.toLowerCase().includes(stat.label.toLowerCase());
+  return /\d|^(?:one|two|three|four|five|six|seven|eight|nine|ten)$/i.test(stat.value) && stat.evidence.text.includes(stat.value) && stat.evidence.text.toLowerCase().includes(stat.label.toLowerCase());
+}
+/** Conservative extraction: explicit count + unit, or explicitly stated absence. */
+export function inputStats(input: Record<string, unknown>): SignatureStat[] {
+  const result: SignatureStat[] = [];
+  for (const field of ['uniqueStrength', 'uniqueValue', 'unique_value', 'credentials', 'offer']) {
+    const source = input[field];
+    if (typeof source !== 'string') continue;
+    const count = source.match(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+(clients|years|projects|locations)\b/i);
+    if (count) result.push({ value: count[1], label: count[2], evidence: { text: count[0], source, field } });
+    const absence = source.match(/\b(?:no|zero|without)\s+(generic templates|stock imagery|junior handoffs)\b/i);
+    if (absence) result.push({ value: '0', label: absence[1], evidence: { text: absence[0], source, field } });
+  }
+  return result.filter(validStat);
 }
 export function payoffPhrase(headline: string, preferred?: string | null) {
   if (preferred && headline.includes(preferred) && preferred !== headline) return preferred;
@@ -32,7 +45,7 @@ export function selectSignature(strategy: CommunicationStrategy, sections: { typ
   const intensity = strategy.visualIntensity;
   const reframe = reframeHalves(strategy.reframe);
   const fromInput = (value: unknown): value is SourceText => sourced(value) && input[value.field] === value.source;
-  const stats = Array.isArray(input.signatureStats) ? (input.signatureStats as SignatureStat[]).filter(stat => validStat(stat) && fromInput(stat.evidence)) : [];
+  const stats = [...inputStats(input), ...(Array.isArray(input.signatureStats) ? (input.signatureStats as SignatureStat[]).filter(stat => validStat(stat) && fromInput(stat.evidence)) : [])];
   const terms = Array.isArray(input.ctaTerms) ? input.ctaTerms.filter(fromInput) : [];
   const microline = fromInput(input.ctaMicroline) ? input.ctaMicroline : null;
   const candidates: SignatureElement[] = ['chapter'];
@@ -48,5 +61,11 @@ export function selectSignature(strategy: CommunicationStrategy, sections: { typ
 }
 export function applySignatureStrategy<T extends { type: string; content: any }>(sections: T[], strategy: CommunicationStrategy, input: Record<string, unknown> = {}): T[] {
   const plan = selectSignature(strategy, sections, input);
-  return sections.map(s => ({ ...s, content: { ...s.content, signature: plan } }));
+  const attach = (item: any) => {
+    const kicker = item.signatureKicker;
+    return { ...item, signatureKicker: sourced(kicker) && input[kicker.field] === kicker.source ? kicker : null };
+  };
+  return sections.map(s => ({ ...s, content: { ...s.content,
+    ...(Array.isArray(s.content.features) ? { features: s.content.features.map(attach) } : {}),
+    signature: plan } }));
 }

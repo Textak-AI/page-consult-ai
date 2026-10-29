@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { selectSignature, reframeHalves, payoffPhrase, validStat, sourced, applySignatureStrategy } from '../src/components/signature/selection.ts';
+import { selectSignature, reframeHalves, payoffPhrase, validStat, sourced, inputStats, applySignatureStrategy } from '../src/components/signature/selection.ts';
 const strategy = { visualIntensity: 'balanced', reframe: 'Past consultants left a report. The partner works your dock.', oneLiner: null, ctaLadder: {primary:'Request a Site Visit',secondary:null} };
 const sections = [{type:'hero',content:{}},{type:'how-it-works',content:{steps:[{},{},{}]}},{type:'features',content:{features:[{},{},{}]}}];
 test('intensity limits exactly 3, 5 and 6 treatments, with no quota padding',()=>{
@@ -26,6 +26,11 @@ test('zero stats require an explicit absence of the labeled thing, not incidenta
 test('numeric stat value and label must both occur in the citation',()=>{
  const stat={value:'4',label:'clients',evidence:{text:'4 clients',source:'We cap engagements at 4 clients.',field:'uniqueValue'}};
  expect(validStat(stat)).toBe(true);expect(validStat({...stat,value:'50'})).toBe(false);
+});
+test('input counts stay verbatim and refusal zero is derived only from the stated absence',()=>{
+ expect(inputStats({uniqueStrength:'We cap every engagement at four clients at a time.'})[0].value).toBe('four');
+ expect(inputStats({uniqueValue:'No generic templates.'})[0].value).toBe('0');
+ expect(inputStats({uniqueValue:'We use tailored design.'})).toEqual([]);
 });
 test('secondary CTA is never invented and unsupported microline/terms are omitted',()=>{
  const p=selectSignature(strategy,sections,{ctaTerms:['Cancel anytime'],ctaMicroline:'No obligation'});
