@@ -39,11 +39,12 @@
 - [ ] Standalone dead-code-sweep typecheck confirmation: no separate automatic result is exposed and this environment prohibits manual project typechecks; automatic build OK is verified, not substituted for typecheck evidence.
 
 ## Communication Strategy (Phase A)
-## Fabrication cleanup
-- [ ] Audit all owner-saved pages and remove unsupported offer terms; clean Saltbox brief number and closing repetition.
-- [ ] Remove generation injections and extend number provenance to all generated copy.
-- [ ] Fix real-count benefit grid and verify Fernhill published footer; verify editors without publication.
 - [x] Extractive communicationStrategy after brief, stored in existing structured brief/page JSON; service-side owner-validated re-synthesis mode; all outputs provenance-logged.
 - [x] Mapper reads hero, stakes, arc emphasis, proof placement and input CTAs after legacy heuristics; mechanism remains UI-only suggestion.
 - [x] Communication Strategy panel in review, standalone brief and editor brief views.
 - [x] Saltbox and HyperBrand computed/stored; owner readback and Saltbox desktop/375 editor screenshots; no AI charges or publication.
+## Fabrication cleanup
+- [x] Audit all 92 pages owned by the two specified accounts; remove unsupported offer terms, closing repetition, Saltbox brief fifty-account claim and Fernhill mistaken app logo via owner sessions.
+- [x] Remove tenant offer-term injections; extend shared numeric provenance to brief prose/JSON and generated page/section copy; 222 Bun tests pass, preview build OK.
+- [x] Verify actual Saltbox/Fernhill editors using ?id= at desktop/375; Saltbox three-up benefits; Fernhill tenant-only footer. Published Fernhill route is unavailable because unpublished; no snapshot or publication changes.
+- [ ] Clean 68 affected pages owned by other accounts: requires their owner-session permission and stated-input audit; no privileged cross-owner writes performed.
