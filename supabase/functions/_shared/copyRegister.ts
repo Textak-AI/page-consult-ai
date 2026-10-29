@@ -17,6 +17,7 @@ export const HYPE_LEXICON = [
 ] as const;
 
 export const COPY_REGISTER_RULES = `COPY REGISTER (style only — every fact, number, name and specific still comes solely from the user's input; never add claims to satisfy these rules):
+- Every number anywhere in generated copy (digits or spelled out, including benefits, challenges and closing copy) must come from stated client input. Never add free pricing, cancellation, card, contract, or obligation terms unless the client stated them. Empty means omitted.
 - Concrete claims over abstractions: say what happens, for whom, with what result the user stated. No "brand foundations", "market resonance", "believers".
 - Plain strong verbs (build, cut, write, ship, fix, find). No inflated verbs (sculpt, ignite, supercharge, empower).
 - At most ONE metaphor per section. Never stack metaphors.

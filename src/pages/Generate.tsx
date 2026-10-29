@@ -297,19 +297,12 @@ function patchSectionsWithConsultationData(
       const derivedGuarantee = consultationData.guaranteeOffer ||
                                consultationData.guarantee_offer ||
                                consultationData.guarantee ||
-                               (consultationData.processDescription?.toLowerCase().includes('no credit card')
-                                 ? 'Start free — no credit card required'
-                                 : null) ||
                                section.content?.guaranteeText ||
                                null;
       
       // Derive subtext from unique strength or value proposition
       // The unique value renders once, as the pull-quote, when the page has one.
-      const derivedSubtext = hasPullQuote ? section.content?.subtext : truncateAtBoundary(consultationData.uniqueStrength, 150) ||
-                             truncateAtBoundary(consultationData.uniqueValue, 150) ||
-                             truncateAtBoundary(consultationData.unique_value, 150) ||
-                             truncateAtBoundary(consultationData.valueProposition, 150) ||
-                             section.content?.subtext;
+      const derivedSubtext = section.content?.subtext;
       
       console.log('🔄 [Patch] Derived CTA values:', {
         cta: derivedCta,
@@ -4682,23 +4675,7 @@ function GenerateContent() {
             },
           };
         case "final_cta":
-          // Determine appropriate trust text based on industry/page type
-          const industry = consultationData.industry?.toLowerCase() || '';
-          const pageTypeForTrust = consultationData.pageType || '';
-          
-          let trustText = 'No credit card required · Free to start'; // default for SaaS
-          
-          if (pageTypeForTrust === 'beta-prelaunch' || pageTypeForTrust === 'waitlist') {
-            trustText = 'No spam · Unsubscribe anytime';
-          } else if (
-            industry.includes('consulting') ||
-            industry.includes('manufacturing') ||
-            industry.includes('services') ||
-            industry.includes('agency') ||
-            industry.includes('professional')
-          ) {
-            trustText = 'Free consultation · No obligation';
-          }
+          const trustText = consultationData.guaranteeOffer || '';
             
           return {
             type: isBetaPage ? "beta-final-cta" : "final-cta",

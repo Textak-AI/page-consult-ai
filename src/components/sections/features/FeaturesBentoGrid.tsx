@@ -26,7 +26,7 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
   const validFeatures = features.filter((f: any) => f.title && f.description);
   if (validFeatures.length < 3) return null;
 
-  const cols = validFeatures.length <= 4 ? 2 : 3;
+  const cols = validFeatures.length === 4 ? 2 : 3;
   const useMonospace = content.numbering === 'monospace';
 
   // Clean title — reject raw audience text
@@ -39,10 +39,6 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
     updated[index] = { ...updated[index], [field]: e.currentTarget.textContent || updated[index][field] };
     onUpdate({ ...content, features: updated });
   };
-
-  // Calculate flex basis for each card based on columns
-  const gapPx = 1;
-  const basisPercent = cols === 2 ? 'calc(50% - 1px)' : 'calc(33.333% - 1px)';
 
   return (
     <section style={{ backgroundColor: bgStyles.bg, ...spacing.section }}>
@@ -90,11 +86,8 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
         </h2>
 
         {/* Bento Grid — flex-wrap for centered incomplete rows */}
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap' as const,
-          justifyContent: 'center',
-          gap: gapPx,
+        <div className={`grid grid-cols-1 ${cols === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'}`} style={{
+          gap: shape.hairline,
           backgroundColor: bgStyles.border,
           border: `${shape.hairline}px solid ${bgStyles.border}`,
         }}>
@@ -102,8 +95,7 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
             <div
               key={i}
               style={{
-                flex: `0 1 ${basisPercent}`,
-                minWidth: 240,
+                minWidth: 0,
                 backgroundColor: bgStyles.bg,
                 padding: space.card,
               }}

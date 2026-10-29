@@ -417,7 +417,7 @@ export function getIntelligentSectionHeaders(
       process: { title: 'How We Work Together', subtitle: 'A collaborative approach to your success' },
       proof: { title: 'Results That Speak', subtitle: 'What our clients have achieved' },
       faq: { title: 'Questions We Often Hear', subtitle: '' },
-      cta: { title: "Let's Start a Conversation", subtitle: 'Free consultation • No obligation' },
+      cta: { title: "Let's Start a Conversation", subtitle: '' },
     },
     manufacturing: {
       features: { title: 'Operational Capabilities', subtitle: 'Proven solutions for complex challenges' },
