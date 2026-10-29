@@ -1,4 +1,5 @@
 import { composeArc } from '@/lib/composition/arc';
+import { applySignatureStrategy } from '@/components/signature/selection';
 import { applyCommunicationStrategy, type CommunicationStrategy } from '@/lib/composition/communicationStrategy';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 /**
@@ -906,7 +907,10 @@ export function mapBriefToSections(
   // ── Apply Art Director Compositional Brief ──────────────────────
   sections = applyArtDirectorDirectives(sections, options.messagingArchitecture);
 
-  if (brief.communicationStrategy) sections = applyCommunicationStrategy(sections, brief.communicationStrategy);
+  if (brief.communicationStrategy) {
+    sections = applyCommunicationStrategy(sections, brief.communicationStrategy);
+    sections = applySignatureStrategy(sections, brief.communicationStrategy);
+  }
 
   return sections;
 }

@@ -1772,3 +1772,64 @@ All colors MUST be HSL.
   text-wrap: balance;
   max-width: 100%;
 }
+
+/* House signature: geometry is shared, all chroma comes from tenant tokens. */
+.signature-scope {
+  --signature-primary: var(--brand-primary, hsl(var(--primary)));
+  --signature-secondary: var(--brand-secondary, var(--signature-primary));
+  --signature-light: hsl(210 20% 98%);
+  --signature-ink: hsl(225 22% 14%);
+  --signature-deep: hsl(240 8% 4%);
+  --signature-lit: hsl(210 15% 94%);
+  --signature-border: color-mix(in srgb, currentColor 18%, transparent);
+  --signature-glass: color-mix(in srgb, currentColor 4%, transparent);
+  --signature-glow: color-mix(in srgb, var(--signature-primary) 9%, transparent);
+  --signature-gradient: linear-gradient(100deg, var(--signature-primary), var(--signature-secondary));
+  --signature-dim: .72;
+  position: relative;
+  isolation: isolate;
+  color: var(--signature-lit);
+}
+.signature-scope[data-intensity="restrained"] { --signature-glow: transparent; --signature-dim: .82; }
+.signature-scope[data-intensity="expressive"] { --signature-glow: color-mix(in srgb, var(--signature-primary) 14%, transparent); }
+.signature-band { padding: 96px clamp(24px, 6vw, 96px); background: var(--signature-deep); color: var(--signature-lit); }
+.signature-band[data-surface="light"] { background: var(--signature-light); color: var(--signature-ink); }
+.signature-compact { padding-block: 56px; }
+.signature-inner { max-width: 1120px; margin-inline: auto; }
+.signature-content { position: relative; z-index: 1; }
+.signature-inner > h2 { font-size: 32px; line-height: 1.2; margin-block: 16px 32px; }
+.signature-chapter { font-size: 11px; line-height: 1.5; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--signature-primary); margin-bottom: 16px; }
+.signature-payoff { background: var(--signature-gradient); background-clip: text; -webkit-background-clip: text; color: transparent; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.signature-glass { background: var(--signature-glass); border: 1px solid var(--signature-border); border-radius: 8px; padding: 24px; min-width: 0; }
+.signature-glass > h3 { font-size: 17px; line-height: 1.4; margin-bottom: 16px; }
+.signature-glass p, .signature-stakes p { font-size: 16px; line-height: 1.7; }
+.signature-kicker { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--signature-border); color: var(--signature-primary); }
+.signature-kicker p { font-size: 14px; line-height: 1.5; }
+.signature-citation { display: block; font-size: 11px; line-height: 1.5; color: inherit; opacity: .8; margin-top: 8px; }
+.signature-two-columns { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 32px; align-items: start; }
+.signature-dimmed { opacity: var(--signature-dim); padding-block: 24px; }
+.signature-reframe-text { font-size: 24px !important; line-height: 1.4 !important; }
+.signature-stakes { max-width: 760px; margin-top: 32px; }
+.signature-card-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; }
+.signature-stat-strip { display: flex; flex-wrap: wrap; gap: 32px; margin: 0; padding: 32px clamp(24px,6vw,96px); background: var(--signature-light); color: var(--signature-ink); }
+.signature-stat-strip > div { flex: 1; min-width: 160px; }
+.signature-stat-value { font-size: 40px; line-height: 1.2; }
+.signature-checklist { margin-block: 24px; display: grid; gap: 12px; }
+.signature-checklist li { display: flex; align-items: start; gap: 8px; }
+.signature-checklist svg { flex-shrink: 0; color: var(--signature-primary); }
+.signature-cta { white-space: normal; height: auto; min-height: 40px; margin-top: 16px; }
+.signature-microline { margin-top: 16px; font-size: 13px !important; }
+.signature-timeline-marker { position: absolute; right: -22px; top: 16px; width: 12px; height: 12px; border-radius: 50%; z-index: 1; background: var(--signature-primary); }
+.signature-step-1 { background: color-mix(in srgb, var(--signature-primary) 75%, var(--signature-secondary)); }
+.signature-step-2 { background: color-mix(in srgb, var(--signature-primary) 50%, var(--signature-secondary)); }
+.signature-step-3 { background: color-mix(in srgb, var(--signature-primary) 25%, var(--signature-secondary)); }
+.signature-step-4 { background: var(--signature-secondary); }
+.signature-ambient { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(ellipse at 70% 25%, var(--signature-glow), transparent 70%); }
+.signature-motif { background-image: linear-gradient(135deg, transparent 49.8%, var(--signature-glow) 50%, transparent 50.2%), radial-gradient(ellipse at 70% 25%,var(--signature-glow),transparent 70%); background-size: 80px 80px, auto; }
+.signature-scope:has(.gaze-empty-section), .signature-scope:not(:has(section, dl)) { display: none; }
+@media (max-width: 767px) {
+  .signature-two-columns, .signature-card-grid { grid-template-columns: minmax(0,1fr); }
+  .signature-band { padding-block: 56px; }
+  .signature-reframe-text { font-size: 20px !important; }
+  .signature-inner > h2 { font-size: 26px; }
+}
