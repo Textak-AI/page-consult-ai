@@ -39,6 +39,8 @@
 - [ ] Standalone dead-code-sweep typecheck confirmation: no separate automatic result is exposed and this environment prohibits manual project typechecks; automatic build OK is verified, not substituted for typecheck evidence.
 
 ## Communication Strategy (Phase A)
+- [ ] Buyer objections: compact skippable five-topic consultation checklist, answered-only verbatim brief/FAQ/proofPlan; no schema/policy/transport changes.
+- [ ] Verify fresh three-answer consultation and resulting FAQ; skipped topics absent; document prompt locations and diff.
 - [x] Extractive communicationStrategy after brief, stored in existing structured brief/page JSON; service-side owner-validated re-synthesis mode; all outputs provenance-logged.
 - [x] Mapper reads hero, stakes, arc emphasis, proof placement and input CTAs after legacy heuristics; mechanism remains UI-only suggestion.
 - [x] Communication Strategy panel in review, standalone brief and editor brief views.
