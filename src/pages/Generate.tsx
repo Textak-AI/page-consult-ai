@@ -273,7 +273,6 @@ function patchSectionsWithConsultationData(
     return sections;
   }
   
-  const hasPullQuote = sections.some(s => s.type === 'differentiator-callout' && s.visible !== false);
   return sections.map(section => {
     // Patch Final CTA with fresh consultation data
     if (section.type === 'final-cta') {

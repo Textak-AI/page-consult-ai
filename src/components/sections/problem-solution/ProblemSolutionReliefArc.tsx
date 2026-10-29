@@ -75,7 +75,7 @@ export default function ProblemSolutionReliefArc({ content, onUpdate, isEditing 
         ...spacing.section,
       }}>
         <div style={{ maxWidth: 680, ...spacing.center }}>
-          <div style={{ ...labelStyle, color: accentFor('eyebrow', primaryColor) }}>Our Approach</div>
+          <div style={{ ...labelStyle, color: accentFor('eyebrow', primaryColor) }}>{content.solutionTitle || 'Our Approach'}</div>
           <p
             contentEditable={isEditing}
             suppressContentEditableWarning

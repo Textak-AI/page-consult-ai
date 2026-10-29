@@ -441,6 +441,7 @@ Be specific. No generic advice. Everything should tie back to the actual consult
     }
     if (!structuredBrief) {
       console.warn('[generate-strategy-brief] Could not parse structured JSON from brief');
+      strategyBrief = guardCopyClaims(strategyBrief, consultationData, 'brief-prose-guard');
     }
 
     if (structuredBrief && typeof structuredBrief === 'object') {

@@ -22,3 +22,6 @@ test('unsupported commitment terms are removed but explicitly stated terms survi
 test('structural process numbering and design fields are not claim copy', () => {
   expect(guardCopyClaims({ steps: [{ number: 1, title: 'Fit Call' }], primaryColor: '#123456', imagePrompt: '3D illustration' }, {})).toEqual({ steps: [{ number: 1, title: 'Fit Call' }], primaryColor: '#123456', imagePrompt: '3D illustration' });
 });
+test('markdown section indices survive but unsupported numeric prose does not', () => {
+  expect(guardCopyClaims('## 12. Closing\nSave fifty hours.', {})).toBe('## 12. Closing');
+});

@@ -72,7 +72,7 @@ export default function ProblemSolutionTwoColumn({ content, onUpdate, isEditing 
 
         {/* Solution column */}
         <div>
-          <div style={labelStyle}>Our Approach</div>
+          <div style={labelStyle}>{content.solutionTitle || 'Our Approach'}</div>
           <p
             contentEditable={isEditing}
             suppressContentEditableWarning
