@@ -10,7 +10,8 @@ import { useFormSubmission } from '@/hooks/useFormSubmission';
 interface LeadCaptureModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  publishedPageId: string;
+  publishedPageId?: string;
+  prospectSlug?: string;
   ctaText?: string;
   companyName?: string;
 }
@@ -19,6 +20,7 @@ function LeadCaptureModalBase({
   open,
   onOpenChange,
   publishedPageId,
+  prospectSlug,
   ctaText = 'Get Started',
   companyName,
 }: LeadCaptureModalProps) {
@@ -35,6 +37,7 @@ function LeadCaptureModalBase({
 
     await submit({
       publishedPageId,
+      prospectSlug,
       email,
       name: name || undefined,
       phone: phone || undefined,
@@ -50,7 +53,7 @@ function LeadCaptureModalBase({
           <div className="text-center space-y-4 py-6">
             <CheckCircle className="w-12 h-12 mx-auto text-green-500" />
             <h3 className="text-xl font-semibold text-foreground">Thank you!</h3>
-            <p className="text-muted-foreground">We'll be in touch shortly.</p>
+            <p className="text-muted-foreground">Your message has been received.</p>
             <Button onClick={() => onOpenChange(false)} variant="outline">Close</Button>
           </div>
         </DialogContent>

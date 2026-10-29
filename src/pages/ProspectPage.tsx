@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { PublicPageRenderer } from '@/components/public/PublicPageRenderer';
+import { LeadCaptureModal } from '@/components/public/LeadCaptureModal';
+import { Button } from '@/components/ui/button';
 
 type Section = {
   type: string;
@@ -28,6 +30,8 @@ export default function ProspectPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showBadge, setShowBadge] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [captureEnabled, setCaptureEnabled] = useState(false);
+  const [leadOpen, setLeadOpen] = useState(false);
 
   useEffect(() => {
     async function fetchPage() {
@@ -49,6 +53,7 @@ export default function ProspectPage() {
         const basePage = data.page;
         setShowBadge(data.showBadge !== false);
         const prospect = data.prospect;
+        setCaptureEnabled(data.canCaptureLead === true || !!prospect);
 
         if (prospect) {
           // Parse sections from JSON
@@ -216,6 +221,7 @@ export default function ProspectPage() {
   }
 
   return (
+    <>
     <PublicPageRenderer 
       sections={pageData.sections}
       styles={pageData.styles}
@@ -224,5 +230,15 @@ export default function ProspectPage() {
       businessName={pageData.businessName || null}
       showBadge={showBadge}
     />
+    {captureEnabled && slug && (
+      <>
+        <div className="bg-background text-foreground py-6 px-4 flex justify-center border-t border-border">
+          <Button variant="outline" onClick={() => setLeadOpen(true)}>Send a message</Button>
+        </div>
+        <LeadCaptureModal open={leadOpen} onOpenChange={setLeadOpen} prospectSlug={slug}
+          ctaText="Send a message" companyName={pageData.businessName || undefined} />
+      </>
+    )}
+    </>
   );
 }

@@ -51,8 +51,24 @@ serve(async (req) => {
           personalized_cta_text: prospect.personalized_cta_text,
         },
         page: displayPage(page),
+        canCaptureLead: true,
         showBadge: await ownerShowsBadge(client, page.user_id),
       });
+    }
+    const { data: prospectPage, error: prospectPageError } = await client.from('prospect_pages')
+      .select('id,user_id,source_landing_page_id,prospect_company,personalized_headline,personalized_subheadline,personalized_sections,unique_slug,expires_at')
+      .eq('unique_slug', input.slug).eq('status', 'published').maybeSingle();
+    if (prospectPageError) throw prospectPageError;
+    if (prospectPage) {
+      if (prospectPage.expires_at && new Date(prospectPage.expires_at).getTime() <= Date.now()) return respond({ error: 'Not found' }, 404);
+      const { data: base } = await client.from('landing_pages').select(PAGE_FIELDS)
+        .eq('id', prospectPage.source_landing_page_id).eq('user_id', prospectPage.user_id).maybeSingle();
+      const sections = Array.isArray(prospectPage.personalized_sections) && prospectPage.personalized_sections.length
+        ? prospectPage.personalized_sections : base?.sections;
+      if (!sections) return respond({ error: 'Not found' }, 404);
+      return respond({ prospect: null, canCaptureLead: true, showBadge: await ownerShowsBadge(client, prospectPage.user_id),
+        page: { ...displayPage(base || { id: prospectPage.id, title: prospectPage.prospect_company, styles: {} }),
+          slug: prospectPage.unique_slug, sections, title: prospectPage.prospect_company } });
     }
     // Preserve the route's existing published-landing-page fallback.
     const { data: page, error } = await client.from('landing_pages').select(PAGE_FIELDS)
