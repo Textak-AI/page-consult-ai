@@ -1,4 +1,5 @@
 import { useUsableImage } from '@/hooks/useUsableImage';
+import { ChapterEyebrow, GradientPayoff } from '@/components/signature/elements';
 import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeScale, typeClass, shape } from '@/lib/design/tokens';
 /**
@@ -74,6 +75,7 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
             ) : null}
 
             {/* Headline */}
+            {content.signature?.elements.includes('chapter') && <ChapterEyebrow slot="hero" />}
             <h1
               contentEditable={isEditing}
               suppressContentEditableWarning
@@ -86,7 +88,7 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
                 fontFamily: usesSerif ? 'Georgia, "Times New Roman", serif' : 'inherit',
               }}
             >
-              {content.headline}
+              {content.signature && !isEditing ? <GradientPayoff text={content.headline || ''} phrase={content.signature.payoff} enabled={content.signature.elements.includes('gradient')} /> : content.headline}
             </h1>
 
             {/* Subheadline */}

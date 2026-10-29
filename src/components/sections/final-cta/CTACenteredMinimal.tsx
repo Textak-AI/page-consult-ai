@@ -1,4 +1,5 @@
 import { typeScale, spacing, space } from '@/lib/design/tokens';
+import { ChapterEyebrow } from '@/components/signature/elements';
 import { accentFor } from '@/lib/design/tokens';
 /**
  * CTACenteredMinimal — Analytical Validator final CTA
@@ -41,6 +42,7 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
 
       <div className="relative z-10" style={{ maxWidth: 600, ...spacing.center, textAlign: 'center' as const }}>
         {/* Headline */}
+        {content.signature?.elements.includes('chapter') && <ChapterEyebrow slot="cta" />}
         <h2
           contentEditable={isEditing}
           suppressContentEditableWarning

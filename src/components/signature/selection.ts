@@ -15,11 +15,11 @@ export function reframeHalves(reframe: string | null) {
 export function sourced(value: unknown): value is SourceText {
   if (!value || typeof value !== 'object') return false;
   const v = value as SourceText;
-  return !!v.text?.trim() && !!v.field?.trim() && !!v.source?.trim() && v.source.includes(v.text);
+  return typeof v.text === 'string' && typeof v.field === 'string' && typeof v.source === 'string' && !!v.text.trim() && !!v.field.trim() && !!v.source.trim() && v.source.includes(v.text);
 }
 export function validStat(stat: SignatureStat) {
-  if (!sourced(stat.evidence) || !stat.label?.trim()) return false;
-  if (stat.value === '0') return /\b(no|zero|without|never)\b/i.test(stat.evidence.text) && stat.evidence.text.toLowerCase().includes(stat.label.toLowerCase());
+  if (!stat || !sourced(stat.evidence) || typeof stat.label !== 'string' || typeof stat.value !== 'string' || !stat.label.trim()) return false;
+  if (stat.value === '0') return new RegExp(`\\b(?:no|zero|without|never)\\s+${stat.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(stat.evidence.text);
   return /\d/.test(stat.value) && stat.evidence.text.includes(stat.value) && stat.evidence.text.toLowerCase().includes(stat.label.toLowerCase());
 }
 export function payoffPhrase(headline: string, preferred?: string | null) {
