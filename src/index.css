@@ -1790,6 +1790,8 @@ All colors MUST be HSL.
   isolation: isolate;
   color: var(--signature-lit);
 }
+[data-work-samples] { color: hsl(var(--foreground)); }
+[data-mode="light"] [data-work-samples] { color: var(--signature-ink, hsl(225 22% 14%)); }
 .signature-scope[data-intensity="restrained"] { --signature-glow: transparent; --signature-dim: .82; }
 .signature-scope[data-intensity="restrained"] .signature-payoff { opacity: .85; }
 .signature-scope[data-intensity="expressive"] { --signature-glow: color-mix(in srgb, var(--signature-primary) 14%, transparent); }

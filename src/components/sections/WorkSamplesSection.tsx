@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Upload, ArrowUp, ArrowDown, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
 import { LOGO_REJECTION_TEXT } from '@/lib/logoAudit';
@@ -20,15 +19,15 @@ export function WorkSamplesSection({ content, onUpdate, editor = false }: Props)
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [verified, setVerified] = useState<string[]>([]);
+  const [failed, setFailed] = useState<string[]>([]);
   const [selection, setSelection] = useState<string[]>([]);
   const input = useRef<HTMLInputElement>(null);
   const urls = JSON.stringify(samples.map(s => s.url));
   useEffect(() => {
     let active = true;
     const candidates: string[] = JSON.parse(urls);
-    Promise.all(candidates.map(async url => (await auditWorkSample(url)).ok ? url : null)).then(result => {
-      if (active) setVerified(result.filter((url): url is string => !!url));
+    Promise.all(candidates.map(async url => (await auditWorkSample(url)).ok ? null : url)).then(result => {
+      if (active) setFailed(result.filter((url): url is string => !!url));
     });
     return () => { active = false; };
   }, [urls]);
@@ -62,12 +61,14 @@ export function WorkSamplesSection({ content, onUpdate, editor = false }: Props)
     } catch (e) { setError(e instanceof Error ? e.message : 'Upload failed. Please try again.'); }
     finally { setBusy(false); if (input.current) input.current.value = ''; }
   };
-  const live = samples.filter(s => verified.includes(s.url));
+  // Uploads were audited before persistence; reserve their geometry immediately,
+  // then collapse only those that fail a fresh audit (no load-time gallery insertion).
+  const live = samples.filter(s => !failed.includes(s.url));
   const gallery = live.length >= WORK_SAMPLE_RULES.min;
   const figure = (s: WorkSample, label?: string) => <figure key={s.id} className="min-w-0">
     {label && <p className="mb-2 font-medium" style={typeScale.small}>{label}</p>}
     <div className="overflow-hidden" style={{ aspectRatio: shape.sampleAspectRatio, borderRadius: shape.radiusImage }}>
-      <img src={s.url} alt={typeof s.caption === 'string' ? s.caption : ''} width={s.width} height={s.height} loading="lazy" decoding="async" className="h-full w-full object-contain" onError={() => setVerified(v => v.filter(url => url !== s.url))} />
+      <img src={s.url} alt={typeof s.caption === 'string' ? s.caption : ''} width={s.width} height={s.height} loading="lazy" decoding="async" className="h-full w-full object-contain" onError={() => setFailed(v => [...v, s.url])} />
     </div>
     {typeof s.caption === 'string' && s.caption.trim() && <figcaption className="mt-2 break-words whitespace-pre-wrap" style={typeScale.small}>{s.caption}</figcaption>}
   </figure>;
