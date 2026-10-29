@@ -49,8 +49,8 @@
 - [x] Verify actual Saltbox/Fernhill editors using ?id= at desktop/375; Saltbox three-up benefits; Fernhill tenant-only footer. Published Fernhill route is unavailable because unpublished; no snapshot or publication changes.
 - [ ] Migration runbook: clean 68 other-owner pages in the planned migration pass (user-managed; no cross-owner writes in this task).
 ## Saltbox publication and hero durability
-- [ ] Work samples: upload-only 2–6 image proof section, captions/order/removal/pairs through existing owner storage; no policy or schema changes.
-- [ ] Verify temporary uploaded files in editor and public-preview renderer desktop/375, empty collapse; remove test section/uploads and report thresholds.
+- [x] Work samples: upload-only 2–6 image proof section, captions/order/removal/pairs through existing owner storage; no policy or schema changes.
+- [x] Desktop and 375px iframe editor/public share preview verified with actual uploads, caption/order/pair/removal and empty collapse; CLS 0, 246 tests pass; both temporary pages, four uploads and preview links removed. Thresholds/diff in Work Samples Report.md.
 - [x] Signature library v1: eight parametric frontend treatments, client tokens/intensity ceilings (3/5/6) and source-backed stats/kickers/CTA terms; 236 tests pass.
 - [x] Saved Saltbox receives chapter/gradient/timeline/reframe/stat strip; HyperBrand chapter/timeline/ambient. Desktop/375, reduced-motion visibility, flush content transitions and CLS verified; no publication or backend changes.
 - [x] Publish cleaned Saltbox through its owner session; live /p/ shows problem, decoded warehouse photo, Lance Chang/Unsplash credit and honest closing after renderer deployment.
