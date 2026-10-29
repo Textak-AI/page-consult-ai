@@ -1,3 +1,4 @@
+import { useUsableImage } from '@/hooks/useUsableImage';
 import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeClass } from '@/lib/design/tokens';
 import { Button } from "@/components/ui/button";
@@ -231,9 +232,9 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
   // AI hero images disabled for legacy layouts — always use CSS gradient backgrounds
   // User-selected images (via editor) are still honored
   // Art Director compositions bypass this flag — they handle images internally
-  const ENABLE_HERO_BG_IMAGES = false;
+  const heroImg = useUsableImage(content.backgroundImage || (content as any).heroImage);
   const isArtDirectorComposition = content?.composition === 'centered-type' || content?.composition === 'split-photo';
-  const hasBackgroundImage = (ENABLE_HERO_BG_IMAGES || isArtDirectorComposition) && !!content.backgroundImage;
+  const hasBackgroundImage = !!heroImg;
   const showDarkOverlay = hasBackgroundImage && (content.darkOverlay !== false);
   // Use light text when: overlay is active on bg image, or when in dark mode
   const useLightText = showDarkOverlay || !isLightMode;
@@ -495,7 +496,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
           <div 
             className="absolute inset-0 z-0"
             style={{
-              backgroundImage: `url(${content.backgroundImage})`,
+              backgroundImage: `url(${heroImg})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             }}
@@ -670,17 +671,17 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
     return (
       <section 
         className={`relative py-20 md:py-32 flex items-center overflow-hidden ${
-          content.backgroundImage 
+          heroImg 
             ? '' 
             : 'bg-gradient-to-br from-white via-slate-50 to-white'
         }`}
       >
         {/* Background Image Layer (if provided) */}
-        {content.backgroundImage && (
+        {heroImg && (
           <div 
             className="absolute inset-0 z-0"
             style={{
-              backgroundImage: `url(${content.backgroundImage})`,
+              backgroundImage: `url(${heroImg})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             }}
@@ -695,7 +696,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
         )}
         
         {/* Subtle warm gradient orbs - no glassmorphism */}
-        {!content.backgroundImage && (
+        {!heroImg && (
           <>
             <div 
               className="absolute top-20 right-[10%] w-[400px] h-[400px] rounded-full blur-3xl opacity-10"
@@ -712,7 +713,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
           <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
             <Button size="sm" onClick={() => setImagePickerOpen(true)}>
               <ImagePlus className="h-4 w-4 mr-2" />
-              {content.backgroundImage ? 'Change' : 'Add'} Background
+              {heroImg ? 'Change' : 'Add'} Background
             </Button>
             {hasBackgroundImage && (
               <div className="flex items-center gap-2 bg-white/90 rounded-lg px-3 py-2 shadow-md">
@@ -911,16 +912,16 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
     return (
       <section 
         className={`relative py-20 md:py-32 flex items-center overflow-hidden ${
-          content.backgroundImage 
+          heroImg 
             ? '' 
             : 'bg-gradient-to-br from-slate-50 via-white to-slate-50'
         }`}
       >
         {/* Background Image Layer (if provided) — atmospheric with strong text-readability gradient */}
-        {content.backgroundImage && (
+        {heroImg && (
           <div className="absolute inset-0 z-0">
             <img 
-              src={content.backgroundImage} 
+              src={heroImg} 
               alt="" 
               className="w-full h-full object-cover"
             />
@@ -935,7 +936,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
           <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
             <Button size="sm" onClick={() => setImagePickerOpen(true)}>
               <ImagePlus className="h-4 w-4 mr-2" />
-              {content.backgroundImage ? 'Change' : 'Add'} Background
+              {heroImg ? 'Change' : 'Add'} Background
             </Button>
             {hasBackgroundImage && (
               <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-md">
@@ -1229,11 +1230,11 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
       )}
 
       {/* Background Image Layer (if provided) */}
-      {content.backgroundImage && (
+      {heroImg && (
         <div 
           className="absolute inset-0 z-0"
           style={{
-            backgroundImage: `url(${content.backgroundImage})`,
+            backgroundImage: `url(${heroImg})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
@@ -1260,7 +1261,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
             onClick={() => setImagePickerOpen(true)}
           >
             <ImagePlus className="h-4 w-4 mr-2" />
-            {content.backgroundImage ? 'Change' : 'Add'} Background
+            {heroImg ? 'Change' : 'Add'} Background
           </Button>
           
           {/* Dark overlay toggle - only show when bg image exists */}
