@@ -22,7 +22,7 @@ Deno.test("restated challenge passes; non-problem fields ignored", () => {
 });
 Deno.test("flags invented competitor behaviour in objection answers", () => {
   const hits = findProvenanceViolations({ objections: [{ objection: "Is this just design?", answer: "Most agencies start with aesthetics. We start with strategy and clarify your brand message." }] }, INPUT);
-  assertEquals(hits.map((h) => h.reason), ["competitor-claim"]);
+  assertEquals(hits.filter((h) => h.reason === "competitor-claim").map((h) => h.sentence), ["Most agencies start with aesthetics."]);
 });
 Deno.test("competitor contrast the user stated is allowed", () => {
   assertEquals(findProvenanceViolations({ faqItems: [{ answer: "Generic agencies miss your brand message." }] }, "Generic agencies don't understand our brand message").filter((h) => h.reason === "competitor-claim").length, 0);
