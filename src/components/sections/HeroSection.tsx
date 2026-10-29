@@ -1,4 +1,5 @@
 import { useUsableImage } from '@/hooks/useUsableImage';
+import { TreatedImage } from './TreatedImage';
 import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeClass } from '@/lib/design/tokens';
 import { Button } from "@/components/ui/button";
@@ -254,10 +255,12 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
     onUpdate({
       ...content,
       backgroundImage: image.urls.regular,
-      imageAttribution: {
+      imageAsset: image.asset || { id: image.id, source: 'unsplash', url: image.urls.regular },
+      imageCredit: image.user ? { name: image.user.name, link: image.user.link } : undefined,
+      imageAttribution: image.user ? {
         photographerName: image.user.name,
         photographerLink: image.user.link,
-      },
+      } : undefined,
       darkOverlay: true, // Auto-enable overlay when adding bg image
     });
   };

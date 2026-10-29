@@ -1,4 +1,5 @@
 import { useUsableImage } from '@/hooks/useUsableImage';
+import { TreatedImage } from '../TreatedImage';
 import { ChapterEyebrow, GradientPayoff } from '@/components/signature/elements';
 import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeScale, typeClass, shape } from '@/lib/design/tokens';
@@ -141,13 +142,11 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
               omitted and the text spans the row (typographic fallback). */}
           {heroImage && (
             <div className="lg:col-span-5">
-              <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-[4/5]">
-                <img
+              <div className="relative overflow-hidden shadow-xl">
+                <TreatedImage priority
                   src={heroImage}
                   alt=""
                   className="w-full h-full object-cover"
-                  loading="eager"
-                  fetchPriority="high"
                 />
               </div>
             </div>

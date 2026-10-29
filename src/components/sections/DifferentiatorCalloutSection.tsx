@@ -2,6 +2,7 @@ import { featureType, spacing, space, typeScale, accentFor, shape } from '@/lib/
 import { getSectionBackgroundStyles } from '@/lib/artDirectorBrief';
 import { useUsableImage } from '@/hooks/useUsableImage';
 import { ChapterEyebrow } from '@/components/signature/elements';
+import { TreatedImage } from './TreatedImage';
 
 interface DifferentiatorCalloutProps {
   content: {
@@ -64,13 +65,12 @@ export function DifferentiatorCalloutSection({ content }: DifferentiatorCalloutP
       </figure>
       {image && (
         <div className="md:col-span-5">
-          <img
+          <TreatedImage
             src={image}
             alt=""
             aria-hidden="true"
             loading="lazy"
             className="w-full object-cover"
-            style={{ aspectRatio: '4 / 5', borderRadius: shape.radiusCard }}
           />
           {content.imageCredit?.name && (
             <a

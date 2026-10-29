@@ -6,6 +6,10 @@ import { Search, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { getAuthHeaders } from '@/lib/authHelpers';
+import { useClientImages } from './ClientImageContext';
+import { auditWorkSample } from '@/lib/workSamples';
+import type { ClientImage } from '@/lib/clientImages';
+import { TreatedImage } from '@/components/sections/TreatedImage';
 
 interface UnsplashImage {
   id: string;
@@ -28,7 +32,8 @@ interface UnsplashImage {
 interface ImagePickerProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (image: UnsplashImage) => void;
+  onSelect: (image: any) => void;
+  clientImages?: ClientImage[];
   defaultQuery?: string;
 }
 
@@ -43,7 +48,10 @@ const industryDefaults: Record<string, string> = {
   'consulting': 'business meeting professional',
 };
 
-export function ImagePicker({ open, onClose, onSelect, defaultQuery }: ImagePickerProps) {
+export function ImagePicker({ open, onClose, onSelect, defaultQuery, clientImages }: ImagePickerProps) {
+  const inherited = useClientImages();
+  const owned = clientImages || inherited;
+  const [rejected, setRejected] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState(defaultQuery || "");
   const [results, setResults] = useState<UnsplashImage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -51,10 +59,16 @@ export function ImagePicker({ open, onClose, onSelect, defaultQuery }: ImagePick
   const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    if (open && defaultQuery) {
+    if (open && defaultQuery && !owned.length) {
       handleSearch(defaultQuery);
     }
-  }, [open, defaultQuery]);
+  }, [open, defaultQuery, owned.length]);
+
+  const selectClient = async (image: ClientImage) => {
+    if (!(await auditWorkSample(image.url)).ok) { setRejected(v => [...v, image.url]); toast({ title: 'Image unavailable', description: 'Please choose another image.', variant: 'destructive' }); return; }
+    onSelect({ id: image.id, source: image.source, asset: image, urls: { small: image.url, regular: image.url, full: image.url }, description: '', user: null });
+    onClose();
+  };
 
   const handleSearch = async (query: string = searchQuery, pageNum: number = 1) => {
     if (!query.trim()) return;
@@ -118,6 +132,7 @@ export function ImagePicker({ open, onClose, onSelect, defaultQuery }: ImagePick
         </DialogHeader>
 
         <div className="space-y-4">
+          {owned.length > 0 && <section aria-label="Your images"><h3 className="text-sm font-medium mb-3">Your images</h3><div className="grid grid-cols-2 md:grid-cols-3 gap-4">{owned.filter(i => !rejected.includes(i.url)).map((image, index) => <div key={image.url} className="min-w-0"><Button variant="outline" className="h-auto w-full p-0 overflow-hidden" aria-label={`Select your image ${index + 1}`} onClick={() => selectClient(image)}><TreatedImage src={image.url} alt="" width={image.width} height={image.height} className="w-full" /></Button><p className="text-xs text-muted-foreground mt-2">{image.source === 'client-site' ? 'From your website' : image.source === 'client-upload' ? 'Your upload' : 'Brand scene'}</p>{image.sourcePageUrl && <a href={image.sourcePageUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground break-all underline">{new URL(image.sourcePageUrl).hostname}</a>}</div>)}</div></section>}
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

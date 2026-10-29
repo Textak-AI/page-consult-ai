@@ -69,7 +69,7 @@ export function judgeLogo(f: {
     if (Math.min(w, h) < LOGO_RULES.minShortSide || Math.max(w, h) < LOGO_RULES.minLongSide)
       return { ok: false, reason: 'too-small', width: w, height: h };
     const ratio = w / h;
-    if (f.purpose !== 'work-sample' && w >= LOGO_RULES.socialMinWidth && ratio >= LOGO_RULES.socialAspect[0] && ratio <= LOGO_RULES.socialAspect[1])
+    if (w >= LOGO_RULES.socialMinWidth && ratio >= LOGO_RULES.socialAspect[0] && ratio <= LOGO_RULES.socialAspect[1])
       return { ok: false, reason: 'social-preview-image', width: w, height: h };
   }
   if (f.pixels) {

@@ -906,6 +906,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
       />
       */}
     </div>
+    </ClientImageContext.Provider>
   );
 }
 

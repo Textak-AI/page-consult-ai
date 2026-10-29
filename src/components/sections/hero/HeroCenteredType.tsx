@@ -1,4 +1,5 @@
 import { useUsableImage } from '@/hooks/useUsableImage';
+import { TreatedImage } from '../TreatedImage';
 import { ChapterEyebrow, GradientPayoff } from '@/components/signature/elements';
 import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeScale, typeClass } from '@/lib/design/tokens';
@@ -77,13 +78,12 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
           failing image simply hides, leaving the typographic fallback. */}
       {heroImage && (
         <>
-          <img
+          <TreatedImage background priority
             src={heroImage}
             alt=""
             aria-hidden="true"
             className="absolute inset-0 z-0 h-full w-full object-cover"
             style={{ opacity: 0.5 }}
-            fetchPriority="high"
           />
           <div
             className="absolute inset-0 z-0 pointer-events-none"
