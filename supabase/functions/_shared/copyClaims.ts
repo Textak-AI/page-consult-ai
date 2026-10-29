@@ -18,7 +18,7 @@ export function inputCopyText(input: unknown): string {
   if (typeof input === 'string') return input;
   if (Array.isArray(input)) return input.map(inputCopyText).join(' ');
   if (!input || typeof input !== 'object') return '';
-  return Object.entries(input).filter(([key]) => !/brief|communicationStrategy|currentContent|sections|marketResearch|intelligenceContext|(^|_)(id|score|timestamp|created_at|updated_at)($|_)/i.test(key)).map(([,v]) => typeof v === 'number' ? String(v) : inputCopyText(v)).join(' ');
+  return Object.entries(input).filter(([key]) => !/brief|communicationStrategy|currentContent|sections|marketResearch|intelligenceContext|url|color|font|image|(^|_)(id|score|timestamp|created_at|updated_at)($|_)/i.test(key)).map(([,v]) => typeof v === 'number' ? String(v) : inputCopyText(v)).join(' ');
 }
 export const OFFER_TERMS = ['No credit card required', 'Free to start', 'Cancel anytime', 'Free consultation', 'No obligation', 'No commitment', 'Pay as you go', 'No contracts'];
 export function stripUnsupportedOfferTerms(text: string, input: unknown, removed: string[] = []): string {
@@ -44,7 +44,7 @@ export function guardCopyClaims<T>(output: T, input: unknown, label = 'copy-guar
         // Document/list indices describe structure, not a claim about the client.
         const prefix = line.match(/^(?:#{1,6}\s+)?\d+\.\s+/)?.[0] || '';
         const body = line.slice(prefix.length);
-        const guarded = (body.match(/[^.!?]+(?:[.!?](?=\s|$)|$)/g) || [body]).filter(sentence => {
+        const guarded = body.split(/(?<=[.!?])(?=\s|$)/).filter(sentence => {
         const unknown = numbersIn(sentence).filter(n => !allowed.has(n));
         if (!unknown.length) return true;
         console.log(`[${label}] Removed unsupported numeric copy at ${path}`, JSON.stringify({ sentence: sentence.trim(), numbers: unknown }));

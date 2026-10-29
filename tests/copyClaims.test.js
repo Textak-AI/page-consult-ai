@@ -25,3 +25,7 @@ test('structural process numbering and design fields are not claim copy', () => 
 test('markdown section indices survive but unsupported numeric prose does not', () => {
   expect(guardCopyClaims('## 12. Closing\nSave fifty hours.', {})).toBe('## 12. Closing');
 });
+test('decimal claims remain intact only if their full numeric value is supported', () => {
+  expect(guardCopyClaims('Save 2.5 hours. Keep the routine.', { offer: '2.5 hours' })).toBe('Save 2.5 hours. Keep the routine.');
+  expect(guardCopyClaims('Save 2.5 hours. Keep the routine.', {})).toBe('Keep the routine.');
+});
