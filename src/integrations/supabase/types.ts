@@ -1459,6 +1459,7 @@ export type Database = {
           custom_instructions: string | null
           deal_stage: string
           expires_at: string | null
+          first_lead_email_sent_at: string | null
           id: string
           known_pain_points: string[] | null
           last_viewed_at: string | null
@@ -1488,6 +1489,7 @@ export type Database = {
           custom_instructions?: string | null
           deal_stage?: string
           expires_at?: string | null
+          first_lead_email_sent_at?: string | null
           id?: string
           known_pain_points?: string[] | null
           last_viewed_at?: string | null
@@ -1517,6 +1519,7 @@ export type Database = {
           custom_instructions?: string | null
           deal_stage?: string
           expires_at?: string | null
+          first_lead_email_sent_at?: string | null
           id?: string
           known_pain_points?: string[] | null
           last_viewed_at?: string | null
@@ -1608,6 +1611,7 @@ export type Database = {
           email_status: string | null
           email_subject: string | null
           engagement_score: number | null
+          first_lead_email_sent_at: string | null
           first_name: string
           first_viewed_at: string | null
           full_name: string | null
@@ -1638,6 +1642,7 @@ export type Database = {
           email_status?: string | null
           email_subject?: string | null
           engagement_score?: number | null
+          first_lead_email_sent_at?: string | null
           first_name: string
           first_viewed_at?: string | null
           full_name?: string | null
@@ -1668,6 +1673,7 @@ export type Database = {
           email_status?: string | null
           email_subject?: string | null
           engagement_score?: number | null
+          first_lead_email_sent_at?: string | null
           first_name?: string
           first_viewed_at?: string | null
           full_name?: string | null
@@ -1763,6 +1769,81 @@ export type Database = {
             columns: ["landing_page_id"]
             isOneToOne: false
             referencedRelation: "landing_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quickpivot_leads: {
+        Row: {
+          company: string | null
+          custom_fields: Json
+          email: string
+          id: string
+          message: string | null
+          name: string | null
+          page_title: string | null
+          phone: string | null
+          prospect_id: string | null
+          prospect_page_id: string | null
+          prospect_slug: string
+          source_url: string | null
+          submitted_at: string
+          user_id: string
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          company?: string | null
+          custom_fields?: Json
+          email: string
+          id?: string
+          message?: string | null
+          name?: string | null
+          page_title?: string | null
+          phone?: string | null
+          prospect_id?: string | null
+          prospect_page_id?: string | null
+          prospect_slug: string
+          source_url?: string | null
+          submitted_at?: string
+          user_id: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          company?: string | null
+          custom_fields?: Json
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string | null
+          page_title?: string | null
+          phone?: string | null
+          prospect_id?: string | null
+          prospect_page_id?: string | null
+          prospect_slug?: string
+          source_url?: string | null
+          submitted_at?: string
+          user_id?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quickpivot_leads_prospect_id_fkey"
+            columns: ["prospect_id"]
+            isOneToOne: false
+            referencedRelation: "prospects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quickpivot_leads_prospect_page_id_fkey"
+            columns: ["prospect_page_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_pages"
             referencedColumns: ["id"]
           },
         ]
@@ -2071,6 +2152,10 @@ export type Database = {
       charge_page_build: {
         Args: { p_cost: number; p_page_id?: string; p_user_id: string }
         Returns: Json
+      }
+      claim_quickpivot_first_lead: {
+        Args: { p_lead_id: string }
+        Returns: boolean
       }
       get_consultation_policies: {
         Args: never
