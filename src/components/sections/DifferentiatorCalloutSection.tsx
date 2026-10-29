@@ -28,7 +28,7 @@ export function DifferentiatorCalloutSection({ content }: DifferentiatorCalloutP
     <section style={{ backgroundColor: bg.bg, ...spacing.section }}>
       <div
         className={image ? 'grid md:grid-cols-12 items-center' : undefined}
-        style={{ maxWidth: image ? 1120 : 820, margin: '0 auto', gap: space.xl }}
+        style={{ maxWidth: image ? 1120 : 820, margin: '0 auto', gap: space.header }}
       >
       <figure className={image ? 'md:col-span-7' : undefined} style={{ margin: 0 }}>
         <div aria-hidden="true" style={{ width: 56, height: 3, backgroundColor: rule, marginBottom: space.lg }} />
@@ -67,7 +67,7 @@ export function DifferentiatorCalloutSection({ content }: DifferentiatorCalloutP
             aria-hidden="true"
             loading="lazy"
             className="w-full object-cover"
-            style={{ aspectRatio: '4 / 5', borderRadius: shape.radius }}
+            style={{ aspectRatio: '4 / 5', borderRadius: shape.radiusCard }}
           />
           {content.imageCredit?.name && (
             <a
