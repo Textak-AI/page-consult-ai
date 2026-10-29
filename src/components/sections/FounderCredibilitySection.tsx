@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { TreatedImage } from './TreatedImage';
 import { Twitter, Linkedin, Globe, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -57,7 +58,7 @@ export function FounderCredibilitySection({ content, styles }: Props) {
               style={{ borderColor: 'rgba(255,255,255,0.15)' }}
             >
               {content.photo ? (
-                <img
+                <TreatedImage
                   src={content.photo}
                   alt={content.name}
                   className="w-full h-full object-cover"

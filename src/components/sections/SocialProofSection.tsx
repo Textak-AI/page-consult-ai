@@ -1,4 +1,5 @@
 import { spacing } from '@/lib/design/tokens';
+import { TreatedImage } from './TreatedImage';
 import { Clock, Quote, User, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
