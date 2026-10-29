@@ -530,7 +530,7 @@ export default function BrandSetup() {
       
       if (error) throw error;
       
-      if (result.success && result.data) {
+      if (result.success) {
         // Update brand brief with website data
         const { data: existingBrief } = await supabase
           .from('brand_briefs')
@@ -538,7 +538,9 @@ export default function BrandSetup() {
           .eq('user_id', userId)
           .maybeSingle();
         
-        const extractedData = result.data;
+        const extractedData = result.data || result;
+        const storedIntel = JSON.parse(localStorage.getItem('pageconsult_extracted_intelligence') || '{}');
+        localStorage.setItem('pageconsult_extracted_intelligence', JSON.stringify({ ...storedIntel, harvestedImages: extractedData.harvestedImages || [] }));
 
         // 🔧 FIX: Persist extracted colors to consultation state for generation
         if (extractedData.brandColors?.length > 0) {
@@ -551,6 +553,7 @@ export default function BrandSetup() {
 
           const updatedIntel = {
             ...existingIntel,
+            harvestedImages: extractedData.harvestedImages || [],
             colors: extractedData.brandColors,
             brandColors: {
               primary: extractedData.brandColors[0] || null,

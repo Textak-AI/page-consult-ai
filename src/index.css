@@ -1784,8 +1784,6 @@ All colors MUST be HSL.
   isolation: isolate;
 }
 .treated-image::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: var(--image-tint); opacity: var(--image-overlay-opacity, 0); mix-blend-mode: color; }
-[data-image-intensity="balanced"] { --image-overlay-opacity: .06; }
-[data-image-intensity="expressive"] { --image-overlay-opacity: .1; }
 .treated-image-background { position: absolute; inset: 0; width: 100%; height: 100%; }
 .treated-image img { display: block; width: 100%; height: 100%; }
 .signature-scope {

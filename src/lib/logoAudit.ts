@@ -8,17 +8,12 @@ import { IMAGE_RULES, judgeImageFacts } from '../../supabase/functions/_shared/i
 export const LOGO_RULES = {
   ...IMAGE_RULES,
   /** Shorter side must be at least this many natural pixels (rejects 1×1 tracking pixels and slivers). */
-  minShortSide: 16,
   /** Longer side must be at least this many natural pixels (rejects 16/32/48px favicons). */
-  minLongSide: 64,
   /** Social-preview images (OG/Twitter cards) are photos, not logos. */
   socialMinWidth: 1000,
   socialAspect: [1.85, 1.95] as const,
   /** Pixel check: a pixel is "visible" above this alpha (0–255). */
-  visibleAlpha: 16,
   /** Pixel check: visible pixels whose channels all stay within this range count as one solid colour. */
-  solidTolerance: 12,
-  timeoutMs: 8000,
 } as const;
 
 const SOCIAL_URL = /(og[-_]?image|opengraph|open-graph|twitter[-_]?(card|image)|social[-_]?(share|preview|card)|share[-_]?image)/i;

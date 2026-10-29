@@ -1263,6 +1263,7 @@ export default function EnhancedBrandSetup() {
       // Merge brand data into extracted_intelligence
       const updatedIntelligence = {
         ...existingIntel,
+        harvestedImages: extractionResults?.harvestedImages || [],
         logoUrl: logo,
         companyName: companyName,
         websiteUrl: websiteUrl,
