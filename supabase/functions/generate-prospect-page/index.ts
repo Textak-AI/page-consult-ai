@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Anthropic from 'https://esm.sh/@anthropic-ai/sdk@0.24.3';
+import { COPY_REGISTER_RULES, logRegisterViolations } from "../_shared/copyRegister.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -276,6 +277,7 @@ serve(async (req) => {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-5',
       max_tokens: 4000,
+      system: COPY_REGISTER_RULES,
       messages: [{ role: 'user', content: personalizationPrompt }],
     });
 
@@ -284,6 +286,7 @@ serve(async (req) => {
       const textContent = response.content.find((c) => c.type === 'text');
       if (textContent && textContent.type === 'text') {
         personalizedContent = JSON.parse(textContent.text);
+        logRegisterViolations('generate-prospect-page', personalizedContent);
       }
     } catch (parseError) {
       console.error('[generate-prospect-page] Error parsing AI response:', parseError);

@@ -3,6 +3,7 @@ import Anthropic from 'npm:@anthropic-ai/sdk'
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { withCharge } from '../_shared/planLimits.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { COPY_REGISTER_RULES, logRegisterViolations } from "../_shared/copyRegister.ts";
 
 const handle = async (req: Request, userId: string): Promise<Response> => {
   // Handle CORS preflight requests
@@ -54,7 +55,7 @@ Return the modified section content as JSON. Only include the content object, no
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-5',
       max_tokens: 2000,
-      system: systemPrompt,
+      system: `${systemPrompt}\n\n${COPY_REGISTER_RULES}`,
       messages: [{ role: 'user', content: userPrompt }]
     })
 
@@ -74,6 +75,7 @@ Return the modified section content as JSON. Only include the content object, no
     cleanedResponse = cleanedResponse.trim()
 
     const modifiedContent = JSON.parse(cleanedResponse)
+    logRegisterViolations('modify-section', modifiedContent)
 
     return new Response(JSON.stringify({ 
       success: true, 
