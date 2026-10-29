@@ -74,7 +74,7 @@ function ClientResultsSectionBase({ content }: ClientResultsSectionProps) {
 
   const getIconStyles = (): React.CSSProperties => {
     if (!isLightMode) return { backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff' };
-    return { backgroundColor: `${accentColor}15`, color: accentColor };
+    return { backgroundColor: 'rgba(15,23,42,0.06)', color: '#334155' };
   };
 
   const icons = [TrendingUp, Award, Users, CheckCircle2];
@@ -120,12 +120,11 @@ function ClientResultsSectionBase({ content }: ClientResultsSectionProps) {
                   size="sm"
                   variant="inline"
                   lightMode={isLightMode}
-                  accentColor={isLightMode ? accentColor : undefined}
                 />
               ) : (
               <>
                   <h3 className={`text-2xl font-bold mb-2 ${isLightMode ? '' : 'text-white'}`}
-                    style={isLightMode ? { color: accentColor } : undefined}
+                    style={isLightMode ? { color: '#0f172a' } : undefined}
                   >
                     {cleanDisplayText(result.metric, 30)}
                   </h3>

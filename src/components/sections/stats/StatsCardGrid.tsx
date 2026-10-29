@@ -42,7 +42,8 @@ export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCar
   };
 
   // Determine if background is brand-colored
-  const isBrandBg = content.sectionBackground === 'brand';
+  // Accent discipline: the brand colour is not a section fill; stats use the token surface.
+  const isBrandBg = false;
   const sectionBg = isBrandBg ? primaryColor : bgStyles.bg;
 
   return (
