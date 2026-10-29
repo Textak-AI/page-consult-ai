@@ -4,7 +4,7 @@ import { runInNewContext } from 'node:vm';
 // Execute the unchanged Deno source with test-only imports and globals.
 // No module mocks, process globals, credentials, sockets, or real fetches.
 export function loadEdgeSource(path, bindings = {}, exports = []) {
-  const source = readFileSync(new URL(`../../..//supabase/functions/${path}`, import.meta.url), 'utf8');
+  const source = readFileSync(new URL(`../../supabase/functions/${path}`, import.meta.url), 'utf8');
   const executable = new Bun.Transpiler({ loader: 'ts' }).transformSync(
     source.replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '')
   );
