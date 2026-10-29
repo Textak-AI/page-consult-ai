@@ -7,6 +7,7 @@ import { computeCommunicationStrategy, auditCommunicationStrategy } from '../_sh
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@4';
 import { guardCopyClaims } from '../_shared/copyClaims.ts';
+import { BUYER_OBJECTION_RULES, consultationObjections, applyAnsweredObjections } from '../_shared/buyerObjections.ts';
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -297,7 +298,9 @@ Generate a STRATEGY BRIEF with these sections:
 
 7. **Tone & Voice** (How the copy should sound - professional, friendly, authoritative, etc.)
 
-8. **Objection Handling** (3-5 common objections with rebuttals - these become FAQ items)
+8. **Objection Handling** (only answered client questions, verbatim; skip unanswered topics entirely)
+${BUYER_OBJECTION_RULES}
+Client-answered pairs: ${JSON.stringify(consultationObjections(consultationData))}
 
 9. **Recommended Page Structure** (USE EXACTLY THE SECTIONS BELOW)
    Based on layout intelligence, use THESE EXACT sections in this order:
@@ -447,11 +450,14 @@ Be specific. No generic advice. Everything should tie back to the actual consult
     if (structuredBrief && typeof structuredBrief === 'object') {
       applyBriefGuards(structuredBrief, consultationData);
       structuredBrief = guardCopyClaims(structuredBrief, consultationData, 'brief-guard');
+      applyAnsweredObjections(structuredBrief, consultationData);
       structuredBrief.communicationStrategy = computeCommunicationStrategy(consultationData, structuredBrief);
       auditCommunicationStrategy(structuredBrief.communicationStrategy, consultationData);
       logRegisterViolations('communication-strategy', structuredBrief.communicationStrategy);
       // Keep recovery-from-markdown paths identical to the structured response.
-      strategyBrief = guardCopyClaims(strategyBrief.replace(/```(?:json)?\s*\n[\s\S]*?```/i, ''), consultationData, 'brief-prose-guard') + '\n\n```json\n' + JSON.stringify(structuredBrief, null, 2) + '\n```';
+      const prose = strategyBrief.replace(/```(?:json)?\s*\n[\s\S]*?```/i, '').replace(/(?:^|\n)(?:#{1,4}\s*)?(?:8[.)]\s*)?(?:\*\*)?Objection[^\n]*\n[\s\S]*?(?=\n(?:#{1,4}\s|9[.)]\s|\*\*9)|$)/i, '\n');
+      const faqProse = structuredBrief.objections.map((o: any) => `### ${o.question}\n${o.answer}`).join('\n\n');
+      strategyBrief = guardCopyClaims(prose, consultationData, 'brief-prose-guard') + (faqProse ? '\n\n## Answered buyer questions\n' + faqProse : '') + '\n\n```json\n' + JSON.stringify(structuredBrief, null, 2) + '\n```';
       logRegisterViolations('generate-strategy-brief', structuredBrief);
     logProvenanceViolations('generate-strategy-brief', structuredBrief, JSON.stringify(consultationData));
     }

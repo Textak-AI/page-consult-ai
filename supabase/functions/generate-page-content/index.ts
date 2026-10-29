@@ -91,6 +91,7 @@ const GenerateContentRequestSchema = z.object({
     primaryGoal: z.string().optional(),
     ctaText: z.string().optional(),
     objectionsToOvercome: z.string().optional(),
+    objections: z.array(z.object({ topic: z.enum(['pricing', 'timeline', 'effort', 'fit', 'materials']).optional(), question: z.string(), answer: z.string() })).optional(),
     pageType: z.string().optional(),
   }).optional(),
 });
@@ -203,7 +204,7 @@ CRITICAL: THE BRIEF IS YOUR BLUEPRINT
    - Use "problemStatement" and "solutionStatement" directly
 
 6. FAQ - Use Section 8 (Objection Handling)
-   - Each objection becomes a FAQ item
+   - Only explicit client-answered objections become FAQ items; skipped topics never appear. Answers remain verbatim, no defaults.
    - Use question as the FAQ question, answer as the FAQ answer
 
 7. TONE - Apply Section 7 Throughout
@@ -322,7 +323,7 @@ INSTRUCTIONS
 1. Use the pageStructure array to determine section order
 2. Pull headlines from the headlines object (pick the best option)
 3. Build features from messagingPillars
-4. Create FAQ from objections
+4. Create FAQ only from answered client objections; never infer rebuttals from concerns or research.
 5. Apply the specified tone throughout
 ${brandContext ? `6. STRICTLY follow the brand guidelines provided below` : ''}
 

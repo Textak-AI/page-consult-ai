@@ -8,6 +8,12 @@ import { slotOf } from './arc';
 /** Apply last so legacy messaging heuristics cannot rewrite approved input CTAs. */
 export function applyCommunicationStrategy<T extends { type: string; order: number; content: any }>(sections: T[], strategy: CommunicationStrategy): T[] {
   const result = sections.map(s => ({ ...s, content: { ...s.content } }));
+  const faqProof = strategy.proofPlan.filter(p => p.sectionType === 'faq' && p.claimSlot === 'proof');
+  if (faqProof.length >= 2) {
+    const faq = result.find(s => s.type === 'faq');
+    const items = faqProof.map(p => ({ question: p.claim, answer: p.evidence }));
+    if (faq) faq.content.items = items;
+  }
   const hero = result.find(s => s.type === 'hero' || s.type === 'beta-hero-teaser');
   if (hero) {
     if (strategy.reframe || strategy.oneLiner) hero.content.headline = strategy.reframe || strategy.oneLiner;
@@ -30,6 +36,7 @@ export function applyCommunicationStrategy<T extends { type: string; order: numb
   const order = strategy.arcEmphasis === 'outcome-led' ? ['hero', 'outcome', 'problem', 'guide', 'plan', 'proof', 'cta'] : ['hero', 'problem', 'guide', 'plan', 'outcome', 'proof', 'cta'];
   result.sort((a,b) => order.indexOf(slotOf(a.type)) - order.indexOf(slotOf(b.type)));
   for (const proof of strategy.proofPlan) {
+    if (proof.sectionType === 'faq') continue; // FAQs stay in the proof/ask run, not beside an earlier claim.
     const evidence = result.find(s => s.type === proof.sectionType);
     const claim = result.find(s => slotOf(s.type) === proof.claimSlot);
     if (!evidence || !claim || evidence === claim) continue;

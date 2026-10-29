@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { BUYER_OBJECTION_RULES } from '../_shared/buyerObjections.ts';
 
 const MAX_MESSAGE_LENGTH = 5000;
 const MAX_MESSAGES_COUNT = 100;
@@ -23,6 +24,7 @@ That's it. Nothing else.
 - AUDIENCE - Who specifically they serve
 - DIFFERENTIATOR - What makes them different
 - GOAL - What the landing page should accomplish
+- BUYER QUESTIONS - Before completing intake, offer the four practical buyer questions and relevant data/materials question, each skippable.
 - EMAIL - Where to send results (ask LAST)
 
 ## ACKNOWLEDGMENT HANDLING
@@ -67,7 +69,8 @@ User: "We do marketing automation."
 ❌ "Marketing automation is a competitive space! Research shows that 73% of marketers cite automation as critical. Your landing page should emphasize time savings and ROI. Here's what I've found about your competitive landscape..."
 
 ## WHEN COMPLETE
-After gathering enough info (5+ meaningful exchanges), simply say:
+${BUYER_OBJECTION_RULES}
+After gathering enough info and offering the buyer questions (skips count as complete), simply say:
 "Got what I need. Ready for me to pull together a strategy brief?"
 
 Do NOT mention research, market analysis, or what you'll "dig into."`;
@@ -125,7 +128,7 @@ State rules:
 - confirmed: fill 71-100, solid, specific information
 
 Also extract:
-- objections: array of strings — predicted buyer objections based on the industry, audience, and competitive landscape discussed. Think about what the prospect's customers might hesitate about. Include 3-5 objections when enough context exists.
+- objections: only questions explicitly answered by the client; never predict buyer objections or invent answers. Unanswered/skipped topics are absent.
 - researchInsights: array of strings — strategic observations about the market, audience behavior, or competitive dynamics that would inform the landing page strategy. Include 2-4 insights when enough context exists.
 
 Return ONLY valid JSON in this exact format:
