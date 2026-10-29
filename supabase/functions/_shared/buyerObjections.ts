@@ -12,9 +12,9 @@ export function materialsRelevant(input: Record<string, any>): boolean {
   const business = ['industry', 'industryCategory', 'industrySubcategory', 'industryOther', 'mainOffer', 'offerIncludes', 'serviceType', 'businessType'].map(k => typeof input[k] === 'string' ? input[k] : '').join(' ');
   return /\b(software|saas|platform|data|technology|automation|consulting|consultant|agency|design|marketing|branding|brand|creative|legal|law|accounting|financial|health|medical|manufactur\w*|logistics|storage|repair|print\w*|document\w*|content|material\w*)\b/i.test(business);
 }
-export function answeredObjections(value: unknown): BuyerObjection[] {
+export function answeredObjections<T extends BuyerObjection = BuyerObjection>(value: unknown): T[] {
   if (!Array.isArray(value)) return [];
-  return value.filter((o): o is BuyerObjection => !!o && typeof o.question === 'string' && !!o.question.trim() && typeof o.answer === 'string' && !!o.answer.trim() && !/^(skip|skipped|not specified|not yet known|none provided|n\/a|unknown)$/i.test(o.answer.trim()));
+  return value.filter((o): o is T => !!o && typeof o.question === 'string' && !!o.question.trim() && typeof o.answer === 'string' && !!o.answer.trim() && !/^(skip|skipped|not specified|not yet known|none provided|n\/a|unknown)$/i.test(o.answer.trim()));
 }
 /** No model output or market predictions can authorize an answer. */
 export function consultationObjections(input: Record<string, any>): BuyerObjection[] {

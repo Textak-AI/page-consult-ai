@@ -608,6 +608,7 @@ export default function NewConsultation() {
             processDescription: consultationData.processDescription,
             ctaText: consultationData.ctaText,
             objectionsToOvercome: consultationData.objectionsToOvercome,
+            objections: consultationData.objections || [],
             // Brand settings from customization
             brandSettings: consultationData.brandSettings,
             // Hero background from AI carousel

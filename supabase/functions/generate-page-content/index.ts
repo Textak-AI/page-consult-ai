@@ -442,8 +442,9 @@ Generate compelling content. Return valid JSON only.`;
 
     parsedContent = guardCopyClaims(parsedContent, { ...requestData, strategyBrief: undefined, structuredBrief: undefined }, 'page-copy-guard');
     const answered = consultationObjections(requestData.strategicConsultation || {});
-    parsedContent.faq = answered.length >= 2 ? answered.map(({ question, answer }) => ({ question, answer })) : [];
-    if ('objections' in parsedContent) parsedContent.objections = parsedContent.faq;
+    parsedContent.faqItems = answered.length >= 2 ? answered.map(({ question, answer }) => ({ question, answer })) : [];
+    if ('faq' in parsedContent) parsedContent.faq = parsedContent.faqItems;
+    if ('objections' in parsedContent) parsedContent.objections = parsedContent.faqItems;
     logRegisterViolations('generate-page-content', parsedContent);
     logProvenanceViolations('generate-page-content', parsedContent, JSON.stringify({ ...requestData, strategyBrief: undefined, structuredBrief: undefined }));
 

@@ -487,7 +487,7 @@ function FAQSectionBase({ content, onUpdate, isEditing }: FAQSectionProps) {
 
   // Art Director composition check (after hooks)
   const faqLayout = (content as any)?.faqLayout;
-  const answered = answeredObjections(content.items);
+  const answered = answeredObjections<FAQItem>(content.items);
   if (answered.length < 2 && !isEditing) return null;
   if (faqLayout === 'accordion-hairline') {
     return <FAQAccordionHairline content={{ ...content, items: answered } as any} onUpdate={onUpdate as any} isEditing={isEditing} />;
