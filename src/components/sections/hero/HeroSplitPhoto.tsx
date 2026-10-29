@@ -1,3 +1,4 @@
+import { useUsableImage } from '@/hooks/useUsableImage';
 import { useUsableLogo } from '@/hooks/useUsableLogo';
 import { typeScale, typeClass, shape } from '@/lib/design/tokens';
 /**
@@ -40,11 +41,11 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
   const headingWeight = content.headingWeight || 500;
   const usesSerif = content.typographyPairing === 'serif-sans';
 
-  const heroImage = content.backgroundImage || content.heroImage;
+  const heroImage = useUsableImage(content.backgroundImage || content.heroImage);
 
   return (
     <section
-      className="relative py-16 md:py-24 md:min-h-[560px] flex items-center overflow-hidden"
+      className="relative py-16 md:py-24 flex items-center overflow-hidden"
       style={{ backgroundColor: bgStyles.bg }}
     >
       {/* Editing outline */}
@@ -55,7 +56,7 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
       <div className="relative z-10 max-w-6xl mx-auto px-6 py-20 md:py-28 w-full">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           {/* Text content — left 55% */}
-          <div className="lg:col-span-7 space-y-8">
+          <div className={`${heroImage ? 'lg:col-span-7' : 'lg:col-span-12 max-w-3xl'} space-y-8`}>
             {/* Logo */}
             {usableLogo ? (
               <img
@@ -134,63 +135,24 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
             )}
           </div>
 
-          {/* Visual — right 45% */}
-          <div className="lg:col-span-5">
-            {heroImage ? (
+          {/* Visual — right 45%. Without a loadable image the column is
+              omitted and the text spans the row (typographic fallback). */}
+          {heroImage && (
+            <div className="lg:col-span-5">
               <div className="relative rounded-2xl overflow-hidden shadow-xl aspect-[4/5]">
                 <img
                   src={heroImage}
-                  alt={content.headline || 'Hero visual'}
-                  className="w-full h-full object-cover transition-opacity duration-1000"
+                  alt=""
+                  className="w-full h-full object-cover"
                   loading="eager"
+                  fetchPriority="high"
                 />
               </div>
-            ) : (
-              /* Shimmer placeholder while image loads */
-              <div
-                className="relative rounded-2xl aspect-[4/5] flex items-center justify-center overflow-hidden"
-                style={{
-                  background: `linear-gradient(135deg, ${primaryColor}18 0%, ${primaryColor}08 50%, ${primaryColor}20 100%)`,
-                  border: `${shape.hairline}px solid ${bgStyles.border}`,
-                }}
-              >
-                {/* Shimmer animation */}
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: `linear-gradient(90deg, transparent 0%, ${primaryColor}08 50%, transparent 100%)`,
-                    animation: 'shimmer 2s ease-in-out infinite',
-                  }}
-                />
-                {/* Decorative circles */}
-                <div
-                  className="absolute w-48 h-48 rounded-full blur-2xl"
-                  style={{ backgroundColor: `${primaryColor}15`, top: '20%', left: '10%' }}
-                />
-                <div
-                  className="absolute w-32 h-32 rounded-full blur-xl"
-                  style={{ backgroundColor: `${primaryColor}20`, bottom: '25%', right: '15%' }}
-                />
-                {usableLogo && (
-                  <img
-                    src={usableLogo}
-                    alt=""
-                    className="relative z-10 h-16 md:h-20 opacity-30"
-                  />
-                )}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Shimmer keyframe */}
-      <style>{`
-        @keyframes shimmer {
-          0%, 100% { opacity: 0.5; }
-          50% { opacity: 1; }
-        }
-      `}</style>
     </section>
   );
 }

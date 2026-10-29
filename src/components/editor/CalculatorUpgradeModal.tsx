@@ -76,7 +76,7 @@ export function CalculatorUpgradeModal({
             Boost Conversions with an Interactive Calculator
           </DialogTitle>
           <DialogDescription>
-            {step === "offer" && "Calculators increase engagement and conversions by 40%+"}
+            {step === "offer" && "Let visitors work out their own numbers on your page"}
             {step === "type" && "Choose the calculator type that fits your business"}
             {step === "inputs" && "Select the input fields for your calculator"}
           </DialogDescription>
@@ -89,7 +89,7 @@ export function CalculatorUpgradeModal({
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-0.5">✓</span>
-                  <span><strong>40%+ higher conversion rates</strong> - visitors stay longer and engage more</span>
+                  <span><strong>Hands-on for visitors</strong> - they enter their own numbers</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-0.5">✓</span>

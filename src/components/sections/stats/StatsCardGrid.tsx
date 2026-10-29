@@ -16,7 +16,7 @@ interface StatsCardGridProps {
 
 export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCardGridProps) {
   const primaryColor = content.primaryColor || '#6366F1';
-  const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'brand', primaryColor);
+  const bgStyles = getSectionBackgroundStyles(content.sectionBackground === 'brand' ? 'dark' : (content.sectionBackground || 'dark'), primaryColor);
   const stats = content.statistics || [];
 
   const validStats = stats.filter((s: any) => {
@@ -42,7 +42,8 @@ export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCar
   };
 
   // Determine if background is brand-colored
-  const isBrandBg = content.sectionBackground === 'brand';
+  // Accent discipline: the brand colour is not a section fill; stats use the token surface.
+  const isBrandBg = false;
   const sectionBg = isBrandBg ? primaryColor : bgStyles.bg;
 
   return (
@@ -79,7 +80,7 @@ export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCar
               style={{
                 ...typeScale.stat,
                 fontWeight: 700,
-                color: primaryColor,
+                color: bgStyles.text,
                 letterSpacing: '-0.02em',
                 fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                 fontVariantNumeric: 'tabular-nums',

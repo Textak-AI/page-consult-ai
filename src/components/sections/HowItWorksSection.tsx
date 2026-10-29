@@ -78,6 +78,22 @@ function HowItWorksSectionBase({ content, onUpdate, isEditing }: HowItWorksSecti
     return null;
   }
 
+  // Consulting and default process styles are sequential step lists, so they
+  // render as the designed vertical timeline. SaaS keeps its card grid (see below).
+  if (!isSaas) {
+    const m = (content as any).mode;
+    const light = isConsulting || m === 'light' || m === 'warm';
+    return (
+      <ProcessNumberedRows
+        content={{ ...(content as any), title, sectionBackground: (content as any).sectionBackground || (light ? 'light' : 'dark') }}
+        onUpdate={onUpdate || (() => {})}
+        isEditing={isEditing}
+      />
+    );
+  }
+
+
+
   // SaaS variant
   if (isSaas) {
     return (

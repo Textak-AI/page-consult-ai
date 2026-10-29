@@ -1,4 +1,4 @@
-import { typeScale, spacing, space } from '@/lib/design/tokens';
+import { typeScale, spacing, space, accentFor } from '@/lib/design/tokens';
 /**
  * ProblemSolutionReliefArc — Emotional Connector problem/solution
  * 
@@ -66,7 +66,7 @@ export default function ProblemSolutionReliefArc({ content, onUpdate, isEditing 
       {/* Gradient transition line */}
       <div style={{
         height: 3,
-        background: `linear-gradient(to right, transparent, ${primaryColor}, transparent)`,
+        background: `linear-gradient(to right, transparent, rgba(148,163,184,0.35), transparent)`,
       }} />
 
       {/* Solution — warm/bright */}
@@ -75,7 +75,7 @@ export default function ProblemSolutionReliefArc({ content, onUpdate, isEditing 
         ...spacing.section,
       }}>
         <div style={{ maxWidth: 680, ...spacing.center }}>
-          <div style={{ ...labelStyle, color: primaryColor }}>Our Approach</div>
+          <div style={{ ...labelStyle, color: accentFor('eyebrow', primaryColor) }}>Our Approach</div>
           <p
             contentEditable={isEditing}
             suppressContentEditableWarning

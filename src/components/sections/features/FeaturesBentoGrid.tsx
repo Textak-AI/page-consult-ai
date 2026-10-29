@@ -1,4 +1,5 @@
 import { typeScale, spacing, space, shape } from '@/lib/design/tokens';
+import { accentFor } from '@/lib/design/tokens';
 /**
  * FeaturesBentoGrid — Analytical Validator features layout
  * 
@@ -58,7 +59,7 @@ export default function FeaturesBentoGrid({ content, onUpdate, isEditing }: Feat
           fontWeight: 600,
           textTransform: 'uppercase' as const,
           letterSpacing: '0.2em',
-          color: primaryColor,
+          color: accentFor('eyebrow', primaryColor),
           textAlign: 'center' as const,
           marginBottom: space.sm,
           fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',

@@ -54,7 +54,7 @@ export function FounderCredibilitySection({ content, styles }: Props) {
             {/* Photo */}
             <div 
               className="relative w-40 h-40 md:w-48 md:h-48 rounded-full overflow-hidden border-4"
-              style={{ borderColor: primaryColor }}
+              style={{ borderColor: 'rgba(255,255,255,0.15)' }}
             >
               {content.photo ? (
                 <img
@@ -65,7 +65,7 @@ export function FounderCredibilitySection({ content, styles }: Props) {
               ) : (
                 <div 
                   className="w-full h-full flex items-center justify-center"
-                  style={{ backgroundColor: `${primaryColor}20` }}
+                  style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}
                 >
                   <User className="w-16 h-16 text-slate-400" />
                 </div>
@@ -74,7 +74,7 @@ export function FounderCredibilitySection({ content, styles }: Props) {
               {/* Decorative ring */}
               <div 
                 className="absolute inset-0 rounded-full border-2 border-dashed opacity-30"
-                style={{ borderColor: primaryColor, transform: 'scale(1.15)' }}
+                style={{ borderColor: 'rgba(255,255,255,0.4)', transform: 'scale(1.15)' }}
               />
             </div>
 
@@ -122,7 +122,7 @@ export function FounderCredibilitySection({ content, styles }: Props) {
             {/* Quote mark */}
             <div 
               className="text-6xl font-serif leading-none mb-4"
-              style={{ color: primaryColor, opacity: 0.3 }}
+              style={{ color: '#ffffff', opacity: 0.2 }}
             >
               &ldquo;
             </div>
@@ -149,9 +149,9 @@ export function FounderCredibilitySection({ content, styles }: Props) {
                     transition={{ delay: 0.2 + index * 0.05 }}
                     className="px-3 py-1.5 rounded-full text-sm font-medium border"
                     style={{ 
-                      borderColor: `${primaryColor}40`,
-                      backgroundColor: `${primaryColor}10`,
-                      color: primaryColor
+                      borderColor: 'rgba(255,255,255,0.15)',
+                      backgroundColor: 'rgba(255,255,255,0.05)',
+                      color: 'rgba(255,255,255,0.85)'
                     }}
                   >
                     {credential}

@@ -32,7 +32,7 @@ export function TestimonialNudgeBanner({
               Boost your conversions with social proof
             </h4>
             <p className="text-xs text-slate-400">
-              Pages with testimonials convert 34% better on average
+              Add a client quote to strengthen this page
             </p>
           </div>
         </div>
@@ -64,7 +64,7 @@ export const TESTIMONIAL_NUDGES: NudgeConfig[] = [
   },
   {
     type: 'in-app',
-    message: "Pages with testimonials convert 34% better. We can help you get them — click here.",
+    message: "Add a client quote to strengthen this page. We can help you collect one — click here.",
     triggerCondition: 'page_published && testimonials_count === 0 && days_since_publish >= 3'
   },
   {

@@ -73,9 +73,8 @@ function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionPr
     ) || (content.mode === 'dark' || content.mode === 'cold');
     
     if (isDarkModeIndustry) {
-      const accentColor = brandPrimary || '#7c3aed';
       return { 
-        background: `linear-gradient(135deg, #0F172A 0%, #1E293B 60%, ${accentColor}18 100%)` 
+        background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)' 
       };
     }
     

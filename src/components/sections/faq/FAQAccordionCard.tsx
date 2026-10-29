@@ -109,7 +109,7 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
                     style={{
                       ...typeScale.h3,
                       fontWeight: 600,
-                      color: isOpen ? primaryColor : bgStyles.text,
+                      color: bgStyles.text,
                       fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
                       transition: 'color 0.2s ease',
                       flex: 1,
@@ -120,7 +120,7 @@ export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAc
                   <ChevronDown
                     size={18}
                     style={{
-                      color: isOpen ? primaryColor : bgStyles.textMuted,
+                      color: bgStyles.textMuted,
                       transform: isOpen ? 'rotate(180deg)' : 'rotate(0)',
                       transition: 'transform 0.25s ease, color 0.2s ease',
                       flexShrink: 0,

@@ -181,13 +181,13 @@ function FeaturesSectionBase({ content, onUpdate, isEditing, iconStyle = "outlin
       return {
         bgStyle: hasBrandColor ? { backgroundColor: `${brandPrimaryColor}15` } : undefined,
         bgClass: `w-14 h-14 rounded-xl flex items-center justify-center mb-6 ${iconBg}`,
-        colorStyle: hasBrandColor ? { color: brandPrimaryColor } : undefined,
+        colorStyle: undefined,
         colorClass: `w-7 h-7 ${iconColor}`,
       };
     }
     // Default
     return {
-      bgStyle: { backgroundColor: `${accentColor}15`, color: accentColor },
+      bgStyle: { backgroundColor: 'rgba(148,163,184,0.12)', color: 'currentColor' },
       bgClass: 'w-14 h-14 rounded-xl flex items-center justify-center mb-6',
       colorClass: 'w-7 h-7',
     };
