@@ -601,6 +601,11 @@ export function mapBriefToSections(
         break;
       }
 
+      case 'work-samples': {
+        // AI briefs cannot supply media or captions. Owner uploads are added in the editor.
+        sections.push({ type: 'work-samples', order, visible: true, content: { samples: [] } });
+        break;
+      }
       case 'social-proof': {
         // Use ranked testimonials for better ordering
         // Null-safe: the brief-guard emits author/title as null when the user

@@ -62,6 +62,8 @@ export const typeClass = {
 
 /** Radius & hairline conventions. */
 export const shape = {
+  radiusImage: 8,
+  sampleAspectRatio: '4 / 3',
   radiusCard: 12,
   hairline: 1,
 } as const;

@@ -5,7 +5,8 @@
 export type ArcSlot = 'hero' | 'problem' | 'guide' | 'plan' | 'outcome' | 'proof' | 'cta';
 
 /** Section types that satisfy each arc slot (first entry is inserted when the slot is missing). */
-export const ARC_SLOT_TYPES: Record<Exclude<ArcSlot, 'proof'>, string[]> = {
+export const ARC_SLOT_TYPES: Record<ArcSlot, string[]> = {
+  proof: ['work-samples', 'social-proof', 'credentials-bar', 'stats-bar'],
   hero: ['hero'],
   problem: ['problem-solution', 'the-real-challenge', 'stakes-amplify'],
   guide: ['differentiator-callout', 'our-approach', 'expertise-areas'],

@@ -54,9 +54,10 @@ export function judgeLogo(f: {
   width: number;
   height: number;
   isVector?: boolean;
+  purpose?: 'logo' | 'work-sample';
   pixels?: Uint8ClampedArray | null;
 }): LogoVerdict {
-  const base = judgeLogoUrl(f.url);
+  const base = f.purpose === 'work-sample' ? { ok: true } : judgeLogoUrl(f.url);
   if (!base.ok) return base;
   const { width: w, height: h } = f;
   const sized = w > 0 && h > 0;
@@ -65,7 +66,7 @@ export function judgeLogo(f: {
     if (Math.min(w, h) < LOGO_RULES.minShortSide || Math.max(w, h) < LOGO_RULES.minLongSide)
       return { ok: false, reason: 'too-small', width: w, height: h };
     const ratio = w / h;
-    if (w >= LOGO_RULES.socialMinWidth && ratio >= LOGO_RULES.socialAspect[0] && ratio <= LOGO_RULES.socialAspect[1])
+    if (f.purpose !== 'work-sample' && w >= LOGO_RULES.socialMinWidth && ratio >= LOGO_RULES.socialAspect[0] && ratio <= LOGO_RULES.socialAspect[1])
       return { ok: false, reason: 'social-preview-image', width: w, height: h };
   }
   if (f.pixels) {
@@ -92,7 +93,7 @@ export function judgeLogo(f: {
   return { ok: true, width: w, height: h, pixelsChecked: false };
 }
 
-function loadImage(url: string, cors: boolean): Promise<HTMLImageElement | null> {
+export function loadImage(url: string, cors: boolean): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const img = new Image();
     if (cors) img.crossOrigin = 'anonymous';
@@ -109,7 +110,7 @@ function loadImage(url: string, cors: boolean): Promise<HTMLImageElement | null>
   });
 }
 
-function readPixels(img: HTMLImageElement): Uint8ClampedArray | null {
+export function readPixels(img: HTMLImageElement): Uint8ClampedArray | null {
   try {
     const w = img.naturalWidth || 128;
     const h = img.naturalHeight || 128;
