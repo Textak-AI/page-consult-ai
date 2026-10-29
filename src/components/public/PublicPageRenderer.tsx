@@ -14,6 +14,7 @@ import { FeaturesSection } from '@/components/sections/FeaturesSection';
 import { SocialProofSection } from '@/components/sections/SocialProofSection';
 import { FinalCTASection } from '@/components/sections/FinalCTASection';
 import { PhotoGallerySection } from '@/components/sections/PhotoGallerySection';
+import { WorkSamplesSection } from '@/components/sections/WorkSamplesSection';
 import { StatsBarSection } from '@/components/sections/StatsBarSection';
 import { FAQSection } from '@/components/sections/FAQSection';
 import { HowItWorksSection } from '@/components/sections/HowItWorksSection';
@@ -139,6 +140,8 @@ export function PublicPageRenderer({
       ...(theme.primaryColor ? { primaryColor: theme.primaryColor } : {}),
     };
     switch (section.type) {
+      case 'work-samples':
+        return <WorkSamplesSection key={index} content={section.content} />;
       case 'hero':
         return (
           <HeroSection
@@ -470,6 +473,7 @@ export function PublicPageRenderer({
           }}
         >
           {sortedSections.map((section, index) => {
+            if (section.type === 'work-samples') return renderSection(section, index);
             const tier = getSectionTier(section.type, index);
             const spacing = getSectionSpacing(section.type);
             const divider = getSectionDivider(section.type, index);
