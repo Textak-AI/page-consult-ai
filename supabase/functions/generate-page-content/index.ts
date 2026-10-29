@@ -438,7 +438,7 @@ Generate compelling content. Return valid JSON only.`;
     }
 
     logRegisterViolations('generate-page-content', parsedContent);
-    logProvenanceViolations('generate-page-content', parsedContent, JSON.stringify(requestData.strategicConsultation || {}) + ' ' + JSON.stringify(requestData.consultationData || {}));
+    logProvenanceViolations('generate-page-content', parsedContent, JSON.stringify({ ...requestData, strategyBrief: undefined, structuredBrief: undefined }));
 
     // Validate required fields
     if (!parsedContent.headline || !parsedContent.features || !Array.isArray(parsedContent.features)) {
