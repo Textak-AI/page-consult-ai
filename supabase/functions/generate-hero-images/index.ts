@@ -9,6 +9,20 @@ interface GenerateRequest {
   forceRegenerate?: boolean;
 }
 
+// Match brand scenes: return/cache the bytes, never an expiring provider URL.
+async function durableImage(url: string): Promise<string> {
+  if (url.startsWith('data:image/')) return url;
+  const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+  if (!response.ok) throw new Error(`Generated image download failed: ${response.status}`);
+  const mime = (response.headers.get('content-type') || '').split(';')[0].trim();
+  if (!/^image\/(png|jpeg|webp|gif|avif)$/.test(mime)) throw new Error('Generated image response is not a supported bitmap');
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (!bytes.length || bytes.length > 10 * 1024 * 1024) throw new Error('Generated image size is invalid');
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return `data:${mime};base64,${btoa(binary)}`;
+}
+
 const handle = async (req: Request, userId: string): Promise<Response> => {
   // Handle CORS preflight requests
   const corsResponse = handleCorsPreflightRequest(req);
@@ -45,14 +59,24 @@ const handle = async (req: Request, userId: string): Promise<Response> => {
         .single();
 
       if (cached?.images && cached.images.length > 0) {
+        const images = (await Promise.all(cached.images.map(async (url: string) => {
+          try { return await durableImage(url); }
+          catch { console.warn('[generate-hero-images] Dropped unavailable legacy cached image'); return null; }
+        }))).filter((url): url is string => url !== null);
+        if (images.length > 0) {
+          if (images.some((url, index) => url !== cached.images[index]) || images.length !== cached.images.length) {
+            await supabase.from('hero_image_cache').upsert({ cache_key: cacheKey, images, updated_at: new Date().toISOString() }, { onConflict: 'cache_key' });
+          }
         console.log('[generate-hero-images] Returning cached images for:', cacheKey);
         return new Response(
           JSON.stringify({ 
-            images: cached.images.map((url: string) => ({ url, prompt: '' })),
+            images: images.map((url: string) => ({ url, prompt: '' })),
             fromCache: true 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+        }
+        // Expired cache entries are never returned as successful imagery.
       }
     }
 
@@ -113,7 +137,7 @@ const handle = async (req: Request, userId: string): Promise<Response> => {
 
         if (result.status === 'succeeded' && result.output && result.output.length > 0) {
           console.log(`[generate-hero-images] Image ${index + 1} completed`);
-          return { url: result.output[0], prompt };
+          return { url: await durableImage(result.output[0]), prompt };
         }
 
         console.error(`[generate-hero-images] Image ${index + 1} failed:`, result.error);
