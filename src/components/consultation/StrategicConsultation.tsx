@@ -1117,9 +1117,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       if (!data.proofStoryContext?.trim()) skippedFields.push('proofStoryContext');
       if (!data.achievements?.trim()) skippedFields.push('achievements');
     }
-    if (currentStepId === 'goals') {
-      if (!data.objectionsToOvercome?.trim()) skippedFields.push('objectionsToOvercome');
-    }
+    // Buyer questions are explicitly skippable; no coaching re-asks a skipped topic.
     
     if (skippedFields.length > 0) {
       const coaching = getSkipCoaching(skippedFields, coachingContext);

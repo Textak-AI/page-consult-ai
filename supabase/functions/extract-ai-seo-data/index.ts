@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { consultationObjections } from '../_shared/buyerObjections.ts';
 
 interface AuthoritySignal {
   type: 'statistic' | 'credential' | 'testimonial' | 'achievement' | 'comparison';
@@ -118,6 +119,8 @@ serve(async (req) => {
     const jsonStr = jsonMatch[1] || jsonMatch[0];
     const aiSeoData: AISeoData = JSON.parse(jsonStr);
     applySeoGuards(aiSeoData, consultationData);
+    const answered = consultationObjections(consultationData);
+    aiSeoData.faqItems = answered.length >= 2 ? answered.map(({ question, answer }) => ({ question, answer, source: 'objection' as const })) : [];
 
     console.log('✅ AI SEO data extracted successfully');
     console.log('   Entity type:', aiSeoData.entity.type);
@@ -187,9 +190,9 @@ For each signal:
 - If no user-supplied numeric claims exist, omit numeric authority signals rather than inventing them.
 
 ### 3. FAQ Generation
-Transform objections, offer details, and process information into natural FAQ questions.
-Generate 6-10 questions someone might ask an AI assistant about this business.
-Mark the source of each FAQ (objection, offer, process, or industry_common).
+Use only client-answered objection pairs, preserving question and answer verbatim.
+Skipped or unanswered topics never appear. No industry-common, offer-derived or process-derived defaults.
+Return no FAQ items when fewer than two client answers exist. Mark source as objection.
 
 ### 4. Query Target Identification
 Generate 8-12 natural language queries people would ask AI assistants that this business should appear in results for.

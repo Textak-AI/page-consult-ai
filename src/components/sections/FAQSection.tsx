@@ -488,7 +488,6 @@ function FAQSectionBase({ content, onUpdate, isEditing }: FAQSectionProps) {
   // Art Director composition check (after hooks)
   const faqLayout = (content as any)?.faqLayout;
   const answered = answeredObjections<FAQItem>(content.items);
-  if (answered.length < 2 && !isEditing) return null;
   if (faqLayout === 'accordion-hairline') {
     return <FAQAccordionHairline content={{ ...content, items: answered } as any} onUpdate={onUpdate as any} isEditing={isEditing} />;
   }
@@ -989,4 +988,7 @@ function FAQSectionBase({ content, onUpdate, isEditing }: FAQSectionProps) {
   );
 }
 
-export const FAQSection = memo(FAQSectionBase);
+export const FAQSection = memo(function AnsweredFAQSection(props: FAQSectionProps) {
+  if (!props.isEditing && answeredObjections(props.content.items).length < 2) return null;
+  return <FAQSectionBase {...props} />;
+});

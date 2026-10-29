@@ -2722,15 +2722,15 @@ function GenerateContent() {
       console.log('🧪 [Generate] No real testimonial supplied — social-proof section hidden.');
     }
 
-    // FAQ Section (from aiSeoData if available)
-    const aiSeoData = consultationData.aiSeoData || consultationData.ai_seo_data;
-    if (isAISeoDataValid(aiSeoData) && aiSeoData.faqItems?.length > 0) {
-      const faqConfig = createFAQSectionConfig(aiSeoData.faqItems);
+    // FAQ Section: supplied answers only; extracted SEO suggestions cannot authorize copy.
+    const answeredFaqs = consultationObjections({ ...consultationData, objections: consultationData.objections ?? consultationData.extracted_intelligence?.objections });
+    if (answeredFaqs.length >= 2) {
+      const faqConfig = createFAQSectionConfig(answeredFaqs.map(o => ({ ...o, source: 'objection' as const })));
       sections.push({
         ...faqConfig,
         order: order++,
       });
-      console.log('✅ Added FAQ section with', aiSeoData.faqItems.length, 'items');
+      console.log('✅ Added FAQ section with', answeredFaqs.length, 'client answers');
     }
 
     // Final CTA
