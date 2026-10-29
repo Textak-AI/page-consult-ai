@@ -1,4 +1,4 @@
-import { typeScale, spacing, space } from '@/lib/design/tokens';
+import { typeScale, spacing, space, accentFor } from '@/lib/design/tokens';
 /**
  * ProblemSolutionReliefArc — Emotional Connector problem/solution
  * 

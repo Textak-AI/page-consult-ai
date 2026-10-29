@@ -16,7 +16,7 @@ interface StatsCardGridProps {
 
 export default function StatsCardGrid({ content, onUpdate, isEditing }: StatsCardGridProps) {
   const primaryColor = content.primaryColor || '#6366F1';
-  const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'brand', primaryColor);
+  const bgStyles = getSectionBackgroundStyles(content.sectionBackground === 'brand' ? 'dark' : (content.sectionBackground || 'dark'), primaryColor);
   const stats = content.statistics || [];
 
   const validStats = stats.filter((s: any) => {
