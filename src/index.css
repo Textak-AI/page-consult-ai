@@ -1791,6 +1791,7 @@ All colors MUST be HSL.
   color: var(--signature-lit);
 }
 .signature-scope[data-intensity="restrained"] { --signature-glow: transparent; --signature-dim: .82; }
+.signature-scope[data-intensity="restrained"] .signature-payoff { opacity: .85; }
 .signature-scope[data-intensity="expressive"] { --signature-glow: color-mix(in srgb, var(--signature-primary) 14%, transparent); }
 .signature-band { padding: 96px clamp(24px, 6vw, 96px); background: var(--signature-deep); color: var(--signature-lit); }
 .signature-band[data-surface="light"] { background: var(--signature-light); color: var(--signature-ink); }

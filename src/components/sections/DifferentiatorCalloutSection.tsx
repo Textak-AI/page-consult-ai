@@ -1,6 +1,7 @@
 import { featureType, spacing, space, typeScale, accentFor, shape } from '@/lib/design/tokens';
 import { getSectionBackgroundStyles } from '@/lib/artDirectorBrief';
 import { useUsableImage } from '@/hooks/useUsableImage';
+import { ChapterEyebrow } from '@/components/signature/elements';
 
 interface DifferentiatorCalloutProps {
   content: {
@@ -11,6 +12,7 @@ interface DifferentiatorCalloutProps {
     /** The page's one optional second image (place/mood only), from the existing image pipelines. */
     supportingImage?: string;
     imageCredit?: { name?: string; link?: string };
+    signature?: { elements: string[] };
   };
 }
 
@@ -31,6 +33,7 @@ export function DifferentiatorCalloutSection({ content }: DifferentiatorCalloutP
         style={{ maxWidth: image ? 1120 : 820, margin: '0 auto', gap: space.header }}
       >
       <figure className={image ? 'md:col-span-7' : undefined} style={{ margin: 0 }}>
+        {content.signature?.elements.includes('chapter') && <ChapterEyebrow slot="guide" />}
         <div aria-hidden="true" style={{ width: 56, height: 3, backgroundColor: rule, marginBottom: space.lg }} />
         <blockquote
           style={{

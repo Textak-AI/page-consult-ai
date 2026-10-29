@@ -909,7 +909,7 @@ export function mapBriefToSections(
 
   if (brief.communicationStrategy) {
     sections = applyCommunicationStrategy(sections, brief.communicationStrategy);
-    sections = applySignatureStrategy(sections, brief.communicationStrategy);
+    sections = applySignatureStrategy(sections, brief.communicationStrategy, options.consultationData || {});
   }
 
   return sections;
