@@ -6,6 +6,10 @@ const input = { challenge: 'Hours lost to recounts. Past consultants audited onc
 test('reframe is quoted input opposition, not invented competitor copy', () => {
   expect(computeCommunicationStrategy(input, {}).reframe).toBe('Past consultants audited once, left a report, and the drift came right back.');
 });
+test('opposition recombines stated alternative without joining words', () => {
+  const source = { ...input, processDescription: 'A short fit call, then the partner works your receiving dock and count schedule in person, then your team runs the corrected routine with our coaching.' };
+  expect(computeCommunicationStrategy(source, {}).reframe).toBe('Past consultants audited once, left a report. The partner works your receiving dock and count schedule in person.');
+});
 test('empty synthesis slots remain null without invented secondary ask or proof', () => {
   const s = computeCommunicationStrategy({}, {});
   expect([s.reframe, s.stakes, s.oneLiner, s.mechanismName, s.ctaLadder.primary, s.ctaLadder.secondary]).toEqual([null,null,null,null,null,null]);

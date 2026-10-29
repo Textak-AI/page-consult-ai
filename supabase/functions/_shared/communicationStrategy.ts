@@ -28,7 +28,7 @@ export function computeCommunicationStrategy(input: Record<string, any>, brief: 
   // A stated negative plus the stated alternative makes the opposition a thesis.
   const alternative = text(input.processDescription) || text(input.offerIncludes);
   const negative = opposition?.split(/,\s+and\s+/i)[0];
-  const positive = alternative?.split(/,?\s+then\s+/i).find(s => /partner works/i.test(s))?.replace(/^the\s+/i, 'The');
+  const positive = alternative?.split(/,?\s+then\s+/i).find(s => /partner works/i.test(s))?.replace(/^the\s+/i, 'The ');
   const reframe = opposition && /past consultants/i.test(opposition) && alternative
     ? `${negative}. ${positive || sentences(alternative)[0]}.`.replace(/\.{2,}/g, '.') : opposition || null;
   provenance.reframe = reframe ? Object.keys(input).filter(k => typeof input[k] === 'string' && (input[k].includes(opposition) || (alternative && input[k] === alternative))) : [];
