@@ -1793,6 +1793,9 @@ All colors MUST be HSL.
 .signature-scope[data-intensity="restrained"] { --signature-glow: transparent; --signature-dim: .82; }
 .signature-scope[data-intensity="restrained"] .signature-payoff { opacity: .85; }
 .signature-scope[data-intensity="expressive"] { --signature-glow: color-mix(in srgb, var(--signature-primary) 14%, transparent); }
+.signature-scope[data-signature="hero"] { --signature-gradient: linear-gradient(100deg, color-mix(in srgb,var(--signature-primary) 70%,var(--signature-lit)),color-mix(in srgb,var(--signature-secondary) 70%,var(--signature-lit))); }
+.signature-scope :is(button, a[role="button"], a.inline-flex) { max-width: 100%; white-space: normal; overflow-wrap: anywhere; height: auto; min-height: 40px; }
+.signature-scope :is(button, a[role="button"], a.inline-flex) { text-align: center; }
 .signature-band { padding: 96px clamp(24px, 6vw, 96px); background: var(--signature-deep); color: var(--signature-lit); }
 .signature-band[data-surface="light"] { background: var(--signature-light); color: var(--signature-ink); }
 .signature-compact { padding-block: 56px; }
