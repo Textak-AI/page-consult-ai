@@ -22,7 +22,10 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
     // (resolveGazeOrder) is deferred until the section actually scrolls into
     // view, so loading a page never runs layout-thrashing work for every
     // section synchronously before first paint.
-    root.style.opacity = '0';
+    // Hero: the LCP candidate must never wait on motion. The wrapper is not
+    // hidden; the largest element paints immediately and only the rest animate.
+    const isHero = sectionType === 'hero';
+    if (!isHero) root.style.opacity = '0';
 
     const reset = (el: HTMLElement) => {
       el.style.opacity = '';
@@ -32,12 +35,15 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
     let els: HTMLElement[] = [];
     const controls: { stop: () => void }[] = [];
     let played = false;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (played || !entries.some((e) => e.isIntersecting)) return;
+    const play = () => {
         played = true;
-        io.disconnect();
-        const beats = resolveGazeOrder(root, sectionType);
+        let beats = resolveGazeOrder(root, sectionType);
+        if (isHero) {
+          const all = beats.flat();
+          const areas = all.map((el) => { const r = el.getBoundingClientRect(); return r.width * r.height; });
+          const largest = all[areas.indexOf(Math.max(0, ...areas))];
+          if (largest) beats = beats.map((b) => b.filter((el) => el !== largest && !el.contains(largest))).filter((b) => b.length);
+        }
         els = beats.flat();
         // Hide children and unhide the wrapper in the same frame: no flash.
         els.forEach((el) => {
@@ -57,10 +63,17 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
             c.then(() => reset(el));
           }),
         );
+    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (played || !entries.some((e) => e.isIntersecting)) return;
+        io.disconnect();
+        play();
       },
       { threshold: 0.15 },
     );
-    io.observe(root);
+    if (isHero) play();
+    else io.observe(root);
 
     return () => {
       io.disconnect();
