@@ -17,7 +17,7 @@ export function GradientPayoff({ text, phrase, enabled = true }: { text: string;
 export function InversionStatStrip({ stats }: { stats: SignatureStat[] }) {
   const valid = stats.filter(validStat);
   if (!valid.length) return null;
-  return <dl className="signature-stat-strip">{valid.map((stat, i) => <div key={i}><dt>{stat.label}</dt><dd className="signature-stat-value">{stat.value}</dd><dd className="signature-citation" title={stat.evidence.source}>{stat.evidence.field}: {stat.evidence.text}</dd></div>)}</dl>;
+  return <dl className="signature-stat-strip">{valid.map((stat, i) => <div key={i}><dt>{stat.label}</dt><dd className="signature-stat-value">{stat.value}</dd><dd className="signature-citation" title={stat.evidence.source}>{stat.evidence.field}: {stat.evidence.source}</dd></div>)}</dl>;
 }
 export function GlassCardWithKicker({ children, kicker }: { children: ReactNode; kicker?: SourceText | null }) {
   // No fabricated takeaway, and numeric kickers cannot bypass citation.

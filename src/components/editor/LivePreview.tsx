@@ -282,6 +282,8 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
     const lockStatus = getSectionLockStatus?.(section.type);
     const isLocked = lockStatus?.isLocked ?? false;
     const justUpdated = (section as any)._justUpdated;
+    // Signature pages do not turn absent proof into a large decorative band.
+    if (section.content?.signature && section.type === 'social-proof' && !(section.content.testimonials || []).some((t: any) => typeof t.quote === 'string' && t.quote.trim().length > 10)) return null;
     
     // If locked, show the gamified overlay
     if (isLocked) {
