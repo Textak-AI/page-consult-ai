@@ -2,7 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { getLayoutRecommendation, consultationToIntelligence } from '../_shared/industryLayouts/index.ts';
-import { COPY_REGISTER_RULES, logRegisterViolations } from "../_shared/copyRegister.ts";
+import { COPY_REGISTER_RULES, PROVENANCE_RULES, logRegisterViolations, logProvenanceViolations } from "../_shared/copyRegister.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -348,7 +348,7 @@ Be specific. No generic advice. Everything should tie back to the actual consult
         model: 'claude-sonnet-4-5',
         max_tokens: 8192,
         temperature: 0.7,
-        system: `${systemPrompt}\n\n${COPY_REGISTER_RULES}`,
+        system: `${systemPrompt}\n\n${COPY_REGISTER_RULES}\n\n${PROVENANCE_RULES}`,
         messages: [
           { role: 'user', content: userPrompt }
         ],
@@ -406,6 +406,7 @@ Be specific. No generic advice. Everything should tie back to the actual consult
     if (structuredBrief && typeof structuredBrief === 'object') {
       applyBriefGuards(structuredBrief, consultationData);
       logRegisterViolations('generate-strategy-brief', structuredBrief);
+    logProvenanceViolations('generate-strategy-brief', structuredBrief, JSON.stringify(consultationData));
     }
 
     return new Response(JSON.stringify({

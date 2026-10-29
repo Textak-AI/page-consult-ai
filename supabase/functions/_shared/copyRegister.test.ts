@@ -11,3 +11,12 @@ Deno.test("flags three-clause dash chains only", () => {
   assertEquals(findRegisterViolations("A — B — C")[0].word, "em-dash-chain");
   assertEquals(findRegisterViolations("A — B").length, 0);
 });
+import { findProvenanceViolations } from "./copyRegister.ts";
+const INPUT = "Many businesses struggle with a clear brand message, an inconsistent brand identity, leading to missed opportunities and difficulty connecting with their target audience.";
+Deno.test("flags invented competitor consequence in problem statement", () => {
+  const hits = findProvenanceViolations({ problemStatement: "They lose deals to competitors whose brands look sharper, even when work quality is comparable." }, INPUT);
+  assertEquals(hits.length, 1);
+});
+Deno.test("restated challenge passes; non-problem fields ignored", () => {
+  assertEquals(findProvenanceViolations({ problemStatement: "An inconsistent identity and unclear message lead to missed opportunities.", headline: "Totally unrelated words here" }, INPUT).length, 0);
+});
