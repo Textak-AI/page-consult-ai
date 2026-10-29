@@ -39,6 +39,10 @@
 - [ ] Standalone dead-code-sweep typecheck confirmation: no separate automatic result is exposed and this environment prohibits manual project typechecks; automatic build OK is verified, not substituted for typecheck evidence.
 
 ## Communication Strategy (Phase A)
+## Fabrication cleanup
+- [ ] Audit all owner-saved pages and remove unsupported offer terms; clean Saltbox brief number and closing repetition.
+- [ ] Remove generation injections and extend number provenance to all generated copy.
+- [ ] Fix real-count benefit grid and verify Fernhill published footer; verify editors without publication.
 - [x] Extractive communicationStrategy after brief, stored in existing structured brief/page JSON; service-side owner-validated re-synthesis mode; all outputs provenance-logged.
 - [x] Mapper reads hero, stakes, arc emphasis, proof placement and input CTAs after legacy heuristics; mechanism remains UI-only suggestion.
 - [x] Communication Strategy panel in review, standalone brief and editor brief views.
