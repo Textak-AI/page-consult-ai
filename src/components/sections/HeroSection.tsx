@@ -229,9 +229,8 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
   
   console.log('🎨 [HeroSection] Mode:', content.mode, 'isLightMode:', isLightMode, 'industryVariant:', industryVariant, 'forcedLight:', isConsulting);
   
-  // AI hero images disabled for legacy layouts — always use CSS gradient backgrounds
-  // User-selected images (via editor) are still honored
-  // Art Director compositions bypass this flag — they handle images internally
+  // Every hero style is image-bearing when a loadable image exists; a failed
+  // load collapses to the typographic/gradient fallback.
   const heroImg = useUsableImage(content.backgroundImage || (content as any).heroImage);
   const isArtDirectorComposition = content?.composition === 'centered-type' || content?.composition === 'split-photo';
   const hasBackgroundImage = !!heroImg;
@@ -328,6 +327,12 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
   if (isLocalServices) {
     return (
       <section className={`relative py-20 md:py-28 overflow-hidden ${isLightMode ? 'bg-white' : 'bg-slate-950'}`}>
+        {heroImg && (
+          <div className="absolute inset-0 z-0" aria-hidden="true">
+            <img src={heroImg} alt="" className="w-full h-full object-cover" fetchPriority="high" />
+            <div className={`absolute inset-0 ${isLightMode ? 'bg-white/85' : 'bg-slate-950/80'}`} />
+          </div>
+        )}
         {isEditing && (
           <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-20" />
         )}
@@ -1201,7 +1206,6 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
       style={{
         // Use industry-aware base color when no background image
         background: !hasBackgroundImage ? ambientGradient : 'hsl(217, 33%, 6%)',
-        minHeight: '100vh',
       }}
     >
 
