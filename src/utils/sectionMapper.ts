@@ -1,3 +1,4 @@
+import { composeArc } from '@/lib/composition/arc';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 /**
  * Brief-First Section Mapper with Intelligent Extraction
