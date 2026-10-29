@@ -1834,7 +1834,7 @@ function GenerateContent() {
           setConsultation({
             ...consultationData,
             ...pageConsultationData,
-            websiteIntelligence: resolvedBrand,
+            websiteIntelligence: { ...pageWebsiteIntel, ...pageConsultationData.websiteIntelligence, ...resolvedBrand },
             // Also preserve designIntelligence for colorMode resolution
             designIntelligence: { ...pageDesignIntel, colorMode: resolvedColorMode },
           });

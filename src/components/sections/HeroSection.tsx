@@ -319,11 +319,11 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
   const composition = content?.composition;
   if (composition === 'centered-type') {
     console.log('🎨 [ArtDirector] Hero: centered-type composition');
-    return <HeroCenteredType content={content} onUpdate={onUpdate} isEditing={isEditing} />;
+    return <><HeroCenteredType content={content} onUpdate={onUpdate} isEditing={isEditing} />{isEditing && <Button variant="outline" onClick={() => setImagePickerOpen(true)}><ImagePlus />Change Background</Button>}<ImagePicker open={imagePickerOpen} onClose={() => setImagePickerOpen(false)} onSelect={handleImageSelect} /></>;
   }
   if (composition === 'split-photo') {
     console.log('🎨 [ArtDirector] Hero: split-photo composition');
-    return <HeroSplitPhoto content={content} onUpdate={onUpdate} isEditing={isEditing} />;
+    return <><HeroSplitPhoto content={content} onUpdate={onUpdate} isEditing={isEditing} />{isEditing && <Button variant="outline" onClick={() => setImagePickerOpen(true)}><ImagePlus />Change Background</Button>}<ImagePicker open={imagePickerOpen} onClose={() => setImagePickerOpen(false)} onSelect={handleImageSelect} /></>;
   }
 
   // Local Services variant: Light mode, trust-forward, phone-prominent

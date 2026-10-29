@@ -1,4 +1,5 @@
 import { useUsableLogo } from '@/hooks/useUsableLogo';
+import { TreatedImage } from '../TreatedImage';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Check, Mail } from 'lucide-react';
@@ -116,10 +117,7 @@ export const HeroTeaserSection: React.FC<Props> = ({
 
       {/* Background image overlay */}
       {content.backgroundStyle === 'image' && content.backgroundImage && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{ backgroundImage: `url(${content.backgroundImage})` }}
-        />
+        <TreatedImage background priority src={content.backgroundImage} alt="" className="opacity-20" />
       )}
 
       <div className="relative z-10 container mx-auto px-4 py-20 text-center">

@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { TreatedImage } from './TreatedImage';
 import { 
   ArrowRight, FileText, Monitor, CheckCircle2, 
   Sparkles, Clock, Target, Users, Building2,
@@ -165,7 +166,7 @@ export function ExampleShowcaseCTA({
                 <div className="relative group">
                   <div className="bg-gradient-to-br from-muted to-muted/50 rounded-xl overflow-hidden aspect-[16/10] flex items-center justify-center border border-border">
                     {example.thumbnailUrl ? (
-                      <img 
+                      <TreatedImage
                         src={example.thumbnailUrl} 
                         alt={`${example.companyName} landing page preview`}
                         className="w-full h-full object-cover"
