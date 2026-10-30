@@ -11,7 +11,7 @@ const prefersReducedMotion = () =>
  * Progressive safety: elements are hidden only after this mounts in a browser;
  * without JS, IntersectionObserver, or with reduced motion, content stays visible.
  */
-export function GazeReveal({ sectionType, children }: { sectionType: string; children: ReactNode }) {
+export function GazeReveal({ sectionType, sectionBg, children }: { sectionType: string; sectionBg?: string; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -117,5 +117,5 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sectionType]);
 
-  return <div ref={ref} data-gaze-section="">{children}</div>;
+  return <div ref={ref} data-gaze-section="" data-section-bg={sectionBg}>{children}</div>;
 }

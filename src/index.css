@@ -1947,7 +1947,7 @@ All colors MUST be HSL.
   }
 
   /* Border beam: a bright brand segment orbits the primary ask. */
-  [data-mode="dark"] .pc-cta-primary::before {
+  [data-mode="dark"] .pc-cta-primary::before, [data-section-bg="dark"] .pc-cta-primary::before, [data-section-bg="brand"] .pc-cta-primary::before {
     content: ''; position: absolute; inset: -2px; z-index: -1; border-radius: inherit;
     padding: 2px;
     background: conic-gradient(from var(--pc-beam-angle),
@@ -1960,18 +1960,18 @@ All colors MUST be HSL.
     mask-composite: exclude;
     animation: pc-beam 3.6s linear infinite;
   }
-  [data-mode="dark"] .pc-cta-primary { overflow: visible; }
+  [data-mode="dark"] .pc-cta-primary, [data-section-bg="dark"] .pc-cta-primary, [data-section-bg="brand"] .pc-cta-primary { overflow: visible; }
   @keyframes pc-beam { to { --pc-beam-angle: 360deg; } }
 }
 /* Reduced motion: beams and auroras hold still as faint static accents */
 @media (prefers-reduced-motion: reduce) {
-  [data-mode="dark"] .pc-cta-primary { box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-primary, #6366F1) 40%, transparent); }
+  [data-mode="dark"] .pc-cta-primary, [data-section-bg="dark"] .pc-cta-primary { box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-primary, #6366F1) 40%, transparent); }
 }
 
 /* Beam/sweep arbitration: dark asks wear the beam, light asks the sweep —
    never both. isolation keeps the ring's z-index:-1 inside the button's own
    stacking context instead of dropping behind the section background. */
-[data-mode="dark"] .pc-cta-primary { isolation: isolate; }
+[data-mode="dark"] .pc-cta-primary, [data-section-bg="dark"] .pc-cta-primary, [data-section-bg="brand"] .pc-cta-primary { isolation: isolate; }
 @media (prefers-reduced-motion: no-preference) {
-  [data-mode="dark"] .pc-cta-primary::after { display: none; }
+  [data-mode="dark"] .pc-cta-primary::after, [data-section-bg="dark"] .pc-cta-primary::after, [data-section-bg="brand"] .pc-cta-primary::after { display: none; }
 }

@@ -497,11 +497,11 @@ export function PublicPageRenderer({
                 )}
               >
                 <div className="relative z-10">
-                  <GazeReveal sectionType={section.type}><SignatureSection type={section.type} content={section.content}>{renderSection(section, index)}</SignatureSection></GazeReveal>
+                  <GazeReveal sectionType={section.type} sectionBg={(section.content as any)?.sectionBackground}><SignatureSection type={section.type} content={section.content}>{renderSection(section, index)}</SignatureSection></GazeReveal>
                 </div>
               </div>
             ) : (
-              <GazeReveal key={`gaze-${index}`} sectionType={section.type}>
+              <GazeReveal key={`gaze-${index}`} sectionType={section.type} sectionBg={(section.content as any)?.sectionBackground}>
                 <SignatureSection type={section.type} content={section.content}>{renderSection(section, index)}</SignatureSection>
               </GazeReveal>
             );

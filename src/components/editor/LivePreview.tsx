@@ -347,7 +347,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
           isEditing={editingSection === index}
         />
         
-        <GazeReveal sectionType={section.type}><SignatureSection type={section.type} content={section.content} editing={editingSection === index}>{sectionElement}</SignatureSection></GazeReveal>
+        <GazeReveal sectionType={section.type} sectionBg={(section.content as any)?.sectionBackground}><SignatureSection type={section.type} content={section.content} editing={editingSection === index}>{sectionElement}</SignatureSection></GazeReveal>
       </div>
     );
   }, [getSectionLockStatus, handleUnlockAction, editingSection, handleEditSection, handleAIAssist, handleImageGenerate, handleLogoEdit]);
