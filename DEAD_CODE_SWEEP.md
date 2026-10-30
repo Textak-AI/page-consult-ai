@@ -69,5 +69,5 @@ Skill applied: Compact code.
 ## 2026-10-30 — trial-theater removal
 - src/components/trial/TrialBanner.tsx — only reference was Dashboard.tsx:392 (removed with it). Counted down a trial nothing enforces; showed a false "trial ended" nag at day 15.
 - src/hooks/useTrialAccess.ts — zero references (`grep -rn useTrialAccess src/` returned only the hook itself).
-- src/lib/contentGenerator.ts — zero references (`grep -rn contentGenerator src/` returned only the file itself).
-- src/lib/contentTemplates.ts — only reference was contentGenerator.ts (removed with it). Contained canned fabricated feature claims ("Free 14-Day Trial", "SOC 2 compliance", "Bank-level encryption") that would have violated zero-fabrication had the chain ever been wired in.
+- src/components/trial/index.ts — barrel for the removed TrialBanner; no other consumers (`grep -rn "components/trial" src/` after removal: none).
+- NOT removed after all: contentGenerator.ts / contentTemplates.ts. The first "zero-reference proof" was wrong — the grep excluded `lib/contentGenerator` to skip the file itself, which also hid the live import in Generate.tsx:41 (`from "@/lib/contentGenerator"`). Lesson recorded: exclusion patterns for self-matches must anchor on the file path prefix (`grep -v "^src/lib/contentGenerator"`), never on a substring an import path also contains. The canned templates these files carry ("Free 14-Day Trial", "SOC 2 compliance", 'Join [X]+ companies') feed Generate.tsx generateFallbackSections — flagged as a zero-fabrication risk to assess, not silently deleted.
