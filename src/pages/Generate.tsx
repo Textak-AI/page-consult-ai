@@ -60,7 +60,9 @@ import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid, generateSE
 import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief, type MappedPage } from "@/utils/sectionMapper";
 import { isBriefEnvelope } from "@/lib/briefEnvelope";
 import { applyArtDirectorDirectives } from "@/lib/artDirectorBrief";
-import { buildHeroImagePrompt, promptKey } from "@/lib/heroImagePrompt";
+// Aliased: Generate.tsx has an older local buildHeroImagePrompt(industry, context)
+// that shadowed this import and crashed page builds on a non-string argument.
+import { buildHeroImagePrompt as buildBusinessHeroPrompt, promptKey } from "@/lib/heroImagePrompt";
 import { selectSectionsFromSDI } from "@/utils/sectionSelector";
 import { generateDesignSystem, designSystemToCSSVariables } from "@/config/designSystem";
 
@@ -607,7 +609,7 @@ function GenerateContent() {
     // abstract texture heroes keep their texture prompt as-is.
     const prompt = imageStyle === 'ambient-texture'
       ? (imagePrompt || `Abstract ${consultation?.industry || 'business'} texture, minimal, high quality`)
-      : buildHeroImagePrompt(consultation, imagePrompt);
+      : buildBusinessHeroPrompt(consultation, typeof imagePrompt === 'string' ? imagePrompt : null);
     console.log('🖼️ [ImageGen] Auto-triggering hero image generation:', prompt);
 
     (async () => {
@@ -4776,7 +4778,7 @@ function GenerateContent() {
    * Creates professional, subtle images that support text overlay
    */
   const buildHeroImagePrompt = (industry: string, businessContext: string): string => {
-    const industryLower = industry.toLowerCase();
+    const industryLower = String(industry || '').toLowerCase();
     
     // Industry-specific subject matter for more targeted imagery
     const industrySubjects: Record<string, string> = {
