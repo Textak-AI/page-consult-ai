@@ -1361,7 +1361,7 @@ All colors MUST be HSL.
   transform: translateX(-50%);
   width: 60%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--glow-color, hsla(239, 84%, 67%, 0.15)), transparent);
+  background: linear-gradient(90deg, transparent, var(--glow-color, color-mix(in srgb, var(--brand-primary, #6366F1) 15%, transparent)), transparent);
   pointer-events: none;
   z-index: 1;
 }
@@ -1396,7 +1396,7 @@ All colors MUST be HSL.
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    var(--glow-color, hsla(239, 84%, 67%, 0.08)) 0%,
+    var(--glow-color, color-mix(in srgb, var(--brand-primary, #6366F1) 8%, transparent)) 0%,
     transparent 70%
   );
   top: var(--glow-top, -10%);
@@ -1415,7 +1415,7 @@ All colors MUST be HSL.
 }
 .premium-gen-card:hover {
   border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 0 20px var(--glow-color, hsla(239, 84%, 67%, 0.08));
+  box-shadow: 0 0 20px var(--glow-color, color-mix(in srgb, var(--brand-primary, #6366F1) 8%, transparent));
 }
 
 /* Light mode variants */
@@ -1537,7 +1537,7 @@ All colors MUST be HSL.
   height: 70%;
   background: radial-gradient(
     ellipse at center,
-    hsla(239, 84%, 67%, 0.04) 0%,
+    color-mix(in srgb, var(--brand-primary, #6366F1) 4%, transparent) 0%,
     transparent 70%
   );
   pointer-events: none;
@@ -1547,7 +1547,7 @@ All colors MUST be HSL.
 [data-mode="dark"] .section-tier-accent {
   background: linear-gradient(
     180deg,
-    hsla(239, 84%, 67%, 0.08) 0%,
+    color-mix(in srgb, var(--brand-primary, #6366F1) 8%, transparent) 0%,
     hsl(222, 47%, 11%) 100%
   );
   position: relative;
@@ -1588,9 +1588,9 @@ All colors MUST be HSL.
   background: linear-gradient(
     90deg,
     transparent 0%,
-    hsla(239, 84%, 67%, 0.2) 25%,
-    hsla(239, 84%, 67%, 0.4) 50%,
-    hsla(239, 84%, 67%, 0.2) 75%,
+    color-mix(in srgb, var(--brand-primary, #6366F1) 20%, transparent) 25%,
+    color-mix(in srgb, var(--brand-primary, #6366F1) 40%, transparent) 50%,
+    color-mix(in srgb, var(--brand-primary, #6366F1) 20%, transparent) 75%,
     transparent 100%
   );
   z-index: 2;
@@ -1922,3 +1922,56 @@ All colors MUST be HSL.
   background-size: 160px 160px;
 }
 @media print { .pc-grain::after { display: none; } }
+
+
+/* ── Dark-page aurora + border beam (dark archetypes only) ──────────────
+   Brand-derived; template builders can't do this coherently because the
+   colors come from the client's own palette. */
+@property --pc-beam-angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Aurora: two brand-hued radial fields drifting very slowly behind dark
+     tier content. Background-position only, 26s, barely-there. */
+  [data-mode="dark"] .section-tier-deep, [data-mode="dark"] .section-tier-accent { position: relative; }
+  [data-mode="dark"] .section-tier-deep::after, [data-mode="dark"] .section-tier-accent::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(42% 52% at 18% 24%, color-mix(in srgb, var(--brand-primary, #6366F1) 10%, transparent), transparent 70%),
+      radial-gradient(38% 46% at 82% 76%, color-mix(in srgb, var(--brand-primary, #6366F1) 7%, transparent), transparent 70%);
+    background-size: 160% 160%, 180% 180%;
+    animation: pc-aurora 26s ease-in-out infinite alternate;
+  }
+  @keyframes pc-aurora {
+    from { background-position: 0% 0%, 100% 100%; }
+    to   { background-position: 60% 40%, 40% 55%; }
+  }
+
+  /* Border beam: a bright brand segment orbits the primary ask. */
+  [data-mode="dark"] .pc-cta-primary::before {
+    content: ''; position: absolute; inset: -2px; z-index: -1; border-radius: inherit;
+    padding: 2px;
+    background: conic-gradient(from var(--pc-beam-angle),
+      transparent 0deg, transparent 300deg,
+      color-mix(in srgb, var(--brand-primary, #6366F1) 85%, white) 330deg,
+      transparent 360deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation: pc-beam 3.6s linear infinite;
+  }
+  [data-mode="dark"] .pc-cta-primary { overflow: visible; }
+  @keyframes pc-beam { to { --pc-beam-angle: 360deg; } }
+}
+/* Reduced motion: beams and auroras hold still as faint static accents */
+@media (prefers-reduced-motion: reduce) {
+  [data-mode="dark"] .pc-cta-primary { box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-primary, #6366F1) 40%, transparent); }
+}
+
+/* Beam/sweep arbitration: dark asks wear the beam, light asks the sweep —
+   never both. isolation keeps the ring's z-index:-1 inside the button's own
+   stacking context instead of dropping behind the section background. */
+[data-mode="dark"] .pc-cta-primary { isolation: isolate; }
+@media (prefers-reduced-motion: no-preference) {
+  [data-mode="dark"] .pc-cta-primary::after { display: none; }
+}
