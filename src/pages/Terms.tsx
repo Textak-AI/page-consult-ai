@@ -78,9 +78,9 @@ const Terms = () => {
           </div>
           <p className="text-gray-400 text-sm italic">*Subject to Fair Use Policy (Section 4)</p>
 
-          <h3 className="text-lg font-medium text-white mt-6 mb-3">3.2 Free Trial</h3>
+          <h3 className="text-lg font-medium text-white mt-6 mb-3">3.2 Free Plan</h3>
           <p className="text-gray-300 leading-relaxed">
-            We offer a 14-day free trial on paid plans. At the end of the trial, your subscription will automatically convert to a paid plan unless you cancel. A valid payment method is required to start a trial.
+            We offer a free plan that includes a monthly allowance of AI actions and your first landing page build. The free plan does not expire and does not require a payment method. Paid subscriptions begin billing when purchased.
           </p>
 
           <h3 className="text-lg font-medium text-white mt-6 mb-3">3.3 Founding Member Pricing</h3>

@@ -24,7 +24,7 @@ const plans = [
       "Email support",
       "Standard generation speed",
     ],
-    buttonText: "Start Free Trial",
+    buttonText: "Get Started",
     priceId: STRIPE_PRICES.starter,
   },
   {
@@ -74,8 +74,8 @@ const plans = [
 
 const faqs = [
   {
-    question: "What's included in the free trial?",
-    answer: "All paid plans come with a 14-day free trial. You'll have full access to all features during the trial period. Your card will only be charged after the trial ends.",
+    question: "Is there a free plan?",
+    answer: "Yes. Every account starts free: the full AI consultation, your strategy brief, your first landing page build, and 30 AI actions a month. No credit card required and no time limit. Upgrade when you need more capacity.",
   },
   {
     question: "What makes Founding Members special?",
@@ -313,7 +313,7 @@ const PricingPage = () => {
           <div className="inline-flex items-center gap-6 text-slate-400 text-sm flex-wrap justify-center">
             <span className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-green-400" />
-              14-day free trial
+              Free plan to start
             </span>
             <span className="w-1 h-1 bg-slate-600 rounded-full hidden sm:block" />
             <span>Cancel anytime</span>

@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { TrialBanner } from '@/components/trial/TrialBanner';
 import { StrategyBrief } from '@/components/strategy-brief/StrategyBrief';
 import { getClientLayoutIntelligence } from '@/lib/layoutIntelligence';
 import { QuickPivotModal } from '@/components/quick-pivot';
@@ -389,7 +388,6 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <TrialBanner />
       
       <main className="pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

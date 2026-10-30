@@ -358,7 +358,7 @@ export function UpgradeDrawer({
               </div>
 
               <p className="text-xs text-slate-500 text-center mt-6">
-                14-day free trial • Cancel anytime • 30-day money-back guarantee
+                Cancel anytime • Your pages stay yours
               </p>
             </div>
           </motion.div>

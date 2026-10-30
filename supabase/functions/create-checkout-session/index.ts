@@ -89,7 +89,6 @@ serve(async (req) => {
       automatic_tax: { enabled: true },
       payment_method_collection: "always",
       subscription_data: {
-        trial_period_days: 14,
         metadata: { supabase_user_id: user.id },
       },
       consent_collection: {

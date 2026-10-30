@@ -66,3 +66,8 @@ Shared UI primitives and external entry points were not presumed dead from unuse
 - Standalone typecheck is unverified: no separate automatic result is exposed, and this environment prohibits manually running project builds/typechecks. Build OK is not substituted for typecheck evidence.
 
 Skill applied: Compact code.
+## 2026-10-30 — trial-theater removal
+- src/components/trial/TrialBanner.tsx — only reference was Dashboard.tsx:392 (removed with it). Counted down a trial nothing enforces; showed a false "trial ended" nag at day 15.
+- src/hooks/useTrialAccess.ts — zero references (`grep -rn useTrialAccess src/` returned only the hook itself).
+- src/lib/contentGenerator.ts — zero references (`grep -rn contentGenerator src/` returned only the file itself).
+- src/lib/contentTemplates.ts — only reference was contentGenerator.ts (removed with it). Contained canned fabricated feature claims ("Free 14-Day Trial", "SOC 2 compliance", "Bank-level encryption") that would have violated zero-fabrication had the chain ever been wired in.

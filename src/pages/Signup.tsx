@@ -377,7 +377,7 @@ export default function Signup() {
           });
           
           toast({
-            title: isFromDemo ? "🚀 Trial started!" : "✅ Account created!",
+            title: "✅ Account created!",
             description: isFromDemo ? "Setting up your workspace..." : "Welcome to PageConsult!"
           });
           
@@ -592,25 +592,23 @@ export default function Signup() {
           console.error('🧠 [Signup] Failed to create accumulator (non-blocking):', accError);
         }
         
-        // Trigger trial welcome email
+        // Sync new contact to Loops for the welcome email
         try {
           await supabase.functions.invoke('loops-sync', {
             body: {
-              event: 'trial_started',
+              event: 'contact_created',
               email: email,
               userId: userId,
               properties: {
-                trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-                days_remaining: 14,
                 industry: demoIntelligence.industry,
                 from_demo: true,
                 readiness: demoIntelligence.readinessScore,
               },
             },
           });
-          console.log('📧 [Signup] Trial welcome email triggered');
+          console.log('📧 [Signup] Welcome contact synced');
         } catch (emailErr) {
-          console.error('Failed to trigger trial email:', emailErr);
+          console.error('Failed to sync welcome contact:', emailErr);
         }
         
         // Clean up sessionStorage
@@ -675,24 +673,22 @@ export default function Signup() {
       
       console.log('✅ [Signup] Consultation created:', consultation.id);
       
-      // Trigger trial welcome email via Loops.so
+      // Sync new contact to Loops for the welcome email
       try {
         await supabase.functions.invoke('loops-sync', {
           body: {
-            event: 'trial_started',
+            event: 'contact_created',
             email: email,
             userId: userId,
             properties: {
-              trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-              days_remaining: 14,
               industry: demoIntelligence.industry,
               from_demo: true,
             },
           },
         });
-        console.log('📧 [Signup] Trial welcome email triggered');
+        console.log('📧 [Signup] Welcome contact synced');
       } catch (emailErr) {
-        console.error('Failed to trigger trial email:', emailErr);
+        console.error('Failed to sync welcome contact:', emailErr);
       }
       
       // Clean up sessionStorage
@@ -813,7 +809,7 @@ export default function Signup() {
             <span className="text-slate-500">Brand Setup</span>
           </div>
           
-          {/* Header - Trial focused */}
+          {/* Header - free account focused */}
           <div className="text-center mb-6">
             <div className="flex items-center justify-center mb-4">
               <img 
@@ -827,10 +823,10 @@ export default function Signup() {
               Your strategy profile is ready
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-              🚀 Start Your 14-Day Free Trial
+              Create Your Free Account
             </h1>
             <p className="text-gray-300 text-base">
-              Create your account to build your first landing page — no credit card required.
+              Your first landing page build is free — no credit card, no clock.
             </p>
           </div>
 
@@ -872,8 +868,8 @@ export default function Signup() {
                   <Check className="w-3 h-3 text-green-400" />
                 </div>
                 <span className="text-gray-200 text-sm">
-                  <span className="text-white font-medium">1 premium landing page</span>
-                  <span className="text-gray-400"> generation</span>
+                  <span className="text-white font-medium">Your first landing page</span>
+                  <span className="text-gray-400"> — built free</span>
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -890,8 +886,8 @@ export default function Signup() {
                   <Clock className="w-3 h-3 text-green-400" />
                 </div>
                 <span className="text-gray-200 text-sm">
-                  <span className="text-white font-medium">14 days</span>
-                  <span className="text-gray-400"> to test everything</span>
+                  <span className="text-white font-medium">30 AI actions</span>
+                  <span className="text-gray-400"> every month to refine and iterate</span>
                 </span>
               </li>
             </ul>
@@ -954,7 +950,7 @@ export default function Signup() {
               </form>
 
               <p className="text-center text-xs text-gray-500 mt-4">
-                No credit card required • Cancel anytime
+                No credit card required • Free plan has no time limit
               </p>
 
               <p className="text-center text-xs text-gray-400 mt-3">
