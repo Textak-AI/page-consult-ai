@@ -17,7 +17,7 @@ interface FAQAccordionCardProps {
 }
 
 export default function FAQAccordionCard({ content, onUpdate, isEditing }: FAQAccordionCardProps) {
-  const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'light', content.primaryColor);
+  const bgStyles = getSectionBackgroundStyles(content.sectionBackground || ((content as any).mode === 'dark' ? 'dark' : 'light'), content.primaryColor);
   const primaryColor = content.primaryColor || '#6366F1';
   const items = content.items || [];
   const [openIndex, setOpenIndex] = useState<number | null>(null);

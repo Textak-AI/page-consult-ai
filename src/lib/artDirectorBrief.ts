@@ -327,6 +327,21 @@ export function applyArtDirectorDirectives(
  * Section background style helper.
  * Returns raw color values for sub-components to apply via inline styles.
  */
+/**
+ * When the art director assigned per-section backgrounds, those decide the
+ * page's base mode: a light/tinted-led palette means a light page, whatever
+ * the SDI default said. Returns null when no section carries a declared
+ * background (legacy pages), letting callers fall back to SDI.
+ */
+export function artDirectedMode(sections: Array<{ content?: any }>): 'light' | 'dark' | null {
+  const declared = sections
+    .map(s => s?.content?.sectionBackground)
+    .filter((b): b is string => typeof b === 'string' && b.length > 0);
+  if (declared.length === 0) return null;
+  const dark = declared.filter(b => b === 'dark').length;
+  return dark > declared.length / 2 ? 'dark' : 'light';
+}
+
 export function getSectionBackgroundStyles(
   background: 'dark' | 'light' | 'tinted' | string,
   primaryColor?: string

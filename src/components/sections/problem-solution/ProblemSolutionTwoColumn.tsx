@@ -17,7 +17,7 @@ interface ProblemSolutionTwoColumnProps {
 }
 
 export default function ProblemSolutionTwoColumn({ content, onUpdate, isEditing }: ProblemSolutionTwoColumnProps) {
-  const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'light', content.primaryColor);
+  const bgStyles = getSectionBackgroundStyles(content.sectionBackground || ((content as any).mode === 'dark' ? 'dark' : 'light'), content.primaryColor);
   const primaryColor = content.primaryColor || '#6366F1';
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {

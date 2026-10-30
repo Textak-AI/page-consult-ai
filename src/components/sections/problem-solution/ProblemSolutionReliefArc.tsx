@@ -16,6 +16,11 @@ interface ProblemSolutionReliefArcProps {
 
 export default function ProblemSolutionReliefArc({ content, onUpdate, isEditing }: ProblemSolutionReliefArcProps) {
   const primaryColor = content.primaryColor || '#6366F1';
+  // Follow the rendered surface mode: dark surfaces need light ink.
+  const isDark = (content as any).mode === 'dark';
+  const inkColor = isDark ? '#F1F5F9' : '#1A1A2E';
+  const dimLabel = isDark ? 'rgba(241,245,249,0.4)' : 'rgba(26,26,46,0.4)';
+  const dimBody = isDark ? 'rgba(241,245,249,0.7)' : 'rgba(26,26,46,0.7)';
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({ ...content, [field]: e.currentTarget.textContent || content[field] });
@@ -50,13 +55,13 @@ export default function ProblemSolutionReliefArc({ content, onUpdate, isEditing 
         ...spacing.section,
       }}>
         <div style={{ maxWidth: 680, ...spacing.center }}>
-          <div style={{ ...labelStyle, color: 'rgba(26,26,46,0.4)' }}>The Challenge</div>
+          <div style={{ ...labelStyle, color: dimLabel }}>The Challenge</div>
           <p
             contentEditable={isEditing}
             suppressContentEditableWarning
             onBlur={(e) => handleBlur('problem', e)}
             className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
-            style={{ ...bodyStyle, color: 'rgba(26,26,46,0.7)' }}
+            style={{ ...bodyStyle, color: dimBody }}
           >
             {content.problem || 'The problem your clients face.'}
           </p>
@@ -81,7 +86,7 @@ export default function ProblemSolutionReliefArc({ content, onUpdate, isEditing 
             suppressContentEditableWarning
             onBlur={(e) => handleBlur('solution', e)}
             className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
-            style={{ ...bodyStyle, color: '#1A1A2E' }}
+            style={{ ...bodyStyle, color: inkColor }}
           >
             {content.solution || 'How you solve it differently.'}
           </p>

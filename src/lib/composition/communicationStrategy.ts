@@ -16,8 +16,18 @@ export function applyCommunicationStrategy<T extends { type: string; order: numb
   }
   const hero = result.find(s => s.type === 'hero' || s.type === 'beta-hero-teaser');
   if (hero) {
-    if (strategy.reframe || strategy.oneLiner) hero.content.headline = strategy.reframe || strategy.oneLiner;
-    if (strategy.oneLiner) hero.content.subheadline = strategy.oneLiner;
+    // Reframe owns the headline when the input supplied one; otherwise the
+    // mapper's guarded brief headline stands — never fall back to the
+    // one-liner, which previously rendered the same sentence as headline AND
+    // subheadline. The one-liner becomes the subheadline only when it differs
+    // from the headline and speaks to the reader: strategy prose written about
+    // the buyer ("their team") stays in the brief, not on the page.
+    if (strategy.reframe) hero.content.headline = strategy.reframe;
+    const speaksToReader = (text: string) => !/\b(their|they|them)\b/i.test(text);
+    if (strategy.oneLiner && strategy.oneLiner !== hero.content.headline && speaksToReader(strategy.oneLiner)) {
+      hero.content.subheadline = strategy.oneLiner;
+    }
+    if (hero.content.subheadline === hero.content.headline) hero.content.subheadline = '';
   }
   const problem = result.find(s => slotOf(s.type) === 'problem');
   if (problem && strategy.stakes) {

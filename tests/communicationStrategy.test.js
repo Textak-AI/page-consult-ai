@@ -49,3 +49,25 @@ test('visual intensity derives from archetype, not invented business facts', () 
   expect(computeCommunicationStrategy({ archetype: 'executive' }, {}).visualIntensity).toBe('restrained');
   expect(computeCommunicationStrategy({}, {}).visualIntensity).toBe('balanced');
 });
+test('hero never duplicates headline into subheadline and keeps brief headline when reframe is null', async () => {
+  const { applyCommunicationStrategy } = await import('../src/lib/composition/communicationStrategy.ts');
+  const strategy = { reframe: null, oneLiner: 'A photo library their whole team can pull from for a year', stakes: null, mechanismName: null, arcEmphasis: 'problem-led', proofPlan: [], ctaLadder: { primary: 'Book a Channel Audit', secondary: null }, register: 'plain', visualIntensity: 'balanced' };
+  const sections = [{ type: 'hero', order: 0, content: { headline: 'One Shoot, One Year of Assets', subheadline: 'Guarded brief subheadline.' } }];
+  const out = applyCommunicationStrategy(sections, strategy);
+  const hero = out.find(s => s.type === 'hero');
+  // Brief headline survives a null reframe
+  expect(hero.content.headline).toBe('One Shoot, One Year of Assets');
+  // Third-person strategy prose never becomes page copy
+  expect(hero.content.subheadline).toBe('Guarded brief subheadline.');
+});
+
+test('a second-person one-liner does become the subheadline, but never equal to the headline', async () => {
+  const { applyCommunicationStrategy } = await import('../src/lib/composition/communicationStrategy.ts');
+  const base = { stakes: null, mechanismName: null, arcEmphasis: 'problem-led', proofPlan: [], ctaLadder: { primary: 'Go', secondary: null }, register: 'plain', visualIntensity: 'balanced' };
+  const mk = () => [{ type: 'hero', order: 0, content: { headline: 'H', subheadline: 'S' } }];
+  const out1 = applyCommunicationStrategy(mk(), { ...base, reframe: null, oneLiner: 'One shoot covers your whole year.' });
+  expect(out1[0].content.subheadline).toBe('One shoot covers your whole year.');
+  const out2 = applyCommunicationStrategy(mk(), { ...base, reframe: 'One shoot covers your whole year.', oneLiner: 'One shoot covers your whole year.' });
+  expect(out2[0].content.headline).toBe('One shoot covers your whole year.');
+  expect(out2[0].content.subheadline).not.toBe(out2[0].content.headline);
+});

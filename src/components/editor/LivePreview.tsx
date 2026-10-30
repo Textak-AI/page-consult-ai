@@ -54,6 +54,7 @@ import type { SEOHeadData } from "@/lib/aiSeoIntegration";
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from "@/lib/premiumPageEffects";
+import { artDirectedMode } from "@/lib/artDirectorBrief";
 import { resolveArchetypeFromStorage, type DesignProfile } from "@/lib/archetypeProfiles";
 import { StrategyConsultantButton } from "@/components/editor/StrategyConsultantButton";
 import { StrategyConsultantOverlay, type ChatMessage } from "@/components/editor/StrategyConsultantOverlay";
@@ -93,7 +94,9 @@ interface LivePreviewProps {
   };
 }
 
-function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode = 'dark', industryVariant, brandSettings: rawBrandSettings, pageTheme, getSectionLockStatus }: LivePreviewProps) {
+function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode: colorModeProp = 'dark', industryVariant, brandSettings: rawBrandSettings, pageTheme, getSectionLockStatus }: LivePreviewProps) {
+  // Art-directed background plans own the page mode (see artDirectedMode).
+  const colorMode = artDirectedMode(sections || []) || colorModeProp;
   const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();
   const currentStyle = styleVariants[pageStyle];
   const brandSettings = useMemo(() => {

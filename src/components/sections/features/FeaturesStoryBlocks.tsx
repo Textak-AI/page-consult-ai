@@ -18,7 +18,7 @@ interface FeaturesStoryBlocksProps {
 }
 
 export default function FeaturesStoryBlocks({ content, onUpdate, isEditing }: FeaturesStoryBlocksProps) {
-  const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'light', content.primaryColor);
+  const bgStyles = getSectionBackgroundStyles(content.sectionBackground || ((content as any).mode === 'dark' ? 'dark' : 'light'), content.primaryColor);
   const primaryColor = content.primaryColor || '#6366F1';
   const features = content.features || content.messagingPillars || [];
 

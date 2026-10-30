@@ -6,6 +6,7 @@ import { LeadCaptureModal } from './LeadCaptureModal';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { cn } from '@/lib/utils';
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from '@/lib/premiumPageEffects';
+import { artDirectedMode } from '@/lib/artDirectorBrief';
 import { resolveArchetypeFromStorage, type DesignProfile } from '@/lib/archetypeProfiles';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { ProblemSolutionSection } from '@/components/sections/ProblemSolutionSection';
@@ -102,7 +103,7 @@ export function PublicPageRenderer({
     }
   }, [publishedPageId]);
   // Derive colorMode from design intelligence
-  const colorMode = designIntelligence?.colorMode || 'dark';
+  const colorMode = artDirectedMode(sections || []) || designIntelligence?.colorMode || 'dark';
   const theme = useMemo(() => cleanTheme(styles?.theme), [styles]);
   const themeCss = useMemo(() => themeFontCss('.page-theme-root', theme), [theme]);
   const industryVariant = designIntelligence?.industryVariant || 'default';

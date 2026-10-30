@@ -16,7 +16,7 @@ interface ProcessNumberedRowsProps {
 }
 
 export default function ProcessNumberedRows({ content, onUpdate, isEditing }: ProcessNumberedRowsProps) {
-  const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'light', content.primaryColor);
+  const bgStyles = getSectionBackgroundStyles(content.sectionBackground || ((content as any).mode === 'dark' ? 'dark' : 'light'), content.primaryColor);
   const primaryColor = content.primaryColor || '#6366F1';
   const steps = content.steps || [];
   const isSerif = content.typographyPairing === 'serif-sans';

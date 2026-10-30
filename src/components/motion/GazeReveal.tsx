@@ -17,6 +17,11 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
   useLayoutEffect(() => {
     const root = ref.current;
     if (!root || prefersReducedMotion() || typeof IntersectionObserver === 'undefined') return;
+    // Background pages never fire IntersectionObserver, so a hidden tab,
+    // prerender, or headless capture would otherwise show empty sections.
+    // Nobody watches animation in a hidden page: skip hiding entirely, and
+    // reveal instantly if the page goes hidden while content is still hidden.
+    if (document.visibilityState === 'hidden') return;
 
     // Mount does a single style write and no layout reads. DOM measurement
     // (resolveGazeOrder) is deferred until the section actually scrolls into
@@ -72,10 +77,19 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
       },
       { threshold: 0.15 },
     );
+    const revealNow = () => {
+      if (played) return;
+      io.disconnect();
+      played = true;
+      root.style.opacity = '';
+    };
+    const onHide = () => { if (document.visibilityState === 'hidden') revealNow(); };
+    document.addEventListener('visibilitychange', onHide);
     if (isHero) play();
     else io.observe(root);
 
     return () => {
+      document.removeEventListener('visibilitychange', onHide);
       io.disconnect();
       controls.forEach((c) => c.stop());
       els.forEach(reset);

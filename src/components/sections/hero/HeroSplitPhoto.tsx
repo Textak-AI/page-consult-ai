@@ -21,7 +21,7 @@ interface HeroSplitPhotoProps {
 }
 
 export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSplitPhotoProps) {
-  const bgStyles = getSectionBackgroundStyles(content.sectionBackground || 'light', content.primaryColor);
+  const bgStyles = getSectionBackgroundStyles(content.sectionBackground || ((content as any).mode === 'dark' ? 'dark' : 'light'), content.primaryColor);
   // Render-time logo guard: a missing/broken/blank logo collapses the slot.
   const usableLogo = useUsableLogo(content.logoUrl);
   const primaryColor = content.primaryColor || '#6366F1';
