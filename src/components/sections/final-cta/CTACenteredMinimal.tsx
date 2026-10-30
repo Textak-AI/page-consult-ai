@@ -1,3 +1,4 @@
+import { MagneticCta } from '@/components/motion/MagneticCta';
 import { typeScale, spacing, space } from '@/lib/design/tokens';
 import { ChapterEyebrow } from '@/components/signature/elements';
 import { accentFor } from '@/lib/design/tokens';
@@ -82,10 +83,11 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
 
         {/* CTA Button */}
         {content.ctaText && <>
+        <MagneticCta>
         <Button
           asChild
           size="lg"
-          className="text-base px-8 py-6 font-medium shadow-lg transition-all duration-300 hover:scale-[1.02]"
+          className="pc-cta-primary text-base px-8 py-6 font-medium shadow-lg transition-all duration-300 hover:scale-[1.02]"
           style={{
             backgroundColor: accentFor('cta', primaryColor),
             color: '#FFFFFF',
@@ -96,6 +98,7 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
             {content.ctaText || 'Get Started'}
           </a>
         </Button>
+        </MagneticCta>
         </>}
         {content.secondaryCta && <Button asChild variant="link" className="block mx-auto mt-3 text-foreground"><a href={content.secondaryCtaLink || '#contact'}>{content.secondaryCta}</a></Button>}
       </div>

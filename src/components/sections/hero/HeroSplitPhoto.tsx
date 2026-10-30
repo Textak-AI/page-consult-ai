@@ -1,3 +1,4 @@
+import { StatCountUp } from '@/components/motion/StatCountUp';
 import { useUsableImage } from '@/hooks/useUsableImage';
 import { TreatedImage } from '../TreatedImage';
 import { ChapterEyebrow, GradientPayoff } from '@/components/signature/elements';
@@ -134,7 +135,7 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
                     style={{ color: bgStyles.textMuted }}
                   >
                     <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: primaryColor }} />
-                    <span>{signal}</span>
+                    {isEditing ? <span>{signal}</span> : <StatCountUp value={signal} />}
                   </div>
                 ))}
               </div>

@@ -55,7 +55,7 @@ import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from "@/lib/premiumPageEffects";
 import { artDirectedMode } from "@/lib/artDirectorBrief";
-import { typePairingCss, warmTextureVariants } from "@/lib/design/tokens";
+import { typePairingCss, pageWantsGrain } from "@/lib/design/tokens";
 import { resolveArchetypeFromStorage, type DesignProfile } from "@/lib/archetypeProfiles";
 import { StrategyConsultantButton } from "@/components/editor/StrategyConsultantButton";
 import { StrategyConsultantOverlay, type ChatMessage } from "@/components/editor/StrategyConsultantOverlay";
@@ -739,7 +739,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
         className={cn(
           "min-h-full live-preview-container relative",
           colorMode === 'light' ? 'bg-white text-slate-900' : 'bg-slate-950 text-slate-50',
-          warmTextureVariants.has(industryVariant || '') && 'pc-grain',
+          pageWantsGrain(sections, industryVariant) && 'pc-grain',
           colorMode === 'dark' && 'page-noise-overlay'
         )}
         style={(() => {

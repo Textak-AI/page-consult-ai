@@ -66,6 +66,14 @@ export function typePairingCss(scope: string, pairing?: string | null): string {
  * texture. Consumed by both renderers via the pc-grain class. */
 export const warmTextureVariants = new Set(['creative', 'ecommerce', 'coaching', 'fitness', 'local-services']);
 
+/** Whether a page gets the tactile grain. Sections carry the canonical
+ * industry key ('ecommerce'); stored design intelligence may hold the raw
+ * wizard label ('E-commerce / Retail'), so the section key wins. */
+export function pageWantsGrain(sections: Array<{ content?: any }> | undefined, fallbackVariant?: string | null): boolean {
+  const key = sections?.find((s) => typeof s?.content?.industryVariant === 'string')?.content.industryVariant || fallbackVariant || '';
+  return warmTextureVariants.has(key);
+}
+
 export const typeScale = {
   display: { fontSize: 'clamp(2.5rem, 5vw, 4.5rem)', lineHeight: 1.08 },
   h1: { fontSize: 'clamp(2rem, 4vw, 3.5rem)', lineHeight: 1.15 },

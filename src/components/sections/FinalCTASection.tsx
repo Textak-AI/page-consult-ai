@@ -1,3 +1,5 @@
+import { MagneticCta } from '@/components/motion/MagneticCta';
+import { StatCountUp } from '@/components/motion/StatCountUp';
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -259,9 +261,10 @@ function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionPr
           transition={{ duration: 0.5, delay: 0.25 }}
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
+          <MagneticCta>
           <Button 
             size="lg" 
-            className={`text-lg font-semibold shadow-lg transition-all ${archetypeCtaClass} ${getButtonClassName()} ${
+            className={`pc-cta-primary text-lg font-semibold shadow-lg transition-all ${archetypeCtaClass} ${getButtonClassName()} ${
               isEditing ? "outline-dashed outline-2 outline-white/30" : ""
             }`}
             style={{ ...getButtonStyles(), borderRadius: 'var(--archetype-btn-radius, 0.375rem)' }}
@@ -282,6 +285,7 @@ function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionPr
             </span>
             <ArrowRight className="ml-2 w-5 h-5" strokeWidth={2} />
           </Button>
+          </MagneticCta>
 
           {secondaryCta && (
             <Button 
@@ -340,7 +344,7 @@ function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionPr
                     onUpdate({ ...content, trustIndicators: newIndicators });
                   }}
                 >
-                  {item.text}
+                  {isEditing ? item.text : <StatCountUp value={item.text} />}
                 </span>
               </div>
             ))}

@@ -1975,3 +1975,19 @@ All colors MUST be HSL.
 @media (prefers-reduced-motion: no-preference) {
   [data-mode="dark"] .pc-cta-primary::after, [data-section-bg="dark"] .pc-cta-primary::after, [data-section-bg="brand"] .pc-cta-primary::after { display: none; }
 }
+
+
+/* Aurora on dark islands inside light pages (Relay-style: light page,
+   dark hero/payoff/close). Dark-mode pages already get it via tiers. */
+[data-mode="light"] [data-section-bg="dark"] { position: relative; }
+@media (prefers-reduced-motion: no-preference) {
+  [data-mode="light"] [data-section-bg="dark"]::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+    mix-blend-mode: screen;
+    background:
+      radial-gradient(42% 52% at 18% 24%, color-mix(in srgb, var(--brand-primary, #6366F1) 14%, transparent), transparent 70%),
+      radial-gradient(38% 46% at 82% 76%, color-mix(in srgb, var(--brand-primary, #6366F1) 9%, transparent), transparent 70%);
+    background-size: 160% 160%, 180% 180%;
+    animation: pc-aurora 26s ease-in-out infinite alternate;
+  }
+}
