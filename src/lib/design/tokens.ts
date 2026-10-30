@@ -61,6 +61,11 @@ export function typePairingCss(scope: string, pairing?: string | null): string {
   );
 }
 
+/** Industries whose pages earn a faint tactile grain overlay — the cheapest
+ * counter to sterile "generated" flatness. Analytical/B2B variants never get
+ * texture. Consumed by both renderers via the pc-grain class. */
+export const warmTextureVariants = new Set(['creative', 'ecommerce', 'coaching', 'fitness', 'local-services']);
+
 export const typeScale = {
   display: { fontSize: 'clamp(2.5rem, 5vw, 4.5rem)', lineHeight: 1.08 },
   h1: { fontSize: 'clamp(2rem, 4vw, 3.5rem)', lineHeight: 1.15 },

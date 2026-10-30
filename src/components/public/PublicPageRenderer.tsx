@@ -7,7 +7,7 @@ import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { cn } from '@/lib/utils';
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from '@/lib/premiumPageEffects';
 import { artDirectedMode } from '@/lib/artDirectorBrief';
-import { typePairingCss } from '@/lib/design/tokens';
+import { typePairingCss, warmTextureVariants } from '@/lib/design/tokens';
 import { resolveArchetypeFromStorage, type DesignProfile } from '@/lib/archetypeProfiles';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { ProblemSolutionSection } from '@/components/sections/ProblemSolutionSection';
@@ -419,6 +419,7 @@ export function PublicPageRenderer({
         data-archetype={archetypeProfile}
         className={cn(
           colorMode === 'light' ? 'min-h-screen bg-white' : 'min-h-screen bg-slate-950',
+          warmTextureVariants.has(industryVariant) && 'pc-grain',
           colorMode === 'dark' && 'page-noise-overlay',
           'relative page-theme-root'
         )}

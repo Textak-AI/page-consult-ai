@@ -51,7 +51,18 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
           const all = beats.flat();
           const areas = all.map((el) => { const r = el.getBoundingClientRect(); return r.width * r.height; });
           const largest = all[areas.indexOf(Math.max(0, ...areas))];
-          if (largest) beats = beats.map((b) => b.filter((el) => el !== largest && !el.contains(largest))).filter((b) => b.length);
+          if (largest) {
+            beats = beats.map((b) => b.filter((el) => el !== largest && !el.contains(largest))).filter((b) => b.length);
+            // Kinetic-lite settle: the headline is NEVER hidden (LCP paints at
+            // once) — it only eases the last few pixels into place.
+            const c = animate(
+              largest,
+              { transform: ['translateY(8px) scale(0.995)', 'translateY(0px) scale(1)'] },
+              { duration: MOTION.duration.md, ease: MOTION.ease },
+            );
+            controls.push(c);
+            c.then(() => reset(largest));
+          }
         }
         els = beats.flat();
         // Hide children and unhide the wrapper in the same frame: no flash.

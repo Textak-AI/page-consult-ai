@@ -329,7 +329,7 @@ function FeaturesSectionBase({ content, onUpdate, isEditing, iconStyle = "outlin
         onSubtitleBlur={(e) => handleBlur("subtitle", e)}
       />
 
-      <CardGrid columns={features.length <= 2 ? 2 : 3} gap="lg" maxCardWidth="420px">
+      <CardGrid columns={features.length <= 2 || features.length === 4 ? 2 : 3} gap="lg" maxCardWidth="420px">
         {features.map((feature, i) => (
           <motion.div
             key={i}
