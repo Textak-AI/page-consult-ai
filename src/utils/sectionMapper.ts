@@ -48,7 +48,7 @@ import {
   isClientVoiceDescription,
 } from '@/lib/briefExtractor';
 import type { DesignIntelligenceOutput } from '@/lib/designIntelligence';
-import { generateArtDirectorBrief, archetypeFromStorage, applyArtDirectorDirectives, artDirectedMode } from '@/lib/artDirectorBrief';
+import { generateArtDirectorBrief, archetypeFromStorage, applyArtDirectorDirectives } from '@/lib/artDirectorBrief';
 
 // Type definitionsimport { composeArc } from '@/lib/composition/arc';
 
@@ -918,14 +918,6 @@ export function mapBriefToSections(
   // ── Apply Art Director Compositional Brief ──────────────────────
   sections = applyArtDirectorDirectives(sections, options.messagingArchitecture);
 
-  // The art director's palette owns the page mode: a light-led background
-  // plan on a 'dark' SDI page previously produced light islands inside dark
-  // tier wrappers and dark ink on dark surfaces. One mode, everywhere.
-  const adMode = artDirectedMode(sections);
-  if (adMode) {
-    for (const sec of sections) sec.content = { ...sec.content, mode: adMode };
-    console.log('🎨 [sectionMapper] Art-directed page mode:', adMode);
-  }
 
   if (brief.communicationStrategy) {
     sections = applyCommunicationStrategy(sections, brief.communicationStrategy);

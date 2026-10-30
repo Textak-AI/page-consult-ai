@@ -320,6 +320,26 @@ export function applyArtDirectorDirectives(
         ...directives,
       },
     };
+  }).map((section, _i, mapped) => {
+    // ── Single visual director ───────────────────────────────────────────
+    // The brief above only covers the section types it names; anything else
+    // (social-proof, credentials-bar, ...) previously fell back to SDI's
+    // separate mode opinion — the "two directors" bug. Here the plan is made
+    // complete: the page mode comes from the brief's declared backgrounds,
+    // uncovered sections inherit the page flavor, and every section's `mode`
+    // is DERIVED from its resolved background so surface and ink always
+    // agree. Downstream (renderers, components) must obey, never re-decide.
+    const declared = mapped
+      .map(sec => sec?.content?.sectionBackground)
+      .filter((b: any): b is string => typeof b === 'string' && b.length > 0);
+    const darkCount = declared.filter(b => b === 'dark' || b === 'brand').length;
+    const pageMode: 'light' | 'dark' = declared.length > 0 && darkCount > declared.length / 2 ? 'dark' : 'light';
+    const bg = section.content.sectionBackground || (pageMode === 'dark' ? 'dark' : 'light');
+    const mode = bg === 'dark' || bg === 'brand' ? 'dark' : 'light';
+    return {
+      ...section,
+      content: { ...section.content, sectionBackground: bg, mode, pageMode },
+    };
   });
 }
 
@@ -334,11 +354,15 @@ export function applyArtDirectorDirectives(
  * background (legacy pages), letting callers fall back to SDI.
  */
 export function artDirectedMode(sections: Array<{ content?: any }>): 'light' | 'dark' | null {
+  // Pages stamped by the completed art-director plan carry pageMode directly.
+  const stamped = sections.find(s => s?.content?.pageMode === 'light' || s?.content?.pageMode === 'dark');
+  if (stamped) return stamped.content.pageMode;
+  // Legacy pages: majority of whatever backgrounds were declared.
   const declared = sections
     .map(s => s?.content?.sectionBackground)
     .filter((b): b is string => typeof b === 'string' && b.length > 0);
   if (declared.length === 0) return null;
-  const dark = declared.filter(b => b === 'dark').length;
+  const dark = declared.filter(b => b === 'dark' || b === 'brand').length;
   return dark > declared.length / 2 ? 'dark' : 'light';
 }
 
