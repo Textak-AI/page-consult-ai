@@ -34,8 +34,11 @@ export default function ProblemSolutionTwoColumn({ content, onUpdate, isEditing 
     fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
   };
 
+  // The section's prose is the page's argument, not a caption: 18px at
+  // full ink for the solution, muted (still AA) for the challenge.
   const bodyStyle: React.CSSProperties = {
-    ...typeScale.lead,
+    fontSize: 18,
+    lineHeight: 1.65,
     color: bgStyles.textMuted,
     fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
     margin: 0,
@@ -78,7 +81,7 @@ export default function ProblemSolutionTwoColumn({ content, onUpdate, isEditing 
             suppressContentEditableWarning
             onBlur={(e) => handleBlur('solution', e)}
             className={isEditing ? 'outline-dashed outline-2 outline-blue-500/30 rounded px-1' : ''}
-            style={bodyStyle}
+            style={{ ...bodyStyle, color: bgStyles.text }}
           >
             {content.solution || 'How you solve it differently.'}
           </p>

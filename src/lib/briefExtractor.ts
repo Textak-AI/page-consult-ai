@@ -318,7 +318,10 @@ export function rankTestimonials(
  */
 export function isClientVoiceDescription(quote: string): boolean {
   if (!quote) return false;
-  return /^\s*(?:what\s+)?(?:our\s+)?(?:clients?|customers?|buyers?|people|they)\s+(?:typically|usually|often|generally|always|will)?\s*(?:say|tell|describe|report|mention|call)/i.test(quote);
+  if (/^\s*["“]/.test(quote)) return false; // the user quoted it: a real quote
+  return /^\s*(?:what\s+)?(?:our\s+)?(?:clients?|customers?|buyers?|people|they)\s+(?:typically|usually|often|generally|always|will)?\s*(?:say|tell|describe|report|mention|call)/i.test(quote)
+    // Reported speech: "One platform lead told us Relay was..."
+    || /^\s*(?:one|a|an|another|our|several|many|most)\b[^.]{0,80}?\b(?:told|tells|said|says)\s+(?:us|me)\b/i.test(quote);
 }
 
 // ============================================

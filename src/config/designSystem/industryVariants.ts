@@ -325,12 +325,12 @@ export const saasVariant: IndustryDesignTokens = {
       subtitle: 'Three simple steps to success',
     },
     proof: {
-      title: 'Loved by teams everywhere',
+      title: 'In their words',
       subtitle: 'See what our customers are saying',
     },
     testimonials: {
       title: 'What teams are saying',
-      subtitle: 'Join thousands of satisfied users',
+      subtitle: 'What customers tell us',
     },
     cta: {
       title: 'Ready to get started?',
@@ -408,7 +408,7 @@ export const healthcareVariant: IndustryDesignTokens = {
     },
     proof: {
       title: 'Results That Matter',
-      subtitle: 'Trusted by healthcare organizations nationwide',
+      subtitle: 'What patients and partners tell us',
     },
     testimonials: {
       title: 'What Clients Say',
@@ -483,8 +483,8 @@ export const defaultVariant: IndustryDesignTokens = {
       subtitle: 'Simple steps to get started',
     },
     proof: {
-      title: 'Trusted By',
-      subtitle: 'Join thousands of satisfied customers',
+      title: 'What Clients Say',
+      subtitle: 'In their own words',
     },
     testimonials: {
       title: 'What People Say',
@@ -575,7 +575,7 @@ export const localServicesVariant: IndustryDesignTokens = {
       subtitle: 'Simple, hassle-free process',
     },
     proof: {
-      title: 'Trusted Locally',
+      title: 'What Customers Say',
       subtitle: 'Serving our community with pride',
     },
     testimonials: {

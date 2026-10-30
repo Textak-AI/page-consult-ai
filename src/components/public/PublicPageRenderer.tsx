@@ -105,6 +105,12 @@ export function PublicPageRenderer({
   }, [publishedPageId]);
   // Derive colorMode from design intelligence
   const colorMode = artDirectedMode(sections || []) || designIntelligence?.colorMode || 'dark';
+  // The page's own ask texts: a click on a button with exactly this text is a CTA.
+  const ctaTexts = useMemo(() => new Set(
+    (sections || []).flatMap((sec: any) => [sec?.content?.ctaText, sec?.content?.secondaryCta, sec?.content?.secondaryCtaText])
+      .filter((t: unknown): t is string => typeof t === 'string' && t.trim().length > 0)
+      .map((t: string) => t.trim()),
+  ), [sections]);
   const theme = useMemo(() => cleanTheme(styles?.theme), [styles]);
   const themeCss = useMemo(() => themeFontCss('.page-theme-root', theme), [theme]);
   // One heading voice page-wide (owner theme override still wins: injected after)
@@ -467,11 +473,17 @@ export function PublicPageRenderer({
             // Intercept CTA button clicks on published pages for lead capture
             if (!publishedPageId) return;
             const target = e.target as HTMLElement;
-            const button = target.closest('button, a[href="#contact"], a[href="#"]');
+            const button = target.closest('button, a');
             if (!button) return;
-            // Only intercept CTA-like buttons (not nav links, FAQ toggles, etc.)
-            const isCta = button.closest('[class*="final-cta"], [class*="FinalCTA"], section:last-of-type') ||
-              button.textContent?.match(/get started|contact|book|schedule|start|learn more|sign up|request|free/i);
+            // Only intercept the page's actual asks. The previous heuristic
+            // keyed on section position, which matched EVERY section (each
+            // sits alone in its reveal wrapper), so FAQ toggles and every
+            // other button opened the lead form.
+            const text = button.textContent?.trim() || '';
+            const isCta =
+              !button.hasAttribute('aria-expanded') &&
+              (button.matches('.pc-cta-primary, .signature-cta, [data-cta], a[href="#contact"], a[href="#"]') ||
+                ctaTexts.has(text));
             if (isCta) {
               e.preventDefault();
               e.stopPropagation();

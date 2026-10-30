@@ -80,7 +80,7 @@ export const typeScale = {
   h2: { fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', lineHeight: 1.2 },
   h3: { fontSize: 17, fontWeight: 600 }, // line-height inherits (unchanged)
   lead: { fontSize: 16, lineHeight: 1.7 },
-  body: { fontSize: 14, lineHeight: 1.7 },
+  body: { fontSize: 15, lineHeight: 1.7 },
   small: { fontSize: 13, lineHeight: 1.5 },
   eyebrow: { fontSize: 11 },
   index: { fontSize: 24 },

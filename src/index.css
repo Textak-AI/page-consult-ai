@@ -1991,3 +1991,7 @@ All colors MUST be HSL.
     animation: pc-aurora 26s ease-in-out infinite alternate;
   }
 }
+
+/* Four signature cards lay out 2x2, never 3+1 with an orphan */
+.signature-card-grid:has(> :nth-child(4):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 767px) { .signature-card-grid:has(> :nth-child(4):last-child) { grid-template-columns: minmax(0, 1fr); } }

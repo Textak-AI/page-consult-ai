@@ -1,3 +1,5 @@
+import { splitQuote } from '@/lib/text/quote';
+import { isClientVoiceDescription } from '@/lib/briefExtractor';
 import { spacing } from '@/lib/design/tokens';
 import { TreatedImage } from './TreatedImage';
 import { Clock, Quote, User, Camera } from "lucide-react";
@@ -123,6 +125,9 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
   });
 
   const testimonial = content.testimonial!;
+  // Saved pages predate the mapper's paraphrase flag; detect at render too.
+  const quoteIsParaphrase = !!testimonial?.paraphrase || isClientVoiceDescription(testimonial?.quote || '');
+  const quoteParts = splitQuote(testimonial?.quote || '');
 
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
@@ -167,7 +172,8 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
     input.click();
   };
   // SaaS variant
-  if (isSaas) {
+  // Respect the art director: a light plan never gets the hardcoded dark SaaS band.
+  if (isSaas && content.mode !== 'light') {
     return (
       <section className={`py-24 relative overflow-hidden section-pattern-grid ${isEditing ? '' : ''}`} style={{ backgroundColor: '#0F172A' }}>
         {isEditing && (
@@ -186,7 +192,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               CUSTOMERS
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-white">
-              Loved by teams everywhere
+              {content.title || 'In their words'}
             </h2>
           </motion.div>
 
@@ -206,7 +212,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               onBlur={(e) => handleBlur("testimonial.quote", e)}
               className={`text-xl md:text-2xl text-slate-200 leading-relaxed text-center mb-8 ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
             >
-              {testimonial.paraphrase ? testimonial.quote : <>"{testimonial.quote}"</>}
+              {isEditing || quoteIsParaphrase ? testimonial.quote : <>“{quoteParts.text}”{quoteParts.attribution && !testimonial.name ? <span className="block mt-3 text-sm not-italic opacity-70">— {quoteParts.attribution}</span> : null}</>}
             </blockquote>
             
             {/* Attribution — rendered only from user-supplied fields */}
@@ -278,7 +284,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("testimonial.quote", e)}
             >
-              {testimonial.paraphrase ? testimonial.quote : <>"{testimonial.quote}"</>}
+              {isEditing || quoteIsParaphrase ? testimonial.quote : <>“{quoteParts.text}”{quoteParts.attribution && !testimonial.name ? <span className="block mt-3 text-sm not-italic opacity-70">— {quoteParts.attribution}</span> : null}</>}
             </blockquote>
             
             {/* Attribution — rendered only from user-supplied fields */}
@@ -400,7 +406,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("testimonial.quote", e)}
             >
-              {testimonial.paraphrase ? testimonial.quote : <>"{testimonial.quote}"</>}
+              {isEditing || quoteIsParaphrase ? testimonial.quote : <>“{quoteParts.text}”{quoteParts.attribution && !testimonial.name ? <span className="block mt-3 text-sm not-italic opacity-70">— {quoteParts.attribution}</span> : null}</>}
             </blockquote>
             
             {/* Attribution — rendered only from user-supplied fields */}
@@ -564,7 +570,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("testimonial.quote", e)}
             >
-              {testimonial.paraphrase ? testimonial.quote : <>"{testimonial.quote}"</>}
+              {isEditing || quoteIsParaphrase ? testimonial.quote : <>“{quoteParts.text}”{quoteParts.attribution && !testimonial.name ? <span className="block mt-3 text-sm not-italic opacity-70">— {quoteParts.attribution}</span> : null}</>}
             </blockquote>
             
             {/* Attribution — rendered only from user-supplied fields */}
