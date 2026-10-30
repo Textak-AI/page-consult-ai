@@ -22,9 +22,11 @@ test('lead capture never keys on section position (every section is last-of-type
   expect(src).toContain('ctaTexts.has(text)');
 });
 
-test('header config carries no unsourced claims', () => {
-  const src = readFileSync(new URL('../src/config/designSystem/industryVariants.ts', import.meta.url), 'utf8');
-  for (const claim of ['Loved by teams everywhere', 'Join thousands', 'nationwide', 'Trusted Locally']) {
-    expect(src).not.toContain(claim);
+test('section header configs carry no unsourced claims', () => {
+  const files = ['../src/config/designSystem/industryVariants.ts', '../src/lib/briefExtractor.ts', '../src/lib/intelligenceConcierge.ts', '../src/lib/industryDesignSystem.ts'];
+  const claims = ['Loved by teams everywhere', 'Join thousands', 'nationwide', 'Trusted Locally', 'Trusted By', 'free trial today', 'in minutes', 'World-class', 'Teams who love us', 'Leading institutions'];
+  for (const f of files) {
+    const src = readFileSync(new URL(f, import.meta.url), 'utf8');
+    for (const claim of claims) expect({ f, hit: src.includes(claim) ? claim : null }).toEqual({ f, hit: null });
   }
 });

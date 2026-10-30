@@ -514,8 +514,8 @@ export class IntelligenceConcierge {
     if (industry.includes('developer') || industry.includes('saas') || industry.includes('software')) {
       return {
         features: { title: 'Platform Features', subtitle: 'Everything you need to ship faster' },
-        process: { title: 'How It Works', subtitle: 'Get started in minutes' },
-        proof: { title: 'Trusted By', subtitle: 'Teams who ship with confidence' },
+        process: { title: 'How It Works', subtitle: '' },
+        proof: { title: 'What Clients Say', subtitle: 'In their own words' },
         faq: { title: 'FAQ', subtitle: '' },
         cta: { title: 'Ready to Get Started?', subtitle: '' },
       };

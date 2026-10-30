@@ -321,7 +321,7 @@ export const saasVariant: IndustryDesignTokens = {
       eyebrow: 'FEATURES',
     },
     process: {
-      title: 'Get started in minutes',
+      title: 'How It Works',
       subtitle: 'Three simple steps to success',
     },
     proof: {

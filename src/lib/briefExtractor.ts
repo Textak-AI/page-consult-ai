@@ -459,10 +459,10 @@ export function getIntelligentSectionHeaders(
     },
     tech: {
       features: { title: 'Platform Features', subtitle: 'Everything you need to succeed' },
-      process: { title: 'How It Works', subtitle: 'Get started in minutes' },
-      proof: { title: 'Trusted By', subtitle: 'Join thousands of happy customers' },
+      process: { title: 'How It Works', subtitle: '' },
+      proof: { title: 'What Clients Say', subtitle: 'In their own words' },
       faq: { title: 'Frequently Asked Questions', subtitle: '' },
-      cta: { title: 'Ready to Get Started?', subtitle: 'Start your free trial today' },
+      cta: { title: 'Ready to Get Started?', subtitle: '' },
     },
     creative: {
       features: { title: 'What We Do', subtitle: '' },

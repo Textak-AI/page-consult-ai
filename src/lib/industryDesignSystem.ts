@@ -397,8 +397,8 @@ const TRUST_PRIORITIES: Record<string, string[]> = {
 const SECTION_HEADERS: Record<string, Record<string, { title: string; subtitle: string }>> = {
   saas: {
     features: { title: 'Platform Features', subtitle: 'Everything you need' },
-    process: { title: 'How It Works', subtitle: 'Get started in minutes' },
-    proof: { title: 'Trusted By', subtitle: 'Teams who love us' },
+    process: { title: 'How It Works', subtitle: '' },
+    proof: { title: 'What Clients Say', subtitle: 'In their own words' },
     problem: { title: 'The Problem', subtitle: '' },
     solution: { title: 'The Solution', subtitle: '' },
     faq: { title: 'FAQ', subtitle: '' },
@@ -447,14 +447,14 @@ const SECTION_HEADERS: Record<string, Record<string, { title: string; subtitle: 
   
   fintech: {
     features: { title: 'Platform Capabilities', subtitle: 'Built for finance' },
-    proof: { title: 'Trusted By', subtitle: 'Leading institutions' },
+    proof: { title: 'What Clients Say', subtitle: 'In their own words' },
     cta: { title: 'Get Started', subtitle: 'Secure and compliant' },
   },
   
   devtools: {
     features: { title: 'Features', subtitle: 'Built for developers' },
-    process: { title: 'Get Started', subtitle: 'Ship in minutes' },
-    proof: { title: 'Trusted By', subtitle: 'World-class teams' },
+    process: { title: 'Get Started', subtitle: '' },
+    proof: { title: 'What Clients Say', subtitle: 'In their own words' },
     cta: { title: 'Start Building', subtitle: '' },
   },
   

@@ -924,6 +924,22 @@ export function mapBriefToSections(
     sections = applySignatureStrategy(sections, brief.communicationStrategy, options.consultationData || {});
   }
 
+  // The close earns a real line: replace boilerplate CTA headlines with a
+  // brief headline option the hero didn't use (options are already
+  // provenance-guarded against the user's input by copyClaims).
+  {
+    const GENERIC_CLOSE = new Set(['Ready to Get Started?', "Let's Start a Conversation", 'Get Started Today', 'Ready to Begin?', 'Get Started']);
+    const heroSec = sections.find((s: any) => s.type === 'hero');
+    const closeSec = sections.find((s: any) => s.type === 'final-cta');
+    if (closeSec && GENERIC_CLOSE.has(String(closeSec.content?.headline || '').trim())) {
+      const used = new Set([heroSec?.content?.headline, heroSec?.content?.subheadline].filter(Boolean).map((h: string) => h.trim()));
+      const h = brief.headlines as any;
+      const alt = [h?.optionC, h?.optionB, h?.optionA]
+        .find((x: unknown): x is string => typeof x === 'string' && x.trim().length > 0 && x.trim().length <= 90 && !used.has(x.trim()));
+      if (alt) closeSec.content = { ...closeSec.content, headline: alt.trim() };
+    }
+  }
+
   return sections;
 }
 
