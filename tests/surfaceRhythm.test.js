@@ -40,3 +40,8 @@ test('distinct prompts get distinct cache keys', () => {
   expect(promptKey('a')).not.toBe(promptKey('b'));
   expect(promptKey('same')).toBe(promptKey('same'));
 });
+
+test('consecutive tinted sections alternate too (warm palettes plan tinted runs)', () => {
+  const out = applySurfaceRhythm(page([['hero','light'],['problem-solution','tinted'],['how-it-works','tinted'],['features','tinted'],['final-cta','tinted']]));
+  expect(out.map(s => s.content.sectionBackground)).toEqual(['light','tinted','light','tinted','dark']);
+});

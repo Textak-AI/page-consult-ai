@@ -383,8 +383,11 @@ export function applySurfaceRhythm<T extends { type: string; content?: any }>(se
     if (!planned) { prev = null; return section; }
     let bg: string = planned;
     const isClose = section.type === 'final-cta' || section.type === 'beta-final-cta';
-    if (isClose && pageMode === 'light' && bg === 'light') bg = 'dark';
-    else if (bg === 'light' && prev === 'light') bg = 'tinted';
+    const lightFamily = (b: string | null) => b === 'light' || b === 'tinted';
+    if (isClose && pageMode === 'light' && lightFamily(bg)) bg = 'dark';
+    // Two neighbors on the same light surface flip to the other one (either
+    // direction: palettes can plan consecutive 'tinted' sections too).
+    else if (lightFamily(bg) && bg === prev) bg = bg === 'light' ? 'tinted' : 'light';
     prev = bg;
     if (bg === planned) return section;
     const mode = bg === 'dark' || bg === 'brand' ? 'dark' : 'light';
