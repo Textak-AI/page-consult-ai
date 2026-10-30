@@ -1853,3 +1853,55 @@ All colors MUST be HSL.
   .signature-reframe-text { font-size: 20px !important; }
   .signature-inner > h2 { font-size: 26px; }
 }
+
+/* ── Micro-interactions (tokens: src/lib/motion/micro.ts) ─────────────────
+   Transform/opacity only; every rule sits behind prefers-reduced-motion. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Press physics on all page buttons (page scopes only, never the editor UI) */
+  .page-theme-root button:active, .page-theme-root a[class*=inline-flex]:active,
+  .live-preview-container button:active {
+    transform: scale(0.97);
+    transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Primary-ask fill sweep: a soft light band crosses once on hover */
+  .pc-cta-primary { position: relative; overflow: hidden; }
+  .pc-cta-primary::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.22) 50%, transparent 62%);
+    transform: translateX(-120%);
+  }
+  .pc-cta-primary:hover::after { transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1); transform: translateX(120%); }
+
+  /* Payoff / premium card hover: lift + hairline accent sweep along the top */
+  .page-theme-root .premium-gen-card, .live-preview-container .premium-gen-card,
+  .page-theme-root [class*="PremiumCard"], .live-preview-container [class*="PremiumCard"] {
+    transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 240ms ease;
+  }
+  .page-theme-root .premium-gen-card:hover, .live-preview-container .premium-gen-card:hover,
+  .page-theme-root [class*="PremiumCard"]:hover, .live-preview-container [class*="PremiumCard"]:hover {
+    transform: translateY(-3px);
+  }
+
+  /* Process connector draws itself in as the section reveals */
+  [data-reveal-armed]:not([data-revealed]) .pc-connector { transform: scaleY(0); }
+  [data-revealed] .pc-connector {
+    transform-origin: top;
+    animation: pc-draw-y 700ms cubic-bezier(0.22, 1, 0.36, 1) 150ms backwards;
+  }
+  @keyframes pc-draw-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+  /* Signature pull-quote rule / dividers draw in horizontally */
+  [data-reveal-armed]:not([data-revealed]) .signature-rule, [data-reveal-armed]:not([data-revealed]) .section-divider-brand::before { transform: scaleX(0); }
+  [data-revealed] .signature-rule {
+    transform-origin: left;
+    animation: pc-draw-x 700ms cubic-bezier(0.22, 1, 0.36, 1) 150ms backwards;
+  }
+  @keyframes pc-draw-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+}
+
+/* Visible keyboard focus for page CTAs, motion or not */
+.page-theme-root .pc-cta-primary:focus-visible, .page-theme-root .signature-cta:focus-visible {
+  outline: 2px solid var(--signature-primary, currentColor);
+  outline-offset: 3px;
+}

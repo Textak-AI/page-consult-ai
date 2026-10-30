@@ -121,6 +121,7 @@ export default function ProcessNumberedRows({ content, onUpdate, isEditing }: Pr
                   {!last && (
                     <span
                       aria-hidden="true"
+                      className="pc-connector"
                       style={{
                         position: 'absolute',
                         right: -(space.sm + 1),

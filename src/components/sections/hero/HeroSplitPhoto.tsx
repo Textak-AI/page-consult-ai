@@ -10,6 +10,7 @@ import { typeScale, typeClass, shape, fontStacks } from '@/lib/design/tokens';
  * warm serif headline, rounded CTA, generous spacing, organic feel.
  */
 
+import { MagneticCta } from '@/components/motion/MagneticCta';
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { getSectionBackgroundStyles } from "@/lib/artDirectorBrief";
@@ -105,10 +106,11 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
 
             {/* CTA */}
             <div className="pt-2">
+              <MagneticCta>
               <Button
                 asChild
                 size="lg"
-                className="text-base px-8 py-6 font-medium shadow-md transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+                className="pc-cta-primary text-base px-8 py-6 font-medium shadow-md transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
                 style={{
                   backgroundColor: primaryColor,
                   color: '#FFFFFF',
@@ -119,6 +121,7 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
                   {content.ctaText || 'Get Started'}
                 </a>
               </Button>
+              </MagneticCta>
             </div>
 
             {/* Trust signals */}

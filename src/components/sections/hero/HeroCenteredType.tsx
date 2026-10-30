@@ -10,6 +10,7 @@ import { typeScale, typeClass } from '@/lib/design/tokens';
  * optional grid texture, inline trust signals. Typography does the visual work.
  */
 
+import { MagneticCta } from '@/components/motion/MagneticCta';
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { getSectionBackgroundStyles } from "@/lib/artDirectorBrief";
@@ -172,10 +173,11 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
         {/* Single CTA */}
         <div className="mb-12">
           {content.ctaText && <>
+          <MagneticCta>
           <Button
             asChild
             size="lg"
-            className="text-base px-8 py-6 font-medium shadow-lg transition-all duration-300 hover:scale-[1.02]"
+            className="pc-cta-primary text-base px-8 py-6 font-medium shadow-lg transition-all duration-300 hover:scale-[1.02]"
             style={{
               backgroundColor: primaryColor,
               color: '#FFFFFF',
@@ -186,6 +188,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
               {content.ctaText || 'Get Started'}
             </a>
           </Button>
+          </MagneticCta>
           </>}
           {content.secondaryCta && <Button asChild variant="link" className="block mx-auto mt-3 text-foreground"><a href={content.secondaryCtaLink || '#contact'}>{content.secondaryCta}</a></Button>}
         </div>

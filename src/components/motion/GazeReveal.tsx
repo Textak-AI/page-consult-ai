@@ -31,6 +31,9 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
     // hidden; the largest element paints immediately and only the rest animate.
     const isHero = sectionType === 'hero';
     if (!isHero) root.style.opacity = '0';
+    // Arms CSS-side draws (connector lines, accent rules): they hold their
+    // start state only while armed-and-unrevealed, so no-JS pages stay static.
+    root.setAttribute('data-reveal-armed', '');
 
     const reset = (el: HTMLElement) => {
       el.style.opacity = '';
@@ -42,6 +45,7 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
     let played = false;
     const play = () => {
         played = true;
+        root.setAttribute('data-revealed', '');
         let beats = resolveGazeOrder(root, sectionType);
         if (isHero) {
           const all = beats.flat();
@@ -81,6 +85,7 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
       if (played) return;
       io.disconnect();
       played = true;
+      root.setAttribute('data-revealed', '');
       root.style.opacity = '';
     };
     const onHide = () => { if (document.visibilityState === 'hidden') revealNow(); };
@@ -94,6 +99,8 @@ export function GazeReveal({ sectionType, children }: { sectionType: string; chi
       controls.forEach((c) => c.stop());
       els.forEach(reset);
       root.style.opacity = '';
+      root.removeAttribute('data-reveal-armed');
+      root.setAttribute('data-revealed', '');
     };
     // Play once per mount; content edits after reveal are not re-hidden.
     // eslint-disable-next-line react-hooks/exhaustive-deps

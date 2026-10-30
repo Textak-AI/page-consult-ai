@@ -1,3 +1,4 @@
+import { StatCountUp } from '@/components/motion/StatCountUp';
 import { typeScale } from '@/lib/design/tokens';
 import { memo } from "react";
 import { motion } from "framer-motion";
@@ -232,7 +233,7 @@ function StatsBarSectionBase({ statistics, industryVariant, mode, archetype = 'p
                   suppressContentEditableWarning
                   onBlur={(e) => handleStatBlur(index, 'value', e)}
                 >
-                  {formatStatValue(stat.value)}
+                  {isEditing ? formatStatValue(stat.value) : <StatCountUp value={formatStatValue(stat.value)} />}
                 </div>
                 
                 <p 
@@ -334,7 +335,7 @@ function StatsBarSectionBase({ statistics, industryVariant, mode, archetype = 'p
                       suppressContentEditableWarning
                       onBlur={(e) => handleStatBlur(index + 1, 'value', e)}
                     >
-                      {formatStatValue(stat.value)}
+                      {isEditing ? formatStatValue(stat.value) : <StatCountUp value={formatStatValue(stat.value)} />}
                     </div>
                     
                     <p 
@@ -455,7 +456,7 @@ function StatsBarSectionBase({ statistics, industryVariant, mode, archetype = 'p
                       suppressContentEditableWarning
                       onBlur={(e) => handleStatBlur(index + 1, 'value', e)}
                     >
-                      {formatStatValue(stat.value)}
+                      {isEditing ? formatStatValue(stat.value) : <StatCountUp value={formatStatValue(stat.value)} />}
                     </div>
                     
                     <p 
@@ -584,7 +585,7 @@ function StatsBarSectionBase({ statistics, industryVariant, mode, archetype = 'p
                     suppressContentEditableWarning
                     onBlur={(e) => handleStatBlur(index + 1, 'value', e)}
                   >
-                    {formatStatValue(stat.value)}
+                    {isEditing ? formatStatValue(stat.value) : <StatCountUp value={formatStatValue(stat.value)} />}
                   </div>
                   
                     <p 
