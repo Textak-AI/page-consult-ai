@@ -33,6 +33,7 @@ interface SocialProofSectionProps {
     industryVariant?: string;
     sectionTitle?: string;
     testimonial?: {
+      paraphrase?: boolean;
       quote: string;
       name?: string | null;
       title?: string | null;
@@ -205,7 +206,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               onBlur={(e) => handleBlur("testimonial.quote", e)}
               className={`text-xl md:text-2xl text-slate-200 leading-relaxed text-center mb-8 ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
             >
-              "{testimonial.quote}"
+              {testimonial.paraphrase ? testimonial.quote : <>"{testimonial.quote}"</>}
             </blockquote>
             
             {/* Attribution — rendered only from user-supplied fields */}
@@ -277,7 +278,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("testimonial.quote", e)}
             >
-              "{testimonial.quote}"
+              {testimonial.paraphrase ? testimonial.quote : <>"{testimonial.quote}"</>}
             </blockquote>
             
             {/* Attribution — rendered only from user-supplied fields */}
@@ -399,7 +400,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("testimonial.quote", e)}
             >
-              "{testimonial.quote}"
+              {testimonial.paraphrase ? testimonial.quote : <>"{testimonial.quote}"</>}
             </blockquote>
             
             {/* Attribution — rendered only from user-supplied fields */}
@@ -563,7 +564,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("testimonial.quote", e)}
             >
-              "{testimonial.quote}"
+              {testimonial.paraphrase ? testimonial.quote : <>"{testimonial.quote}"</>}
             </blockquote>
             
             {/* Attribution — rendered only from user-supplied fields */}

@@ -181,7 +181,10 @@ export function extractAuthoritySignals(
     });
   }
 
-  // Extract from AI Search Optimization if available
+  // Extract from AI Search Optimization if available.
+  // Only texts that LEAD with their number become value+label chips: pulling a
+  // mid-sentence number out ("Founded by reviewers with 10 years of...") turns
+  // the remainder into a garbled label, so those are skipped entirely.
   if (aiSearchOptimization?.authoritySignals && Array.isArray(aiSearchOptimization.authoritySignals)) {
     aiSearchOptimization.authoritySignals.forEach((signal) => {
       // Handle both string and object formats
@@ -191,13 +194,13 @@ export function extractAuthoritySignals(
       
       if (!signalText) return;
       
-      const numMatch = signalText.match(/(\d+[\d,]*[%+]?)/);
-      if (numMatch) {
+      const numMatch = signalText.trim().match(/^(\d+[\d,]*[%+]?)\s+(.+)$/);
+      if (numMatch && numMatch[2].length <= 40) {
         const exists = signals.some(s => s.value === numMatch[1]);
         if (!exists) {
           signals.push({
             value: numMatch[1],
-            label: signalText.replace(numMatch[1], '').trim(),
+            label: numMatch[2].trim(),
             type: 'social-proof',
             strength: 6,
           });
@@ -306,6 +309,16 @@ export function rankTestimonials(
   console.log('🧠 [briefExtractor] Ranked', ranked.length, 'testimonials');
 
   return ranked;
+}
+
+/**
+ * True when a "testimonial" is the owner DESCRIBING what clients say rather
+ * than a client speaking ("Clients typically say we are..."). Rendering such
+ * text inside quotation marks fabricates a verbatim client quote.
+ */
+export function isClientVoiceDescription(quote: string): boolean {
+  if (!quote) return false;
+  return /^\s*(?:what\s+)?(?:our\s+)?(?:clients?|customers?|buyers?|people|they)\s+(?:typically|usually|often|generally|always|will)?\s*(?:say|tell|describe|report|mention|call)/i.test(quote);
 }
 
 // ============================================

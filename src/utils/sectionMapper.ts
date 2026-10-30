@@ -45,6 +45,7 @@ import {
   optimizeFAQs,
   enhanceMessagingPillars,
   getIntelligentSectionHeaders,
+  isClientVoiceDescription,
 } from '@/lib/briefExtractor';
 import type { DesignIntelligenceOutput } from '@/lib/designIntelligence';
 import { generateArtDirectorBrief, archetypeFromStorage, applyArtDirectorDirectives } from '@/lib/artDirectorBrief';
@@ -637,6 +638,9 @@ export function mapBriefToSections(
           name: rankedTestimonials[0].author || null,
           title: rankedTestimonials[0].title || null,
           company: '',
+          // Owner-described client sentiment is not a verbatim quote; renderers
+          // must not wrap it in quotation marks.
+          paraphrase: isClientVoiceDescription(rankedTestimonials[0].quote),
         } : undefined;
 
         sections.push({
@@ -657,6 +661,7 @@ export function mapBriefToSections(
                   author: t.author || null,
                   title: t.title || null,
                   score: t.score,
+                  paraphrase: isClientVoiceDescription(t.quote),
                 }))
               : [],
             achievements: brief.proofPoints?.achievements || null,

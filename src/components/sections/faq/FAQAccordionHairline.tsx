@@ -27,7 +27,7 @@ export default function FAQAccordionHairline({ content, onUpdate, isEditing }: F
   const isSerif = content.typographyPairing === 'serif-sans';
 
   const validItems = items.filter((item: any) => item.question && item.answer);
-  if (validItems.length < 3) return null;
+  if (validItems.length < 2) return null;
 
   const handleItemBlur = (index: number, field: string, e: React.FocusEvent<HTMLElement>) => {
     const updated = [...items];
