@@ -57,8 +57,8 @@ test('hero never duplicates headline into subheadline and keeps brief headline w
   const hero = out.find(s => s.type === 'hero');
   // Brief headline survives a null reframe
   expect(hero.content.headline).toBe('One Shoot, One Year of Assets');
-  // Third-person strategy prose never becomes page copy
-  expect(hero.content.subheadline).toBe('Guarded brief subheadline.');
+  // The stated outcome becomes the subheadline, addressed to the reader
+  expect(hero.content.subheadline).toBe('A photo library your whole team can pull from for a year');
 });
 
 test('a second-person one-liner does become the subheadline, but never equal to the headline', async () => {
@@ -70,4 +70,21 @@ test('a second-person one-liner does become the subheadline, but never equal to 
   const out2 = applyCommunicationStrategy(mk(), { ...base, reframe: 'One shoot covers your whole year.', oneLiner: 'One shoot covers your whole year.' });
   expect(out2[0].content.headline).toBe('One shoot covers your whole year.');
   expect(out2[0].content.subheadline).not.toBe(out2[0].content.headline);
+});
+
+test('a subheadline that restates the headline is replaced by the stated outcome (Ridgeline)', async () => {
+  const { applyCommunicationStrategy } = await import('../src/lib/composition/communicationStrategy.ts');
+  const strategy = { reframe: null, oneLiner: 'A kitchen that fits their actual walls, built once, by people who will still answer the phone in five years.', stakes: null, mechanismName: null, arcEmphasis: 'problem-led', proofPlan: [], ctaLadder: { primary: 'Book a Measure Visit', secondary: null }, register: 'plain', visualIntensity: 'balanced' };
+  const sections = [{ type: 'hero', order: 0, content: {
+    headline: 'Custom Hardwood Cabinets Built and Installed by the Same Asheville Craftsmen Who Measured Your Kitchen',
+    subheadline: 'Custom hardwood cabinets built in our Asheville shop and installed by the same craftsmen who measured your kitchen.' } }];
+  const hero = applyCommunicationStrategy(sections, strategy)[0];
+  expect(hero.content.subheadline).toBe('A kitchen that fits your actual walls, built once, by people who will still answer the phone in five years.');
+});
+
+test('toReader and wordOverlap', async () => {
+  const { toReader, wordOverlap } = await import('../src/lib/composition/communicationStrategy.ts');
+  expect(toReader('They want their team to own it themselves')).toBe('You want your team to own it yourselves');
+  expect(wordOverlap('custom hardwood cabinets built', 'Custom Hardwood Cabinets Built Here')).toBe(1);
+  expect(wordOverlap('completely different words', 'nothing shared at all')).toBe(0);
 });

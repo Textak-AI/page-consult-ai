@@ -188,7 +188,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
             transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
-            <span className="inline-block px-4 py-1 bg-purple-500/20 text-purple-400 text-sm font-semibold rounded-full mb-4">
+            <span className="signature-chapter block" style={{ color: content.primaryColor || undefined }}>
               CUSTOMERS
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-white">
@@ -253,7 +253,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
             transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
-            <span className="inline-block px-4 py-1 bg-amber-100 text-amber-800 text-sm font-semibold rounded-full mb-4">
+            <span className="signature-chapter block" style={{ color: content.primaryColor || undefined }}>
               SUCCESS STORIES
             </span>
             <h2 
@@ -346,10 +346,10 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="mt-10 p-6 bg-white rounded-xl border border-slate-200 text-center"
+              className="mt-8 max-w-2xl mx-auto text-center"
             >
               <p 
-                className={`text-slate-600 leading-relaxed ${
+                className={`text-slate-600 text-sm leading-relaxed ${
                   isEditing ? "outline-dashed outline-2 outline-cyan-500/30 rounded px-2" : ""
                 }`}
                 contentEditable={isEditing}
@@ -381,7 +381,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
             transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
-            <span className="inline-block px-4 py-1 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full mb-4">
+            <span className="signature-chapter block" style={{ color: content.primaryColor || undefined }}>
               TESTIMONIALS
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">

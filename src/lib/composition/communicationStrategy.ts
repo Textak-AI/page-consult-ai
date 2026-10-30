@@ -23,11 +23,16 @@ export function applyCommunicationStrategy<T extends { type: string; order: numb
     // from the headline and speaks to the reader: strategy prose written about
     // the buyer ("their team") stays in the brief, not on the page.
     if (strategy.reframe) hero.content.headline = strategy.reframe;
-    const speaksToReader = (text: string) => !/\b(their|they|them)\b/i.test(text);
-    if (strategy.oneLiner && strategy.oneLiner !== hero.content.headline && speaksToReader(strategy.oneLiner)) {
-      hero.content.subheadline = strategy.oneLiner;
+    // The stated outcome, addressed to the reader ("their team" -> "your
+    // team"): the user's own words in the page's voice, nothing added.
+    const outcome = strategy.oneLiner ? toReader(strategy.oneLiner) : '';
+    if (outcome && wordOverlap(outcome, hero.content.headline || '') < 0.6) {
+      hero.content.subheadline = outcome;
     }
-    if (hero.content.subheadline === hero.content.headline) hero.content.subheadline = '';
+    // A subheadline that restates the headline wastes the second line read.
+    if (hero.content.subheadline && wordOverlap(hero.content.subheadline, hero.content.headline || '') >= 0.6) {
+      hero.content.subheadline = '';
+    }
   }
   const problem = result.find(s => slotOf(s.type) === 'problem');
   if (problem && strategy.stakes) {
@@ -55,4 +60,25 @@ export function applyCommunicationStrategy<T extends { type: string; order: numb
   }
   // mechanismName is deliberately never consumed here.
   return result.map((s, order) => ({ ...s, order }));
+}
+/** Re-address buyer-description prose to the reader: their->your, they->you. */
+export function toReader(text: string): string {
+  const cap = (m: string, to: string) => (m[0] === m[0].toUpperCase() ? to[0].toUpperCase() + to.slice(1) : to);
+  return text
+    .replace(/\btheirs\b/gi, (m) => cap(m, 'yours'))
+    .replace(/\btheir\b/gi, (m) => cap(m, 'your'))
+    .replace(/\bthemselves\b/gi, (m) => cap(m, 'yourselves'))
+    .replace(/\bthem\b/gi, (m) => cap(m, 'you'))
+    .replace(/\bthey\b/gi, (m) => cap(m, 'you'));
+}
+
+/** Share of the shorter text's content words (4+ letters) found in the other. */
+export function wordOverlap(a: string, b: string): number {
+  const words = (t: string) => new Set((t.toLowerCase().match(/[a-z0-9']+/g) || []).filter((w) => w.length >= 4));
+  const A = words(a);
+  const B = words(b);
+  if (A.size === 0 || B.size === 0) return 0;
+  let shared = 0;
+  A.forEach((w) => { if (B.has(w)) shared++; });
+  return shared / Math.min(A.size, B.size);
 }

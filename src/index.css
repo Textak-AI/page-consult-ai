@@ -1998,3 +1998,12 @@ All colors MUST be HSL.
 /* Four signature cards lay out 2x2, never 3+1 with an orphan */
 .signature-card-grid:has(> :nth-child(4):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 767px) { .signature-card-grid:has(> :nth-child(4):last-child) { grid-template-columns: minmax(0, 1fr); } }
+
+/* On light and tinted bands, cards are white panels (a translucent wash of
+   currentColor read as muddy gray on the brand tint). */
+.signature-band[data-surface="light"] .signature-glass,
+.signature-band[data-surface="tinted"] .signature-glass {
+  background: #FFFFFF;
+  border-color: color-mix(in srgb, var(--signature-primary) 14%, transparent);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 16px -8px rgba(16, 24, 40, 0.08);
+}
