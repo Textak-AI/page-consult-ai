@@ -60,6 +60,7 @@ import { generateSEOAssets, createFAQSectionConfig, isAISeoDataValid, generateSE
 import { mapBriefToSections, isStructuredBriefContent, type StructuredBrief, type MappedPage } from "@/utils/sectionMapper";
 import { isBriefEnvelope } from "@/lib/briefEnvelope";
 import { applyArtDirectorDirectives } from "@/lib/artDirectorBrief";
+import { buildHeroImagePrompt, promptKey } from "@/lib/heroImagePrompt";
 import { selectSectionsFromSDI } from "@/utils/sectionSelector";
 import { generateDesignSystem, designSystemToCSSVariables } from "@/config/designSystem";
 
@@ -602,7 +603,11 @@ function GenerateContent() {
 
     heroImageTriggered.current = true;
 
-    const prompt = imagePrompt || `Professional ${consultation?.industry || 'business'} environment, modern, high quality`;
+    // Photo heroes depict this business (mood from the art director);
+    // abstract texture heroes keep their texture prompt as-is.
+    const prompt = imageStyle === 'ambient-texture'
+      ? (imagePrompt || `Abstract ${consultation?.industry || 'business'} texture, minimal, high quality`)
+      : buildHeroImagePrompt(consultation, imagePrompt);
     console.log('🖼️ [ImageGen] Auto-triggering hero image generation:', prompt);
 
     (async () => {
@@ -610,7 +615,9 @@ function GenerateContent() {
         const { data, error } = await supabase.functions.invoke('generate-hero-images', {
           body: {
             prompts: [prompt],
-            cacheKey: `art-director-${composition}-${(consultation?.id || 'anon').slice(0, 8)}`,
+            // Keyed by the prompt itself: a missing consultation id used to
+            // collapse every page onto one shared 'anon' cache entry.
+            cacheKey: `art-director-${composition}-${promptKey(prompt)}`,
             forceRegenerate: false,
           },
         });

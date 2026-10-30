@@ -84,7 +84,7 @@ export function generateArtDirectorBrief(archetype: string): ArtDirectorBrief {
         designPhilosophy: 'organic',
         sectionRhythm: 'all-light',
         dividerSystem: 'whitespace',
-        hero: { composition: 'split-photo', background: 'light', hasGridTexture: false, hasAccentGlow: false, trustSignals: 'inline-checks', imageStyle: 'split-right', imagePrompt: 'warm welcoming environment, soft natural lighting, community atmosphere, people connecting' },
+        hero: { composition: 'split-photo', background: 'light', hasGridTexture: false, hasAccentGlow: false, trustSignals: 'inline-checks', imageStyle: 'split-right', imagePrompt: 'soft natural light, warm tones, inviting and human in scale' },
         features: { layout: 'icon-cards', background: 'tinted', numbering: 'none', iconStyle: 'accent-circle' },
         stats: { presentation: 'card-grid', background: 'brand', numberStyle: 'medium-bold', labelStyle: 'sentence-description' },
         process: { layout: 'stacked-cards', background: 'tinted', numbering: 'accent-large' },
@@ -245,7 +245,7 @@ export function applyArtDirectorDirectives(
   console.log('🎨🎨🎨 [ArtDirector] EXECUTING — sections count:', sections.length, '| archetype:', archetype);
   console.log('🎨 [ArtDirector] Brief generated:', artBrief.designPhilosophy, '| Hero:', artBrief.hero.composition, '| Features:', artBrief.features.layout);
 
-  return sections.map(section => {
+  const planned = sections.map(section => {
     const type = section.type;
     let directives: Record<string, any> = {};
 
@@ -341,6 +341,7 @@ export function applyArtDirectorDirectives(
       content: { ...section.content, sectionBackground: bg, mode, pageMode },
     };
   });
+  return applySurfaceRhythm(planned);
 }
 
 /** 
@@ -366,6 +367,41 @@ export function artDirectedMode(sections: Array<{ content?: any }>): 'light' | '
   return dark > declared.length / 2 ? 'dark' : 'light';
 }
 
+/**
+ * Surface rhythm (part of the art director's plan, deterministic):
+ * - adjacent light sections alternate light / tinted, so section edges read;
+ * - on light-led pages the close becomes the one deep, brand-colored moment.
+ * Mode is re-derived from the resulting background so surface and ink agree.
+ * Renderers apply this at display time so saved pages benefit without
+ * regeneration; the director applies it to new plans.
+ */
+export function applySurfaceRhythm<T extends { type: string; content?: any }>(sections: T[]): T[] {
+  const pageMode = artDirectedMode(sections);
+  let prev: string | null = null;
+  return sections.map((section) => {
+    const planned = section.content?.sectionBackground;
+    if (!planned) { prev = null; return section; }
+    let bg: string = planned;
+    const isClose = section.type === 'final-cta' || section.type === 'beta-final-cta';
+    if (isClose && pageMode === 'light' && bg === 'light') bg = 'dark';
+    else if (bg === 'light' && prev === 'light') bg = 'tinted';
+    prev = bg;
+    if (bg === planned) return section;
+    const mode = bg === 'dark' || bg === 'brand' ? 'dark' : 'light';
+    return { ...section, content: { ...section.content, sectionBackground: bg, mode } };
+  });
+}
+
+/** applySurfaceRhythm over render order, returned in the ORIGINAL array order
+ * (editor update handlers address sections by array index). Idempotent. */
+export function withSurfaceRhythm<T extends { type: string; order: number; visible?: boolean; content?: any }>(sections: T[]): T[] {
+  const ordered = sections.map((s, i) => ({ s, i })).filter((x) => x.s.visible !== false).sort((a, b) => a.s.order - b.s.order);
+  const rhythmic = applySurfaceRhythm(ordered.map((x) => x.s));
+  const out = [...sections];
+  ordered.forEach((x, k) => { out[x.i] = rhythmic[k]; });
+  return out;
+}
+
 export function getSectionBackgroundStyles(
   background: 'dark' | 'light' | 'tinted' | string,
   primaryColor?: string
@@ -378,7 +414,8 @@ export function getSectionBackgroundStyles(
   switch (background) {
     case 'dark':
       return {
-        bg: '#0A0A0A',
+        // Brand-deep, not neutral black: the client's color sunk into near-black
+        bg: primaryColor ? `color-mix(in srgb, ${primaryColor} 22%, #0B0D14)` : '#0A0A0A',
         text: '#F1F5F9',
         textMuted: 'rgba(255,255,255,0.70)',
         border: 'rgba(255,255,255,0.06)',
@@ -392,7 +429,8 @@ export function getSectionBackgroundStyles(
       };
     case 'tinted':
       return {
-        bg: primaryColor ? `${primaryColor}06` : '#F5F3FF',
+        // A visible brand wash (the old 2% alpha was indistinguishable from white)
+        bg: primaryColor ? `color-mix(in srgb, ${primaryColor} 6%, #FFFFFF)` : '#F5F3FF',
         text: '#1A1A2E',
         textMuted: 'rgba(26,26,46,0.72)',
         border: 'rgba(0,0,0,0.04)',

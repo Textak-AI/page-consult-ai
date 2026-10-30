@@ -8,7 +8,10 @@ export function SignatureSection({ type, content, children, editing = false }: {
   const plan: SignaturePlan | undefined = content.signature;
   if (!plan) return <>{children}</>;
   const has = (element: SignaturePlan['elements'][number]) => plan.elements.includes(element);
-  const surface = content.sectionBackground === 'light' ? 'light' : 'deep';
+  // Only dark/brand plans are deep; 'tinted' is a light surface (it rendered
+  // near-black before, turning warm pages' soft payoff into a black band).
+  const bgPlan = content.sectionBackground;
+  const surface = bgPlan === 'dark' || bgPlan === 'brand' ? 'deep' : bgPlan === 'tinted' ? 'tinted' : 'light';
   let body = children;
   if (!editing && type === 'problem-solution' && has('reframe') && plan.reframe) {
     body = <section className="signature-band" data-surface={surface}><div className="signature-inner"><ReframeColumns reframe={plan.reframe} />{content.problem && content.problem !== plan.reframe.refused && <div className="signature-stakes"><p>{content.problem}</p></div>}{content.solution && <div className="signature-stakes"><p>{content.solution}</p></div>}</div></section>;

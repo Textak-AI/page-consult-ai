@@ -6,7 +6,7 @@ import { LeadCaptureModal } from './LeadCaptureModal';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { cn } from '@/lib/utils';
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from '@/lib/premiumPageEffects';
-import { artDirectedMode } from '@/lib/artDirectorBrief';
+import { artDirectedMode, applySurfaceRhythm } from '@/lib/artDirectorBrief';
 import { typePairingCss, pageWantsGrain } from '@/lib/design/tokens';
 import { resolveArchetypeFromStorage, type DesignProfile } from '@/lib/archetypeProfiles';
 import { HeroSection } from '@/components/sections/HeroSection';
@@ -128,9 +128,9 @@ export function PublicPageRenderer({
   
   // Sort sections by order
   const sortedSections = useMemo(() => {
-    return [...sections]
+    return applySurfaceRhythm([...sections]
       .filter(s => s.visible)
-      .sort((a, b) => a.order - b.order);
+      .sort((a, b) => a.order - b.order));
   }, [sections]);
 
   // The page record's own company name, read from the sections it already has.

@@ -54,7 +54,7 @@ import type { SEOHeadData } from "@/lib/aiSeoIntegration";
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from "@/lib/premiumPageEffects";
-import { artDirectedMode } from "@/lib/artDirectorBrief";
+import { artDirectedMode, withSurfaceRhythm } from "@/lib/artDirectorBrief";
 import { typePairingCss, pageWantsGrain } from "@/lib/design/tokens";
 import { resolveArchetypeFromStorage, type DesignProfile } from "@/lib/archetypeProfiles";
 import { StrategyConsultantButton } from "@/components/editor/StrategyConsultantButton";
@@ -95,7 +95,9 @@ interface LivePreviewProps {
   };
 }
 
-function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode: colorModeProp = 'dark', industryVariant, brandSettings: rawBrandSettings, pageTheme, getSectionLockStatus }: LivePreviewProps) {
+function LivePreviewInner({ sections: rawSections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode: colorModeProp = 'dark', industryVariant, brandSettings: rawBrandSettings, pageTheme, getSectionLockStatus }: LivePreviewProps) {
+  // Same surface rhythm the published page applies, so editor and page match.
+  const sections = useMemo(() => withSurfaceRhythm(rawSections), [rawSections]);
   // Art-directed background plans own the page mode (see artDirectedMode).
   const colorMode = artDirectedMode(sections || []) || colorModeProp;
   const { editingSection, setEditingSection, isEditing, pageStyle } = useEditing();

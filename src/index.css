@@ -1793,7 +1793,9 @@ All colors MUST be HSL.
   --signature-secondary: var(--brand-secondary, var(--signature-primary));
   --signature-light: hsl(210 20% 98%);
   --signature-ink: hsl(225 22% 14%);
-  --signature-deep: hsl(240 8% 4%);
+  /* Deep surfaces carry the brand: its color sunk into near-black */
+  --signature-deep: color-mix(in srgb, var(--signature-primary) 22%, hsl(228 28% 7%));
+  --signature-tint: color-mix(in srgb, var(--signature-primary) 6%, #FFFFFF);
   --signature-lit: hsl(210 15% 94%);
   --signature-border: color-mix(in srgb, currentColor 18%, transparent);
   --signature-glass: color-mix(in srgb, currentColor 4%, transparent);
@@ -1814,6 +1816,7 @@ All colors MUST be HSL.
 .signature-scope :is(button, a[role="button"], a.inline-flex) { text-align: center; }
 .signature-band { padding: 96px clamp(24px, 6vw, 96px); background: var(--signature-deep); color: var(--signature-lit); }
 .signature-band[data-surface="light"] { background: var(--signature-light); color: var(--signature-ink); }
+.signature-band[data-surface="tinted"] { background: var(--signature-tint); color: var(--signature-ink); }
 .signature-compact { padding-block: 56px; }
 .signature-inner { max-width: 1120px; margin-inline: auto; }
 .signature-content { position: relative; z-index: 1; }
