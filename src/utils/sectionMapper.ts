@@ -934,8 +934,10 @@ export function mapBriefToSections(
     if (closeSec && GENERIC_CLOSE.has(String(closeSec.content?.headline || '').trim())) {
       const used = new Set([heroSec?.content?.headline, heroSec?.content?.subheadline].filter(Boolean).map((h: string) => h.trim()));
       const h = brief.headlines as any;
+      // Outcome (C) first: a close should land on what they get. 120 chars
+      // admits the brief's full outcome lines; anything longer is a paragraph.
       const alt = [h?.optionC, h?.optionB, h?.optionA]
-        .find((x: unknown): x is string => typeof x === 'string' && x.trim().length > 0 && x.trim().length <= 90 && !used.has(x.trim()));
+        .find((x: unknown): x is string => typeof x === 'string' && x.trim().length > 0 && x.trim().length <= 120 && !used.has(x.trim()));
       if (alt) closeSec.content = { ...closeSec.content, headline: alt.trim() };
     }
   }

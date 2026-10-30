@@ -25,7 +25,7 @@ export function PageFooter({
     (businessName && businessName !== 'PageConsult AI'));
   
   return (
-    <footer className="border-t border-slate-800 bg-slate-950 py-8">
+    <footer className="border-t border-white/10 py-8" style={{ background: 'color-mix(in srgb, var(--brand-primary, #0f172a) 18%, #07080C)' }}>
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Logo / Brand */}
