@@ -16,13 +16,38 @@ export function StatCountUp({ value, className }: { value: string; className?: s
   useEffect(() => {
     const el = ref.current;
     if (!el || !match) return;
-    if (
-      prefersReducedMotion() ||
-      typeof IntersectionObserver === 'undefined' ||
-      document.visibilityState === 'hidden'
-    ) {
+    if (prefersReducedMotion() || typeof IntersectionObserver === 'undefined') {
       return; // static
     }
+    // Mounted hidden (background tab): same contract as GazeReveal — wait for
+    // first show; if the stat is already on screen then, it stays static,
+    // otherwise it counts when scrolled to.
+    if (document.visibilityState === 'hidden') {
+      let probe: IntersectionObserver | null = null;
+      let inner: (() => void) | undefined;
+      const onShown = () => {
+        if (document.visibilityState !== 'visible') return;
+        document.removeEventListener('visibilitychange', onShown);
+        probe = new IntersectionObserver((entries) => {
+          probe?.disconnect();
+          probe = null;
+          if (!entries.some((e) => e.isIntersecting)) inner = startCount(el);
+        });
+        probe.observe(el);
+      };
+      document.addEventListener('visibilitychange', onShown);
+      return () => {
+        document.removeEventListener('visibilitychange', onShown);
+        probe?.disconnect();
+        inner?.();
+      };
+    }
+    return startCount(el);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  function startCount(el: HTMLElement): () => void {
+    if (!match) return () => {};
     const target = match.num;
     const decimals = (match.raw.split('.')[1] || '').length;
     const grouped = match.raw.includes(',');
@@ -63,8 +88,7 @@ export function StatCountUp({ value, className }: { value: string; className?: s
       cancelAnimationFrame(raf);
       document.removeEventListener('visibilitychange', onHide);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }
 
   return (
     <span ref={ref} className={className}>
