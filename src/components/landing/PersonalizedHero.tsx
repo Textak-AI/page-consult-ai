@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import { formatForSentence } from "@/utils/formatForDisplay";
 
 export interface PersonalizedContent {
   company_name: string;
@@ -77,7 +78,7 @@ export function PersonalizedHero({
           This is YOUR personalized landing page preview
         </p>
         <p className="text-muted-foreground text-sm mt-1">
-          See how we'd position your {content.industry || 'business'} to convert visitors into customers.
+          See how we'd position your {content.industry ? formatForSentence(content.industry) : 'business'} to convert visitors into customers.
         </p>
       </motion.div>
       

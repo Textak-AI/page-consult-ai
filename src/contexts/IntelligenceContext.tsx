@@ -600,8 +600,13 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
   // ----------------------------------------
   useEffect(() => {
     if (state.extracted.industry) {
-      // Use resolveIndustry() to get the canonical industry key, not the raw stated industry
-      const resolution = resolveIndustry(state.extracted.industry);
+      // Use resolveIndustry() with the scored classification, not just the raw stated industry
+      const det = state.industryDetection;
+      const resolution = resolveIndustry(
+        state.extracted.industry,
+        det?.variant ?? null,
+        det ? (det.manuallyConfirmed ? 'high' : det.confidence) : null
+      );
       const resolvedKey = resolution.industry;
       console.log(`🎯 [Objections] Resolving industry: "${state.extracted.industry}" → "${resolvedKey}" (${resolution.source}, ${resolution.confidence})`);
       
@@ -619,7 +624,7 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
         console.log('🎯 Loaded', objections.length, 'pre-computed objections for', resolvedKey, '(raw:', state.extracted.industry, ')');
       }
     }
-  }, [state.extracted.industry, state.extracted.targetMarket]);
+  }, [state.extracted.industry, state.extracted.targetMarket, state.industryDetection]);
 
   // ----------------------------------------
   // Calculate journey stage
@@ -779,9 +784,14 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       console.error('Failed to save lead:', err);
     }
 
-    // Now fetch market research - use resolved industry key
+    // Now fetch market research - use resolved industry key (scored detection first)
     if (currentExtracted.industry) {
-      const resolution = resolveIndustry(currentExtracted.industry);
+      const detNow = stateRef.current.industryDetection;
+      const resolution = resolveIndustry(
+        currentExtracted.industry,
+        detNow?.variant ?? null,
+        detNow ? (detNow.manuallyConfirmed ? 'high' : detNow.confidence) : null
+      );
       await fetchMarketResearch(resolution.industry, currentExtracted.audience);
     }
   }, [calculateReadiness, calculateEngagementScore, fetchMarketResearch]);
@@ -1919,7 +1929,12 @@ export function IntelligenceProvider({ children }: { children: React.ReactNode }
       const audience = extractedAudienceRef.current;
       if (industry) {
         console.log('🔍 [Research] Triggering market research for:', companyName, '/', website, '/ industry:', industry);
-        const resolution = resolveIndustry(industry);
+        const detRef = stateRef.current.industryDetection;
+        const resolution = resolveIndustry(
+          industry,
+          detRef?.variant ?? null,
+          detRef ? (detRef.manuallyConfirmed ? 'high' : detRef.confidence) : null
+        );
         const resolvedKey = resolution.industry === 'default' ? 'creative' : resolution.industry;
         marketResearchFetched.current = false;
         fetchMarketResearch(resolvedKey, audience);

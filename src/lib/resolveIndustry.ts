@@ -366,45 +366,51 @@ export function resolveIndustry(
 
   // Sort by score descending
   scores.sort((a, b) => b.score - a.score);
+  const statedBest = scores.length > 0 ? scores[0] : null;
 
-  if (scores.length > 0) {
-    const best = scores[0];
-    if (best.score >= best.threshold) {
-      console.log(`🏭 [resolveIndustry] Weighted match: "${normalized}" → ${best.industry} (score: ${best.score}, threshold: ${best.threshold})`);
-      return { industry: best.industry, source: 'keyword', confidence: 'high' };
-    }
-    if (best.score >= best.likelyMin) {
-      console.log(`🏭 [resolveIndustry] Likely match: "${normalized}" → ${best.industry} (score: ${best.score}, likely range)`);
-      return { industry: best.industry, source: 'keyword', confidence: 'medium' };
-    }
-  }
-
-  // 3. Scored fallback (AI classification)
+  // 2b. Resolve the scored (AI-classified) industry, if provided with usable confidence
   const scoredNorm = scoredIndustry?.toLowerCase().trim() || '';
-  if (scoredNorm && SUPPORTED_INDUSTRIES[scoredNorm] && 
-      (scoredConfidence === 'high' || scoredConfidence === 'medium')) {
-    console.log(`🏭 [resolveIndustry] Scored fallback: "${scoredNorm}" (${scoredConfidence})`);
-    return { 
-      industry: SUPPORTED_INDUSTRIES[scoredNorm], 
-      source: 'scored', 
-      confidence: scoredConfidence as 'high' | 'medium',
-    };
-  }
-
-  // Also try weighted scoring on scored industry string
+  let scoredResolved: IndustryVariant | null = null;
   if (scoredNorm && (scoredConfidence === 'high' || scoredConfidence === 'medium')) {
-    const scoredScores: Array<{ industry: IndustryVariant; score: number; threshold: number }> = [];
-    for (const entry of WEIGHTED_INDUSTRY_MAP) {
-      const score = scoreText(scoredNorm, entry.keywords);
-      if (score > 0) {
-        scoredScores.push({ industry: entry.industry, score, threshold: entry.threshold ?? 5 });
+    if (SUPPORTED_INDUSTRIES[scoredNorm]) {
+      scoredResolved = SUPPORTED_INDUSTRIES[scoredNorm];
+    } else {
+      const scoredScores: Array<{ industry: IndustryVariant; score: number; threshold: number }> = [];
+      for (const entry of WEIGHTED_INDUSTRY_MAP) {
+        const score = scoreText(scoredNorm, entry.keywords);
+        if (score > 0) {
+          scoredScores.push({ industry: entry.industry, score, threshold: entry.threshold ?? 5 });
+        }
+      }
+      scoredScores.sort((a, b) => b.score - a.score);
+      if (scoredScores.length > 0 && scoredScores[0].score >= scoredScores[0].threshold) {
+        scoredResolved = scoredScores[0].industry;
       }
     }
-    scoredScores.sort((a, b) => b.score - a.score);
-    if (scoredScores.length > 0 && scoredScores[0].score >= (scoredScores[0].threshold)) {
-      console.log(`🏭 [resolveIndustry] Scored weighted match: "${scoredNorm}" → ${scoredScores[0].industry} (score: ${scoredScores[0].score})`);
-      return { industry: scoredScores[0].industry, source: 'scored', confidence: scoredConfidence as 'high' | 'medium' };
-    }
+  }
+
+  // 3. Priority: scored classification beats raw stated-text keyword matching.
+  // High-confidence scoring always wins over keyword matches on the stated string;
+  // medium-confidence scoring wins over "likely" (sub-threshold) stated matches but
+  // yields to a stated match that fully met its keyword threshold.
+  if (scoredResolved && scoredConfidence === 'high') {
+    console.log(`🏭 [resolveIndustry] Scored (high) wins: "${scoredNorm}" → ${scoredResolved}`);
+    return { industry: scoredResolved, source: 'scored', confidence: 'high' };
+  }
+
+  if (statedBest && statedBest.score >= statedBest.threshold) {
+    console.log(`🏭 [resolveIndustry] Weighted match: "${normalized}" → ${statedBest.industry} (score: ${statedBest.score}, threshold: ${statedBest.threshold})`);
+    return { industry: statedBest.industry, source: 'keyword', confidence: 'high' };
+  }
+
+  if (scoredResolved && scoredConfidence === 'medium') {
+    console.log(`🏭 [resolveIndustry] Scored (medium) over likely stated match: "${scoredNorm}" → ${scoredResolved}`);
+    return { industry: scoredResolved, source: 'scored', confidence: 'medium' };
+  }
+
+  if (statedBest && statedBest.score >= statedBest.likelyMin) {
+    console.log(`🏭 [resolveIndustry] Likely match: "${normalized}" → ${statedBest.industry} (score: ${statedBest.score}, likely range)`);
+    return { industry: statedBest.industry, source: 'keyword', confidence: 'medium' };
   }
 
   // 4. Default

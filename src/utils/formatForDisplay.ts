@@ -58,7 +58,44 @@ const properNouns: Record<string, string> = {
   'cbd': 'CBD',
   'cpa': 'CPA',
   'kpi': 'KPI',
+  'fda': 'FDA',
+  'hipaa': 'HIPAA',
+  'gdpr': 'GDPR',
+  'hvac': 'HVAC',
+  'emr': 'EMR',
+  'ehr': 'EHR',
 };
+
+/**
+ * Tokens that must never be case-mangled: all-caps acronyms (FDA, ROI, B2B)
+ * and anything containing a digit (510(k), 401(k), ISO9001).
+ */
+function isPreservedToken(word: string): boolean {
+  if (/\d/.test(word)) return true;
+  const letters = word.replace(/[^A-Za-z]/g, '');
+  // All-caps, optionally with a plural "s": FDA, ROI, CTOs, KPIs
+  return /^[A-Z]{2,}s?$/.test(letters);
+}
+
+/**
+ * Lowercase a phrase for mid-sentence use without destroying acronyms or
+ * numeric tokens: "FDA rejection & 510(k) delays" stays exactly that, while
+ * "Regulatory Hire Turnover" becomes "regulatory hire turnover".
+ */
+export function formatForSentence(value: string): string {
+  if (!value) return '';
+  let result = value
+    .replace(/\.{2,}$/, '')
+    .trim()
+    .split(' ')
+    .map(word => (isPreservedToken(word) ? word : word.toLowerCase()))
+    .join(' ');
+  // Restore known proper nouns the user may have typed in lowercase
+  Object.entries(properNouns).forEach(([lower, proper]) => {
+    result = result.replace(new RegExp(`\\b${lower}\\b`, 'gi'), proper);
+  });
+  return result;
+}
 
 export function formatForHeadline(value: string): string {
   if (!value) return '';
@@ -85,6 +122,8 @@ export function formatForHeadline(value: string): string {
   result = result
     .split(' ')
     .map(word => {
+      // Never mangle acronyms or numeric tokens (FDA, B2B, 510(k))
+      if (isPreservedToken(word)) return word;
       // Skip if already handled by properNouns
       if (Object.values(properNouns).includes(word)) return word;
       // Skip if already handled by abbreviations

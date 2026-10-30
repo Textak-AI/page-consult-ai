@@ -8,7 +8,7 @@ import { DefaultHero } from "@/components/landing/DefaultHero";
 import { PersonalizedHero, type PersonalizedContent } from "@/components/landing/PersonalizedHero";
 import { GeneratingHero } from "@/components/landing/GeneratingHero";
 import { useDemoState, type DemoState } from "@/hooks/useDemoState";
-import { formatForHeadline } from "@/utils/formatForDisplay";
+import { formatForHeadline, formatForSentence } from "@/utils/formatForDisplay";
 import { GlossyBackground } from "@/components/ui/GlossyBackground";
 
 const Hero = () => {
@@ -111,12 +111,12 @@ const Hero = () => {
     
     // Best case: Audience + pain point
     if (audience && painPoints) {
-      return `Built specifically to help ${audience} overcome ${painPoints.toLowerCase()} with a page that actually converts.`;
+      return `Built specifically to help ${audience} overcome ${formatForSentence(painPoints)} with a page that actually converts.`;
     }
     
     // Good case: Audience + edge
     if (audience && edge) {
-      return `Show ${audience} why you're different — ${edge.toLowerCase()}.`;
+      return `Show ${audience} why you're different — ${formatForSentence(edge)}.`;
     }
     
     // Okay case: Just audience
@@ -126,7 +126,7 @@ const Hero = () => {
     
     // Industry fallback
     if (industry) {
-      return `AI-crafted messaging tailored to what ${industry.toLowerCase()} buyers actually care about.`;
+      return `AI-crafted messaging tailored to what ${formatForSentence(industry)} buyers actually care about.`;
     }
     
     // Generic fallback
