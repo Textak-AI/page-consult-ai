@@ -455,9 +455,12 @@ Be specific. No generic advice. Everything should tie back to the actual consult
       auditCommunicationStrategy(structuredBrief.communicationStrategy, consultationData);
       logRegisterViolations('communication-strategy', structuredBrief.communicationStrategy);
       // Keep recovery-from-markdown paths identical to the structured response.
-      const prose = strategyBrief.replace(/```(?:json)?\s*\n[\s\S]*?```/i, '').replace(/(?:^|\n)(?:#{1,4}\s*)?(?:8[.)]\s*)?(?:\*\*)?Objection[^\n]*\n[\s\S]*?(?=\n(?:#{1,4}\s|9[.)]\s|\*\*9)|$)/i, '\n');
+      // Strip the model's own objection section wholesale: stop only at the next
+      // top-level section (h1/h2 or a "9." heading), not at the h3 question
+      // subheadings inside it, which previously left headerless Q&A debris.
+      const prose = strategyBrief.replace(/```(?:json)?\s*\n[\s\S]*?```/i, '').replace(/(?:^|\n)(?:#{1,4}\s*)?(?:8[.)]\s*)?(?:\*\*)?Objection[^\n]*\n[\s\S]*?(?=\n(?:#{1,2}\s|(?:#{1,4}\s*)?(?:\*\*)?9[.)])|$)/i, '\n');
       const faqProse = structuredBrief.objections.map((o: any) => `### ${o.question}\n${o.answer}`).join('\n\n');
-      strategyBrief = guardCopyClaims(prose, consultationData, 'brief-prose-guard') + (faqProse ? '\n\n## Answered buyer questions\n' + faqProse : '') + '\n\n```json\n' + JSON.stringify(structuredBrief, null, 2) + '\n```';
+      strategyBrief = guardCopyClaims(prose, consultationData, 'brief-prose-guard') + (faqProse ? '\n\n## 8. Answered buyer questions\n' + faqProse : '') + '\n\n```json\n' + JSON.stringify(structuredBrief, null, 2) + '\n```';
       logRegisterViolations('generate-strategy-brief', structuredBrief);
     logProvenanceViolations('generate-strategy-brief', structuredBrief, JSON.stringify(consultationData));
     }

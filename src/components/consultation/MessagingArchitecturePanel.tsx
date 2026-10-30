@@ -160,8 +160,8 @@ function buildBriefPreview(arch: MessagingArchitecturePanelProps['messagingArchi
     : 'We\'ve removed all urgency signals. This buyer interprets scarcity as manipulation, and it will cost you the conversion.';
 
   const ctaReason = arch.commitmentAsk === 'direct'
-    ? 'Your CTA is direct — \'Schedule a Call\' or \'Request a Proposal\' — because this buyer respects confidence and doesn\'t need hand-holding.'
-    : 'Your CTA is exploratory — \'See How It Works\' or \'Explore the Platform\' — because this buyer needs space to evaluate before committing.';
+    ? 'Your CTA makes a direct ask because this buyer respects confidence and doesn\'t need hand-holding.'
+    : 'Your CTA is exploratory because this buyer needs space to evaluate before committing.';
 
   return `Your buyer is ${article} ${arch.archetype} — ${desc} We've optimized your page architecture around this psychology. ${headlineReason} ${urgencyReason} ${ctaReason}`;
 }

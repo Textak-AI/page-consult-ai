@@ -101,16 +101,14 @@ function getContrastWarning(color1: string, color2: string): string | null {
   const g2 = parseInt(hex2.substr(2, 2), 16);
   const b2 = parseInt(hex2.substr(4, 2), 16);
   
-  // Simple luminance difference check
-  const lum1 = (0.299 * r1 + 0.587 * g1 + 0.114 * b1) / 255;
-  const lum2 = (0.299 * r2 + 0.587 * g2 + 0.114 * b2) / 255;
-  
-  const diff = Math.abs(lum1 - lum2);
-  
-  if (diff < 0.15) {
+  // Colors are "very similar" only when they are close in RGB space.
+  // Equal luminance alone is fine for two brand roles (e.g. blue vs orange).
+  const distance = Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
+
+  if (distance < 60) {
     return 'These colors are very similar. Consider using more contrast.';
   }
-  
+
   return null;
 }
 
@@ -380,7 +378,7 @@ export function BrandCustomization({
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <span className="text-slate-500 text-sm">Step 2 of 8</span>
+          <span className="text-slate-500 text-sm">Step 1 of 8</span>
         </div>
 
         {/* Title */}
@@ -393,7 +391,11 @@ export function BrandCustomization({
             <Palette className="w-7 h-7 text-cyan-400" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-3">Let's Match Your Brand</h1>
-          <p className="text-slate-400">We extracted these from your website. Adjust as needed.</p>
+          <p className="text-slate-400">
+            {websiteIntelligence?.primaryColor || websiteIntelligence?.logoUrl || (websiteIntelligence?.colors?.length ?? 0) > 0
+              ? 'We extracted these from your website. Adjust as needed.'
+              : 'Set your brand colors and fonts — or keep the defaults and refine later.'}
+          </p>
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-8">
