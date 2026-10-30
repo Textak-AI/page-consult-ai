@@ -2,7 +2,7 @@ import { useUsableImage } from '@/hooks/useUsableImage';
 import { TreatedImage } from '../TreatedImage';
 import { ChapterEyebrow, GradientPayoff } from '@/components/signature/elements';
 import { useUsableLogo } from '@/hooks/useUsableLogo';
-import { typeScale, typeClass, shape } from '@/lib/design/tokens';
+import { typeScale, typeClass, shape, fontStacks } from '@/lib/design/tokens';
 /**
  * HeroSplitPhoto — Emotional Connector / Warmth hero
  * 
@@ -86,7 +86,7 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
                 color: bgStyles.text,
                 fontWeight: headingWeight,
                 ...typeScale.h1,
-                fontFamily: usesSerif ? 'Georgia, "Times New Roman", serif' : 'inherit',
+                fontFamily: usesSerif ? fontStacks.serifDisplay : 'inherit',
               }}
             >
               {content.signature && !isEditing ? <GradientPayoff text={content.headline || ''} phrase={content.signature.payoff} enabled={content.signature.elements.includes('gradient')} /> : content.headline}

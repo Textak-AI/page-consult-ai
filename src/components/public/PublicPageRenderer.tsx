@@ -7,6 +7,7 @@ import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { cn } from '@/lib/utils';
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from '@/lib/premiumPageEffects';
 import { artDirectedMode } from '@/lib/artDirectorBrief';
+import { typePairingCss } from '@/lib/design/tokens';
 import { resolveArchetypeFromStorage, type DesignProfile } from '@/lib/archetypeProfiles';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { ProblemSolutionSection } from '@/components/sections/ProblemSolutionSection';
@@ -106,6 +107,9 @@ export function PublicPageRenderer({
   const colorMode = artDirectedMode(sections || []) || designIntelligence?.colorMode || 'dark';
   const theme = useMemo(() => cleanTheme(styles?.theme), [styles]);
   const themeCss = useMemo(() => themeFontCss('.page-theme-root', theme), [theme]);
+  // One heading voice page-wide (owner theme override still wins: injected after)
+  const pairing = sections?.find(s => (s.content as any)?.typographyPairing)?.content?.typographyPairing;
+  const pairingCss = useMemo(() => (theme?.headingFont ? '' : typePairingCss('.page-theme-root', pairing)), [pairing, theme]);
   const industryVariant = designIntelligence?.industryVariant || 'default';
   
   // Resolve archetype design profile
@@ -405,6 +409,7 @@ export function PublicPageRenderer({
       {styles?.cssVariables && (
         <style dangerouslySetInnerHTML={{ __html: sanitizeFullCSS(styles.cssVariables) }} />
       )}
+      {pairingCss && <style>{pairingCss}</style>}
       {themeCss && <style>{themeCss}</style>}
 
       <div 

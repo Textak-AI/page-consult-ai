@@ -37,6 +37,30 @@ export const spacing = {
  * Type scale. clamp() values are fluid between breakpoints (375 → 1280+);
  * the *Class variants are the Tailwind per-breakpoint equivalents for class-based heroes.
  */
+/** The page's two voices. Every serif heading on a page uses THIS stack —
+ * never a second serif (the hero once used bare Georgia while sections used
+ * Instrument Serif, splitting the page's voice). */
+export const fontStacks = {
+  serifDisplay: '"Instrument Serif", "Instrument Serif Fallback", Georgia, serif',
+  sans: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
+} as const;
+
+/**
+ * Scoped CSS that unifies heading typography when the art director chose a
+ * pairing. Legacy section components hardcode Inter/bold utility classes;
+ * this brings them onto the page's single voice (mirrors themeFontCss's
+ * !important pattern). Owner theme overrides are applied AFTER this, so the
+ * owner still wins.
+ */
+export function typePairingCss(scope: string, pairing?: string | null): string {
+  if (pairing !== 'serif-sans') return '';
+  return (
+    `${scope} :is(h1,h2),${scope} :is(h1,h2) *{font-family:${fontStacks.serifDisplay} !important;font-weight:400 !important;letter-spacing:-0.01em;}` +
+    `${scope} h2{font-size:clamp(1.75rem, 3vw, 2.25rem) !important;}` +
+    `${scope} h3{font-size:1.125rem !important;}`
+  );
+}
+
 export const typeScale = {
   display: { fontSize: 'clamp(2.5rem, 5vw, 4.5rem)', lineHeight: 1.08 },
   h1: { fontSize: 'clamp(2rem, 4vw, 3.5rem)', lineHeight: 1.15 },

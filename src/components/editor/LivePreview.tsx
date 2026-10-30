@@ -55,6 +55,7 @@ import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from "@/lib/premiumPageEffects";
 import { artDirectedMode } from "@/lib/artDirectorBrief";
+import { typePairingCss } from "@/lib/design/tokens";
 import { resolveArchetypeFromStorage, type DesignProfile } from "@/lib/archetypeProfiles";
 import { StrategyConsultantButton } from "@/components/editor/StrategyConsultantButton";
 import { StrategyConsultantOverlay, type ChatMessage } from "@/components/editor/StrategyConsultantOverlay";
@@ -104,6 +105,8 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
     return { ...(rawBrandSettings || {}), primaryColor: c.primary, secondaryColor: c.secondary };
   }, [rawBrandSettings, pageTheme]);
   const themeCss = useMemo(() => themeFontCss('.live-preview-container', pageTheme || {}), [pageTheme]);
+  const lpPairing = sections?.find(s => (s.content as any)?.typographyPairing)?.content?.typographyPairing;
+  const pairingCss = useMemo(() => (pageTheme?.headingFont ? '' : typePairingCss('.live-preview-container', lpPairing)), [lpPairing, pageTheme]);
   
   // Resolve archetype design profile from sections or localStorage bridge
   const archetypeProfile = useMemo<DesignProfile>(() => {
@@ -716,6 +719,7 @@ function LivePreviewInner({ sections, onSectionsChange, cssVariables, iconStyle 
           100% { opacity: 0; }
         }
       `}</style>
+      {pairingCss && <style>{pairingCss}</style>}
       {themeCss && <style>{themeCss}</style>}
       {isEditing && (
         <EditingToolbar onSave={handleSaveEdit} onCancel={handleCancelEdit} />

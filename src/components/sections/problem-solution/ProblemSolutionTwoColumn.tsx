@@ -35,7 +35,7 @@ export default function ProblemSolutionTwoColumn({ content, onUpdate, isEditing 
   };
 
   const bodyStyle: React.CSSProperties = {
-    ...typeScale.body,
+    ...typeScale.lead,
     color: bgStyles.textMuted,
     fontFamily: '"DM Sans", "DM Sans Fallback", system-ui, sans-serif',
     margin: 0,
