@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Check, Sparkles, Wand2, Undo2, Redo2, Brain, Rocket, Zap, AlertTriangle, RefreshCw } from "lucide-react";
 import { calculateStrategicLevel } from "@/lib/strategicLevelCalculator";
-import { optimizeFromProfile, type IntelProfile } from '@/utils/archetypeOptimizer';
+import { parsePricePoint, optimizeFromProfile, type IntelProfile } from '@/utils/archetypeOptimizer';
 import type { ExtractedIntelligence, ConsultationStatus } from "@/types/consultationReadiness";
 import { PersonaInsightsPanel } from "@/components/editor/PersonaInsightsPanel";
 import { SectionManager } from "@/components/editor/SectionManager";
@@ -2447,9 +2447,7 @@ function GenerateContent() {
           const intelProfile: IntelProfile = {
             industry: sc?.industry || sc?.industryCategory || consultationData.industry,
             audience: sc?.idealClient,
-            pricePoint: parseFloat(
-              String(sc?.investmentRange || '0').replace(/[^0-9.]/g, '')
-            ),
+            pricePoint: parsePricePoint(sc?.investmentRange),
             painPoints: sc?.clientFrustration,
             tone: sc?.tone,
             valueProp: sc?.mainOffer,

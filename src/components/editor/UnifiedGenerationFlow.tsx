@@ -22,18 +22,17 @@ interface UnifiedGenerationFlowProps {
   isGenerating?: boolean;
 }
 
+// Describes only work that actually happens during a page build. The steps
+// before the build are already done when this screen opens (the brief exists).
 const gatheringSteps = [
-  "Industry intelligence loaded",
-  "Structural framework selected",
-  "Initializing generation"
+  "Strategy brief ready",
+  "Reading your answers",
+  "Starting the page build"
 ];
 
 const buildingMessages = [
-  "Setting up hero section...",
-  "Applying trust signals...",
-  "Calibrating voice...",
-  "Structuring proof elements...",
-  "Finalizing layout..."
+  "Writing your sections from your brief...",
+  "Checking every line against your answers..."
 ];
 
 export function UnifiedGenerationFlow({ 
