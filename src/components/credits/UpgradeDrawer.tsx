@@ -43,7 +43,7 @@ const plans = [
     features: [
       'Unlimited landing pages',
       'All premium templates',
-      'Priority AI generation',
+      'Priority AI generation (coming soon)',
       'Priority support',
       'Lock in price forever',
       'Remove the PageConsult badge',
@@ -60,10 +60,10 @@ const plans = [
     icon: Users,
     features: [
       'Everything in Founding Member',
-      'White-label exports',
-      '5 team seats',
-      'Client sub-accounts',
-      'API access',
+      'White-label exports (coming soon)',
+      '5 team seats (coming soon)',
+      'Client sub-accounts (coming soon)',
+      'API access (coming soon)',
     ],
   },
 ];

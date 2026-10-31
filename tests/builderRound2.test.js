@@ -95,3 +95,13 @@ test('inline image bytes are uploaded and replaced by URLs before save and publi
   expect(src('src/hooks/useEditorSession.ts')).toMatch(/sections: await externalizeImages\(snap\.sections\)/);
   expect(src('src/components/editor/PublishModal.tsx').match(/externalizeImages\(sections\)/g).length).toBe(2);
 });
+
+test('unbuilt plan features are marked coming soon; no agency trial promised', () => {
+  for (const f of ['src/pages/PricingPage.tsx', 'src/components/Pricing.tsx', 'src/components/credits/UpgradeDrawer.tsx', 'src/components/settings/BillingSettings.tsx']) {
+    const s = src(f);
+    for (const it of ['Advanced analytics', 'Custom domains', 'White-label', 'team seats', 'Client sub-accounts', 'API access', 'Custom integrations', 'Priority AI generation']) {
+      for (const m of s.matchAll(new RegExp(it + '[^"\'<]*', 'g'))) expect(m[0]).toMatch(/coming soon/);
+    }
+    expect(s).not.toMatch(/Agency Trial/);
+  }
+});

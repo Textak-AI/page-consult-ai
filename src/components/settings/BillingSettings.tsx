@@ -167,8 +167,8 @@ export function BillingSettings() {
               <>
                 <li>• Unlimited AI credits</li>
                 <li>• Priority support</li>
-                <li>• White-label options</li>
-                <li>• Team collaboration</li>
+                <li>• White-label options (coming soon)</li>
+                <li>• Team collaboration (coming soon)</li>
                 <li>• Custom branding</li>
               </>
             ) : credits?.isPro ? (
@@ -176,7 +176,7 @@ export function BillingSettings() {
                 <li>• {creditsTotal} AI credits per month</li>
                 <li>• Credit rollover (up to 50)</li>
                 <li>• Priority support</li>
-                <li>• Advanced analytics</li>
+                <li>• Advanced analytics (coming soon)</li>
               </>
             ) : (
               <>
