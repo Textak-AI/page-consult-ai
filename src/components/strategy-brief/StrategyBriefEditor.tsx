@@ -130,7 +130,7 @@ export function StrategyBriefEditor({
       title: 'Social Proof',
       icon: MessageSquare,
       fields: [
-        { id: 'clientCount', label: 'Client/User Count', type: 'text', value: editedData.clientCount || '', placeholder: '500+ customers' },
+        { id: 'clientCount', label: 'Client/User Count', type: 'text', value: editedData.clientCount || '', placeholder: 'Only a number you can stand behind' },
         { id: 'caseStudyHighlight', label: 'Best Result', type: 'textarea', value: editedData.caseStudyHighlight || '', placeholder: 'Describe your best customer outcome...' },
       ],
     },
@@ -139,7 +139,7 @@ export function StrategyBriefEditor({
       title: 'Trust Elements',
       icon: Shield,
       fields: [
-        { id: 'guaranteeOffer', label: 'Guarantee', type: 'textarea', value: editedData.guaranteeOffer || '', placeholder: '30-day money-back guarantee...', hint: 'Reduces perceived risk for buyers' },
+        { id: 'guaranteeOffer', label: 'Guarantee', type: 'textarea', value: editedData.guaranteeOffer || '', placeholder: 'Only if you actually offer one', hint: 'Leave blank if you have no guarantee - the page will not invent one' },
         { id: 'riskReversals', label: 'Risk Reversals', type: 'list', value: editedData.riskReversals || [], placeholder: 'Add risk reversal...' },
       ],
     },
@@ -148,10 +148,10 @@ export function StrategyBriefEditor({
       title: 'CTA Strategy',
       icon: Zap,
       fields: [
-        { id: 'primaryGoal', label: 'Page Goal', type: 'text', value: editedData.primaryGoal || '', placeholder: 'Generate demo requests' },
-        { id: 'primaryCTA', label: 'Primary CTA Text', type: 'text', value: editedData.primaryCTA || '', placeholder: 'Start Free Trial' },
-        { id: 'secondaryCTA', label: 'Secondary CTA', type: 'text', value: editedData.secondaryCTA || '', placeholder: 'Watch Demo' },
-        { id: 'urgencyAngle', label: 'Urgency Angle', type: 'textarea', value: editedData.urgencyAngle || '', placeholder: 'Limited time offer, deadline, scarcity...' },
+        { id: 'primaryGoal', label: 'Page Goal', type: 'text', value: editedData.primaryGoal || '', placeholder: 'What should a visitor do?' },
+        { id: 'primaryCTA', label: 'Primary CTA Text', type: 'text', value: editedData.primaryCTA || '', placeholder: 'Your button text' },
+        { id: 'secondaryCTA', label: 'Secondary CTA', type: 'text', value: editedData.secondaryCTA || '', placeholder: 'Optional second button' },
+        { id: 'urgencyAngle', label: 'Urgency Angle', type: 'textarea', value: editedData.urgencyAngle || '', placeholder: 'Only a real deadline or limit, if one exists' },
       ],
     },
   ];

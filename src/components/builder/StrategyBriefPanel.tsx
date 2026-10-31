@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, X, ChevronRight, Sparkles, Edit3, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import type { AISeoData } from '@/services/intelligence/types';
 import { CommunicationStrategyPanel } from '@/components/strategy-brief/CommunicationStrategyPanel';
 import { briefObjectValue } from '@/lib/briefEnvelope';
+import { toBriefEditorData, fromBriefEditorData } from '@/lib/briefEditorData';
 
 interface Props {
   brief: string | null;
@@ -17,6 +18,8 @@ interface Props {
   businessName?: string;
   consultationData?: any;
   consultationId?: string;
+  /** landing_pages row: edits are folded into its consultation_data so they survive reload. */
+  landingPageId?: string;
   aiSeoData?: AISeoData | null;
   onDataUpdated?: (data: any) => void;
   onRegenerate?: (data: any) => Promise<void>;
@@ -29,6 +32,7 @@ export function StrategyBriefPanel({
   businessName, 
   consultationData,
   consultationId,
+  landingPageId,
   aiSeoData,
   onDataUpdated,
   onRegenerate,
@@ -36,6 +40,7 @@ export function StrategyBriefPanel({
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const editorData = useMemo(() => toBriefEditorData(consultationData), [consultationData]);
 
   // Notify parent of open state changes
   const handleOpenChange = (open: boolean) => {
@@ -46,13 +51,20 @@ export function StrategyBriefPanel({
   if (!brief) return null;
 
   const handleSave = async (updatedData: any) => {
-    if (!consultationId) {
+    if (!consultationId && !landingPageId) {
       toast.error('Cannot save: No consultation ID');
       return;
     }
 
     try {
-      const { error } = await supabase
+      if (landingPageId) {
+        const { error: pageError } = await supabase
+          .from('landing_pages')
+          .update({ consultation_data: fromBriefEditorData(consultationData, updatedData) })
+          .eq('id', landingPageId);
+        if (pageError) throw pageError;
+      }
+      const { error } = !consultationId ? { error: null } : await supabase
         .from('consultations')
         .update({
           industry: updatedData.industry,
@@ -261,7 +273,7 @@ export function StrategyBriefPanel({
         <StrategyBriefEditor
           isOpen={isEditorOpen}
           onClose={() => setIsEditorOpen(false)}
-          consultationData={consultationData}
+          consultationData={editorData}
           onSave={handleSave}
           onRegenerate={handleRegenerate}
         />

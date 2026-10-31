@@ -29,6 +29,7 @@ import { ActionCards } from '@/components/dashboard/ActionCards';
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 import { useCredits } from '@/hooks/useCredits';
 import { useToast } from '@/hooks/use-toast';
+import { dashboardTitle, isLive, newestFirst, DASHBOARD_VISIBLE } from '@/lib/dashboardPages';
 interface PageVersion {
   id: string;
   updated_at: string;
@@ -41,6 +42,7 @@ interface PageWithVersions {
   title?: string;
   slug: string;
   status?: string;
+  is_published?: boolean | null;
   updated_at: string;
   view_count?: number;
   last_viewed_at?: string | null;
@@ -64,6 +66,7 @@ export default function Dashboard() {
   const [selectedConsultation, setSelectedConsultation] = useState<any>(null);
   const [quickPivotOpen, setQuickPivotOpen] = useState(false);
   const [targetFilter, setTargetFilter] = useState<string>('all');
+  const [showAllDrafts, setShowAllDrafts] = useState(false);
   
   // Fetch user's landing pages
   const { data: landingPages, isLoading, refetch } = useQuery({
@@ -149,8 +152,9 @@ export default function Dashboard() {
     });
 
     // Attach versions to parent pages and sort versions by time
-    return Array.from(parentPages.values()).map(page => ({
+    return newestFirst(Array.from(parentPages.values())).map(page => ({
       ...page,
+      title: dashboardTitle(page),
       versions: (versionsByParent.get(page.parent_page_id || page.id) || [])
         .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
     }));
@@ -186,13 +190,12 @@ export default function Dashboard() {
 
   // Split pages by status
   const inProgressPages = useMemo(() => {
-    return filteredPages.filter(p => 
-      !p.status || p.status === 'draft'
-    );
+    // Live state comes from is_published; status can lag after a failed update.
+    return filteredPages.filter(p => !isLive(p));
   }, [filteredPages]);
 
   const publishedPages = useMemo(() => {
-    return filteredPages.filter(p => p.status === 'published');
+    return filteredPages.filter(p => isLive(p));
   }, [filteredPages]);
 
   // Calculate actual page count (unique pages, not versions)
@@ -495,7 +498,7 @@ export default function Dashboard() {
                       emptyMessage="No drafts in progress"
                       defaultExpanded={true}
                     >
-                      {inProgressPages.map(page => (
+                      {(showAllDrafts || searchQuery ? inProgressPages : inProgressPages.slice(0, DASHBOARD_VISIBLE)).map(page => (
                         <PageItem
                           key={page.id}
                           page={page}
@@ -506,6 +509,11 @@ export default function Dashboard() {
                           onArchive={() => handleDeletePage(page.id)}
                         />
                       ))}
+                      {!searchQuery && inProgressPages.length > DASHBOARD_VISIBLE && (
+                        <Button variant="ghost" size="sm" className="w-full" onClick={() => setShowAllDrafts(v => !v)}>
+                          {showAllDrafts ? 'Show fewer' : `Show all ${inProgressPages.length} drafts`}
+                        </Button>
+                      )}
                     </StatusCard>
 
                     {/* Published Section */}
@@ -522,7 +530,7 @@ export default function Dashboard() {
                           page={page}
                           status="published"
                           onEdit={() => navigate(`/generate?id=${page.id}`)}
-                          onView={() => window.open(page.published_url || `/preview/${page.slug}`, '_blank')}
+                          onView={() => window.open(page.published_url || `/p/${page.slug}`, '_blank')}
                           onDuplicate={() => handleDuplicatePage(page.id)}
                           onArchive={() => handleDeletePage(page.id)}
                         />
@@ -541,16 +549,16 @@ export default function Dashboard() {
 
               {/* Completed Consultations with Strategy Briefs */}
               {consultations && consultations.filter(c => 
-                c.consultation_status === 'proven' || c.status === 'completed'
+                (c.consultation_status === 'proven' || c.status === 'completed') && !c.existingPage
               ).length > 0 && (
                 <div className="mt-10 space-y-4">
                   <h2 className="text-xl font-semibold text-foreground">Strategy Briefs</h2>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Download your AI-generated strategy briefs from completed consultations
+                    Briefs from finished consultations that don't have a page yet. A page's brief opens from its editor.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {consultations
-                      .filter(c => c.consultation_status === 'proven' || c.status === 'completed')
+                      .filter(c => (c.consultation_status === 'proven' || c.status === 'completed') && !c.existingPage)
                       .map(consultation => (
                         <div 
                           key={consultation.id}

@@ -74,6 +74,15 @@ export function ConsultantChat({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // Visible progress while the reply is written: elapsed seconds, so a
+  // 15-20 s wait reads as work in progress rather than a stall.
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!isLoading) { setElapsed(0); return; }
+    const started = Date.now();
+    const t = setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(t);
+  }, [isLoading]);
   const [hasInitialized, setHasInitialized] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -354,7 +363,10 @@ export function ConsultantChat({
                       <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                       <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
-                    <span>Working on it, usually 15 to 20 seconds…</span>
+                    <span aria-live="polite">
+                      Reading your page and writing changes · {elapsed}s
+                      <span className="block text-xs opacity-80">Usually 15 to 20 seconds. Every line is checked against your answers before you see it.</span>
+                    </span>
                   </div>
                 </div>
               </div>

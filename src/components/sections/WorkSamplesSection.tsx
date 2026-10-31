@@ -86,7 +86,7 @@ export function WorkSamplesSection({ content, onUpdate, editor = false }: Props)
       <SheetHeader><SheetTitle>Work samples</SheetTitle><SheetDescription>Show real work - uploads only</SheetDescription></SheetHeader>
       <input ref={input} type="file" accept="image/png,image/jpeg,image/webp" multiple className="hidden" aria-label="Upload work samples" onChange={e => upload(e.target.files)} />
       <Button className="my-4" onClick={() => input.current?.click()} disabled={busy || samples.length >= 6}>{busy ? <Loader2 className="animate-spin" /> : <Upload />}Add work samples</Button>
-      <p className="text-xs text-muted-foreground mb-4">2–6 images · PNG, JPG or WebP · up to 2MB each</p>
+      <p className="text-xs text-muted-foreground mb-4">{samples.length >= 6 ? '6 of 6 images. Remove one to add another.' : '2–6 images · PNG, JPG or WebP · up to 2MB each'}</p>
       {error && <p role="alert" className="text-destructive mb-4">{error}</p>}
       <div className="space-y-6">{samples.map((s, index) => <div key={s.id} data-sample-editor={s.id}>
         <img src={s.url} alt="" className="w-full object-contain" style={{ aspectRatio: shape.sampleAspectRatio, borderRadius: shape.radiusImage }} />

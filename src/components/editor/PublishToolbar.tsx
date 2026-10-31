@@ -4,6 +4,12 @@ import { Loader2, Globe, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
+export const PUBLISH_CHANGED_EVENT = 'pc:publish-changed';
+/** The Publish dialog announces publish/unpublish so the header label never goes stale. */
+export function announcePublishChanged(published: boolean): void {
+  try { window.dispatchEvent(new CustomEvent(PUBLISH_CHANGED_EVENT, { detail: { published } })); } catch { /* non-browser */ }
+}
+
 interface PublishToolbarProps {
   pageId: string;
   slug: string;
@@ -33,6 +39,9 @@ export function PublishToolbar({
       setIsPublished(!!data);
     };
     check();
+    const onChange = (e: Event) => setIsPublished(!!(e as CustomEvent).detail?.published);
+    window.addEventListener(PUBLISH_CHANGED_EVENT, onChange);
+    return () => window.removeEventListener(PUBLISH_CHANGED_EVENT, onChange);
   }, [pageId]);
 
   if (isPublished) {
@@ -45,7 +54,7 @@ export function PublishToolbar({
           className="border-green-500/30 text-green-400 hover:bg-green-500/10"
         >
           <Check className="w-4 h-4 mr-1" />
-          Published
+          Live · Update
         </Button>
       </div>
     );

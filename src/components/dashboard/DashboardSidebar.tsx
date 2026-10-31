@@ -15,8 +15,7 @@ export function DashboardSidebar({ credits, totalCredits, tier }: DashboardSideb
   const tips = [
     "Use Quick Pivot to create personalized pages for specific prospects in under 60 seconds.",
     "Add your brand colors and logo for consistent, professional pages.",
-    "Include social proof and testimonials to boost conversions.",
-    "A/B test different headlines to find what resonates best."
+    "Add quotes from real customers in your consultation. Pages only show proof you provide."
   ];
 
   const randomTip = tips[Math.floor(Math.random() * tips.length)];

@@ -1,3 +1,4 @@
+import { announcePublishChanged } from './PublishToolbar';
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -213,6 +214,7 @@ export function PublishModal({
 
       setPublishState('published');
       onPublishStateChange?.(true, slug);
+      announcePublishChanged(true);
       toast.success("Page published! 🎉");
     } catch (error: any) {
       console.error('Publish error:', error);
@@ -275,6 +277,7 @@ export function PublishModal({
       setExistingPublish({ ...existingPublish, status: 'unpublished' });
       setPublishState('idle');
       onPublishStateChange?.(false);
+      announcePublishChanged(false);
       toast.success("Page unpublished");
     } catch (error: any) {
       console.error('Unpublish error:', error);

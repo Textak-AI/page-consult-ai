@@ -23,7 +23,7 @@ export const ACTION_COSTS = {
   section_regeneration: 1,
   ai_improvement: 1,
   intelligence_refresh: 2,
-  style_change: 1,
+  style_change: 0, // preset switch is local, no AI call
   page_build: 3, // new page build; the account's first build is free (charge_page_build)
   section_chat: 1,
   image_generation: 2,

@@ -21,7 +21,6 @@ import { SeoPanel } from "@/components/editor/SeoPanel";
 import { AIConsultantSidebar } from "@/components/editor/AIConsultantSidebar";
 import { CalculatorUpgradeModal } from "@/components/editor/CalculatorUpgradeModal";
 import { StylePicker } from "@/components/editor/StylePicker";
-import { VariantGeneratorModal } from "@/components/editor/VariantGeneratorModal";
 import { UnifiedGenerationFlow } from "@/components/editor/UnifiedGenerationFlow";
 import { StrategyBriefPanel } from "@/components/builder/StrategyBriefPanel";
 import { ConsultantPanel } from "@/components/editor/ConsultantPanel";
@@ -5298,7 +5297,6 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [hasShownConversionReady, setHasShownConversionReady] = useState(false);
   // Removed showDigitalChampion toggle - using single consistent design
-  const [variantModalOpen, setVariantModalOpen] = useState(false);
 
   // Add Section menu: content comes from the saved strategy brief when present.
   const [addSectionOpen, setAddSectionOpen] = useState(false);
@@ -5548,8 +5546,9 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
     setPageChatFocus({ index, type: sectionType, nonce: Date.now(), prefill: 'Rewrite this section using only my brief and answers.' });
   };
 
+  // Style presets are a local design switch with no AI call, so they are free.
   const handleStyleChangeWithUsage = (style: StylePresetName) => {
-    executeWithUsageCheck('style_change', () => {
+    (() => {
       setPageStyle(style);
       const styleNames: Record<StylePresetName, string> = {
         premium: 'Premium',
@@ -5561,7 +5560,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         title: `Style applied: ${styleNames[style] || style}`,
         description: "Your page now uses the new design preset",
       });
-    });
+    })();
   };
 
   // Keyboard shortcuts for undo/redo
@@ -5920,6 +5919,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         businessName={strategicData?.consultationData?.businessName || (pageData?.consultation_data as any)?.businessName}
         consultationData={strategicData?.consultationData || (pageData?.consultation_data as any) || consultation}
         consultationId={consultation?.id || pageData?.consultation_id}
+        landingPageId={pageData?.id}
         aiSeoData={strategicData?.aiSeoData || (pageData?.consultation_data as any)?.aiSeoData || null}
         onDataUpdated={(updatedData) => {
           // Update local state with new data
@@ -6009,18 +6009,6 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         }}
       />
 
-      <VariantGeneratorModal
-        isOpen={variantModalOpen}
-        onClose={() => setVariantModalOpen(false)}
-        originalPageData={pageData}
-        onGenerateVariant={async (variantType, config) => {
-          console.log('Generating variant:', { variantType, config });
-          toast({
-            title: 'Variant feature coming soon!',
-            description: `${variantType} variant will be generated based on your configuration.`,
-          });
-        }}
-      />
 
       <CalculatorUpgradeModal
         open={calculatorUpgradeOpen}

@@ -70,3 +70,11 @@
 - composeClientImages keeps imageCredit/imageAttribution when the existing asset is Unsplash (license requires the credit).
 - PublishModal: a taken slug fills a suggested slug and shows a muted notice (slugNotice), not an error that blocks Publish.
 - PublicPageRenderer strips index.html's static description/og/twitter meta (no data-rh) so the page's own tags are the only ones. Link-preview bots still see the static HTML until render-public-page serves published pages.
+
+## Builder round 2 (2026-10-31)
+- No A/B testing exists, so nothing may promise it: VariantGeneratorModal is deleted, the wizard's "A/B Messaging Test" purpose and the dashboard tip are gone. Old consultations with pagePurpose 'ab-test' still render (type kept).
+- Strategy Brief editor: `toBriefEditorData` maps wizard keys (clientFrustration, concreteProofStory, achievements, ctaText, testimonialText…) to the editor's field names; `fromBriefEditorData` folds edits back. Saves write landing_pages.consultation_data (so edits survive reload) and the consultations row. Placeholders never model invented claims.
+- Style presets are free (style_change cost 0, no usage check): a local design switch with no AI call.
+- Header publish label: PublishModal dispatches `pc:publish-changed`; PublishToolbar listens and shows "Live · Update" while live.
+- Dashboard: titles are the business name (`dashboardTitle`), live means `is_published`, newest first, 8 drafts visible with "Show all". The briefs list only shows consultations without a page.
+- Page Chat wait state shows elapsed seconds and states the claim check.

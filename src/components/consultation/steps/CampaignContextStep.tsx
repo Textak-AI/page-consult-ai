@@ -1,4 +1,4 @@
-import { Mail, Target, Calendar, Download, RefreshCw, Video, GitBranch, Globe } from 'lucide-react';
+import { Mail, Target, Calendar, Download, RefreshCw, Video, Globe } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -69,12 +69,6 @@ const PAGE_PURPOSE_OPTIONS = [
     label: 'Webinar or Event Registration', 
     description: 'Drive signups for an online event',
     Icon: Video,
-  },
-  { 
-    value: 'ab-test' as PagePurpose, 
-    label: 'A/B Messaging Test', 
-    description: 'Test new messaging angles',
-    Icon: GitBranch,
   },
   { 
     value: 'primary-site' as PagePurpose, 

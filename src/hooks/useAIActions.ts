@@ -48,7 +48,7 @@ const ACTION_COSTS: Record<AIActionType, number> = {
   section_regeneration: 1,
   ai_improvement: 1,
   intelligence_refresh: 2,
-  style_change: 1,
+  style_change: 0,
   section_chat: 1,
   image_generation: 2,
   prospect_page: 2,

@@ -29,7 +29,7 @@ const TAB_DESCRIPTIONS: Record<string, { threshold: number; description: string 
   },
   'analytics': {
     threshold: 100,
-    description: 'View visitor behavior, conversion rates, and A/B test results for your pages.',
+    description: 'View visitors and conversion rates for your pages.',
   },
   'export': {
     threshold: 50,
