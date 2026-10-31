@@ -274,7 +274,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               suppressContentEditableWarning
               onBlur={(e) => handleBlur("sectionTitle", e)}
             >
-              {content.sectionTitle || header.title}
+              {content.title || content.sectionTitle || header.title}
             </h2>
           </motion.div>
 
@@ -351,6 +351,12 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
             )}
           </motion.div>
 
+          {content.proofStory && (
+            <div className="mt-8 max-w-2xl mx-auto bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+              <span className="signature-chapter block mb-2" style={{ color: content.primaryColor || undefined }}>RESULT</span>
+              <p className="text-lg font-medium text-slate-900">{content.proofStory}</p>
+            </div>
+          )}
           {/* Achievements */}
           {content.achievements && (
             <motion.div
@@ -397,7 +403,7 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               TESTIMONIALS
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              {content.sectionTitle || header.title}
+              {content.title || content.sectionTitle || header.title}
             </h2>
           </motion.div>
 
@@ -466,6 +472,16 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
             </div>
             )}
           </motion.div>
+
+          {content.proofStory && (
+            <div className="mt-8 max-w-2xl mx-auto bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+              <span className="signature-chapter block mb-2" style={{ color: content.primaryColor || undefined }}>RESULT</span>
+              <p className="text-lg font-medium text-gray-900">{content.proofStory}</p>
+            </div>
+          )}
+          {content.achievements && (
+            <p className="mt-6 max-w-2xl mx-auto text-center text-sm leading-relaxed text-gray-600">{content.achievements}</p>
+          )}
 
           {/* Stats Grid */}
           {content.stats && content.stats.length > 0 && content.stats.some(s => s.value) && (
