@@ -28,6 +28,8 @@ import { ConsultantPanel } from "@/components/editor/ConsultantPanel";
 import { EditingProvider, useEditing } from "@/contexts/EditingContext";
 import { useEditorSession } from "@/hooks/useEditorSession";
 import { normalize as normalizeSections, insertAt as insertSectionAt } from "@/lib/editor/sectionOps";
+import { applyPageChatOps } from "@/lib/editor/pageChatOps";
+import type { PageChatOperation } from "../../supabase/functions/_shared/pageChat";
 import { ADDABLE_SECTION_TYPES, buildSectionContent, type BriefSource } from "@/lib/editor/sectionFactory";
 import { AddSectionDialog } from "@/components/editor/AddSectionDialog";
 import { WorkNudgeBanner } from "@/components/editor/WorkNudgeBanner";
@@ -5294,8 +5296,9 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
   const [addSectionAt, setAddSectionAt] = useState<number | undefined>(undefined);
   const [addBrief, setAddBrief] = useState<BriefSource | null>(null);
+  // Loaded for the Add Section menu and the page chat (adds start from the brief).
   useEffect(() => {
-    if (!addSectionOpen || addBrief) return;
+    if (addBrief) return;
     const fromState = strategicData?.structuredBrief as BriefSource | undefined;
     if (fromState) { setAddBrief(fromState); return; }
     const consultationId = pageData?.consultation_id;
@@ -5306,7 +5309,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         const structured = raw && typeof raw === "object" ? (raw.structured ?? raw) : null;
         if (structured && typeof structured === "object") setAddBrief(structured);
       });
-  }, [addSectionOpen, addBrief, strategicData?.structuredBrief, pageData?.consultation_id]);
+  }, [addBrief, strategicData?.structuredBrief, pageData?.consultation_id]);
 
   const sectionTitleFor = (type: string) =>
     ({ hero: "Hero", "final-cta": "Final CTA" } as Record<string, string>)[type] ||
@@ -5322,6 +5325,13 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
     const siteImages = collectClientImages(consultation, strategicData, sections).filter((i) => i.source === 'client-site').length;
     return shouldSuggestWorkGallery(sections, businessText, siteImages);
   }, [sections, pageData, consultation, strategicData]);
+
+  // Page chat proposals, applied only when the owner clicks Apply (one undo step).
+  const handleApplyPageChat = (operations: PageChatOperation[]) => {
+    setSections(applyPageChatOps(sections, operations, addBrief, {
+      uniqueValue: (pageData?.consultation_data as any)?.uniqueValue || consultation?.unique_value || null,
+    }));
+  };
 
   const handleAddSection = (type: string, at: number) => {
     const content = buildSectionContent(type, addBrief, {
@@ -6079,7 +6089,9 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           consultationData={strategicData?.consultationData || consultation || {}}
           sections={sections}
           completeness={pageBuilder.completeness}
-          onApplyChange={handleApplyConsultantChange}
+          brief={addBrief}
+          titleFor={sectionTitleFor}
+          onApplyOperations={handleApplyPageChat}
         />
       )}
 

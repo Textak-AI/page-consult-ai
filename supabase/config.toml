@@ -109,7 +109,11 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.consultant-chat]
-verify_jwt = false
+# Retired from the editor (replaced by page-chat); no longer callable anonymously.
+verify_jwt = true
+
+[functions.page-chat]
+verify_jwt = true
 
 [functions.extract-brand]
 verify_jwt = false

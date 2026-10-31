@@ -14,56 +14,55 @@ import {
   Loader2,
   Lightbulb,
   Target,
-  TrendingUp,
+  Plus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { CompletenessState } from '@/lib/pageCompleteness';
+import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
+import { ADDABLE_SECTION_TYPES, buildSectionContent } from '@/lib/editor/sectionFactory';
+import { describeOp, previewOf } from '@/lib/editor/pageChatOps';
+import { CHAT_ADDABLE_TYPES, type PageChatOperation } from '../../../supabase/functions/_shared/pageChat';
 
 interface Message {
   id: string;
   role: 'assistant' | 'user';
   content: string;
   timestamp: Date;
-  actions?: ActionButton[];
-  options?: OptionButton[];
-}
-
-interface ActionButton {
-  id: string;
-  label: string;
-  section: string;
-  field: string;
-  value: string;
-  reasoning?: string;
+  operations?: PageChatOperation[];
   applied?: boolean;
-}
-
-interface OptionButton {
-  id: string;
-  label: string;
-  preview: string;
-  value: string;
-  reasoning: string;
-  section: string;
-  field: string;
-  selected?: boolean;
 }
 
 interface ConsultantChatProps {
   consultationData: any;
   sections: any[];
   completeness: CompletenessState;
-  onApplyChange: (section: string, field: string, value: string) => void;
+  /** Structured strategy brief, so added sections start from the owner's own words. */
+  brief?: unknown;
+  titleFor: (type: string) => string;
+  onApplyOperations: (operations: PageChatOperation[]) => void;
   className?: string;
 }
+
+// Plumbing and design never go to the model; only what the owner told us.
+const OWNER_INPUT_EXCLUDE = /brief|websiteIntelligence|designIntelligence|aiSeo|ai_seo|brand|image|logo|color|font|classification|draft|conversation|history|id$/i;
+function ownerInputOf(data: any): Record<string, unknown> {
+  if (!data || typeof data !== 'object') return {};
+  return Object.fromEntries(Object.entries(data).filter(([k, v]) => !OWNER_INPUT_EXCLUDE.test(k) && v !== null && v !== '' && typeof v !== 'function'));
+}
+
+const CHAT_ADDABLE = ADDABLE_SECTION_TYPES
+  .filter((t) => (CHAT_ADDABLE_TYPES as readonly string[]).includes(t.type))
+  .map((t) => ({ type: t.type, label: t.label, description: t.description, shape: buildSectionContent(t.type, null) }));
 
 export function ConsultantChat({
   consultationData,
   sections,
   completeness,
-  onApplyChange,
+  brief,
+  titleFor,
+  onApplyOperations,
   className
 }: ConsultantChatProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -84,10 +83,15 @@ export function ConsultantChat({
     }
   }, [messages]);
 
-  // Initial analysis
+  // Opening line is static: every chat turn costs an action, so nothing runs until the owner asks.
   useEffect(() => {
     if (isOpen && !hasInitialized && messages.length === 0) {
-      generateInitialAnalysis();
+      setMessages([{
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: `Tell me what to change on the ${companyName} page — rewrite a section, or add a new one. I'll show you the changes before anything is applied, and I only use what you've told me.`,
+        timestamp: new Date(),
+      }]);
       setHasInitialized(true);
     }
   }, [isOpen, hasInitialized, messages.length]);
@@ -98,42 +102,6 @@ export function ConsultantChat({
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
-
-  const generateInitialAnalysis = async () => {
-    setIsLoading(true);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('consultant-chat', {
-        body: {
-          type: 'initial_analysis',
-          consultationData,
-          sections,
-          completeness
-        }
-      });
-
-      if (error) throw error;
-      
-      setMessages([{
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: data.content,
-        timestamp: new Date(),
-        actions: data.actions,
-        options: data.options
-      }]);
-    } catch (error) {
-      console.error('Initial analysis error:', error);
-      setMessages([{
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: `Hey! I've been reviewing the ${companyName} page. You're at ${completeness.score}% page strength — ${completeness.score >= 75 ? "that's solid foundation to work with" : "let's get this higher together"}. What would you like to focus on first?`,
-        timestamp: new Date()
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
@@ -150,68 +118,43 @@ export function ConsultantChat({
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('consultant-chat', {
+      const { data, error } = await supabase.functions.invoke('page-chat', {
         body: {
-          type: 'message',
-          message: content,
-          consultationData,
-          sections,
-          completeness,
-          history: messages.slice(-10).map(m => ({ role: m.role, content: m.content }))
+          message: content.trim(),
+          history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
+          sections: sections.map((s: any) => ({ type: s.type, content: s.content })),
+          addable: CHAT_ADDABLE,
+          brief: brief ?? null,
+          ownerInput: ownerInputOf(consultationData),
+          businessName: consultationData?.businessName || consultationData?.companyName || '',
         }
       });
 
+      if (isLimitReached(error)) throw new Error(LIMIT_REACHED_MESSAGE);
       if (error) throw error;
-      
+      if (!data?.success) throw new Error(data?.error || 'Chat failed');
+
+      const operations: PageChatOperation[] = Array.isArray(data.operations) ? data.operations : [];
       setMessages(prev => [...prev, {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: data.content,
+        content: data.reply || (operations.length ? 'Here are the changes.' : 'Can you tell me a bit more?'),
         timestamp: new Date(),
-        actions: data.actions,
-        options: data.options
+        operations,
       }]);
     } catch (error) {
-      console.error('Chat error:', error);
-      toast.error('Connection issue. Please try again.');
+      console.error('🔴 [PageChat] error:', error);
+      toast.error(error instanceof Error && error.message === LIMIT_REACHED_MESSAGE ? LIMIT_REACHED_MESSAGE : 'Connection issue. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleAction = (action: ActionButton) => {
-    onApplyChange(action.section, action.field, action.value);
-    
-    setMessages(prev => prev.map(msg => ({
-      ...msg,
-      actions: msg.actions?.map(a => 
-        a.id === action.id ? { ...a, applied: true } : a
-      )
-    })));
-
-    toast.success('Change applied', {
-      description: `Updated ${action.field} in ${action.section}`
-    });
-  };
-
-  const handleOption = (option: OptionButton, messageId: string) => {
-    onApplyChange(option.section, option.field, option.value);
-    
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId 
-        ? { ...msg, options: msg.options?.map(o => ({ ...o, selected: o.id === option.id })) }
-        : msg
-    ));
-
-    // Add follow-up
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: `Great choice. ${option.reasoning} What's next on your mind?`,
-        timestamp: new Date()
-      }]);
-    }, 500);
+  const applyMessage = (message: Message) => {
+    if (!message.operations?.length || message.applied) return;
+    onApplyOperations(message.operations);
+    setMessages(prev => prev.map(m => m.id === message.id ? { ...m, applied: true } : m));
+    toast.success('Applied to your page', { description: 'Undo reverts it. Replace anything in [brackets] with your own words.' });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -221,23 +164,11 @@ export function ConsultantChat({
     }
   };
 
-  // Strategic prompts (not generic)
+  // Quick starts: each one is a real edit or add the chat can carry out.
   const strategicPrompts = [
-    { 
-      icon: <Sparkles className="w-3.5 h-3.5" />, 
-      label: "Sharpen my headline", 
-      prompt: "I want a headline that stops my ideal customer in their tracks. Can you look at what I have and suggest something stronger?" 
-    },
-    { 
-      icon: <Target className="w-3.5 h-3.5" />, 
-      label: "Find my angle", 
-      prompt: "What's the most compelling angle for this page? What should I lead with?" 
-    },
-    { 
-      icon: <TrendingUp className="w-3.5 h-3.5" />, 
-      label: "What's missing?", 
-      prompt: "What's the biggest gap in this page right now? What would make the biggest difference?" 
-    },
+    { icon: <Sparkles className="w-3.5 h-3.5" />, label: "Sharpen my headline", prompt: "Rewrite my hero headline so it lands harder with my ideal customer. Use only what I've told you." },
+    { icon: <Plus className="w-3.5 h-3.5" />, label: "Add an FAQ", prompt: "Add an FAQ section built from my answers and brief." },
+    { icon: <Target className="w-3.5 h-3.5" />, label: "Tighten every section", prompt: "Tighten the copy in my problem and features sections: shorter sentences, same facts." },
   ];
 
   // Closed state - premium floating button
@@ -261,8 +192,8 @@ export function ConsultantChat({
               <Lightbulb className="w-4 h-4" />
             </div>
             <div className="text-left">
-              <div className="text-sm font-semibold">Strategy Consultant</div>
-              <div className="text-[10px] text-white/70">Let's build this together</div>
+              <div className="text-sm font-semibold">Page Chat</div>
+              <div className="text-[10px] text-white/70">Edit or add sections</div>
             </div>
           </div>
         </Button>
@@ -304,7 +235,7 @@ export function ConsultantChat({
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Your co-producer on {companyName}
+                  Edits and new sections for {companyName}
                 </div>
               </div>
             </div>
@@ -365,62 +296,26 @@ export function ConsultantChat({
                     </div>
                   </div>
                   
-                  {/* Action Buttons - Premium Style */}
-                  {message.actions && message.actions.length > 0 && (
-                    <div className="space-y-2 w-full">
-                      {message.actions.map((action) => (
-                        <button
-                          key={action.id}
-                          className={cn(
-                            "w-full p-3 rounded-xl text-left transition-all",
-                            action.applied 
-                              ? "bg-green-500/10 border border-green-500/30" 
-                              : "bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 cursor-pointer"
-                          )}
-                          onClick={() => !action.applied && handleAction(action)}
-                          disabled={action.applied}
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-medium text-purple-400">
-                              {action.applied ? '✓ Applied' : action.label}
-                            </span>
-                            {!action.applied && (
-                              <Sparkles className="w-3 h-3 text-purple-400" />
-                            )}
-                          </div>
-                          <div className="text-sm text-foreground/80 line-clamp-2">
-                            {action.value}
-                          </div>
-                        </button>
+                  {/* Proposed changes: reviewed, then applied together */}
+                  {message.operations && message.operations.length > 0 && (
+                    <div className={cn(
+                      "w-full rounded-xl border p-3 space-y-2",
+                      message.applied ? "bg-green-500/10 border-green-500/30" : "bg-purple-500/10 border-purple-500/30"
+                    )}>
+                      {message.operations.map((op, i) => (
+                        <div key={i} className="text-sm">
+                          <div className="text-xs font-medium text-purple-400">{describeOp(op, sections, titleFor)}</div>
+                          <div className="text-foreground/80 line-clamp-2">{previewOf(op.content)}</div>
+                        </div>
                       ))}
-                    </div>
-                  )}
-
-                  {/* Option Cards - For Multiple Choices */}
-                  {message.options && message.options.length > 0 && (
-                    <div className="grid gap-2 w-full">
-                      {message.options.map((option) => (
-                        <button
-                          key={option.id}
-                          className={cn(
-                            "p-3 rounded-xl text-left transition-all border",
-                            option.selected
-                              ? "bg-green-500/10 border-green-500/30"
-                              : "bg-muted/50 border-border/50 hover:border-purple-500/50 hover:bg-purple-500/5 cursor-pointer"
-                          )}
-                          onClick={() => !option.selected && handleOption(option, message.id)}
-                          disabled={option.selected}
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-semibold text-foreground">
-                              {option.label}
-                            </span>
-                            {option.selected && <Check className="w-4 h-4 text-green-500" />}
-                          </div>
-                          <p className="text-sm text-foreground/90 mb-1">{option.preview}</p>
-                          <p className="text-xs text-muted-foreground">{option.reasoning}</p>
-                        </button>
-                      ))}
+                      <Button
+                        size="sm"
+                        className="w-full h-8 bg-purple-600 hover:bg-purple-700 text-white"
+                        disabled={message.applied}
+                        onClick={() => applyMessage(message)}
+                      >
+                        {message.applied ? <><Check className="w-3.5 h-3.5 mr-1" />Applied</> : `Apply ${message.operations.length === 1 ? 'change' : `${message.operations.length} changes`}`}
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -443,7 +338,7 @@ export function ConsultantChat({
                       <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                       <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
-                    <span>Thinking strategically...</span>
+                    <span>Working on it...</span>
                   </div>
                 </div>
               </div>
@@ -483,7 +378,7 @@ export function ConsultantChat({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="What would you like to work on?"
+                placeholder="e.g. Add a section on who this is for"
                 className="min-h-[44px] max-h-32 pr-12 resize-none rounded-xl border-muted-foreground/20 focus:border-purple-400"
                 rows={1}
                 disabled={isLoading}
