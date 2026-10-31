@@ -30,6 +30,8 @@ import { useEditorSession } from "@/hooks/useEditorSession";
 import { normalize as normalizeSections, insertAt as insertSectionAt } from "@/lib/editor/sectionOps";
 import { ADDABLE_SECTION_TYPES, buildSectionContent, type BriefSource } from "@/lib/editor/sectionFactory";
 import { AddSectionDialog } from "@/components/editor/AddSectionDialog";
+import { WorkNudgeBanner } from "@/components/editor/WorkNudgeBanner";
+import { shouldSuggestWorkGallery, workGalleryInsertAt } from "@/lib/editor/workNudge";
 import { generateIntelligentContent, runIntelligencePipeline } from "@/services/intelligence";
 import { generateIntelligentContent as generateIntelligentContentLegacy } from "@/lib/generateIntelligentContent";
 import type { PersonaIntelligence, GeneratedContent, AISeoData } from "@/services/intelligence/types";
@@ -5305,6 +5307,16 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
     ADDABLE_SECTION_TYPES.find((t) => t.type === type)?.label ||
     type.replace(/[-_]/g, " ");
 
+  // "Show your work": suggest the upload-only gallery for visual trades or
+  // when we already found photos on their site. Never offers stock as work.
+  const showWorkNudge = useMemo(() => {
+    const cd: any = (pageData?.consultation_data as any) || consultation || {};
+    const businessText = [cd.industry, cd.industrySubcategory, cd.industryCategory, cd.offer, cd.mainOffer, cd.unique_value, cd.uniqueValue, cd.businessName]
+      .filter((v) => typeof v === 'string').join(' ');
+    const siteImages = collectClientImages(consultation, strategicData, sections).filter((i) => i.source === 'client-site').length;
+    return shouldSuggestWorkGallery(sections, businessText, siteImages);
+  }, [sections, pageData, consultation, strategicData]);
+
   const handleAddSection = (type: string, at: number) => {
     const content = buildSectionContent(type, addBrief, {
       uniqueValue: (pageData?.consultation_data as any)?.uniqueValue || consultation?.unique_value || null,
@@ -5838,6 +5850,12 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         </div>
         
 <div className="flex-1 min-w-0 flex flex-col relative">
+        {showWorkNudge && (
+          <WorkNudgeBanner
+            pageKey={String(pageData?.id || consultation?.id || 'draft')}
+            onAddGallery={() => handleAddSection('work-samples', workGalleryInsertAt(sections))}
+          />
+        )}
         <div className="absolute top-2 right-3 z-30">
           <DeviceToggle value={previewDevice} onChange={setPreviewDevice} />
         </div>

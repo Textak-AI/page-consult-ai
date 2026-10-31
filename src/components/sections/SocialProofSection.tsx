@@ -9,6 +9,8 @@ import { useState, memo } from "react";
 
 interface SocialProofSectionProps {
   content: {
+    primaryColor?: string | null;
+    title?: string;
     stats: Array<{
       label: string;
       value: string;

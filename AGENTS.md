@@ -45,3 +45,9 @@
 - Hero subheadline = the stated outcome (strategy.oneLiner) re-addressed to the reader via toReader (their->your), and never a line with >=60% content-word overlap with the headline (wordOverlap); a restating subheadline is dropped rather than shown.
 - Stated input that reaches the page verbatim passes through src/lib/text/copyEdit (copyEditSections, last mapper pass): mechanical slip fixes and capitalization only - never rewording, never new claims. Commitment language (guarantee/money-back/risk-free/warranty) must be stated in input; copyClaims.unsupportedCommitment gates headlines and guarded copy.
 - How-it-works renders only when the input states a process (processDescription or methodologySteps); the brief may phrase stated steps but never design one, and there is no generic industry fallback.
+
+## Type-checking
+- Root `tsconfig.json` has `"files": []` — `npx tsc --noEmit` checks NOTHING. Use `npm run typecheck` (`tsc -p tsconfig.app.json`). `npm test` now runs it before the bun suite.
+
+## Work-gallery nudge
+- `WorkNudgeBanner` (editor only) suggests a Work Samples section when the business is a visual trade or we found client-site photos, and no gallery exists. Upload-only: the gallery never takes stock or generated images — those would present someone else's work as theirs. Inserts after the payoff (`workGalleryInsertAt`). Dismissal is per page in localStorage.
