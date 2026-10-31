@@ -68,7 +68,7 @@ export function LogoUploader({
 
       // Optimize the logo (SVGs pass through, raster → 600px WebP)
       const { blob, fileName: optimizedName, contentType } = await optimizeLogo(file);
-      const filePath = `logos/${user.id}/${optimizedName}`;
+      const filePath = `${user.id}/logos/${optimizedName}`; // storage policy: first folder = owner id
 
       // Upload optimized logo to Supabase Storage
       const { data, error: uploadError } = await supabase.storage
@@ -162,7 +162,7 @@ export function LogoUploader({
 
       // Optimize edited logo to WebP
       const { blob, fileName: optimizedName, contentType } = await optimizeEditedLogo(editedDataUrl);
-      const filePath = `logos/${user.id}/${optimizedName}`;
+      const filePath = `${user.id}/logos/${optimizedName}`; // storage policy: first folder = owner id
 
       // Upload optimized logo to Supabase Storage
       const { data, error: uploadError } = await supabase.storage

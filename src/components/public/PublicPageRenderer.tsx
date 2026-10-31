@@ -1,7 +1,7 @@
 import { cleanTheme, themeFontCss } from '@/lib/editor/pageTheme';
 import { SignatureSection } from '@/components/signature/SignatureSection';
 import { GazeReveal } from '@/components/motion/GazeReveal';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 import { LeadCaptureModal } from './LeadCaptureModal';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { cn } from '@/lib/utils';
@@ -392,6 +392,14 @@ export function PublicPageRenderer({
         return null;
     }
   };
+
+  // index.html ships PageConsult's own description/og/twitter tags. Helmet adds
+  // the page's tags beside them, and readers take the FIRST match, so a customer
+  // page announced itself as PageConsult. Remove the static copies here.
+  useEffect(() => {
+    const selectors = ['meta[name="description"]', 'meta[property^="og:"]', 'meta[name^="twitter:"]'];
+    document.head.querySelectorAll(selectors.map((q) => `${q}:not([data-rh])`).join(',')).forEach((el) => el.remove());
+  }, []);
 
   return (
     <>

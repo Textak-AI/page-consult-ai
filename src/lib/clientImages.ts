@@ -23,6 +23,8 @@ export function collectClientImages(...contexts: any[]): ClientImage[] {
   contexts.forEach(c => visit(c, 0));
   return found.sort((a, b) => IMAGE_SOURCE_ORDER.indexOf(a.source) - IMAGE_SOURCE_ORDER.indexOf(b.source));
 }
+// Stock photos keep their photographer credit (Unsplash requires attribution);
+// the owner's own images never carry one.
 export function composeClientImages<T extends { type: string; content: any }>(sections: T[], candidates: ClientImage[]): T[] {
   if (!candidates.length) return sections;
   const existingHero = sections.find(s => s.type === 'hero')?.content?.backgroundImage;
@@ -38,7 +40,7 @@ export function composeClientImages<T extends { type: string; content: any }>(se
     const existingAsset = candidates.find(i => i.url === existing);
     if (sameCandidates && (existing || !selected) && (!existingAsset || s.content?.[assetField]?.url === existingAsset.url)) return s;
     changed = true;
-    return { ...s, content: { ...s.content, clientImages: candidates, ...(existingAsset ? { [assetField]: existingAsset, imageCredit: undefined, imageAttribution: undefined } : {}), ...(!existing && selected ? { [field]: selected.url, [assetField]: selected, imageCredit: undefined, imageAttribution: undefined } : {}) } };
+    return { ...s, content: { ...s.content, clientImages: candidates, ...(existingAsset ? { [assetField]: existingAsset, ...(existingAsset.source === 'unsplash' ? {} : { imageCredit: undefined, imageAttribution: undefined }) } : {}), ...(!existing && selected ? { [field]: selected.url, [assetField]: selected, imageCredit: undefined, imageAttribution: undefined } : {}) } };
   });
   return changed ? result : sections;
 }

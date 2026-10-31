@@ -54,6 +54,12 @@ const ACTION_COSTS: Record<AIActionType, number> = {
   prospect_page: 2,
 };
 
+/** Fired after any charged AI call so every balance display refreshes. */
+export const USAGE_CHANGED_EVENT = 'pc:usage-changed';
+export function announceUsageChanged(): void {
+  try { window.dispatchEvent(new Event(USAGE_CHANGED_EVENT)); } catch { /* non-browser */ }
+}
+
 export function useAIActions(userId: string | null, userEmail?: string | null) {
   const [usage, setUsage] = useState<UserUsage | null>(null);
   const [usageLog, setUsageLog] = useState<UsageLogEntry[]>([]);
@@ -143,6 +149,14 @@ export function useAIActions(userId: string | null, userEmail?: string | null) {
   useEffect(() => {
     fetchUsage();
     fetchUsageLog();
+  }, [fetchUsage, fetchUsageLog]);
+
+  // Several components each hold their own copy of this hook (the header's
+  // balance is one); a charge anywhere announces itself so every copy refetches.
+  useEffect(() => {
+    const onChanged = () => { fetchUsage(); fetchUsageLog(); };
+    window.addEventListener(USAGE_CHANGED_EVENT, onChanged);
+    return () => window.removeEventListener(USAGE_CHANGED_EVENT, onChanged);
   }, [fetchUsage, fetchUsageLog]);
 
   // Check if action is allowed (without tracking)
@@ -277,7 +291,7 @@ export function useAIActions(userId: string | null, userEmail?: string | null) {
     trackAction,
     requestGraceActions,
     getActionCost,
-    refreshUsage: fetchUsage,
+    refreshUsage: async () => { announceUsageChanged(); },
     devMode, // Expose dev mode status
   };
 }

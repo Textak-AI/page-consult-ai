@@ -52,3 +52,23 @@ test('no StrataQuest naming in the product: PageConsult AI is a Hyperbrand Creat
   const hits = execSync("grep -rli 'strataquest' src supabase/functions || true", { cwd: new URL('..', import.meta.url).pathname }).toString().trim();
   expect(hits).toBe('');
 });
+
+test('a picked stock photo keeps its photographer credit through image composition', async () => {
+  const { composeClientImages, collectClientImages } = await import('../src/lib/clientImages');
+  const url = 'https://images.unsplash.com/photo-1';
+  const sections = [{ type: 'hero', content: { backgroundImage: url, imageAsset: { id: 'u1', source: 'unsplash', url }, imageCredit: { name: 'Ann Lee', link: 'https://unsplash.com/@ann' } } }];
+  const out = composeClientImages(sections, collectClientImages(sections));
+  expect(out[0].content.imageCredit).toEqual({ name: 'Ann Lee', link: 'https://unsplash.com/@ann' });
+});
+
+test('published pages drop the app-default head tags so the page owns its description', () => {
+  expect(src('src/components/public/PublicPageRenderer.tsx')).toMatch(/:not\(\[data-rh\]\)/);
+});
+test('a taken slug suggests a new one without disabling Publish', () => {
+  const m = src('src/components/editor/PublishModal.tsx');
+  expect(m).toMatch(/setSlugNotice\(`"\$\{slug\}" is taken/);
+  expect(m).not.toMatch(/setSlugError\(`"\$\{slug\}" is taken/);
+});
+test('logo uploads use the owner-first storage path the bucket policy requires', () => {
+  expect(src('src/components/editor/LogoUploader.tsx')).not.toMatch(/`logos\/\$\{user\.id\}/);
+});

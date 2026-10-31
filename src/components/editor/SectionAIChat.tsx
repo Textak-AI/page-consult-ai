@@ -1,3 +1,4 @@
+import { announceUsageChanged } from '@/hooks/useAIActions';
 import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import { useState } from "react";
 import { Sparkles, Send, RotateCcw, AlertCircle, Loader2 } from "lucide-react";
@@ -75,6 +76,7 @@ export function SectionAIChat({
           brandVoice: strategyBrief?.tone || strategyBrief?.brandVoice || 'professional'
         }
       });
+      announceUsageChanged();
 
       if (isLimitReached(fnError)) throw new Error(LIMIT_REACHED_MESSAGE);
       if (fnError) {

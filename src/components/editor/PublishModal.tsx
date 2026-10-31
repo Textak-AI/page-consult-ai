@@ -38,6 +38,9 @@ export function PublishModal({
   const [pageTitle, setPageTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
   const [slugError, setSlugError] = useState<string | null>(null);
+  // A taken slug is a suggestion, not an error: the suggested slug is valid,
+  // so it must not disable Publish (it used to dead-end the dialog).
+  const [slugNotice, setSlugNotice] = useState<string | null>(null);
   const [existingPublish, setExistingPublish] = useState<any>(null);
   const [copied, setCopied] = useState(false);
 
@@ -100,6 +103,7 @@ export function PublishModal({
   const handleSlugChange = (value: string) => {
     const cleaned = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
     setSlug(cleaned);
+    setSlugNotice(null);
     if (cleaned) validateSlug(cleaned);
     else setSlugError(null);
   };
@@ -137,7 +141,8 @@ export function PublishModal({
         const suffix = Math.random().toString(36).substring(2, 6);
         const newSlug = `${slug}-${suffix}`;
         setSlug(newSlug);
-        setSlugError(`"${slug}" is taken. Try "${newSlug}" instead.`);
+        setSlugError(null);
+        setSlugNotice(`"${slug}" is taken, so we suggested "${newSlug}". Publish again to use it, or edit it.`);
         setPublishState('idle');
         return;
       }
@@ -386,6 +391,9 @@ export function PublishModal({
                 <AlertCircle className="w-3 h-3" />
                 {slugError}
               </p>
+            )}
+            {!slugError && slugNotice && (
+              <p className="text-xs text-muted-foreground">{slugNotice}</p>
             )}
             <p className="text-xs text-muted-foreground truncate">{fullUrl}</p>
           </div>

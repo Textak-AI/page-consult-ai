@@ -63,3 +63,10 @@
 - Section "Regenerate" buttons open Page Chat focused on that section with a prefilled rewrite request; the legacy generate-content regenerate_section path invented offers and is no longer reachable from the editor.
 - Every image generator returns bytes, never provider URLs: `_shared/durableImage.ts` is shared by generate-hero-images and generate-section-image (section images used to store replicate.delivery links that expire within hours).
 - Naming: PageConsult AI is a product of Hyperbrand Creative, Ltd. "StrataQuest" is retired everywhere (company and methodology). Method labels read "PageConsult Method"; exported blueprints read "Strategy Blueprint" with "PageConsult AI by Hyperbrand Creative, Ltd". A test fails on any StrataQuest string in src/ or supabase/functions/.
+
+## Builder fixes (2026-10-31, full builder UAT)
+- Header balance: any surface that spends actions calls `announceUsageChanged()` (useAIActions.ts); every useAIActions instance refetches on `pc:usage-changed`. New spending surfaces must call it after their invoke.
+- Logo uploads go to `${user.id}/logos/...` in brand-assets — the storage policy requires the first folder to be auth.uid().
+- composeClientImages keeps imageCredit/imageAttribution when the existing asset is Unsplash (license requires the credit).
+- PublishModal: a taken slug fills a suggested slug and shows a muted notice (slugNotice), not an error that blocks Publish.
+- PublicPageRenderer strips index.html's static description/og/twitter meta (no data-rh) so the page's own tags are the only ones. Link-preview bots still see the static HTML until render-public-page serves published pages.

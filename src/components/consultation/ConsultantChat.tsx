@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { CompletenessState } from '@/lib/pageCompleteness';
 import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
+import { announceUsageChanged } from '@/hooks/useAIActions';
 import { ADDABLE_SECTION_TYPES, buildSectionContent } from '@/lib/editor/sectionFactory';
 import { describeOp, previewOf } from '@/lib/editor/pageChatOps';
 import { CHAT_ADDABLE_TYPES, type PageChatOperation } from '../../../supabase/functions/_shared/pageChat';
@@ -144,6 +145,7 @@ export function ConsultantChat({
         }
       });
 
+      announceUsageChanged();
       if (isLimitReached(error)) throw new Error(LIMIT_REACHED_MESSAGE);
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Chat failed');
