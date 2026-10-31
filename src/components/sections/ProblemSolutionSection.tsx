@@ -86,7 +86,7 @@ function ProblemSolutionSectionBase({ content, onUpdate, isEditing }: ProblemSol
               onBlur={(e) => handleBlur("sectionTitle", e)}
               className={`text-3xl md:text-4xl font-bold text-white ${isEditing ? "cursor-text hover:ring-2 hover:ring-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded px-2" : ""}`}
             >
-              {content.sectionTitle || "Why teams struggle"}
+              {content.sectionTitle || "Before and after"}
             </h2>
           </motion.div>
           

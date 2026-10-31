@@ -1,6 +1,7 @@
 // Builds content for a section added from the editor's Add Section menu.
 // ZERO FABRICATION: content comes verbatim from the user's strategy brief /
 // consultation, otherwise bracketed placeholders the user must replace.
+import { toPageQuestion } from '../../../supabase/functions/_shared/buyerObjections';
 // Section types whose renderers need real numbers (stats, credentials, results)
 // or ship built-in claims (risk reversal, comparison) are deliberately not offered.
 
@@ -72,7 +73,7 @@ export function buildSectionContent(
     case 'how-it-works': {
       const s = steps(b);
       return {
-        title: '[How it works]',
+        title: 'How it works',
         steps: s.length
           ? s.map((x, i) => ({ number: x.step ?? i + 1, title: x.title, description: x.description }))
           : placeholderItems(3, 'Step', 'Describe what happens in this step').map((x, i) => ({ number: i + 1, ...x })),
@@ -89,9 +90,9 @@ export function buildSectionContent(
     case 'faq': {
       const o = objections(b);
       return {
-        headline: '[Frequently asked questions]',
+        headline: 'Frequently asked questions',
         items: o.length
-          ? o.map((x) => ({ question: x.question, answer: x.answer }))
+          ? o.map((x) => ({ question: toPageQuestion(String(x.question)), answer: x.answer }))
           : Array.from({ length: 3 }, (_, i) => ({ question: `[Question ${i + 1}]`, answer: '[Your answer]' })),
       };
     }
@@ -103,15 +104,12 @@ export function buildSectionContent(
       return { text: str(extra.uniqueValue) || '[What makes you different, in one sentence]' };
     case 'audience-fit':
       return { forWho: '[Who this is for]', notForWho: '[Who this is not for]' };
-    case 'the-real-challenge': {
-      const o = objections(b);
+    case 'the-real-challenge':
+      // Buyer FAQ answers are not challenges; this section is the owner's to write.
       return {
         headline: '[The real challenge]',
-        challenges: o.length
-          ? o.slice(0, 3).map((x) => ({ title: x.question, description: x.answer }))
-          : placeholderItems(3, 'Challenge', 'Describe this challenge'),
+        challenges: placeholderItems(3, 'Challenge', 'Describe this challenge'),
       };
-    }
     case 'our-approach': {
       const p = pillars(b);
       return {

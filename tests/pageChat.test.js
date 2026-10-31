@@ -70,3 +70,21 @@ test('parse tolerates fences and prose; garbage yields a reply with no operation
   expect(parsePlanText('```json\n{"reply":"ok","operations":[]}\n```').reply).toBe('ok');
   expect(parsePlanText('I need your pricing first.')).toEqual({ reply: 'I need your pricing first.', operations: [] });
 });
+
+import { buildSectionContent } from '../src/lib/editor/sectionFactory';
+import { readFileSync as rf } from 'fs';
+test('added sections: buyer-voiced FAQ, no FAQ answers posing as challenges, plain default headings', () => {
+  const brief = { objections: [{ question: 'What do you need from the buyer’s team?', answer: 'One read-only IAM role.' }] };
+  expect(buildSectionContent('faq', brief).items[0].question).toBe('What do you need from my team?');
+  expect(buildSectionContent('faq', brief).headline).toBe('Frequently asked questions');
+  expect(JSON.stringify(buildSectionContent('the-real-challenge', brief))).not.toContain('IAM');
+});
+test('no canned slogan subtitles in section header configs or section defaults', () => {
+  const files = ['src/lib/industrySectionHeaders.ts', 'src/lib/briefExtractor.ts', 'src/config/designSystem/industryVariants.ts',
+    'src/components/sections/HowItWorksSection.tsx', 'src/components/sections/OurApproachSection.tsx',
+    'src/components/sections/ExpertiseAreasSection.tsx', 'src/components/sections/EngagementModelSection.tsx'];
+  for (const f of files) {
+    const src = rf(new URL('../' + f, import.meta.url), 'utf8');
+    expect(src).not.toMatch(/subtitle(?::| =) ['"`][^'"`]+['"`]/);
+  }
+});

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ADDABLE_SECTION_TYPES } from "@/lib/editor/sectionFactory";
 import { Eye, EyeOff, Trash2, RefreshCw, Calculator, Loader2, Zap, ChevronUp, ChevronDown, GripVertical, Plus, Lock } from "lucide-react";
 import { useState } from "react";
 import { useEditing } from "@/contexts/EditingContext";
@@ -117,7 +118,10 @@ export function SectionManager({
       "social-proof": "Testimonials",
       "final-cta": "Final CTA",
     };
-    return titles[type] || type.replace(/_/g, ' ').replace(/-/g, ' ');
+    const fromMenu = ADDABLE_SECTION_TYPES.find((t) => t.type === type)?.label;
+    const extra: { [key: string]: string } = { faq: "FAQ", "how-it-works": "How It Works" };
+    return titles[type] || extra[type] || fromMenu
+      || type.replace(/[_-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   };
 
   const getSectionId = (type: string) => {

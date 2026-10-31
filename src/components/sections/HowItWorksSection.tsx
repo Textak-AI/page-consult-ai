@@ -40,7 +40,7 @@ function HowItWorksSectionBase({ content, onUpdate, isEditing }: HowItWorksSecti
     return <ProcessNumberedRows content={content as any} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
   }
 
-  const { title = "How It Works", subtitle = "Your path to results", steps } = content;
+  const { title = "How It Works", subtitle = "", steps } = content;
   const industryVariant = content.industryVariant || 'default';
   const isConsulting = industryVariant === 'consulting';
   const isSaas = industryVariant === 'saas';

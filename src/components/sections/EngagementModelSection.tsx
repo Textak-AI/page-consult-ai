@@ -31,7 +31,7 @@ interface EngagementModelSectionProps {
 function EngagementModelSectionBase({ content }: EngagementModelSectionProps) {
   const { 
     headline = "Our Engagement Model",
-    subtitle = "A structured approach designed for your success",
+    subtitle = "",
     steps = [],
   } = content;
   

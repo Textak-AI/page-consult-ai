@@ -30,7 +30,7 @@ interface OurApproachSectionProps {
 function OurApproachSectionBase({ content }: OurApproachSectionProps) {
   const { 
     headline = "Our Approach",
-    subtitle = "A proven methodology that delivers results",
+    subtitle = "",
     principles = [],
   } = content;
   

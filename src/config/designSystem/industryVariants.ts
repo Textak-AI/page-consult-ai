@@ -146,20 +146,20 @@ export const consultingVariant: IndustryDesignTokens = {
   sectionHeaders: {
     features: {
       title: 'Areas of Practice',
-      subtitle: 'Expertise that drives real results',
+      subtitle: '',
       eyebrow: 'OUR EXPERTISE',
     },
     process: {
       title: 'Our Engagement Model',
-      subtitle: 'A collaborative path to success',
+      subtitle: '',
     },
     proof: {
       title: 'Client Success',
-      subtitle: 'Measurable impact across industries',
+      subtitle: '',
     },
     testimonials: {
       title: 'What Clients Say',
-      subtitle: 'Real results from real partnerships',
+      subtitle: '',
     },
     cta: {
       title: 'Schedule a Conversation',
@@ -236,20 +236,20 @@ export const creativeVariant: IndustryDesignTokens = {
   sectionHeaders: {
     features: {
       title: 'What We Do',
-      subtitle: 'Transforming brands through strategic creativity',
+      subtitle: '',
       eyebrow: 'CAPABILITIES',
     },
     process: {
       title: 'Our Process',
-      subtitle: 'From insight to impact',
+      subtitle: '',
     },
     proof: {
       title: 'Selected Work',
-      subtitle: 'Projects that moved the needle',
+      subtitle: '',
     },
     testimonials: {
       title: 'Client Love',
-      subtitle: 'Words from the people we work with',
+      subtitle: '',
     },
     cta: {
       title: "Let's Create Something",
@@ -317,20 +317,20 @@ export const saasVariant: IndustryDesignTokens = {
   sectionHeaders: {
     features: {
       title: 'Everything you need',
-      subtitle: 'Built for teams who move fast',
+      subtitle: '',
       eyebrow: 'FEATURES',
     },
     process: {
       title: 'How It Works',
-      subtitle: 'Three simple steps to success',
+      subtitle: '',
     },
     proof: {
       title: 'In their words',
-      subtitle: 'See what our customers are saying',
+      subtitle: '',
     },
     testimonials: {
       title: 'What teams are saying',
-      subtitle: 'What customers tell us',
+      subtitle: '',
     },
     cta: {
       title: 'Ready to get started?',
@@ -399,20 +399,20 @@ export const healthcareVariant: IndustryDesignTokens = {
   sectionHeaders: {
     features: {
       title: 'Why Organizations Trust Us',
-      subtitle: 'Protecting what matters most',
+      subtitle: '',
       eyebrow: 'Our Expertise',
     },
     process: {
       title: 'How We Work',
-      subtitle: 'A proven approach to security',
+      subtitle: '',
     },
     proof: {
       title: 'Results That Matter',
-      subtitle: 'What patients and partners tell us',
+      subtitle: '',
     },
     testimonials: {
       title: 'What Clients Say',
-      subtitle: 'Real results from real organizations',
+      subtitle: '',
     },
     cta: {
       title: 'Ready to Secure Your Organization?',
@@ -475,20 +475,20 @@ export const defaultVariant: IndustryDesignTokens = {
   sectionHeaders: {
     features: {
       title: 'Why Choose Us',
-      subtitle: 'Everything you need to succeed',
+      subtitle: '',
       eyebrow: 'Features',
     },
     process: {
       title: 'How It Works',
-      subtitle: 'Simple steps to get started',
+      subtitle: '',
     },
     proof: {
       title: 'What Clients Say',
-      subtitle: 'In their own words',
+      subtitle: '',
     },
     testimonials: {
       title: 'What People Say',
-      subtitle: 'Real stories from real customers',
+      subtitle: '',
     },
     cta: {
       title: 'Ready to Start?',
@@ -567,20 +567,20 @@ export const localServicesVariant: IndustryDesignTokens = {
   sectionHeaders: {
     features: {
       title: 'Our Services',
-      subtitle: 'Professional solutions for your home',
+      subtitle: '',
       eyebrow: 'What We Do',
     },
     process: {
       title: 'How It Works',
-      subtitle: 'Simple, hassle-free process',
+      subtitle: '',
     },
     proof: {
       title: 'What Customers Say',
-      subtitle: 'Serving our community with pride',
+      subtitle: '',
     },
     testimonials: {
       title: 'What Our Customers Say',
-      subtitle: 'Real reviews from real neighbors',
+      subtitle: '',
     },
     cta: {
       title: 'Ready to Get Started?',

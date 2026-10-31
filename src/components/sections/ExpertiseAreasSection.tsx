@@ -31,7 +31,7 @@ interface ExpertiseAreasSectionProps {
 function ExpertiseAreasSectionBase({ content }: ExpertiseAreasSectionProps) {
   const { 
     headline = "Areas of Practice",
-    subtitle = "Deep expertise across critical business domains",
+    subtitle = "",
     areas = [],
   } = content;
   
