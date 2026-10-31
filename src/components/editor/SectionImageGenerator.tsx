@@ -407,7 +407,7 @@ export function SectionImageGenerator({
               {/* Suggestions */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">
-                  Suggestions for {industry}
+                  {industry && industry !== 'default' ? `Suggestions for ${industry}` : 'Suggestions'}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {suggestions.map((suggestion, i) => (

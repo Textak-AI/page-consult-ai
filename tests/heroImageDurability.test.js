@@ -3,7 +3,9 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
 const source = readFileSync(new URL('../supabase/functions/generate-hero-images/index.ts', import.meta.url), 'utf8');
-const executable = new Bun.Transpiler({ loader: 'ts' }).transformSync(source.replace(/^import .*;\r?\n/gm, ''));
+// The handler's durableImage helper lives in _shared; evaluate it in the same VM context.
+const helper = readFileSync(new URL('../supabase/functions/_shared/durableImage.ts', import.meta.url), 'utf8').replace(/^export /gm, '');
+const executable = new Bun.Transpiler({ loader: 'ts' }).transformSync(helper + '\n' + source.replace(/^import .*;\r?\n/gm, ''));
 function setup({ cached = null, downloadStatus = 200, mime = 'image/webp' } = {}) {
   let handler; const writes = []; const downloads = [];
   const query = { select: () => query, eq: () => query, single: async () => ({ data: cached }), upsert: async value => { writes.push(value); return {}; } };

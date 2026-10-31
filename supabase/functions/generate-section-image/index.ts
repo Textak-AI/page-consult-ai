@@ -3,6 +3,7 @@ import Replicate from 'https://esm.sh/replicate@0.25.2'
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts'
 import { withCharge } from '../_shared/planLimits.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import { durableImage } from '../_shared/durableImage.ts';
 
 const handle = async (req: Request, userId: string): Promise<Response> => {
   // Handle CORS preflight
@@ -71,9 +72,14 @@ Mood: Confident, trustworthy, innovative.`
 
     console.log('Generation complete, images count:', Array.isArray(output) ? output.length : 0)
 
+    // Provider URLs expire within hours; the editor stores whatever it gets,
+    // so hand back the bytes (failed downloads are dropped, not returned).
+    const urls = (Array.isArray(output) ? output : []).map((o: unknown) => String(o))
+    const images = (await Promise.all(urls.map(async (u) => { try { return await durableImage(u) } catch (e) { console.warn('🔴 [section-image] durable download failed:', String(e)); return null } }))).filter(Boolean)
+
     return new Response(JSON.stringify({ 
       success: true, 
-      images: output,
+      images,
       model: model
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
