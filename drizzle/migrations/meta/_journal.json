@@ -78,6 +78,13 @@
       "when": 1793235587303,
       "tag": "0010_preserve_prospect_update_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793479715520,
+      "tag": "0011_edge_rate_limits",
+      "breakpoints": true
     }
   ]
 }
