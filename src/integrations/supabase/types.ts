@@ -749,6 +749,27 @@ export type Database = {
         }
         Relationships: []
       }
+      edge_rate_limits: {
+        Row: {
+          caller_hash: string
+          created_at: string
+          fn: string
+          id: number
+        }
+        Insert: {
+          caller_hash: string
+          created_at?: string
+          fn: string
+          id?: never
+        }
+        Update: {
+          caller_hash?: string
+          created_at?: string
+          fn?: string
+          id?: never
+        }
+        Relationships: []
+      }
       form_submissions: {
         Row: {
           company: string | null
