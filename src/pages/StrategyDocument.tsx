@@ -237,7 +237,7 @@ export default function StrategyDocument() {
            })
          }
        );
-       toast.success(`StrataQuest™ Blueprint exported as ${filename}`);
+       toast.success(`Strategy Blueprint exported as ${filename}`);
      } catch (error) {
        console.error('PDF export failed:', error);
        toast.error('Failed to export PDF. Please try again.');
@@ -505,13 +505,13 @@ export default function StrategyDocument() {
             </Button>
           </div>
           
-          <h1 className="text-4xl font-bold mb-2">Your StrataQuest™ Blueprint</h1>
+          <h1 className="text-4xl font-bold mb-2">Your Strategy Blueprint</h1>
           <p className="text-gray-400">Strategic methodology applied to your landing page</p>
           
           {/* Methodology Badge */}
           <div className="mt-3">
             <span className="bg-purple-500/10 text-purple-400 text-xs px-2 py-0.5 rounded-full">
-              Powered by StrataQuest™ Methodology
+              PageConsult AI by Hyperbrand Creative, Ltd
             </span>
           </div>
           
@@ -525,7 +525,7 @@ export default function StrategyDocument() {
               </div>
             </div>
             
-            {/* Intelligence Breakdown — StrataQuest category names */}
+            {/* Intelligence Breakdown — PageConsult Method category names */}
             <div className="flex flex-wrap gap-3">
               <div className={`px-3 py-2 ${SECTION_COLORS.whoYouAre.badgeBg} border ${SECTION_COLORS.whoYouAre.badgeBorder} rounded-lg`}>
                 <div className={`text-xs ${SECTION_COLORS.whoYouAre.badgeText}`}>Client Context</div>
@@ -606,7 +606,7 @@ export default function StrategyDocument() {
           </div>
         </section>
 
-        {/* Section 2: Buyer Archetype Assignment — StrataQuest™ Pillar 2 */}
+        {/* Section 2: Buyer Archetype Assignment — PageConsult Method Pillar 2 */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <span className="p-2 rounded-lg bg-purple-500/15 drop-shadow-[0_0_6px_rgba(168,85,247,0.3)]"><Target className="w-5 h-5 text-purple-400" strokeWidth={1.5} /></span>
@@ -1104,7 +1104,7 @@ export default function StrategyDocument() {
           <div className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 border border-purple-500/20 rounded-2xl p-8 text-center">
             <h2 className="text-2xl font-bold mb-4">Ready to Build Your Page?</h2>
             <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
-              Your StrataQuest™ blueprint is complete. Continue to generate a high-converting landing page based on this intelligence.
+              Your strategy blueprint is complete. Continue to generate a high-converting landing page based on this intelligence.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Button 

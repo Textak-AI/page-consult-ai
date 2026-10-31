@@ -46,3 +46,9 @@ test('section rewrite goes through Page Chat; hero and closing CTA cannot be del
   expect(m).toMatch(/disabled=\{pinned\}/);
   expect(m).not.toMatch(/section regenerated/);
 });
+
+test('no StrataQuest naming in the product: PageConsult AI is a Hyperbrand Creative, Ltd product', () => {
+  const { execSync } = require('child_process');
+  const hits = execSync("grep -rli 'strataquest' src supabase/functions || true", { cwd: new URL('..', import.meta.url).pathname }).toString().trim();
+  expect(hits).toBe('');
+});

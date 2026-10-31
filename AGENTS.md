@@ -62,3 +62,4 @@
 - Preview and Share both go through src/lib/editor/previewLink (crypto tokens; /preview/:token takes a token, never a slug).
 - Section "Regenerate" buttons open Page Chat focused on that section with a prefilled rewrite request; the legacy generate-content regenerate_section path invented offers and is no longer reachable from the editor.
 - Every image generator returns bytes, never provider URLs: `_shared/durableImage.ts` is shared by generate-hero-images and generate-section-image (section images used to store replicate.delivery links that expire within hours).
+- Naming: PageConsult AI is a product of Hyperbrand Creative, Ltd. "StrataQuest" is retired everywhere (company and methodology). Method labels read "PageConsult Method"; exported blueprints read "Strategy Blueprint" with "PageConsult AI by Hyperbrand Creative, Ltd". A test fails on any StrataQuest string in src/ or supabase/functions/.

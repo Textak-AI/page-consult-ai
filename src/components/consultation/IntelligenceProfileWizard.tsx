@@ -152,7 +152,7 @@ export function IntelligenceProfileWizard({
               <h2 className="text-base font-medium tracking-wide text-white">
                 Discovery Protocol™
               </h2>
-              <div className="text-[10px] text-slate-500">StrataQuest™ Pillar 1</div>
+              <div className="text-[10px] text-slate-500">PageConsult Method · Pillar 1</div>
             </div>
             <motion.span
               key={score.totalScore}
