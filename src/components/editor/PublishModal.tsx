@@ -1,3 +1,4 @@
+import { externalizeImages } from '@/lib/editor/externalizeImages';
 import { announcePublishChanged } from './PublishToolbar';
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -121,7 +122,8 @@ export function PublishModal({
 
       const userId = session.session.user.id;
       const contentSnapshot = {
-        page_content: sections,
+        // Published pages carry image URLs, never inline image bytes.
+        page_content: await externalizeImages(sections),
         page_styles: styles || pageData?.styles,
         page_title: pageTitle,
         meta_description: metaDescription,
@@ -231,7 +233,7 @@ export function PublishModal({
       const { error } = await supabase
         .from('published_pages')
         .update({
-          page_content: sections as any,
+          page_content: (await externalizeImages(sections)) as any,
           page_styles: styles || pageData?.styles,
           page_title: pageTitle,
           meta_description: metaDescription,

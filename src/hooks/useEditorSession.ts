@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { externalizeImages } from '@/lib/editor/externalizeImages';
 import * as H from '@/lib/editor/history';
 import { stylePresets, type StylePresetName } from '@/styles/presets';
 import { cleanTheme, type PageTheme } from '@/lib/editor/pageTheme';
@@ -86,7 +87,8 @@ export function useEditorSession(opts: {
         const { data, error } = await supabase
           .from('landing_pages')
           .update({
-            sections: snap.sections,
+            // Inline image bytes go to storage; the page keeps the URL.
+            sections: await externalizeImages(snap.sections),
             styles: { ...(baseStylesRef.current || {}), pagePreset: snap.pageStyle, theme: snap.theme },
             updated_at: new Date().toISOString(),
           })

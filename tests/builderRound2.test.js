@@ -81,3 +81,17 @@ test('pricing makes no scarcity or discount claims; agency comparison removed', 
   expect(existsSync(new URL('../src/components/TimelineComparison.tsx', import.meta.url))).toBe(false);
   expect(src('src/pages/Index.tsx')).not.toMatch(/TimelineComparison/);
 });
+
+test('inline image bytes are uploaded and replaced by URLs before save and publish', async () => {
+  const { collectInlineImages, replaceInlineImages, isInlineImage } = await import('../src/lib/editor/externalizeImages');
+  const img = 'data:image/webp;base64,UklGRgAAAABXRUJQ';
+  const sections = [{ type: 'hero', content: { backgroundImage: img, headline: 'data:image is just text here' } }, { type: 'gallery', content: { images: [img, 'https://x/y.png'] } }];
+  expect([...collectInlineImages(sections)]).toEqual([img]);
+  expect(isInlineImage('data:image is just text here')).toBe(false);
+  const out = replaceInlineImages(sections, new Map([[img, 'https://cdn/a.webp']]));
+  expect(out[0].content.backgroundImage).toBe('https://cdn/a.webp');
+  expect(out[1].content.images).toEqual(['https://cdn/a.webp', 'https://x/y.png']);
+  expect(sections[0].content.backgroundImage).toBe(img); // input untouched
+  expect(src('src/hooks/useEditorSession.ts')).toMatch(/sections: await externalizeImages\(snap\.sections\)/);
+  expect(src('src/components/editor/PublishModal.tsx').match(/externalizeImages\(sections\)/g).length).toBe(2);
+});
