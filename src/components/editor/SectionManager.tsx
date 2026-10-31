@@ -65,23 +65,16 @@ export function SectionManager({
     onSectionsChange(move(sections, index, dir));
   };
 
+  // The handler owns its own feedback (it opens Page Chat on that section);
+  // a success toast here fired even when nothing changed.
   const handleRegenerate = async (sectionType: string) => {
     if (!onRegenerateSection || isRegenerating) return;
     setRegeneratingSection(sectionType);
     try {
       await onRegenerateSection(sectionType);
-      toast({
-        title: `${getSectionTitle(sectionType)} section regenerated`,
-        description: "Content has been updated with fresh copy.",
-      });
-    } catch (error) {
-      toast({
-        title: "Regeneration failed",
-        description: "Please try again.",
-        variant: "destructive",
-      });
+    } finally {
+      setRegeneratingSection(null);
     }
-    setRegeneratingSection(null);
   };
 
   const handleSectionClick = (section: Section, index: number) => {
@@ -232,7 +225,7 @@ export function SectionManager({
                     "p-1.5 rounded hover:bg-cyan-500/20 transition-colors",
                     isCurrentlyRegenerating ? "text-cyan-400" : "text-gray-400 hover:text-cyan-400"
                   )}
-                  title={`Regenerate ${getSectionTitle(section.type)}`}
+                  title={`Rewrite ${getSectionTitle(section.type)} with Page Chat`}
                 >
                   {isCurrentlyRegenerating ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -257,11 +250,12 @@ export function SectionManager({
                   )}
                 </button>
                 
-                {/* Delete */}
+                {/* Delete: the leading hero and the closing CTA are the page's frame. */}
                 <button
+                  disabled={pinned}
                   onClick={(e) => {
                     e.stopPropagation();
-                    deleteSection(index);
+                    if (!pinned) deleteSection(index);
                   }}
                   className="p-1.5 rounded hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors"
                   title="Delete section"

@@ -42,7 +42,7 @@ interface ConsultantChatProps {
   brief?: unknown;
   titleFor: (type: string) => string;
   /** Set when a section's AI button is clicked: open, scoped to that section. */
-  focus?: { index: number; type: string; nonce: number } | null;
+  focus?: { index: number; type: string; nonce: number; prefill?: string } | null;
   onApplyOperations: (operations: PageChatOperation[]) => void;
   className?: string;
 }
@@ -105,7 +105,7 @@ export function ConsultantChat({
     if (!focus) return;
     setIsOpen(true);
     setFocusIndex(focus.index);
-    setInput(prev => prev.trim() ? prev : '');
+    setInput(prev => prev.trim() ? prev : (focus.prefill || ''));
     setTimeout(() => inputRef.current?.focus(), 150);
   }, [focus?.nonce]);
 

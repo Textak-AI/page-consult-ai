@@ -29,6 +29,7 @@ import { EditingProvider, useEditing } from "@/contexts/EditingContext";
 import { useEditorSession } from "@/hooks/useEditorSession";
 import { normalize as normalizeSections, insertAt as insertSectionAt } from "@/lib/editor/sectionOps";
 import { applyPageChatOps } from "@/lib/editor/pageChatOps";
+import { getOrCreatePreviewLink } from "@/lib/editor/previewLink";
 import type { PageChatOperation } from "../../supabase/functions/_shared/pageChat";
 import { ADDABLE_SECTION_TYPES, buildSectionContent, type BriefSource } from "@/lib/editor/sectionFactory";
 import { AddSectionDialog } from "@/components/editor/AddSectionDialog";
@@ -5069,10 +5070,19 @@ function GenerateContent() {
 
   const updateSections = setSectionsNow;
 
-  const handlePreview = () => {
-    if (pageData) {
-      window.open(`/preview/${pageData.slug}`, "_blank");
+  // Preview = the current draft through a preview link (the /preview route
+  // takes a token, never a slug). Open the tab first so the popup isn't blocked.
+  const handlePreview = async () => {
+    if (!pageData?.id) return;
+    const tab = window.open('about:blank', '_blank');
+    const link = await getOrCreatePreviewLink(pageData.id);
+    if (!link) {
+      tab?.close();
+      toast({ title: 'Preview unavailable', description: 'Could not create a preview link. Please try again.', variant: 'destructive' });
+      return;
     }
+    const url = `/preview/${link.token}`;
+    if (tab) tab.location.href = url; else window.open(url, '_blank');
   };
 
   // Error state takes precedence over all other UI
@@ -5327,7 +5337,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
   }, [sections, pageData, consultation, strategicData]);
 
   // A section's AI button opens Page Chat focused on that section.
-  const [pageChatFocus, setPageChatFocus] = useState<{ index: number; type: string; nonce: number } | null>(null);
+  const [pageChatFocus, setPageChatFocus] = useState<{ index: number; type: string; nonce: number; prefill?: string } | null>(null);
   const handleAskPageChat = useCallback((index: number, type: string) => {
     setPageChatFocus({ index, type, nonce: Date.now() });
   }, []);
@@ -5529,8 +5539,13 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
     executeWithUsageCheck('page_generation', handleRegenerate);
   };
 
+  // Section rewrites go through Page Chat: the old regenerate_section path
+  // wrote generic copy with invented offers ("Start Building Free") and failed
+  // schema validation on reloaded pages. The chat is guarded and reviewed.
   const handleRegenerateSectionWithUsage = (sectionType: string) => {
-    executeWithUsageCheck('section_regeneration', () => handleRegenerateSection(sectionType), sectionType);
+    const index = sections.findIndex((s: any) => s.type === sectionType);
+    if (index < 0) return;
+    setPageChatFocus({ index, type: sectionType, nonce: Date.now(), prefill: 'Rewrite this section using only my brief and answers.' });
   };
 
   const handleStyleChangeWithUsage = (style: StylePresetName) => {

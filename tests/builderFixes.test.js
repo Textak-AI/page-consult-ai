@@ -24,3 +24,25 @@ test('publishing never silently loses the published state on a slug clash', () =
   expect(s).toMatch(/lpError/);
   expect(s).toMatch(/retrying without slug/);
 });
+
+test('functions.invoke callers never pass a Content-Type header (supabase-js then sends the body unserialized)', () => {
+  for (const f of ['src/components/editor/ImagePicker.tsx', 'src/lib/industryInsights.ts']) {
+    expect(src(f)).not.toMatch(/getAuthHeaders/);
+  }
+});
+
+test('Preview opens a preview-link token, never a slug; tokens come from crypto', () => {
+  const g = src('src/pages/Generate.tsx');
+  expect(g).not.toMatch(/\/preview\/\$\{pageData\.slug\}/);
+  expect(g).toMatch(/getOrCreatePreviewLink\(pageData\.id\)/);
+  const l = src('src/lib/editor/previewLink.ts');
+  expect(l).toMatch(/crypto\.getRandomValues/);
+  expect(src('src/components/editor/SharePreviewModal.tsx')).not.toMatch(/Math\.random/);
+});
+
+test('section rewrite goes through Page Chat; hero and closing CTA cannot be deleted', () => {
+  expect(src('src/pages/Generate.tsx')).toMatch(/prefill: 'Rewrite this section using only my brief and answers\.'/);
+  const m = src('src/components/editor/SectionManager.tsx');
+  expect(m).toMatch(/disabled=\{pinned\}/);
+  expect(m).not.toMatch(/section regenerated/);
+});

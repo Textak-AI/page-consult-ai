@@ -5,20 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Copy, Check, RefreshCw, Loader2, Link2, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { createPreviewLink, getOrCreatePreviewLink } from '@/lib/editor/previewLink';
 
 interface SharePreviewModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   landingPageId: string;
-}
-
-function generateToken(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let token = '';
-  for (let i = 0; i < 12; i++) {
-    token += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return token;
 }
 
 export function SharePreviewModal({ open, onOpenChange, landingPageId }: SharePreviewModalProps) {
@@ -39,21 +31,7 @@ export function SharePreviewModal({ open, onOpenChange, landingPageId }: SharePr
   const fetchOrCreateLink = async () => {
     setLoading(true);
     try {
-      // Check for existing non-expired link
-      const { data: existing } = await supabase
-        .from('preview_links')
-        .select('token, expires_at')
-        .eq('landing_page_id', landingPageId)
-        .gt('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (existing) {
-        setPreviewLink(existing);
-      } else {
-        await createNewLink();
-      }
+      setPreviewLink(await getOrCreatePreviewLink(landingPageId));
     } catch (err) {
       console.error('Failed to fetch preview link:', err);
     } finally {
@@ -62,28 +40,12 @@ export function SharePreviewModal({ open, onOpenChange, landingPageId }: SharePr
   };
 
   const createNewLink = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const token = generateToken();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-    const { error } = await supabase
-      .from('preview_links')
-      .insert({
-        landing_page_id: landingPageId,
-        token,
-        expires_at: expiresAt,
-        created_by: user.id,
-      });
-
-    if (error) {
-      console.error('Failed to create preview link:', error);
+    const link = await createPreviewLink(landingPageId);
+    if (!link) {
       toast.error('Failed to create preview link');
       return;
     }
-
-    setPreviewLink({ token, expires_at: expiresAt });
+    setPreviewLink(link);
   };
 
   const handleRegenerate = async () => {

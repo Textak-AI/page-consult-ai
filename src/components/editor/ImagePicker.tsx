@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Search, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { getAuthHeaders } from '@/lib/authHelpers';
 import { useClientImages } from './ClientImageContext';
 import { auditWorkSample } from '@/lib/workSamples';
 import type { ClientImage } from '@/lib/clientImages';
@@ -75,11 +74,9 @@ export function ImagePicker({ open, onClose, onSelect, defaultQuery, clientImage
 
     setLoading(true);
     try {
-      const headers = await getAuthHeaders();
       
       const { data, error } = await supabase.functions.invoke('unsplash-search', {
-        body: { query: query.trim(), page: pageNum, perPage: 12 },
-        headers,
+        body: { query: query.trim(), page: pageNum, perPage: 12 }
       });
 
       if (error) throw error;
@@ -111,10 +108,8 @@ export function ImagePicker({ open, onClose, onSelect, defaultQuery, clientImage
   const handleImageSelect = async (image: UnsplashImage) => {
     // Track download for Unsplash attribution via Edge Function (keeps API key server-side)
     try {
-      const headers = await getAuthHeaders();
       await supabase.functions.invoke('unsplash-track-download', {
-        body: { downloadLocation: image.links.download_location },
-        headers,
+        body: { downloadLocation: image.links.download_location }
       });
     } catch (err) {
       console.error('Failed to track download:', err);
