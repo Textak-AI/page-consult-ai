@@ -16,6 +16,7 @@ import { assignArchetype } from '@/lib/buyerArchetype';
 import { getPrecomputedObjections, type PredictedObjection } from '@/data/precomputedObjections';
 import { resolveIndustry } from '@/lib/resolveIndustry';
 import { getCtaByIndustry } from '@/lib/ctaByIndustry';
+import { buildHeadlineOptions, buildSubheadline } from '@/lib/strategy/headlineOptions';
 
 // Infer a counter-strategy from objection text when no precomputed data exists
 function inferCounterStrategy(objection: string): string {
@@ -51,69 +52,7 @@ function inferProofNeeded(objection: string): string {
   return 'Case studies and measurable client results';
 }
 
-// --- Headline generation helpers for Voice Resonance section ---
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function extractCore(valueProp: string): string {
-  // Get the first meaningful clause
-  const first = valueProp.split(/[.,;]/)[0].trim();
-  return first.charAt(0).toLowerCase() + first.slice(1);
-}
-
-function synthesizeOutcome(valueProp: string): string {
-  // If short enough, use as-is
-  if (valueProp.length <= 60) return capitalize(valueProp);
-  // Try to extract a "X for Y" pattern spanning the full prop
-  const forMatch = valueProp.match(/^(.+?)\s+for\s+(.+)$/i);
-  if (forMatch) {
-    const what = forMatch[1].trim();
-    const who = forMatch[2].trim();
-    // Condense: keep first noun-phrase of "what", keep full "who"
-    const shortWhat = what.length > 30 ? what.split(/\s+/).slice(0, 4).join(' ') : what;
-    return `${capitalize(shortWhat)} built for ${who}`;
-  }
-  // Summarize by taking first ~8 words
-  const words = valueProp.split(/\s+/);
-  return capitalize(words.slice(0, 8).join(' '));
-}
-
-function buildOutcomeHeadline(valueProp: string, audience: string, companyName: string): string {
-  const outcome = synthesizeOutcome(valueProp);
-  // If audience is already embedded, return as-is
-  if (audience && outcome.toLowerCase().includes(audience.toLowerCase().split(/\s+/)[0])) {
-    return outcome;
-  }
-  if (audience) {
-    return `${outcome} — designed for ${audience}`;
-  }
-  return outcome;
-}
-
-function buildAudienceHeadline(audience: string, challenge: string, fallbackPain?: string): string {
-  const clean = challenge.trim();
-  if (clean.length < 10) {
-    return fallbackPain ? `${audience} deserve a better ${fallbackPain.toLowerCase()}` : `${audience} deserve a better experience`;
-  }
-  return `${audience} deserve better than ${clean.charAt(0).toLowerCase() + clean.slice(1)}`;
-}
-
-function buildContrastHeadline(edge: string, audience: string): string {
-  // Derive a verb phrase from the edge instead of pasting it raw
-  const lower = edge.toLowerCase();
-  // Try to extract a verb-object from common patterns
-  const verbMatch = lower.match(/(?:appeals to|works for|serves|enables|supports|empowers)\s+(.+)/i);
-  if (verbMatch && audience) {
-    // "appeals to both devs and CFOs" → "developers love and CFOs approve"
-    return `Stop compromising — ${capitalize(edge.replace(/^appeals to\s*/i, '').replace(/^works for\s*/i, '').trim())} deserve a single platform`;
-  }
-  // Fallback: use edge as a benefit clause
-  if (audience) {
-    return `The only platform ${audience} trust — ${lower}`;
-  }
-  return `Stop compromising — ${capitalize(edge)}`;
-}
+// Voice Resonance headline options come from src/lib/strategy/headlineOptions (stated sentences only).
 
 const PillarPill = ({ pillar }: { pillar: string }) => (
   <span className="text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded ml-2 align-middle">
@@ -626,7 +565,7 @@ export default function StrategyDocument() {
                 archetype.confidence === 'Moderate' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
                 'bg-gray-500/20 text-gray-300 border border-gray-500/30'
               }`}>
-                {archetype.confidence} ({archetype.signalCount} converging signals)
+                {archetype.confidence === 'Low' ? 'Early read: based on short answers' : `${archetype.confidence} (${archetype.signalCount} signals)`}
               </div>
             </div>
             
@@ -666,53 +605,12 @@ export default function StrategyDocument() {
             // Generate headline options from consultation intel — no API call needed
             const valueProp = (intelligence as any)?.valueProp || consultation?.unique_value || '';
             const audience = consultation?.target_audience || (intelligence as any)?.audience || '';
-            const challenge = (consultation as any)?.challenge || (intelligence as any)?.painPoints?.[0] || '';
-            const companyName = (intelligence as any)?.businessName || (consultation as any)?.business_name || '';
+            // painPoints may be a string; [0] on it returned a single character.
+            const challenge = (consultation as any)?.challenge || painPointsArray[0] || '';
             const edge = consultation?.competitor_differentiator || (intelligence as any)?.competitorDifferentiation || '';
 
-            // Build 3 headline variants from available data
-            const headlines: Array<{ headline: string; reasoning: string }> = [];
-
-            if (valueProp || audience || challenge) {
-              // Option 1: Outcome-focused
-              if (valueProp && audience) {
-                headlines.push({
-                  headline: buildOutcomeHeadline(valueProp, audience, companyName),
-                  reasoning: 'Leads with the measurable outcome your buyer cares about',
-                });
-              } else if (valueProp) {
-                headlines.push({
-                  headline: `${capitalize(valueProp.split(/[.,;]/)[0].trim())}`,
-                  reasoning: 'Leads with your core value proposition',
-                });
-              }
-
-              // Option 2: Audience-specific
-              if (audience && challenge) {
-                headlines.push({
-                  headline: buildAudienceHeadline(audience, challenge, painPointsArray[0]),
-                  reasoning: 'Names the exact buyer and their top frustration',
-                });
-              } else if (audience && valueProp) {
-                headlines.push({
-                  headline: `Built for ${audience} who demand ${extractCore(valueProp)}`,
-                  reasoning: 'Names the exact buyer and what they need',
-                });
-              }
-
-              // Option 3: Contrast/differentiation
-              if (edge) {
-                headlines.push({
-                  headline: buildContrastHeadline(edge, audience),
-                  reasoning: 'Positions against the status quo or competitors',
-                });
-              } else if (challenge) {
-                headlines.push({
-                  headline: `Stop ${challenge.charAt(0).toLowerCase() + challenge.slice(1).split(/[.,;]/)[0].trim()}`,
-                  reasoning: 'Calls out the pain the buyer wants to leave behind',
-                });
-              }
-            }
+            // Headline options: whole stated sentences only (no spliced templates).
+            const headlines = buildHeadlineOptions({ valueProp, challenge, edge });
 
             // Use AI-generated variants if available, otherwise use our generated ones
             const displayHeadlines = (Array.isArray(strategyData.headlineVariants) && strategyData.headlineVariants.length > 0)
@@ -720,14 +618,9 @@ export default function StrategyDocument() {
               : headlines;
 
             // Build subheadline suggestion
-            const subheadlineSuggestion = strategyData.subheadlineApproach || (() => {
-              if (valueProp && audience) {
-                const core = extractCore(valueProp);
-                return `${capitalize(core)} — designed for ${audience}${companyName ? `, powered by ${companyName}` : ''}.`;
-              }
-              if (valueProp) return capitalize(valueProp.split(/[.,;]/)[0].trim()) + '.';
-              return 'Amplify the headline with specific benefits and who they serve.';
-            })();
+            const subheadlineSuggestion = strategyData.subheadlineApproach
+              || buildSubheadline({ valueProp, audience })
+              || 'Add your value proposition in the consultation to get a subheadline here.';
 
             return (
               <div className="space-y-6">

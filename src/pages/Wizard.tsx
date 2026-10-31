@@ -16,6 +16,7 @@ import { ReadyToGeneratePanel } from "@/components/wizard/ReadyToGeneratePanel";
 import { WizardIntelligenceProfile, tilesToIntelligence, mapDemoToConsultation, ExtractedIntelligence } from "@/components/wizard/WizardIntelligenceProfile";
 import PrefillBanner from "@/components/wizard/PrefillBanner";
 import { cn } from "@/lib/utils";
+import { CHAT_SUMMARY_STEPS } from "@/lib/progress/honestSteps";
 import { BuyerObjectionChecklist } from '@/components/consultation/BuyerObjectionChecklist';
 import { consultationObjections } from '../../supabase/functions/_shared/buyerObjections';
 
@@ -80,12 +81,9 @@ export default function Wizard() {
   const [tiles, setTiles] = useState<IntelligenceTile[]>(getDefaultTiles());
   const [overallReadiness, setOverallReadiness] = useState(0);
   const [showPanel, setShowPanel] = useState(true);
-  const [researchSteps, setResearchSteps] = useState<ResearchStep[]>([
-    { label: "Analyzing your industry landscape", done: false },
-    { label: "Researching competitor positioning", done: false },
-    { label: "Identifying audience pain points", done: false },
-    { label: "Finding market statistics", done: false },
-  ]);
+  const [researchSteps, setResearchSteps] = useState<ResearchStep[]>(
+    CHAT_SUMMARY_STEPS.map((label) => ({ label, done: false }))
+  );
   const [researchData, setResearchData] = useState<any>(null);
   const [showPrefillBanner, setShowPrefillBanner] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -852,16 +850,9 @@ export default function Wizard() {
     try {
       const headers = await getAuthHeaders();
       
-      // Simulate research steps
-      for (let i = 0; i < researchSteps.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 2500 + Math.random() * 1500));
-        setResearchSteps(prev => prev.map((step, idx) => 
-          idx === i ? { ...step, done: true } : step
-        ));
-      }
-
-      // Generate research insights using the conversation
+      // Steps advance only when the work they name has happened (no timed simulation).
       const conversationText = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+      setResearchSteps(prev => prev.map((step, idx) => idx === 0 ? { ...step, done: true } : step));
       
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/intake-chat`,
@@ -888,6 +879,7 @@ ${conversationText}` }
       if (!response.ok) throw new Error("Research failed");
       
       const data = await response.json();
+      setResearchSteps(prev => prev.map(step => ({ ...step, done: true })));
       const researchPayload = { 
         ...data, 
         tiles: tiles.map(t => ({ id: t.id, insight: t.insight, fill: t.fill })), 
@@ -1449,8 +1441,8 @@ Ready to build this? Or want to adjust the approach first?`,
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
                   <Search className="w-8 h-8 text-white animate-pulse" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Researching Your Market</h2>
-                <p className="text-white/60">This takes about 15-30 seconds...</p>
+                <h2 className="text-2xl font-bold text-white mb-2">Summarizing your answers</h2>
+                <p className="text-white/60">Turning our conversation into positioning notes.</p>
               </div>
               
               <div className="space-y-4">

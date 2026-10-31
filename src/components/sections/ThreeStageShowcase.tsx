@@ -27,7 +27,7 @@ const CONSULTATION_DATA = [
   { 
     question: "What industry are you in?",
     answer: "B2B SaaS — workflow automation",
-    insight: "SaaS buyers typically need 3-7 touches before converting. Your page needs multiple proof points."
+    insight: "Software buyers compare before they book. Put proof close to the demo ask."
   },
   { 
     question: "Who is your ideal customer?",
@@ -37,17 +37,22 @@ const CONSULTATION_DATA = [
   { 
     question: "What's your main page goal?",
     answer: "Generate qualified demo requests",
-    insight: "Demo requests convert 3x higher than 'contact us' for B2B SaaS."
+    insight: "A demo request matches this goal. The page will ask for one, not a generic contact form."
   },
   { 
     question: "What makes you different from competitors?",
-    answer: "We automate manual workflows in 10 minutes, not 10 weeks. No-code setup.",
+    answer: "Setup takes 10 minutes with no code. Customers tell us they get back about 10 hours a week. We're SOC 2 Type II audited and about 200 ops teams use us.",
     insight: "Speed-to-value is your key differentiator. Make '10 minutes' your headline anchor."
   },
   { 
     question: "What objections do prospects typically have?",
     answer: "Security concerns, integration complexity, change management",
     insight: "Address security early with trust badges. Show integrations visually."
+  },
+  {
+    question: "Any customer quotes you can share?",
+    answer: "\"TechFlow saved our ops team 12 hours per week.\" - Sarah Chen, VP Operations, Acme Corp",
+    insight: "A named quote you supplied. It goes on the page word for word."
   },
 ];
 
@@ -63,7 +68,7 @@ const BRIEF_DATA = {
     "Lead with time savings (10 hours/week) not feature lists",
     "Include ROI calculator — Ops Directors love quantifiable results",
     "Address security concerns above the fold with trust badges",
-    "Demo CTA converts 3x better than 'Contact Us' for this audience"
+    "Use a demo request as the main ask, since that is the stated goal"
   ],
   recommendedStructure: [
     { section: "Hero", description: "Bold time-savings headline + demo CTA" },
@@ -85,7 +90,7 @@ const PAGE_SECTIONS = [
         <div className="text-center space-y-4">
           <span className="inline-block px-3 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full">Workflow Automation</span>
           <h3 className="text-2xl font-bold text-white">Cut Manual Workflows by 10 Hours/Week</h3>
-          <p className="text-gray-400 text-sm">Operations teams at 200+ companies use TechFlow to automate the busywork. Set up in 10 minutes, not 10 weeks.</p>
+          <p className="text-gray-400 text-sm">About 200 ops teams use TechFlow to automate the busywork. Set up in 10 minutes, no code.</p>
           <div className="flex items-center justify-center gap-3 pt-2">
             <span className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg">Book a Demo →</span>
             <span className="text-gray-400 text-sm">Watch Video</span>
@@ -93,7 +98,7 @@ const PAGE_SECTIONS = [
           <div className="flex items-center justify-center gap-4 text-xs text-gray-500 pt-2">
             <span>✓ No credit card</span>
             <span>✓ 10-min setup</span>
-            <span>✓ SOC 2 Certified</span>
+            <span>✓ SOC 2 Type II audited</span>
           </div>
         </div>
       </div>
@@ -118,7 +123,7 @@ const PAGE_SECTIONS = [
             <div className="mt-2 space-y-1">
               <p className="text-gray-300 text-xs">• Automated in 10 minutes</p>
               <p className="text-gray-300 text-xs">• Single source of truth</p>
-              <p className="text-gray-300 text-xs">• 99.9% accuracy</p>
+              <p className="text-gray-300 text-xs">• No copy-paste between tools</p>
             </div>
           </div>
         </div>
@@ -161,15 +166,10 @@ const PAGE_SECTIONS = [
     preview: (
       <div className="space-y-4">
         <div className="text-center">
-          <p className="text-gray-400 text-sm mb-3">Trusted by operations teams at</p>
-          <div className="flex items-center justify-center gap-6 text-gray-500 text-sm">
-            <span className="opacity-60">Stripe</span>
-            <span className="opacity-60">Notion</span>
-            <span className="opacity-60">Figma</span>
-          </div>
+          <p className="text-gray-400 text-sm mb-3">What customers say</p>
         </div>
         <div className="bg-slate-800/50 p-5 rounded-xl border border-gray-700/50">
-          <p className="text-gray-300 text-sm italic mb-3">"TechFlow saved our ops team 12 hours per week. The ROI was obvious within the first month."</p>
+          <p className="text-gray-300 text-sm italic mb-3">"TechFlow saved our ops team 12 hours per week."</p>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-purple-500/30 rounded-full"></div>
             <div>
@@ -394,10 +394,10 @@ export function ThreeStageShowcase({
                 <div className="mt-6 p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/20">
                   <div className="flex items-center gap-2 text-purple-300 text-sm font-medium mb-1">
                     <Zap className="w-4 h-4" />
-                    10x faster than manual
+                    Every claim traces to an answer
                   </div>
                   <p className="text-gray-400 text-xs">
-                    What takes agencies 2-3 weeks, we do in 10 minutes.
+                    Numbers and quotes on the page come from what TechFlow told us. Nothing is filled in.
                   </p>
                 </div>
               </div>
@@ -681,7 +681,7 @@ export function ThreeStageShowcase({
             </span>
             <span className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-purple-400" />
-              10 minutes total
+              One sitting
             </span>
             <span className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-purple-400" />

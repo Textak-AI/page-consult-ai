@@ -112,7 +112,7 @@ export const QUESTION_EXPLAINERS: Record<string, QuestionMeta> = {
   
   idealClient: {
     insight: "Shapes language specificity and pain point framing",
-    methodology: "Specific audience targeting increases conversion 2-3x over generic messaging. We use this to craft headlines that speak directly to your buyer's situation.",
+    methodology: "Headlines written for one specific buyer are easier to recognize yourself in. We use this to write to your buyer's situation.",
     researchRef: {
       title: "Message-Market Fit",
       source: "Copyhackers Research",
@@ -121,7 +121,7 @@ export const QUESTION_EXPLAINERS: Record<string, QuestionMeta> = {
   
   clientFrustration: {
     insight: "Drives the Problem-Solution section structure",
-    methodology: "Problem-aware headlines outperform solution-first headlines by 28%. We lead with their pain, then position you as the relief.",
+    methodology: "Buyers who already feel the problem respond to seeing it named. We lead with the problem in their words, then show how you solve it.",
     researchRef: {
       title: "The PAS Framework",
       source: "Classic Copywriting Methodology",
@@ -139,7 +139,7 @@ export const QUESTION_EXPLAINERS: Record<string, QuestionMeta> = {
   
   clientCount: {
     insight: "Builds trust signals and social proof sections",
-    methodology: "Specific numbers convert 89% better than vague claims. We structure your proof points for maximum credibility.",
+    methodology: "A specific number you can back up says more than a vague claim. We only use the numbers you give us.",
     researchRef: {
       title: "Social Proof in Marketing",
       source: "Cialdini, Influence",
@@ -162,7 +162,7 @@ export const QUESTION_EXPLAINERS: Record<string, QuestionMeta> = {
   
   concreteProofStory: {
     insight: "Creates a specific, memorable case study",
-    methodology: "Abstract claims are forgettable. Concrete stories with specific details are 22x more memorable and build trust faster.",
+    methodology: "Abstract claims are easy to forget. A concrete story with specific details sticks.",
     researchRef: {
       title: "Story-Based Selling",
       source: "Made to Stick, Heath Brothers",
@@ -176,7 +176,7 @@ export const QUESTION_EXPLAINERS: Record<string, QuestionMeta> = {
   
   processDescription: {
     insight: "Reduces uncertainty about what happens next",
-    methodology: "Showing a clear process reduces perceived risk by 47%. We break your approach into digestible steps.",
+    methodology: "Showing what happens next makes the first step feel smaller. We lay out the steps you describe.",
     researchRef: {
       title: "Reducing Purchase Anxiety",
       source: "CXL Institute Research",
@@ -185,7 +185,7 @@ export const QUESTION_EXPLAINERS: Record<string, QuestionMeta> = {
   
   primaryGoal: {
     insight: "Determines CTA language and page structure",
-    methodology: "Single clear CTA increases conversion 371% vs. multiple options. We align every section toward your one goal.",
+    methodology: "One clear ask is easier to act on than several. We point every section toward your one goal.",
     researchRef: {
       title: "CTA Optimization Studies",
       source: "Unbounce Conversion Benchmark",
@@ -194,7 +194,7 @@ export const QUESTION_EXPLAINERS: Record<string, QuestionMeta> = {
   
   ctaText: {
     insight: "Crafts action-oriented button copy",
-    methodology: "First-person CTAs ('Start my trial') outperform second-person ('Start your trial') by 90%. We optimize for action.",
+    methodology: "Button text works best when it says exactly what happens on click. We use the words you choose.",
     researchRef: {
       title: "Button Copy Testing",
       source: "ContentVerve A/B Tests",

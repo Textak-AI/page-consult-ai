@@ -5,6 +5,7 @@ import { applySignatureStrategy } from '@/components/signature/selection';
 import { applyCommunicationStrategy, type CommunicationStrategy } from '@/lib/composition/communicationStrategy';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 import { answeredObjections, toPageQuestion } from '../../supabase/functions/_shared/buyerObjections';
+import { statedCtaText } from '../../supabase/functions/_shared/siteExtraction';
 /**
  * Brief-First Section Mapper with Intelligent Extraction
  * 
@@ -218,7 +219,27 @@ const SECTION_TYPE_ALIASES: Record<string, string> = {
   'credentials': 'credentials-bar',
   'problem/solution': 'problem-solution',
   'case-studies': 'client-results',
+  // _shared/industryLayouts native vocabulary (its SectionType union)
+  'problem-agitate': 'problem-solution',
+  'solution': 'problem-solution',
+  'benefits': 'features',
+  'stats': 'stats-bar',
+  'final_cta': 'final-cta',
+  'closing-cta': 'final-cta',
 };
+
+/**
+ * Every page opens with the hero and closes with the ask (the editor pins the
+ * same two ends). A brief whose structure omits either - the website-first run
+ * shipped hero + one section and no close - gets them added; the close carries
+ * the owner's stated CTA, so this adds no content the owner didn't give.
+ */
+export function pinPageEnds(structure: string[]): string[] {
+  const s = structure.filter((t) => t !== 'hero' && t !== 'final-cta');
+  if (!structure.includes('hero')) console.log('📌 [sectionMapper] hero pinned: missing from page structure');
+  if (!structure.includes('final-cta')) console.log('📌 [sectionMapper] final-cta pinned: missing from page structure');
+  return ['hero', ...s, 'final-cta'];
+}
 
 /**
  * Normalizes a raw pageStructure entry to a canonical switch case label.
@@ -336,7 +357,7 @@ export function mapBriefToSections(
 
   // STORY ARC: problem → guide → plan → outcome → CTA, filled only from existing fields.
   const arcSrc = options.arcSource || {};
-  const arc = composeArc(pageStructure.map(normalizeSectionType), {
+  const arc = composeArc(pinPageEnds(pageStructure.map(normalizeSectionType)), {
     challenge: arcSrc.challenge,
     problemStatement: brief.problemStatement,
     solutionStatement: brief.solutionStatement,
@@ -384,6 +405,13 @@ export function mapBriefToSections(
   console.log('🎨 [SDI] Mode from SDI:', sdiMode);
   
   const industryTokens = getIndustryTokensNew(industryVariant);
+  // SECTION_HEADERS keys differ per variant (no 'testimonials' anywhere - it is
+  // 'proof'; creative has no 'faq'): a missing key used to throw and fail the
+  // whole build. Fall back to the default variant's header.
+  const headerFor = (key: string): { title: string; subtitle: string } => {
+    const k = key === 'testimonials' ? 'proof' : key;
+    return industryTokens.sectionHeaders?.[k] || getIndustryTokensNew('default').sectionHeaders?.[k] || { title: '', subtitle: '' };
+  };
   const isConsulting = industryVariant === 'consulting';
   const isHealthcare = industryVariant === 'healthcare';
   
@@ -442,7 +470,7 @@ export function mapBriefToSections(
           content: {
             headline: headlineSelection.primary,
             subheadline: brief.subheadline,
-            ctaText: options.consultationData?.primaryCTA || brief.ctaText || (isConsulting ? industryTokens.ctaDefaults.primary : getCtaByIndustry(industry).primary),
+            ctaText: statedCtaText(options.consultationData) || brief.ctaText || (isConsulting ? industryTokens.ctaDefaults.primary : getCtaByIndustry(industry).primary),
             ctaLink: '#contact',
             backgroundImage: heroImageUrl || null,
             trustBadges: trustBadges.length > 0 ? trustBadges : undefined,
@@ -546,14 +574,14 @@ export function mapBriefToSections(
             content: {
               title: isBetaPage 
                 ? 'Early Adopter Perks' 
-                : arcSrc.offer?.trim() || (intelligentHeaders.features?.title || industryTokens.sectionHeaders.features.title),
+                : arcSrc.offer?.trim() || (intelligentHeaders.features?.title || headerFor('features').title),
               subtitle: (() => {
                 if (isBetaPage) return 'What you get by joining early';
                 // Outcome slot titled with the client's stated offer: no generic header copy.
                 if (arcSrc.offer?.trim()) return undefined;
                 if (intelligentHeaders.features?.subtitle) return intelligentHeaders.features.subtitle;
                 // Never use raw industry string as subtitle
-                const defaultSub = industryTokens.sectionHeaders.features.subtitle;
+                const defaultSub = headerFor('features').subtitle;
                 const industryLower = (industry || '').toLowerCase().replace(/[_-]/g, ' ');
                 if (defaultSub && industryLower.length > 3 && defaultSub.toLowerCase().includes(industryLower)) {
                   return businessName ? `What sets ${businessName} apart` : 'What makes the difference';
@@ -612,8 +640,8 @@ export function mapBriefToSections(
             order,
             visible: true,
             content: {
-              title: intelligentHeaders.process?.title || industryTokens.sectionHeaders.process.title,
-              subtitle: intelligentHeaders.process?.subtitle || industryTokens.sectionHeaders.process.subtitle,
+              title: intelligentHeaders.process?.title || headerFor('process').title,
+              subtitle: intelligentHeaders.process?.subtitle || headerFor('process').subtitle,
               steps,
               industryVariant: industryVariant,
               mode: sdiMode,
@@ -670,8 +698,8 @@ export function mapBriefToSections(
           content: {
             title: isBetaPage 
               ? 'Join the Waitlist' 
-              : (intelligentHeaders.proof?.title || industryTokens.sectionHeaders.testimonials.title),
-            subtitle: intelligentHeaders.proof?.subtitle || industryTokens.sectionHeaders.testimonials.subtitle,
+              : (intelligentHeaders.proof?.title || headerFor('testimonials').title),
+            subtitle: intelligentHeaders.proof?.subtitle || headerFor('testimonials').subtitle,
             // Pass single testimonial object for component compatibility
             testimonial: primaryTestimonial,
             // Also keep array for components that need multiple
@@ -704,7 +732,7 @@ export function mapBriefToSections(
             order,
             visible: true,
             content: {
-              headline: intelligentHeaders.faq?.title || industryTokens.sectionHeaders.faq.title,
+              headline: intelligentHeaders.faq?.title || headerFor('faq').title,
               eyebrow: undefined,
               items: optimizedFAQs.map(faq => ({
                 question: toPageQuestion(faq.question),
@@ -740,7 +768,8 @@ export function mapBriefToSections(
 
         // CTA Text - check multiple sources (industry-aware fallback)
         const industryCta = getCtaByIndustry(industry);
-        const ctaButtonText = consultation.primaryCTA || 
+        // The owner's stated CTA (wizard field or verbatim site label) is law.
+        const ctaButtonText = statedCtaText(consultation) || 
                               brief.ctaText || 
                               industryCta.primary || 
                               'Get Started';
@@ -770,7 +799,7 @@ export function mapBriefToSections(
           ? 'Be the First to Know' 
           : (intelligentHeaders.cta?.title || 
              goalHeadlines[effectivePageGoal] || 
-             industryTokens.sectionHeaders.cta.title);
+             headerFor('cta').title);
 
         // Differentiation belongs in the guide slot, not repeated beneath the ask.
         const ctaSubtext = '';
@@ -924,8 +953,10 @@ export function mapBriefToSections(
 
     // 4. CTA softening for exploratory ask
     if (msgArch.commitmentAsk === 'exploratory') {
+      // Softening suggests; it never rewrites a CTA the owner stated.
+      const stated = statedCtaText(options.consultationData).toLowerCase();
       sections.forEach(s => {
-        if (s.content?.ctaText) {
+        if (s.content?.ctaText && s.content.ctaText.trim().toLowerCase() !== stated) {
           const hard = ['get started', 'buy now', 'sign up', 'purchase', 'subscribe', 'start now'];
           if (hard.some(cta => s.content.ctaText.toLowerCase().includes(cta))) {
             const original = s.content.ctaText;

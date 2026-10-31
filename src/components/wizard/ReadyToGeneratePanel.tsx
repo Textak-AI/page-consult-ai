@@ -14,14 +14,8 @@ export function ReadyToGeneratePanel({
   onGenerate, 
   onReviewResearch 
 }: ReadyToGeneratePanelProps) {
-  // Default highlights if none provided
-  const highlights = researchHighlights.length > 0 
-    ? researchHighlights.slice(0, 3)
-    : [
-        "Competitive positioning identified",
-        "Target audience pain points analyzed",
-        "Industry best practices researched"
-      ];
+  // Only notes that were actually written for this conversation; no canned defaults.
+  const highlights = researchHighlights.slice(0, 3);
   
   return (
     <div className="h-full flex flex-col bg-black/30 backdrop-blur-xl border-l border-white/10">
@@ -47,7 +41,7 @@ export function ReadyToGeneratePanel({
             <CheckCircle className="w-10 h-10 text-green-400" />
           </div>
         </motion.div>
-        <h2 className="text-xl font-semibold text-white">Strategy Complete!</h2>
+        <h2 className="text-xl font-semibold text-white">Your notes are ready</h2>
         <p className="text-sm text-white/50 mt-1">
           Your landing page brief is ready
         </p>
@@ -55,10 +49,11 @@ export function ReadyToGeneratePanel({
       
       {/* Research Highlights */}
       <div className="flex-1 overflow-y-auto p-4">
+        {highlights.length > 0 && (
         <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-xl p-4 border border-white/10">
           <h4 className="text-sm font-medium text-cyan-400 mb-3 flex items-center gap-2">
             <Zap className="w-4 h-4" />
-            Key Insights
+            From your answers
           </h4>
           <ul className="space-y-3">
             {highlights.map((insight, i) => (
@@ -75,6 +70,7 @@ export function ReadyToGeneratePanel({
             ))}
           </ul>
         </div>
+        )}
         
         {/* What you'll get */}
         <div className="mt-4 p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
@@ -82,10 +78,10 @@ export function ReadyToGeneratePanel({
             Your page will include:
           </h4>
           <ul className="space-y-1 text-xs text-white/60">
-            <li>• Compelling hero section with your value prop</li>
-            <li>• Social proof and credibility elements</li>
-            <li>• Problem-solution messaging framework</li>
-            <li>• Optimized CTAs based on your goals</li>
+            <li>• A hero built from your value proposition</li>
+            <li>• Proof you gave us (left out if you gave none)</li>
+            <li>• The problem and how you solve it, in your words</li>
+            <li>• A call to action built from your stated goal</li>
           </ul>
         </div>
       </div>
@@ -120,7 +116,7 @@ export function ReadyToGeneratePanel({
             className="w-full py-2 text-white/50 hover:text-white hover:bg-white/5 gap-2"
           >
             <FileSearch className="w-4 h-4" />
-            Review full research first
+            Review the notes first
           </Button>
         )}
         

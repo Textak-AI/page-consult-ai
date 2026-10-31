@@ -5,13 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 import { StrategicConsultation, StrategyBriefReview, ConsultationIntro, shouldShowIntro, type ConsultationData } from "@/components/consultation";
-import { optimizeFromProfile, type IntelProfile, type OptimizationResult } from '@/utils/archetypeOptimizer';
+import { optimizeFromProfile, parsePricePoint, type IntelProfile, type OptimizationResult } from '@/utils/archetypeOptimizer';
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import iconmark from "@/assets/iconmark-darkmode.svg";
 import { DevToolbar, useDevMode } from "@/components/dev/DevToolbar";
 import { mockConsultation, mockStrategyBrief, mockAiSeoData, mockStructuredBrief } from "@/lib/mockDevData";
-import { AIWorkingLoader } from "@/components/editor/AIWorkingLoader";
+import { BriefProgressLoader } from "@/components/consultation/BriefProgressLoader";
 import { BrandExtractor } from "@/components/consultation/BrandExtractor";
 import { WebsiteAnalyzer } from "@/components/consultation/WebsiteAnalyzer";
 import { ExtractedBrand } from "@/lib/brandExtraction";
@@ -469,7 +469,7 @@ export default function NewConsultation() {
       const intelProfile: IntelProfile = {
         industry: data.industry || data.industryCategory,
         audience: data.idealClient,
-        pricePoint: parseFloat(String(data.investmentRange || '0').replace(/[^0-9.]/g, '')),
+        pricePoint: parsePricePoint(data.investmentRange),
         painPoints: data.clientFrustration,
         tone: (data as any).tone,
         valueProp: data.mainOffer,
@@ -521,9 +521,10 @@ export default function NewConsultation() {
       const wi: any = (consultationData as any).websiteIntelligence || {};
       let ls: any = {};
       try { ls = JSON.parse(localStorage.getItem('pageconsult_brand_data') || '{}'); } catch {}
-      const brandPrimary   = bs.primaryColor   || wi.primaryColor   || ls.colors?.primary   || null;
-      const brandSecondary = bs.secondaryColor || wi.secondaryColor || ls.colors?.secondary || null;
-      const brandAccent    = ls.colors?.accent || null;
+      // extract-website-intelligence names them primary/secondary/brandColors; extract-brand primaryColor.
+      const brandPrimary   = bs.primaryColor   || wi.primaryColor   || wi.primary   || wi.brandColors?.[0] || ls.colors?.primary   || null;
+      const brandSecondary = bs.secondaryColor || wi.secondaryColor || wi.secondary || wi.brandColors?.[1] || ls.colors?.secondary || null;
+      const brandAccent    = wi.accent || wi.brandColors?.[2] || ls.colors?.accent || null;
       const brandLogo      = bs.logoUrl || wi.logoUrl || ls.logo || null;
       const brandName      = consultationData.businessName || wi.companyName || ls.companyName || null;
 
@@ -582,6 +583,17 @@ export default function NewConsultation() {
       // Log heroBackgroundUrl for debugging
       console.log('🖼️ [NewConsultation] heroBackgroundUrl:', consultationData.heroBackgroundUrl);
       
+      // One resolved brand for every reader: an empty brandSettings colour (logo-only
+      // extraction) must not shadow colours extracted into websiteIntelligence.
+      const resolvedBrandSettings = (brandPrimary || brandLogo || consultationData.brandSettings)
+        ? {
+            ...(consultationData.brandSettings || { headingFont: 'Inter', bodyFont: 'Inter', modified: false }),
+            primaryColor: brandPrimary || '',
+            secondaryColor: brandSecondary || '',
+            logoUrl: brandLogo,
+          }
+        : undefined;
+
       navigate("/generate", {
         state: {
           consultationId: consultationRecord.id,
@@ -609,8 +621,10 @@ export default function NewConsultation() {
             ctaText: consultationData.ctaText,
             objectionsToOvercome: consultationData.objectionsToOvercome,
             objections: consultationData.objections || [],
-            // Brand settings from customization
-            brandSettings: consultationData.brandSettings,
+            // Brand settings from customization, resolved against the extracted colours
+            brandSettings: resolvedBrandSettings,
+            // The saved brand row: Generate's brand chain reads it first
+            extracted_intelligence: consultationRecord.extracted_intelligence,
             // Hero background from AI carousel
             heroBackgroundUrl: consultationData.heroBackgroundUrl,
           },
@@ -622,7 +636,7 @@ export default function NewConsultation() {
             structuredBrief,
             // CRITICAL: Include AI SEO data for intelligent optimization
             aiSeoData,
-            brandSettings: consultationData.brandSettings,
+            brandSettings: resolvedBrandSettings,
             // CRITICAL: Include hero background URL for direct use
             heroBackgroundUrl: consultationData.heroBackgroundUrl,
             // CRITICAL: Include the AI-powered industry classification
@@ -802,9 +816,9 @@ export default function NewConsultation() {
     );
   }
 
-  // Dev loading state (shows AI working loader for 10 seconds)
+  // Dev loading state (shows the brief progress loader)
   if (stage === 'dev-loading') {
-    return <AIWorkingLoader />;
+    return <BriefProgressLoader />;
   }
 
   // Generating state

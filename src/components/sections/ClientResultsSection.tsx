@@ -35,7 +35,7 @@ interface ClientResultsSectionProps {
 
 function ClientResultsSectionBase({ content }: ClientResultsSectionProps) {
   const { 
-    headline = "Client Success Stories",
+    headline = "Client Stories",
     subtitle = "Measurable results that speak for themselves",
     results = [],
   } = content;

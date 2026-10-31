@@ -33,7 +33,7 @@ const plans = [
     tagline: "Limited to 500 spots",
     icon: Crown,
     popular: true,
-    badge: "Most Popular",
+    badge: "Founding price",
     features: [
       "Unlimited landing pages",
       "All premium templates",

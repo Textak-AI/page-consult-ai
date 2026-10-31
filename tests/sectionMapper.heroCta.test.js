@@ -34,7 +34,8 @@ describe('hero ctaText source precedence', () => {
       briefWith({ ctaText: 'Book a Working Session' }),
       consulting({ consultationData: { primaryCTA: 'Talk to Kyle' } })
     );
-    expect(sections).toHaveLength(1);
+    // The close is pinned (pinPageEnds): a hero-only structure still ends on the ask.
+    expect(sections.map(s => s.type)).toEqual(['hero', 'final-cta']);
     expect(heroCta(sections)).toBe('Talk to Kyle');
   });
 

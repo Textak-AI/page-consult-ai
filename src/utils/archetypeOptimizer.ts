@@ -12,6 +12,8 @@ export type ArchetypeName =
 export interface MessagingArchitecture {
   archetype: ArchetypeName;
   confidence: number;
+  /** How much the owner actually said; drives whether a percent is shown at all. */
+  evidence?: ArchetypeEvidence;
   headlineFocus: "outcome-led" | "problem-led";
   proofStyle: "quantitative" | "narrative";
   commitmentAsk: "direct" | "exploratory";
@@ -31,6 +33,8 @@ export interface IntelProfile {
   valueProp?: string;
   edge?: string;
 }
+
+export type ArchetypeEvidence = "thin" | "some" | "strong";
 
 export interface OptimizationResult {
   primary: MessagingArchitecture;
@@ -119,9 +123,52 @@ const MARKERS: Record<ArchetypeName, string[]> = {
   "Cautious Researcher": ["research","compare","evaluate","consider","risk","careful","thorough","due diligence","review","long-term","sustainable","proven","established","trust"],
 };
 
+export function countWords(text: string | null | undefined): number {
+  return (text || '').split(/\s+/).filter((w) => /[a-z0-9]/i.test(w)).length;
+}
+
+/**
+ * Confidence scales with how much the owner actually said. A large score margin
+ * from three-word answers (industry boost alone) is not evidence, so short
+ * answers are capped low and labelled "thin" instead of shown as a percent.
+ */
+export function calibrateArchetypeConfidence(input: {
+  margin: number;
+  total: number;
+  ownerWordCount: number;
+  markerCount: number;
+}): { confidence: number; evidence: ArchetypeEvidence } {
+  const { margin, total, ownerWordCount, markerCount } = input;
+  const raw = 0.5 + Math.max(0, margin) / (total || 1);
+  let cap: number;
+  let evidence: ArchetypeEvidence;
+  if (ownerWordCount < 40 || markerCount < 2) { cap = 0.55; evidence = 'thin'; }
+  else if (ownerWordCount < 120 || markerCount < 4) { cap = 0.7; evidence = 'some'; }
+  else { cap = 0.85; evidence = 'strong'; }
+  const confidence = Math.min(cap, Math.max(0.4, raw));
+  return { confidence: parseFloat(confidence.toFixed(2)), evidence };
+}
+
+/** Plain label for display. Only "strong" evidence earns a percent. */
+export function archetypeConfidenceLabel(confidence: number, evidence?: ArchetypeEvidence): string {
+  if (evidence === 'thin') return 'Early read: based on short answers';
+  if (evidence === 'some') return 'Likely, based on your answers';
+  if (evidence === 'strong') return `${Math.round(confidence * 100)}% confidence`;
+  // Legacy results without evidence: never show a precise percent.
+  return 'Based on your answers';
+}
+
+/** "$5,000 - $10,000" -> 5000 (low end). Never concatenates the two numbers. */
+export function parsePricePoint(range: string | number | null | undefined): number {
+  if (typeof range === 'number') return Number.isFinite(range) ? range : 0;
+  const first = String(range || '').match(/\d[\d,]*(?:\.\d+)?/);
+  return first ? parseFloat(first[0].replace(/,/g, '')) : 0;
+}
+
 export function inferArchetype(profile: IntelProfile): {
   archetype: ArchetypeName;
   confidence: number;
+  evidence: ArchetypeEvidence;
   reasoning: string;
   matchedMarkers: string[];
 } {
@@ -197,7 +244,15 @@ export function inferArchetype(profile: IntelProfile): {
 
   const sorted = (Object.entries(scores) as [ArchetypeName, number][]).sort(([, a], [, b]) => b - a);
   const total = sorted.reduce((s, [, v]) => s + v, 0) || 1;
-  const confidence = Math.min(0.95, Math.max(0.45, 0.5 + (sorted[0][1] - sorted[1][1]) / total));
+  // Industry/price boosts are not evidence about the buyer; only the owner's own words are.
+  const ownerText = [profile.audience, profile.painPoints, profile.tone, profile.valueProp, profile.edge, conversationText, extractedText].join(' ');
+  const markerCount = Object.values(markerCounts).reduce((a, b) => a + b, 0);
+  const { confidence, evidence } = calibrateArchetypeConfidence({
+    margin: sorted[0][1] - sorted[1][1],
+    total,
+    ownerWordCount: countWords(ownerText),
+    markerCount,
+  });
 
   console.log('🎯 [ArchetypeOptimizer] Inference:', sorted[0][0], '| Confidence:', confidence.toFixed(2), '| Scores:', JSON.stringify(scores));
 
@@ -207,14 +262,15 @@ export function inferArchetype(profile: IntelProfile): {
   return {
     archetype: sorted[0][0],
     confidence: parseFloat(confidence.toFixed(2)),
-    reasoning: `Classified as ${sorted[0][0]} based on ${profile.industry || "unknown"} industry, $${price.toLocaleString()} price point, and language signal analysis.`,
+    evidence,
+    reasoning: `Read as ${sorted[0][0]} from the words in your answers${profile.industry ? `, your industry (${profile.industry})` : ""}${price > 0 ? ` and your $${price.toLocaleString()} price point` : ""}.`,
     matchedMarkers,
   };
 }
 
 // ── Main Optimization ──────────────────────────────────────────────────────
 
-export function optimizeArchitecture(archetype: ArchetypeName, confidence: number = 0.8): OptimizationResult {
+export function optimizeArchitecture(archetype: ArchetypeName, confidence: number = 0.5, evidence?: ArchetypeEvidence): OptimizationResult {
   const weights = WEIGHTS[archetype];
 
   const states: { dims: number[]; score: number }[] = [];
@@ -235,6 +291,7 @@ export function optimizeArchitecture(archetype: ArchetypeName, confidence: numbe
   const primary: MessagingArchitecture = {
     archetype,
     confidence,
+    evidence,
     headlineFocus: best.dims[0] === 0 ? "outcome-led" : "problem-led",
     proofStyle: best.dims[1] === 0 ? "quantitative" : "narrative",
     commitmentAsk: best.dims[2] === 0 ? "direct" : "exploratory",
@@ -266,16 +323,16 @@ export function optimizeArchitecture(archetype: ArchetypeName, confidence: numbe
   return {
     primary,
     alternates,
-    reasoning: `Buyer archetype: ${archetype} (${(confidence * 100).toFixed(0)}% confidence). 64 messaging architectures evaluated. Optimal configuration locked.`,
+    reasoning: `Buyer archetype: ${archetype} (${archetypeConfidenceLabel(confidence, evidence)}). Six messaging choices set from your answers before the page is written.`,
     generationConstraints,
   };
 }
 
 export function optimizeFromProfile(profile: IntelProfile): OptimizationResult & {
-  inference: { archetype: ArchetypeName; confidence: number; reasoning: string; matchedMarkers: string[] };
+  inference: { archetype: ArchetypeName; confidence: number; evidence: ArchetypeEvidence; reasoning: string; matchedMarkers: string[] };
 } {
   const inference = inferArchetype(profile);
-  const result = optimizeArchitecture(inference.archetype, inference.confidence);
+  const result = optimizeArchitecture(inference.archetype, inference.confidence, inference.evidence);
   console.log('🎯 [ArchetypeOptimizer] Full pipeline complete:', inference.archetype, '→', result.primary.stateKey);
   return { ...result, inference };
 }
@@ -286,7 +343,7 @@ function buildGenerationConstraints(arch: MessagingArchitecture): string {
   return `
 ## Messaging Architecture (Deterministic Optimization — SDI Layer 1.5)
 
-Buyer Archetype: ${arch.archetype} (${(arch.confidence * 100).toFixed(0)}% confidence)
+Buyer Archetype: ${arch.archetype} (${archetypeConfidenceLabel(arch.confidence, arch.evidence)})
 These six constraints are MANDATORY. Follow them exactly.
 
 1. HEADLINE: ${arch.headlineFocus} framing.

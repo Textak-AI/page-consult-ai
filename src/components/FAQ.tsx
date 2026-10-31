@@ -24,7 +24,7 @@ const faqs = [
   {
     question: "What if I don't know my positioning or target audience yet?",
     answer:
-      "That's exactly what the consultation is for. The AI asks questions that help you articulate your value — even if you haven't put it into words before. Many users discover clarity about their own business through the process.",
+      "That's exactly what the consultation is for. The AI asks questions that help you articulate your value — even if you haven't put it into words before. The questions are there to help you put it into words.",
   },
   {
     question: "How long does it take?",

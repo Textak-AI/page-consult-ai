@@ -2,7 +2,8 @@
  * Industry-Specific Section Headers
  * 
  * Each industry needs contextually appropriate section headers.
- * A plumber's "What Our Customers Say" beats SaaS's "Trusted By"
+ * A plumber's "What Our Customers Say" reads differently from SaaS's "Customers".
+ * Titles describe the section; they never claim trust, results or popularity.
  * A healthcare provider's "Your Journey With Us" beats manufacturing's "Process Framework"
  */
 
@@ -30,30 +31,30 @@ export const SECTION_HEADERS: Record<string, Record<SectionHeaderType, SectionHe
   'local-services': {
     features: { title: 'Our Services', subtitle: '' },
     process: { title: 'How It Works', subtitle: '' },
-    proof: { title: 'Trusted Locally', subtitle: '' },
+    proof: { title: 'What customers say', subtitle: '' },
     testimonials: { title: 'What Our Customers Say', subtitle: '' },
-    cta: { title: 'Get Your Free Quote', subtitle: '' },
+    cta: { title: 'Request a Quote', subtitle: '' },
     gallery: { title: 'Our Recent Work', subtitle: '' },
     serviceArea: { title: 'Areas We Serve', subtitle: '' },
     faq: { title: 'Common Questions', subtitle: '' },
     benefits: { title: 'Why Choose Us', subtitle: '' },
-    pricing: { title: 'Transparent Pricing', subtitle: '' },
+    pricing: { title: 'Pricing', subtitle: '' },
     team: { title: 'Meet Our Team', subtitle: '' },
-    credentials: { title: 'Licensed & Certified', subtitle: '' },
+    credentials: { title: 'Credentials', subtitle: '' },
   },
 
   // SaaS: Speed, efficiency, modern
   saas: {
     features: { title: 'Platform Features', subtitle: '' },
     process: { title: 'How It Works', subtitle: '' },
-    proof: { title: 'Trusted By', subtitle: '' },
+    proof: { title: 'Customers', subtitle: '' },
     testimonials: { title: 'Customer Stories', subtitle: '' },
-    cta: { title: 'Start Free Trial', subtitle: '' },
+    cta: { title: 'Get Started', subtitle: '' },
     gallery: { title: 'Product Screenshots', subtitle: '' },
-    serviceArea: { title: 'Global Availability', subtitle: '' },
+    serviceArea: { title: 'Availability', subtitle: '' },
     faq: { title: 'Frequently Asked Questions', subtitle: '' },
-    benefits: { title: 'Why Teams Choose Us', subtitle: '' },
-    pricing: { title: 'Simple Pricing', subtitle: '' },
+    benefits: { title: 'Why Choose Us', subtitle: '' },
+    pricing: { title: 'Pricing', subtitle: '' },
     team: { title: 'Built By', subtitle: '' },
     credentials: { title: 'Security & Compliance', subtitle: '' },
   },
@@ -62,7 +63,7 @@ export const SECTION_HEADERS: Record<string, Record<SectionHeaderType, SectionHe
   manufacturing: {
     features: { title: 'Capabilities', subtitle: '' },
     process: { title: 'Our Process', subtitle: '' },
-    proof: { title: 'Proven Track Record', subtitle: '' },
+    proof: { title: 'Results', subtitle: '' },
     testimonials: { title: 'Client Results', subtitle: '' },
     cta: { title: 'Request a Quote', subtitle: '' },
     gallery: { title: 'Facility & Equipment', subtitle: '' },
@@ -78,7 +79,7 @@ export const SECTION_HEADERS: Record<string, Record<SectionHeaderType, SectionHe
   healthcare: {
     features: { title: 'How We Support You', subtitle: '' },
     process: { title: 'Your Journey With Us', subtitle: '' },
-    proof: { title: 'Why Families Trust Us', subtitle: '' },
+    proof: { title: 'What patients say', subtitle: '' },
     testimonials: { title: 'Patient Stories', subtitle: '' },
     cta: { title: 'Schedule a Consultation', subtitle: '' },
     gallery: { title: 'Our Facilities', subtitle: '' },
@@ -114,7 +115,7 @@ export const SECTION_HEADERS: Record<string, Record<SectionHeaderType, SectionHe
     testimonials: { title: 'Client Words', subtitle: '' },
     cta: { title: "Let's Create", subtitle: '' },
     gallery: { title: 'Portfolio', subtitle: '' },
-    serviceArea: { title: 'Clients Worldwide', subtitle: '' },
+    serviceArea: { title: 'Where We Work', subtitle: '' },
     faq: { title: 'Questions', subtitle: '' },
     benefits: { title: 'Why Us', subtitle: '' },
     pricing: { title: 'Engagement Models', subtitle: '' },
@@ -127,7 +128,7 @@ export const SECTION_HEADERS: Record<string, Record<SectionHeaderType, SectionHe
   consulting: {
     features: { title: 'Areas of Practice', subtitle: '' },
     process: { title: 'Our Engagement Model', subtitle: '' },
-    proof: { title: 'Client Success', subtitle: '' },
+    proof: { title: 'Client Results', subtitle: '' },
     testimonials: { title: 'What Clients Say', subtitle: '' },
     cta: { title: 'Schedule a Conversation', subtitle: '' },
     gallery: { title: 'Case Studies', subtitle: '' },
@@ -159,14 +160,14 @@ export const SECTION_HEADERS: Record<string, Record<SectionHeaderType, SectionHe
   ecommerce: {
     features: { title: 'Shop Our Collection', subtitle: '' },
     process: { title: 'How to Order', subtitle: '' },
-    proof: { title: 'Customer Love', subtitle: '' },
-    testimonials: { title: 'Happy Customers', subtitle: '' },
+    proof: { title: 'What customers say', subtitle: '' },
+    testimonials: { title: 'Customer Reviews', subtitle: '' },
     cta: { title: 'Shop Now', subtitle: '' },
     gallery: { title: 'Product Gallery', subtitle: '' },
     serviceArea: { title: 'We Ship To', subtitle: '' },
     faq: { title: 'Shopping FAQ', subtitle: '' },
     benefits: { title: 'Why Shop With Us', subtitle: '' },
-    pricing: { title: 'Today\'s Deals', subtitle: '' },
+    pricing: { title: 'Pricing', subtitle: '' },
     team: { title: 'Our Story', subtitle: '' },
     credentials: { title: 'Secure Shopping', subtitle: '' },
   },
@@ -175,7 +176,7 @@ export const SECTION_HEADERS: Record<string, Record<SectionHeaderType, SectionHe
   default: {
     features: { title: 'What We Offer', subtitle: '' },
     process: { title: 'How It Works', subtitle: '' },
-    proof: { title: 'Proven Results', subtitle: '' },
+    proof: { title: 'Results', subtitle: '' },
     testimonials: { title: 'What Clients Say', subtitle: '' },
     cta: { title: 'Get Started', subtitle: '' },
     gallery: { title: 'Our Work', subtitle: '' },

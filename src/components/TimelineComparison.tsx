@@ -117,7 +117,7 @@ const TimelineComparison = () => {
                     <Clock className="w-5 h-5 text-cyan-400" />
                     <span className="text-white/70">Timeline</span>
                   </div>
-                  <span className="text-white font-semibold">A few minutes</span>
+                  <span className="text-white font-semibold">One sitting</span>
                 </div>
                 <div className="flex items-center justify-between py-4 border-b border-white/10">
                   <div className="flex items-center gap-3">
@@ -128,7 +128,7 @@ const TimelineComparison = () => {
                 </div>
                 <div className="flex items-center justify-between py-4 border-b border-white/10">
                   <span className="text-white/70">Revisions</span>
-                  <span className="text-white font-semibold">Unlimited AI edits</span>
+                  <span className="text-white font-semibold">Edit with AI or by hand</span>
                 </div>
                 <div className="flex items-center justify-between py-4">
                   <span className="text-white/70">Strategy Included</span>
@@ -142,11 +142,11 @@ const TimelineComparison = () => {
               <div className="mt-6 pt-6 border-t border-white/10 space-y-3 relative z-10">
                 <div className="flex items-center gap-3 text-white/80">
                   <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                  <span className="text-sm">Live in minutes</span>
+                  <span className="text-sm">Publish when you are ready</span>
                 </div>
                 <div className="flex items-center gap-3 text-white/80">
                   <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                  <span className="text-sm">Test 10 variations for the cost of one</span>
+                  <span className="text-sm">Strategy brief written before the page</span>
                 </div>
               </div>
             </div>

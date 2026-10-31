@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { htmlToText, harvestActionLabels, sanitizeSiteAnalysis, taxonomyPromptList } from '../_shared/siteExtraction.ts';
 
 serve(async (req) => {
   const corsResponse = handleCorsPreflightRequest(req);
@@ -37,13 +38,9 @@ serve(async (req) => {
     const html = await response.text();
     
     // Extract text content
-    const textContent = html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 15000);
+    const textContent = htmlToText(html).slice(0, 15000);
+    // Button/link labels exactly as rendered: the only source a CTA label may come from.
+    const actionLabels = harvestActionLabels(html);
 
     // Try to fetch About page
     let aboutContent = '';
@@ -56,13 +53,7 @@ serve(async (req) => {
           });
           if (aboutResponse.ok) {
             const aboutHtml = await aboutResponse.text();
-            aboutContent = aboutHtml
-              .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-              .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-              .replace(/<[^>]+>/g, ' ')
-              .replace(/\s+/g, ' ')
-              .trim()
-              .slice(0, 5000);
+            aboutContent = htmlToText(aboutHtml).slice(0, 5000);
             break;
           }
         } catch (e) { /* continue */ }
@@ -101,20 +92,33 @@ For example:
 
 The user will fill in gaps themselves. Your job is to extract what EXISTS, not invent what doesn't.
 
+VERBATIM FIELDS (copied character-for-character from the site; anything not found exactly is discarded):
+- offers[].name: the offer/service/product name exactly as the site writes it. Never rename, shorten, or "improve" it.
+- offers[].description: a sentence copied from the site about that offer, or "".
+- ctaLabels: call-to-action button/link labels exactly as written, most prominent first. Choose ONLY from BUTTON AND LINK LABELS below.
+- testimonials[].quote and proofPoints[]: exact text from the site.
+- targetAudience / problemStatement / solutionStatement / uniqueDifferentiator: quote the site's own sentence, or "".
+
+INDUSTRY: pick exactly one category and one subcategory from this list (copy the labels exactly), with your confidence:
+${taxonomyPromptList()}
+
+BUTTON AND LINK LABELS ON THE SITE:
+${actionLabels.length ? actionLabels.map((l) => `- ${l}`).join('\n') : '(none found)'}
+
 Return JSON:
 
 {
   "companyName": "Company name (from website)",
-  "industry": "Primary industry if mentioned, or empty string",
-  "targetAudience": "Only if explicitly mentioned on the site, otherwise empty string",
-  "problemStatement": "Only if clearly stated on website, otherwise empty string",
-  "solutionStatement": "Only if clearly stated on website, otherwise empty string",
-  "uniqueDifferentiator": "Only if explicitly claimed on site, otherwise empty string",
-  "proofPoints": ["Only real certifications, awards, stats actually on the website"],
+  "industry": "The site's own description of what the business is, or empty string",
+  "industryClassification": { "category": "Exact category label", "subcategory": "Exact subcategory label", "confidence": "high | medium | low" },
+  "targetAudience": "",
+  "problemStatement": "",
+  "solutionStatement": "",
+  "uniqueDifferentiator": "",
+  "proofPoints": ["Exact text of real certifications, awards, stats on the website"],
   "testimonials": [{"quote": "Exact quote from website", "author": "Real name", "title": "Real title"}],
-  "services": [{"name": "Service name from site", "description": "Description from site"}],
-  "recommendedCTA": "Suggest based on their business type",
-  "recommendedOffer": "Suggest based on their industry",
+  "offers": [{"name": "Exact offer name", "description": "Exact sentence from the site or empty"}],
+  "ctaLabels": ["Exact button label"],
   "gaps": [
     {
       "field": "fieldName",
@@ -128,7 +132,7 @@ IMPORTANT:
 - Be SPECIFIC to this company
 - Add to "gaps" for EVERY field you couldn't fill from the website
 - For missing testimonials, include email template for requesting them
-- recommendedCTA and recommendedOffer are the only fields where you can suggest (not extract)
+- Do not suggest CTAs or offers. If the site has none, leave the array empty and add a gap.
 
 Return ONLY valid JSON.`;
 
@@ -142,7 +146,7 @@ Return ONLY valid JSON.`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 2000,
+        max_tokens: 3000,
         messages: [{ role: 'user', content: analysisPrompt }]
       })
     });
@@ -166,6 +170,9 @@ Return ONLY valid JSON.`;
         throw new Error('Failed to parse AI analysis');
       }
     }
+
+    // Verbatim contract: drop anything not on the site; suggestions never prefill.
+    analysis = sanitizeSiteAnalysis(analysis, `${textContent} ${aboutContent}`, actionLabels);
 
     // Add testimonial guidance if none found
     if (!analysis.testimonials?.length) {

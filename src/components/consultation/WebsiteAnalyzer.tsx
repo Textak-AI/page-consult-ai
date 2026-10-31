@@ -35,11 +35,19 @@ export function WebsiteAnalyzer({ websiteUrl, extractedBrand, onAnalysisComplete
       setProgress(30);
       setStatus('Analyzing your business...');
 
-      const { data, error } = await supabase.functions.invoke('analyze-website', {
-        body: { url: websiteUrl, extractedBrand }
-      });
+      // analyze-website reads the copy; extract-website-intelligence is the same
+      // extractor the wizard's website step uses (stylesheet colours, site images),
+      // so the website-first path carries equivalent brand data. It never blocks.
+      const [analysisResult, siteIntelResult] = await Promise.allSettled([
+        supabase.functions.invoke('analyze-website', { body: { url: websiteUrl, extractedBrand } }),
+        supabase.functions.invoke('extract-website-intelligence', { body: { url: websiteUrl } }),
+      ]);
+      if (analysisResult.status === 'rejected') throw analysisResult.reason;
+      const { data, error } = analysisResult.value;
 
       if (error) throw error;
+      const siteIntel = siteIntelResult.status === 'fulfilled' ? (siteIntelResult.value.data?.data || siteIntelResult.value.data) : null;
+      if (data?.analysis && siteIntel?.success) data.analysis.siteIntelligence = siteIntel;
 
       setProgress(70);
       setStatus('Extracting key insights...');

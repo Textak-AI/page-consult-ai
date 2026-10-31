@@ -5,6 +5,7 @@ import { Check, Pencil, Loader2, FileText, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { BrandBrief } from '@/hooks/useBrandBrief';
 import type { ConsultationData } from './StrategicConsultation';
+import { resolveBrandSummary } from '@/lib/wizard/brandSummary';
 
 interface CollapsibleBriefPanelProps {
   wizardData: Partial<ConsultationData>;
@@ -227,6 +228,8 @@ export function CollapsibleBriefPanel({
   const [hasAutoCollapsed, setHasAutoCollapsed] = useState(false);
   
   const completeness = calculateCompleteness(wizardData);
+  // Colors set in the wizard's Brand step count, not only a saved brand row.
+  const brand = resolveBrandSummary(brandBrief, wizardData.brandSettings);
   const { saveStatus, manualSave } = useAutoSave(wizardData, userId);
   const isEditable = !!onFieldChange;
 
@@ -265,8 +268,8 @@ export function CollapsibleBriefPanel({
             >
               Your Brief
             </span>
-            {brandBrief?.logo_url && (
-              <div className="w-2 h-2 rounded-full bg-emerald-500" title="Brand loaded" />
+            {brand && (
+              <div className="w-2 h-2 rounded-full bg-emerald-500" title="Brand set" />
             )}
           </motion.button>
         )}
@@ -300,10 +303,10 @@ export function CollapsibleBriefPanel({
               {/* Brand Section */}
               <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
                 <div className="flex items-center justify-between mb-3">
-                  {brandBrief ? (
+                  {brand ? (
                     <div className="flex items-center gap-2 text-emerald-400 text-sm">
                       <Check className="w-4 h-4" />
-                      Brand Loaded
+                      {brand.source === 'wizard' ? 'Brand set' : 'Brand Loaded'}
                     </div>
                   ) : brandLoading ? (
                     <div className="text-sm text-slate-400">Loading brand...</div>
@@ -318,9 +321,9 @@ export function CollapsibleBriefPanel({
                   </Link>
                 </div>
                 
-                {brandBrief && (
+                {brand && (
                   <>
-                    {brandBrief.logo_url && (
+                    {brand.logoUrl && (
                       <div 
                         className="rounded-lg p-3 mb-3 flex items-center justify-center"
                         style={{
@@ -331,45 +334,43 @@ export function CollapsibleBriefPanel({
                         }}
                       >
                         <img 
-                          src={brandBrief.logo_url} 
+                          src={brand.logoUrl} 
                           alt="Logo" 
                           className="h-10 object-contain max-w-full"
                         />
                       </div>
                     )}
                     
-                    {brandBrief.website_url && (
+                    {brand.websiteUrl && (
                       <p className="text-xs text-slate-400 mb-3 flex items-center gap-1.5">
                         <span className="text-slate-300">🌐</span>
                         <a 
-                          href={brandBrief.website_url} 
+                          href={brand.websiteUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="hover:text-white transition-colors truncate"
                         >
-                          {brandBrief.website_url.replace(/^https?:\/\//, '')}
+                          {brand.websiteUrl.replace(/^https?:\/\//, '')}
                         </a>
                       </p>
                     )}
                     
-                    {brandBrief.colors?.primary?.hex && (
+                    {brand.colors.length > 0 && (
                       <div className="flex gap-2 mb-3">
-                        {Object.entries(brandBrief.colors).map(([key, color]) => (
-                          color?.hex && (
-                            <div
-                              key={key}
-                              className="w-6 h-6 rounded border border-slate-600"
-                              style={{ backgroundColor: color.hex }}
-                              title={`${key}: ${color.hex}`}
-                            />
-                          )
+                        {brand.colors.map((color) => (
+                          <div
+                            key={color.key}
+                            className="w-6 h-6 rounded border border-slate-600"
+                            style={{ backgroundColor: color.hex }}
+                            title={`${color.key}: ${color.hex}`}
+                          />
                         ))}
                       </div>
                     )}
                     
-                    {brandBrief.voice_tone?.personality && brandBrief.voice_tone.personality.length > 0 && (
+                    {brand.voice.length > 0 && (
                       <p className="text-xs text-slate-400">
-                        Voice: {brandBrief.voice_tone.personality.slice(0, 2).join(', ')}
+                        Voice: {brand.voice.join(', ')}
                       </p>
                     )}
                   </>

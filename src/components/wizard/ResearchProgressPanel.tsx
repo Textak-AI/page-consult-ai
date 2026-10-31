@@ -26,9 +26,9 @@ export function ResearchProgressPanel({ steps }: ResearchProgressPanelProps) {
         >
           <Search className="w-8 h-8 text-white" />
         </motion.div>
-        <h2 className="text-xl font-semibold text-white">Researching Your Market</h2>
+        <h2 className="text-xl font-semibold text-white">Summarizing your answers</h2>
         <p className="text-sm text-white/50 mt-1">
-          Analyzing competitive landscape...
+          Turning our conversation into positioning notes
         </p>
       </div>
       
@@ -92,10 +92,7 @@ export function ResearchProgressPanel({ steps }: ResearchProgressPanelProps) {
       
       {/* Footer */}
       <div className="p-4 border-t border-white/10 text-center">
-        <p className="text-sm text-white/40">
-          Usually takes 30-60 seconds
-        </p>
-        <p className="text-xs text-white/30 mt-1">
+        <p className="text-xs text-white/30">
           {completedCount} of {steps.length} steps complete
         </p>
       </div>

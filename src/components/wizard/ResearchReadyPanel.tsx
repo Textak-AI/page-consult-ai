@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import type { IntelligenceTile } from "./IntelligencePanel";
+import { CHAT_SUMMARY_STEPS } from "@/lib/progress/honestSteps";
 
 interface ResearchReadyPanelProps {
   tiles: IntelligenceTile[];
@@ -96,21 +97,15 @@ export function ResearchReadyPanel({
             What happens next?
           </h3>
           <ul className="space-y-2 text-sm text-white/70">
-            <li className="flex items-start gap-2">
-              <Search className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />
-              Analyze your competitive landscape
-            </li>
-            <li className="flex items-start gap-2">
-              <Search className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />
-              Research industry statistics
-            </li>
-            <li className="flex items-start gap-2">
-              <Search className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />
-              Identify audience pain points
-            </li>
+            {CHAT_SUMMARY_STEPS.map((step) => (
+              <li key={step} className="flex items-start gap-2">
+                <Search className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />
+                {step}
+              </li>
+            ))}
           </ul>
           <p className="text-xs text-white/40 mt-3">
-            This usually takes 30-60 seconds
+            Uses only what you told me. No web research runs at this step.
           </p>
         </div>
       </div>
@@ -131,7 +126,7 @@ export function ResearchReadyPanel({
           >
             <Search className="w-5 h-5" />
           </motion.div>
-          Begin Market Research
+          Summarize my answers
           <Rocket className="w-5 h-5" />
         </Button>
       </div>

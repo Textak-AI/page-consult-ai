@@ -1,5 +1,5 @@
-import { AIWorkingLoader } from '@/components/editor/AIWorkingLoader';
+import { BriefProgressLoader } from '@/components/consultation/BriefProgressLoader';
 
 export default function AILoaderPreview() {
-  return <AIWorkingLoader />;
+  return <BriefProgressLoader />;
 }

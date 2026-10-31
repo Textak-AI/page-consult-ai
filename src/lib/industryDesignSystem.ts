@@ -408,7 +408,7 @@ const SECTION_HEADERS: Record<string, Record<string, { title: string; subtitle: 
   consulting: {
     features: { title: 'How We Help', subtitle: 'Our expertise' },
     process: { title: 'Our Approach', subtitle: 'How we work together' },
-    proof: { title: 'Client Results', subtitle: 'Proven impact' },
+    proof: { title: 'Client Results', subtitle: '' },
     problem: { title: 'The Challenge', subtitle: '' },
     solution: { title: 'Our Solution', subtitle: '' },
     faq: { title: 'Common Questions', subtitle: '' },
@@ -418,7 +418,7 @@ const SECTION_HEADERS: Record<string, Record<string, { title: string; subtitle: 
   coaching: {
     features: { title: "What You'll Get", subtitle: 'The transformation' },
     process: { title: 'How It Works', subtitle: 'Your journey' },
-    proof: { title: 'Success Stories', subtitle: 'Real transformations' },
+    proof: { title: 'Client Stories', subtitle: '' },
     problem: { title: 'Does This Sound Like You?', subtitle: '' },
     solution: { title: "There's a Better Way", subtitle: '' },
     faq: { title: 'Questions', subtitle: '' },
@@ -428,19 +428,19 @@ const SECTION_HEADERS: Record<string, Record<string, { title: string; subtitle: 
   manufacturing: {
     features: { title: 'Operational Capabilities', subtitle: 'What we deliver' },
     process: { title: 'Engagement Framework', subtitle: 'How we work' },
-    proof: { title: 'Proven Impact', subtitle: 'Measurable results' },
+    proof: { title: 'Results', subtitle: '' },
     problem: { title: 'The Challenge', subtitle: '' },
     solution: { title: 'Our Approach', subtitle: '' },
     faq: { title: 'Common Questions', subtitle: '' },
-    cta: { title: 'Ready to Optimize?', subtitle: 'Start your assessment' },
+    cta: { title: 'Start Your Assessment', subtitle: '' },
     industries: { title: 'Industries Served', subtitle: 'Built for your sector' },
-    certifications: { title: 'Certifications', subtitle: 'Quality assured' },
+    certifications: { title: 'Certifications', subtitle: '' },
   },
   
   healthcare: {
-    features: { title: 'Our Services', subtitle: 'Comprehensive care' },
+    features: { title: 'Our Services', subtitle: '' },
     process: { title: 'Your Care Journey', subtitle: 'What to expect' },
-    proof: { title: 'Patient Stories', subtitle: 'Real experiences' },
+    proof: { title: 'Patient Stories', subtitle: '' },
     faq: { title: 'Questions & Answers', subtitle: '' },
     cta: { title: 'Your Health Matters', subtitle: 'Take the first step' },
   },
@@ -486,7 +486,7 @@ const SECTION_HEADERS: Record<string, Record<string, { title: string; subtitle: 
   realestate: {
     features: { title: 'Our Services', subtitle: 'Full-service real estate' },
     process: { title: 'How We Work', subtitle: 'Your journey to closing' },
-    proof: { title: 'Client Success', subtitle: 'What our clients say' },
+    proof: { title: 'Client Results', subtitle: '' },
     cta: { title: 'Find Your Dream Home', subtitle: 'Start your search' },
   },
   

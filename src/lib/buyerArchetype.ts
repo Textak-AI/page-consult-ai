@@ -43,9 +43,21 @@ const ARCHETYPE_META: Record<ArchetypeName, { label: string; description: string
     label: 'Cautious Researcher',
     description: 'Thorough. Risk-averse. Needs comprehensive answers.',
     monologue: '"What am I missing? What could go wrong?"',
-    voice: 'Transparent, thorough, reassuring with guarantees',
+    voice: 'Transparent, thorough, reassuring with clear answers',
   },
 };
+
+export function countOwnerWords(parts: string[]): number {
+  return parts.join(' ').split(/\s+/).filter((w) => /[a-z0-9]/i.test(w)).length;
+}
+
+/** High needs both score and enough of the owner's own words to back it. */
+export function calibratedArchetypeLabel(winnerScore: number, ownerWords: number): 'High' | 'Moderate' | 'Low' {
+  const byScore: 'High' | 'Moderate' | 'Low' = winnerScore >= 4 ? 'High' : winnerScore >= 2 ? 'Moderate' : 'Low';
+  if (ownerWords < 40) return 'Low';
+  if (ownerWords < 120 && byScore === 'High') return 'Moderate';
+  return byScore;
+}
 
 export function assignArchetype(briefData: Record<string, any>): ArchetypeAssignment {
   const signals: ArchetypeSignal[] = [];
@@ -53,7 +65,7 @@ export function assignArchetype(briefData: Record<string, any>): ArchetypeAssign
 
   // Signal from industry
   const industry = (briefData.industry || '').toLowerCase();
-  if (/saas|fintech|healthcare|enterprise|b2b|tech|software|ai|automation/.test(industry)) {
+  if (/saas|fintech|healthcare|enterprise|b2b|tech|software|\bai\b|automation/.test(industry)) {
     signals.push({ archetype: 'analytical_validator', source: 'technical_industry', weight: 2 });
     signalDescriptions.push('B2B enterprise context');
   }
@@ -79,7 +91,7 @@ export function assignArchetype(briefData: Record<string, any>): ArchetypeAssign
 
   // Signal from competitive edge / value prop language
   const edge = (briefData.competitiveEdge || briefData.competitorDifferentiator || briefData.competitor_differentiator || briefData.valueProp || briefData.unique_value || '').toLowerCase();
-  if (/data|ai|automation|analytics|ml|algorithm|metric|roi|performance/.test(edge)) {
+  if (/\bdata\b|\bai\b|automation|analytics|\bml\b|algorithm|metric|\broi\b|performance/.test(edge)) {
     signals.push({ archetype: 'analytical_validator', source: 'technical_differentiator', weight: 1 });
     signalDescriptions.push('Data/ROI-focused language');
   }
@@ -137,9 +149,10 @@ export function assignArchetype(briefData: Record<string, any>): ArchetypeAssign
   // Deduplicate signal descriptions
   const uniqueSignals = [...new Set(signalDescriptions)];
 
-  const confidence: 'High' | 'Moderate' | 'Low' = 
-    winnerScore >= 4 ? 'High' : 
-    winnerScore >= 2 ? 'Moderate' : 'Low';
+  // Industry and job-title matches are not evidence of how this buyer decides;
+  // the owner's own words are. Short answers cap the label.
+  const ownerWords = countOwnerWords([audience, edge, pains, proof]);
+  const confidence = calibratedArchetypeLabel(winnerScore, ownerWords);
 
   return {
     primary: winner,

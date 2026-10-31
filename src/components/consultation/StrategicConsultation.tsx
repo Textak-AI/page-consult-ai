@@ -11,13 +11,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
-import { AIWorkingLoader } from '@/components/editor/AIWorkingLoader';
+import { BriefProgressLoader } from './BriefProgressLoader';
+import { getWizardPlaceholders, getOfferKind, frustrationQuestion, uniqueStrengthExample } from '@/lib/wizard/industryWording';
 import { QuestionExplainer, QUESTION_EXPLAINERS } from './QuestionExplainer';
 import type { AISeoData } from '@/services/intelligence/types';
 import { BrandCustomization, type BrandSettings, type WebsiteIntelligence } from './BrandCustomization';
 import { CollapsibleBriefPanel } from './CollapsibleBriefPanel';
 import { useBrandBrief } from '@/hooks/useBrandBrief';
 import { extractStructuredBrief } from '@/lib/extractStructuredBrief';
+import { websiteFirstPrefill, type WebsiteFirstAnalysis } from '@/lib/websiteFirst';
 import { AmbientHeroBackground } from './AmbientHeroBackground';
 import { generateHeroImages, regenerateHeroImages, generateCombinedHeroImages, regenerateCombinedHeroImages, type HeroImage } from '@/lib/heroImages';
 import { 
@@ -73,6 +75,9 @@ export interface ConsultationData {
     companyName: string | null;
     headingFont?: string | null;
     bodyFont?: string | null;
+    /** Website-first: offers and CTA labels verbatim from the owner's site. */
+    siteOffers?: { name: string; description: string }[];
+    siteCtaLabels?: string[];
   };
   
   // Brand Settings (from BrandCustomization step)
@@ -252,79 +257,6 @@ const PRIMARY_GOALS = [
   { value: 'sales', label: 'Direct Sales', desc: 'Sell product/service directly' },
 ];
 
-// Industry-specific placeholder examples for better UX
-const INDUSTRY_PLACEHOLDERS: Record<string, {
-  idealClient: string;
-  clientFrustration: string;
-  desiredOutcome: string;
-  uniqueStrength: string;
-  mainOffer: string;
-  offerIncludes: string;
-}> = {
-  'B2B SaaS / Software': {
-    idealClient: 'e.g., Mid-market SaaS companies with 50-200 employees looking to scale their sales operations...',
-    clientFrustration: 'e.g., They struggle with fragmented tools, manual processes, and inconsistent data across departments...',
-    desiredOutcome: 'e.g., Streamlined operations that save 10+ hours per week and provide clear visibility into their pipeline...',
-    uniqueStrength: 'e.g., We integrate with 50+ tools out of the box and customers see ROI within the first 30 days...',
-    mainOffer: 'e.g., Enterprise Platform Integration, Custom API Development',
-    offerIncludes: 'e.g., Full implementation, 3 custom integrations, dedicated success manager, 24/7 support...',
-  },
-  'Professional Services': {
-    idealClient: 'e.g., Growing businesses with 10-50 employees needing strategic consulting but lacking in-house expertise...',
-    clientFrustration: 'e.g., They hire consultants who give generic advice without understanding their specific industry challenges...',
-    desiredOutcome: 'e.g., A clear strategic roadmap they can implement immediately with measurable quarterly milestones...',
-    uniqueStrength: 'e.g., We only work with 5 clients at a time, guaranteeing hands-on attention from senior partners...',
-    mainOffer: 'e.g., Strategic Growth Consulting, Business Transformation Services',
-    offerIncludes: 'e.g., Monthly strategy sessions, implementation support, quarterly business reviews...',
-  },
-  'Healthcare / Medical': {
-    idealClient: 'e.g., Medical practices with 3-10 providers looking to improve patient experience and operational efficiency...',
-    clientFrustration: 'e.g., They deal with outdated systems, long wait times, and frustrated staff juggling manual paperwork...',
-    desiredOutcome: 'e.g., A smoothly running practice where staff focus on patient care, not administrative burden...',
-    uniqueStrength: 'e.g., We specialize exclusively in healthcare IT with HIPAA-compliant solutions and 24/7 support...',
-    mainOffer: 'e.g., Practice Management Solutions, EHR Implementation',
-    offerIncludes: 'e.g., Full system setup, staff training, data migration, ongoing technical support...',
-  },
-  'Real Estate': {
-    idealClient: 'e.g., First-time homebuyers or families relocating who need guidance through the entire buying process...',
-    clientFrustration: 'e.g., They feel overwhelmed by the process, fear making a costly mistake, and get generic MLS listings...',
-    desiredOutcome: 'e.g., Finding their perfect home without stress, getting the best deal, and closing on time...',
-    uniqueStrength: 'e.g., We negotiate an average of $15K below asking price and have a 100% closing rate...',
-    mainOffer: 'e.g., Full-Service Home Buying, Luxury Property Sales',
-    offerIncludes: 'e.g., Market analysis, property tours, negotiation, closing coordination, post-sale support...',
-  },
-  'Agency / Creative': {
-    idealClient: 'e.g., Funded startups and established brands looking to differentiate through exceptional design and strategy...',
-    clientFrustration: 'e.g., They work with agencies that miss deadlines, don\'t understand their vision, or produce mediocre work...',
-    desiredOutcome: 'e.g., A brand that stands out, resonates with their audience, and drives measurable business results...',
-    uniqueStrength: 'e.g., We\'ve won 15+ design awards and our average client sees 3x improvement in conversion rates...',
-    mainOffer: 'e.g., Brand Strategy & Design, Digital Experience Design',
-    offerIncludes: 'e.g., Discovery workshop, brand strategy, visual identity, website design, brand guidelines...',
-  },
-  'Manufacturing / Industrial': {
-    idealClient: 'e.g., Aerospace and defense contractors requiring precision machined components with tight tolerances...',
-    clientFrustration: 'e.g., They deal with quality inconsistencies, late deliveries, and suppliers who can\'t scale with demand...',
-    desiredOutcome: 'e.g., A reliable supply chain partner that delivers quality parts on time, every time...',
-    uniqueStrength: 'e.g., AS9100D certified with 99.7% on-time delivery and zero defects on mission-critical parts...',
-    mainOffer: 'e.g., Precision CNC Machining, Custom Fabrication Services',
-    offerIncludes: 'e.g., Design consultation, prototyping, production runs, quality documentation, logistics...',
-  },
-  'default': {
-    idealClient: 'e.g., Describe your ideal customer in detail - their role, company size, specific needs...',
-    clientFrustration: 'e.g., What problems do they face? What keeps them up at night when hiring in your space?',
-    desiredOutcome: 'e.g., What transformation or result are they really paying for?',
-    uniqueStrength: 'e.g., What makes you different from competitors? What do you guarantee or promise?',
-    mainOffer: 'e.g., Your main product or service name',
-    offerIncludes: 'e.g., List what\'s included in your core offering...',
-  },
-};
-
-// Helper to get placeholders based on selected industry
-const getPlaceholders = (industry?: string) => {
-  if (!industry) return INDUSTRY_PLACEHOLDERS['default'];
-  return INDUSTRY_PLACEHOLDERS[industry] || INDUSTRY_PLACEHOLDERS['default'];
-};
-
 // Prefill data from landing demo
 interface PrefillData {
   extracted?: {
@@ -358,20 +290,7 @@ interface ExtractedBrandData {
   websiteUrl?: string;
 }
 
-interface WebsiteAnalysis {
-  companyName?: string;
-  industry?: string;
-  targetAudience?: string;
-  problemStatement?: string;
-  solutionStatement?: string;
-  uniqueDifferentiator?: string;
-  proofPoints?: string[];
-  testimonials?: { quote: string; author: string; title?: string }[];
-  services?: { name: string; description: string }[];
-  recommendedCTA?: string;
-  recommendedOffer?: string;
-  gaps?: { field: string; message: string; guidance: string }[];
-}
+type WebsiteAnalysis = WebsiteFirstAnalysis;
 
 interface Props {
   onComplete: (
@@ -407,51 +326,12 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   const getInitialData = (): Partial<ConsultationData> => {
     const initial: Partial<ConsultationData> = {};
     
-    // WEBSITE ANALYSIS TAKES TOP PRIORITY (AI analyzed the full site)
+    // WEBSITE ANALYSIS TAKES TOP PRIORITY (AI analyzed the full site).
+    // websiteFirstPrefill fills the same fields the wizard collects: offers/CTA
+    // verbatim from the site, real extracted colours, industry as selector labels.
     if (websiteAnalysis) {
       console.log('🤖 Using AI website analysis for initial data');
-      initial.businessName = websiteAnalysis.companyName || extractedBrand?.companyName || '';
-      initial.websiteUrl = extractedBrand?.websiteUrl || '';
-      initial.hasExistingWebsite = !!extractedBrand?.websiteUrl;
-      initial.industry = websiteAnalysis.industry || '';
-      initial.idealClient = websiteAnalysis.targetAudience || '';
-      initial.clientFrustration = websiteAnalysis.problemStatement || '';
-      initial.uniqueStrength = websiteAnalysis.solutionStatement || '';
-      initial.mainOffer = websiteAnalysis.recommendedOffer || '';
-      initial.ctaText = websiteAnalysis.recommendedCTA || '';
-      initial.achievements = websiteAnalysis.proofPoints?.join('\n') || '';
-      initial.testimonialText = websiteAnalysis.testimonials?.[0]?.quote || '';
-      
-      // Apply brand settings from extracted brand
-      if (extractedBrand?.themeColor || extractedBrand?.logoUrl) {
-        initial.brandSettings = {
-          logoUrl: extractedBrand.logoUrl || null,
-          primaryColor: extractedBrand.themeColor || '',
-          secondaryColor: extractedBrand.secondaryColor || '',
-          headingFont: 'Inter',
-          bodyFont: 'Inter',
-          modified: true,
-        };
-      }
-      if (extractedBrand?.ogImage) {
-        initial.heroBackgroundUrl = extractedBrand.ogImage;
-      }
-      // Build website intelligence with explicit primary/secondary for BrandCustomization
-      const brandColors = [extractedBrand?.themeColor, extractedBrand?.secondaryColor].filter(Boolean) as string[];
-      initial.websiteIntelligence = {
-        logoUrl: extractedBrand?.logoUrl || null,
-        brandColors,
-        primaryColor: extractedBrand?.themeColor || brandColors[0] || null,
-        secondaryColor: extractedBrand?.secondaryColor || brandColors[1] || null,
-        title: websiteAnalysis.companyName || extractedBrand?.companyName || null,
-        tagline: extractedBrand?.tagline || null,
-        description: extractedBrand?.description || null,
-        heroText: null,
-        testimonials: websiteAnalysis.testimonials?.map(t => t.quote) || [],
-        companyName: websiteAnalysis.companyName || extractedBrand?.companyName || null,
-      };
-      
-      return initial;
+      return websiteFirstPrefill(websiteAnalysis, extractedBrand) as Partial<ConsultationData>;
     }
     
     // EXTRACTED BRAND TAKES SECOND PRIORITY
@@ -632,9 +512,11 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       setData(prev => ({
         ...prev,
         // Brand settings
+        // Real extracted colours only: no substituted hex (an invented colour would
+        // outrank the industry default), and never clobber colours already prefilled.
         brandSettings: {
-          primaryColor: extractedBrand.themeColor || prev.brandSettings?.primaryColor || '#7C3AED',
-          secondaryColor: extractedBrand.secondaryColor || prev.brandSettings?.secondaryColor || '#4F46E5',
+          primaryColor: extractedBrand.themeColor || prev.brandSettings?.primaryColor || '',
+          secondaryColor: extractedBrand.secondaryColor || prev.brandSettings?.secondaryColor || '',
           logoUrl: extractedBrand.logoUrl || prev.brandSettings?.logoUrl || null,
           headingFont: prev.brandSettings?.headingFont || 'Inter',
           bodyFont: prev.brandSettings?.bodyFont || 'Inter',
@@ -644,9 +526,11 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         websiteIntelligence: {
           ...prev.websiteIntelligence,
           logoUrl: extractedBrand.logoUrl || prev.websiteIntelligence?.logoUrl || null,
-          brandColors: [extractedBrand.themeColor, extractedBrand.secondaryColor, extractedBrand.accentColor].filter(Boolean) as string[],
-          primaryColor: extractedBrand.themeColor || null,
-          secondaryColor: extractedBrand.secondaryColor || null,
+          brandColors: ([extractedBrand.themeColor, extractedBrand.secondaryColor, extractedBrand.accentColor].filter(Boolean) as string[]).length
+            ? [extractedBrand.themeColor, extractedBrand.secondaryColor, extractedBrand.accentColor].filter(Boolean) as string[]
+            : prev.websiteIntelligence?.brandColors || [],
+          primaryColor: extractedBrand.themeColor || prev.websiteIntelligence?.primaryColor || null,
+          secondaryColor: extractedBrand.secondaryColor || prev.websiteIntelligence?.secondaryColor || null,
           companyName: extractedBrand.companyName || prev.websiteIntelligence?.companyName || null,
           tagline: extractedBrand.tagline || prev.websiteIntelligence?.tagline || null,
           description: extractedBrand.description || prev.websiteIntelligence?.description || null,
@@ -1509,8 +1393,8 @@ ${d.ctaText}
                   {data.pageType === 'beta-prelaunch'
                     ? `What will make ${data.productName || data.businessName || 'your product'} worth the wait? *`
                     : data.productName
-                    ? `What's the ONE thing ${data.productName} does better than anything else? *`
-                    : "What's the ONE thing you do better than anyone else? *"}
+                    ? `What does ${data.productName} do that the alternatives don't? *`
+                    : "What do you do differently from the alternatives? *"}
                   <QuestionExplainer {...QUESTION_EXPLAINERS.uniqueStrength} />
                 </Label>
                 <Textarea
@@ -1518,9 +1402,7 @@ ${d.ctaText}
                   placeholder={
                     data.pageType === 'beta-prelaunch'
                       ? "e.g., AI that actually learns YOUR focus patterns, not generic productivity tips..."
-                      : data.productName
-                      ? `e.g., ${data.productName} is the only tool that...`
-                      : "e.g., We're the only agency that guarantees 10x ROI on ad spend within 90 days or your money back..."
+                      : uniqueStrengthExample(getOfferKind(data.industryCategory || data.industry, data.industrySubcategory), data.productName)
                   }
                   value={data.uniqueStrength || ''}
                   onChange={(e) => updateData({ uniqueStrength: e.target.value })}
@@ -1533,7 +1415,7 @@ ${d.ctaText}
               {/* NEW: Identity Sentence */}
               <div>
                 <Label htmlFor="identitySentence" className="text-slate-400 inline-flex items-center">
-                  How would you describe your firm in one sentence to a peer in your industry?
+                  How would you describe your business in one sentence to a peer in your industry?
                   <QuestionExplainer {...QUESTION_EXPLAINERS.identitySentence} />
                 </Label>
                 <p className="text-xs text-slate-500 mt-1">Not your tagline — your honest positioning.</p>
@@ -1560,7 +1442,8 @@ ${d.ctaText}
         );
 
       case 'audience':
-        const placeholders = getPlaceholders(data.industry);
+        const placeholders = getWizardPlaceholders(data.industryCategory || data.industry);
+        const offerKind = getOfferKind(data.industryCategory || data.industry, data.industrySubcategory);
         return (
           <div className="space-y-6">
             <div className="text-center mb-8">
@@ -1587,7 +1470,7 @@ ${d.ctaText}
               
               <div>
                 <Label htmlFor="clientFrustration" className="text-slate-400 inline-flex items-center">
-                  What's their biggest frustration when hiring in your space? *
+                  {frustrationQuestion(offerKind)} *
                   <QuestionExplainer {...QUESTION_EXPLAINERS.clientFrustration} />
                 </Label>
                 <Textarea
@@ -1625,18 +1508,18 @@ ${d.ctaText}
           <div className="space-y-6">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-white mb-2">Your Track Record</h2>
-              <p className="text-slate-400">Social proof that builds trust. Share what you can.</p>
+              <p className="text-slate-400">Proof you can stand behind. Leave out anything you can't back up.</p>
             </div>
             
             <div className="space-y-5">
               <div>
                 <Label htmlFor="clientCount" className="text-slate-400 inline-flex items-center">
-                  Approximately how many clients/projects have you completed?
+                  About how many customers, clients or projects can you point to?
                   <QuestionExplainer {...QUESTION_EXPLAINERS.clientCount} />
                 </Label>
                 <Input
                   id="clientCount"
-                  placeholder="e.g., 400+ weddings, 50 clients, 1000 projects"
+                  placeholder="e.g., 50 clients, 1,200 active users, 400 weddings"
                   value={data.clientCount || ''}
                   onChange={(e) => updateData({ clientCount: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
@@ -1742,7 +1625,7 @@ ${d.ctaText}
                 </Label>
                 <Input
                   id="mainOffer"
-                  placeholder="e.g., Wedding DJ Partnership Package, Growth Marketing Audit, Custom Software Development"
+                  placeholder={getWizardPlaceholders(data.industryCategory || data.industry).mainOffer}
                   value={data.mainOffer || ''}
                   onChange={(e) => updateData({ mainOffer: e.target.value })}
                   onBlur={() => triggerConsultantBlur('mainOffer')}
@@ -1757,7 +1640,7 @@ ${d.ctaText}
                 </Label>
                 <Textarea
                   id="offerIncludes"
-                  placeholder="e.g., 6 hours of coverage, backup equipment, planning consultation, custom playlist creation, MC services..."
+                  placeholder={getWizardPlaceholders(data.industryCategory || data.industry).offerIncludes}
                   value={data.offerIncludes || ''}
                   onChange={(e) => updateData({ offerIncludes: e.target.value })}
                   onBlur={() => triggerConsultantBlur('offerIncludes')}
@@ -1961,7 +1844,7 @@ ${d.ctaText}
   };
 
   if (isGeneratingBrief) {
-    return <AIWorkingLoader />;
+    return <BriefProgressLoader />;
   }
 
   // Brand customization step renders as full-page component
@@ -2223,7 +2106,7 @@ ${d.ctaText}
       {/* Collapsible Brief Panel - fixed position overlay */}
       <CollapsibleBriefPanel 
         wizardData={data} 
-        brandBrief={brandBrief} 
+        brandBrief={savedBrandDismissed ? null : brandBrief} 
         brandLoading={brandLoading}
         onFieldChange={handleBriefFieldChange}
         userId={userId}

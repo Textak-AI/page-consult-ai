@@ -154,7 +154,7 @@ export const consultingVariant: IndustryDesignTokens = {
       subtitle: '',
     },
     proof: {
-      title: 'Client Success',
+      title: 'Client Results',
       subtitle: '',
     },
     testimonials: {
@@ -248,7 +248,7 @@ export const creativeVariant: IndustryDesignTokens = {
       subtitle: '',
     },
     testimonials: {
-      title: 'Client Love',
+      title: 'What Clients Say',
       subtitle: '',
     },
     cta: {
@@ -398,7 +398,7 @@ export const healthcareVariant: IndustryDesignTokens = {
   
   sectionHeaders: {
     features: {
-      title: 'Why Organizations Trust Us',
+      title: 'What We Do',
       subtitle: '',
       eyebrow: 'Our Expertise',
     },
@@ -407,7 +407,7 @@ export const healthcareVariant: IndustryDesignTokens = {
       subtitle: '',
     },
     proof: {
-      title: 'Results That Matter',
+      title: 'Results',
       subtitle: '',
     },
     testimonials: {

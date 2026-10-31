@@ -8,6 +8,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@4';
 import { guardCopyClaims } from '../_shared/copyClaims.ts';
 import { BUYER_OBJECTION_RULES, consultationObjections, applyAnsweredObjections } from '../_shared/buyerObjections.ts';
+import { pinStatedCopy, siteCopyPromptBlock } from '../_shared/siteExtraction.ts';
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -268,6 +269,7 @@ ${consultationData.websiteIntelligence ? `
 - Description: ${consultationData.websiteIntelligence.description || 'None'}
 - Existing Testimonials: ${consultationData.websiteIntelligence.testimonials?.join(' | ') || 'None'}
 ` : ''}
+${siteCopyPromptBlock(consultationData)}
 
 ${hasSelectedHeadline || hasSelectedCTA || alternativeHeadlines.length > 0 ? `
 ## Creative Direction (User-Selected)
@@ -449,6 +451,8 @@ Be specific. No generic advice. Everything should tie back to the actual consult
 
     if (structuredBrief && typeof structuredBrief === 'object') {
       applyBriefGuards(structuredBrief, consultationData);
+      // Owner-stated CTA (typed or verbatim from their site) outranks the model's restatement.
+      pinStatedCopy(structuredBrief, consultationData);
       structuredBrief = guardCopyClaims(structuredBrief, consultationData, 'brief-guard');
       applyAnsweredObjections(structuredBrief, consultationData);
       structuredBrief.communicationStrategy = computeCommunicationStrategy(consultationData, structuredBrief);

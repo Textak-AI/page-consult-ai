@@ -18,7 +18,7 @@ const EXAMPLE_DATA = {
   goal: "Generate qualified demo requests",
   keyInsight: "Operations Directors are measured on efficiency metrics — your page needs to show time savings in their language, not yours.",
   heroHeadline: "Cut Manual Workflows by 10 Hours/Week",
-  heroSubhead: "Operations teams at 200+ companies use TechFlow to automate the busywork.",
+  heroSubhead: "TechFlow automates the busywork for operations teams.",
   pageFeatures: [
     "Strategy-driven headline",
     "ROI calculator included",
@@ -360,7 +360,7 @@ export function PremiumShowcaseCTA({
               {/* Footer */}
               <div className="mt-6 text-center">
                 <p className="text-gray-500 text-sm">
-                  Generated in 10 minutes from strategic consultation.
+                  Built from a strategy consultation.
                   <span className="text-gray-400 ml-1">No templates. No guesswork.</span>
                 </p>
               </div>
@@ -531,7 +531,7 @@ export function PremiumShowcaseCTA({
             </span>
             <span className="flex items-center gap-1.5">
               <Clock className="w-4 h-4 text-cyan-400" />
-              10 minutes start to finish
+              One sitting
             </span>
             <span className="flex items-center gap-1.5">
               <Shield className="w-4 h-4 text-purple-400" />

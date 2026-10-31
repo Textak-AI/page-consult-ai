@@ -68,14 +68,14 @@ function getSocialProofHeader(industry?: string, isConsulting?: boolean): { titl
   
   if (industryLower.includes('wedding') || industryLower.includes('dj')) {
     return { 
-      title: 'Client Success Stories', 
+      title: 'Client Stories', 
       subtitle: '',
     };
   }
   
   if (industryLower.includes('b2b') || industryLower.includes('saas') || industryLower.includes('software')) {
     return { 
-      title: 'Client Success Stories', 
+      title: 'Client Stories', 
       subtitle: '',
     };
   }

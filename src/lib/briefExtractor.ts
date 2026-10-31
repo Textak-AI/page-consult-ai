@@ -1,5 +1,6 @@
 import { truncateAtBoundary } from '@/lib/text/truncate';
 import { answeredObjections } from '../../supabase/functions/_shared/buyerObjections';
+import { firstSentence } from './strategy/headlineOptions';
 /**
  * INTELLIGENT BRIEF EXTRACTION
  * 
@@ -398,10 +399,11 @@ export function enhanceMessagingPillars(
   }
 
   return pillars.map((pillar) => {
-    const firstSentence = pillar.description.split(/[.!?]/)[0];
-    const hook = firstSentence.length > 60 
-      ? truncateAtBoundary(firstSentence, 60, { ellipsis: true })
-      : firstSentence;
+    // Whole first sentence: splitting on every '.' cut "$2.5M" and "e.g." mid-phrase.
+    const lead = firstSentence(pillar.description || '');
+    const hook = lead.length > 60 
+      ? truncateAtBoundary(lead, 60, { ellipsis: true })
+      : lead;
 
     const relevantSignal = authoritySignals.find(signal => {
       const combined = `${pillar.title} ${pillar.description}`.toLowerCase();
@@ -432,28 +434,28 @@ export function getIntelligentSectionHeaders(
     consulting: {
       features: { title: 'How We Help', subtitle: '' },
       process: { title: 'How We Work Together', subtitle: '' },
-      proof: { title: 'Results That Speak', subtitle: '' },
+      proof: { title: 'Results', subtitle: '' },
       faq: { title: 'Questions We Often Hear', subtitle: '' },
       cta: { title: "Let's Start a Conversation", subtitle: '' },
     },
     manufacturing: {
       features: { title: 'Operational Capabilities', subtitle: '' },
       process: { title: 'Engagement Framework', subtitle: '' },
-      proof: { title: 'Proven Impact', subtitle: '' },
+      proof: { title: 'Results', subtitle: '' },
       faq: { title: 'Common Questions', subtitle: '' },
       cta: { title: 'Start Your Assessment', subtitle: '' },
     },
     healthcare: {
       features: { title: 'How We Care For You', subtitle: '' },
       process: { title: 'Your Journey With Us', subtitle: '' },
-      proof: { title: 'Why Families Trust Us', subtitle: '' },
+      proof: { title: 'What patients say', subtitle: '' },
       faq: { title: 'Common Questions', subtitle: '' },
       cta: { title: "We're Here For You", subtitle: '' },
     },
     finance: {
       features: { title: 'Our Approach', subtitle: '' },
       process: { title: 'Investment Process', subtitle: '' },
-      proof: { title: 'Performance Track Record', subtitle: '' },
+      proof: { title: 'Track record', subtitle: '' },
       faq: { title: 'Investment Questions', subtitle: '' },
       cta: { title: 'Discuss Your Portfolio', subtitle: '' },
     },

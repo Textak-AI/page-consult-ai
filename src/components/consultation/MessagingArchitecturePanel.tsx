@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Brain, CheckCircle, AlertTriangle } from 'lucide-react';
+import { archetypeConfidenceLabel, type ArchetypeEvidence } from '@/utils/archetypeOptimizer';
 
 const ARCHETYPE_PROFILES: Record<string, string> = {
   'Analytical Validator': 'This buyer evaluates vendors like they evaluate data — systematically. They want ROI projections, benchmark comparisons, and peer-reviewed credibility. Urgency tactics insult their intelligence. Authority and hard evidence win.',
@@ -12,6 +13,7 @@ export interface MessagingArchitecturePanelProps {
   messagingArchitecture: {
     archetype: string;
     confidence: number;
+    evidence?: ArchetypeEvidence;
     headlineFocus: string;
     proofStyle: string;
     commitmentAsk: string;
@@ -163,7 +165,7 @@ function buildBriefPreview(arch: MessagingArchitecturePanelProps['messagingArchi
     ? 'Your CTA makes a direct ask because this buyer respects confidence and doesn\'t need hand-holding.'
     : 'Your CTA is exploratory because this buyer needs space to evaluate before committing.';
 
-  return `Your buyer is ${article} ${arch.archetype} — ${desc} We've optimized your page architecture around this psychology. ${headlineReason} ${urgencyReason} ${ctaReason}`;
+  return `Your buyer is ${article} ${arch.archetype} — ${desc} The page is set up for this kind of buyer. ${headlineReason} ${urgencyReason} ${ctaReason}`;
 }
 
 export function MessagingArchitecturePanel({ messagingArchitecture, detectedSignals }: MessagingArchitecturePanelProps) {
@@ -202,7 +204,7 @@ export function MessagingArchitecturePanel({ messagingArchitecture, detectedSign
             </div>
           </div>
           <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${meta.pillBg} whitespace-nowrap`}>
-            {Math.round(messagingArchitecture.confidence * 100)}% confidence
+            {archetypeConfidenceLabel(messagingArchitecture.confidence, messagingArchitecture.evidence)}
           </span>
         </div>
         {ARCHETYPE_PROFILES[messagingArchitecture.archetype] && (
@@ -212,7 +214,7 @@ export function MessagingArchitecturePanel({ messagingArchitecture, detectedSign
         )}
         {detectedSignals && detectedSignals.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-3">
-            <span className="text-[10px] text-slate-500 mr-1">Detected signals:</span>
+            <span className="text-[10px] text-slate-500 mr-1">Words matched in your answers:</span>
             {detectedSignals.map((signal) => (
               <span
                 key={signal}
@@ -224,7 +226,7 @@ export function MessagingArchitecturePanel({ messagingArchitecture, detectedSign
           </div>
         )}
         <p className="text-slate-500 text-xs mt-3">
-          64 page architectures evaluated. Optimal configuration locked before generation.
+          Six messaging choices, set from your answers before the page is written.
         </p>
       </div>
 
@@ -288,7 +290,7 @@ export function MessagingArchitecturePanel({ messagingArchitecture, detectedSign
 
       {/* Footer Note */}
       <p className="text-[11px] text-slate-600 italic text-center px-4">
-        These decisions were resolved by deterministic optimization before your page was generated. The AI wrote copy against this locked architecture — it did not make these strategic choices itself.
+        These six choices come from a fixed scoring of the words in your answers, set before the page is written. The page copy follows them; it does not make them.
       </p>
     </motion.div>
   );
