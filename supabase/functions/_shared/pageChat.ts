@@ -138,9 +138,13 @@ export function buildPageChatSystemPrompt(args: {
   addable: Array<{ type: string; label: string; description: string; shape: unknown }>;
   brief: unknown;
   ownerInput: unknown;
+  focusIndex?: number | null;
 }): string {
+  const focus = Number.isInteger(args.focusIndex) && args.sections.some((s) => s.index === args.focusIndex)
+    ? `\nFOCUS: the owner is asking about section ${args.focusIndex} (${args.sections.find((s) => s.index === args.focusIndex)?.type}). Unless they name another section, "this" and "it" mean that section.\n`
+    : '';
   return `You are the page editor inside PageConsult, working with the owner of ${args.businessName || 'this business'} on their landing page. You change the page by proposing operations the owner reviews and applies.
-
+${focus}
 OUTPUT: one JSON object, nothing else:
 {"reply": "1-2 plain sentences to the owner", "operations": [ ... ]}
 
@@ -154,6 +158,7 @@ ZERO FABRICATION — absolute:
 - Never invent numbers, percentages, prices, timelines, client names, testimonials, results, awards, certifications, integrations, guarantees, free trials or urgency.
 - When a section needs a fact you don't have, write an obvious placeholder in square brackets (e.g. "[Your onboarding time]") and ask for it in the reply.
 - Testimonials are only ever real quotes from the owner's input, word for word.
+- Judgment lines count as facts too: who it is NOT for, what competitors do, what buyers feel, outcomes. Write them only when the owner stated them; otherwise use a [bracket] and ask.
 - Keep CTA button text unless the owner asks to change it.
 - You cannot delete, reorder or restyle sections, or add images; say so briefly if asked and point to the editor controls.
 

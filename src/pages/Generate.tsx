@@ -5326,6 +5326,12 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
     return shouldSuggestWorkGallery(sections, businessText, siteImages);
   }, [sections, pageData, consultation, strategicData]);
 
+  // A section's AI button opens Page Chat focused on that section.
+  const [pageChatFocus, setPageChatFocus] = useState<{ index: number; type: string; nonce: number } | null>(null);
+  const handleAskPageChat = useCallback((index: number, type: string) => {
+    setPageChatFocus({ index, type, nonce: Date.now() });
+  }, []);
+
   // Page chat proposals, applied only when the owner clicks Apply (one undo step).
   const handleApplyPageChat = (operations: PageChatOperation[]) => {
     setSections(applyPageChatOps(sections, operations, addBrief, {
@@ -5886,6 +5892,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           brandSettings={previewBrandSettings}
           pageTheme={pageTheme}
           getSectionLockStatus={pageBuilder.getSectionLockStatus}
+          onAskPageChat={handleAskPageChat}
         />
         </DevicePreviewFrame>
         </div>
@@ -6091,6 +6098,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           completeness={pageBuilder.completeness}
           brief={addBrief}
           titleFor={sectionTitleFor}
+          focus={pageChatFocus}
           onApplyOperations={handleApplyPageChat}
         />
       )}

@@ -4,6 +4,8 @@ import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { withCharge } from '../_shared/planLimits.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { COPY_REGISTER_RULES, logRegisterViolations } from "../_shared/copyRegister.ts";
+import { guardCopyClaims } from "../_shared/copyClaims.ts";
+import { pageCopyStrings } from "../_shared/pageChat.ts";
 
 const handle = async (req: Request, userId: string): Promise<Response> => {
   // Handle CORS preflight requests
@@ -74,7 +76,9 @@ Return the modified section content as JSON. Only include the content object, no
     }
     cleanedResponse = cleanedResponse.trim()
 
-    const modifiedContent = JSON.parse(cleanedResponse)
+    // Same evidence rule as Page Chat: the section's current copy and the
+    // owner's request. A number or guarantee from nowhere drops its sentence.
+    const modifiedContent = guardCopyClaims(JSON.parse(cleanedResponse), { pageCopy: pageCopyStrings([{ content: sectionContent }]), ownerRequest: userRequest }, 'modify-section')
     logRegisterViolations('modify-section', modifiedContent)
 
     return new Response(JSON.stringify({ 

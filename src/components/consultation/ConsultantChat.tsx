@@ -41,6 +41,8 @@ interface ConsultantChatProps {
   /** Structured strategy brief, so added sections start from the owner's own words. */
   brief?: unknown;
   titleFor: (type: string) => string;
+  /** Set when a section's AI button is clicked: open, scoped to that section. */
+  focus?: { index: number; type: string; nonce: number } | null;
   onApplyOperations: (operations: PageChatOperation[]) => void;
   className?: string;
 }
@@ -62,6 +64,7 @@ export function ConsultantChat({
   completeness,
   brief,
   titleFor,
+  focus,
   onApplyOperations,
   className
 }: ConsultantChatProps) {
@@ -96,6 +99,16 @@ export function ConsultantChat({
     }
   }, [isOpen, hasInitialized, messages.length]);
 
+  // A section's AI button: open the chat scoped to that section.
+  const [focusIndex, setFocusIndex] = useState<number | null>(null);
+  useEffect(() => {
+    if (!focus) return;
+    setIsOpen(true);
+    setFocusIndex(focus.index);
+    setInput(prev => prev.trim() ? prev : '');
+    setTimeout(() => inputRef.current?.focus(), 150);
+  }, [focus?.nonce]);
+
   // Focus input
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -127,6 +140,7 @@ export function ConsultantChat({
           brief: brief ?? null,
           ownerInput: ownerInputOf(consultationData),
           businessName: consultationData?.businessName || consultationData?.companyName || '',
+          focusIndex,
         }
       });
 
@@ -338,7 +352,7 @@ export function ConsultantChat({
                       <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                       <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
-                    <span>Working on it...</span>
+                    <span>Working on it, usually 15 to 20 seconds…</span>
                   </div>
                 </div>
               </div>
@@ -371,6 +385,14 @@ export function ConsultantChat({
 
         {/* Premium Input Area */}
         <div className="p-4 border-t border-border/50 bg-muted/30">
+          {focusIndex !== null && sections[focusIndex] && (
+            <div className="mb-2 flex items-center gap-2 text-xs">
+              <span className="px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                About: {titleFor(sections[focusIndex].type)}
+              </span>
+              <button className="text-muted-foreground hover:text-foreground" onClick={() => setFocusIndex(null)} aria-label="Clear section focus">Clear</button>
+            </div>
+          )}
           <div className="relative">
             <div className="relative">
               <Textarea
@@ -378,7 +400,7 @@ export function ConsultantChat({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="e.g. Add a section on who this is for"
+                placeholder={focusIndex !== null ? "What should change in this section?" : "e.g. Add a section on who this is for"}
                 className="min-h-[44px] max-h-32 pr-12 resize-none rounded-xl border-muted-foreground/20 focus:border-purple-400"
                 rows={1}
                 disabled={isLoading}

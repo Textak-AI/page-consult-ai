@@ -93,9 +93,11 @@ interface LivePreviewProps {
     requirement?: string;
     progress?: string;
   };
+  /** Sends the section's AI button to the page-level chat (one AI surface, one set of guards). */
+  onAskPageChat?: (index: number, type: string) => void;
 }
 
-function LivePreviewInner({ sections: rawSections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode: colorModeProp = 'dark', industryVariant, brandSettings: rawBrandSettings, pageTheme, getSectionLockStatus }: LivePreviewProps) {
+function LivePreviewInner({ sections: rawSections, onSectionsChange, cssVariables, iconStyle = "outline", strategyBrief, seoData, colorMode: colorModeProp = 'dark', industryVariant, brandSettings: rawBrandSettings, pageTheme, getSectionLockStatus, onAskPageChat }: LivePreviewProps) {
   // Same surface rhythm the published page applies, so editor and page match.
   const sections = useMemo(() => withSurfaceRhythm(rawSections), [rawSections]);
   // Art-directed background plans own the page mode (see artDirectedMode).
@@ -168,6 +170,7 @@ function LivePreviewInner({ sections: rawSections, onSectionsChange, cssVariable
   };
 
   const handleAIAssist = (index: number, type: string, content: any) => {
+    if (onAskPageChat) { onAskPageChat(index, type); return; }
     setAiChatSection({ index, type, content });
     setAiChatOpen(true);
   };

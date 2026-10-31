@@ -187,18 +187,24 @@ export function PublishModal({
 
       // Also update the landing_pages record for backward compat, carrying
       // the edited SEO values so the server-rendered head reflects them
-      await supabase
-        .from('landing_pages')
-        .update({
-          status: 'published',
-          is_published: true,
-          published_at: new Date().toISOString(),
-          published_url: `/p/${slug}`,
-          slug,
-          meta_title: pageTitle.trim() || null,
-          meta_description: metaDescription.trim() || null,
-        })
-        .eq('id', pageData.id);
+      // landing_pages.slug is unique: another draft of the same business can
+      // already hold it, and the whole update used to fail silently — the page
+      // went live but stayed "In Progress" on the dashboard. Retry without the
+      // legacy slug column rather than lose the published state.
+      const lpUpdate = {
+        status: 'published',
+        is_published: true,
+        published_at: new Date().toISOString(),
+        published_url: `/p/${slug}`,
+        meta_title: pageTitle.trim() || null,
+        meta_description: metaDescription.trim() || null,
+      };
+      const { error: lpError } = await supabase.from('landing_pages').update({ ...lpUpdate, slug }).eq('id', pageData.id);
+      if (lpError) {
+        console.warn('🔴 [PublishModal] landing_pages update failed, retrying without slug:', lpError.message);
+        const { error: retryError } = await supabase.from('landing_pages').update(lpUpdate).eq('id', pageData.id);
+        if (retryError) console.error('🔴 [PublishModal] landing_pages publish state not saved:', retryError.message);
+      }
 
       setPublishState('published');
       onPublishStateChange?.(true, slug);

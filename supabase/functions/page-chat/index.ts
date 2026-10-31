@@ -16,7 +16,7 @@ const handle = async (req: Request, _userId: string): Promise<Response> => {
     new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   try {
-    const { message, history, sections, addable, brief, ownerInput, businessName } = await req.json();
+    const { message, history, sections, addable, brief, ownerInput, businessName, focusIndex } = await req.json();
     if (typeof message !== 'string' || !message.trim() || !Array.isArray(sections)) {
       return json({ success: false, error: 'message and sections are required' }, 400);
     }
@@ -26,7 +26,7 @@ const handle = async (req: Request, _userId: string): Promise<Response> => {
       .map((m: any) => ({ role: m.role, content: m.content.slice(0, 4000) }));
 
     const pageSections = sections.map((s: any, index: number) => ({ index, type: String(s?.type || ''), content: copyOnly(s?.content) ?? {} }));
-    const system = `${buildPageChatSystemPrompt({ businessName: String(businessName || ''), sections: pageSections, addable: Array.isArray(addable) ? addable : [], brief, ownerInput })}\n\n${COPY_REGISTER_RULES}`;
+    const system = `${buildPageChatSystemPrompt({ businessName: String(businessName || ''), sections: pageSections, addable: Array.isArray(addable) ? addable : [], brief, ownerInput, focusIndex: Number.isInteger(focusIndex) ? focusIndex : null })}\n\n${COPY_REGISTER_RULES}`;
 
     const anthropic = new Anthropic();
     const response = await anthropic.messages.create({
