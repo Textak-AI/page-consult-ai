@@ -854,8 +854,20 @@ export function mapBriefToSections(
       case 'expertise-areas':
       case 'engagement-model':
       case 'client-results': {
-        // These sections use stub components - pass through minimal content
-        // The components will render with sensible defaults if data is missing
+        // These sections use stub components - pass through minimal content.
+        // Zero fabrication: a process only when the owner stated one (same rule
+        // as how-it-works), and no credentials bar without real credentials -
+        // the brief's processSteps alone once put a designed 3-step method on
+        // a website-first page where the owner gave none.
+        const ccd: any = options.consultationData || {};
+        const cStated = [ccd.methodologySteps, ccd.methodology_steps].find((a: unknown) => Array.isArray(a)) as string[] | undefined;
+        const cProcessStated =
+          (typeof (ccd.processDescription ?? ccd.process_description) === 'string' && String(ccd.processDescription ?? ccd.process_description).trim().length > 0) ||
+          (cStated || []).some((x) => typeof x === 'string' && x.trim().length > 0);
+        if (normalized === 'credentials-bar') {
+          console.log('🚫 [sectionMapper] credentials-bar skipped: renders only supplied credentials');
+          break;
+        }
         console.log(`📐 [sectionMapper] Creating consulting section: ${normalized}`);
         sections.push({
           type: normalized,
@@ -875,7 +887,7 @@ export function mapBriefToSections(
               description: p.description,
               icon: p.icon,
             })),
-            steps: brief.processSteps?.map(s => ({
+            steps: !cProcessStated ? undefined : brief.processSteps?.map(s => ({
               number: s.step,
               title: s.title,
               description: s.description,

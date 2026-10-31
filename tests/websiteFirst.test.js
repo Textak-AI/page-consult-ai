@@ -262,3 +262,15 @@ test('website-first wiring: analyzer runs the wizard extractor, nav carries the 
   expect(src('supabase/functions/analyze-website/index.ts')).not.toMatch(/Suggest based on/);
   expect(src('supabase/functions/generate-strategy-brief/index.ts')).toMatch(/pinStatedCopy\(structuredBrief, consultationData\)/);
 });
+
+test('consulting sections never carry a process the owner did not state; no empty credentials bar', async () => {
+  const { mapBriefToSections } = await import('../src/utils/sectionMapper');
+  const brief = { pageStructure: ['hero', 'credentials-bar', 'our-approach', 'final-cta'], headlines: { optionA: 'H' }, ctaStrategy: { primaryCta: 'Go' }, processSteps: [{ step: 1, title: 'Decision Architecture Mapping', description: 'invented' }] };
+  const out = mapBriefToSections(brief, { consultationData: { businessName: 'X', ctaText: 'Go' } });
+  const types = out.map((s) => s.type);
+  expect(types).not.toContain('credentials-bar');
+  const approach = out.find((s) => s.type === 'our-approach');
+  expect(JSON.stringify(approach?.content || {})).not.toMatch(/Decision Architecture/);
+  const stated = mapBriefToSections(brief, { consultationData: { businessName: 'X', ctaText: 'Go', processDescription: 'We call you, then we audit.' } });
+  expect(JSON.stringify(stated.find((s) => s.type === 'our-approach')?.content || {})).toMatch(/Decision Architecture/);
+});

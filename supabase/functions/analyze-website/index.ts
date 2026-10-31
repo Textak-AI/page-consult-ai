@@ -151,6 +151,7 @@ Return ONLY valid JSON.`;
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
         max_tokens: 3000,
+        temperature: 0, // same site, same classification and fields on every run
         messages: [{ role: 'user', content: analysisPrompt }]
       })
     });

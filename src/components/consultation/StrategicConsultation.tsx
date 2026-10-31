@@ -1519,7 +1519,7 @@ ${d.ctaText}
                 </Label>
                 <Input
                   id="clientCount"
-                  placeholder="e.g., 50 clients, 1,200 active users, 400 weddings"
+                  placeholder="Only a count you can back up, e.g. the number of clients you have served"
                   value={data.clientCount || ''}
                   onChange={(e) => updateData({ clientCount: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
@@ -1533,7 +1533,7 @@ ${d.ctaText}
                 </Label>
                 <Textarea
                   id="achievements"
-                  placeholder="e.g., 'Best of Weddings' award 3 years running, certified by XYZ, featured in ABC magazine..."
+                  placeholder="Real certifications, awards, press or named clients. Leave blank if none."
                   value={data.achievements || ''}
                   onChange={(e) => updateData({ achievements: e.target.value })}
                   onBlur={() => triggerConsultantBlur('achievements')}
@@ -1747,7 +1747,7 @@ ${d.ctaText}
                       </Label>
                       <Input
                         id="calculatorTypicalResults"
-                        placeholder="e.g., Most clients see 15-30% improvement in efficiency"
+                        placeholder="Only a range you have measured across clients"
                         value={data.calculatorTypicalResults || ''}
                         onChange={(e) => updateData({ calculatorTypicalResults: e.target.value })}
                         className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
@@ -1826,7 +1826,7 @@ ${d.ctaText}
                 </Label>
                 <Input
                   id="ctaText"
-                  placeholder="e.g., Schedule a Consultation, Get Your Free Quote, Book a Demo"
+                  placeholder="e.g., Schedule a Consultation, Book a Demo"
                   value={data.ctaText || ''}
                   onChange={(e) => updateData({ ctaText: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
