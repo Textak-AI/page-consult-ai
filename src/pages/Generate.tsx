@@ -2382,6 +2382,10 @@ function GenerateContent() {
           // SDI Layer 1.5: Messaging architecture for section reordering/suppression
           messagingArchitecture: messagingArchitecture?.primary || null,
           arcSource: { challenge: consultationData.challenge, offer: consultationData.offer, uniqueValue: consultationData.unique_value || consultationData.uniqueValue },
+          // The user's stated input: provenance guards (process, commitments,
+          // close headline) check against it. Omitted, every guard saw {} and
+          // how-it-works never rendered on the live wizard path.
+          consultationData: { ...(consultationData || {}), ...(strategicData.consultationData || {}) },
         });
         
         console.log('📊 aiSearchOptimization passed to mapper:', strategicData.aiSeoData ? 'from strategicData.aiSeoData' : strategicData.consultationData?.ai_seo_data ? 'from consultationData.ai_seo_data' : 'null');
@@ -2869,6 +2873,7 @@ function GenerateContent() {
         aiSearchOptimization,                       // For authority signal extraction
         messagingArchitecture: messagingArchitecture?.primary || null,
         arcSource: { challenge: consultationData.challenge, offer: consultationData.offer, uniqueValue: consultationData.unique_value || consultationData.uniqueValue },
+        consultationData: { ...(consultationData || {}), ...(strategicConsultation || {}) },
       });
       
       console.log(`✅ Brief-first mapper built ${sections.length} sections with intelligent extraction`);

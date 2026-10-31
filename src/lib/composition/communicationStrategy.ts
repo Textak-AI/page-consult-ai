@@ -4,6 +4,7 @@ export type { CommunicationStrategy } from '../../../supabase/functions/_shared/
 
 import type { CommunicationStrategy } from '../../../supabase/functions/_shared/communicationStrategy';
 import { slotOf } from './arc';
+import { toPageQuestion } from '../../../supabase/functions/_shared/buyerObjections';
 
 /** Apply last so legacy messaging heuristics cannot rewrite approved input CTAs. */
 export function applyCommunicationStrategy<T extends { type: string; order: number; content: any }>(sections: T[], strategy: CommunicationStrategy): T[] {
@@ -11,7 +12,7 @@ export function applyCommunicationStrategy<T extends { type: string; order: numb
   const faqProof = strategy.proofPlan.filter(p => p.sectionType === 'faq' && p.claimSlot === 'proof');
   if (faqProof.length >= 2) {
     const faq = result.find(s => s.type === 'faq');
-    const items = faqProof.map(p => ({ question: p.claim, answer: p.evidence }));
+    const items = faqProof.map(p => ({ question: toPageQuestion(p.claim), answer: p.evidence }));
     if (faq) faq.content.items = items;
   }
   const hero = result.find(s => s.type === 'hero' || s.type === 'beta-hero-teaser');
@@ -22,7 +23,10 @@ export function applyCommunicationStrategy<T extends { type: string; order: numb
     // subheadline. The one-liner becomes the subheadline only when it differs
     // from the headline and speaks to the reader: strategy prose written about
     // the buyer ("their team") stays in the brief, not on the page.
-    if (strategy.reframe) hero.content.headline = strategy.reframe;
+    // A positioning paragraph is not a headline: the reframe takes the
+    // headline only at headline length; a longer one leaves the guarded brief
+    // headline in place (Driftwatch E2E: a 210-char sentence rendered as h1).
+    if (strategy.reframe && (isHeadlineLength(strategy.reframe) || !String(hero.content.headline || '').trim())) hero.content.headline = strategy.reframe;
     // The stated outcome, addressed to the reader ("their team" -> "your
     // team"): the user's own words in the page's voice, nothing added.
     const outcome = strategy.oneLiner ? toReader(strategy.oneLiner) : '';
@@ -61,6 +65,12 @@ export function applyCommunicationStrategy<T extends { type: string; order: numb
   // mechanismName is deliberately never consumed here.
   return result.map((s, order) => ({ ...s, order }));
 }
+/** Headline-length: one read, roughly a line or two at display size. */
+export function isHeadlineLength(text: string): boolean {
+  const t = (text || '').trim();
+  return t.length > 0 && t.length <= 90 && t.split(/\s+/).length <= 14;
+}
+
 /** Re-address buyer-description prose to the reader: their->your, they->you. */
 export function toReader(text: string): string {
   const cap = (m: string, to: string) => (m[0] === m[0].toUpperCase() ? to[0].toUpperCase() + to.slice(1) : to);

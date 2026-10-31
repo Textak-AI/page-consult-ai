@@ -11,6 +11,7 @@ interface SocialProofSectionProps {
   content: {
     primaryColor?: string | null;
     title?: string;
+    subtitle?: string;
     stats: Array<{
       label: string;
       value: string;
@@ -59,7 +60,7 @@ function getSocialProofHeader(industry?: string, isConsulting?: boolean): { titl
   if (isConsulting) {
     return {
       title: 'Client Results',
-      subtitle: 'What our clients say about working with us',
+      subtitle: '',
     };
   }
   
@@ -68,27 +69,27 @@ function getSocialProofHeader(industry?: string, isConsulting?: boolean): { titl
   if (industryLower.includes('wedding') || industryLower.includes('dj')) {
     return { 
       title: 'Client Success Stories', 
-      subtitle: 'Real experiences from our clients',
+      subtitle: '',
     };
   }
   
   if (industryLower.includes('b2b') || industryLower.includes('saas') || industryLower.includes('software')) {
     return { 
       title: 'Client Success Stories', 
-      subtitle: 'Real experiences from our clients',
+      subtitle: '',
     };
   }
   
   if (industryLower.includes('ecommerce') || industryLower.includes('shop') || industryLower.includes('store')) {
     return { 
       title: 'What Customers Are Saying', 
-      subtitle: 'Real experiences from our customers',
+      subtitle: '',
     };
   }
   
   return { 
     title: 'What Our Clients Say', 
-    subtitle: 'Real experiences from our clients',
+    subtitle: '',
   };
 }
 
@@ -234,6 +235,15 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
             </div>
             )}
           </motion.div>
+          {content.proofStory && (
+            <p className="mt-8 max-w-2xl mx-auto text-center text-lg font-medium text-slate-100">
+              <span className="signature-chapter block mb-2" style={{ color: content.primaryColor || undefined }}>RESULT</span>
+              {content.proofStory}
+            </p>
+          )}
+          {content.achievements && (
+            <p className="mt-6 max-w-2xl mx-auto text-center text-sm leading-relaxed text-slate-400">{content.achievements}</p>
+          )}
         </div>
       </section>
     );
@@ -517,8 +527,10 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               letterSpacing: 'var(--letter-spacing-heading)',
             }}
           >
-            {header.title}
+            {content.title || content.sectionTitle || header.title}
           </h2>
+          {/* Subtitle only when the plan supplied one — no canned reassurance line. */}
+          {(content.subtitle || header.subtitle) && (
           <p 
             className="text-lg md:text-xl"
             style={{ 
@@ -527,8 +539,9 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               lineHeight: 'var(--line-height-body)',
             }}
           >
-            {header.subtitle}
+            {content.subtitle || header.subtitle}
           </p>
+          )}
         </motion.div>
 
         {/* Testimonial Card */}
@@ -658,12 +671,13 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
             <div className="relative p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
               <div className="absolute -top-3 left-6">
                 <span className="px-3 py-1 rounded-full bg-brand text-white text-xs font-medium">
-                  Recent Result
+                  Result
                 </span>
               </div>
-              <blockquote className="text-lg text-foreground font-medium mt-2">
-                "{content.proofStory}"
-              </blockquote>
+              {/* The owner's own account of a result — not a quote, so no quote marks. */}
+              <p className="text-lg font-medium mt-2" style={{ color: 'var(--color-text-primary)' }}>
+                {content.proofStory}
+              </p>
               {content.proofStoryContext && (
                 <p className="mt-3 text-sm text-muted-foreground">
                   — {content.proofStoryContext}
@@ -671,6 +685,13 @@ function SocialProofSectionBase({ content, onUpdate, isEditing }: SocialProofSec
               )}
             </div>
           </motion.div>
+        )}
+
+        {/* Stated credentials (awards, certifications, partners) — one quiet line. */}
+        {content.achievements && (
+          <p className="mt-8 max-w-2xl mx-auto text-center text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+            {content.achievements}
+          </p>
         )}
 
         {/* Stats Grid */}

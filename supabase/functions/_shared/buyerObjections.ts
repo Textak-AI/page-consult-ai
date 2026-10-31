@@ -1,11 +1,19 @@
 /** Prompts are questions, never answers. Shared by both consultation paths and generation guards. */
 export const BUYER_OBJECTION_PROMPTS = [
-  { topic: 'pricing', question: 'What does it cost, or how does pricing work?' },
-  { topic: 'timeline', question: 'How long does it take?' },
-  { topic: 'effort', question: 'What do you need from the buyer’s team?' },
-  { topic: 'fit', question: 'How does it fit with the tools or way of working they already use?' },
-  { topic: 'materials', question: 'What happens to the buyer’s data or materials?' },
+  { topic: 'pricing', question: 'What does it cost, or how does pricing work?', pageQuestion: 'What does it cost?' },
+  { topic: 'timeline', question: 'How long does it take?', pageQuestion: 'How long does it take?' },
+  { topic: 'effort', question: 'What do you need from the buyer’s team?', pageQuestion: 'What do you need from my team?' },
+  { topic: 'fit', question: 'How does it fit with the tools or way of working they already use?', pageQuestion: 'Does it fit the tools we already use?' },
+  { topic: 'materials', question: 'What happens to the buyer’s data or materials?', pageQuestion: 'What happens to our data?' },
 ] as const;
+/** Interview prompts address the owner ("the buyer's team"); the page FAQ is
+ * read by the buyer, so canonical prompts swap to the buyer's own voice.
+ * Questions the owner wrote themselves pass through unchanged. */
+export function toPageQuestion(question: string): string {
+  const q = (question || '').trim();
+  const p = BUYER_OBJECTION_PROMPTS.find(x => x.question === q || x.question.replace(/’/g, "'") === q.replace(/’/g, "'"));
+  return p ? p.pageQuestion : question;
+}
 export type BuyerObjectionTopic = typeof BUYER_OBJECTION_PROMPTS[number]['topic'];
 export interface BuyerObjection { topic?: BuyerObjectionTopic; question: string; answer: string }
 export function materialsRelevant(input: Record<string, any>): boolean {

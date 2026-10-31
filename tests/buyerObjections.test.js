@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { BUYER_OBJECTION_PROMPTS, consultationObjections, applyAnsweredObjections, materialsRelevant } from '../supabase/functions/_shared/buyerObjections.ts';
+import { BUYER_OBJECTION_PROMPTS, consultationObjections, applyAnsweredObjections, materialsRelevant, toPageQuestion } from '../supabase/functions/_shared/buyerObjections.ts';
 import { computeCommunicationStrategy } from '../supabase/functions/_shared/communicationStrategy.ts';
 import { optimizeFAQs } from '../src/lib/briefExtractor.ts';
 import { buildFAQs } from '../src/utils/sectionMapper.ts';
@@ -11,4 +11,4 @@ test('zero or one answered objection cannot authorize FAQ section',()=>{for(cons
 test('legacy strings and unanswered concerns never become answers',()=>{expect(buildFAQs({objections:['Too expensive','Takes too long']},'default')).toEqual([]);expect(optimizeFAQs([{question:'Cost?',answer:''}])).toEqual([]);});
 test('all three same-category client answers remain; no variety quota drops them',()=>{expect(optimizeFAQs(objections.map(p=>({...p,question:'How does this work?'})))).toHaveLength(3);});
 test('chat uses immediate client words, skips excluded',()=>{const input={industry:'Software',conversationHistory:BUYER_OBJECTION_PROMPTS.flatMap((p,i)=>[{role:'assistant',content:p.question},{role:'user',content:i<3?objections[i].answer:'skip'}])};expect(consultationObjections(input)).toEqual(objections);});
-test('FAQ proof stays between outcome and final ask',()=>{const strategy=computeCommunicationStrategy({objections},{});const sections=applyCommunicationStrategy([{type:'final-cta',order:0,content:{}},{type:'faq',order:1,content:{items:[]}},{type:'features',order:2,content:{}}],strategy);expect(sections.map(s=>s.type)).toEqual(['features','faq','final-cta']);expect(sections[1].content.items).toEqual(objections.map(({question,answer})=>({question,answer})));});
+test('FAQ proof stays between outcome and final ask',()=>{const strategy=computeCommunicationStrategy({objections},{});const sections=applyCommunicationStrategy([{type:'final-cta',order:0,content:{}},{type:'faq',order:1,content:{items:[]}},{type:'features',order:2,content:{}}],strategy);expect(sections.map(s=>s.type)).toEqual(['features','faq','final-cta']);expect(sections[1].content.items).toEqual(objections.map(({question,answer})=>({question:toPageQuestion(question),answer})));});

@@ -51,3 +51,6 @@
 
 ## Work-gallery nudge
 - `WorkNudgeBanner` (editor only) suggests a Work Samples section when the business is a visual trade or we found client-site photos, and no gallery exists. Upload-only: the gallery never takes stock or generated images — those would present someone else's work as theirs. Inserts after the payoff (`workGalleryInsertAt`). Dismissal is per page in localStorage.
+- Every live mapBriefToSections call passes `consultationData` (nav consultationData merged with strategicData.consultationData). Without it the provenance guards see `{}` — how-it-works never renders and commitment checks run blind. A test enforces it.
+- The communication-strategy reframe owns the hero headline only at headline length (isHeadlineLength: ≤90 chars, ≤14 words); a positioning paragraph leaves the brief headline in place.
+- FAQ questions render in the buyer's voice via toPageQuestion (canonical interview prompts only); answers stay verbatim.

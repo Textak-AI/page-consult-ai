@@ -4,7 +4,7 @@ import { composeArc } from '@/lib/composition/arc';
 import { applySignatureStrategy } from '@/components/signature/selection';
 import { applyCommunicationStrategy, type CommunicationStrategy } from '@/lib/composition/communicationStrategy';
 import { truncateAtBoundary } from '@/lib/text/truncate';
-import { answeredObjections } from '../../supabase/functions/_shared/buyerObjections';
+import { answeredObjections, toPageQuestion } from '../../supabase/functions/_shared/buyerObjections';
 /**
  * Brief-First Section Mapper with Intelligent Extraction
  * 
@@ -590,13 +590,20 @@ export function mapBriefToSections(
         const processStated =
           (typeof (cd.processDescription ?? cd.process_description) === 'string' && String(cd.processDescription ?? cd.process_description).trim().length > 0) ||
           (statedSteps || []).some((x) => typeof x === 'string' && x.trim().length > 0);
-        const steps = processStated && brief.processSteps && brief.processSteps.length > 0
-          ? brief.processSteps.map(step => ({
-              number: step.step,
-              title: step.title,
-              description: step.description,
-            }))
-          : [];
+        // When the brief phrased no steps (its process section can be absent),
+        // the user's own Week 1/2/3 steps render verbatim — never a designed one.
+        const statedStepTexts = (statedSteps || []).filter((x) => typeof x === 'string' && x.trim().length > 0).map((x) => x.trim());
+        const steps = !processStated
+          ? []
+          : brief.processSteps && brief.processSteps.length > 0
+            ? brief.processSteps.map(step => ({
+                number: step.step,
+                title: step.title,
+                description: step.description,
+              }))
+            : statedStepTexts.length >= 2
+              ? statedStepTexts.map((text, i) => ({ number: i + 1, title: text, description: '' }))
+              : [];
         if (!processStated) console.log('🚫 [sectionMapper] how-it-works skipped: no process stated in input (zero-fabrication)');
         
         if (steps.length > 0) {
@@ -678,6 +685,8 @@ export function mapBriefToSections(
                 }))
               : [],
             achievements: brief.proofPoints?.achievements || null,
+            // The owner's stated result, verbatim ("Share ONE specific result").
+            proofStory: (() => { const cd: any = options.consultationData || {}; const v = cd.concreteProofStory ?? cd.concrete_proof_story; return typeof v === 'string' && v.trim() ? v.trim() : null; })(),
             industryVariant: industryVariant,
             mode: sdiMode,
           },
@@ -698,7 +707,7 @@ export function mapBriefToSections(
               headline: intelligentHeaders.faq?.title || industryTokens.sectionHeaders.faq.title,
               eyebrow: undefined,
               items: optimizedFAQs.map(faq => ({
-                question: faq.question,
+                question: toPageQuestion(faq.question),
                 answer: faq.answer,
                 category: faq.category,
               })),
