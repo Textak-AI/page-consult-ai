@@ -1,3 +1,4 @@
+import { copyEditSections } from '@/lib/text/copyEdit';
 import { unsupportedCommitment } from '../../supabase/functions/_shared/copyClaims';
 import { composeArc } from '@/lib/composition/arc';
 import { applySignatureStrategy } from '@/components/signature/selection';
@@ -924,6 +925,10 @@ export function mapBriefToSections(
     sections = applyCommunicationStrategy(sections, brief.communicationStrategy);
     sections = applySignatureStrategy(sections, brief.communicationStrategy, options.consultationData || {});
   }
+
+  // Stated input goes on the page verbatim (extractive strategy); fix only
+  // keyboard slips - capitalization, apostrophes - never meaning.
+  sections = copyEditSections(sections);
 
   // The close earns a real line: replace boilerplate CTA headlines with a
   // brief headline option the hero didn't use (options are already
