@@ -72,3 +72,12 @@ test('page-build loader only names work that happens', () => {
   expect(existsSync(new URL('../src/components/editor/AIWorkingLoader.tsx', import.meta.url))).toBe(false);
   expect(src('src/pages/Generate.tsx')).toMatch(/pricePoint: parsePricePoint\(/);
 });
+
+test('pricing makes no scarcity or discount claims; agency comparison removed', () => {
+  for (const f of ['src/pages/PricingPage.tsx', 'src/components/Pricing.tsx', 'src/components/credits/UpgradeDrawer.tsx']) {
+    const s = src(f);
+    expect(s).not.toMatch(/500 spots|spots left|spots remaining|30% off|originalPrice|Limited Time/);
+  }
+  expect(existsSync(new URL('../src/components/TimelineComparison.tsx', import.meta.url))).toBe(false);
+  expect(src('src/pages/Index.tsx')).not.toMatch(/TimelineComparison/);
+});

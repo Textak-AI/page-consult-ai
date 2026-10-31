@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { publicUrl, publicFetch } from '../_shared/publicFetch.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
 // Colors to filter out (whites, blacks, grays)
@@ -72,10 +73,9 @@ serve(async (req) => {
     }
 
     // Normalize URL
-    let normalizedUrl = url.trim().toLowerCase();
-    if (!normalizedUrl.startsWith('http')) {
-      normalizedUrl = `https://${normalizedUrl}`;
-    }
+    // Only public websites: the URL is typed by a visitor before sign-in.
+    const normalizedUrl = publicUrl(url.trim().toLowerCase());
+    if (!normalizedUrl) throw new Error('Enter a public website address.');
 
     console.log(`[Brand Extraction] Starting extraction from: ${normalizedUrl}`);
 
@@ -83,7 +83,7 @@ serve(async (req) => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(normalizedUrl, {
+    const response = await publicFetch(normalizedUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',

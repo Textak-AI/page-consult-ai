@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { publicUrl, publicFetch } from '../_shared/publicFetch.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { harvestSiteImages } from '../_shared/siteImages.ts';
@@ -179,7 +180,7 @@ async function extractCSS(pageUrl: string, html: string): Promise<string> {
   // Fetch first 3 stylesheets (avoid timeout)
   for (const cssUrl of urls.slice(0, 3)) {
     try {
-      const resp = await fetch(cssUrl, { signal: AbortSignal.timeout(3000) });
+      const resp = await publicFetch(cssUrl, { signal: AbortSignal.timeout(3000) });
       if (resp.ok) {
         allCSS += await resp.text() + '\n';
       }
@@ -326,15 +327,14 @@ serve(async (req) => {
     }
 
     // Normalize URL
-    let normalizedUrl = url;
-    if (!normalizedUrl.startsWith('http')) {
-      normalizedUrl = 'https://' + normalizedUrl;
-    }
+    // Only public websites: the URL is typed by a visitor, possibly before sign-in.
+    const normalizedUrl = publicUrl(url);
+    if (!normalizedUrl) throw new Error('Enter a public website address.');
 
     console.log('[extract-website-intelligence] Fetching:', normalizedUrl);
 
     // Fetch the website with browser-like headers to avoid 403 blocks
-    const response = await fetch(normalizedUrl, {
+    const response = await publicFetch(normalizedUrl, {
       headers: { 
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -671,7 +671,7 @@ serve(async (req) => {
     for (const cssUrl of cssLinks.slice(0, 3)) {
       try {
         console.log('[extract] Fetching external CSS:', cssUrl.slice(0, 80));
-        const cssResponse = await fetch(cssUrl, {
+        const cssResponse = await publicFetch(cssUrl, {
           headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PageConsultBot/1.0)' }
         });
         if (cssResponse.ok) {

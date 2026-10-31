@@ -6,7 +6,6 @@ import SoftLockDemo from "@/components/landing/SoftLockDemo";
 import AIQuestionsShowcase from "@/components/landing/AIQuestionsShowcase";
 import WhyThisMattersSection from "@/components/landing/WhyThisMattersSection";
 import HowItWorks from "@/components/HowItWorks";
-import TimelineComparison from "@/components/TimelineComparison";
 import Features from "@/components/Features";
 import SocialProof from "@/components/SocialProof";
 import FAQ from "@/components/FAQ";
@@ -91,7 +90,6 @@ const IndexContent = ({ autoOpen = false }: IndexContentProps) => {
           </AnimatePresence>
           
           <HowItWorks />
-          <TimelineComparison />
           <Features />
           <SocialProof />
           <FAQ />

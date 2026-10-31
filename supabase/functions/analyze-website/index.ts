@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { createClient } from 'npm:@supabase/supabase-js@2';
+import { publicUrl, publicFetch, BlockedUrlError, rateLimit, rateLimitedResponse, blockedUrlResponse } from '../_shared/publicFetch.ts';
 import { htmlToText, harvestActionLabels, sanitizeSiteAnalysis, taxonomyPromptList } from '../_shared/siteExtraction.ts';
 
 serve(async (req) => {
@@ -16,15 +18,17 @@ serve(async (req) => {
       throw new Error('URL is required');
     }
 
-    let normalizedUrl = url.trim();
-    if (!normalizedUrl.startsWith('http')) {
-      normalizedUrl = `https://${normalizedUrl}`;
-    }
+    // Runs before sign-in: only public sites, and a per-connection hourly cap
+    // so nobody can spend the AI budget in a loop.
+    const normalizedUrl = publicUrl(url);
+    if (!normalizedUrl) return blockedUrlResponse(corsHeaders);
+    const service = createClient(Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '');
+    if (!(await rateLimit(service, req, 'analyze-website', 10))) return rateLimitedResponse(corsHeaders);
 
     console.log(`Analyzing website: ${normalizedUrl}`);
 
     // Fetch the main page
-    const response = await fetch(normalizedUrl, {
+    const response = await publicFetch(normalizedUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; PageConsultBot/1.0)',
         'Accept': 'text/html',
@@ -48,7 +52,7 @@ serve(async (req) => {
       const aboutUrls = ['/about', '/about-us', '/company', '/who-we-are'];
       for (const aboutPath of aboutUrls) {
         try {
-          const aboutResponse = await fetch(`${new URL(normalizedUrl).origin}${aboutPath}`, {
+          const aboutResponse = await publicFetch(`${new URL(normalizedUrl).origin}${aboutPath}`, {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PageConsultBot/1.0)' },
           });
           if (aboutResponse.ok) {
@@ -203,6 +207,7 @@ Return ONLY valid JSON.`;
     );
 
   } catch (error) {
+    if (error instanceof BlockedUrlError) return blockedUrlResponse(corsHeaders);
     console.error('Analysis error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Analysis failed';
     return new Response(

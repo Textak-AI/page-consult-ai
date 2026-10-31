@@ -64,7 +64,12 @@ export function WebsiteAnalyzer({ websiteUrl, extractedBrand, onAnalysisComplete
       }
     } catch (error) {
       console.error('Analysis error:', error);
-      setStatus('Could not analyze — continuing manually');
+      const httpStatus = (error as any)?.context?.status;
+      setStatus(httpStatus === 429
+        ? 'Too many website checks from this connection. Continuing manually'
+        : httpStatus === 400
+          ? 'That address is not a public website. Continuing manually'
+          : 'Could not analyze. Continuing manually');
       setTimeout(() => onSkip(), 1500);
     }
   };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, Loader2, Zap, Shield, Crown, Users, Gift } from "lucide-react";
+import { Check, ArrowRight, Loader2, Zap, Shield, Crown, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -31,12 +31,10 @@ const plans = [
     id: "founding",
     name: "Founding Member",
     price: 69,
-    originalPrice: 99,
-    tagline: "Limited to 500 spots",
+    tagline: "Founding price",
     icon: Crown,
     popular: true,
     badge: "BEST VALUE",
-    discountBadge: "🎉 30% off for life",
     features: [
       "Unlimited landing pages",
       "All premium templates",
@@ -79,7 +77,7 @@ const faqs = [
   },
   {
     question: "What makes Founding Members special?",
-    answer: "Founding Members lock in $69/mo forever, even as prices increase. You also get early access to new features and priority support. Only 500 spots available.",
+    answer: "Founding Members lock in $69/mo forever, even as prices increase. You also get early access to new features and priority support.",
   },
   {
     question: "Can I cancel anytime?",
@@ -97,7 +95,6 @@ const faqs = [
 
 const PricingPage = () => {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const [foundingSpotsLeft] = useState(127);
   const [foundersDiscount, setFoundersDiscount] = useState(false);
   const navigate = useNavigate();
 
@@ -163,24 +160,6 @@ const PricingPage = () => {
             Start building high-converting landing pages in minutes, not weeks.
           </p>
           
-          {/* Founders Discount Banner - special when they have discount from demo */}
-          {foundersDiscount ? (
-            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 rounded-full px-6 py-3">
-              <Gift className="w-5 h-5 text-emerald-400" />
-              <span className="text-emerald-200 font-medium">
-                🎁 Founders Discount Unlocked: <span className="text-emerald-400">50% Off First Year</span>
-              </span>
-            </div>
-          ) : (
-            /* Founding Member Banner */
-            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 rounded-full px-6 py-3">
-              <Crown className="w-5 h-5 text-cyan-400" />
-              <span className="text-cyan-200 font-medium">
-                🎉 Limited Time: Lock in Founding Member pricing forever 
-                <span className="text-cyan-400 ml-1">({foundingSpotsLeft} spots left)</span>
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Pricing Cards */}
@@ -238,11 +217,6 @@ const PricingPage = () => {
                     {/* Price */}
                     <div className="text-center mb-4">
                       <div className="flex items-baseline justify-center gap-1">
-                        {plan.originalPrice && (
-                          <span className="text-lg text-slate-500 line-through mr-2">
-                            ${plan.originalPrice}
-                          </span>
-                        )}
                         <span className={cn(
                           "text-4xl font-bold",
                           plan.popular ? "text-cyan-400" : "text-white"
@@ -251,21 +225,8 @@ const PricingPage = () => {
                         </span>
                         <span className="text-slate-400">/mo</span>
                       </div>
-                      {plan.discountBadge && (
-                        <div className="mt-2 inline-block bg-cyan-500/20 text-cyan-300 text-sm font-medium px-3 py-1 rounded-full">
-                          {plan.discountBadge}
-                        </div>
-                      )}
                     </div>
 
-                    {/* Scarcity counter for Founding Member */}
-                    {plan.popular && (
-                      <div className="flex items-center justify-center gap-2 mb-4 p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-                        <span className="text-sm font-medium text-cyan-300">
-                          {foundingSpotsLeft} spots remaining
-                        </span>
-                      </div>
-                    )}
 
                     {/* Features */}
                     <ul className="space-y-3 mb-6 flex-grow">

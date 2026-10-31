@@ -93,3 +93,8 @@
 - Wizard question wording/examples come from src/lib/wizard/industryWording (keyed by industryCategory; only services firms are "hired"); examples model checkable facts, never guarantees, ROI multiples or superlatives. The brief sidebar's brand block resolves through src/lib/wizard/brandSummary so colors set in the Brand step count.
 - Section header defaults describe the section ("Results", "What customers say"); no Proven/Trusted/Love/Success/free-trial titles. Strategy Document headline options (src/lib/strategy/headlineOptions) are whole stated sentences only; firstSentence never splits on decimals or e.g.
 - tests/honestClaims.test.js greps src/ and index.html for the retired false-claim strings; add new ones there.
+
+## Public URL fetches and rate limits (2026-10-31)
+- Any edge function that fetches a visitor-typed URL uses `_shared/publicFetch.ts`: `publicUrl()` refuses localhost, private/link-local IPs, IP literals in integer/hex/IPv6 form, bare hostnames, credentials and non-default ports; `publicFetch()` re-checks every redirect hop. Wired into analyze-website, extract-brand, extract-website-intelligence.
+- analyze-website runs before sign-in and calls Anthropic, so it is capped at 10 calls per connection per hour via `rateLimit()` on table `edge_rate_limits` (service-role only, RLS blocks clients). The check fails open if the table is missing.
+- Pricing pages make no scarcity or discount claims (no spot counters, strikethrough prices or "30% off"); the agency cost/time comparison section is removed.

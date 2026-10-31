@@ -29,8 +29,7 @@ const plans = [
     id: "founding",
     name: "Founding Member",
     price: 69,
-    originalPrice: 149,
-    tagline: "Limited to 500 spots",
+    tagline: "Founding price",
     icon: Crown,
     popular: true,
     badge: "Founding price",
@@ -179,11 +178,6 @@ const Pricing = () => {
                     
                     {/* Price */}
                     <div className="flex items-baseline gap-1 mb-1">
-                      {plan.originalPrice && (
-                        <span className="text-lg text-white/30 line-through mr-2">
-                          ${plan.originalPrice}
-                        </span>
-                      )}
                       <span className={cn(
                         "font-bold",
                         plan.popular ? "text-5xl text-white" : "text-4xl text-white"
@@ -193,14 +187,7 @@ const Pricing = () => {
                       <span className="text-white/40">/month</span>
                     </div>
                     
-                    {plan.originalPrice && (
-                      <p className="text-white/40 text-sm mb-6">
-                        ${plan.originalPrice}/month after beta
-                      </p>
-                    )}
-                    {!plan.originalPrice && (
-                      <p className="text-white/40 text-sm mb-6">{plan.tagline}</p>
-                    )}
+                    <p className="text-white/40 text-sm mb-6">{plan.tagline}</p>
                     
                     {/* Features */}
                     <ul className="space-y-4 mb-8 flex-grow">

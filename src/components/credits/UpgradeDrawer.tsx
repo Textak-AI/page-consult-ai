@@ -36,7 +36,6 @@ const plans = [
     id: 'founding',
     name: 'Founding Member',
     price: 69,
-    originalPrice: 99,
     priceLabel: '$69/mo',
     actionsLabel: 'Unlimited pages',
     priceId: STRIPE_PRICES.founding_member,
@@ -50,7 +49,6 @@ const plans = [
       'Remove the PageConsult badge',
     ],
     recommended: true,
-    discountBadge: '30% off for life',
   },
   {
     id: 'agency',
@@ -266,11 +264,6 @@ export function UpgradeDrawer({
                         </div>
                         <h3 className="text-lg font-bold text-white">{plan.name}</h3>
                         <div className="flex items-baseline gap-1 mt-1">
-                          {plan.originalPrice && (
-                            <span className="text-sm text-slate-500 line-through mr-1">
-                              ${plan.originalPrice}
-                            </span>
-                          )}
                           <span className={cn(
                             "text-2xl font-bold",
                             plan.recommended ? "text-cyan-400" : "text-white"
@@ -278,11 +271,6 @@ export function UpgradeDrawer({
                             {plan.priceLabel}
                           </span>
                         </div>
-                        {plan.discountBadge && (
-                          <div className="mt-1 inline-block bg-cyan-500/20 text-cyan-300 text-xs font-medium px-2 py-0.5 rounded-full">
-                            🎉 {plan.discountBadge}
-                          </div>
-                        )}
                       </div>
                       
                       <div className="flex items-center gap-2 mb-4 p-2 rounded-lg bg-white/5">
