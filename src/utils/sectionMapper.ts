@@ -579,14 +579,25 @@ export function mapBriefToSections(
       }
 
       case 'how-it-works': {
-        // Use brief processSteps or fallback to builder function
-        const steps = (brief.processSteps && brief.processSteps.length > 0)
+        // A process is a claim about how THIS business works: it renders only
+        // when the user described one (process description or Week 1/2/3
+        // steps). The brief may phrase stated steps, but it cannot design a
+        // process the user never gave - and there is no generic fallback.
+        // (Website-first E2E: the brief invented 'AI Readiness Assessment ->
+        // Custom System Design -> Implementation' from nothing.)
+        const cd: any = options.consultationData || {};
+        const statedSteps = [cd.methodologySteps, cd.methodology_steps].find((a: unknown) => Array.isArray(a)) as string[] | undefined;
+        const processStated =
+          (typeof (cd.processDescription ?? cd.process_description) === 'string' && String(cd.processDescription ?? cd.process_description).trim().length > 0) ||
+          (statedSteps || []).some((x) => typeof x === 'string' && x.trim().length > 0);
+        const steps = processStated && brief.processSteps && brief.processSteps.length > 0
           ? brief.processSteps.map(step => ({
               number: step.step,
               title: step.title,
               description: step.description,
             }))
-          : buildProcessSteps({}, industryVariant);
+          : [];
+        if (!processStated) console.log('🚫 [sectionMapper] how-it-works skipped: no process stated in input (zero-fabrication)');
         
         if (steps.length > 0) {
           sections.push({
