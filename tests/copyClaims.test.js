@@ -29,3 +29,14 @@ test('decimal claims remain intact only if their full numeric value is supported
   expect(guardCopyClaims('Save 2.5 hours. Keep the routine.', { offer: '2.5 hours' })).toBe('Save 2.5 hours. Keep the routine.');
   expect(guardCopyClaims('Save 2.5 hours. Keep the routine.', {})).toBe('Keep the routine.');
 });
+test('unstated commitments are flagged; stated ones pass', async () => {
+  const { unsupportedCommitment, guardCopyClaims } = await import('../supabase/functions/_shared/copyClaims.ts');
+  const input = { uniqueValue: 'We show up every week.', challenge: 'No-shows.' };
+  expect(unsupportedCommitment('Your Lawn Mowed Every Week—Guaranteed', input)).toBe('Guaranteed');
+  expect(unsupportedCommitment('Risk-free trial for every homeowner', input)).toBe('Risk-free');
+  expect(unsupportedCommitment('Weekly Lawn Care That Actually Shows Up', input)).toBe(null);
+  const stated = { guarantee: 'If we miss a week, the next mow is free - that is our guarantee.' };
+  expect(unsupportedCommitment('Every Week, Guaranteed', stated)).toBe(null);
+  const out = guardCopyClaims({ headline: 'We Show Up. Your Lawn Mowed Every Week—Guaranteed.' }, input);
+  expect(out.headline).toBe('We Show Up.');
+});

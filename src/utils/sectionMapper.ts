@@ -1,3 +1,4 @@
+import { unsupportedCommitment } from '../../supabase/functions/_shared/copyClaims';
 import { composeArc } from '@/lib/composition/arc';
 import { applySignatureStrategy } from '@/components/signature/selection';
 import { applyCommunicationStrategy, type CommunicationStrategy } from '@/lib/composition/communicationStrategy';
@@ -416,7 +417,7 @@ export function mapBriefToSections(
       case 'hero': {
         // Use intelligent headline selection based on page goal
         const headlineSelection = selectBestHeadline(
-          brief.headlines || { optionA: '', optionB: '', optionC: '' },
+          withoutUnstatedPromises(brief.headlines, options.consultationData || {}) || { optionA: '', optionB: '', optionC: '' },
           pageGoal || 'generate-leads'
         );
         
@@ -934,10 +935,13 @@ export function mapBriefToSections(
     if (closeSec && GENERIC_CLOSE.has(String(closeSec.content?.headline || '').trim())) {
       const used = new Set([heroSec?.content?.headline, heroSec?.content?.subheadline].filter(Boolean).map((h: string) => h.trim()));
       const h = brief.headlines as any;
+      const stated = options.consultationData || {};
       // Outcome (C) first: a close should land on what they get. 120 chars
       // admits the brief's full outcome lines; anything longer is a paragraph.
       const alt = [h?.optionC, h?.optionB, h?.optionA]
-        .find((x: unknown): x is string => typeof x === 'string' && x.trim().length > 0 && x.trim().length <= 120 && !used.has(x.trim()));
+        .find((x: unknown): x is string => typeof x === 'string' && x.trim().length > 0 && x.trim().length <= 120 && !used.has(x.trim())
+          // Never promote a promise the business didn't make ('...Guaranteed').
+          && !unsupportedCommitment(x, stated));
       if (alt) closeSec.content = { ...closeSec.content, headline: alt.trim() };
     }
   }
@@ -948,6 +952,13 @@ export function mapBriefToSections(
 /**
  * Check if content appears to be from a structured brief
  */
+/** Headline options carrying an unstated promise are blanked before selection. */
+function withoutUnstatedPromises(headlines: any, stated: unknown): any {
+  if (!headlines || typeof headlines !== 'object') return headlines;
+  return Object.fromEntries(Object.entries(headlines).map(([k, v]) =>
+    [k, typeof v === 'string' && unsupportedCommitment(v, stated) ? '' : v]));
+}
+
 export function isStructuredBriefContent(content: any): content is StructuredBrief {
   return content && 
     typeof content === 'object' &&
