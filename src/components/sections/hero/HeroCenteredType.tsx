@@ -61,7 +61,13 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
   const trackingStyle = content.trackingStyle || 'tight';
   const trackingValue = trackingStyle === 'tight' ? '-0.03em' : '0';
 
-  const heroImage = useUsableImage(content.backgroundImage || content.heroImage);
+  // Generated abstract textures read as early gen-AI filler; they never
+  // render. Generated heroes are stored as data: URLs; a picked photo
+  // (imageAsset) or an uploaded https image still renders.
+  const rawHeroSrc = content.backgroundImage || content.heroImage;
+  const generatedTexture = content.imageStyle === 'ambient-texture' && !content.imageAsset
+    && typeof rawHeroSrc === 'string' && rawHeroSrc.startsWith('data:');
+  const heroImage = useUsableImage(generatedTexture ? null : rawHeroSrc);
 
   return (
     <>
@@ -105,13 +111,25 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
         </a>
       )}
 
-      {/* Grid texture overlay (typographic fallback only) */}
+      {/* Typographic hero atmosphere, all brand-derived CSS: a soft light
+          field from above in the primary colour, and an engineering grid that
+          fades out from the headline. */}
+      {!heroImage && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none z-0"
+          style={{ background: `radial-gradient(ellipse 70% 55% at 50% -8%, color-mix(in srgb, ${primaryColor} 40%, transparent) 0%, transparent 70%)` }}
+        />
+      )}
       {!heroImage && content.hasGridTexture && (
         <div
+          aria-hidden="true"
           className="absolute inset-0 pointer-events-none z-0"
           style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)`,
-            backgroundSize: '60px 60px',
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)`,
+            backgroundSize: '56px 56px',
+            WebkitMaskImage: 'radial-gradient(ellipse 75% 65% at 50% 0%, #000 25%, transparent 75%)',
+            maskImage: 'radial-gradient(ellipse 75% 65% at 50% 0%, #000 25%, transparent 75%)',
           }}
         />
       )}

@@ -54,3 +54,4 @@
 - Every live mapBriefToSections call passes `consultationData` (nav consultationData merged with strategicData.consultationData). Without it the provenance guards see `{}` — how-it-works never renders and commitment checks run blind. A test enforces it.
 - The communication-strategy reframe owns the hero headline only at headline length (isHeadlineLength: ≤90 chars, ≤14 words); a positioning paragraph leaves the brief headline in place.
 - FAQ questions render in the buyer's voice via toPageQuestion (canonical interview prompts only); answers stay verbatim.
+- Abstract hero textures are never generated or shown: no archetype asks for 'ambient-texture', Generate skips it, and HeroCenteredType ignores stored generated (data: URL) textures. The typographic hero's atmosphere is brand-derived CSS only (primary-colour light field + fading grid). Photos of the actual business remain the only generated hero imagery.

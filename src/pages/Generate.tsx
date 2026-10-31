@@ -601,7 +601,8 @@ function GenerateContent() {
 
     const { composition, imageStyle, imagePrompt, backgroundImage, heroImage } = heroSection.content || {};
     const isArtDirector = composition === 'centered-type' || composition === 'split-photo';
-    if (!isArtDirector || imageStyle === 'none') return;
+    // Abstract textures are never generated (they read as early gen-AI filler).
+    if (!isArtDirector || imageStyle === 'none' || imageStyle === 'ambient-texture') return;
     if (backgroundImage || heroImage) return; // Already has an image
     if (preferredImage(collectClientImages(consultation, effectiveNavState?.strategicData, sections))) return;
 
