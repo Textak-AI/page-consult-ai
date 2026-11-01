@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { z } from "npm:zod@4";
 
 export const sessionTokenSchema = z.string().regex(/^(?:[0-9a-f]{64}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
-export const jsonRecord = z.record(z.unknown());
+export const jsonRecord = z.record(z.string(), z.unknown());
 export function sessionClient() {
   const url = Deno.env.get("SUPABASE_URL");
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
