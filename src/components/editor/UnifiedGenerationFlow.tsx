@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { Check, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import logo from '/logo/whiteAsset_3combimark_darkmode.svg';
+import logo from '/brand/pageconsult-lockup.svg';
 
 type GenerationPhase = 'gathering' | 'building' | 'revealing' | 'complete';
 

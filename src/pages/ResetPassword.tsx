@@ -71,7 +71,7 @@ export default function ResetPassword() {
   return <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4">
     <div className="w-full max-w-md">
       <div className="flex justify-center mb-8">
-        <img src="/logo/whiteAsset_3combimark_darkmode.svg" alt="PageConsult AI" className="h-12 w-auto" />
+        <img src="/brand/pageconsult-lockup.svg" alt="PageConsult AI" className="h-12 w-auto" />
       </div>
       <div className="bg-card/80 backdrop-blur-xl border border-border rounded-lg p-8 shadow-lg">
         {state === 'checking' ? <div role="status" className="flex items-center justify-center gap-2"><Loader2 className="h-5 w-5 animate-spin" />Checking reset link…</div> :

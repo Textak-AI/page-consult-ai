@@ -41,7 +41,7 @@ export function PageFooter({
               // on PageConsult's own pages. A tenant page without a logo of its
               // own shows the name text alone.
               <img 
-                src="/logo/whiteAsset_6iconmark_lightmode.svg" 
+                src="/brand/pageconsult-icon.svg" 
                 alt="PageConsult AI" 
                 className="h-6 w-6" 
               />

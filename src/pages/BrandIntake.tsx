@@ -8,7 +8,6 @@ import {
   Loader2, CheckCircle, Image, Type, FileArchive
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import PageConsultLogo from '@/components/ui/PageConsultLogo';
 
 interface DetectionResults {
   logo?: string;
@@ -469,7 +468,7 @@ export default function BrandIntake() {
       {/* Header */}
       <header className="border-b border-white/10 p-6">
         <div className="max-w-2xl mx-auto flex justify-between items-center">
-          <PageConsultLogo className="h-8 w-auto text-white" />
+          <img src="/brand/pageconsult-lockup.svg" alt="PageConsult" className="h-8 w-auto" />
           <span className="text-cyan-400 text-sm font-medium">Brand Setup</span>
         </div>
       </header>

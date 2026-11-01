@@ -813,7 +813,7 @@ export default function Signup() {
           <div className="text-center mb-6">
             <div className="flex items-center justify-center mb-4">
               <img 
-                src="/logo/whiteAsset_3combimark_darkmode.svg" 
+                src="/brand/pageconsult-lockup.svg" 
                 alt="PageConsult AI" 
                 className="h-12 w-auto"
               />
@@ -997,7 +997,7 @@ export default function Signup() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <img 
-              src="/logo/whiteAsset_3combimark_darkmode.svg" 
+              src="/brand/pageconsult-lockup.svg" 
               alt="PageConsult AI" 
               className="h-12 w-auto"
             />

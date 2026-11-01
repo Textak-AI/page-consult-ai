@@ -567,7 +567,7 @@ const CoverPage = ({
         <Text style={styles.confidential}>CONFIDENTIAL</Text>
         {!isAgencyTier && (
           <Image 
-            src="/images/pageconsult-logo-light.png" 
+            src="/brand/pageconsult-lockup.png" 
             style={styles.pageConsultBadge} 
           />
         )}

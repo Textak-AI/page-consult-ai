@@ -94,7 +94,7 @@ const Chat = () => {
       <header className="flex-shrink-0 border-b border-white/10 bg-black/20 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3">
           <img 
-            src="/logo/whiteAsset_3combimark_darkmode.svg" 
+            src="/brand/pageconsult-lockup.svg" 
             alt="PageConsult AI" 
             className="h-8"
           />

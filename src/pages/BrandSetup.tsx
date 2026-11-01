@@ -740,7 +740,7 @@ export default function BrandSetup() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
-            <img src="/pageconsult-logo.png" alt="PageConsult AI" className="h-10 w-auto" />
+            <img src="/brand/pageconsult-lockup.svg" alt="PageConsult AI" className="h-10 w-auto" />
           </div>
         </header>
         
@@ -872,7 +872,7 @@ export default function BrandSetup() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <img src="/pageconsult-logo.png" alt="PageConsult AI" className="h-10 w-auto" />
+          <img src="/brand/pageconsult-lockup.svg" alt="PageConsult AI" className="h-10 w-auto" />
         </div>
       </header>
 

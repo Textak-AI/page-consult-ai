@@ -99,7 +99,7 @@ const Header = () => {
             <Link to="/" className="flex items-center py-2 hover:opacity-80 transition-opacity">
               <div className="h-8 w-32 flex items-center flex-shrink-0">
                 <img 
-                  src="/logo/whiteAsset_3combimark_darkmode.svg" 
+                  src="/brand/pageconsult-lockup.svg" 
                   alt="PageConsult AI" 
                   onLoad={() => setLogoLoaded(true)}
                   className={cn(

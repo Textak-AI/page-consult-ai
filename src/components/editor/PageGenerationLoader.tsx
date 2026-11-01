@@ -15,7 +15,7 @@ import {
   Layout
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import logo from '/logo/whiteAsset_3combimark_darkmode.svg';
+import logo from '/brand/pageconsult-lockup.svg';
 
 interface GenerationStep {
   id: string;

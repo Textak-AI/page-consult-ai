@@ -40,7 +40,7 @@ import { generateIntelligentContent, runIntelligencePipeline } from "@/services/
 import { generateIntelligentContent as generateIntelligentContentLegacy } from "@/lib/generateIntelligentContent";
 import type { PersonaIntelligence, GeneratedContent, AISeoData } from "@/services/intelligence/types";
 import { cn } from "@/lib/utils";
-import logo from "/logo/whiteAsset_3combimark_darkmode.svg";
+import logo from "/brand/pageconsult-lockup.svg";
 import { useAIActions, type AIActionType } from "@/hooks/useAIActions";
 import { useCredits } from "@/hooks/useCredits";
 import { useConsultantIntegration } from '@/hooks/useConsultantIntegration';
