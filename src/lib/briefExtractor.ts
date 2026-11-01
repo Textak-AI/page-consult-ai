@@ -113,14 +113,20 @@ export function extractAuthoritySignals(
 
   // Extract from clientCount
   if (proofPoints?.clientCount) {
-    const match = proofPoints.clientCount.match(/(\d+[\d,]*\+?)/);
-    if (match) {
+    const raw = String(proofPoints.clientCount).trim();
+    // Only a count that LEADS the text splits into value + label. "About 900
+    // households served" stays whole; splitting it rendered "900 About households served".
+    const leads = /^\d[\d,]*\+?(?=\s|$)/.test(raw);
+    const match = raw.match(/(\d+[\d,]*\+?)/);
+    if (leads && match) {
       signals.push({
         value: match[1],
-        label: extractLabelFromString(proofPoints.clientCount, 'Clients Served'),
+        label: extractLabelFromString(raw, 'Clients Served'),
         type: 'stat',
         strength: 8,
       });
+    } else if (match) {
+      signals.push({ value: raw, label: '', type: 'stat', strength: 8 });
     }
   }
 

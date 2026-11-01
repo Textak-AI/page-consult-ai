@@ -1,4 +1,5 @@
 import { fontIdFromStack, HERO_LAYOUTS, type PageTheme } from '@/lib/editor/pageTheme';
+import { statedStat } from '@/lib/statedStat';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 import { consultationObjections } from '../../supabase/functions/_shared/buyerObjections';
 import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
@@ -3246,33 +3247,24 @@ function GenerateContent() {
         
         // Years in business
         if (proof.yearsInBusiness) {
-          const match = proof.yearsInBusiness.match(/(\d+)\+?/);
-          if (match) {
-            credentials.push({ icon: 'award', value: `${match[1]}+`, label: 'Years Experience' });
-          }
+          const stat = statedStat(proof.yearsInBusiness, 'years');
+          if (stat) credentials.push({ icon: 'award', ...stat });
         }
         
-        // Client count
+        // Client count (the owner's own number and words; never "+")
         if (proof.clientCount) {
-          const match = proof.clientCount.match(/(\d+[\d,]*)\+?/);
-          if (match) {
-            credentials.push({ icon: 'users', value: `${match[1].replace(',', '')}+`, label: 'Clients Served' });
-          }
+          const stat = statedStat(proof.clientCount, 'clients');
+          if (stat) credentials.push({ icon: 'users', ...stat });
         }
         
         // Industry awards/recognition from raw text
         if (proof.rawProofText) {
           const rawText = proof.rawProofText.toLowerCase();
-          if (rawText.includes('forrester') || rawText.includes('gartner')) {
-            credentials.push({ icon: 'badge', value: 'Leader', label: 'Analyst Recognition' });
-          }
-          if (rawText.includes('fortune 500') || rawText.includes('fortune500')) {
-            credentials.push({ icon: 'shield', value: 'Trusted', label: 'By Fortune 500' });
-          }
+          // Mentions of analysts or the Fortune 500 are not recognition by them: no chips from keywords.
           // Countries/offices
           const countryMatch = rawText.match(/(\d+)\+?\s*(countries|offices|locations|global offices)/i);
           if (countryMatch) {
-            credentials.push({ icon: 'globe', value: `${countryMatch[1]}+`, label: countryMatch[2].charAt(0).toUpperCase() + countryMatch[2].slice(1) });
+            credentials.push({ icon: 'globe', value: countryMatch[1], label: countryMatch[2].charAt(0).toUpperCase() + countryMatch[2].slice(1) });
           }
         }
       }
@@ -3283,13 +3275,13 @@ function GenerateContent() {
         // Years
         const yearsMatch = proofText.match(/(\d+)\+?\s*years?/i);
         if (yearsMatch && !credentials.some(c => c.label.includes('Years'))) {
-          credentials.push({ icon: 'award', value: `${yearsMatch[1]}+`, label: 'Years Experience' });
+          credentials.push({ icon: 'award', value: yearsMatch[1], label: 'Years Experience' });
         }
         
         // Clients
         const clientsMatch = proofText.match(/(\d+[\d,]*)\+?\s*(clients?|companies|organizations|businesses)/i);
         if (clientsMatch && !credentials.some(c => c.label.includes('Clients'))) {
-          credentials.push({ icon: 'users', value: `${clientsMatch[1].replace(',', '')}+`, label: 'Clients Served' });
+          credentials.push({ icon: 'users', value: clientsMatch[1], label: 'Clients Served' });
         }
       }
       
@@ -3607,18 +3599,14 @@ function GenerateContent() {
         
         // Add client count if available
         if (proof.clientCount && stats.length < 4) {
-          const match = proof.clientCount.match(/(\d+\+?)/);
-          if (match) {
-            stats.push({ value: match[1] + '+', label: 'Clients Served' });
-          }
+          const stat = statedStat(proof.clientCount, 'clients');
+          if (stat) stats.push(stat);
         }
         
         // Add years in business if available
         if (proof.yearsInBusiness && stats.length < 4) {
-          const match = proof.yearsInBusiness.match(/(\d+\+?)/);
-          if (match) {
-            stats.push({ value: match[1] + '+', label: 'Years Experience' });
-          }
+          const stat = statedStat(proof.yearsInBusiness, 'years');
+          if (stat) stats.push(stat);
         }
         
         if (stats.length >= 2) {
@@ -5656,7 +5644,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
                 {aiActions.isUnlimited 
                   ? '∞' 
                   : aiActions.available
-                } AI actions
+                } AI action{!aiActions.isUnlimited && aiActions.available === 1 ? '' : 's'}
               </span>
             </div>
           )}

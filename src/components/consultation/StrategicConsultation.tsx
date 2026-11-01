@@ -1434,7 +1434,9 @@ ${d.ctaText}
                   placeholder={
                     data.pageType === 'beta-prelaunch'
                       ? "e.g., AI that actually learns YOUR focus patterns, not generic productivity tips..."
-                      : uniqueStrengthExample(getOfferKind(data.industryCategory || data.industry, data.industrySubcategory), data.productName)
+                      : localServiceBusiness(data)
+                        ? getWizardPlaceholders(data.industryCategory).uniqueStrength
+                        : uniqueStrengthExample(getOfferKind(data.industryCategory || data.industry, data.industrySubcategory), data.productName)
                   }
                   value={data.uniqueStrength || ''}
                   onChange={(e) => updateData({ uniqueStrength: e.target.value })}

@@ -25,7 +25,7 @@ export function DashboardSidebar({ credits, totalCredits, tier }: DashboardSideb
       {/* Credits Meter */}
       <div className="bg-card border border-border rounded-xl p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-muted-foreground">Credits</span>
+          <span className="text-sm text-muted-foreground">AI actions</span>
           <span className="text-sm font-medium text-foreground">{credits} remaining</span>
         </div>
         <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -42,7 +42,7 @@ export function DashboardSidebar({ credits, totalCredits, tier }: DashboardSideb
             className="p-0 h-auto text-primary hover:text-primary/80"
             onClick={() => navigate('/settings')}
           >
-            Get more credits <ArrowRight className="w-3 h-3 ml-1" />
+            Get more actions <ArrowRight className="w-3 h-3 ml-1" />
           </Button>
         </div>
       </div>

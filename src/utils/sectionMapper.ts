@@ -1,4 +1,5 @@
 import { copyEditSections } from '@/lib/text/copyEdit';
+import { statedStat } from '@/lib/statedStat';
 import { unsupportedCommitment } from '../../supabase/functions/_shared/copyClaims';
 import { composeArc } from '@/lib/composition/arc';
 import { applySignatureStrategy } from '@/components/signature/selection';
@@ -806,7 +807,7 @@ export function mapBriefToSections(
 
         // Build trust signal from top authority signal
         const trustSignal = consultation.clientCount 
-          ? `${consultation.clientCount}+ clients`
+          ? String(consultation.clientCount)
           : authoritySignals[0]
             ? `${authoritySignals[0].value} ${authoritySignals[0].label}`
             : undefined;
@@ -1177,18 +1178,16 @@ function buildStatsFromSDI(sdi: DesignIntelligenceOutput): Array<{value: string,
   
   // Add client count if available
   if (proof.clientCount && stats.length < 4) {
-    const match = proof.clientCount.match(/(\d+\+?)/);
-    if (match) {
-      addStat(match[1] + '+', 'Clients Served', 'Clients Served');
-    }
+    const stat = statedStat(proof.clientCount, 'clients');
+    // A stat kept whole ("Since 2011") has no separate label to validate.
+    if (stat) { if (stat.label) addStat(stat.value, stat.label, 'Clients Served'); else if (!seenValues.has(stat.value.toLowerCase())) { seenValues.add(stat.value.toLowerCase()); stats.push(stat); } }
   }
   
   // Add years in business if available
   if (proof.yearsInBusiness && stats.length < 4) {
-    const match = proof.yearsInBusiness.match(/(\d+\+?)/);
-    if (match) {
-      addStat(match[1] + '+', 'Years Experience', 'Years Experience');
-    }
+    const stat = statedStat(proof.yearsInBusiness, 'years');
+    // A stat kept whole ("Since 2011") has no separate label to validate.
+    if (stat) { if (stat.label) addStat(stat.value, stat.label, 'Years Experience'); else if (!seenValues.has(stat.value.toLowerCase())) { seenValues.add(stat.value.toLowerCase()); stats.push(stat); } }
   }
   
   console.log('📊 [buildStatsFromSDI] Built', stats.length, 'unique stats:', stats);
@@ -1236,10 +1235,10 @@ export function buildStatistics(sources: any, industryVariant: string): Array<{v
     
     // Extract from individual fields
     if (proofData.clientCount && stats.length < 4) {
-      stats.push({ value: proofData.clientCount + '+', label: 'Clients Served' });
+      const stat = statedStat(proofData.clientCount, 'clients'); if (stat) stats.push(stat);
     }
     if (proofData.yearsInBusiness && stats.length < 4) {
-      stats.push({ value: proofData.yearsInBusiness + '+', label: 'Years Experience' });
+      const stat = statedStat(proofData.yearsInBusiness, 'years'); if (stat) stats.push(stat);
     }
     if (proofData.successRate && stats.length < 4) {
       stats.push({ value: proofData.successRate, label: 'Success Rate' });
@@ -1255,13 +1254,13 @@ export function buildStatistics(sources: any, industryVariant: string): Array<{v
     if (consultData.client_count || consultData.clientCount) {
       const count = consultData.client_count || consultData.clientCount;
       if (!stats.some(s => s.label.includes('Client'))) {
-        stats.push({ value: count + '+', label: 'Clients Served' });
+        const stat = statedStat(count, 'clients'); if (stat) stats.push(stat);
       }
     }
     if (consultData.years_in_business || consultData.yearsInBusiness) {
       const years = consultData.years_in_business || consultData.yearsInBusiness;
       if (!stats.some(s => s.label.includes('Years'))) {
-        stats.push({ value: years + '+', label: 'Years Experience' });
+        const stat = statedStat(years, 'years'); if (stat) stats.push(stat);
       }
     }
   }

@@ -62,3 +62,17 @@ test('owner-facing wording from the phone run stays fixed', () => {
   expect(brief).not.toMatch(/Based on layout intelligence|For each pillar|"X\+ clients"/);
   expect(brief).toMatch(/## 10\. Answered buyer questions/);
 });
+
+test('stat chips keep the owner\'s count and words', async () => {
+  const { statedStat } = await import('../src/lib/statedStat');
+  expect(statedStat('About 900 households served', 'clients')).toEqual({ value: 'About 900 households served', label: '' });
+  expect(statedStat('140 weekly lawn accounts', 'clients')).toEqual({ value: '140', label: 'Weekly lawn accounts' });
+  expect(statedStat('Since 2011', 'years')).toEqual({ value: 'Since 2011', label: '' });
+  expect(statedStat('12 years', 'years')).toEqual({ value: '12', label: 'Years Experience' });
+  const { extractAuthoritySignals } = await import('../src/lib/briefExtractor');
+  const sig = extractAuthoritySignals({ clientCount: 'About 900 households served' });
+  expect(sig[0]).toMatchObject({ value: 'About 900 households served', label: '' });
+  for (const f of ['src/utils/sectionMapper.ts', 'src/pages/Generate.tsx']) {
+    expect(read(f)).not.toMatch(/\+ '\+'|\}\+`|value: '(?:Leader|Trusted)'/);
+  }
+});

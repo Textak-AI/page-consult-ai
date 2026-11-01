@@ -183,7 +183,7 @@ const Header = () => {
                 {/* Credits display - understated */}
                 <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground">
                   <Zap className="w-3.5 h-3.5" />
-                  <span>{credits.isUnlimited ? '∞' : credits.available} AI actions</span>
+                  <span>{credits.isUnlimited ? '∞' : credits.available} AI action{!credits.isUnlimited && credits.available === 1 ? '' : 's'}</span>
                 </div>
                 
                 <Button 
