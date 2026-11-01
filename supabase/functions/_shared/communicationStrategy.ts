@@ -32,7 +32,7 @@ export function computeCommunicationStrategy(input: Record<string, any>, brief: 
   const positive = alternative?.split(/,?\s+then\s+/i).find(s => /partner works/i.test(s))?.replace(/^the\s+/i, 'The ');
   const reframe = opposition && /past consultants/i.test(opposition) && alternative
     ? `${negative}. ${positive || sentences(alternative)[0]}.`.replace(/\.{2,}/g, '.') : opposition || null;
-  provenance.reframe = reframe ? Object.keys(input).filter(k => typeof input[k] === 'string' && (input[k].includes(opposition) || (alternative && input[k] === alternative))) : [];
+  provenance.reframe = reframe && opposition ? Object.keys(input).filter(k => typeof input[k] === 'string' && (input[k].includes(opposition) || (alternative && input[k] === alternative))) : [];
   // Prefer stated outcome. Long sentences are shortened at a clause boundary only.
   let oneLiner = value ? sentences(value)[0] : null;
   if (oneLiner && /\b(visceral|resonan|sculpt|empower|elevat)/i.test(oneLiner)) {
