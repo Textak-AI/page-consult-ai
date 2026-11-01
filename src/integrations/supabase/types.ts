@@ -1351,6 +1351,7 @@ export type Database = {
           job_title: string | null
           lead_webhook_url: string | null
           marketing_emails: boolean | null
+          onboarded_at: string | null
           phone_number: string | null
           preferred_mode: string | null
           prospect_view_alerts: boolean | null
@@ -1380,6 +1381,7 @@ export type Database = {
           job_title?: string | null
           lead_webhook_url?: string | null
           marketing_emails?: boolean | null
+          onboarded_at?: string | null
           phone_number?: string | null
           preferred_mode?: string | null
           prospect_view_alerts?: boolean | null
@@ -1409,6 +1411,7 @@ export type Database = {
           job_title?: string | null
           lead_webhook_url?: string | null
           marketing_emails?: boolean | null
+          onboarded_at?: string | null
           phone_number?: string | null
           preferred_mode?: string | null
           prospect_view_alerts?: boolean | null
