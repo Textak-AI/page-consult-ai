@@ -6,8 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789';
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-/** 16 characters from a cryptographic source: the token is a capability, so Math.random won't do. */
-export function generatePreviewToken(length = 16): string {
+/** 12 characters (preview_links.token is VARCHAR(12)) from a cryptographic source: the token is a capability, so Math.random won't do. */
+export function generatePreviewToken(length = 12): string {
   const bytes = new Uint8Array(length);
   crypto.getRandomValues(bytes);
   return Array.from(bytes, (b) => ALPHABET[b % ALPHABET.length]).join('');
