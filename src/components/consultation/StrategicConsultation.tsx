@@ -307,6 +307,8 @@ interface Props {
   extractedBrand?: ExtractedBrandData | null;
   skipDraftLoad?: boolean;
   websiteAnalysis?: WebsiteAnalysis | null;
+  /** Business name the owner typed in onboarding; beats a name scraped from their site. */
+  statedBusinessName?: string;
 }
 
 // Brand fields are never persisted in drafts — they live only in React state for the current session
@@ -320,7 +322,7 @@ function stripDraftBrandFields<T extends Record<string, any>>(value: T, phase: '
   return copy as T;
 }
 
-export function StrategicConsultation({ onComplete, onBack, prefillData, extractedBrand, skipDraftLoad, websiteAnalysis }: Props) {
+export function StrategicConsultation({ onComplete, onBack, prefillData, extractedBrand, skipDraftLoad, websiteAnalysis, statedBusinessName }: Props) {
   // Check if dev mode is active
   const [isDevModeActive] = useDevMode();
   // Pre-generate section check (must stay above every early return: hooks run in a fixed order).
@@ -432,7 +434,10 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   };
 
   const [currentStep, setCurrentStep] = useState(0);
-  const [data, setData] = useState<Partial<ConsultationData>>(getInitialData);
+  const [data, setData] = useState<Partial<ConsultationData>>(() => {
+    const initial = getInitialData();
+    return statedBusinessName?.trim() ? { ...initial, businessName: statedBusinessName.trim() } : initial;
+  });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [isGeneratingBrief, setIsGeneratingBrief] = useState(false);

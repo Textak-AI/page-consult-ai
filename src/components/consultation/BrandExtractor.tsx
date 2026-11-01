@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { extractBrandFromUrl, ExtractedBrand } from '@/lib/brandExtraction';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,10 +9,12 @@ import { cn } from '@/lib/utils';
 interface BrandExtractorProps {
   onExtracted: (brand: ExtractedBrand, url: string) => void;
   onSkip: () => void;
+  /** From onboarding: the owner's website, read as soon as this step opens. */
+  initialUrl?: string;
 }
 
-export function BrandExtractor({ onExtracted, onSkip }: BrandExtractorProps) {
-  const [url, setUrl] = useState('');
+export function BrandExtractor({ onExtracted, onSkip, initialUrl }: BrandExtractorProps) {
+  const [url, setUrl] = useState(initialUrl || '');
   const [isExtracting, setIsExtracting] = useState(false);
   const [extracted, setExtracted] = useState<ExtractedBrand | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +42,16 @@ export function BrandExtractor({ onExtracted, onSkip }: BrandExtractorProps) {
       setError(result.error || 'Could not access that website');
     }
   };
+
+  // Onboarding gave us the site already: start reading it once, without another click.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (initialUrl && !autoStarted.current) {
+      autoStarted.current = true;
+      void handleExtract();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialUrl]);
 
   const handleContinue = () => {
     if (extracted) {

@@ -11,6 +11,9 @@
 import { guardCopyClaims } from './copyClaims.ts';
 
 /** Section types the chat may add. Upload-only galleries stay in the Add Section menu. */
+/** The editor controls Page Chat may point to. Keep in step with the editor; a test checks the claims it makes. */
+export const EDITOR_CONTROLS = 'the section list in the left sidebar (move, hide, delete), Add Section, Style presets, the hero background (stock photo search or a generated image), generated section images, logo upload, photo uploads in Work Samples and Photo Gallery, SEO, Preview, Share and Publish';
+
 export const CHAT_ADDABLE_TYPES = [
   'problem-solution', 'features', 'how-it-works', 'social-proof', 'faq',
   'differentiator-callout', 'audience-fit', 'the-real-challenge', 'our-approach',
@@ -162,6 +165,7 @@ ZERO FABRICATION — absolute:
 - Judgment lines count as facts too: who it is NOT for, what competitors do, what buyers feel, outcomes. Write them only when the owner stated them; otherwise use a [bracket] and ask.
 - Keep CTA button text unless the owner asks to change it.
 - You cannot delete, reorder or restyle sections, or add images; say so briefly if asked and point to the editor controls.
+- The editor's controls are exactly: ${EDITOR_CONTROLS}. Never mention, describe or promise any other control or feature. If the owner asks for something not on that list (for example video), say plainly that the editor doesn't support it yet.
 
 CURRENT PAGE (index, type, copy):
 ${JSON.stringify(args.sections, null, 1)}

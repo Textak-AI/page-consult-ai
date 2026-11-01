@@ -47,6 +47,7 @@ import StrategyDocument from "./pages/StrategyDocument";
 import TrustCenter from "./pages/TrustCenter";
 import BrandIntake from "./pages/BrandIntake";
 import WizardChoice from "./pages/WizardChoice";
+import Welcome from "./pages/Welcome";
 import EnhancedBrandSetup from "./pages/EnhancedBrandSetup";
 import PricingPage from "./pages/PricingPage";
 import Terms from "./pages/Terms";
@@ -123,6 +124,7 @@ const App = () => {
                 <Route path="/brand-setup-old" element={<BrandSetup />} />
                 
                 {/* Wizard Choice - decision point */}
+                <Route path="/welcome" element={<Welcome />} />
                 <Route path="/wizard" element={<WizardChoice />} />
                 
                 {/* Wizard Paths */}

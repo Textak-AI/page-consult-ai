@@ -122,3 +122,9 @@
 ## Logo (2026-10-31)
 - One logo family in public/brand: pageconsult-lockup.svg (icon + "PageConsult", no "AI"), pageconsult-icon.svg, pageconsult-lockup.png (react-pdf can't take SVG). Favicons: favicon.svg/.ico/.png + apple-touch-icon.png. Source is Kyle's Illustrator file "10_31_26_PageConsult_logo-05.svg": one colour #00B6D5, screen and eyes knocked out (transparent, no fill behind), so the same file works on light and dark. Every app logo spot uses these files; tests/brandLogo.test.js guards it. The old public/logo set and the hand-drawn PageConsultLogo.tsx are deleted.
 - The editor sidebar has no gamified progress layer: the "Looking Strong!"/"Conversion ready" banners, confetti and the achievement share card are removed. Page Score (pageScore.ts) is the only progress signal.
+
+## Customer onboarding (2026-11-01)
+- New accounts see /welcome once (src/pages/Welcome.tsx, helpers in src/lib/onboarding.ts): name, business name, optional website, then three plain "how it works" steps, then /wizard/form. Saves profiles.full_name/company_name/website/onboarded_at and auth metadata full_name. Hand-off travels in router state (readOnboardingHandoff): the website step auto-reads the given site; the typed business name beats a scraped one. Skips the ConsultationIntro.
+- /wizard no longer offers the chat-vs-form either/or; it keeps its resume redirects, then sends un-onboarded accounts to /welcome and everyone else to /wizard/form. profiles.onboarded_at was backfilled for accounts with any consultation or page; a failed profile read never blocks (needsOnboarding).
+- Greetings use a stated first name only (firstNameOf), never the email prefix; with no name the dashboard says "Welcome back".
+- Page Chat may only point to the controls in EDITOR_CONTROLS (_shared/pageChat.ts). It told an owner to "upload a video in the sidebar"; there is no video support.

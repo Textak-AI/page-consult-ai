@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +19,7 @@ import type { AISeoData } from "@/services/intelligence/types";
 import type { IndustryClassification } from "@/lib/industryClassification";
 import { DraftRecoveryModal } from "@/components/consultation/DraftRecoveryModal";
 import { extractStructuredBrief } from "@/lib/extractStructuredBrief";
+import { readOnboardingHandoff } from "@/lib/onboarding";
 
 type Stage = 'loading' | 'checking-draft' | 'brand-extractor' | 'website-analyzer' | 'intro' | 'consultation' | 'brief-review' | 'generating' | 'dev-loading';
 
@@ -107,6 +108,9 @@ export default function NewConsultation() {
   const [skipDraftLoad, setSkipDraftLoad] = useState(false);
   const [websiteAnalysis, setWebsiteAnalysis] = useState<any>(null);
   const [isDevModeActive] = useDevMode();
+  // Onboarding hand-off (/welcome): stated business name, and a website to read first.
+  const location = useLocation();
+  const [onboarding] = useState(() => readOnboardingHandoff(location.state));
   
   // Ref to track if brand data was loaded from EnhancedBrandSetup
   const brandDataLoadedRef = useRef(brandDataExistsOnLoad);
@@ -311,6 +315,12 @@ export default function NewConsultation() {
       return;
     }
     
+    // Onboarding already explained the steps: go to the website step if they gave one, else to the questions.
+    if (onboarding) {
+      setStage(onboarding.websiteUrl ? 'brand-extractor' : 'consultation');
+      return;
+    }
+
     if (!shouldShowIntro()) {
       console.log('🔄 setStage called:', 'brand-extractor', 'from: proceedToStart (no intro)');
       setStage('brand-extractor');
@@ -796,6 +806,7 @@ export default function NewConsultation() {
           <BrandExtractor
             onExtracted={handleBrandExtracted}
             onSkip={handleSkipBrandExtractor}
+            initialUrl={onboarding?.websiteUrl || undefined}
           />
         </motion.div>
       </div>
@@ -890,6 +901,7 @@ export default function NewConsultation() {
               } : null}
               skipDraftLoad={skipDraftLoad}
               websiteAnalysis={websiteAnalysis}
+              statedBusinessName={onboarding?.businessName || undefined}
             />
           </motion.div>
         )}

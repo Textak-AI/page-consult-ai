@@ -1,3 +1,4 @@
+import { firstNameOf } from "@/lib/onboarding";
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -230,10 +231,8 @@ export default function Dashboard() {
   };
 
   const getUserDisplayName = () => {
-    if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
-    if (user?.user_metadata?.name) return user.user_metadata.name;
-    if (user?.email) return user.email.split('@')[0];
-    return '';
+    // A name the person gave us, first word only. Never the email prefix ("Jkyle").
+    return firstNameOf(user?.user_metadata?.full_name || user?.user_metadata?.name);
   };
 
   const handleEditPage = (id: string) => {

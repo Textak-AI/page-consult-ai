@@ -50,9 +50,10 @@ export function DashboardHeader({
   const displayName = capitalizeDisplayName(userName);
 
   const getGreeting = () => {
-    if (pageCount === 0) return `Let's build your first page, ${displayName}`;
-    if (draftCount > 0) return `Welcome back, ${displayName} — you have work in progress`;
-    return `Welcome back, ${displayName}`;
+    const name = displayName ? `, ${displayName}` : '';
+    if (pageCount === 0) return `Let's build your first page${name}`;
+    if (draftCount > 0) return `Welcome back${name} — you have work in progress`;
+    return `Welcome back${name}`;
   };
 
   const getSubtext = () => {
