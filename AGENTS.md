@@ -103,3 +103,8 @@
 - Page Chat docks: ConsultantChat reports its open width via `onDockWidth`; Generate pads the preview by that amount on screens ≥1280px so the chat never covers the copy being edited.
 - Sidebar: `hiddenReason()` (src/lib/editor/emptySections.ts) mirrors the render gates of sections that show nothing without real proof (social-proof, credentials-bar) and labels them "Hidden until…".
 - Page Chat replies say what changed and never claim "only your facts"; the section-rewrite prefill is "Rewrite this section from my brief and answers."
+
+## Section unlocks (2026-10-31)
+- `src/lib/sectionUnlocks.ts` is the one list of sections that need the owner's facts: How It Works (a stated process), Results (a real quote >10 chars, SocialProofSection's gate), FAQ (≥2 answered buyer questions, sectionMapper's gate). Keep it in step with those gates.
+- Wizard: on "Generate Strategy", if anything is missing, `SectionUnlockReview` shows once with one question per section; "Generate without them" is always available.
+- Editor: SectionManager lists the same sections under "Waiting on your answers"; clicking opens Page Chat with `UNLOCK_PREFILLS` typed in for the owner to finish.

@@ -25,6 +25,8 @@ interface SectionManagerProps {
   onRegenerateSection?: (sectionType: string) => void;
   isRegenerating?: boolean;
   actionCost?: number;
+  /** Sections the page can't show yet, each opening Page Chat with the one question that adds it. */
+  unlocks?: Array<{ section: string; label: string; hint: string; onClick: () => void }>;
 }
 
 export function SectionManager({
@@ -36,6 +38,7 @@ export function SectionManager({
   onRegenerateSection,
   isRegenerating,
   actionCost = 1,
+  unlocks = [],
 }: SectionManagerProps) {
   const [regeneratingSection, setRegeneratingSection] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -270,6 +273,22 @@ export function SectionManager({
             </div>
           );
         })}
+        {unlocks.length > 0 && (
+          <div className="pt-3 mt-1 border-t border-white/10 space-y-1.5" aria-label="Sections waiting on your answers">
+            <p className="px-1 text-[11px] uppercase tracking-wide text-gray-500">Waiting on your answers</p>
+            {unlocks.map((u) => (
+              <button
+                key={u.section}
+                type="button"
+                onClick={u.onClick}
+                className="w-full text-left px-3 py-2 rounded-lg border border-dashed border-white/15 text-gray-400 hover:text-white hover:border-cyan-400/40 transition-colors"
+              >
+                <span className="block text-sm font-medium">+ {u.label}</span>
+                <span className="block text-[11px] text-gray-500">{u.hint}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Add Section / Calculator */}

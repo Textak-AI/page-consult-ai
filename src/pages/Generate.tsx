@@ -5,6 +5,8 @@ import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import { consultationAccess } from '@/lib/consultationAccess';
 import { readDemoSession } from '@/lib/anonymousSessions';
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { missingSections, UNLOCK_HINTS, UNLOCK_PREFILLS } from "@/lib/sectionUnlocks";
+import { hiddenReason } from "@/lib/editor/emptySections";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -5221,6 +5223,22 @@ function EditorContent({
   const [strategyBriefOpen, setStrategyBriefOpen] = useState(false);
   // Width of the open Page Chat panel: the preview shifts left so the chat never covers the copy it edits.
   const [pageChatDock, setPageChatDock] = useState(0);
+  // Sections this page can't show without the owner's facts; each opens Page Chat with the question.
+  const sectionUnlocks = useMemo(() => {
+    const cd: any = strategicData?.consultationData || pageData?.consultation_data || consultation || {};
+    const has = (type: string) => sections.some((s: any) => s.type === type && s.visible !== false && !hiddenReason(s));
+    return missingSections(cd)
+      .filter((m) => !has(m.section))
+      .map((m) => {
+        const idx = sections.findIndex((s: any) => s.type === m.section);
+        return {
+          section: m.section,
+          label: m.label,
+          hint: UNLOCK_HINTS[m.section],
+          onClick: () => setPageChatFocus({ index: idx, type: m.section, nonce: Date.now(), prefill: UNLOCK_PREFILLS[m.section] }),
+        };
+      });
+  }, [strategicData, pageData?.consultation_data, consultation, sections]);
   const [sharePreviewOpen, setSharePreviewOpen] = useState(false);
   
   useEffect(() => {
@@ -5881,6 +5899,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
               onRegenerateSection={handleRegenerateSectionWithUsage}
               isRegenerating={isRegenerating}
               actionCost={1}
+              unlocks={sectionUnlocks}
             />
           </div>
         </div>

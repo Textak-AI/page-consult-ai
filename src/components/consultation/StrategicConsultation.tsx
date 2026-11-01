@@ -54,6 +54,8 @@ import {
 } from './beta';
 import { useDevMode } from '@/components/dev/DevToolbar';
 import { BuyerObjectionChecklist } from './BuyerObjectionChecklist';
+import { SectionUnlockReview } from './SectionUnlockReview';
+import { missingSections } from '@/lib/sectionUnlocks';
 import type { BuyerObjection } from '../../../supabase/functions/_shared/buyerObjections';
 
 export interface ConsultationData {
@@ -988,6 +990,9 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     setCurrentStep(currentStep + 1);
   };
 
+  const [unlockReviewOpen, setUnlockReviewOpen] = useState(false);
+  const [unlockReviewShown, setUnlockReviewShown] = useState(false);
+
   const handleNext = async () => {
     const currentStepId = STEPS[currentStep]?.id;
     
@@ -1020,6 +1025,10 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
+    } else if (!unlockReviewShown && missingSections(data).length > 0) {
+      // Last check: show which sections the page will skip and the one question that adds each.
+      setUnlockReviewShown(true);
+      setUnlockReviewOpen(true);
     } else {
       await generateStrategyBrief();
     }
@@ -1878,6 +1887,13 @@ ${d.ctaText}
 
   return (
     <div className="min-h-[calc(100vh-4rem)] relative">
+      <SectionUnlockReview
+        open={unlockReviewOpen}
+        data={data}
+        onChange={(updates) => updateData(updates as Partial<ConsultationData>)}
+        onClose={() => setUnlockReviewOpen(false)}
+        onGenerate={() => { setUnlockReviewOpen(false); void generateStrategyBrief(); }}
+      />
       {/* Ambient Hero Background */}
       {data.industryCategory && (
         <AmbientHeroBackground
