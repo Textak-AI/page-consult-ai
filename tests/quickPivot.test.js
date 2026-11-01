@@ -21,6 +21,7 @@ test('owner chooses the page; no test-data button; balance refreshes', () => {
   expect(m).toMatch(/base_page_id: pageId/);
   expect(m).not.toMatch(/fillTestData|🧪|kyle@/);
   expect(m).toMatch(/announceUsageChanged\(\)/);
+  expect(m).not.toMatch(/>\/p\/</);
 });
 
 test('prospect links are /for/ everywhere; emails never borrow another person\'s name', () => {

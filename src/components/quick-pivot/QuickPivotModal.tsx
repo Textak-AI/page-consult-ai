@@ -401,7 +401,7 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
                     className="flex items-center border rounded-lg overflow-hidden"
                     onMouseDown={e => e.stopPropagation()}
                   >
-                    <span className="px-3 py-2 bg-muted text-muted-foreground text-sm">/p/</span>
+                    <span className="px-3 py-2 bg-muted text-muted-foreground text-sm">/for/</span>
                     <Input
                       value={formData.custom_slug}
                       onChange={e => setFormData(p => ({ ...p, custom_slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') }))}
