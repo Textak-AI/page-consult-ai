@@ -32,3 +32,12 @@ test('wizard shows the review once before generating; editor lists waiting secti
   expect(src('src/pages/Generate.tsx')).toMatch(/unlocks=\{sectionUnlocks\}/);
   expect(src('src/components/editor/SectionManager.tsx')).toMatch(/Waiting on your answers/);
 });
+
+test('wizard declares no hooks after its first early return (React #310 blanked /wizard/form)', () => {
+  const s = src('src/components/consultation/StrategicConsultation.tsx');
+  const start = s.indexOf('export function StrategicConsultation(');
+  const firstReturn = s.indexOf('  if (!isBrandCheckComplete) {', start);
+  expect(firstReturn).toBeGreaterThan(start);
+  const after = s.slice(firstReturn);
+  expect(after).not.toMatch(/\n  const \[[^\]]+\] = useState\(|\n  use(Effect|Memo|Callback|Ref|State)\(|\n  const \w+ = use(Memo|Callback|Ref)\(/);
+});

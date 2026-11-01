@@ -323,6 +323,9 @@ function stripDraftBrandFields<T extends Record<string, any>>(value: T, phase: '
 export function StrategicConsultation({ onComplete, onBack, prefillData, extractedBrand, skipDraftLoad, websiteAnalysis }: Props) {
   // Check if dev mode is active
   const [isDevModeActive] = useDevMode();
+  // Pre-generate section check (must stay above every early return: hooks run in a fixed order).
+  const [unlockReviewOpen, setUnlockReviewOpen] = useState(false);
+  const [unlockReviewShown, setUnlockReviewShown] = useState(false);
   
   // Initialize data with prefill values if available
   const getInitialData = (): Partial<ConsultationData> => {
@@ -989,9 +992,6 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     updateData({ brandSettings: undefined });
     setCurrentStep(currentStep + 1);
   };
-
-  const [unlockReviewOpen, setUnlockReviewOpen] = useState(false);
-  const [unlockReviewShown, setUnlockReviewShown] = useState(false);
 
   const handleNext = async () => {
     const currentStepId = STEPS[currentStep]?.id;
