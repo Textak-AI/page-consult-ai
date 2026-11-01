@@ -91,9 +91,7 @@ export function SeoPanel({ open, onOpenChange, pageData, sections, onSaved }: Se
               placeholder={fallbackTitle || "Page title"}
               className="text-sm"
             />
-            <p className="text-xs text-muted-foreground text-right">
-              {metaTitle.length} characters — aim for ~60
-            </p>
+            <FieldStatus value={metaTitle} fallback={fallbackTitle} target={60} onUseFallback={() => setMetaTitle(fallbackTitle)} />
           </div>
 
           {/* Meta Description */}
@@ -106,9 +104,7 @@ export function SeoPanel({ open, onOpenChange, pageData, sections, onSaved }: Se
               rows={3}
               className="resize-none"
             />
-            <p className="text-xs text-muted-foreground text-right">
-              {metaDescription.length} characters — aim for ~160
-            </p>
+            <FieldStatus value={metaDescription} fallback={fallbackDescription} target={160} onUseFallback={() => setMetaDescription(fallbackDescription)} />
           </div>
 
           {/* Actions */}
@@ -129,5 +125,28 @@ export function SeoPanel({ open, onOpenChange, pageData, sections, onSaved }: Se
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * An empty field uses the page's own copy (shown as the placeholder). Say so,
+ * count that text, and let the owner pull it into the field to edit it rather
+ * than retyping it.
+ */
+function FieldStatus({ value, fallback, target, onUseFallback }: { value: string; fallback: string; target: number; onUseFallback: () => void }) {
+  const usingFallback = !value.trim() && !!fallback;
+  const length = usingFallback ? fallback.length : value.length;
+  const over = length > target + 10;
+  return (
+    <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+      {usingFallback ? (
+        <button type="button" onClick={onUseFallback} className="text-primary hover:underline">
+          Start from this text
+        </button>
+      ) : <span />}
+      <span className={over ? 'text-amber-400' : undefined}>
+        {usingFallback ? 'Using your page copy · ' : ''}{length} characters — aim for ~{target}
+      </span>
+    </div>
   );
 }

@@ -125,3 +125,10 @@ test('Page Chat never claims "only your facts"', () => {
   expect(src('supabase/functions/_shared/pageChat.ts')).toMatch(/Never claim the copy uses "only"/);
   expect(src('src/pages/Generate.tsx')).not.toMatch(/using only my brief/);
 });
+
+test('SEO fields: page-copy fallback can be pulled into the field and is counted', () => {
+  const s = src('src/components/editor/SeoPanel.tsx');
+  expect(s).toMatch(/Start from this text/);
+  expect(s).toMatch(/onUseFallback=\{\(\) => setMetaDescription\(fallbackDescription\)\}/);
+  expect(s).toMatch(/Using your page copy/);
+});
