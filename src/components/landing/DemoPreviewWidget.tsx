@@ -91,7 +91,7 @@ export function DemoPreviewWidget({ onActivate }: DemoPreviewWidgetProps) {
                 <div className="flex items-center gap-3 mb-6">
                   <StrategistIcon size={40} />
                   <div>
-                    <div className="text-sm font-medium text-white">PageConsult AI</div>
+                    <div className="text-sm font-medium text-white">PageConsult</div>
                     <div className="text-xs text-slate-500">Strategy Consultant</div>
                   </div>
                 </div>

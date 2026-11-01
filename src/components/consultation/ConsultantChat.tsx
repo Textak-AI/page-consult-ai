@@ -251,10 +251,8 @@ export function ConsultantChat({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Avatar className="h-10 w-10 border-2 border-purple-500/30">
-                  <AvatarFallback className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white font-bold text-sm">
-                    PC
-                  </AvatarFallback>
+                <Avatar className="h-10 w-10 border-2 border-cyan-500/30">
+                  <AvatarFallback className="bg-slate-900"><img src="/brand/pageconsult-icon.svg" alt="PageConsult" className="h-[62%] w-[62%] object-contain" /></AvatarFallback>
                 </Avatar>
                 <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
               </div>
@@ -304,10 +302,8 @@ export function ConsultantChat({
               >
                 {message.role === 'assistant' && (
                   <div className="flex-shrink-0">
-                    <Avatar className="h-8 w-8 border border-purple-500/30">
-                      <AvatarFallback className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white text-xs font-bold">
-                        PC
-                      </AvatarFallback>
+                    <Avatar className="h-8 w-8 border border-cyan-500/30">
+                      <AvatarFallback className="bg-slate-900"><img src="/brand/pageconsult-icon.svg" alt="PageConsult" className="h-[62%] w-[62%] object-contain" /></AvatarFallback>
                     </Avatar>
                   </div>
                 )}
@@ -356,10 +352,8 @@ export function ConsultantChat({
             {isLoading && (
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
-                  <Avatar className="h-8 w-8 border border-purple-500/30">
-                    <AvatarFallback className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white text-xs font-bold">
-                      PC
-                    </AvatarFallback>
+                  <Avatar className="h-8 w-8 border border-cyan-500/30">
+                    <AvatarFallback className="bg-slate-900"><img src="/brand/pageconsult-icon.svg" alt="PageConsult" className="h-[62%] w-[62%] object-contain" /></AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
@@ -407,7 +401,7 @@ export function ConsultantChat({
         <div className="p-4 border-t border-border/50 bg-muted/30">
           {focusIndex !== null && sections[focusIndex] && (
             <div className="mb-2 flex items-center gap-2 text-xs">
-              <span className="px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30">
+              <span className="px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-cyan-500/30">
                 About: {titleFor(sections[focusIndex].type)}
               </span>
               <button className="text-muted-foreground hover:text-foreground" onClick={() => setFocusIndex(null)} aria-label="Clear section focus">Clear</button>

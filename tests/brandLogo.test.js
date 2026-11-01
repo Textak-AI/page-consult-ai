@@ -38,3 +38,8 @@ test('no screen builds the old logo from an icon plus "PageConsult AI" text', ()
   }
   expect(readFileSync(join(root, 'src/components/consultation/ConsultantChat.tsx'), 'utf8')).not.toMatch(/I only use what you/);
 });
+
+test('the product speaks with the logo: no hand-drawn strategist or "PC" initials', () => {
+  expect(readFileSync(join(root, 'src/components/ui/StrategistIcon.tsx'), 'utf8')).toMatch(/\/brand\/pageconsult-icon\.svg/);
+  expect(readFileSync(join(root, 'src/components/consultation/ConsultantChat.tsx'), 'utf8')).not.toMatch(/>\s*PC\s*</);
+});

@@ -32,7 +32,7 @@ export function CompanionHeader({ isExpanded }: CompanionHeaderProps) {
         </div>
         
         <div className="min-w-0 flex-1">
-          <span className="text-cyan-400 font-medium text-sm">PageConsult AI</span>
+          <span className="text-cyan-400 font-medium text-sm">PageConsult</span>
           {!isExpanded && latestAIMessage && (
             <span className="text-slate-400 text-sm ml-2 truncate inline-block max-w-[300px] md:max-w-[500px]">
               "{latestAIMessage.content}"

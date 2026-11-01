@@ -421,7 +421,7 @@ export default function LiveDemoSection() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1.5">
-                            <span className="text-sm font-medium text-white">PageConsult AI</span>
+                            <span className="text-sm font-medium text-white">PageConsult</span>
                             <span className="text-xs text-slate-500">Strategy Consultant</span>
                           </div>
                           <div className="bg-slate-800/60 rounded-2xl rounded-tl-md px-4 py-3 text-slate-200 text-[15px] leading-relaxed break-words">
@@ -628,7 +628,7 @@ export default function LiveDemoSection() {
                   <MessageSquare className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold">PageConsult AI</h3>
+                  <h3 className="text-white font-semibold">PageConsult</h3>
                   <p className="text-white/50 text-sm">Strategy Consultant</p>
                 </div>
               </div>

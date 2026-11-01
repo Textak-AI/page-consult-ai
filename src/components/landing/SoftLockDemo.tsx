@@ -630,7 +630,7 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
                     className="w-6 h-6" 
                     alt="" 
                   />
-                  <span className="text-cyan-400 font-semibold text-sm">PageConsult AI</span>
+                  <span className="text-cyan-400 font-semibold text-sm">PageConsult</span>
                 </div>
                 
                 {/* Center: Strategy Session title */}
@@ -718,7 +718,7 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
                                       animate={{ opacity: showAsGhost ? 0.5 : 1 }}
                                       transition={{ duration: 0.35 }}
                                     >
-                                      <span className="text-cyan-400 font-medium text-sm">PageConsult AI</span>
+                                      <span className="text-cyan-400 font-medium text-sm">PageConsult</span>
                                       <span className="text-slate-500 text-xs">Strategy Consultant</span>
                                     </motion.div>
                                     
