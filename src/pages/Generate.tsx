@@ -46,13 +46,11 @@ import { useCredits } from "@/hooks/useCredits";
 import { useConsultantIntegration } from '@/hooks/useConsultantIntegration';
 import { usePageBuilder } from '@/hooks/usePageBuilder';
 import { DigitalChampionMeter } from '@/components/consultation/DigitalChampionMeter';
-import { ShareableAchievementCard } from '@/components/consultation/ShareableAchievementCard';
 import { ConsultantChat } from '@/components/consultation/ConsultantChat';
 import { LockedSectionOverlay } from '@/components/sections/LockedSectionOverlay';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Trophy, Share2, Search, Palette } from 'lucide-react';
 import { DevicePreviewFrame, DeviceToggle, type PreviewDevice } from '@/components/editor/DevicePreviewFrame';
-import confetti from 'canvas-confetti';
 import { StylePresetName } from "@/styles/presets";
 import {
   UsageIndicator,
@@ -5311,9 +5309,6 @@ function EditorContent({
   } | null>(null);
 const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
   
-  // Achievement modal and confetti celebration
-  const [showAchievementModal, setShowAchievementModal] = useState(false);
-  const [hasShownConversionReady, setHasShownConversionReady] = useState(false);
   // Removed showDigitalChampion toggle - using single consistent design
 
   // Add Section menu: content comes from the saved strategy brief when present.
@@ -5464,23 +5459,6 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
     }
   }, [aiActions.isLowBalance, aiActions.isZeroBalance]);
   
-  // Celebrate when hitting conversion-ready for the first time
-  useEffect(() => {
-    if (pageBuilder.isConversionReady && !hasShownConversionReady) {
-      setHasShownConversionReady(true);
-      
-      // Confetti celebration!
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-      
-      setTimeout(() => {
-        setShowAchievementModal(true);
-      }, 1500);
-    }
-  }, [pageBuilder.isConversionReady, hasShownConversionReady]);
 
   // Actions charged server-side by the edge function itself (never double-charge from the client).
   const SERVER_CHARGED: AIActionType[] = ['page_generation', 'section_regeneration'];
@@ -5843,51 +5821,6 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             />
           </div>
           
-          {/* Conversion Ready Banner */}
-          {pageBuilder.isConversionReady && (
-            <div className="p-3 border-b border-white/10 bg-gradient-to-r from-green-500/10 to-emerald-500/10 animate-glow-green">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2 text-green-400">
-                  <Trophy className="w-4 h-4" />
-                  <span className="font-medium text-sm">Conversion-Ready!</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowAchievementModal(true)}
-                  className="h-7 px-2 text-green-400 hover:text-green-300 hover:bg-green-500/20"
-                >
-                  <Share2 className="w-3 h-3 mr-1" />
-                  Share
-                </Button>
-              </div>
-              <p className="text-xs text-green-300/80 mb-2">
-                Your page has all the elements for high conversion.
-              </p>
-              <Button
-                size="sm"
-                onClick={() => setPublishModalOpen(true)}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-              >
-                Preview & Publish
-              </Button>
-            </div>
-          )}
-
-          {/* Strong Page Banner */}
-          {pageBuilder.isStrong && !pageBuilder.isConversionReady && (
-            <div className="p-3 border-b border-white/10 bg-gradient-to-r from-blue-500/10 to-cyan-500/10">
-              <div className="flex items-center gap-2 text-blue-400 mb-1">
-                <Sparkles className="w-4 h-4" />
-                <span className="font-medium text-sm">Looking Strong!</span>
-              </div>
-              <p className="text-xs text-blue-300/80">
-                {pageBuilder.nextUnlock?.hint || "Add more content to reach conversion-ready status."}
-              </p>
-            </div>
-          )}
-
-          
           {/* Persona Insights Panel */}
           {intelligence?.synthesizedPersona && (
             <PersonaInsightsPanel 
@@ -6134,16 +6067,6 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
         />
       )}
 
-      {/* Achievement Share Modal */}
-      <Dialog open={showAchievementModal} onOpenChange={setShowAchievementModal}>
-        <DialogContent className="max-w-lg p-0 overflow-hidden bg-gradient-to-br from-background to-muted border-2 border-primary/20">
-          <ShareableAchievementCard
-            completeness={pageBuilder.completeness}
-            brandName={strategicData?.consultationData?.businessName || consultation?.industry || 'Your Brand'}
-            logoUrl={strategicData?.brandSettings?.logoUrl || strategicData?.consultationData?.websiteIntelligence?.logoUrl}
-          />
-        </DialogContent>
-      </Dialog>
 
       {/* Editor footer */}
       <footer className="h-8 shrink-0 border-t border-white/10 bg-white/5 backdrop-blur-md flex items-center justify-center relative z-10">

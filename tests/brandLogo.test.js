@@ -25,3 +25,9 @@ test('logo SVGs are one colour (final file, Oct 31) and say PageConsult', () => 
     expect(s).toMatch(/aria-label="PageConsult"/);
   }
 });
+
+test('editor has no gamified progress banners or achievement pop-ups', () => {
+  const g = readFileSync(join(root, 'src/pages/Generate.tsx'), 'utf8');
+  expect(g).not.toMatch(/Looking Strong|all the elements for high conversion|confetti|ShareableAchievementCard/);
+  expect(existsSync(join(root, 'src/components/consultation/ShareableAchievementCard.tsx'))).toBe(false);
+});

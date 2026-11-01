@@ -121,3 +121,4 @@
 
 ## Logo (2026-10-31)
 - One logo family in public/brand: pageconsult-lockup.svg (icon + "PageConsult", no "AI"), pageconsult-icon.svg, pageconsult-lockup.png (react-pdf can't take SVG). Favicons: favicon.svg/.ico/.png + apple-touch-icon.png. Source is Kyle's Illustrator file "10_31_26_PageConsult_logo-05.svg": one colour #00B6D5, screen and eyes knocked out (transparent, no fill behind), so the same file works on light and dark. Every app logo spot uses these files; tests/brandLogo.test.js guards it. The old public/logo set and the hand-drawn PageConsultLogo.tsx are deleted.
+- The editor sidebar has no gamified progress layer: the "Looking Strong!"/"Conversion ready" banners, confetti and the achievement share card are removed. Page Score (pageScore.ts) is the only progress signal.
