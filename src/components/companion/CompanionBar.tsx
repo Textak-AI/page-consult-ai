@@ -14,7 +14,7 @@ const HIDDEN_ROUTES = [
   '/new',        // New consultation wizard
   '/wizard',     // Wizard chat
   '/consultation', // Consultation chat
-  '/strategy-document', // Strategy Blueprint page
+  '/strategy-document', // Strategy Brief page
   '/builder',    // Page builder
   '/brand-setup', // Brand setup
   '/huddle',     // Strategy huddle

@@ -409,7 +409,7 @@ export default function AIDemo() {
                   <div className="w-6 h-6 rounded-md bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center">
                     <Rocket className="w-3.5 h-3.5 text-cyan-400" />
                   </div>
-                  <h3 className="text-sm font-semibold text-white/80">Intelligence Profile</h3>
+                  <h3 className="text-sm font-semibold text-white/80">What we know so far</h3>
                 </div>
                 
                 {/* Tiles */}

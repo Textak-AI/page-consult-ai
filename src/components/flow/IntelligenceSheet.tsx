@@ -153,7 +153,7 @@ export function IntelligenceSheet({
             </motion.div>
             
             <span className="text-sm font-medium text-slate-200">
-              Intelligence Profile
+              What we know so far
             </span>
             
             {/* Score badge with delta during peek */}

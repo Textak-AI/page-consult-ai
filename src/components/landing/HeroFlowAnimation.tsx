@@ -56,7 +56,7 @@ export function HeroFlowAnimation() {
           <div className="space-y-1.5 flex-1">
             {[
               { label: 'Headlines', count: '3 options' },
-              { label: 'Messaging pillars', count: '4 points' },
+              { label: 'Key points', count: '4 points' },
               { label: 'Proof points', count: '5 items' },
               { label: 'FAQ answers', count: '4 Q&As' },
             ].map((item) => (

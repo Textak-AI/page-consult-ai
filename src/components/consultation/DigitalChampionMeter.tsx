@@ -3,8 +3,9 @@ import { cn } from '@/lib/utils';
 import { CompletenessState } from '@/lib/pageCompleteness';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { Trophy, Unlock, Sparkles, Palette, Award, Users, Shield, ChevronRight, ChevronDown, Check, Circle } from 'lucide-react';
+import { Unlock, Sparkles, Palette, Award, Users, Shield, ChevronRight, ChevronDown, Check, Circle } from 'lucide-react';
 import { SCORE_CATEGORIES } from '@/lib/categoryColors';
+import { pageScore, scoreLabel } from '@/lib/pageScore';
 
 interface ScoreFactor {
   id: string;
@@ -20,6 +21,9 @@ interface DigitalChampionMeterProps {
   logoUrl?: string;
   className?: string;
   onScrollToSection?: (sectionType: string) => void;
+  /** With both of these, the score is computed from the page itself (pageScore). */
+  consultationData?: Record<string, any> | null;
+  sections?: Array<{ type: string; visible?: boolean; content?: any }>;
 }
 
 // Factor definitions for each category
@@ -65,21 +69,28 @@ export function DigitalChampionMeter({
   brandName = 'YOUR BRAND',
   logoUrl,
   className,
-  onScrollToSection
+  onScrollToSection,
+  consultationData,
+  sections,
 }: DigitalChampionMeterProps) {
-  const { score, unlockedSections, milestones } = completeness;
+  const { unlockedSections, milestones } = completeness;
+  // Real score from the page and the owner's answers; legacy estimate only where no page is passed.
+  const real = useMemo(() => (sections ? pageScore(consultationData, sections, logoUrl) : null), [consultationData, sections, logoUrl]);
+  const score = real ? real.overall : completeness.score;
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   
   const prevUnlockedRef = useRef<string[]>([]);
-  const prevMilestonesRef = useRef<string[]>([]);
 
   // Calculate individual stats from completeness data
-  const stats = useMemo(() => ({
+  const legacyStats = useMemo(() => ({
     brand: Math.min(100, Math.round((score * 1.2) + (logoUrl ? 15 : 0))),
     authority: Math.min(100, Math.round(score * 0.9)),
     proof: Math.min(100, Math.round((milestones.filter(m => m.achieved).length / Math.max(milestones.length, 1)) * 100)),
     trust: Math.min(100, Math.round(score * 0.85)),
   }), [score, logoUrl, milestones]);
+  const stats = real
+    ? Object.fromEntries(real.categories.map((c) => [c.id, c.value])) as typeof legacyStats
+    : legacyStats;
 
   // Toast on unlock (keeping existing behavior)
   useEffect(() => {
@@ -94,7 +105,7 @@ export function DigitalChampionMeter({
       toast.success(
         <div className="flex items-center gap-2">
           <Unlock className="w-4 h-4 text-purple-400" />
-          <span className="text-sm">{section.replace(/-/g, ' ')} unlocked!</span>
+          <span className="text-sm">{section.replace(/-/g, ' ')} added</span>
         </div>,
         { duration: 3000 }
       );
@@ -102,35 +113,9 @@ export function DigitalChampionMeter({
     prevUnlockedRef.current = unlockedSections;
   }, [unlockedSections]);
 
-  // Toast on milestone
-  useEffect(() => {
-    const achievedMilestones = milestones.filter(m => m.achieved).map(m => m.name);
-    if (prevMilestonesRef.current.length === 0) {
-      prevMilestonesRef.current = achievedMilestones;
-      return;
-    }
-    const newMilestones = achievedMilestones.filter(
-      m => !prevMilestonesRef.current.includes(m)
-    );
-    newMilestones.forEach(milestone => {
-      toast.success(
-        <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-amber-500" />
-          <span className="text-sm">Achievement: {milestone}</span>
-        </div>,
-        { duration: 4000 }
-      );
-    });
-    prevMilestonesRef.current = achievedMilestones;
-  }, [milestones]);
+  // Milestone toasts removed: the score itself shows progress; achievements read as a game.
 
-  const getScoreLabel = (s: number) => {
-    if (s >= 90) return 'Conversion-Ready';
-    if (s >= 75) return 'Strong Foundation';
-    if (s >= 50) return 'Good Progress';
-    if (s >= 25) return 'Building Up';
-    return 'Getting Started';
-  };
+  const getScoreLabel = (s: number) => scoreLabel(s);
 
   const categories = [
     { 
@@ -196,7 +181,9 @@ export function DigitalChampionMeter({
       <div className="divide-y divide-slate-700/30">
         {categories.map(({ id, name, value, color, Icon }) => {
           const isExpanded = expandedCategory === id;
-          const factors = getFactorsForCategory(id, completeness, logoUrl);
+          const factors = real
+            ? (real.categories.find((c) => c.id === id)?.factors || []).map((f) => ({ ...f, points: 0 }))
+            : getFactorsForCategory(id, completeness, logoUrl);
           const missingFactors = factors.filter(f => !f.complete);
           
           return (
@@ -281,7 +268,7 @@ export function DigitalChampionMeter({
                               }}
                               className="text-purple-400 hover:text-purple-300 text-xs"
                             >
-                              +{factor.points} pts →
+                              Go →
                             </button>
                           )}
                         </div>

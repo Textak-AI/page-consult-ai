@@ -185,7 +185,7 @@ export function BriefReviewModal({ isOpen, onClose, onGenerate }: BriefReviewMod
       ]
     },
     {
-      id: 'buyer', title: 'BUYER REALITY', icon: '🧠',
+      id: 'buyer', title: 'YOUR BUYER', icon: '🧠',
       fields: [
         { key: 'painPoints', label: 'Pain Points', required: false, placeholder: 'Problems your audience faces' },
         { key: 'objections', label: 'Objections', required: false, placeholder: 'Why they hesitate' },

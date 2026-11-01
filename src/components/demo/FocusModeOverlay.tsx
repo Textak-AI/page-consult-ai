@@ -125,7 +125,7 @@ export function FocusModeOverlay({
                 <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <span className="text-slate-400 text-sm">
-                      Intelligence Score: <span className="text-white font-medium">{score.totalScore}/100</span>
+                      Answer completeness: <span className="text-white font-medium">{score.totalScore}/100</span>
                     </span>
                     {!canGenerate && (
                       <span className="text-slate-500 text-xs">

@@ -77,7 +77,7 @@ export function MobileIntelligencePanel({
             <BarChart3 className="w-4 h-4 text-cyan-400" />
           </div>
           <span className="text-sm font-medium text-slate-300">
-            Intelligence Profile
+            What we know so far
           </span>
           <span className="text-sm font-bold text-cyan-400">
             {score.totalScore}/100

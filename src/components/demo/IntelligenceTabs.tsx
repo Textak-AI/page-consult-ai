@@ -123,8 +123,8 @@ export function IntelligenceTabs({
   const tabs: Tab[] = [
     {
       id: 'intelligence',
-      label: 'Intelligence Profile',
-      shortLabel: 'Intel',
+      label: 'What we know so far',
+      shortLabel: 'Answers',
       icon: BarChart3,
       hasNewData: false,
       isAvailable: true,

@@ -469,11 +469,11 @@ export function StrategyBrief({
             colorBg="bg-blue-500/20"
           >
             <div className="bg-slate-800/50 rounded-xl p-5">
-              {/* Layout Intelligence Badge */}
+              {/* Page layout badge */}
               {layoutIntelligence && (
                 <div className="mb-4 p-3 bg-slate-700/30 rounded-lg border border-slate-600/50">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Layout Intelligence</span>
+                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Page layout</span>
                     {layoutIntelligence.confidence && (
                       <span className="text-xs px-2 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full">
                         {Math.round(layoutIntelligence.confidence * 100)}% match

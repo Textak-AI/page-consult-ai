@@ -1,4 +1,4 @@
-// PageConsult Method: Buyer Archetype Assignment — Pillar 2
+// Buyer Archetype Assignment (internal ids; UI labels live in src/lib/buyerTypeLabels)
 // Derives archetype from existing consultation/brief data (no new extraction needed)
 
 export type ArchetypeName = 'analytical_validator' | 'emotional_connector' | 'decisive_commander' | 'cautious_researcher';

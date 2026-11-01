@@ -13,6 +13,7 @@ import { useFlowNavigation, type FlowState } from '@/hooks/useFlowNavigation';
  import { exportStrategyBriefPdf } from '@/utils/exportStrategyPdf';
  import { toast } from 'sonner';
 import { assignArchetype } from '@/lib/buyerArchetype';
+import { buyerTypeLabel } from '@/lib/buyerTypeLabels';
 import { getPrecomputedObjections, type PredictedObjection } from '@/data/precomputedObjections';
 import { resolveIndustry } from '@/lib/resolveIndustry';
 import { getCtaByIndustry } from '@/lib/ctaByIndustry';
@@ -52,13 +53,7 @@ function inferProofNeeded(objection: string): string {
   return 'Case studies and measurable client results';
 }
 
-// Voice Resonance headline options come from src/lib/strategy/headlineOptions (stated sentences only).
-
-const PillarPill = ({ pillar }: { pillar: string }) => (
-  <span className="text-[10px] text-slate-500 bg-slate-800/50 px-1.5 py-0.5 rounded ml-2 align-middle">
-    {pillar}
-  </span>
-);
+// Headline options come from src/lib/strategy/headlineOptions (stated sentences only).
 
 // Color scheme matching Intelligence Profile
 const SECTION_COLORS = {
@@ -176,7 +171,7 @@ export default function StrategyDocument() {
            })
          }
        );
-       toast.success(`Strategy Blueprint exported as ${filename}`);
+       toast.success(`Strategy Brief exported as ${filename}`);
      } catch (error) {
        console.error('PDF export failed:', error);
        toast.error('Failed to export PDF. Please try again.');
@@ -388,7 +383,7 @@ export default function StrategyDocument() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="flex items-center gap-3 text-white">
           <Loader2 className="w-6 h-6 animate-spin" />
-          <span>Loading Strategy Document...</span>
+          <span>Loading your Strategy Brief...</span>
         </div>
       </div>
     );
@@ -444,42 +439,42 @@ export default function StrategyDocument() {
             </Button>
           </div>
           
-          <h1 className="text-4xl font-bold mb-2">Your Strategy Blueprint</h1>
-          <p className="text-gray-400">Strategic methodology applied to your landing page</p>
+          <h1 className="text-4xl font-bold mb-2">Your Strategy Brief</h1>
+          <p className="text-gray-400">The plan your landing page is built from</p>
           
-          {/* Methodology Badge */}
+          {/* Attribution */}
           <div className="mt-3">
             <span className="bg-purple-500/10 text-purple-400 text-xs px-2 py-0.5 rounded-full">
               PageConsult AI by Hyperbrand Creative, Ltd
             </span>
           </div>
           
-          {/* Intelligence Score Badge */}
+          {/* Answer completeness badge */}
           <div className="mt-6 flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-3">
               <div className="text-5xl font-bold text-purple-400">{score.totalScore}/100</div>
               <div>
-                <div className="text-sm text-gray-400">Intelligence Score</div>
-                <div className="text-xs text-green-400">✓ Ready for Generation</div>
+                <div className="text-sm text-gray-400">Answer completeness</div>
+                <div className="text-xs text-green-400">✓ Ready to build your page</div>
               </div>
             </div>
             
-            {/* Intelligence Breakdown — PageConsult Method category names */}
+            {/* Answer completeness by topic */}
             <div className="flex flex-wrap gap-3">
               <div className={`px-3 py-2 ${SECTION_COLORS.whoYouAre.badgeBg} border ${SECTION_COLORS.whoYouAre.badgeBorder} rounded-lg`}>
-                <div className={`text-xs ${SECTION_COLORS.whoYouAre.badgeText}`}>Client Context</div>
+                <div className={`text-xs ${SECTION_COLORS.whoYouAre.badgeText}`}>Your business</div>
                 <div className={`font-semibold ${SECTION_COLORS.whoYouAre.scoreText}`}>{score.whoYouAre.total}/25</div>
               </div>
               <div className={`px-3 py-2 ${SECTION_COLORS.whatYouOffer.badgeBg} border ${SECTION_COLORS.whatYouOffer.badgeBorder} rounded-lg`}>
-                <div className={`text-xs ${SECTION_COLORS.whatYouOffer.badgeText}`}>Value Architecture</div>
+                <div className={`text-xs ${SECTION_COLORS.whatYouOffer.badgeText}`}>Your offer</div>
                 <div className={`font-semibold ${SECTION_COLORS.whatYouOffer.scoreText}`}>{score.whatYouOffer.total}/25</div>
               </div>
               <div className={`px-3 py-2 ${SECTION_COLORS.buyerReality.badgeBg} border ${SECTION_COLORS.buyerReality.badgeBorder} rounded-lg`}>
-                <div className={`text-xs ${SECTION_COLORS.buyerReality.badgeText}`}>Buyer Reality</div>
+                <div className={`text-xs ${SECTION_COLORS.buyerReality.badgeText}`}>Your buyer</div>
                 <div className={`font-semibold ${SECTION_COLORS.buyerReality.scoreText}`}>{score.buyerReality.total}/25</div>
               </div>
               <div className={`px-3 py-2 ${SECTION_COLORS.proofCredibility.badgeBg} border ${SECTION_COLORS.proofCredibility.badgeBorder} rounded-lg`}>
-                <div className={`text-xs ${SECTION_COLORS.proofCredibility.badgeText}`}>Proof Inventory</div>
+                <div className={`text-xs ${SECTION_COLORS.proofCredibility.badgeText}`}>Your proof</div>
                 <div className={`font-semibold ${SECTION_COLORS.proofCredibility.scoreText}`}>{score.proofCredibility.total}/25</div>
               </div>
             </div>
@@ -545,19 +540,18 @@ export default function StrategyDocument() {
           </div>
         </section>
 
-        {/* Section 2: Buyer Archetype Assignment — PageConsult Method Pillar 2 */}
+        {/* Section 2: How your buyer decides */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <span className="p-2 rounded-lg bg-purple-500/15 drop-shadow-[0_0_6px_rgba(168,85,247,0.3)]"><Target className="w-5 h-5 text-purple-400" strokeWidth={1.5} /></span>
-            <span className={SECTION_COLORS.buyerReality.section}>Buyer Archetype Assignment</span>
-            <PillarPill pillar="Pillar 2" />
+            <span className={SECTION_COLORS.buyerReality.section}>How your buyer decides</span>
           </h2>
           
           <div className={`${SECTION_COLORS.buyerReality.cardBg} border ${SECTION_COLORS.buyerReality.cardBorder} rounded-lg p-6`}>
             <div className="flex items-start justify-between mb-4">
               <div>
-                <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mb-1`}>Primary Archetype</div>
-                <div className={`text-2xl font-bold ${SECTION_COLORS.buyerReality.text}`}>{archetype.label}</div>
+                <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mb-1`}>Your buyer</div>
+                <div className={`text-2xl font-bold ${SECTION_COLORS.buyerReality.text}`}>{buyerTypeLabel(archetype.primary)}</div>
                 <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mt-1 italic`}>{archetype.description}</div>
               </div>
               <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -565,17 +559,17 @@ export default function StrategyDocument() {
                 archetype.confidence === 'Moderate' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
                 'bg-gray-500/20 text-gray-300 border border-gray-500/30'
               }`}>
-                {archetype.confidence === 'Low' ? 'Early read: based on short answers' : `${archetype.confidence} (${archetype.signalCount} signals)`}
+                {archetype.confidence === 'Low' ? 'Early read: based on short answers' : `${archetype.confidence} confidence (${archetype.signalCount} ${archetype.signalCount === 1 ? 'clue' : 'clues'} in your answers)`}
               </div>
             </div>
             
             <div className="mb-4 p-3 bg-purple-900/20 border border-purple-500/10 rounded-lg">
-              <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mb-1`}>Internal Monologue</div>
+              <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mb-1`}>What they're thinking</div>
               <div className="text-purple-200 italic">{archetype.internalMonologue}</div>
             </div>
             
             <div className="mb-4">
-              <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mb-2`}>Signals Detected:</div>
+              <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mb-2`}>What this is based on</div>
               <div className="space-y-1">
                 {archetype.signals.map((signal, idx) => (
                   <div key={idx} className="flex items-center gap-2 text-sm">
@@ -587,18 +581,17 @@ export default function StrategyDocument() {
             </div>
             
             <div>
-              <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mb-1`}>Voice Match</div>
+              <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted} mb-1`}>Tone that fits them</div>
               <div className={SECTION_COLORS.buyerReality.text}>{archetype.voiceMatch}</div>
             </div>
           </div>
         </section>
 
-        {/* Section 3: Voice Resonance™ Strategy — Pillar 4 */}
+        {/* Section 3: Headlines */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <span className="p-2 rounded-lg bg-green-500/15 drop-shadow-[0_0_6px_rgba(34,197,94,0.3)]"><Mic className="w-5 h-5 text-green-400" strokeWidth={1.5} /></span>
-            <span className={SECTION_COLORS.whatYouOffer.section}>Voice Resonance™ Strategy</span>
-            <PillarPill pillar="Pillar 4" />
+            <span className={SECTION_COLORS.whatYouOffer.section}>Headlines</span>
           </h2>
           
           {(() => {
@@ -662,7 +655,7 @@ export default function StrategyDocument() {
                 
                 {/* Subheadline Strategy */}
                 <div className={`${SECTION_COLORS.whatYouOffer.cardBg} border ${SECTION_COLORS.whatYouOffer.cardBorder} rounded-lg p-6`}>
-                  <h3 className={`font-semibold text-lg ${SECTION_COLORS.whatYouOffer.textMuted} mb-3`}>Subheadline Strategy</h3>
+                  <h3 className={`font-semibold text-lg ${SECTION_COLORS.whatYouOffer.textMuted} mb-3`}>Subheadline</h3>
                   <div className={SECTION_COLORS.whatYouOffer.text}>
                     {subheadlineSuggestion}
                   </div>
@@ -672,17 +665,17 @@ export default function StrategyDocument() {
           })()}
         </section>
 
-        {/* Section 4: Buyer Psychology Analysis */}
+        {/* Section 4: What your buyer is dealing with */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <span className="p-2 rounded-lg bg-purple-500/15 drop-shadow-[0_0_6px_rgba(168,85,247,0.3)]"><Brain className="w-5 h-5 text-purple-400" strokeWidth={1.5} /></span>
-            <span className={SECTION_COLORS.buyerReality.section}>Buyer Psychology Analysis</span>
+            <span className={SECTION_COLORS.buyerReality.section}>What your buyer is dealing with</span>
           </h2>
           
           <div className="space-y-6">
             {/* Pain Point Prioritization */}
             <div className={`${SECTION_COLORS.buyerReality.cardBg} border ${SECTION_COLORS.buyerReality.cardBorder} rounded-lg p-6`}>
-              <h3 className={`font-semibold text-lg ${SECTION_COLORS.buyerReality.textMuted} mb-4`}>Pain Point Prioritization</h3>
+              <h3 className={`font-semibold text-lg ${SECTION_COLORS.buyerReality.textMuted} mb-4`}>Their problems, most important first</h3>
               {painPointsArray.length > 0 ? (
                 painPointsArray.map((pain: string, idx: number) => (
                   <div key={idx} className="flex items-start gap-3 mb-3 last:mb-0">
@@ -701,7 +694,7 @@ export default function StrategyDocument() {
             
             {/* Objection Handling */}
             <div className={`${SECTION_COLORS.buyerReality.cardBg} border ${SECTION_COLORS.buyerReality.cardBorder} rounded-lg p-6`}>
-              <h3 className={`font-semibold text-lg ${SECTION_COLORS.buyerReality.textMuted} mb-4`}>Objection Handling Strategy</h3>
+              <h3 className={`font-semibold text-lg ${SECTION_COLORS.buyerReality.textMuted} mb-4`}>Objections and how the page answers them</h3>
               {Array.isArray(marketData.commonObjections) && marketData.commonObjections.length > 0 ? (
                 marketData.commonObjections.map((objection: any, idx: number) => {
                   const frequencyLabel = objection.frequency === 'very_common' ? 'Very Common'
@@ -739,15 +732,14 @@ export default function StrategyDocument() {
                   );
                 })
               ) : (
-                <div className={SECTION_COLORS.buyerReality.textMuted}>Add more context to generate objection handling strategy</div>
+                <div className={SECTION_COLORS.buyerReality.textMuted}>Add more context to see how the page answers objections</div>
               )}
             </div>
             
-            {/* Buyer Awareness Level — Schwartz Framework */}
+            {/* How much the buyer already knows */}
             <div className={`${SECTION_COLORS.buyerReality.cardBg} border ${SECTION_COLORS.buyerReality.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.buyerReality.textMuted} mb-3`}>
-                Awareness Level — Schwartz Framework
-                <PillarPill pillar="Pillar 3" />
+                How much they already know
               </h3>
               <div className="flex items-center gap-4">
                 <div className="flex-1 bg-gray-800 h-3 rounded-full relative overflow-hidden">
@@ -767,12 +759,11 @@ export default function StrategyDocument() {
           </div>
         </section>
 
-        {/* Section 5: Conversion Architecture™ — Pillar 3 */}
+        {/* Section 5: Page structure */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <span className="p-2 rounded-lg bg-indigo-500/15 drop-shadow-[0_0_6px_rgba(99,102,241,0.3)]"><Layers className="w-5 h-5 text-indigo-400" strokeWidth={1.5} /></span>
-            <span className={SECTION_COLORS.contentStrategy.section}>Conversion Architecture™</span>
-            <PillarPill pillar="Pillar 3" />
+            <span className={SECTION_COLORS.contentStrategy.section}>Page structure</span>
           </h2>
           
           <div className="space-y-6">
@@ -787,9 +778,9 @@ export default function StrategyDocument() {
               </div>
             </div>
             
-            {/* Section Blueprint */}
+            {/* Sections in order */}
             <div className={`${SECTION_COLORS.contentStrategy.cardBg} border ${SECTION_COLORS.contentStrategy.cardBorder} rounded-lg p-6`}>
-              <h3 className={`font-semibold text-lg ${SECTION_COLORS.contentStrategy.textMuted} mb-4`}>Section Blueprint</h3>
+              <h3 className={`font-semibold text-lg ${SECTION_COLORS.contentStrategy.textMuted} mb-4`}>Sections, in order</h3>
               <div className="space-y-4">
                 {[
                   { section: "Hero", purpose: "Capture attention with measurable promise", priority: "Critical" },
@@ -821,11 +812,10 @@ export default function StrategyDocument() {
               </div>
             </div>
             
-            {/* Trust Architecture™ Strategy */}
+            {/* When to show proof */}
             <div className={`${SECTION_COLORS.contentStrategy.cardBg} border ${SECTION_COLORS.contentStrategy.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.contentStrategy.textMuted} mb-3`}>
-                Trust Architecture™ Strategy
-                <PillarPill pillar="Pillar 2+3" />
+                When to show proof
               </h3>
               <div className="flex items-center gap-4 mb-3">
                 <div className={`px-4 py-2 ${SECTION_COLORS.contentStrategy.cardBg} border ${SECTION_COLORS.contentStrategy.cardBorder} rounded-lg`}>
@@ -844,11 +834,11 @@ export default function StrategyDocument() {
           </div>
         </section>
 
-        {/* Section 6: Design Intelligence (SDI) */}
+        {/* Section 6: Design direction */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <span className="p-2 rounded-lg bg-slate-500/15 drop-shadow-[0_0_6px_rgba(148,163,184,0.3)]"><Palette className="w-5 h-5 text-slate-400" strokeWidth={1.5} /></span>
-            <span className={SECTION_COLORS.design.section}>Strategic Design Intelligence (SDI)</span>
+            <span className={SECTION_COLORS.design.section}>Design direction</span>
           </h2>
           
           <div className="space-y-6">
@@ -908,19 +898,18 @@ export default function StrategyDocument() {
           </div>
         </section>
 
-        {/* Section 7: Conversion Optimization */}
+        {/* Section 7: Proof and calls to action */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
             <span className="p-2 rounded-lg bg-yellow-500/15 drop-shadow-[0_0_6px_rgba(234,179,8,0.3)]"><Zap className="w-5 h-5 text-yellow-400" strokeWidth={1.5} /></span>
-            <span className={SECTION_COLORS.proofCredibility.section}>Conversion Optimization</span>
+            <span className={SECTION_COLORS.proofCredibility.section}>Proof and calls to action</span>
           </h2>
           
           <div className="space-y-6">
-            {/* Trust Architecture™ Hierarchy */}
+            {/* Proof to show first */}
             <div className={`${SECTION_COLORS.proofCredibility.cardBg} border ${SECTION_COLORS.proofCredibility.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.proofCredibility.textMuted} mb-4`}>
-                Trust Architecture™ Hierarchy
-                <PillarPill pillar="Pillar 2+3" />
+                Proof to show first
               </h3>
               <div className="space-y-3">
                 {(Array.isArray(marketData.designConventions?.trustSignalPriority) ? marketData.designConventions.trustSignalPriority : [
@@ -943,11 +932,10 @@ export default function StrategyDocument() {
               </div>
             </div>
             
-            {/* Conversion Pathway™ Strategy */}
+            {/* Calls to action */}
             <div className={`${SECTION_COLORS.proofCredibility.cardBg} border ${SECTION_COLORS.proofCredibility.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.proofCredibility.textMuted} mb-4`}>
-                Conversion Pathway™ Strategy
-                <PillarPill pillar="Pillar 3" />
+                Calls to action
               </h3>
               {(() => {
                 const industryRaw = consultation?.industry || (intelligence as any)?.industry || '';
@@ -997,7 +985,7 @@ export default function StrategyDocument() {
           <div className="bg-gradient-to-br from-purple-900/30 to-blue-900/30 border border-purple-500/20 rounded-2xl p-8 text-center">
             <h2 className="text-2xl font-bold mb-4">Ready to Build Your Page?</h2>
             <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
-              Your strategy blueprint is complete. Continue to generate a high-converting landing page based on this intelligence.
+              Your Strategy Brief is ready. Next, build your landing page from it.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Button 

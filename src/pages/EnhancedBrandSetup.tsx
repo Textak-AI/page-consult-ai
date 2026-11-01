@@ -1302,7 +1302,7 @@ export default function EnhancedBrandSetup() {
       
       console.log('🚀 [EnhancedBrandSetup] Brand captured:', { consultationId, readinessScore });
       
-      // Always navigate to Strategy Document - the "View Your Strategy Blueprint" destination
+      // Always navigate to Strategy Document - the "View Your Strategy Brief" destination
       console.log('🚀 [EnhancedBrandSetup] Navigating to Strategy Document');
       navigate(`/strategy-document?consultationId=${consultationId}`, { replace: true });
     } else if (demoSession && sessionId) {
@@ -1745,11 +1745,11 @@ export default function EnhancedBrandSetup() {
               <div className="md:col-span-2 pt-4 border-t border-white/10">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="space-y-1">
-                    <div className="text-xs font-medium text-purple-300 uppercase tracking-wider">Intelligence Score</div>
+                    <div className="text-xs font-medium text-purple-300 uppercase tracking-wider">Answer completeness</div>
                     <div className="flex items-center gap-3">
                       <span className="text-2xl font-bold text-white">{accumulator.readinessScore}/100</span>
                       <span className="px-2 py-1 bg-green-500/20 text-green-300 text-xs font-medium rounded-full border border-green-500/30">
-                        ✓ Ready for Generation
+                        ✓ Ready to build your page
                       </span>
                     </div>
                   </div>
@@ -2571,12 +2571,12 @@ export default function EnhancedBrandSetup() {
           >
             {demoSession ? (
               <>
-                View Your Strategy Blueprint
+                View Your Strategy Brief
                 <Sparkles className="w-5 h-5 ml-2" />
               </>
             ) : (
               <>
-                View Your Strategy Blueprint
+                View Your Strategy Brief
                 <ArrowRight className="w-5 h-5 ml-2" />
               </>
             )}

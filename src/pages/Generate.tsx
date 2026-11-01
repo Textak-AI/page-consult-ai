@@ -975,8 +975,8 @@ function GenerateContent() {
         console.log('🎨 [LoadExisting] DB colorMode:', dbColorMode);
         console.log('🎨 [LoadExisting] DB industryVariant:', dbIndustryVariant);
         
-        // BUG 1 FIX: Resolve colorMode from Strategy Blueprint (fresh) over stale DB value
-        // Priority: Strategy Blueprint > brand settings override > database fallback
+        // BUG 1 FIX: Resolve colorMode from Strategy Brief (fresh) over stale DB value
+        // Priority: Strategy Brief > brand settings override > database fallback
         const strategyBlueprintColorMode = strategicData?.consultationData?.designConventions?.colorMode ||
                                             consultationData?.designConventions?.colorMode;
         const resolvedColorMode = strategyBlueprintColorMode || dbColorMode || 'dark';
@@ -1667,10 +1667,10 @@ function GenerateContent() {
           
           // ============================================
           // BUG 1 FIX: colorMode Resolution with CLEAR PRIORITY
-          // Strategy Blueprint (fresh) > Brand Settings > DB design_intelligence (stale)
+          // Strategy Brief (fresh) > Brand Settings > DB design_intelligence (stale)
           // ============================================
           
-          // Check for fresh Strategy Blueprint from designConventions (computed this session)
+          // Check for fresh Strategy Brief from designConventions (computed this session)
           const strategyBlueprintColorMode = consultationData.designConventions?.colorMode || 
                                               pageConsultationData.designConventions?.colorMode || 
                                               null;
@@ -1678,7 +1678,7 @@ function GenerateContent() {
           
           let resolvedColorMode: 'light' | 'dark';
           if (strategyBlueprintColorMode) {
-            // Strategy Blueprint takes priority - it's freshly computed
+            // Strategy Brief takes priority - it's freshly computed
             resolvedColorMode = strategyBlueprintColorMode === 'light' ? 'light' : 'dark';
             console.log(`🎨 [LoadExisting] colorMode resolution: strategy='${strategyBlueprintColorMode}', db='${dbColorMode}', resolved='${resolvedColorMode}' (strategy wins)`);
             
@@ -5829,6 +5829,14 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           <div className="p-3 border-b border-white/10">
             <DigitalChampionMeter 
               completeness={pageBuilder.completeness}
+              consultationData={strategicData?.consultationData || pageData?.consultation_data || consultation || {}}
+              sections={sections}
+              onScrollToSection={(type) => {
+                // A section waiting on the owner's answers opens Page Chat with its question; one on the page scrolls into view.
+                const waiting = sectionUnlocks.find((u) => u.section === type);
+                if (waiting) { waiting.onClick(); return; }
+                document.getElementById(`section-${type}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }}
               brandName={strategicData?.consultationData?.businessName || consultation?.industry || 'Your Brand'}
               logoUrl={strategicData?.brandSettings?.logoUrl || strategicData?.consultationData?.websiteIntelligence?.logoUrl}
               className="bg-transparent border-white/10"

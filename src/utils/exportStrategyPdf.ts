@@ -89,7 +89,7 @@
    pdf.setFont('helvetica', 'bold');
    pdf.setFontSize(36);
    pdf.setTextColor(255, 255, 255);
-   pdf.text('PageConsult Strategy Blueprint', margin, 180);
+   pdf.text('Strategy Brief', margin, 180);
  
    // Company name
    pdf.setFont('helvetica', 'normal');
@@ -97,11 +97,11 @@
    pdf.setTextColor(148, 163, 184); // Slate-400
    pdf.text(companyName, margin, 220);
  
-   // Intelligence score badge
+   // Answer completeness badge
    if (intelligenceScore) {
      pdf.setFontSize(16);
      pdf.setTextColor(148, 163, 184);
-     pdf.text(`Intelligence Score: ${intelligenceScore}/100`, margin, 270);
+     pdf.text(`Answer completeness: ${intelligenceScore}/100`, margin, 270);
      
      // Score bar background
      pdf.setFillColor(30, 41, 59); // Slate-800
@@ -157,7 +157,7 @@
      pdf.text('PageConsult AI', margin, 24);
      pdf.setFont('helvetica', 'normal');
      pdf.setTextColor(100, 116, 139);
-     pdf.text(`  |  ${companyName} — Strategy Blueprint`, margin + pdf.getTextWidth('PageConsult AI'), 24);
+     pdf.text(`  |  ${companyName} — Strategy Brief`, margin + pdf.getTextWidth('PageConsult AI'), 24);
      
      // Thin accent line under header
      pdf.setDrawColor(99, 102, 241);
@@ -210,7 +210,7 @@
  
    // Generate filename
    const sanitizedName = companyName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-   const filename = `${sanitizedName}-strategy-blueprint.pdf`;
+   const filename = `${sanitizedName}-strategy-brief.pdf`;
    
    pdf.save(filename);
    return filename;

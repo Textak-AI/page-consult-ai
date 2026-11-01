@@ -28,7 +28,7 @@ export default function ConversionCTAPanel({
         </div>
         <div>
           <h3 className="text-lg font-semibold text-white">
-            Your Intelligence Profile is looking solid
+            Your answers are looking solid
           </h3>
           <p className="text-sm text-slate-400">
             {readiness}% strategy readiness • Ready to build your page

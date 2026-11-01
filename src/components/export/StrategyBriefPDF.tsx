@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica-Bold',
     color: colors.textDark,
   },
-  // Pillar card
+  // Key point card
   pillarCard: {
     backgroundColor: colors.white,
     borderWidth: 1,
@@ -506,7 +506,7 @@ const structureLabels: Record<string, string> = {
   'hero': 'Hero + Primary CTA',
   'stats-bar': 'Authority Bar (Stats)',
   'problem-solution': 'Problem / Solution',
-  'features': 'Key Features (Pillars)',
+  'features': 'Key Points',
   'how-it-works': 'How It Works',
   'testimonials': 'Social Proof',
   'social-proof': 'Social Proof',
@@ -555,7 +555,7 @@ const CoverPage = ({
       {/* Title Block */}
       <View style={styles.coverTitleBlock}>
         <View style={styles.coverRule} />
-        <Text style={styles.coverTitle}>STRATEGIC POSITIONING BRIEF</Text>
+        <Text style={styles.coverTitle}>STRATEGY BRIEF</Text>
         <View style={styles.coverRuleBottom} />
         <Text style={styles.preparedFor}>Prepared for</Text>
         <Text style={styles.companyName}>{brief.businessName}</Text>
@@ -681,7 +681,7 @@ const TargetAudiencePage = ({ brief }: { brief: StrategyBriefData }) => {
   );
 };
 
-// Messaging Architecture Page
+// Headlines Page
 const MessagingArchitecturePage = ({ brief }: { brief: StrategyBriefData }) => {
   if (!brief.headlines?.optionA && !brief.headlines?.optionB && !brief.headlines?.optionC) {
     return null;
@@ -689,12 +689,12 @@ const MessagingArchitecturePage = ({ brief }: { brief: StrategyBriefData }) => {
 
   return (
     <Page size="LETTER" style={styles.page}>
-      <Text style={styles.sectionHeader}>MESSAGING ARCHITECTURE</Text>
+      <Text style={styles.sectionHeader}>HEADLINES</Text>
       <View style={styles.sectionUnderline} />
 
       <Text style={styles.subsectionHeader}>HEADLINE OPTIONS</Text>
       <Text style={styles.bodyText}>
-        We recommend testing these headline approaches:
+        Headline options for the page.
       </Text>
 
       {brief.headlines?.optionA && (
@@ -748,7 +748,7 @@ const MessagingArchitecturePage = ({ brief }: { brief: StrategyBriefData }) => {
   );
 };
 
-// Messaging Pillars Page
+// Key Points Page
 const MessagingPillarsPage = ({ brief }: { brief: StrategyBriefData }) => {
   if (!brief.messagingPillars || brief.messagingPillars.length === 0) {
     return null;
@@ -756,12 +756,11 @@ const MessagingPillarsPage = ({ brief }: { brief: StrategyBriefData }) => {
 
   return (
     <Page size="LETTER" style={styles.page}>
-      <Text style={styles.sectionHeader}>MESSAGING PILLARS</Text>
+      <Text style={styles.sectionHeader}>KEY POINTS</Text>
       <View style={styles.sectionUnderline} />
 
       <Text style={styles.bodyText}>
-        These pillars form the foundation of all marketing communications. 
-        Each should be consistently reinforced across landing pages, sales materials, and content.
+        The main points your page makes. Use the same points in sales materials and other content.
       </Text>
 
       {brief.messagingPillars.map((pillar, index) => (

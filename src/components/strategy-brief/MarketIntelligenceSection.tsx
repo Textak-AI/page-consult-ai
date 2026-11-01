@@ -46,7 +46,7 @@ export function MarketIntelligenceSection({
   return (
     <CollapsibleBriefSection
       number={sectionNumber}
-      title="Market Intelligence"
+      title="Your market"
       color="text-green-400"
       colorBg="bg-green-500/20"
       defaultExpanded={true}

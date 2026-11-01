@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Brain, CheckCircle, AlertTriangle } from 'lucide-react';
 import { archetypeConfidenceLabel, type ArchetypeEvidence } from '@/utils/archetypeOptimizer';
+import { buyerTypeLabel } from '@/lib/buyerTypeLabels';
 
 const ARCHETYPE_PROFILES: Record<string, string> = {
   'Analytical Validator': 'This buyer evaluates vendors like they evaluate data — systematically. They want ROI projections, benchmark comparisons, and peer-reviewed credibility. Urgency tactics insult their intelligence. Authority and hard evidence win.',
@@ -150,8 +151,9 @@ function getActiveCoherencePairs(arch: MessagingArchitecturePanelProps['messagin
 
 function buildBriefPreview(arch: MessagingArchitecturePanelProps['messagingArchitecture']): string {
   const meta = ARCHETYPE_META[arch.archetype];
-  const article = arch.archetype === 'Emotional Connector' || arch.archetype === 'Analytical Validator' ? 'an' : 'a';
-  const desc = meta?.description.toLowerCase() || 'has a distinct buying psychology';
+  const label = buyerTypeLabel(arch.archetype);
+  const plain = label.charAt(0).toLowerCase() + label.slice(1);
+  const desc = meta?.description || '';
 
   const headlineReason = arch.headlineFocus === 'outcome-led'
     ? 'Your headline leads with the outcome — what they get — because this buyer wants proof before engagement.'
@@ -165,7 +167,7 @@ function buildBriefPreview(arch: MessagingArchitecturePanelProps['messagingArchi
     ? 'Your CTA makes a direct ask because this buyer respects confidence and doesn\'t need hand-holding.'
     : 'Your CTA is exploratory because this buyer needs space to evaluate before committing.';
 
-  return `Your buyer is ${article} ${arch.archetype} — ${desc} The page is set up for this kind of buyer. ${headlineReason} ${urgencyReason} ${ctaReason}`;
+  return `Your buyer ${plain}. ${desc ? `${desc} ` : ''}The page is set up for this kind of buyer. ${headlineReason} ${urgencyReason} ${ctaReason}`;
 }
 
 export function MessagingArchitecturePanel({ messagingArchitecture, detectedSignals }: MessagingArchitecturePanelProps) {
@@ -184,14 +186,11 @@ export function MessagingArchitecturePanel({ messagingArchitecture, detectedSign
       {/* Section Header */}
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold tracking-[0.2em] uppercase text-cyan-400">
-          Messaging Architecture
+          How your buyer decides
         </p>
-        <span className="text-[10px] px-2.5 py-1 rounded-full bg-white/[0.04] text-slate-500 tracking-wide">
-          SDI Layer 1.5
-        </span>
       </div>
 
-      {/* Archetype Banner */}
+      {/* Buyer type banner */}
       <div className={`rounded-xl border ${meta.borderClass} ${meta.bgClass} p-5`}>
         <div className="flex items-start justify-between gap-3 mb-2">
           <div className="flex items-center gap-3">
@@ -199,7 +198,7 @@ export function MessagingArchitecturePanel({ messagingArchitecture, detectedSign
               <Brain className={`w-5 h-5 ${meta.colorClass}`} />
             </div>
             <div>
-              <h3 className={`text-lg font-bold ${meta.colorClass}`}>{messagingArchitecture.archetype}</h3>
+              <h3 className={`text-lg font-bold ${meta.colorClass}`}>{buyerTypeLabel(messagingArchitecture.archetype)}</h3>
               <p className="text-slate-400 text-sm">{meta.description}</p>
             </div>
           </div>

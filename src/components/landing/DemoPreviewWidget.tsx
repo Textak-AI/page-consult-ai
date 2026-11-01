@@ -14,7 +14,7 @@ interface DemoPreviewWidgetProps {
 const intelligenceCategories = [
   { label: 'WHO YOU ARE', score: 0, max: 25, color: 'cyan' },
   { label: 'WHAT YOU OFFER', score: 0, max: 25, color: 'violet' },
-  { label: 'BUYER REALITY', score: 0, max: 25, color: 'emerald' },
+  { label: 'YOUR BUYER', score: 0, max: 25, color: 'emerald' },
   { label: 'PROOF & CREDIBILITY', score: 0, max: 25, color: 'amber' },
 ];
 

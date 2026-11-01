@@ -250,12 +250,12 @@ export default function StrategyBrief() {
           </div>
         </div>
 
-        {/* Layout Intelligence Badge */}
+        {/* Page layout badge */}
         <CommunicationStrategyPanel strategy={brief.communicationStrategy} />
         {layoutIntelligence && (
           <div className="bg-[#1a1a2e] rounded-xl p-6 border border-gray-700/50 mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Layout Intelligence</h2>
+              <h2 className="text-lg font-semibold text-white">Page layout</h2>
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm font-medium">
                   {layoutIntelligence.archetypeName}

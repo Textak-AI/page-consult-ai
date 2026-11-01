@@ -194,7 +194,7 @@ export function IntelligencePanel({
       <div className="p-6 border-b border-white/10">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-cyan-400" />
-          Intelligence Profile
+          What we know so far
         </h2>
         <p className="text-sm text-white/50 mt-1">
           Building your business profile in real-time
@@ -215,7 +215,7 @@ export function IntelligencePanel({
         {/* Overall readiness meter - now shows X/100 */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-white/60">Intelligence Score</span>
+            <span className="text-sm text-white/60">Answer completeness</span>
             <span className={cn(
               "text-sm font-semibold",
               overallReadiness >= 70 ? "text-cyan-400" : "text-white/60"

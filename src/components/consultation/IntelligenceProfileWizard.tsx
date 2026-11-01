@@ -15,7 +15,7 @@ import {
 const WIZARD_CATEGORIES = [
   {
     key: 'whoYouAre' as const,
-    label: 'CLIENT CONTEXT',
+    label: 'YOUR BUSINESS',
     fields: [
       { key: 'industry' as const, label: 'Industry', maxPoints: 10 },
       { key: 'audience' as const, label: 'Audience', maxPoints: 10 },
@@ -24,7 +24,7 @@ const WIZARD_CATEGORIES = [
   },
   {
     key: 'whatYouOffer' as const,
-    label: 'VALUE ARCHITECTURE',
+    label: 'YOUR OFFER',
     fields: [
       { key: 'valueProp' as const, label: 'Value Prop', maxPoints: 10 },
       { key: 'edge' as const, label: 'Edge', maxPoints: 10 },
@@ -33,7 +33,7 @@ const WIZARD_CATEGORIES = [
   },
   {
     key: 'buyerReality' as const,
-    label: 'BUYER REALITY',
+    label: 'YOUR BUYER',
     fields: [
       { key: 'painPoints' as const, label: 'Pain Points', maxPoints: 10 },
       { key: 'objections' as const, label: 'Objections', maxPoints: 10 },
@@ -42,7 +42,7 @@ const WIZARD_CATEGORIES = [
   },
   {
     key: 'proofCredibility' as const,
-    label: 'PROOF INVENTORY',
+    label: 'YOUR PROOF',
     fields: [
       { key: 'results' as const, label: 'Results', maxPoints: 10 },
       { key: 'socialProof' as const, label: 'Social Proof', maxPoints: 10 },
@@ -150,9 +150,8 @@ export function IntelligenceProfileWizard({
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-medium tracking-wide text-white">
-                Discovery Protocol™
+                What we know so far
               </h2>
-              <div className="text-[10px] text-slate-500">PageConsult Method · Pillar 1</div>
             </div>
             <motion.span
               key={score.totalScore}
