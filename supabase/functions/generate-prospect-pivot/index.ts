@@ -143,6 +143,11 @@ const handle = async (req: Request, userId: string): Promise<Response> => {
       prospect: { first_name, last_name, company, job_title, industry },
     };
 
+    // What may AUTHORIZE a number or a commitment: only what the owner has published or answered.
+    // Conversation notes record what the prospect said or asked ("can you guarantee results in 30 days?");
+    // they are not the owner's claims, so they never authorize a number or a guarantee.
+    const claimSources = { pageCopy: ownerInput.pageCopy, consultation: ownerInput.consultation, prospect: ownerInput.prospect };
+
     // Generate with Anthropic
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) {
@@ -207,6 +212,7 @@ Generate personalized messaging that:
 ZERO FABRICATION:
 - Use only facts from the CURRENT PAGE, the PROSPECT details and the CONVERSATION CONTEXT.
 - Never add numbers, results, client counts, timelines, guarantees, prices, other clients' names, or claims about the prospect's company that the notes don't state.
+- The CONVERSATION CONTEXT is what the prospect said or asked. It is not a claim you can make: never answer their questions with numbers, timelines or promises unless the CURRENT PAGE states them.
 - Do not change the CTA; it is the owner's.
 
 CRITICAL EMAIL BODY RULES:
@@ -269,7 +275,7 @@ You must respond with ONLY valid JSON, no other text:
     // Same claim guard as the page builder: unsupported numbers/commitments drop the whole sentence.
     const generated = guardCopyClaims(
       { headline: raw.headline, subhead: raw.subhead, context_summary: raw.context_summary, email_subject: raw.email_subject, email_body: raw.email_body },
-      ownerInput,
+      claimSources,
       "prospect-copy-guard",
     ) as Record<string, string>;
     logProvenanceViolations("generate-prospect-pivot", generated, JSON.stringify(ownerInput));

@@ -61,3 +61,14 @@ test('the retired prospect-page flow is gone and its endpoints answer 410', () =
     expect(s).not.toMatch(/createClient|demo_sessions|ANTHROPIC/);
   }
 });
+
+test('conversation notes never authorize numbers or guarantees; only the page and its answers do', async () => {
+  const g = src('supabase/functions/generate-prospect-pivot/index.ts');
+  expect(g).toMatch(/const claimSources = \{ pageCopy: ownerInput\.pageCopy, consultation: ownerInput\.consultation, prospect: ownerInput\.prospect \}/);
+  expect(g).toMatch(/claimSources,\s*"prospect-copy-guard"/);
+  const { guardCopyClaims } = await import('../supabase/functions/_shared/copyClaims');
+  const page = { pageCopy: ['A two-week review of your messaging.'], prospect: { company: 'Example Co' } };
+  const out = guardCopyClaims({ headline: 'Results guaranteed in 30 days.', subhead: 'A two-week review for Example Co.' }, page);
+  expect(out.headline).toBe('');
+  expect(out.subhead).toBe('A two-week review for Example Co.');
+});
