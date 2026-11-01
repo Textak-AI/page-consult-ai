@@ -5,7 +5,23 @@ export const BUYER_OBJECTION_PROMPTS = [
   { topic: 'effort', question: 'What do you need from the buyer’s team?', pageQuestion: 'What do you need from my team?' },
   { topic: 'fit', question: 'How does it fit with the tools or way of working they already use?', pageQuestion: 'Does it fit the tools we already use?' },
   { topic: 'materials', question: 'What happens to the buyer’s data or materials?', pageQuestion: 'What happens to our data?' },
+  { topic: 'area', question: 'Which areas do you serve?', pageQuestion: 'Do you serve my area?' },
+  { topic: 'access', question: 'Does the customer need to be home, or do anything before you arrive?', pageQuestion: 'Do I need to be home?' },
 ] as const;
+/** Local trades sell to households: "the buyer's team" and "their tools" don't apply; service area and access do. */
+export function localServiceBusiness(input: Record<string, any>): boolean {
+  const t = ['industryCategory', 'industry'].map(k => typeof input?.[k] === 'string' ? input[k] : '').join(' ');
+  return /home & local services/i.test(t);
+}
+const LOCAL_ONLY = new Set(['area', 'access']);
+const BUSINESS_ONLY = new Set(['effort', 'fit', 'materials']);
+/** The questions to ask this business, in order. */
+export function promptsFor(input: Record<string, any>) {
+  const local = localServiceBusiness(input);
+  return BUYER_OBJECTION_PROMPTS.filter(p => local
+    ? !BUSINESS_ONLY.has(p.topic)
+    : !LOCAL_ONLY.has(p.topic) && (p.topic !== 'materials' || materialsRelevant(input)));
+}
 /** Interview prompts address the owner ("the buyer's team"); the page FAQ is
  * read by the buyer, so canonical prompts swap to the buyer's own voice.
  * Questions the owner wrote themselves pass through unchanged. */
@@ -30,8 +46,7 @@ export function consultationObjections(input: Record<string, any>): BuyerObjecti
   // Chat prompts use the canonical question verbatim; take only the user's immediate response.
   const history = input.conversationHistory;
   if (!Array.isArray(history)) return [];
-  return BUYER_OBJECTION_PROMPTS.flatMap(prompt => {
-    if (prompt.topic === 'materials' && !materialsRelevant(input)) return [];
+  return promptsFor(input).flatMap(prompt => {
     for (let i = history.length - 2; i >= 0; i--) {
       if (history[i]?.role !== 'assistant' || !String(history[i].content).includes(prompt.question)) continue;
       const reply = history[i + 1];

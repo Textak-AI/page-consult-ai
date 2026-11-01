@@ -101,6 +101,7 @@ export default function PreviewPage() {
           designIntelligence={pageData.design_intelligence}
           businessName={pageData?.consultation_data?.businessName || null}
           showBadge={showBadge}
+          previewMode
         />
       </div>
     </div>

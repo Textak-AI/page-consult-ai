@@ -9,8 +9,9 @@ import { z } from 'npm:zod@4';
 import { guardCopyClaims } from '../_shared/copyClaims.ts';
 import { BUYER_OBJECTION_RULES, consultationObjections, applyAnsweredObjections } from '../_shared/buyerObjections.ts';
 import { pinStatedCopy, siteCopyPromptBlock } from '../_shared/siteExtraction.ts';
+import { withCharge } from '../_shared/planLimits.ts';
 
-serve(async (req) => {
+const handle = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   const corsResponse = handleCorsPreflightRequest(req);
   if (corsResponse) return corsResponse;
@@ -291,26 +292,22 @@ Generate a STRATEGY BRIEF with these sections:
 3. **Core Value Proposition** (One plain, specific statement that captures the unique value - this becomes the hero subheadline)
 
 4. **Key Points** (3-4 main themes to emphasize - these become FEATURE CARDS)
-   - For each pillar: Title, Benefit Description, Icon suggestion (Zap, Target, Shield, Award, TrendingUp, Users, CheckCircle, Clock, Heart, Star)
+   - For each key point: Title, Benefit Description, Icon suggestion (Zap, Target, Shield, Award, TrendingUp, Users, CheckCircle, Clock, Heart, Star)
 
 5. **Competitive Differentiation** (What sets this apart - use for problem/solution section)
 
 6. **Proof Points** (Specific credibility elements to feature - numbers, years, achievements)
-   - Extract specific numbers: "X+ clients", "Y years experience", etc.
+   - Use only stated numbers, exactly as given ("140 clients" stays 140; never add "+", "over" or "nearly")
 
 7. **Tone & Voice** (How the copy should sound - professional, friendly, authoritative, etc.)
 
-8. **Objection Handling** (only answered client questions, verbatim; skip unanswered topics entirely)
-${BUYER_OBJECTION_RULES}
-Client-answered pairs: ${JSON.stringify(consultationObjections(consultationData))}
-
-9. **Recommended Page Structure** (USE EXACTLY THE SECTIONS BELOW)
-   Based on layout intelligence, use THESE EXACT sections in this order:
+8. **Recommended Page Structure** (USE EXACTLY THE SECTIONS BELOW)
+   Use THESE EXACT sections in this order:
    ${layoutResult.sections.map(s => `- ${s}`).join('\n   ')}
    
    Provide a brief purpose statement for each section in the list.
 
-10. **Headline Recommendations** (3 options for the main headline, derived from the value prop)
+9. **Headline Recommendations** (3 options for the main headline, derived from the value prop)
     - Option A (Direct benefit)
     - Option B (Problem-focused)
     - Option C (Outcome-focused)
@@ -318,6 +315,10 @@ ${hasSelectedHeadline ? `
     IMPORTANT: The user has already selected their preferred headline direction: "${artifacts.selectedHeadline.content}"
     Use this as Option A and create 2 variations that maintain the same strategic angle.
 ` : ''}
+
+10. **Objection Handling** (only answered client questions, verbatim; skip unanswered topics entirely)
+${BUYER_OBJECTION_RULES}
+Client-answered pairs: ${JSON.stringify(consultationObjections(consultationData))}
 
 ---
 
@@ -339,7 +340,7 @@ After the markdown brief, include a JSON block that the page generator will pars
     }
   ],
   "proofPoints": {
-    "clientCount": "X+ clients" or null,
+    "clientCount": "The stated count, exactly as given (e.g. \"140 clients\")" or null,
     "yearsInBusiness": "Y years" or null,
     "achievements": "Achievement text" or null,
     "otherStats": ["Additional stat 1", "Additional stat 2"]
@@ -462,9 +463,9 @@ Be specific. No generic advice. Everything should tie back to the actual consult
       // Strip the model's own objection section wholesale: stop only at the next
       // top-level section (h1/h2 or a "9." heading), not at the h3 question
       // subheadings inside it, which previously left headerless Q&A debris.
-      const prose = strategyBrief.replace(/```(?:json)?\s*\n[\s\S]*?```/i, '').replace(/(?:^|\n)(?:#{1,4}\s*)?(?:8[.)]\s*)?(?:\*\*)?Objection[^\n]*\n[\s\S]*?(?=\n(?:#{1,2}\s|(?:#{1,4}\s*)?(?:\*\*)?9[.)])|$)/i, '\n');
+      const prose = strategyBrief.replace(/```(?:json)?\s*\n[\s\S]*?```/i, '').replace(/(?:^|\n)(?:#{1,4}\s*)?(?:\d{1,2}[.)]\s*)?(?:\*\*)?Objection[^\n]*\n[\s\S]*?(?=\n(?:#{1,2}\s|#{1,4}\s*(?:\*\*)?\d{1,2}[.)]\s|\*\*\d{1,2}[.)]\s)|$)/i, '\n').trimEnd();
       const faqProse = structuredBrief.objections.map((o: any) => `### ${o.question}\n${o.answer}`).join('\n\n');
-      strategyBrief = guardCopyClaims(prose, consultationData, 'brief-prose-guard') + (faqProse ? '\n\n## 8. Answered buyer questions\n' + faqProse : '') + '\n\n```json\n' + JSON.stringify(structuredBrief, null, 2) + '\n```';
+      strategyBrief = guardCopyClaims(prose, consultationData, 'brief-prose-guard') + (faqProse ? '\n\n## 10. Answered buyer questions\n' + faqProse : '') + '\n\n```json\n' + JSON.stringify(structuredBrief, null, 2) + '\n```';
       logRegisterViolations('generate-strategy-brief', structuredBrief);
     logProvenanceViolations('generate-strategy-brief', structuredBrief, JSON.stringify(consultationData));
     }
@@ -510,7 +511,18 @@ Be specific. No generic advice. Everything should tie back to the actual consult
       headers: { ...getCorsHeaders(origin), 'Content-Type': 'application/json' }
     });
   }
-});
+};
+
+// A new brief is where a page build's AI work happens (the page itself is mapped from it
+// without another AI call), so the build is charged here: page_build, account's first free.
+// Re-synthesizing the communication strategy of an existing brief makes no AI call and stays free.
+const isNewBrief = async (req: Request) => {
+  try { return (await req.json())?.mode !== 'communication-strategy'; } catch { return true; }
+};
+
+serve((req) => req.method === 'OPTIONS'
+  ? handle(req)
+  : withCharge(req, 'page_build', getCorsHeaders(req.headers.get('Origin')), () => handle(req), { createClient, shouldCharge: isNewBrief }));
 
 function buildCampaignContextPrompt(data: any): string {
   if (!data.pagePurpose) return '';

@@ -9,7 +9,7 @@
  *  - social-proof: SocialProofSection renders only with a real testimonial quote
  *  - faq: sectionMapper needs at least two answered buyer questions
  */
-import { BUYER_OBJECTION_PROMPTS, answeredObjections, type BuyerObjection } from '../../supabase/functions/_shared/buyerObjections';
+import { answeredObjections, promptsFor, type BuyerObjection } from '../../supabase/functions/_shared/buyerObjections';
 
 export type UnlockSection = 'how-it-works' | 'social-proof' | 'faq';
 
@@ -73,7 +73,7 @@ export function missingSections(d: Record<string, any> | null | undefined): Sect
 /** Buyer questions still unanswered, so the unlock prompt asks only for what's missing. */
 export function unansweredBuyerPrompts(d: Record<string, any> | null | undefined) {
   const answered = new Set(answeredObjections((d || {}).objections).map((o: BuyerObjection) => o.topic));
-  return BUYER_OBJECTION_PROMPTS.filter((p) => p.topic !== 'materials' && !answered.has(p.topic));
+  return promptsFor(d || {}).filter((p) => p.topic !== 'materials' && !answered.has(p.topic));
 }
 
 /** Editor sidebar: what each waiting section needs. */

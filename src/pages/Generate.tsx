@@ -49,7 +49,7 @@ import { DigitalChampionMeter } from '@/components/consultation/DigitalChampionM
 import { ConsultantChat } from '@/components/consultation/ConsultantChat';
 import { LockedSectionOverlay } from '@/components/sections/LockedSectionOverlay';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Trophy, Share2, Search, Palette } from 'lucide-react';
+import { Trophy, Share2, Search, Palette, PanelLeft, X } from 'lucide-react';
 import { DevicePreviewFrame, DeviceToggle, type PreviewDevice } from '@/components/editor/DevicePreviewFrame';
 import { StylePresetName } from "@/styles/presets";
 import {
@@ -5313,6 +5313,8 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
 
   // Add Section menu: content comes from the saved strategy brief when present.
   const [addSectionOpen, setAddSectionOpen] = useState(false);
+  // Below lg the section sidebar is a drawer so the preview keeps the screen width.
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   // Per-session editor convenience; never persisted to the page.
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
   const [addSectionAt, setAddSectionAt] = useState<number | undefined>(undefined);
@@ -5620,8 +5622,18 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
       
       {/* Top toolbar */}
-      <header className="h-14 border-b border-white/10 backdrop-blur-md bg-white/5 flex items-center justify-between px-4 relative z-10">
+      <header className="min-h-14 border-b border-white/10 backdrop-blur-md bg-white/5 flex flex-wrap lg:flex-nowrap items-center justify-between gap-y-2 px-4 py-2 lg:py-0 relative z-10">
         <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10"
+            aria-label="Open sections"
+          >
+            <PanelLeft className="w-4 h-4" />
+            Sections
+          </Button>
           <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <img src={logo} alt="PageConsult AI" className="h-8 w-auto" />
           </a>
@@ -5644,7 +5656,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
                 {aiActions.isUnlimited 
                   ? '∞' 
                   : aiActions.available
-                } credits
+                } AI actions
               </span>
             </div>
           )}
@@ -5665,7 +5677,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           )}
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto lg:overflow-visible [scrollbar-width:none] [&>*]:shrink-0">
           {/* Regenerate button */}
           {intelligence && (
             <Button
@@ -5749,7 +5761,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             variant="outline"
             size="sm"
             onClick={handlePreview}
-            className="relative pl-5 builder-button preview-btn bg-white/5 border-white/10 text-white hover:bg-white/10"
+            className="order-first lg:order-none relative pl-5 builder-button preview-btn bg-white/5 border-white/10 text-white hover:bg-white/10"
           >
             <span className="absolute left-0 top-0 w-1 h-full bg-cyan-500 rounded-l"></span>
             Preview
@@ -5761,7 +5773,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
                 size="sm"
                 variant="outline"
                 onClick={() => setSharePreviewOpen(true)}
-                className="border-white/10 text-white/70 hover:bg-white/10"
+                className="order-first lg:order-none border-white/10 text-white/70 hover:bg-white/10"
               >
                 <Share2 className="w-4 h-4 mr-1" />
                 Share
@@ -5770,11 +5782,12 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
                 size="sm"
                 variant="outline"
                 onClick={() => setSeoPanelOpen(true)}
-                className="border-white/10 text-white/70 hover:bg-white/10"
+                className="order-first lg:order-none border-white/10 text-white/70 hover:bg-white/10"
               >
                 <Search className="w-4 h-4 mr-1" />
                 SEO
               </Button>
+              <div className="order-first lg:order-none">
               <PublishToolbar
                 pageId={pageData.id}
                 slug={pageData.slug}
@@ -5782,6 +5795,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
                 publishedAt={pageData.published_at}
                 onOpenPublishModal={() => setPublishModalOpen(true)}
               />
+              </div>
             </>
           )}
           
@@ -5790,7 +5804,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
             <Button
               size="sm"
               onClick={() => setPublishModalOpen(true)}
-              className="relative pl-5 builder-button publish-btn bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white border-0"
+              className="order-first lg:order-none relative pl-5 builder-button publish-btn bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white border-0"
             >
               <span className="absolute left-0 top-0 w-1 h-full bg-green-500 rounded-l"></span>
               Publish
@@ -5802,7 +5816,17 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
       {/* Editor layout */}
       <div className="flex-1 flex overflow-hidden relative z-10">
         {/* Left sidebar with Credits + Persona Insights + Section Manager */}
-<div className="w-72 border-r border-white/10 bg-white/5 backdrop-blur-md flex flex-col overflow-hidden">
+        {sidebarOpen && <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={() => setSidebarOpen(false)} aria-hidden="true" />}
+<div className={cn(
+          "w-72 border-r border-white/10 backdrop-blur-md flex-col overflow-hidden",
+          sidebarOpen ? "flex fixed inset-y-0 left-0 z-50 max-w-[85vw] bg-slate-950 lg:static lg:z-auto lg:bg-white/5" : "hidden lg:flex bg-white/5",
+        )}>
+          <div className="lg:hidden flex items-center justify-between px-3 py-2 border-b border-white/10">
+            <span className="text-sm font-medium text-white">Sections</span>
+            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} aria-label="Close sections" className="text-white/70 hover:text-white">
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
           {/* Page Score Meter - Single consistent design */}
           <div className="p-3 border-b border-white/10">
             <DigitalChampionMeter 
@@ -5811,6 +5835,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
               sections={sections}
               onScrollToSection={(type) => {
                 // A section waiting on the owner's answers opens Page Chat with its question; one on the page scrolls into view.
+                setSidebarOpen(false);
                 const waiting = sectionUnlocks.find((u) => u.section === type);
                 if (waiting) { waiting.onClick(); return; }
                 document.getElementById(`section-${type}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });

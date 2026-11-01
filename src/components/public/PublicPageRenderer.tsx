@@ -5,6 +5,7 @@ import { useMemo, useState, useCallback, useEffect } from 'react';
 import { LeadCaptureModal } from './LeadCaptureModal';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from '@/lib/premiumPageEffects';
 import { artDirectedMode, applySurfaceRhythm } from '@/lib/artDirectorBrief';
 import { typePairingCss, pageWantsGrain } from '@/lib/design/tokens';
@@ -81,6 +82,8 @@ interface PublicPageRendererProps {
   showBadge?: boolean;
   /** When set, CTA clicks open a lead capture form instead of navigating */
   publishedPageId?: string | null;
+  /** Owner preview: CTA clicks say what they will do on the live page instead of doing nothing. */
+  previewMode?: boolean;
 }
 
 export function PublicPageRenderer({ 
@@ -95,6 +98,7 @@ export function PublicPageRenderer({
   showPoweredBy = false,
   showBadge = true,
   publishedPageId,
+  previewMode = false,
 }: PublicPageRendererProps) {
   const [leadCaptureOpen, setLeadCaptureOpen] = useState(false);
   const [leadCaptureCtaText, setLeadCaptureCtaText] = useState('Get Started');
@@ -483,7 +487,7 @@ export function PublicPageRenderer({
           className="relative z-10"
           onClick={(e) => {
             // Intercept CTA button clicks on published pages for lead capture
-            if (!publishedPageId) return;
+            if (!publishedPageId && !previewMode) return;
             const target = e.target as HTMLElement;
             const button = target.closest('button, a');
             if (!button) return;
@@ -496,6 +500,11 @@ export function PublicPageRenderer({
               !button.hasAttribute('aria-expanded') &&
               (button.matches('.pc-cta-primary, .signature-cta, [data-cta], a[href="#contact"], a[href="#"]') ||
                 ctaTexts.has(text));
+            if (isCta && !publishedPageId) {
+              e.preventDefault();
+              toast('On your live page, this button opens your contact form.');
+              return;
+            }
             if (isCta) {
               e.preventDefault();
               e.stopPropagation();

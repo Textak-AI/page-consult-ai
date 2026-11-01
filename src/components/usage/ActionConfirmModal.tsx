@@ -70,13 +70,13 @@ export function ActionConfirmModal({
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-cyan-400">-{actionCost}</p>
-              <p className="text-xs text-slate-500">credits</p>
+              <p className="text-xs text-slate-500">AI actions</p>
             </div>
           </div>
 
           <div className="flex items-center justify-between px-4">
             <span className="text-slate-400">Current balance</span>
-            <span className="font-medium text-white">{remaining} credits</span>
+            <span className="font-medium text-white">{remaining} AI actions</span>
           </div>
           
           <div className="flex items-center justify-between px-4">
@@ -85,7 +85,7 @@ export function ActionConfirmModal({
               'font-medium',
               isLowAfter ? 'text-amber-400' : 'text-emerald-400'
             )}>
-              {afterAction} credits
+              {afterAction} AI actions
             </span>
           </div>
 

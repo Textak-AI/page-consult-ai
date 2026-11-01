@@ -225,7 +225,7 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
 
       {data.pagePurpose === 'retargeting' && (
         <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 text-sm text-gray-300 mt-2">
-          <span className="text-cyan-400 font-medium">Smart move.</span>{' '}
+          <span className="text-cyan-400 font-medium">Got it: these visitors already know you.</span>{' '}
           Since visitors already know you, we'll skip the long intro and go 
           straight to your strongest offer. The page will be shorter and more direct.
         </div>
@@ -233,9 +233,8 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
 
       {data.pagePurpose === 'primary-site' && (
         <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 text-sm text-gray-300 mt-2">
-          <span className="text-cyan-400 font-medium">Great — we'll build comprehensive.</span>{' '}
-          This page will serve as your main web presence, covering your full 
-          story, services, proof, and a strong call-to-action.
+          <span className="text-cyan-400 font-medium">Got it: this is your main site.</span>{' '}
+          The page will cover your whole story: what you do, how you work, your proof, and how to get in touch.
         </div>
       )}
 

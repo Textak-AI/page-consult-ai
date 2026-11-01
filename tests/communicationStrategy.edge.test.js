@@ -2,12 +2,13 @@ import { test, expect } from 'bun:test';
 import { loadEdgeSource, fakeDb } from './helpers/edgeHarness.js';
 import { computeCommunicationStrategy, auditCommunicationStrategy } from '../supabase/functions/_shared/communicationStrategy.ts';
 import { z } from 'zod';
+import { withCharge } from '../supabase/functions/_shared/planLimits.ts';
 
 const id = 'a3657032-d5df-446a-a27b-ab4e88e3aa25';
 function harness(owner = 'owner') {
   const db = fakeDb(op => op.table === 'consultations' && !op.kind ? { data: owner === 'owner' ? { id, strategy_brief: { markdown: 'unchanged', structured: { headlines: {} } }, challenge: 'Hours lost to recounts.', offer: 'Reset' } : null, error: null } : { data: null, error: null });
   db.client.auth = { getUser: async () => ({ data: { user: { id: 'owner' } }, error: null }) };
-  const edge = loadEdgeSource('generate-strategy-brief/index.ts', { createClient: () => db.client, z, computeCommunicationStrategy, auditCommunicationStrategy, getCorsHeaders: () => ({}), handleCorsPreflightRequest: () => null, logRegisterViolations: () => [], logProvenanceViolations: () => [] });
+  const edge = loadEdgeSource('generate-strategy-brief/index.ts', { createClient: () => db.client, z, computeCommunicationStrategy, auditCommunicationStrategy, getCorsHeaders: () => ({}), handleCorsPreflightRequest: () => null, logRegisterViolations: () => [], logProvenanceViolations: () => [], withCharge });
   return { ...edge, db };
 }
 test('strategy recompute requires authentication', async () => {

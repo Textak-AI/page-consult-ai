@@ -80,7 +80,7 @@ export function DashboardHeader({
         <QuickStat icon={FileText} label="Pages" value={pageCount} />
         <QuickStat 
           icon={Sparkles} 
-          label="Credits" 
+          label="AI actions" 
           value={credits} 
           highlight={credits < 10} 
         />

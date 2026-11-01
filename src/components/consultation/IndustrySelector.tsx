@@ -15,6 +15,7 @@ import {
   Film,
   Smartphone,
   HeartHandshake,
+  Wrench,
   type LucideIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -126,6 +127,23 @@ const INDUSTRY_DATA: IndustryCategory[] = [
     ],
   },
   {
+    id: 'home-services',
+    label: 'Home & Local Services',
+    icon: Wrench,
+    subIndustries: [
+      { id: 'lawn-landscaping', label: 'Lawn Care / Landscaping' },
+      { id: 'cleaning', label: 'Cleaning / Maid Services' },
+      { id: 'hvac-plumbing-electrical', label: 'HVAC / Plumbing / Electrical' },
+      { id: 'roofing-exteriors', label: 'Roofing / Siding / Exteriors' },
+      { id: 'remodeling-handyman', label: 'Remodeling / Handyman' },
+      { id: 'pest-control', label: 'Pest Control' },
+      { id: 'moving-hauling', label: 'Moving / Junk Hauling' },
+      { id: 'auto-services', label: 'Auto Repair / Detailing' },
+      { id: 'pet-services', label: 'Pet Grooming / Care' },
+      { id: 'other-local', label: 'Other Local Services' },
+    ],
+  },
+  {
     id: 'real-estate',
     label: 'Real Estate / PropTech',
     icon: Home,
@@ -231,10 +249,6 @@ export function IndustrySelector({ value, onChange }: IndustrySelectorProps) {
 
   // Get selected category data
   const selectedCategory = INDUSTRY_DATA.find(c => c.label === value.category);
-  const activeCategory = hoveredCategory 
-    ? INDUSTRY_DATA.find(c => c.id === hoveredCategory) 
-    : selectedCategory;
-
   // Filter categories by search
   const filteredCategories = searchQuery
     ? INDUSTRY_DATA.filter(cat => 
@@ -245,9 +259,15 @@ export function IndustrySelector({ value, onChange }: IndustrySelectorProps) {
       )
     : INDUSTRY_DATA;
 
-  // Filter sub-industries by search within active category
+  // While searching, show the first match's options without needing a hover (touch has none).
+  const hovered = hoveredCategory ? filteredCategories.find(c => c.id === hoveredCategory) : undefined;
+  const activeCategory = hovered
+    ?? (searchQuery ? filteredCategories[0] : selectedCategory);
+
+  // Filter sub-industries by search within active category (a category-name match shows all of it)
+  const categoryNameMatch = !!searchQuery && !!activeCategory?.label.toLowerCase().includes(searchQuery.toLowerCase());
   const filteredSubIndustries = activeCategory?.subIndustries.filter(sub =>
-    !searchQuery || sub.label.toLowerCase().includes(searchQuery.toLowerCase())
+    !searchQuery || categoryNameMatch || sub.label.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
   const handleSelect = (category: IndustryCategory, subIndustry: SubIndustry) => {
@@ -325,10 +345,13 @@ export function IndustrySelector({ value, onChange }: IndustrySelectorProps) {
               </div>
             </div>
 
-            {/* Two-column layout */}
-            <div className="flex max-h-[400px]">
+            {filteredCategories.length === 0 && (
+              <p className="px-4 py-3 text-sm text-slate-400">No match. Pick the closest category, or its "Other" option.</p>
+            )}
+            {/* Two columns on wider screens; stacked on phones so labels aren't cut off */}
+            <div className="flex flex-col sm:flex-row max-h-[70vh] sm:max-h-[400px]">
               {/* Left Column: Categories */}
-              <div className="w-1/2 border-r border-slate-700/50 overflow-y-auto">
+              <div className="w-full sm:w-1/2 max-h-48 sm:max-h-none border-b sm:border-b-0 sm:border-r border-slate-700/50 overflow-y-auto">
                 {filteredCategories.map((category) => {
                   const Icon = category.icon;
                   const isSelected = value.category === category.label;
@@ -356,7 +379,7 @@ export function IndustrySelector({ value, onChange }: IndustrySelectorProps) {
               </div>
 
               {/* Right Column: Sub-industries */}
-              <div className="w-1/2 overflow-y-auto">
+              <div className="w-full sm:w-1/2 overflow-y-auto">
                 <AnimatePresence mode="wait">
                   {activeCategory && (
                     <motion.div

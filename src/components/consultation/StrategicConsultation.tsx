@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette, FileText, TrendingUp, UserCheck, Rocket, Calendar, Gift, Share2, Check, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
+import { PageBuildCost } from '@/components/usage/PageBuildCost';
+import { announceUsageChanged } from '@/hooks/useAIActions';
 import { formatDistanceToNow } from 'date-fns';
 import { IndustrySelector } from './IndustrySelector';
 import { InlineConsultant } from './InlineConsultant';
@@ -56,7 +59,7 @@ import { useDevMode } from '@/components/dev/DevToolbar';
 import { BuyerObjectionChecklist } from './BuyerObjectionChecklist';
 import { SectionUnlockReview } from './SectionUnlockReview';
 import { missingSections } from '@/lib/sectionUnlocks';
-import type { BuyerObjection } from '../../../supabase/functions/_shared/buyerObjections';
+import { localServiceBusiness, type BuyerObjection } from '../../../supabase/functions/_shared/buyerObjections';
 
 export interface ConsultationData {
   // Page Type
@@ -250,6 +253,15 @@ const INVESTMENT_RANGES = [
   '$10,000 - $25,000',
   '$25,000+',
   'Custom / Varies'
+];
+// Local trades price per visit or per job, not per engagement.
+const LOCAL_PRICE_RANGES = [
+  'Under $100 per visit',
+  '$100 - $300 per visit',
+  '$300 - $1,000 per job',
+  '$1,000 - $5,000 per job',
+  '$5,000+ per project',
+  'Custom / Varies',
 ];
 
 const PRIMARY_GOALS = [
@@ -1132,9 +1144,15 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       await deleteDbDraftOnCompletion();
       
       // Pass BOTH the text brief AND the structured JSON brief AND the classification
+      announceUsageChanged();
       onComplete(data as ConsultationData, strategyBriefText, aiSeoData, structuredBrief, classification);
     } catch (err) {
       console.error('Strategy brief generation error:', err);
+      // Out of actions: stay on the wizard with the answers kept (the draft is not cleared).
+      if (isLimitReached(err)) {
+        toast.error(LIMIT_REACHED_MESSAGE);
+        return;
+      }
       // Fallback: proceed with basic brief (no structured brief available)
       const fallbackBrief = generateFallbackBrief(data as ConsultationData);
       
@@ -1674,7 +1692,7 @@ ${d.ctaText}
                   className="mt-2 w-full bg-slate-800 border border-slate-600 text-white rounded-lg px-4 py-3"
                 >
                   <option value="">Select range...</option>
-                  {INVESTMENT_RANGES.map(range => (
+                  {(localServiceBusiness(data) ? LOCAL_PRICE_RANGES : INVESTMENT_RANGES).map(range => (
                     <option key={range} value={range}>{range}</option>
                   ))}
                 </select>
@@ -1687,7 +1705,7 @@ ${d.ctaText}
                 </Label>
                 <Textarea
                   id="processDescription"
-                  placeholder="e.g., 1) Free 15-min call to discuss needs, 2) Custom proposal within 48 hours, 3) Planning session if booked, 4) Delivery/event day"
+                  placeholder={localServiceBusiness(data) ? 'e.g., 1) Text or call for a quote, 2) We look at the job and give you a price, 3) We book a day and do the work' : 'e.g., 1) Free 15-min call to discuss needs, 2) Custom proposal within 48 hours, 3) Planning session if booked, 4) Delivery/event day'}
                   value={data.processDescription || ''}
                   onChange={(e) => updateData({ processDescription: e.target.value })}
                   onBlur={() => triggerConsultantBlur('processDescription')}
@@ -2121,6 +2139,7 @@ ${d.ctaText}
           )}
         </Button>
       </div>
+      {currentStep === STEPS.length - 1 && <PageBuildCost className="mt-2 text-right text-slate-400" />}
         </div>
       </div>
 

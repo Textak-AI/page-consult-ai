@@ -170,7 +170,7 @@ export function PageGenerationLoader({ consultation, onComplete }: PageGeneratio
             Generating Your Page
           </h2>
           <p className="text-gray-400">
-            AI is crafting conversion-optimized content just for you
+            Writing each section from your Strategy Brief
           </p>
         </div>
 

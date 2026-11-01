@@ -56,7 +56,8 @@ export default function ProblemSolutionTwoColumn({ content, onUpdate, isEditing 
         maxWidth: 920,
         ...spacing.center,
         display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
+        // Stacks below ~600px so phone columns aren't ~95px wide.
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
         gap: 'clamp(32px, 5vw, 64px)',
       }}>
         {/* Problem column */}

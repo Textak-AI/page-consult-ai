@@ -78,6 +78,7 @@ const FONT_OPTIONS = {
 const INDUSTRY_FONT_RECOMMENDATIONS: Record<string, string[]> = {
   'Manufacturing / Industrial': ['Inter', 'Roboto', 'IBM Plex Sans'],
   'Professional Services': ['Inter', 'Plus Jakarta Sans', 'Lato'],
+  'Home & Local Services': ['DM Sans', 'Inter', 'Lato'],
   'Healthcare / Medical': ['Plus Jakarta Sans', 'Open Sans', 'Lato'],
   'Legal Services': ['Playfair Display', 'Merriweather', 'Lora'],
   'Financial Services': ['Inter', 'Source Serif Pro', 'Roboto'],
@@ -452,7 +453,7 @@ export function BrandCustomization({
 
               {!logoUrl && extractedLogoOk !== null && (
                 <div className="mb-4 rounded-xl border border-slate-700 bg-slate-900/40 p-4" data-testid="no-usable-logo">
-                  <p className="text-sm font-medium text-white">We couldn't find a usable logo</p>
+                  <p className="text-sm font-medium text-white">{logoRejection ? "We couldn't use the logo we found" : 'Add your logo'}</p>
                   {logoRejection && <p className="mt-1 text-xs text-slate-400">{logoRejection}</p>}
                   {continueWithoutLogo ? (
                     <p className="mt-1 text-xs text-slate-400" data-testid="continuing-without-logo">Continuing without a logo — your business name will be shown instead.</p>

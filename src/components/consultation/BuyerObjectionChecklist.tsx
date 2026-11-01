@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { BUYER_OBJECTION_PROMPTS, answeredObjections, materialsRelevant, type BuyerObjection } from '../../../supabase/functions/_shared/buyerObjections';
+import { answeredObjections, promptsFor, type BuyerObjection } from '../../../supabase/functions/_shared/buyerObjections';
 
 export function BuyerObjectionChecklist({ value, context, onChange }: { value?: BuyerObjection[]; context: Record<string, any>; onChange: (items: BuyerObjection[]) => void }) {
   const items = answeredObjections(value);
   const [expanded, setExpanded] = useState<string[]>([]);
-  const prompts = BUYER_OBJECTION_PROMPTS.filter(p => p.topic !== 'materials' || materialsRelevant(context));
+  const prompts = promptsFor(context);
   return <fieldset className="space-y-3" aria-label="Buyer questions">
     <legend className="text-sm font-medium text-foreground mb-3">Buyer questions · optional</legend>
     {prompts.map(p => {

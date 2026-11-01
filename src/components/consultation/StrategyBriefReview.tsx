@@ -1,4 +1,3 @@
-import { PageBuildCost } from '@/components/usage/PageBuildCost';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Edit3, RotateCcw, ArrowRight, CheckCircle2, ChevronRight } from 'lucide-react';
@@ -34,7 +33,6 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, messag
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <CommunicationStrategyPanel strategy={extractStructuredBrief(brief)?.communicationStrategy} />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -135,6 +133,10 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, messag
       </motion.div>
 
       {/* AI SEO Panel */}
+      <div className="bg-slate-800/50 border border-slate-700 rounded-2xl px-6 md:px-8 text-white">
+        <CommunicationStrategyPanel strategy={extractStructuredBrief(brief)?.communicationStrategy} />
+      </div>
+
       <AISeoPanel aiSeoData={aiSeoData ?? null} />
 
       {/* Messaging Architecture Panel */}
@@ -174,7 +176,6 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, messag
           Approve & Generate Page
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
-        <PageBuildCost className="basis-full text-center" />
       </motion.div>
     </div>
   );

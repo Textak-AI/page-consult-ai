@@ -22,7 +22,7 @@ export function getOfferKind(industry?: string | null, subcategory?: string | nu
   // non-software businesses too, so only unambiguous labels count as software.
   if (/saas|software|consumer apps|developer tools|healthcare it|telemedicine|fintech/.test(t)) return 'software';
   if (/e-?commerce|retail|hardware|consumer electronics|devices|apparel|food \/ beverage|beauty|furniture|gadgets|subscription \/ dtc/.test(t)) return 'product';
-  if (/professional services|agency|creative|consult|legal|accounting|real estate|healthcare|medical|financial services|manufacturing|industrial|education|non-profit|nonprofit|coach|wellness/.test(t)) return 'services';
+  if (/home & local|lawn|landscap|cleaning|hvac|plumb|roof|remodel|handyman|pest|moving|hauling|auto repair|detailing|grooming|professional services|agency|creative|consult|legal|accounting|real estate|healthcare|medical|financial services|manufacturing|industrial|education|non-profit|nonprofit|coach|wellness/.test(t)) return 'services';
   return 'general';
 }
 
@@ -95,6 +95,14 @@ const PLACEHOLDERS: Record<string, WizardPlaceholders> = {
     uniqueStrength: 'e.g., AS9100D certified, with in-house CMM inspection on every lot...',
     mainOffer: 'e.g., Precision CNC Machining, Custom Fabrication Services',
     offerIncludes: 'e.g., Design consultation, prototyping, production runs, quality documentation, logistics...',
+  },
+  'Home & Local Services': {
+    idealClient: 'e.g., Homeowners in two or three nearby suburbs with older houses, who would rather hire it out than spend weekends on it...',
+    clientFrustration: 'e.g., Companies that don\'t call back, show up late without a word, or send someone different every time...',
+    desiredOutcome: 'e.g., The job done right the first time, without taking a day off work to wait for it...',
+    uniqueStrength: 'e.g., The owner does every estimate in person, and the same crew does the work...',
+    mainOffer: 'e.g., Weekly Lawn Care, Furnace Tune-Up, Deep House Cleaning',
+    offerIncludes: 'e.g., What is done on each visit, how often, and what is extra...',
   },
   default: {
     idealClient: 'e.g., Describe your ideal customer in detail - their role, company size, specific needs...',

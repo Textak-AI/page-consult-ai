@@ -272,7 +272,7 @@ export function UnifiedGenerationFlow({
               />
             </div>
             <p className="text-xs text-gray-500 mt-3 text-center">
-              AI is crafting conversion-optimized content just for you
+              Writing each section from your Strategy Brief
             </p>
           </div>
           

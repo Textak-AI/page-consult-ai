@@ -24,13 +24,43 @@ export function inputCopyText(input: unknown): string {
 }
 /** Promises the business must make itself: never generated, only quoted. */
 const COMMITMENT = /\b(guarantee[ds]?|guaranteeing|money[- ]?back|risk[- ]free|no[- ]risk|warrant(?:y|ies|ied)|or (?:it'?s|your money) free)\b/i;
+/**
+ * Service promises and trade credentials a page may only repeat, never supply: a local business
+ * gets held to "rain delays included" or "licensed and insured". `need` is what the input must say.
+ */
+const STATED_ONLY: Array<{ re: RegExp; need: RegExp }> = [
+  { re: /\brain(?:[- ]or[- ]shine|\s+delays?\s+(?:are\s+|is\s+)?(?:included|covered|made\s+up))/i, need: /rain[- ]or[- ]shine|rain delay/ },
+  { re: /\bnever\s+(?:miss(?:es|ed)?|skip(?:s|ped)?)\s+a\s+(?:week|visit|day|appointment|job)\b/i, need: /never (?:miss|skip)/ },
+  { re: /\b(?:always|guaranteed)\s+on[- ]time\b|\bon[- ]time,?\s+every\s+time\b/i, need: /on[- ]time/ },
+  { re: /\b24\/7\b|\baround[- ]the[- ]clock\b/i, need: /24\/7|around[- ]the[- ]clock|24 hours/ },
+  { re: /\bno\s+hidden\s+(?:fees|costs|charges)\b/i, need: /hidden (?:fee|cost|charge)/ },
+  { re: /\b(?:fully\s+)?insured\b/i, need: /insur/ },
+  { re: /\blicensed\b/i, need: /licens/ },
+  { re: /\bbonded\b/i, need: /\bbonded\b/ },
+  { re: /\bfamily[- ](?:owned|run)\b/i, need: /family[- ]?(?:owned|run)/ },
+  { re: /\blocally[- ]owned\b/i, need: /locally[- ]?owned/ },
+];
 /** The commitment term in `text` that the user's input never stated, or null. */
 export function unsupportedCommitment(text: string, input: unknown): string | null {
   const hit = COMMITMENT.exec(text || '');
-  if (!hit) return null;
-  const stem = hit[1].toLowerCase().replace(/[^a-z]/g, '').slice(0, 7); // guarant / moneyba / riskfre / warrant
-  const source = inputCopyText(input).toLowerCase().replace(/[^a-z]/g, '');
-  return source.includes(stem) ? null : hit[1];
+  if (hit) {
+    const stem = hit[1].toLowerCase().replace(/[^a-z]/g, '').slice(0, 7); // guarant / moneyba / riskfre / warrant
+    const source = inputCopyText(input).toLowerCase().replace(/[^a-z]/g, '');
+    if (!source.includes(stem)) return hit[1];
+  }
+  const said = inputCopyText(input).toLowerCase();
+  for (const { re, need } of STATED_ONLY) {
+    const m = re.exec(text || '');
+    if (m && !need.test(said)) return m[0];
+  }
+  return null;
+}
+/** "140+" when the input said "140": the stated count, not a bigger one. Leaves "+" the input itself used. */
+export function unInflateCounts(text: string, input: unknown): string {
+  if (!text || !text.includes('+')) return text;
+  const said = inputCopyText(input).replace(/,/g, '');
+  return text.replace(/(?<![A-Za-z\d])(\d[\d,]*)\s?\+(?![\d+])/g, (whole, n: string) =>
+    said.includes(`${n.replace(/,/g, '')}+`) ? whole : n);
 }
 export const OFFER_TERMS = ['No credit card required', 'Free to start', 'Cancel anytime', 'Free consultation', 'No obligation', 'No commitment', 'Pay as you go', 'No contracts'];
 export function stripUnsupportedOfferTerms(text: string, input: unknown, removed: string[] = []): string {
@@ -49,7 +79,9 @@ export function guardCopyClaims<T>(output: T, input: unknown, label = 'copy-guar
     if (structural.test(key)) return value;
     if (typeof value === 'string') {
       const removed: string[] = [];
-      const terms = stripUnsupportedOfferTerms(value, input, removed);
+      const counted = unInflateCounts(value, input);
+      if (counted !== value) console.log(`[${label}] Removed "+" from a stated count at ${path}`);
+      const terms = stripUnsupportedOfferTerms(counted, input, removed);
       if (removed.length) console.log(`[${label}] Removed unsupported offer terms at ${path}`, JSON.stringify(removed));
       // Discard the whole unsupported sentence/line, never just its number.
       return (terms.match(/[^\n]+(?:\n|$)/g) || []).map(line => {

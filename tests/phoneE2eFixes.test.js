@@ -1,0 +1,64 @@
+import { test, expect } from 'bun:test';
+import { readFileSync } from 'fs';
+import { guardCopyClaims, unsupportedCommitment, unInflateCounts } from '../supabase/functions/_shared/copyClaims';
+
+const read = (p) => readFileSync(p, 'utf8');
+const greenline = {
+  clientCount: '140 weekly lawn accounts',
+  clientFrustration: 'Crews that skip weeks after a rainy stretch without telling anyone.',
+  uniqueStrength: 'Same two-person crew on your property every week.',
+};
+
+// Phone E2E (Nov 1): a new page cost nothing — the brief call never charged and the page is mapped without AI.
+test('a new brief charges the page build; re-synthesizing a stored strategy stays free', () => {
+  const src = read('supabase/functions/generate-strategy-brief/index.ts');
+  expect(src).toMatch(/withCharge\(req, 'page_build'/);
+  expect(src).toMatch(/mode !== 'communication-strategy'/);
+  const wizard = read('src/components/consultation/StrategicConsultation.tsx');
+  expect(wizard).toMatch(/isLimitReached\(err\)/); // out of actions: no free fallback brief
+  expect(wizard).toMatch(/<PageBuildCost/);
+  expect(read('src/components/consultation/StrategyBriefReview.tsx')).not.toMatch(/PageBuildCost/);
+});
+
+test('stated counts are not inflated', () => {
+  expect(unInflateCounts('140+ weekly lawn accounts', greenline)).toBe('140 weekly lawn accounts');
+  expect(unInflateCounts('Since 2014 · 140+ accounts', { clientCount: '140+ accounts' })).toBe('Since 2014 · 140+ accounts');
+  const out = guardCopyClaims({ proof: ['140+ weekly lawn accounts'] }, greenline, 't');
+  expect(out.proof[0]).toBe('140 weekly lawn accounts');
+});
+
+test('unstated service promises and trade credentials are removed', () => {
+  expect(unsupportedCommitment('Same day every week, rain delays included.', greenline)).toBeTruthy();
+  expect(unsupportedCommitment('Licensed and insured crews.', greenline)).toBeTruthy();
+  expect(unsupportedCommitment('We never miss a week.', greenline)).toBeTruthy();
+  expect(unsupportedCommitment('Same crew every week.', greenline)).toBeNull();
+  expect(unsupportedCommitment('Fully insured.', { achievements: 'Licensed and insured in Ohio' })).toBeNull();
+  const out = guardCopyClaims({ benefit: 'Cut on the same day every week, rain delays included. A photo when it is done.' }, greenline, 't');
+  expect(out.benefit).toBe('A photo when it is done.');
+});
+
+test('phone editor: section sidebar is a drawer and page actions come first', () => {
+  const g = read('src/pages/Generate.tsx');
+  expect(g).toMatch(/hidden lg:flex/);
+  expect(g).toMatch(/aria-label="Open sections"/);
+  expect((g.match(/order-first lg:order-none/g) || []).length).toBeGreaterThanOrEqual(4);
+});
+
+test('local trades get their own category, questions and price bands', async () => {
+  const { promptsFor } = await import('../supabase/functions/_shared/buyerObjections');
+  const { INDUSTRY_TAXONOMY } = await import('../supabase/functions/_shared/siteExtraction');
+  expect(INDUSTRY_TAXONOMY['Home & Local Services']).toContain('Lawn Care / Landscaping');
+  const topics = promptsFor({ industryCategory: 'Home & Local Services' }).map((p) => p.topic);
+  expect(topics).not.toContain('effort');
+  expect(topics).toContain('area');
+  expect(read('src/components/consultation/StrategicConsultation.tsx')).toMatch(/LOCAL_PRICE_RANGES/);
+  expect(read('src/config/designSystem/industryVariants.ts')).toMatch(/home & local/);
+});
+
+test('owner-facing wording from the phone run stays fixed', () => {
+  const all = ['src/components/editor/PageGenerationLoader.tsx', 'src/components/editor/UnifiedGenerationFlow.tsx', 'src/components/consultation/steps/CampaignContextStep.tsx', 'src/components/strategy-brief/CommunicationStrategyPanel.tsx'].map(read).join('\n');
+  for (const s of ['conversion-optimized', 'build comprehensive', 'Arc emphasis', 'Mechanism suggestion', 'Visual intensity']) expect(all).not.toContain(s);
+  const brief = read('supabase/functions/generate-strategy-brief/index.ts');
+  expect(brief).not.toMatch(/Based on layout intelligence|For each pillar|"X\+ clients"/);
+  expect(brief).toMatch(/## 10\. Answered buyer questions/);
+});

@@ -14,6 +14,7 @@ export const INDUSTRY_TAXONOMY: Record<string, string[]> = {
   'Technology / Hardware': ['Consumer Electronics', 'IoT / Smart Devices', 'Robotics / Automation', 'Semiconductors', 'Clean Tech / Energy', 'Aerospace / Defense', 'Networking / Infrastructure', 'Other Hardware'],
   'E-commerce / Retail': ['Fashion / Apparel', 'Food / Beverage', 'Beauty / Personal Care', 'Home / Furniture', 'Electronics / Gadgets', 'Marketplace / Multi-vendor', 'Subscription / DTC', 'Other Retail'],
   'Professional Services': ['Legal / LegalTech', 'Consulting', 'Marketing / Advertising Agency', 'Design / Creative Agency', 'Recruiting / Staffing', 'Accounting / Bookkeeping', 'Other Services'],
+  'Home & Local Services': ['Lawn Care / Landscaping', 'Cleaning / Maid Services', 'HVAC / Plumbing / Electrical', 'Roofing / Siding / Exteriors', 'Remodeling / Handyman', 'Pest Control', 'Moving / Junk Hauling', 'Auto Repair / Detailing', 'Pet Grooming / Care', 'Other Local Services'],
   'Real Estate / PropTech': ['Residential', 'Commercial', 'Property Management', 'Mortgage / Lending', 'Construction / Development', 'Other Real Estate'],
   'Education / EdTech': ['K-12', 'Higher Education', 'Corporate Training', 'Online Courses / MOOCs', 'Tutoring / Test Prep', 'Language Learning', 'Other Education'],
   'Media / Entertainment': ['Streaming / Video', 'Gaming', 'Music / Audio', 'Publishing / News', 'Social Media', 'Sports / Fitness', 'Other Media'],

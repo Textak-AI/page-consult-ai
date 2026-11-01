@@ -626,6 +626,11 @@ export function detectIndustryVariant(
   const serviceTypeLower = (serviceType || '').toLowerCase();
   const combined = `${industryLower} ${serviceTypeLower}`;
   
+  // The wizard's "Home & Local Services" category says "services", so it must win before consulting.
+  if (combined.includes('home & local') || combined.includes('local services')) {
+    return 'local-services';
+  }
+
   // Consulting detection (MUST come before SaaS - more specific)
   // Includes: HR consulting, management consulting, professional services, etc.
   if (

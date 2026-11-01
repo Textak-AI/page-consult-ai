@@ -60,6 +60,7 @@ function containsAgencySignals(text: string): boolean {
 // LOCAL-SERVICES catches local service businesses (plumbers, electricians, etc.)
 const INDUSTRY_PATTERNS: Record<IndustryVariant, { keywords: string[]; weight: number }[]> = {
   'local-services': [
+    { keywords: ['home & local services', 'local services'], weight: 30 },
     // Home services - HIGH weight for exact matches
     { keywords: ['plumber', 'plumbing', 'plumb'], weight: 20 },
     { keywords: ['electrician', 'electrical', 'electric'], weight: 20 },
@@ -390,6 +391,7 @@ export function optionToVariant(option: string): IndustryVariant {
     'Financial Services': 'finance',
     'Legal': 'legal',
     'Professional Services': 'consulting',
+    'Home & Local Services': 'local-services',
     'Other': 'default',
   };
   return mapping[option] || 'default';
@@ -431,6 +433,7 @@ export function displayOptionToVariant(option: string): IndustryVariant {
     'Legal': 'legal',
     'Real Estate': 'consulting',
     'Professional Services': 'consulting',
+    'Home & Local Services': 'local-services',
     'Other': 'default',
   };
   return mapping[option] || 'default';

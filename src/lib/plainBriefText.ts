@@ -8,6 +8,10 @@ const RELABEL: Array<[RegExp, string]> = [
   [/\bMessaging Pillars\b/g, 'Key Points'],
   [/\bStrategy Blueprint\b/g, 'Strategy Brief'],
   [/\bPageConsult Method\b\s*·?\s*/g, ''],
+  [/\s*\((?:Feature|Messaging) Pillars\)/g, ''],
+  [/\bPillar (\d+):\s*/g, '$1. '],
+  [/\bBased on layout intelligence[^,:\n]*[,:]?\s*/gi, ''],
+  [/\blayout intelligence\b/gi, 'your answers'],
 ];
 
 export function plainBriefText(markdown: string | null | undefined): string {

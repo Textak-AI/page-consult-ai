@@ -10,21 +10,25 @@ interface LowBalanceAlertProps {
 }
 
 export function LowBalanceAlert({ remaining, onUpgrade, onDismiss }: LowBalanceAlertProps) {
-  const [dismissed, setDismissed] = useState(false);
+  // Dismissal lasts the browser session, so the alert doesn't keep covering the page on every load.
+  const [dismissed, setDismissed] = useState(() => {
+    try { return sessionStorage.getItem('pc:low-balance-dismissed') === '1'; } catch { return false; }
+  });
 
   if (dismissed) return null;
 
   const handleDismiss = () => {
     setDismissed(true);
+    try { sessionStorage.setItem('pc:low-balance-dismissed', '1'); } catch { /* storage unavailable */ }
     onDismiss?.();
   };
 
   return (
     <div className={cn(
-      'fixed bottom-4 right-4 z-50 max-w-sm',
+      'fixed bottom-20 inset-x-3 z-50 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:max-w-sm',
       'animate-in slide-in-from-bottom-4 fade-in duration-300'
     )}>
-      <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 backdrop-blur-sm shadow-xl">
+      <div className="p-4 rounded-xl bg-slate-900 bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 backdrop-blur-sm shadow-xl">
         <div className="flex items-start gap-3">
           <div className="p-2 rounded-lg bg-amber-500/20">
             <AlertTriangle className="w-5 h-5 text-amber-400" />
@@ -35,7 +39,7 @@ export function LowBalanceAlert({ remaining, onUpgrade, onDismiss }: LowBalanceA
             </h4>
             <p className="text-sm text-slate-400 mb-3">
               You have {remaining} action{remaining !== 1 ? 's' : ''} remaining. 
-              Upgrade to Pro for 150 actions/month!
+              Upgrade to Pro for 150 actions a month.
             </p>
             <div className="flex items-center gap-2">
               <Button
