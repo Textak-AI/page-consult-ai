@@ -92,6 +92,13 @@
       "when": 1793504985640,
       "tag": "0012_add_profiles_onboarded_at",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793575597457,
+      "tag": "0013_owner_test_allowance",
+      "breakpoints": true
     }
   ]
 }
