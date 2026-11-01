@@ -85,6 +85,13 @@
       "when": 1793479715520,
       "tag": "0011_edge_rate_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793504985640,
+      "tag": "0012_add_profiles_onboarded_at",
+      "breakpoints": true
     }
   ]
 }
