@@ -41,7 +41,7 @@ test('Preview opens a preview-link token, never a slug; tokens come from crypto'
 });
 
 test('section rewrite goes through Page Chat; hero and closing CTA cannot be deleted', () => {
-  expect(src('src/pages/Generate.tsx')).toMatch(/prefill: 'Rewrite this section using only my brief and answers\.'/);
+  expect(src('src/pages/Generate.tsx')).toMatch(/prefill: 'Rewrite this section from my brief and answers\.'/);
   const m = src('src/components/editor/SectionManager.tsx');
   expect(m).toMatch(/disabled=\{pinned\}/);
   expect(m).not.toMatch(/section regenerated/);

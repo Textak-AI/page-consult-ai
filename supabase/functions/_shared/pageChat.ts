@@ -147,6 +147,7 @@ export function buildPageChatSystemPrompt(args: {
 ${focus}
 OUTPUT: one JSON object, nothing else:
 {"reply": "1-2 plain sentences to the owner", "operations": [ ... ]}
+The reply says what you changed, plainly. Never claim the copy uses "only" the owner's facts or input; name any wording you added beyond what they said only if asked.
 
 Operations (at most ${MAX_OPERATIONS}):
 - Edit an existing section: {"op":"edit","index":N,"content":{...}} — N is the section index below. Include only the fields you change, using the same keys and shape as the section's current content. A list you change must be returned complete.

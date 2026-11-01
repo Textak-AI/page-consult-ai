@@ -100,3 +100,6 @@
 - Pricing pages make no scarcity or discount claims (no spot counters, strikethrough prices or "30% off"); the agency cost/time comparison section is removed.
 - Generated images arrive as data: URIs (durable), but page JSON must not carry them: `externalizeImages` (src/lib/editor/externalizeImages.ts) uploads each inline image to brand-assets `${uid}/generated/<sha>.ext` and swaps in the public URL on every autosave and on publish/update. Failed uploads stay inline so nothing is lost.
 - Plan feature lists mark unbuilt items "(coming soon)" (analytics, custom domains, white-label, seats, sub-accounts, API, integrations, priority generation); no agency trial button. Feature-card elaboration in generated copy is accepted as copywriting (Kyle, Oct 31); stated facts, numbers, processes and proof stay guarded.
+- Page Chat docks: ConsultantChat reports its open width via `onDockWidth`; Generate pads the preview by that amount on screens ≥1280px so the chat never covers the copy being edited.
+- Sidebar: `hiddenReason()` (src/lib/editor/emptySections.ts) mirrors the render gates of sections that show nothing without real proof (social-proof, credentials-bar) and labels them "Hidden until…".
+- Page Chat replies say what changed and never claim "only your facts"; the section-rewrite prefill is "Rewrite this section from my brief and answers."

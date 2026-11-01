@@ -105,3 +105,23 @@ test('unbuilt plan features are marked coming soon; no agency trial promised', (
     expect(s).not.toMatch(/Agency Trial/);
   }
 });
+
+test('open Page Chat docks beside the preview instead of covering it', () => {
+  expect(src('src/components/consultation/ConsultantChat.tsx')).toMatch(/onDockWidth\?\.\(isOpen \? \(isExpanded \? 480 : 400\) \+ 24 : 0\)/);
+  expect(src('src/pages/Generate.tsx')).toMatch(/onDockWidth=\{setPageChatDock\}/);
+  expect(src('src/pages/Generate.tsx')).toMatch(/paddingRight: pageChatDock/);
+});
+
+test('sidebar marks sections that render nothing until real proof exists', async () => {
+  const { hiddenReason } = await import('../src/lib/editor/emptySections');
+  expect(hiddenReason({ type: 'social-proof', content: { testimonials: [] } })).toMatch(/real testimonial/);
+  expect(hiddenReason({ type: 'social-proof', content: { testimonial: { quote: '[Test quote] long enough' } } })).toBeNull();
+  expect(hiddenReason({ type: 'credentials-bar', content: {} })).toMatch(/credentials/);
+  expect(hiddenReason({ type: 'features', content: {} })).toBeNull();
+  expect(src('src/components/editor/SectionManager.tsx')).toMatch(/hiddenReason\(section\)/);
+});
+
+test('Page Chat never claims "only your facts"', () => {
+  expect(src('supabase/functions/_shared/pageChat.ts')).toMatch(/Never claim the copy uses "only"/);
+  expect(src('src/pages/Generate.tsx')).not.toMatch(/using only my brief/);
+});

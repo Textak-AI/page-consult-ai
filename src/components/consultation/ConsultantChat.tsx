@@ -45,6 +45,8 @@ interface ConsultantChatProps {
   /** Set when a section's AI button is clicked: open, scoped to that section. */
   focus?: { index: number; type: string; nonce: number; prefill?: string } | null;
   onApplyOperations: (operations: PageChatOperation[]) => void;
+  /** Reports the open panel's width (0 when closed) so the editor can make room for it. */
+  onDockWidth?: (px: number) => void;
   className?: string;
 }
 
@@ -67,10 +69,14 @@ export function ConsultantChat({
   titleFor,
   focus,
   onApplyOperations,
+  onDockWidth,
   className
 }: ConsultantChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  // Panel width + its 24px gutter, so the page you are editing stays visible beside it.
+  useEffect(() => { onDockWidth?.(isOpen ? (isExpanded ? 480 : 400) + 24 : 0); }, [isOpen, isExpanded, onDockWidth]);
+  useEffect(() => () => onDockWidth?.(0), [onDockWidth]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);

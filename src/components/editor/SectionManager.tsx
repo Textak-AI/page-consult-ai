@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { hiddenReason } from '@/lib/editor/emptySections';
 import { ADDABLE_SECTION_TYPES } from "@/lib/editor/sectionFactory";
 import { Eye, EyeOff, Trash2, RefreshCw, Calculator, Loader2, Zap, ChevronUp, ChevronDown, GripVertical, Plus, Lock } from "lucide-react";
 import { useState } from "react";
@@ -184,9 +185,12 @@ export function SectionManager({
               {/* Title - no emoji, just text */}
               <span className={cn(
                 "flex-1 min-w-0 truncate text-sm font-medium",
-                section.visible ? "text-white" : "text-gray-500"
+                section.visible && !hiddenReason(section) ? "text-white" : "text-gray-500"
               )}>
                 {getSectionTitle(section.type)}
+                {hiddenReason(section) && (
+                  <span className="block truncate text-[11px] font-normal text-gray-500">{hiddenReason(section)}</span>
+                )}
               </span>
 
               {/* Action Buttons */}

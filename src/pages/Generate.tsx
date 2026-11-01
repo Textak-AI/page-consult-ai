@@ -5219,6 +5219,8 @@ function EditorContent({
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [strategyBriefOpen, setStrategyBriefOpen] = useState(false);
+  // Width of the open Page Chat panel: the preview shifts left so the chat never covers the copy it edits.
+  const [pageChatDock, setPageChatDock] = useState(0);
   const [sharePreviewOpen, setSharePreviewOpen] = useState(false);
   
   useEffect(() => {
@@ -5541,7 +5543,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
   const handleRegenerateSectionWithUsage = (sectionType: string) => {
     const index = sections.findIndex((s: any) => s.type === sectionType);
     if (index < 0) return;
-    setPageChatFocus({ index, type: sectionType, nonce: Date.now(), prefill: 'Rewrite this section using only my brief and answers.' });
+    setPageChatFocus({ index, type: sectionType, nonce: Date.now(), prefill: 'Rewrite this section from my brief and answers.' });
   };
 
   // Style presets are a local design switch with no AI call, so they are free.
@@ -5883,7 +5885,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           </div>
         </div>
         
-<div className="flex-1 min-w-0 flex flex-col relative">
+<div className="flex-1 min-w-0 flex flex-col relative transition-[padding] duration-300" style={pageChatDock && typeof window !== 'undefined' && window.innerWidth >= 1280 ? { paddingRight: pageChatDock } : undefined}>
         {showWorkNudge && (
           <WorkNudgeBanner
             pageKey={String(pageData?.id || consultation?.id || 'draft')}
@@ -6101,6 +6103,7 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
           titleFor={sectionTitleFor}
           focus={pageChatFocus}
           onApplyOperations={handleApplyPageChat}
+          onDockWidth={setPageChatDock}
         />
       )}
 
