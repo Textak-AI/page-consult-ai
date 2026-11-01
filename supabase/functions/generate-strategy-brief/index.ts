@@ -10,6 +10,7 @@ import { guardCopyClaims } from '../_shared/copyClaims.ts';
 import { BUYER_OBJECTION_RULES, consultationObjections, applyAnsweredObjections } from '../_shared/buyerObjections.ts';
 import { pinStatedCopy, siteCopyPromptBlock } from '../_shared/siteExtraction.ts';
 import { withCharge } from '../_shared/planLimits.ts';
+import { parseMessagingChoices, messagingChoicesPrompt } from '../_shared/messagingChoices.ts';
 
 const handle = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -41,7 +42,7 @@ const handle = async (req: Request): Promise<Response> => {
       const stored = consultation.strategy_brief;
       const structured = stored?.structured ?? stored;
       if (!structured || typeof structured !== 'object') return new Response(JSON.stringify({ error: 'Structured brief required' }), { status: 422, headers: corsHeaders });
-      const input = { ...(consultation.extracted_intelligence || {}), ...(page?.consultation_data || {}), challenge: consultation.challenge, unique_value: consultation.unique_value, offer: consultation.offer, primary_cta: consultation.primary_cta, secondary_cta: consultation.secondary_cta, credentials: consultation.credentials, client_count: consultation.client_count, case_study_highlight: consultation.case_study_highlight };
+      const input = { ...(consultation.extracted_intelligence || {}), ...(page?.consultation_data || {}), challenge: consultation.challenge, unique_value: consultation.unique_value, offer: consultation.offer, primary_cta: consultation.primary_cta, secondary_cta: consultation.secondary_cta, credentials: consultation.credentials, client_count: consultation.client_count, case_study_highlight: consultation.case_study_highlight, messagingChoices: structured.messagingChoices };
       const communicationStrategy = computeCommunicationStrategy(input, structured);
       const flags = auditCommunicationStrategy(communicationStrategy, input);
       logRegisterViolations('communication-strategy', communicationStrategy);
@@ -57,6 +58,8 @@ const handle = async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ success: true, communicationStrategy, flags }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
     const { consultationData } = body;
+    // Six choices scored from the owner's answers (deterministic, client-side); labels only, validated here.
+    const messagingChoices = parseMessagingChoices(body.messagingChoices);
     
     console.log('[generate-strategy-brief] Received consultationData:', JSON.stringify(consultationData, null, 2));
     console.log('[generate-strategy-brief] Generating brief for:', consultationData.businessName || 'Unknown business');
@@ -232,10 +235,13 @@ Output the brief in clean markdown format with a STRUCTURED JSON block at the en
     });
 
     const campaignContextPrompt = buildCampaignContextPrompt(consultationData);
+    const choicesPrompt = messagingChoicesPrompt(messagingChoices);
     
     const userPrompt = `Create a strategy brief for this landing page project:
 
 ${campaignContextPrompt}
+
+${choicesPrompt}
 
 ## Client Information
 - Business Name: ${consultationData.businessName || 'Not specified'}
@@ -456,7 +462,9 @@ Be specific. No generic advice. Everything should tie back to the actual consult
       pinStatedCopy(structuredBrief, consultationData);
       structuredBrief = guardCopyClaims(structuredBrief, consultationData, 'brief-guard');
       applyAnsweredObjections(structuredBrief, consultationData);
-      structuredBrief.communicationStrategy = computeCommunicationStrategy(consultationData, structuredBrief);
+      // The brief records the choices it was written to, so the page and its strategy trace use the same ones.
+      if (messagingChoices) structuredBrief.messagingChoices = messagingChoices;
+      structuredBrief.communicationStrategy = computeCommunicationStrategy({ ...consultationData, messagingChoices }, structuredBrief);
       auditCommunicationStrategy(structuredBrief.communicationStrategy, consultationData);
       logRegisterViolations('communication-strategy', structuredBrief.communicationStrategy);
       // Keep recovery-from-markdown paths identical to the structured response.

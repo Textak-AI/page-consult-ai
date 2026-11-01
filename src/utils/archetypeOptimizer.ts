@@ -377,3 +377,31 @@ These six constraints are MANDATORY. Follow them exactly.
      : "Named testimonials, case studies with quotes, client stories."}
 `.trim();
 }
+
+/** One mapping from wizard answers to the optimizer's profile, so the wizard (before the brief), the review page and the editor score the same words. */
+export function profileFromConsultation(data: Record<string, any> | null | undefined): IntelProfile {
+  const d = data || {};
+  return {
+    industry: d.industry || d.industryCategory,
+    audience: d.idealClient,
+    pricePoint: parsePricePoint(d.investmentRange),
+    painPoints: d.clientFrustration,
+    tone: d.tone,
+    valueProp: d.mainOffer,
+    edge: d.uniqueStrength,
+  };
+}
+
+/** The labels the brief writer receives (see supabase/functions/_shared/messagingChoices.ts). */
+export function messagingChoicesFrom(arch: MessagingArchitecture) {
+  return {
+    archetype: arch.archetype,
+    evidence: arch.evidence || 'thin',
+    headlineFocus: arch.headlineFocus,
+    proofStyle: arch.proofStyle,
+    commitmentAsk: arch.commitmentAsk,
+    voiceRegister: arch.voiceRegister,
+    urgencySignal: arch.urgencySignal,
+    socialProofType: arch.socialProofType,
+  };
+}

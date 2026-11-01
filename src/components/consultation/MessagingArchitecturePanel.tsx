@@ -289,7 +289,7 @@ export function MessagingArchitecturePanel({ messagingArchitecture, detectedSign
 
       {/* Footer Note */}
       <p className="text-[11px] text-slate-600 italic text-center px-4">
-        These six choices come from a fixed scoring of the words in your answers, set before the page is written. The page copy follows them; it does not make them.
+        These six choices come from a fixed scoring of the words in your answers, set before your brief is written. The brief and page copy are written to them: they change emphasis, order and voice, never your facts.
       </p>
     </motion.div>
   );

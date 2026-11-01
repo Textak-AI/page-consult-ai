@@ -70,7 +70,9 @@ test('page-build loader only names work that happens', () => {
   const s = src('src/components/editor/UnifiedGenerationFlow.tsx');
   expect(s).not.toMatch(/Industry intelligence loaded|Applying trust signals|Calibrating voice/);
   expect(existsSync(new URL('../src/components/editor/AIWorkingLoader.tsx', import.meta.url))).toBe(false);
-  expect(src('src/pages/Generate.tsx')).toMatch(/pricePoint: parsePricePoint\(/);
+  // Price ranges are parsed in the one shared profile mapping the wizard, review page and editor all use.
+  expect(src('src/utils/archetypeOptimizer.ts')).toMatch(/pricePoint: parsePricePoint\(/);
+  expect(src('src/pages/Generate.tsx')).toMatch(/profileFromConsultation\(/);
 });
 
 test('pricing makes no scarcity or discount claims; agency comparison removed', () => {

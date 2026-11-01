@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 import { StrategicConsultation, StrategyBriefReview, ConsultationIntro, shouldShowIntro, type ConsultationData } from "@/components/consultation";
-import { optimizeFromProfile, parsePricePoint, type IntelProfile, type OptimizationResult } from '@/utils/archetypeOptimizer';
+import { optimizeFromProfile, profileFromConsultation, type OptimizationResult } from '@/utils/archetypeOptimizer';
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DevToolbar, useDevMode } from "@/components/dev/DevToolbar";
@@ -475,16 +475,7 @@ export default function NewConsultation() {
 
     // Run Archetype Optimizer (SDI Layer 1.5)
     try {
-      const intelProfile: IntelProfile = {
-        industry: data.industry || data.industryCategory,
-        audience: data.idealClient,
-        pricePoint: parsePricePoint(data.investmentRange),
-        painPoints: data.clientFrustration,
-        tone: (data as any).tone,
-        valueProp: data.mainOffer,
-        edge: data.uniqueStrength,
-      };
-      const optimization = optimizeFromProfile(intelProfile);
+      const optimization = optimizeFromProfile(profileFromConsultation(data));
       setOptimizationResult(optimization);
       console.log('🎯 [NewConsultation] Archetype optimizer ran:', optimization.primary.archetype);
     } catch (err) {

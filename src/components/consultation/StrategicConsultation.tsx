@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette, FileText, TrendingUp, UserCheck, Rocket, Calendar, Gift, Share2, Check, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { optimizeFromProfile, profileFromConsultation, messagingChoicesFrom } from '@/utils/archetypeOptimizer';
 import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
 import { PageBuildCost } from '@/components/usage/PageBuildCost';
 import { announceUsageChanged } from '@/hooks/useAIActions';
@@ -1107,6 +1108,8 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
         supabase.functions.invoke('generate-strategy-brief', {
           body: { 
             consultationData: data,
+            // Scored from the owner's answers before the brief, so the brief is written to them.
+            messagingChoices: (() => { try { return messagingChoicesFrom(optimizeFromProfile(profileFromConsultation(data)).primary); } catch { return null; } })(),
             industryClassification: classification // Pass classification to brief generation
           }
         }),

@@ -1,5 +1,6 @@
 import { fontIdFromStack, HERO_LAYOUTS, type PageTheme } from '@/lib/editor/pageTheme';
 import { statedStat } from '@/lib/statedStat';
+import { buildStrategyTrace } from '@/lib/strategyTrace';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 import { consultationObjections } from '../../supabase/functions/_shared/buyerObjections';
 import { isLimitReached, LIMIT_REACHED_MESSAGE } from '@/lib/limitReached';
@@ -14,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Check, Sparkles, Wand2, Undo2, Redo2, Brain, Rocket, Zap, AlertTriangle, RefreshCw } from "lucide-react";
 import { calculateStrategicLevel } from "@/lib/strategicLevelCalculator";
-import { parsePricePoint, optimizeFromProfile, type IntelProfile } from '@/utils/archetypeOptimizer';
+import { parsePricePoint, optimizeFromProfile, profileFromConsultation, type IntelProfile } from '@/utils/archetypeOptimizer';
 import type { ExtractedIntelligence, ConsultationStatus } from "@/types/consultationReadiness";
 import { PersonaInsightsPanel } from "@/components/editor/PersonaInsightsPanel";
 import { SectionManager } from "@/components/editor/SectionManager";
@@ -1995,6 +1996,20 @@ function GenerateContent() {
         insertData.strategy_brief = strategicData.strategyBrief || null;
         console.log("📋 Including strategic consultation data in page record");
       }
+
+      // How this page came to be: answers -> choices -> decisions -> sections, saved with the page.
+      try {
+        insertData.consultation_data.strategyTrace = buildStrategyTrace({
+          answers: insertData.consultation_data,
+          brief: strategicData?.structuredBrief || consultationData.structuredBrief || null,
+          sections: generatedSections,
+          fallbackChoices: messagingArchitecture?.primary || null,
+          brandColor: strategicData?.brandSettings?.primaryColor || consultationData.primaryColor || null,
+        });
+        console.log('🧭 [StrategyTrace] Saved with page:', insertData.consultation_data.strategyTrace.sections.length, 'sections');
+      } catch (e) {
+        console.warn('🧭 [StrategyTrace] Not built (non-blocking):', e);
+      }
       
       // Compute and persist SDI decisions (colorMode, cardStyle, etc.)
       // This ensures multi-user isolation - each page has its own design intelligence
@@ -2384,7 +2399,8 @@ function GenerateContent() {
           // CRITICAL: Pass stored AI classification for accurate industry styling
           industryClassification: storedClassification,
           // SDI Layer 1.5: Messaging architecture for section reordering/suppression
-          messagingArchitecture: messagingArchitecture?.primary || null,
+          // The choices the brief was written to win, so page and brief agree.
+          messagingArchitecture: (structuredBrief as any)?.messagingChoices || messagingArchitecture?.primary || null,
           arcSource: { challenge: consultationData.challenge, offer: consultationData.offer, uniqueValue: consultationData.unique_value || consultationData.uniqueValue },
           // The user's stated input: provenance guards (process, commitments,
           // close headline) check against it. Omitted, every guard saw {} and
@@ -2445,15 +2461,7 @@ function GenerateContent() {
         let optimizationPrimary: any = null;
         try {
           const sc = strategicData?.consultationData || {};
-          const intelProfile: IntelProfile = {
-            industry: sc?.industry || sc?.industryCategory || consultationData.industry,
-            audience: sc?.idealClient,
-            pricePoint: parsePricePoint(sc?.investmentRange),
-            painPoints: sc?.clientFrustration,
-            tone: sc?.tone,
-            valueProp: sc?.mainOffer,
-            edge: sc?.uniqueStrength,
-          };
+          const intelProfile: IntelProfile = profileFromConsultation({ ...sc, industry: sc?.industry || sc?.industryCategory || consultationData.industry });
           const optimizationResult = optimizeFromProfile(intelProfile);
           optimizationConstraints = optimizationResult.generationConstraints;
           optimizationPrimary = optimizationResult.primary;
@@ -5887,6 +5895,8 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
 
       {/* Strategy Brief Panel - Fixed to right edge */}
       <StrategyBriefPanel
+        strategyTrace={(pageData?.consultation_data as any)?.strategyTrace || null}
+        sections={sections}
         communicationStrategy={strategicData?.structuredBrief?.communicationStrategy || (pageData?.consultation_data as any)?.communicationStrategy || (consultation as any)?.structuredBrief?.communicationStrategy}
         brief={strategicData?.strategyBrief || (pageData?.strategy_brief as string | null) || null}
         businessName={strategicData?.consultationData?.businessName || (pageData?.consultation_data as any)?.businessName}

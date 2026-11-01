@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { AISeoData } from '@/services/intelligence/types';
 import { CommunicationStrategyPanel } from '@/components/strategy-brief/CommunicationStrategyPanel';
+import { StrategyTracePanel } from '@/components/strategy-brief/StrategyTracePanel';
+import type { StrategyTrace } from '@/lib/strategyTrace';
 import { briefObjectValue } from '@/lib/briefEnvelope';
 import { toBriefEditorData, fromBriefEditorData } from '@/lib/briefEditorData';
 
@@ -25,6 +27,10 @@ interface Props {
   onDataUpdated?: (data: any) => void;
   onRegenerate?: (data: any) => Promise<void>;
   onOpenChange?: (isOpen: boolean) => void;
+  /** Stored with the page at build time (consultation_data.strategyTrace). */
+  strategyTrace?: StrategyTrace | null;
+  /** Current sections, so edited ones are marked. */
+  sections?: Array<{ type: string; content?: unknown }>;
 }
 
 export function StrategyBriefPanel({ 
@@ -37,7 +43,9 @@ export function StrategyBriefPanel({
   aiSeoData,
   onDataUpdated,
   onRegenerate,
-  onOpenChange
+  onOpenChange,
+  strategyTrace,
+  sections,
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -174,6 +182,7 @@ export function StrategyBriefPanel({
 
               {/* Brief Content */}
               <div className="flex-1 overflow-auto p-6 space-y-6">
+                <StrategyTracePanel trace={strategyTrace || consultationData?.strategyTrace || null} sections={sections} />
                 <CommunicationStrategyPanel strategy={communicationStrategy || consultationData?.communicationStrategy || briefObjectValue(consultationData?.strategy_brief)?.communicationStrategy} />
                 {/* Main Strategy Brief */}
                 <div className="prose prose-invert prose-sm max-w-none">

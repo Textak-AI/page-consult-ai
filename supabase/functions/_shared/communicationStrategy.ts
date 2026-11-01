@@ -45,8 +45,10 @@ export function computeCommunicationStrategy(input: Record<string, any>, brief: 
   const mechanism = text(input.processName) || text(input.mechanismName) || (text(input.processDescription) ? text(input.mainOffer) || text(input.offer) : null);
   provenance.mechanismName = mechanism ? ['processName', 'mechanismName', 'mainOffer', 'offer'].filter(k => text(input[k]) === mechanism) : [];
   const awareness = text(input.awarenessLevel) || text(input.awareness_level);
-  const arcEmphasis = awareness && /solution|product|most.aware/i.test(awareness) ? 'outcome-led' : 'problem-led';
-  provenance.arcEmphasis = awareness ? ['awarenessLevel', 'awareness_level'] : ['default:problem-led (awareness not supplied)'];
+  // Stated awareness wins; otherwise the scored messaging choice; otherwise problem first.
+  const choiceFocus = input.messagingChoices?.headlineFocus === 'outcome-led' || input.messagingChoices?.headlineFocus === 'problem-led' ? input.messagingChoices.headlineFocus : null;
+  const arcEmphasis = awareness ? (/solution|product|most.aware/i.test(awareness) ? 'outcome-led' : 'problem-led') : choiceFocus || 'problem-led';
+  provenance.arcEmphasis = awareness ? ['awarenessLevel', 'awareness_level'] : choiceFocus ? ['messagingChoices.headlineFocus'] : ['default:problem-led (awareness not supplied)'];
   const archetype = text(input.archetype) || text(brief.layoutIntelligence?.archetype);
   const visualIntensity = archetype && /bold|disrupt|creative/i.test(archetype) ? 'expressive' : archetype && /executive|trust|professional/i.test(archetype) ? 'restrained' : 'balanced';
   provenance.visualIntensity = archetype ? ['archetype / brief.layoutIntelligence.archetype'] : ['default:balanced (archetype not supplied)'];

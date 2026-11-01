@@ -20,7 +20,7 @@ export function inputCopyText(input: unknown): string {
   if (typeof input === 'string') return input;
   if (Array.isArray(input)) return input.map(inputCopyText).join(' ');
   if (!input || typeof input !== 'object') return '';
-  return Object.entries(input).filter(([key]) => !/brief|communicationStrategy|currentContent|sections|marketResearch|intelligenceContext|url|color|font|image|(^|_)(id|score|timestamp|created_at|updated_at)($|_)/i.test(key)).map(([,v]) => typeof v === 'number' ? String(v) : inputCopyText(v)).join(' ');
+  return Object.entries(input).filter(([key]) => !/brief|communicationStrategy|strategyTrace|messagingChoices|currentContent|sections|marketResearch|intelligenceContext|url|color|font|image|(^|_)(id|score|timestamp|created_at|updated_at)($|_)/i.test(key)).map(([,v]) => typeof v === 'number' ? String(v) : inputCopyText(v)).join(' ');
 }
 /** Promises the business must make itself: never generated, only quoted. */
 const COMMITMENT = /\b(guarantee[ds]?|guaranteeing|money[- ]?back|risk[- ]free|no[- ]risk|warrant(?:y|ies|ied)|or (?:it'?s|your money) free)\b/i;
