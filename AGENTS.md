@@ -108,3 +108,4 @@
 - `src/lib/sectionUnlocks.ts` is the one list of sections that need the owner's facts: How It Works (a stated process), Results (a real quote >10 chars, SocialProofSection's gate), FAQ (≥2 answered buyer questions, sectionMapper's gate). Keep it in step with those gates.
 - Wizard: on "Generate Strategy", if anything is missing, `SectionUnlockReview` shows once with one question per section; "Generate without them" is always available.
 - Editor: SectionManager lists the same sections under "Waiting on your answers"; clicking opens Page Chat with `UNLOCK_PREFILLS` typed in for the owner to finish.
+- SEO default text: `seoFallback` (src/lib/seoFallback.ts) builds title (offer for audience | business, ≤60) and description (brief one-liner + offer includes, whole sentences, ≤160) from stated answers only; SEO panel placeholder and Publish dialog default both use it, falling back to page title / hero copy.

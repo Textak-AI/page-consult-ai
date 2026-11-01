@@ -1,3 +1,4 @@
+import { seoFallback } from '@/lib/seoFallback';
 import { externalizeImages } from '@/lib/editor/externalizeImages';
 import { announcePublishChanged } from './PublishToolbar';
 import { useState, useEffect } from "react";
@@ -75,8 +76,10 @@ export function PublishModal({
         const heroSection = sections?.find((s: any) => s.type === 'hero' && s.visible);
         const companyName = brandSettings?.companyName || pageData?.title || "";
         setSlug(generateCleanSlug(companyName));
-        setPageTitle(pageData?.meta_title || heroSection?.content?.headline || pageData?.title || "");
-        setMetaDescription(pageData?.meta_description || heroSection?.content?.subheadline || "");
+        // Same default the SEO panel shows: the owner's stated offer, audience and one-liner.
+        const seo = seoFallback(pageData?.consultation_data, { title: heroSection?.content?.headline || pageData?.title, description: heroSection?.content?.subheadline });
+        setPageTitle(pageData?.meta_title || seo.title || "");
+        setMetaDescription(pageData?.meta_description || seo.description || "");
         setPublishState('idle');
         setExistingPublish(null);
       }

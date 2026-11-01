@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Search } from "lucide-react";
+import { seoFallback } from "@/lib/seoFallback";
 
 interface SeoPanelProps {
   open: boolean;
@@ -29,8 +30,10 @@ export function SeoPanel({ open, onOpenChange, pageData, sections, onSaved }: Se
 
   // Real fallbacks — the page's own title and hero copy, never synthesized
   const heroSection = sections?.find((s: any) => s.type === 'hero' && s.visible !== false);
-  const fallbackTitle = pageData?.title || "";
-  const fallbackDescription = heroSection?.content?.subheadline || "";
+  // Built from the owner's stated offer, audience and the brief's one-liner (seoFallback).
+  const seo = seoFallback(pageData?.consultation_data, { title: pageData?.title, description: heroSection?.content?.subheadline });
+  const fallbackTitle = seo.title;
+  const fallbackDescription = seo.description;
 
   useEffect(() => {
     if (!open || !pageData) return;
