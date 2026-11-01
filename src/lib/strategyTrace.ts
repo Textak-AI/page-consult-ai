@@ -11,6 +11,7 @@
 import { buyerTypeLabel } from '@/lib/buyerTypeLabels';
 import { missingSections } from '@/lib/sectionUnlocks';
 import { truncateAtBoundary } from '@/lib/text/truncate';
+import { hiddenReason } from '@/lib/editor/emptySections';
 import { CHOICE_LABELS, parseMessagingChoices, type MessagingChoices } from '../../supabase/functions/_shared/messagingChoices';
 
 export const TRACE_VERSION = 1;
@@ -98,26 +99,37 @@ export function copyPrint(content: unknown): string {
 
 const answerText = (v: unknown): string | null => typeof v === 'string' && v.trim().length > 2 ? v.trim() : null;
 
-/** Answers whose content words clearly show up in this copy: at least 3 shared and 35% of the answer, or a verbatim match. */
+const tokens = (t: string) => (t.toLowerCase().replace(/[’']/g, "'").match(/[a-z0-9$%']+/g) || []);
+/** Every run of n consecutive words in the text. */
+const shingles = (t: string, n: number) => {
+  const tk = tokens(t);
+  const out = new Set<string>();
+  for (let i = 0; i + n <= tk.length; i++) out.add(tk.slice(i, i + n).join(' '));
+  return out;
+};
+
+/**
+ * Answers this copy demonstrably reuses: the whole answer appears, or a run of
+ * four of the owner's words appears unchanged. Shared topic words alone
+ * ("bank", "ledger") are not evidence, so short or generic overlaps don't count.
+ */
 export function sourcesFor(copy: string[], answers: Record<string, any>): TraceSource[] {
-  const joined = copy.join(' ');
-  const copyWords = words(joined);
-  const lowered = joined.toLowerCase();
+  const joined = copy.join(' \n ');
+  const copyRuns = shingles(joined, 4);
+  const lowered = tokens(joined).join(' ');
   const out: TraceSource[] = [];
   for (const [field, label] of ANSWER_FIELDS) {
     const answer = answerText(answers[field]);
     if (!answer) continue;
-    const aw = [...words(answer)];
-    const shared = aw.filter((w) => copyWords.has(w)).length;
-    const verbatim = answer.length >= 8 && lowered.includes(answer.toLowerCase());
-    if (verbatim || (aw.length > 0 && shared >= Math.min(3, aw.length) && shared / aw.length >= 0.35)) {
-      out.push({ field, label, quote: truncateAtBoundary(answer, 180) });
-    }
+    const whole = tokens(answer).join(' ');
+    const verbatim = whole.length >= 6 && lowered.includes(whole);
+    const reused = [...shingles(answer, 4)].some((run) => copyRuns.has(run));
+    if (verbatim || reused) out.push({ field, label, quote: truncateAtBoundary(answer, 180) });
   }
   const objections = Array.isArray(answers.objections) ? answers.objections : [];
   objections.forEach((o: any, i: number) => {
     const a = answerText(o?.answer);
-    if (a && lowered.includes(a.toLowerCase().slice(0, 40))) out.push({ field: `objections.${i}`, label: `Your answer: ${o.question}`, quote: truncateAtBoundary(a, 180) });
+    if (a && (lowered.includes(tokens(a).join(' ')) || [...shingles(a, 4)].some((run) => copyRuns.has(run)))) out.push({ field: `objections.${i}`, label: `Your answer: ${o.question}`, quote: truncateAtBoundary(a, 180) });
   });
   return out;
 }
@@ -165,14 +177,15 @@ export function buildStrategyTrace(input: {
   const proofPlan: any[] = Array.isArray(strategy?.proofPlan) ? strategy.proofPlan : [];
   const stated = String(answers.ctaText || answers.primaryCTA || answers.primary_cta || '').trim().toLowerCase();
 
-  const sections: TraceSection[] = (input.sections || []).map((s, index) => {
+  // Sections that render nothing (no real proof yet) are listed under "waiting", not credited here.
+  const sections: TraceSection[] = (input.sections || []).flatMap((s, index) => hiddenReason(s) ? [] : [s].map(() => {
     const content = s.content || {};
     const copy = sectionCopy(content);
     const decisions: string[] = [];
     if (index === 0 && opening) decisions.push(opening.label);
     if (stated && copy.some((c) => c.trim().toLowerCase() === stated)) decisions.push('The button uses your words exactly.');
     for (const p of proofPlan) {
-      if (p?.sectionType === s.type && typeof p.evidence === 'string') decisions.push(`Your words back up: “${truncateAtBoundary(String(p.claim || ''), 120)}”`);
+      if (p?.sectionType === s.type && s.type !== 'faq' && typeof p.evidence === 'string') decisions.push(`Your words back up: “${truncateAtBoundary(String(p.claim || ''), 120)}”`);
     }
     if (s.type === 'faq') decisions.push('Only questions you answered appear here, with your answers word for word.');
     if (s.type === 'how-it-works') decisions.push('The steps are the process you described.');
@@ -188,7 +201,7 @@ export function buildStrategyTrace(input: {
       },
       copyPrint: copyPrint(content),
     };
-  });
+  }));
 
   const waiting = missingSections(answers).map((u) => ({ section: u.section, name: SECTION_NAMES[u.section] || u.section, needs: u.question }));
 

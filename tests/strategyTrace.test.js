@@ -60,6 +60,13 @@ test('R8: the view shows nothing that is not a fixed label or in the trace', () 
   expect(renderToStaticMarkup(React.createElement(StrategyTracePanel, { trace: null }))).toContain(TRACE_UI.none);
 });
 
+test('hidden sections are not credited, and topic words alone are not a source', () => {
+  const t = buildStrategyTrace({ answers, brief, sections: [...sections, { type: 'social-proof', content: { testimonial: { quote: '' } } }] });
+  expect(t.sections.map((s) => s.type)).not.toContain('social-proof');
+  expect(t.waiting.map((w) => w.section)).toContain('social-proof');
+  expect(sourcesFor(['Furnace prices for homeowners in Akron.'], answers)).toEqual([]);
+});
+
 test('the build saves the trace with the page, and it never counts as claim evidence', async () => {
   const { readFileSync } = await import('fs');
   expect(readFileSync('src/pages/Generate.tsx', 'utf8')).toMatch(/strategyTrace = buildStrategyTrace\(/);
