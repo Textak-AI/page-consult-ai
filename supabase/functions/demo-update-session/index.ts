@@ -1,4 +1,4 @@
-import { z } from "npm:zod@3";
+import { z } from "npm:zod@4";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 import { sessionClient, sessionTokenSchema, jsonRecord, lookupSession, authenticatedUser, readSessionBody } from "../_shared/sessionAccess.ts";
 

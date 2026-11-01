@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { z } from "npm:zod@3";
+import { z } from "npm:zod@4";
 
 export const sessionTokenSchema = z.string().regex(/^(?:[0-9a-f]{64}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
 export const jsonRecord = z.record(z.unknown());
