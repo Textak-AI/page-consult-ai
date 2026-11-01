@@ -134,3 +134,6 @@
 - Three placements, same shape: Video section (type `video`, content.video, upload-only so Page Chat can't add it; hidden on published pages until a video exists; `hiddenReason` says so), a video under any section (content.attachedVideo, rendered by AttachedVideo on the section's own surface in both renderers; toolbar Video button), and hero background (hero content.backgroundVideo, uploads only, muted loop under the scrim in centered-type, in the photo panel in split-photo; reduced motion / data saver show the poster; failure falls back to the photo).
 - Lower third (name, title/business) is the owner's own words, drawn over uploaded videos (never burned in) with the brand colour bar, brand-deep glass and the owner's heading font; shows before play and for the first 6 s.
 - Page Chat: video keys are in NON_COPY_KEY (never sent, never merged); EDITOR_CONTROLS lists the video controls.
+
+## Deploy check gotcha (2026-11-01)
+- Lovable hosting pins each browser to a deployment with a `__dpl` cookie. A browser pinned to an old deployment keeps getting the old index-[hash].js (and 404s for new assets) after a publish, while everyone else gets the new one. To check what's really live, fetch with `credentials: 'omit'`; to unstick a browser, delete the `__dpl` cookie for pageconsult.app. Republishing or reconnecting the domain does not clear it.
