@@ -87,9 +87,10 @@ export async function getNextStep(consultationId: string): Promise<FlowDecision>
           reasoning: `Signed up with sufficient intelligence (${score}), showing huddle`
         };
       }
-      // If low intelligence, need more consultation
+      // If low intelligence, need more consultation: the form wizard, which loads
+      // the demo answers from ?consultationId (one tested path; the chat wizard is retired).
       return {
-        route: '/wizard/chat',
+        route: '/wizard/form',
         reasoning: `Intelligence score ${score} too low, needs consultation`
       };
 

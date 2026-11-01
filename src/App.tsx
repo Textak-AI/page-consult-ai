@@ -21,7 +21,6 @@ import { IntelligenceProvider } from "@/contexts/IntelligenceContext";
 
 import { DevFloatingButton } from "@/components/dev";
 import HomePage from "./pages/HomePage";
-import Wizard from "./pages/Wizard";
 import WizardReview from "./pages/WizardReview";
 import Signup from "./pages/Signup";
 import Generate from "./pages/Generate";
@@ -128,7 +127,8 @@ const App = () => {
                 <Route path="/wizard" element={<WizardChoice />} />
                 
                 {/* Wizard Paths */}
-                <Route path="/wizard/chat" element={<Wizard />} />
+                {/* Chat wizard retired from every path (Nov 1); code kept in pages/Wizard.tsx. */}
+                <Route path="/wizard/chat" element={<Navigate to="/wizard" replace />} />
                 <Route path="/wizard/form" element={<NewConsultation key={Date.now()} />} />
                 <Route path="/wizard/review" element={<WizardReview />} />
                 

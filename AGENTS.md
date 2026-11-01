@@ -137,3 +137,4 @@
 
 ## Deploy check gotcha (2026-11-01)
 - Lovable hosting pins each browser to a deployment with a `__dpl` cookie. A browser pinned to an old deployment keeps getting the old index-[hash].js (and 404s for new assets) after a publish, while everyone else gets the new one. To check what's really live, fetch with `credentials: 'omit'`; to unstick a browser, delete the `__dpl` cookie for pageconsult.app. Republishing or reconnecting the domain does not clear it.
+- One intake path (Nov 1): the chat wizard (/wizard/chat, pages/Wizard.tsx) is retired from routing. flowEngine's low-score demo signup goes to /wizard/form?consultationId=…, which loads the demo answers as prefill (source 'demo_consultation'); /wizard/chat redirects to /wizard. A conversation step after the form (depth pass) is planned after first paid customer.

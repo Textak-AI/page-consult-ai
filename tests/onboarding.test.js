@@ -60,3 +60,11 @@ test('how-it-works copy makes no promises the product does not keep', () => {
   expect(text).not.toMatch(/minutes|guarantee|only|instantly|AI-powered|convert/i);
   expect(text).toMatch(/Strategy Brief/);
 });
+
+test('one intake path: nothing routes to the retired chat wizard', () => {
+  expect(src('src/services/flowEngine.ts')).not.toMatch(/route: '\/wizard\/chat'/);
+  expect(src('src/services/flowEngine.ts')).toMatch(/route: '\/wizard\/form'/);
+  expect(src('src/App.tsx')).toMatch(/path="\/wizard\/chat" element=\{<Navigate to="\/wizard" replace \/>\}/);
+  // The form wizard picks up the demo's answers from ?consultationId.
+  expect(src('src/pages/NewConsultation.tsx')).toMatch(/source: 'demo_consultation'/);
+});
