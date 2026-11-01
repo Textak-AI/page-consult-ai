@@ -1115,7 +1115,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
             {/* Visual element - 5 columns: Brand Intelligence Card */}
             <div className="lg:col-span-5 relative flex items-center justify-center h-full">
               <HeroVisualComposition
-                industry={content.industryVariant || industryVariant || 'Strategic Intelligence'}
+                industry={content.industryVariant || industryVariant || ''}
                 industryIcon={getHeroIcon(industryVariant).icon}
                 primaryColor={content.primaryColor || '#14b8a6'}
                 companyName={(content as any).companyName || (content as any).businessName || 'Page Analysis'}

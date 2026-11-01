@@ -31,10 +31,10 @@ function inferCounterStrategy(objection: string): string {
   if (lower.includes('competitor') || lower.includes('alternative') || lower.includes('already') || lower.includes('existing'))
     return 'Differentiate on unique strengths. Show switching costs are lower than perceived.';
   if (lower.includes('complex') || lower.includes('difficult') || lower.includes('integration'))
-    return 'Demonstrate ease of use with a guided walkthrough or quick-start guarantee.';
+    return 'Demonstrate ease of use with a guided walkthrough or a quick-start plan.';
   if (lower.includes('security') || lower.includes('compliance') || lower.includes('data'))
     return 'Lead with certifications, compliance standards, and security architecture transparency.';
-  return 'Counter with specific proof points, client outcomes, and risk reversal guarantees.';
+  return 'Counter with specific proof points and client outcomes, plus any risk reversal you actually offer.';
 }
 
 // Infer what proof is needed to overcome an objection
@@ -45,7 +45,7 @@ function inferProofNeeded(objection: string): string {
   if (lower.includes('trust') || lower.includes('risk') || lower.includes('proven'))
     return 'Client testimonials, case studies, and industry certifications';
   if (lower.includes('time') || lower.includes('busy'))
-    return 'Implementation timeline, quick-start demo, or onboarding guarantee';
+    return 'Implementation timeline, quick-start demo, or onboarding plan';
   if (lower.includes('competitor') || lower.includes('alternative'))
     return 'Feature comparison matrix and migration success stories';
   if (lower.includes('security') || lower.includes('compliance'))
@@ -532,12 +532,12 @@ export default function StrategyDocument() {
             </div>
           </div>
           
+          {strategyData.approachSummary && (
           <div className={`mt-6 ${SECTION_COLORS.contentStrategy.cardBg} border ${SECTION_COLORS.contentStrategy.cardBorder} rounded-lg p-6`}>
             <div className={`text-sm ${SECTION_COLORS.contentStrategy.textMuted} mb-2`}>Strategic Approach</div>
-            <div className="text-gray-300">
-              {strategyData.approachSummary || "Technical authority positioning with measurable ROI proof"}
-            </div>
+            <div className="text-gray-300">{strategyData.approachSummary}</div>
           </div>
+          )}
         </section>
 
         {/* Section 2: How your buyer decides */}
@@ -737,6 +737,8 @@ export default function StrategyDocument() {
             </div>
             
             {/* How much the buyer already knows */}
+            {/* Shown only when the brief set an awareness stage; no default stage or percentage. */}
+            {strategyData.awarenessStage && typeof strategyData.awarenessLevel === 'number' && (
             <div className={`${SECTION_COLORS.buyerReality.cardBg} border ${SECTION_COLORS.buyerReality.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.buyerReality.textMuted} mb-3`}>
                 How much they already know
@@ -745,17 +747,18 @@ export default function StrategyDocument() {
                 <div className="flex-1 bg-gray-800 h-3 rounded-full relative overflow-hidden">
                   <div 
                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full transition-all"
-                    style={{ width: `${strategyData.awarenessLevel || 60}%` }}
+                    style={{ width: `${strategyData.awarenessLevel}%` }}
                   />
                 </div>
                 <div className={`text-sm ${SECTION_COLORS.buyerReality.textMuted}`}>
-                  {strategyData.awarenessStage || "Solution Aware"}
+                  {strategyData.awarenessStage}
                 </div>
               </div>
               <div className={`mt-3 text-sm ${SECTION_COLORS.buyerReality.textMuted}`}>
-                {strategyData.awarenessInsight || "Buyers know they need a solution, but need proof your approach works"}
+                {strategyData.awarenessInsight}
               </div>
             </div>
+            )}
           </div>
         </section>
 
@@ -771,46 +774,27 @@ export default function StrategyDocument() {
             <div className={`${SECTION_COLORS.contentStrategy.cardBg} border ${SECTION_COLORS.contentStrategy.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.contentStrategy.textMuted} mb-3`}>Recommended Page Structure</h3>
               <div className={`${SECTION_COLORS.contentStrategy.text} mb-4`}>
-                {strategyData.pageStructure || "Offer-first approach: Lead with results, then prove credibility"}
+                {typeof strategyData.pageStructure === 'string' && strategyData.pageStructure ? strategyData.pageStructure : 'Set from your answers when the page is built.'}
               </div>
               <div className={`text-sm ${SECTION_COLORS.contentStrategy.textMuted}`}>
-                Why: {strategyData.structureReasoning || "Solution-aware buyers need immediate value clarity"}
+                {strategyData.structureReasoning ? `Why: ${strategyData.structureReasoning}` : ''}
               </div>
             </div>
             
-            {/* Sections in order */}
+            {/* Sections in order: the brief's own page structure, never a fixed list. */}
+            {Array.isArray(strategyData.pageStructure) && strategyData.pageStructure.length > 0 && (
             <div className={`${SECTION_COLORS.contentStrategy.cardBg} border ${SECTION_COLORS.contentStrategy.cardBorder} rounded-lg p-6`}>
               <h3 className={`font-semibold text-lg ${SECTION_COLORS.contentStrategy.textMuted} mb-4`}>Sections, in order</h3>
-              <div className="space-y-4">
-                {[
-                  { section: "Hero", purpose: "Capture attention with measurable promise", priority: "Critical" },
-                  { section: "Stakes Amplify", purpose: "Quantify the cost of inaction", priority: "High" },
-                  { section: "Problem/Solution", purpose: "Frame challenge and your unique approach", priority: "High" },
-                  { section: "Social Proof", purpose: "Build credibility through results", priority: "Critical" },
-                  { section: "Features/Benefits", purpose: "Detail how solution delivers", priority: "Medium" },
-                  { section: "Final CTA", purpose: "Remove friction, create urgency", priority: "Critical" }
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-4 p-4 bg-indigo-900/20 border border-indigo-500/10 rounded-lg">
-                    <div className={`mt-1 w-8 h-8 rounded-full ${SECTION_COLORS.contentStrategy.accent} flex items-center justify-center text-sm font-semibold`}>
-                      {idx + 1}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1">
-                        <div className={`font-semibold ${SECTION_COLORS.contentStrategy.text}`}>{item.section}</div>
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          item.priority === 'Critical' ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
-                          item.priority === 'High' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
-                          'bg-gray-500/20 text-gray-300 border border-gray-500/30'
-                        }`}>
-                          {item.priority}
-                        </span>
-                      </div>
-                      <div className={`text-sm ${SECTION_COLORS.contentStrategy.textMuted}`}>{item.purpose}</div>
-                    </div>
-                  </div>
+              <ol className="space-y-2">
+                {(strategyData.pageStructure as unknown[]).filter((x): x is string => typeof x === 'string').map((name, idx) => (
+                  <li key={idx} className="flex items-center gap-4 p-3 bg-indigo-900/20 border border-indigo-500/10 rounded-lg">
+                    <span className={`w-7 h-7 rounded-full ${SECTION_COLORS.contentStrategy.accent} flex items-center justify-center text-sm font-semibold`}>{idx + 1}</span>
+                    <span className={`font-medium ${SECTION_COLORS.contentStrategy.text}`}>{name.replace(/[-_]/g, ' ').replace(/^./, (c) => c.toUpperCase())}</span>
+                  </li>
                 ))}
-              </div>
+              </ol>
             </div>
+            )}
             
             {/* When to show proof */}
             <div className={`${SECTION_COLORS.contentStrategy.cardBg} border ${SECTION_COLORS.contentStrategy.cardBorder} rounded-lg p-6`}>
@@ -963,19 +947,22 @@ export default function StrategyDocument() {
               })()}
             </div>
             
-            {/* Risk Reversal Elements */}
+            {/* Risk reversal: only what the owner said they offer. Never a default trial or guarantee. */}
             <div className={`${SECTION_COLORS.proofCredibility.cardBg} border ${SECTION_COLORS.proofCredibility.cardBorder} rounded-lg p-6`}>
-              <h3 className={`font-semibold text-lg ${SECTION_COLORS.proofCredibility.textMuted} mb-3`}>Risk Reversal Elements</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-3 bg-yellow-900/20 border border-yellow-500/10 rounded-lg">
-                  <div className="font-semibold text-yellow-200 mb-1">✓ Free Trial / POC</div>
-                  <div className={`text-sm ${SECTION_COLORS.proofCredibility.textMuted}`}>Test before commitment</div>
-                </div>
-                <div className="p-3 bg-yellow-900/20 border border-yellow-500/10 rounded-lg">
-                  <div className="font-semibold text-yellow-200 mb-1">✓ Money-Back Guarantee</div>
-                  <div className={`text-sm ${SECTION_COLORS.proofCredibility.textMuted}`}>Zero-risk implementation</div>
-                </div>
-              </div>
+              <h3 className={`font-semibold text-lg ${SECTION_COLORS.proofCredibility.textMuted} mb-3`}>Risk reversal you offer</h3>
+              {(() => {
+                const c: any = consultation || {};
+                const stated = [c.guarantee_offer, ...(Array.isArray(c.risk_reversals) ? c.risk_reversals : [])].filter((x: unknown) => typeof x === 'string' && x.trim());
+                return stated.length ? (
+                  <ul className="space-y-2">
+                    {stated.map((r: string, i: number) => (
+                      <li key={i} className="p-3 bg-yellow-900/20 border border-yellow-500/10 rounded-lg text-yellow-100">✓ {r}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className={`text-sm ${SECTION_COLORS.proofCredibility.textMuted}`}>None stated. The page only shows a trial or guarantee you actually offer.</p>
+                );
+              })()}
             </div>
           </div>
         </section>

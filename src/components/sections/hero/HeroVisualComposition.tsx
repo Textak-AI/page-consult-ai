@@ -61,7 +61,7 @@ export function HeroVisualComposition({
                   isLight ? 'text-gray-400' : 'text-slate-500'
                 }`}
               >
-                {industry || 'Strategic Intelligence'}
+                {industry || ''}
               </div>
               <div
                 className={`text-sm font-semibold ${

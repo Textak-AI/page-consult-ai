@@ -88,3 +88,12 @@ test('framework jargon is gone from the owner screens touched in the plain-vocab
   expect(pdf).not.toMatch(/MESSAGING (ARCHITECTURE|PILLARS)/);
   expect(pdf).not.toMatch(/recommend testing/);
 });
+
+test('Strategy Document shows only stated strategy: no default guarantee, trial, stage or section list', () => {
+  const s = readFileSync(new URL('../src/pages/StrategyDocument.tsx', import.meta.url), 'utf8');
+  expect(s).not.toMatch(/Money-Back Guarantee|Free Trial \/ POC|create urgency|Technical authority positioning|"Solution Aware"|awarenessLevel \|\| 60|Offer-first approach: Lead with results/);
+  expect(s).toMatch(/c\.guarantee_offer/);
+  for (const f of ['src/components/sections/HeroSection.tsx', 'src/components/sections/hero/HeroVisualComposition.tsx']) {
+    expect(readFileSync(new URL('../' + f, import.meta.url), 'utf8')).not.toMatch(/'Strategic Intelligence'/);
+  }
+});
