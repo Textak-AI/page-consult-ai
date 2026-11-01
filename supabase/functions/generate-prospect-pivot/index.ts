@@ -1,7 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { withCharge } from '../_shared/planLimits.ts';
-import { COPY_REGISTER_RULES, logRegisterViolations } from "../_shared/copyRegister.ts";
+import { COPY_REGISTER_RULES, PROVENANCE_RULES, logRegisterViolations, logProvenanceViolations } from "../_shared/copyRegister.ts";
+import { guardCopyClaims } from "../_shared/copyClaims.ts";
+import { pageCopyStrings } from "../_shared/pageChat.ts";
+import { prospectSlug } from "../_shared/prospectSlug.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -92,12 +95,13 @@ const handle = async (req: Request, userId: string): Promise<Response> => {
     }
 
     if (!basePage) {
-      // Last resort - any published page
+      // Last resort (older clients that don't send base_page_id): the most recently updated published page
       const { data: publishedPage } = await supabase
         .from("landing_pages")
         .select("*")
         .eq("user_id", user.id)
         .eq("is_published", true)
+        .order("updated_at", { ascending: false })
         .limit(1);
 
       if (publishedPage && publishedPage.length > 0) {
@@ -123,12 +127,23 @@ const handle = async (req: Request, userId: string): Promise<Response> => {
       heroSection?.content?.subheadline ||
       heroSection?.content?.subhead ||
       "";
+    // The owner's stated button text is never rewritten for a prospect (pinned like on every page).
     const currentCta =
       heroSection?.content?.cta_text ||
       heroSection?.content?.ctaText ||
-      "Learn More";
+      null;
 
-    // Generate with Lovable AI
+    // What the owner has stated: the base page's copy, its consultation answers, their notes and the
+    // prospect's details. Personalized copy may only use facts from here.
+    const ownerInput = {
+      pageCopy: pageCopyStrings(basePage.sections || []),
+      consultation: basePage.consultation_data || {},
+      notes: context,
+      meeting: meeting_context || "",
+      prospect: { first_name, last_name, company, job_title, industry },
+    };
+
+    // Generate with Anthropic
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) {
       throw new Error("ANTHROPIC_API_KEY not configured");
@@ -171,7 +186,7 @@ const handle = async (req: Request, userId: string): Promise<Response> => {
 CURRENT PAGE:
 - Headline: ${currentHeadline}
 - Subhead: ${currentSubhead}  
-- CTA: ${currentCta}
+- CTA: ${currentCta || "(none)"}
 
 PROSPECT:
 - Name: ${first_name}${last_name ? " " + last_name : ""}
@@ -184,10 +199,15 @@ CONVERSATION CONTEXT:
 ${context}
 
 Generate personalized messaging that:
-1. Speaks to their specific pain point from the conversation
+1. Speaks to their specific pain point, in the words of the conversation notes
 2. Uses their industry language naturally
-3. Maintains the core value proposition
+3. Keeps the page's core value proposition
 4. Feels personal but professional
+
+ZERO FABRICATION:
+- Use only facts from the CURRENT PAGE, the PROSPECT details and the CONVERSATION CONTEXT.
+- Never add numbers, results, client counts, timelines, guarantees, prices, other clients' names, or claims about the prospect's company that the notes don't state.
+- Do not change the CTA; it is the owner's.
 
 CRITICAL EMAIL BODY RULES:
 - Include the page link naturally in the email (use {{page_link}} placeholder)
@@ -221,7 +241,7 @@ You must respond with ONLY valid JSON, no other text:
         body: JSON.stringify({
           model: "claude-sonnet-4-5",
           max_tokens: 4096,
-          system: "You are an expert conversion copywriter. Always respond with valid JSON only.\n\n" + COPY_REGISTER_RULES,
+          system: "You are an expert conversion copywriter. Always respond with valid JSON only.\n\n" + COPY_REGISTER_RULES + "\n\n" + PROVENANCE_RULES,
           messages: [
             { role: "user", content: prompt },
           ],
@@ -244,27 +264,33 @@ You must respond with ONLY valid JSON, no other text:
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("Failed to parse AI response");
 
-    const generated = JSON.parse(jsonMatch[0]);
-    logRegisterViolations("generate-prospect-pivot", generated);
+    const raw = JSON.parse(jsonMatch[0]);
+    logRegisterViolations("generate-prospect-pivot", raw);
+    // Same claim guard as the page builder: unsupported numbers/commitments drop the whole sentence.
+    const generated = guardCopyClaims(
+      { headline: raw.headline, subhead: raw.subhead, context_summary: raw.context_summary, email_subject: raw.email_subject, email_body: raw.email_body },
+      ownerInput,
+      "prospect-copy-guard",
+    ) as Record<string, string>;
+    logProvenanceViolations("generate-prospect-pivot", generated, JSON.stringify(ownerInput));
+    // A guarded-away line falls back to the owner's own copy, never to nothing.
+    if (!generated.headline) generated.headline = currentHeadline;
+    if (!generated.subhead) generated.subhead = currentSubhead;
+    generated.cta_text = currentCta || "";
 
-    // Generate slug
-    let slug = custom_slug;
-    if (!slug) {
-      const baseSlug = `${first_name}${last_name ? "-" + last_name : ""}`
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "-")
-        .replace(/-+/g, "-")
-        .substring(0, 30);
-
-      const { data: existing } = await supabase
-        .from("prospects")
-        .select("slug")
-        .like("slug", `${baseSlug}%`);
-
-      slug = baseSlug;
-      if (existing?.some((p) => p.slug === baseSlug)) {
-        slug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
-      }
+    // Slug: sanitized, and unique across prospect pages and published pages (both live at top-level paths).
+    const wanted = prospectSlug(custom_slug || `${first_name}${last_name ? "-" + last_name : ""}`);
+    if (!wanted) throw new Error("Choose a link name with letters or numbers.");
+    const taken = async (candidate: string) => {
+      const [{ data: p }, { data: l }] = await Promise.all([
+        supabase.from("prospects").select("id").eq("slug", candidate).limit(1),
+        supabase.from("landing_pages").select("id").eq("slug", candidate).limit(1),
+      ]);
+      return (p?.length || 0) + (l?.length || 0) > 0;
+    };
+    let slug = wanted;
+    for (let i = 0; i < 5 && (await taken(slug)); i++) {
+      slug = `${wanted}-${Math.random().toString(36).substring(2, 6)}`;
     }
 
     const publicUrl = `${

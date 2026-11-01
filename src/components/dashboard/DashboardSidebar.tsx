@@ -13,7 +13,7 @@ export function DashboardSidebar({ credits, totalCredits, tier }: DashboardSideb
   const creditPercentage = Math.min(100, (credits / totalCredits) * 100);
 
   const tips = [
-    "Use Quick Pivot to create personalized pages for specific prospects in under 60 seconds.",
+    "Use Quick Pivot to turn one of your live pages into a page for one specific prospect.",
     "Add your brand colors and logo for consistent, professional pages.",
     "Add quotes from real customers in your consultation. Pages only show proof you provide."
   ];

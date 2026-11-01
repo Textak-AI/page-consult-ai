@@ -190,7 +190,7 @@ export default function ProspectsDashboard() {
   };
 
   const copyLink = (slug: string) => {
-    const url = `${window.location.origin}/p/${slug}`;
+    const url = `${window.location.origin}/for/${slug}`;
     navigator.clipboard.writeText(url);
     toast({ title: 'Link copied!' });
   };
@@ -458,7 +458,7 @@ export default function ProspectsDashboard() {
                               <Copy className="w-4 h-4 mr-2" />
                               Copy Link
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => window.open(`/p/${prospect.slug}`, '_blank')}>
+                            <DropdownMenuItem onClick={() => window.open(`/for/${prospect.slug}`, "_blank")}>
                               <ExternalLink className="w-4 h-4 mr-2" />
                               View Page
                             </DropdownMenuItem>

@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { announceUsageChanged } from '@/hooks/useAIActions';
+import { dashboardTitle } from '@/lib/dashboardPages';
 
 interface QuickPivotModalProps {
   isOpen: boolean;
@@ -56,23 +58,6 @@ const INDUSTRIES = [
   { value: 'other', label: 'Other' },
 ];
 
-// Test data arrays
-const TEST_FIRST_NAMES = ['Sarah', 'Michael', 'Jennifer', 'David', 'Emily', 'James', 'Amanda', 'Robert'];
-const TEST_LAST_NAMES = ['Chen', 'Rodriguez', 'Patel', 'Williams', 'Kim', 'Martinez', 'Johnson', 'Thompson'];
-const TEST_COMPANIES = ['Acme Corp', 'TechFlow Systems', 'Pinnacle Industries', 'Horizon Logistics', 'Summit Healthcare', 'Apex Manufacturing'];
-const TEST_INDUSTRIES = ['saas', 'healthcare', 'financial-services', 'logistics', 'manufacturing', 'professional-services'];
-const TEST_MEETINGS = ['SaaStr Annual 2025', 'Industry Summit', 'LinkedIn connection', 'Warm intro from Alex', 'Trade show booth', 'Webinar Q&A'];
-const TEST_CONTEXTS = [
-  "She's frustrated with their reporting tools, needs better visibility into delays and bottlenecks.",
-  "He mentioned their CRM doesn't integrate with their warehouse system, losing deals because of it.",
-  "They're scaling fast but their current solution can't handle the volume. Looking for enterprise features.",
-  "Complained about spending 10+ hours weekly on manual data entry. Wants automation.",
-  "Their team is distributed and collaboration tools aren't cutting it. Security is a concern too.",
-  "Budget approved for Q1, actively evaluating vendors. Decision maker, not just researcher."
-];
-
-const pickRandom = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-
 export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPivotModalProps) {
   const [step, setStep] = useState<Step>('input');
   const [formData, setFormData] = useState<FormData>({
@@ -92,6 +77,29 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const { toast } = useToast();
+
+  // Which live page gets personalized: the owner chooses (newest live page preselected).
+  const [pages, setPages] = useState<Array<{ id: string; label: string }> | null>(null);
+  const [pageId, setPageId] = useState<string>(basePageId || '');
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('landing_pages')
+        .select('id, title, consultation_data, updated_at')
+        .eq('user_id', user.id)
+        .eq('is_published', true)
+        .order('updated_at', { ascending: false });
+      if (cancelled) return;
+      const list = (data || []).map((p: any) => ({ id: p.id, label: dashboardTitle(p) }));
+      setPages(list);
+      setPageId((current) => current && list.some((p) => p.id === current) ? current : list[0]?.id || '');
+    })();
+    return () => { cancelled = true; };
+  }, [isOpen]);
 
   // Voice input
   const recognitionRef = useRef<any>(null);
@@ -129,7 +137,7 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
     }
   };
 
-  const isValid = formData.first_name && formData.industry && formData.context;
+  const isValid = !!(pageId && formData.first_name && formData.industry && formData.context);
 
   const handleGenerate = async () => {
     if (!isValid) return;
@@ -139,7 +147,7 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
       const { data, error } = await supabase.functions.invoke('generate-prospect-pivot', {
         body: {
           ...formData,
-          base_page_id: basePageId,
+          base_page_id: pageId,
         },
       });
 
@@ -157,6 +165,7 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
         page_url: data.page_url,
       });
       setStep('preview');
+      announceUsageChanged(); // 2 actions were spent: refresh the header balance
 
     } catch (err: any) {
       console.error('Generation error:', err);
@@ -247,21 +256,6 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
     onClose();
   };
 
-  const fillTestData = () => {
-    setFormData({
-      first_name: pickRandom(TEST_FIRST_NAMES),
-      last_name: pickRandom(TEST_LAST_NAMES),
-      email: 'kyle@pageconsult.ai',
-      company: pickRandom(TEST_COMPANIES),
-      job_title: '',
-      industry: pickRandom(TEST_INDUSTRIES),
-      context: pickRandom(TEST_CONTEXTS),
-      meeting_context: pickRandom(TEST_MEETINGS),
-      custom_slug: '',
-    });
-    toast({ title: '🧪 Test data loaded' });
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -284,11 +278,6 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
           <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b bg-background">
             <h2 className="text-lg font-semibold">Quick Pivot</h2>
             <div className="flex items-center gap-1">
-              {step === 'input' && (
-                <Button variant="ghost" size="sm" onClick={fillTestData} className="text-xs px-2">
-                  🧪 Test
-                </Button>
-              )}
               <Button variant="ghost" size="icon" onClick={handleClose}>
                 <X className="w-5 h-5" />
               </Button>
@@ -299,6 +288,23 @@ export default function QuickPivotModal({ isOpen, onClose, basePageId }: QuickPi
           <div className="p-4">
             {step === 'input' && (
               <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Page to personalize *</Label>
+                  {pages === null ? (
+                    <p className="text-sm text-muted-foreground mt-1">Loading your live pages…</p>
+                  ) : pages.length === 0 ? (
+                    <p className="text-sm text-muted-foreground mt-1">Publish a page first. Quick Pivot personalizes one of your live pages for one person.</p>
+                  ) : (
+                    <Select value={pageId} onValueChange={setPageId}>
+                      <SelectTrigger aria-label="Page to personalize"><SelectValue placeholder="Choose a live page" /></SelectTrigger>
+                      <SelectContent>
+                        {pages.map((p) => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">Only the headline and subheadline change for this person. Your button and everything else stay as written.</p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-sm font-medium">First Name *</Label>

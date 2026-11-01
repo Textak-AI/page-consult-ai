@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { rateLimit } from "../_shared/publicFetch.ts";
+import { nextProspectStatus } from "../_shared/prospectStatus.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,7 +45,7 @@ serve(async (req) => {
     // Find prospect
     const { data: prospect, error: findError } = await supabase
       .from("prospects")
-      .select("id, view_count, engagement_score, first_viewed_at, status")
+      .select("id, user_id, view_count, engagement_score, first_viewed_at, status")
       .eq("slug", slug)
       .single();
 
@@ -54,6 +56,22 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const ok = (extra: Record<string, unknown> = {}) => new Response(JSON.stringify({ success: true, ...extra }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+
+    // The owner previewing their own page is not engagement.
+    const bearer = req.headers.get("Authorization")?.replace("Bearer ", "");
+    if (bearer) {
+      const { data: { user } } = await supabase.auth.getUser(bearer).catch(() => ({ data: { user: null } }) as any);
+      if (user?.id && user.id === prospect.user_id) return ok({ owner: true, counted: false });
+    }
+
+    // One connection can count at most 3 visits per prospect page per hour (and one closing beacon each),
+    // so a link can't be refreshed into "hot".
+    const allowed = await rateLimit(supabase, req, `track-prospect-view:${is_final ? "final" : "view"}:${prospect.id}`, 3);
+    if (!allowed) return ok({ counted: false });
 
     // Insert view record (only on initial view, not final beacon)
     if (!is_final) {
@@ -94,17 +112,11 @@ serve(async (req) => {
     }
 
     // Set first viewed timestamp if not set
-    if (!prospect.first_viewed_at) {
-      updates.first_viewed_at = new Date().toISOString();
-      updates.status = "contacted";
-    }
+    if (!prospect.first_viewed_at) updates.first_viewed_at = new Date().toISOString();
 
-    // Auto-update status based on engagement
-    if (newScore >= 100) {
-      updates.status = "hot";
-    } else if (newScore >= 50 && prospect.status !== "hot" && prospect.status !== "converted") {
-      updates.status = "engaged";
-    }
+    // Status only moves forward, and never off a status the owner set (converted, lost, archived).
+    const status = nextProspectStatus(prospect.status, newScore, !prospect.first_viewed_at);
+    if (status !== prospect.status) updates.status = status;
 
     const { error: updateError } = await supabase
       .from("prospects")

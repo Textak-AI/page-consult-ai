@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
@@ -32,6 +32,7 @@ export default function ProspectPage() {
   const [error, setError] = useState<string | null>(null);
   const [captureEnabled, setCaptureEnabled] = useState(false);
   const [leadOpen, setLeadOpen] = useState(false);
+  const ownerViewing = useRef(false);
 
   useEffect(() => {
     async function fetchPage() {
@@ -76,19 +77,7 @@ export default function ProspectPage() {
                   ...section.content,
                   headline: prospect.personalized_headline || section.content?.headline,
                   subheadline: prospect.personalized_subhead || section.content?.subheadline || section.content?.subhead,
-                  cta_text: prospect.personalized_cta_text || section.content?.cta_text || section.content?.ctaText,
-                  ctaText: prospect.personalized_cta_text || section.content?.cta_text || section.content?.ctaText,
-                }
-              };
-            }
-            // Also personalize final CTA sections
-            if (section.type === 'cta' || section.type === 'final-cta') {
-              return {
-                ...section,
-                content: {
-                  ...section.content,
-                  cta_text: prospect.personalized_cta_text || section.content?.cta_text || section.content?.ctaText,
-                  ctaText: prospect.personalized_cta_text || section.content?.cta_text || section.content?.ctaText,
+                  // The owner's stated button text is never personalized (pinned like on every page).
                 }
               };
             }
@@ -108,13 +97,15 @@ export default function ProspectPage() {
 
           // Track initial view
           try {
-            await supabase.functions.invoke('track-prospect-view', {
+            const { data: tracked } = await supabase.functions.invoke('track-prospect-view', {
               body: {
                 slug,
                 device_type: /Mobile|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
                 referrer_source: document.referrer.includes('mail') ? 'email' : 'direct',
               }
             });
+            // The page owner previewing their own prospect page is not engagement.
+            ownerViewing.current = tracked?.owner === true;
           } catch (trackError) {
             console.error('Track view error:', trackError);
           }
@@ -180,6 +171,7 @@ export default function ProspectPage() {
     };
 
     const handleUnload = () => {
+      if (ownerViewing.current) return;
       const timeOnPage = Math.round((Date.now() - startTime) / 1000);
       navigator.sendBeacon(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/track-prospect-view`,

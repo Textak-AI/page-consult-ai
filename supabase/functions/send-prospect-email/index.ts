@@ -98,7 +98,8 @@ function sanitizeHtmlSignature(html: string): string {
 
 interface SendEmailRequest {
   prospectId: string;
-  pageLink: string;
+  /** Ignored: the link is built from the prospect's slug. */
+  pageLink?: string;
 }
 
 serve(async (req) => {
@@ -189,7 +190,8 @@ serve(async (req) => {
     const body = await req.json();
     console.log("[send-prospect-email] Received request with:", JSON.stringify(body, null, 2));
 
-    const { prospectId, pageLink }: SendEmailRequest = body;
+    // The page link is built here from the prospect's own slug; a client-sent link is ignored.
+    const { prospectId }: SendEmailRequest = body;
 
     if (!prospectId) {
       console.error("[send-prospect-email] Missing prospectId in request");
@@ -202,16 +204,6 @@ serve(async (req) => {
       });
     }
 
-    if (!pageLink) {
-      console.error("[send-prospect-email] Missing pageLink in request");
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: "Missing pageLink in request body" 
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     // Step 4: Get prospect data
     console.log("[send-prospect-email] Fetching prospect:", prospectId);
@@ -260,26 +252,38 @@ serve(async (req) => {
 
     // Step 5: Fetch user profile for sender_name and signature settings
     console.log("[send-prospect-email] Fetching user profile for sender_name and signature...");
-    let senderName = "Kyle Moyer"; // Fallback default
+    // Sender: the account's own name, else its business name. Never another person's name.
+    let senderName = "";
     let signatureType = "simple";
     let signatureHtml = "";
     
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("full_name, signature_type, signature_html, signature_name, signature_title, signature_email, signature_phone, signature_website, signature_enabled")
+      .select("full_name, company_name, signature_type, signature_html, signature_name, signature_title, signature_email, signature_phone, signature_website, signature_enabled")
       .eq("id", user.id)
       .single();
     
     if (profileError) {
       console.log("[send-prospect-email] No profile found, using fallback sender_name");
     } else if (profile) {
-      if (profile.full_name) {
-        senderName = profile.full_name;
-      }
+      senderName = (profile.full_name || profile.company_name || "").trim();
       signatureType = profile.signature_type || "simple";
       signatureHtml = profile.signature_html || "";
       console.log("[send-prospect-email] Using sender_name from profile:", senderName, "Signature type:", signatureType);
     }
+
+    if (!senderName) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Add your name in Settings before sending, so the prospect knows who it's from.",
+      }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (!prospect.slug) {
+      return new Response(JSON.stringify({ success: false, error: "This prospect has no page link yet." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const pageLink = `${Deno.env.get("PUBLIC_SITE_URL") || "https://pageconsult.app"}/for/${prospect.slug}`;
 
     // Step 6: Prepare email body with proper formatting
     let emailBody = prospect.email_body?.replace(/\{\{page_link\}\}/g, pageLink) || "";

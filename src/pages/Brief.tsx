@@ -13,13 +13,11 @@ import {
   Users,
   Lightbulb,
   CheckCircle,
-  UserPlus
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import ExportBriefButton from "@/components/export/ExportBriefButton";
 import type { StrategyBriefData } from "@/components/export/StrategyBriefPDF";
-import { CreateProspectPageModal } from "@/components/prospect";
 
 interface BriefData {
   id: string;
@@ -76,7 +74,6 @@ const Brief = () => {
   const [briefData, setBriefData] = useState<BriefData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showProspectModal, setShowProspectModal] = useState(false);
   
   // Debug: Log sessionId on mount
   useEffect(() => {
@@ -398,14 +395,6 @@ const Brief = () => {
               Continue to Brand Setup
               <ArrowRight className="w-5 h-5" />
             </button>
-            <Button
-              variant="outline"
-              onClick={() => setShowProspectModal(true)}
-              className="border-white/20 text-white hover:bg-white/10"
-            >
-              <UserPlus className="w-4 h-4 mr-2" />
-              Create Prospect Page
-            </Button>
           </div>
           <p className="text-slate-500 text-sm mt-4">
             Takes about 2 minutes
@@ -426,12 +415,6 @@ const Brief = () => {
         </div>
       </footer>
 
-      {/* Prospect Page Modal */}
-      <CreateProspectPageModal
-        isOpen={showProspectModal}
-        onClose={() => setShowProspectModal(false)}
-        sourceDemoSessionId={briefData?.id}
-      />
     </div>
   );
 };
