@@ -7,6 +7,8 @@ interface DashboardHeaderProps {
   pageCount: number;
   draftCount: number;
   credits: number;
+  /** Pages still loading: the count would read 0, so hold the count-based greeting. */
+  loading?: boolean;
 }
 
 const QuickStat = ({ 
@@ -44,19 +46,23 @@ export function DashboardHeader({
   userName, 
   pageCount, 
   draftCount, 
-  credits 
+  credits,
+  loading = false,
 }: DashboardHeaderProps) {
   // Capitalize the user's display name
   const displayName = capitalizeDisplayName(userName);
 
   const getGreeting = () => {
     const name = displayName ? `, ${displayName}` : '';
+    // While pages load the count reads 0; don't greet a returning owner as new.
+    if (loading) return `Welcome${name}`;
     if (pageCount === 0) return `Let's build your first page${name}`;
     if (draftCount > 0) return `Welcome back${name} — you have work in progress`;
     return `Welcome back${name}`;
   };
 
   const getSubtext = () => {
+    if (loading) return ' ';
     if (pageCount === 0) return "Start a strategy session and watch your page come to life";
     if (draftCount > 0) return `${draftCount} draft${draftCount > 1 ? 's' : ''} waiting to be finished`;
     return `${pageCount} page${pageCount > 1 ? 's' : ''} created`;

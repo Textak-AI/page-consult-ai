@@ -31,3 +31,10 @@ test('editor has no gamified progress banners or achievement pop-ups', () => {
   expect(g).not.toMatch(/Looking Strong|all the elements for high conversion|confetti|ShareableAchievementCard/);
   expect(existsSync(join(root, 'src/components/consultation/ShareableAchievementCard.tsx'))).toBe(false);
 });
+
+test('no screen builds the old logo from an icon plus "PageConsult AI" text', () => {
+  for (const f of ['src/pages/NewConsultation.tsx', 'src/pages/Wizard.tsx', 'src/pages/Brief.tsx', 'src/components/landing/SoftLockDemo.tsx', 'src/components/AnimatedChatPreview.tsx']) {
+    expect(readFileSync(join(root, f), 'utf8')).not.toMatch(/@\/assets\/iconmark/);
+  }
+  expect(readFileSync(join(root, 'src/components/consultation/ConsultantChat.tsx'), 'utf8')).not.toMatch(/I only use what you/);
+});

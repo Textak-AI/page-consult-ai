@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Send, Loader2, Bot, User, Search, CheckCircle2, ArrowRight, Sparkles, PanelRightClose, PanelRight } from "lucide-react";
-import iconmark from "@/assets/iconmark-darkmode.svg";
 import { getAuthHeaders } from "@/lib/authHelpers";
 import { motion, AnimatePresence } from "framer-motion";
 import { IntelligencePanel, IntelligenceTile, TileState, getDefaultTiles } from "@/components/wizard/IntelligencePanel";
@@ -1392,8 +1391,7 @@ Ready to build this? Or want to adjust the approach first?`,
       {/* Header */}
       <header className="border-b border-white/10 bg-black/20 backdrop-blur-xl z-10">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-3">
-          <img src={iconmark} alt="PageConsult" className="h-8 w-8" />
-          <span className="text-lg font-semibold text-white">PageConsult AI</span>
+          <img src="/brand/pageconsult-lockup.svg" alt="PageConsult" className="h-7 w-auto" />
           
           {/* Phase indicator */}
           <div className="ml-4 flex items-center gap-2 text-sm">

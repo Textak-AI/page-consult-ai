@@ -108,7 +108,7 @@ export function ConsultantChat({
       setMessages([{
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: `Tell me what to change on the ${companyName} page — rewrite a section, or add a new one. I'll show you the changes before anything is applied, and I only use what you've told me.`,
+        content: `Tell me what to change on the ${companyName} page — rewrite a section, or add a new one. I'll show you the changes before anything is applied, and I'll ask when I need a fact you haven't given me.`,
         timestamp: new Date(),
       }]);
       setHasInitialized(true);

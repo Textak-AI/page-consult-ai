@@ -400,6 +400,7 @@ export default function Dashboard() {
             pageCount={actualPageCount}
             draftCount={draftCount}
             credits={credits.available}
+            loading={isLoading}
           />
 
           {/* Main Content + Sidebar Layout */}

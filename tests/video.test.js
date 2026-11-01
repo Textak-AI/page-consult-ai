@@ -78,3 +78,13 @@ test('background video respects reduced motion and never autoplays with sound', 
 test('uploads go to the owner\'s own folder', () => {
   expect(src('src/lib/editor/videoUpload.ts')).toMatch(/`\$\{user\.id\}\/videos\/\$\{id\}\.\$\{ext\}`/);
 });
+
+test('claim guard: identifiers like S3 or EC2 never authorize an invented number', async () => {
+  const { guardCopyClaims, numbersIn } = await import('../supabase/functions/_shared/copyClaims');
+  expect(numbersIn('state in S3, EC2 and B2B teams')).toEqual([]);
+  expect(numbersIn('SOC 2 and 10x')).toEqual(['2', '10']);
+  const out = guardCopyClaims({ heading: 'Watch a 3-minute demo: see live drift.' }, { copy: 'Self-managed state in S3. Read-only AWS connection.' });
+  expect(out.heading).toBe('');
+  const kept = guardCopyClaims({ heading: 'State stays in S3.' }, { copy: 'Self-managed state in S3.' });
+  expect(kept.heading).toBe('State stays in S3.');
+});

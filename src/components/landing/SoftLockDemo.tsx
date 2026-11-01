@@ -13,7 +13,7 @@ import { DemoPreviewWidget } from './DemoPreviewWidget';
 import { MutedCircuitBackground } from './MutedCircuitBackground';
 import { StrategistIcon } from '@/components/ui/StrategistIcon';
 import ReactMarkdown from 'react-markdown';
-import tealLogo from '@/assets/iconmark-teal.svg';
+const tealLogo = '/brand/pageconsult-icon.svg';
 import { UnifiedNavBar } from '@/components/flow/UnifiedNavBar';
 import type { FlowState } from '@/hooks/useFlowNavigation';
 import { optimizeFromProfile, type IntelProfile } from '@/utils/archetypeOptimizer';

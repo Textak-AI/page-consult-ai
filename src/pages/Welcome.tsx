@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { capitalizeDisplayName } from '@/lib/formatters';
 import {
   HOW_IT_WORKS,
   firstNameOf,
@@ -137,7 +138,7 @@ export default function Welcome() {
         ) : (
           <section>
             <h1 className="text-3xl font-semibold tracking-tight">
-              {firstNameOf(answers.name) ? `Here's how it works, ${firstNameOf(answers.name)}` : "Here's how it works"}
+              {firstNameOf(answers.name) ? `Here's how it works, ${capitalizeDisplayName(firstNameOf(answers.name))}` : "Here's how it works"}
             </h1>
             <ol className="mt-8 space-y-6">
               {HOW_IT_WORKS.map((s, i) => (

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { User } from "lucide-react";
-import aiChatIcon from "@/assets/iconmark-darkmode.svg";
+const aiChatIcon = "/brand/pageconsult-icon.svg";
 
 const conversationSteps = [
   { type: "ai", message: "What industry are you in?" },

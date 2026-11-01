@@ -216,10 +216,7 @@ const Brief = () => {
       <header className="border-b border-white/10 p-6">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-semibold text-white">PageConsult AI</span>
+            <img src="/brand/pageconsult-lockup.svg" alt="PageConsult" className="h-7 w-auto" />
           </div>
           <span className="text-cyan-400 text-sm font-medium flex items-center gap-2">
             <CheckCircle className="w-4 h-4" />

@@ -63,9 +63,9 @@ export function BrandExtractor({ onExtracted, onSkip, initialUrl }: BrandExtract
     <div className="w-full max-w-md mx-auto space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-semibold text-white">Have an existing website?</h2>
+        <h2 className="text-2xl font-semibold text-white">{initialUrl ? 'Reading your website' : 'Have an existing website?'}</h2>
         <p className="text-sm text-slate-300">
-          We'll grab your company info to get started faster
+          {initialUrl ? 'Check what we found, then use it or start fresh.' : "We'll grab your company info to get started faster"}
         </p>
       </div>
 

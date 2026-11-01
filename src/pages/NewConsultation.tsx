@@ -8,7 +8,6 @@ import { StrategicConsultation, StrategyBriefReview, ConsultationIntro, shouldSh
 import { optimizeFromProfile, parsePricePoint, type IntelProfile, type OptimizationResult } from '@/utils/archetypeOptimizer';
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import iconmark from "@/assets/iconmark-darkmode.svg";
 import { DevToolbar, useDevMode } from "@/components/dev/DevToolbar";
 import { mockConsultation, mockStrategyBrief, mockAiSeoData, mockStructuredBrief } from "@/lib/mockDevData";
 import { BriefProgressLoader } from "@/components/consultation/BriefProgressLoader";
@@ -865,8 +864,7 @@ export default function NewConsultation() {
           </Button>
           
           <div className="flex items-center gap-3 ml-4">
-            <img src={iconmark} alt="PageConsult" className="h-8 w-8" />
-            <span className="text-lg font-semibold text-white">PageConsult AI</span>
+            <img src="/brand/pageconsult-lockup.svg" alt="PageConsult" className="h-7 w-auto" />
           </div>
           
           {/* Stage indicator */}

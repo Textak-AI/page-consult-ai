@@ -53,7 +53,7 @@ export function VideoSection({ content, onUpdate, editor = false }: Props) {
         )}
         {editor && (
           <div className="mt-4 flex justify-center">
-            <Button variant="outline" onClick={() => setOpen(true)}><Video />{video ? 'Edit video' : 'Add video'}</Button>
+            <Button variant="outline" onClick={() => setOpen(true)} style={{ color: surface.text, borderColor: surface.textMuted, background: 'transparent' }}><Video />{video ? 'Edit video' : 'Add video'}</Button>
           </div>
         )}
       </div>
