@@ -192,7 +192,7 @@ CRITICAL: THE BRIEF IS YOUR BLUEPRINT
    - Choose the BEST headline from the "headlines" options (optionA, optionB, or optionC)
    - Use "subheadline" directly as the hero subheadline
 
-3. FEATURES - Build from Section 4 (Messaging Pillars)
+3. FEATURES - Build from Section 4 (Key Points)
    - Each messagingPillar becomes a feature card
    - Use the exact title, description, and icon from the pillar
    - Maximum 6 features (4 is ideal for visual balance)

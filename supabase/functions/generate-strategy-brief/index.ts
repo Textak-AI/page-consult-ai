@@ -290,7 +290,7 @@ Generate a STRATEGY BRIEF with these sections:
 
 3. **Core Value Proposition** (One plain, specific statement that captures the unique value - this becomes the hero subheadline)
 
-4. **Key Messaging Pillars** (3-4 main themes to emphasize - these become FEATURE CARDS)
+4. **Key Points** (3-4 main themes to emphasize - these become FEATURE CARDS)
    - For each pillar: Title, Benefit Description, Icon suggestion (Zap, Target, Shield, Award, TrendingUp, Users, CheckCircle, Clock, Heart, Star)
 
 5. **Competitive Differentiation** (What sets this apart - use for problem/solution section)

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FileText, Edit3, RotateCcw, ArrowRight, CheckCircle2, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
+import { plainBriefText } from '@/lib/plainBriefText';
 import { AISeoPanel } from './AISeoPanel';
 import { MessagingArchitecturePanel, type MessagingArchitecturePanelProps } from './MessagingArchitecturePanel';
 import type { ConsultationData } from './StrategicConsultation';
@@ -127,7 +128,7 @@ export function StrategyBriefReview({ brief, consultationData, aiSeoData, messag
                 ),
               }}
             >
-              {brief}
+              {plainBriefText(brief)}
             </ReactMarkdown>
           </div>
         )}

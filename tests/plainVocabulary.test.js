@@ -41,19 +41,19 @@ test('screens that show a buyer type go through the shared map, not the archetyp
 });
 
 test('"PageConsult Method" is gone from the app', () => {
-  expect(grep("grep -rl 'PageConsult Method' src")).toBe('');
+  expect(grep("grep -rl --exclude=plainBriefText.ts 'PageConsult Method' src")).toBe('');
 });
 
 test('no user-visible "Blueprint": it is the Strategy Brief everywhere', () => {
   // Word-boundary match: identifiers like strategyBlueprintColorMode are not user-visible.
-  expect(grep("grep -rnwi 'blueprints\\?' src")).toBe('');
+  expect(grep("grep -rnwi --exclude=plainBriefText.ts 'blueprints\\?' src")).toBe('');
   expect(src('src/utils/exportStrategyPdf.ts')).toMatch(/-strategy-brief\.pdf/);
   expect(src('src/pages/StrategyDocument.tsx')).toMatch(/PageConsult AI by Hyperbrand Creative, Ltd/);
 });
 
 test('no "Pillar" labels in UI text', () => {
   // Quoted strings or JSX text containing the word; property names like messagingPillars are fine.
-  const hits = grep(`grep -rnE "(['\\"\\\`>]|^\\s+)[^'\\"\\\`<{}]*\\bPillars?\\b" src --include=*.tsx --include=*.ts`)
+  const hits = grep(`grep -rnE "(['\\"\\\`>]|^\\s+)[^'\\"\\\`<{}]*\\bPillars?\\b" src --include=*.tsx --include=*.ts --exclude=plainBriefText.ts`)
     .split('\n').filter((l) => l && !/^\S+:\d+:\s*(\/\/|\*|\/\*)/.test(l));
   expect(hits).toEqual([]);
   expect(src('src/components/consultation/IntelligenceProfileWizard.tsx')).not.toMatch(/Pillar/);
@@ -96,4 +96,11 @@ test('Strategy Document shows only stated strategy: no default guarantee, trial,
   for (const f of ['src/components/sections/HeroSection.tsx', 'src/components/sections/hero/HeroVisualComposition.tsx']) {
     expect(readFileSync(new URL('../' + f, import.meta.url), 'utf8')).not.toMatch(/'Strategic Intelligence'/);
   }
+});
+
+test('older brief text is relabeled when shown; new briefs ask for Key Points', async () => {
+  const { plainBriefText } = await import('../src/lib/plainBriefText');
+  expect(plainBriefText('## 4. Key Messaging Pillars\n- Speed')).toBe('## 4. Key Points\n- Speed');
+  expect(plainBriefText('Your Strategy Blueprint')).toBe('Your Strategy Brief');
+  expect(readFileSync(new URL('../supabase/functions/generate-strategy-brief/index.ts', import.meta.url), 'utf8')).not.toMatch(/Key Messaging Pillars/);
 });

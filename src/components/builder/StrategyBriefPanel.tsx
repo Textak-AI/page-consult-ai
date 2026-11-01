@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, X, ChevronRight, Sparkles, Edit3, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ReactMarkdown from 'react-markdown';
+import { plainBriefText } from '@/lib/plainBriefText';
 import { StrategyBriefEditor } from '@/components/strategy-brief/StrategyBriefEditor';
 import { AISeoPanel } from '@/components/consultation/AISeoPanel';
 import { supabase } from '@/integrations/supabase/client';
@@ -231,7 +232,7 @@ export function StrategyBriefPanel({
                       ),
                     }}
                   >
-                    {brief}
+                    {plainBriefText(brief)}
                   </ReactMarkdown>
                 </div>
 
