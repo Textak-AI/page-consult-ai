@@ -18,11 +18,11 @@ export default function WizardChoice() {
       const pendingConsultationId = sessionStorage.getItem('pendingConsultationId');
       const consultationId = consultationIdFromUrl || pendingConsultationId;
       
-      // If user has a consultationId, go to huddle (they already have data)
+      // A consultation from the demo continues in the form wizard with its answers
       if (consultationId) {
-        console.log('🔄 [WizardChoice] Redirecting to huddle - user has consultation:', consultationId);
+        console.log('🔄 [WizardChoice] Continuing consultation in the form wizard:', consultationId);
         sessionStorage.removeItem('pendingConsultationId'); // Clean up
-        navigate(`/huddle?type=pre_brief&consultationId=${consultationId}`, { replace: true });
+        navigate(`/wizard/form?consultationId=${consultationId}`, { replace: true });
         return;
       }
       
@@ -33,36 +33,8 @@ export default function WizardChoice() {
         return;
       }
       
-      // Check if authenticated user has existing consultation with high readiness
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: consultation } = await supabase
-          .from('consultations')
-          .select('id, readiness_score, strategy_brief, extracted_intelligence')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
-        if (consultation) {
-          const score = consultation.readiness_score || 0;
-          
-          console.log('[Demo Handoff] Route decision:', {
-            hasConsultation: true,
-            consultationId: consultation.id,
-            hasStrategyBrief: !!consultation.strategy_brief,
-            score,
-            route: score >= 40 ? 'huddle' : 'show wizard choice',
-          });
-          
-          // If they have meaningful consultation data, route to huddle
-          if (score >= 40) {
-            navigate(`/huddle?type=pre_brief&consultationId=${consultation.id}`, { replace: true });
-            return;
-          }
-        }
-      }
-      
+
       // No existing work: new accounts get onboarding once, everyone else goes straight to the questions.
       // (The old either/or screen between chat and form is gone: the wizard runs for everyone.)
       if (user) {

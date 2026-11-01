@@ -22,7 +22,7 @@ export function ActionCards({ onQuickPivot }: ActionCardsProps) {
       title: "New Strategy Session",
       description: "Build a page from strategic consultation",
       icon: MessageSquare,
-      href: "/try?from=dashboard",
+      href: "/wizard",
       gradient: "from-primary to-secondary",
       primary: true
     },

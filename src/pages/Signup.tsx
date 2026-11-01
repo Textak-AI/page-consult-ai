@@ -450,18 +450,15 @@ export default function Signup() {
         if (intel) {
           const consultationId = await createConsultationFromIntelligence(authenticatedUser.id, intel);
           if (consultationId) {
-            // Store consultation ID for brand-setup to find
-            sessionStorage.setItem('pendingConsultationId', consultationId);
-            console.log('🚀 [Auth] Redirecting to brand-setup with consultation:', consultationId);
-            // Include session param as fallback for demo_sessions data access
-            navigate(`/brand-setup?consultationId=${consultationId}&session=${sessionIdFromUrl}`, { replace: true });
+            // One intake path: the form wizard loads the demo answers from ?consultationId.
+            navigate(`/wizard/form?consultationId=${consultationId}`, { replace: true });
             return;
           }
         }
         
-        // Fallback: go to brand-setup with session
-        console.log('⚠️ [Auth] No intelligence found, going to brand-setup with session');
-        navigate(`/brand-setup?session=${sessionIdFromUrl}`, { replace: true });
+        // Fallback: no demo answers found; start in the wizard (onboarding first for new accounts)
+        console.log('⚠️ [Auth] No intelligence found, going to the wizard');
+        navigate('/wizard', { replace: true });
         return;
       }
       
@@ -617,7 +614,7 @@ export default function Signup() {
         
         // Always go to Huddle first - the "prove I listened" moment
         console.log('🚀 [Signup] Redirecting to huddle with consultationId:', consultation.id);
-        navigate(`/huddle?type=pre_brief&consultationId=${consultation.id}`, { replace: true });
+        navigate(`/wizard/form?consultationId=${consultation.id}`, { replace: true });
         return;
         
       } catch (err) {
@@ -702,11 +699,9 @@ export default function Signup() {
       console.log('🧭 [Signup] Flow decision:', decision);
       
       // Navigate based on Flow Engine decision
-      if (decision.huddleType) {
-        navigate(`/huddle?type=${decision.huddleType}&consultationId=${consultation.id}`, { replace: true });
-      } else {
-        navigate(`${decision.route}?consultationId=${consultation.id}`, { replace: true });
-      }
+      // One intake path: demo answers continue in the form wizard.
+      console.log('🧭 [Signup] Flow engine said', decision.route, '- using the form wizard');
+      navigate(`/wizard/form?consultationId=${consultation.id}`, { replace: true });
       
     } catch (err) {
       console.error('Error creating consultation from demo:', err);

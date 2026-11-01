@@ -122,7 +122,7 @@ export function DemoPreviewWidget({ onActivate }: DemoPreviewWidgetProps) {
                 {/* Score header */}
                 <div className="mb-5">
                   <div className="flex items-baseline justify-between mb-1">
-                    <span className="text-xs text-slate-500 uppercase tracking-wider font-medium">Intelligence Profile</span>
+                    <span className="text-xs text-slate-500 uppercase tracking-wider font-medium">What we know so far</span>
                     <span className="text-slate-500 text-sm font-medium">0<span className="text-slate-600">/100</span></span>
                   </div>
                   {/* Main progress bar - empty */}

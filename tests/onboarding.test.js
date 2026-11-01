@@ -68,3 +68,17 @@ test('one intake path: nothing routes to the retired chat wizard', () => {
   // The form wizard picks up the demo's answers from ?consultationId.
   expect(src('src/pages/NewConsultation.tsx')).toMatch(/source: 'demo_consultation'/);
 });
+
+test('every way in lands on onboarding or the form wizard, never the old brand-setup/huddle pipeline', () => {
+  expect(src('src/components/landing/DefaultHero.tsx')).toMatch(/<Link to="\/wizard">/);
+  expect(src('src/components/Header.tsx')).not.toMatch(/to="\/brand-setup"/);
+  const signup = src('src/pages/Signup.tsx');
+  expect(signup).not.toMatch(/navigate\(`\/brand-setup\?consultationId/);
+  expect(signup).not.toMatch(/navigate\(`\/huddle/);
+  expect(src('src/components/landing/SoftLockDemo.tsx')).toMatch(/\/wizard\/form\?consultationId=\$\{consultationId\}/);
+  const wc = src('src/pages/WizardChoice.tsx');
+  expect(wc).not.toMatch(/\/huddle/);
+  for (const f of ['src/pages/Dashboard.tsx', 'src/components/dashboard/PriorityAction.tsx', 'src/components/dashboard/ActionCards.tsx']) {
+    expect(src(f)).not.toMatch(/try\?from=dashboard/);
+  }
+});

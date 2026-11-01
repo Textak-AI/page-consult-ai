@@ -432,12 +432,10 @@ export default function SoftLockDemo({ onLockChange, autoLock = false, onClose }
         }
         
         // Use the consultationId that was set above
-        const brandSetupUrl = consultationId 
-          ? `/brand-setup?consultationId=${consultationId}`
-          : `/brand-setup?session=${sessionId}`;
-        
-        console.log('[Auth Check] Redirecting authenticated user to:', brandSetupUrl);
-        navigate(brandSetupUrl);
+        // One intake path: the form wizard loads the demo answers from ?consultationId.
+        const wizardUrl = consultationId ? `/wizard/form?consultationId=${consultationId}` : '/wizard';
+        console.log('[Auth Check] Redirecting authenticated user to:', wizardUrl);
+        navigate(wizardUrl);
       } else {
         // Not authenticated - redirect to signup (existing flow)
         const signupUrl = isReady 

@@ -136,12 +136,6 @@ const Header = () => {
                 <Inbox className="w-4 h-4" />
                 <span className="text-sm">Leads</span>
               </Link>
-              <Link
-                to="/brand-setup"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 rounded-lg hover:bg-muted"
-              >
-                <span className="text-sm">Brand Setup</span>
-              </Link>
             </nav>
           ) : (
             // Logged-out navigation
@@ -176,13 +170,6 @@ const Header = () => {
                 Demo
                 <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-secondary transition-all duration-200 group-hover:w-full" />
               </a>
-              <Link
-                to="/brand-setup"
-                className="text-muted-foreground hover:text-foreground transition-all duration-200 relative group"
-              >
-                Brand Setup
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-secondary transition-all duration-200 group-hover:w-full" />
-              </Link>
             </nav>
           )}
 
