@@ -17,6 +17,8 @@ import { SocialProofSection } from '@/components/sections/SocialProofSection';
 import { FinalCTASection } from '@/components/sections/FinalCTASection';
 import { PhotoGallerySection } from '@/components/sections/PhotoGallerySection';
 import { WorkSamplesSection } from '@/components/sections/WorkSamplesSection';
+import { VideoSection } from '@/components/sections/VideoSection';
+import { AttachedVideo } from '@/components/video/AttachedVideo';
 import { StatsBarSection } from '@/components/sections/StatsBarSection';
 import { FAQSection } from '@/components/sections/FAQSection';
 import { HowItWorksSection } from '@/components/sections/HowItWorksSection';
@@ -153,6 +155,8 @@ export function PublicPageRenderer({
     switch (section.type) {
       case 'work-samples':
         return <WorkSamplesSection key={index} content={section.content} />;
+      case 'video':
+        return <VideoSection key={index} content={{ ...section.content, primaryColor: enrichedContent.primaryColor }} />;
       case 'hero':
         return (
           <HeroSection
@@ -501,7 +505,8 @@ export function PublicPageRenderer({
           }}
         >
           {sortedSections.map((section, index) => {
-            if (section.type === 'work-samples') return renderSection(section, index);
+            if (section.type === 'work-samples' || section.type === 'video') return renderSection(section, index);
+            const attached = <AttachedVideo content={{ ...section.content, primaryColor: theme.primaryColor || section.content?.primaryColor }} />;
             const tier = getSectionTier(section.type, index);
             const spacing = getSectionSpacing(section.type);
             const divider = getSectionDivider(section.type, index);
@@ -518,12 +523,16 @@ export function PublicPageRenderer({
               >
                 <div className="relative z-10">
                   <GazeReveal sectionType={section.type} sectionBg={(section.content as any)?.sectionBackground}><SignatureSection type={section.type} content={section.content}>{renderSection(section, index)}</SignatureSection></GazeReveal>
+                  {attached}
                 </div>
               </div>
             ) : (
-              <GazeReveal key={`gaze-${index}`} sectionType={section.type} sectionBg={(section.content as any)?.sectionBackground}>
-                <SignatureSection type={section.type} content={section.content}>{renderSection(section, index)}</SignatureSection>
-              </GazeReveal>
+              <div key={`gaze-${index}`}>
+                <GazeReveal sectionType={section.type} sectionBg={(section.content as any)?.sectionBackground}>
+                  <SignatureSection type={section.type} content={section.content}>{renderSection(section, index)}</SignatureSection>
+                </GazeReveal>
+                {attached}
+              </div>
             );
           })}
         </div>

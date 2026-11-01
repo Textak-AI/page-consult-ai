@@ -14,6 +14,10 @@ import { FinalCTASection } from "@/components/sections/FinalCTASection";
 import { ThreeStageShowcase } from "@/components/sections/ThreeStageShowcase";
 import { PhotoGallerySection } from "@/components/sections/PhotoGallerySection";
 import { WorkSamplesSection } from '@/components/sections/WorkSamplesSection';
+import { VideoSection } from '@/components/sections/VideoSection';
+import { AttachedVideo } from '@/components/video/AttachedVideo';
+import { VideoSheet } from '@/components/video/VideoSheet';
+import { canAttachVideo } from '@/lib/video';
 import { StatsBarSection } from "@/components/sections/StatsBarSection";
 import { FAQSection } from "@/components/sections/FAQSection";
 import { HowItWorksSection } from "@/components/sections/HowItWorksSection";
@@ -131,6 +135,9 @@ function LivePreviewInner({ sections: rawSections, onSectionsChange, cssVariable
   
   const [imageGenOpen, setImageGenOpen] = useState(false);
   const [imageGenSection, setImageGenSection] = useState<{ index: number; type: string; content: any } | null>(null);
+  // Video: hero background (photo-capable compositions) or a video under any other section.
+  const [videoTarget, setVideoTarget] = useState<{ index: number; placement: 'attach' | 'background' } | null>(null);
+  const handleVideo = useCallback((index: number, type: string) => setVideoTarget({ index, placement: type === 'hero' ? 'background' : 'attach' }), []);
   
   const [logoUploadOpen, setLogoUploadOpen] = useState(false);
   const [logoUploadSection, setLogoUploadSection] = useState<{ index: number; content: any } | null>(null);
@@ -349,13 +356,17 @@ function LivePreviewInner({ sections: rawSections, onSectionsChange, cssVariable
           onAIAssist={() => handleAIAssist(index, section.type, section.content)}
           onImageGenerate={() => handleImageGenerate(index, section.type, section.content)}
           onLogoEdit={() => handleLogoEdit(index, section.content)}
+          onVideo={(section.type === 'hero'
+            ? ['centered-type', 'split-photo'].includes(section.content?.composition)
+            : canAttachVideo(section.type)) ? () => handleVideo(index, section.type) : undefined}
           isEditing={editingSection === index}
         />
         
         <GazeReveal sectionType={section.type} sectionBg={(section.content as any)?.sectionBackground}><SignatureSection type={section.type} content={section.content} editing={editingSection === index}>{sectionElement}</SignatureSection></GazeReveal>
+        <AttachedVideo content={{ ...section.content, primaryColor: pageTheme?.primaryColor || section.content?.primaryColor || stableBrandPrimaryColor }} />
       </div>
     );
-  }, [getSectionLockStatus, handleUnlockAction, editingSection, handleEditSection, handleAIAssist, handleImageGenerate, handleLogoEdit]);
+  }, [getSectionLockStatus, handleUnlockAction, editingSection, handleEditSection, handleAIAssist, handleImageGenerate, handleLogoEdit, handleVideo, pageTheme?.primaryColor, stableBrandPrimaryColor]);
 
   // Stable update handlers per section index - prevents new closure on every render
   const updateSectionHandlers = useMemo(() => {
@@ -386,6 +397,8 @@ function LivePreviewInner({ sections: rawSections, onSectionsChange, cssVariable
     switch (section.type) {
       case 'work-samples':
         return <WorkSamplesSection key={index} content={section.content} onUpdate={updateSection} editor />;
+      case 'video':
+        return <div key={index} id={getSectionId(section.type)}><VideoSection content={{ ...section.content, primaryColor: sectionContent.primaryColor }} onUpdate={updateSection} editor /></div>;
       case "hero":
         return renderSectionWithToolbar(
           section,
@@ -845,6 +858,24 @@ function LivePreviewInner({ sections: rawSections, onSectionsChange, cssVariable
         onApplyChanges={handleApplyAIChanges}
       />
       
+      {/* Video drawer: hero background or a video under a section */}
+      <VideoSheet
+        open={!!videoTarget}
+        onOpenChange={(o) => { if (!o) setVideoTarget(null); }}
+        placement={videoTarget?.placement || 'attach'}
+        value={videoTarget ? sections[videoTarget.index]?.content?.[videoTarget.placement === 'background' ? 'backgroundVideo' : 'attachedVideo'] : null}
+        primaryColor={pageTheme?.primaryColor || stableBrandPrimaryColor || undefined}
+        onChange={(video) => {
+          if (!videoTarget) return;
+          const key = videoTarget.placement === 'background' ? 'backgroundVideo' : 'attachedVideo';
+          const updated = [...sections];
+          const content = { ...updated[videoTarget.index].content };
+          if (video) content[key] = video; else delete content[key];
+          updated[videoTarget.index] = { ...updated[videoTarget.index], content };
+          onSectionsChange(updated);
+        }}
+      />
+
       {/* Image Generator Drawer */}
       <SectionImageGenerator
         isOpen={imageGenOpen}

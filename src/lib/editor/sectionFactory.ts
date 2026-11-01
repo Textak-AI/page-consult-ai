@@ -13,6 +13,7 @@ export interface AddableSectionType {
 
 export const ADDABLE_SECTION_TYPES: AddableSectionType[] = [
   { type: 'work-samples', label: 'Work Samples', description: 'Show real work - uploads only' },
+  { type: 'video', label: 'Video', description: 'Upload a video or paste a link' },
   { type: 'problem-solution', label: 'Problem / Solution', description: 'The problem you solve and how' },
   { type: 'features', label: 'Features', description: 'Your key benefits or points' },
   { type: 'how-it-works', label: 'How It Works', description: 'Your process, step by step' },
@@ -100,6 +101,8 @@ export function buildSectionContent(
       return { title: '[Gallery title]', images: [] };
     case 'work-samples':
       return { samples: [] };
+    case 'video':
+      return { heading: '[What this video shows]', body: '', video: null };
     case 'differentiator-callout':
       return { text: str(extra.uniqueValue) || '[What makes you different, in one sentence]' };
     case 'audience-fit':

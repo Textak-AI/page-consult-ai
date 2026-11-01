@@ -1,4 +1,4 @@
-import { Pencil, Sparkles, ImageIcon, Image } from "lucide-react";
+import { Pencil, Sparkles, ImageIcon, Image, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +9,7 @@ interface SectionToolbarProps {
   onAIAssist: () => void;
   onImageGenerate?: () => void;
   onLogoEdit?: () => void;
+  onVideo?: () => void;
   isEditing: boolean;
 }
 
@@ -22,6 +23,7 @@ export function SectionToolbar({
   onAIAssist,
   onImageGenerate,
   onLogoEdit,
+  onVideo,
   isEditing,
 }: SectionToolbarProps) {
   const sectionLabel = sectionType
@@ -72,6 +74,18 @@ export function SectionToolbar({
         >
           <Image className="h-3.5 w-3.5" />
           <span className="text-xs">Logo</span>
+        </Button>
+      )}
+      {onVideo && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 gap-1.5"
+          onClick={onVideo}
+          title={sectionType === 'hero' ? 'Background video' : 'Add a video to this section'}
+        >
+          <Video className="h-3.5 w-3.5" />
+          <span className="text-xs">Video</span>
         </Button>
       )}
       {showImageButton && onImageGenerate && (

@@ -1,5 +1,8 @@
 import { StatCountUp } from '@/components/motion/StatCountUp';
+import { useState } from 'react';
 import { useUsableImage } from '@/hooks/useUsableImage';
+import { usableBackgroundVideo } from '@/lib/video';
+import { BackgroundVideo } from '@/components/video/BackgroundVideo';
 import { TreatedImage } from '../TreatedImage';
 import { ChapterEyebrow, GradientPayoff } from '@/components/signature/elements';
 import { useUsableLogo } from '@/hooks/useUsableLogo';
@@ -45,7 +48,11 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
   const headingWeight = content.headingWeight || 500;
   const usesSerif = content.typographyPairing === 'serif-sans';
 
-  const heroImage = useUsableImage(content.backgroundImage || content.heroImage);
+  const photo = useUsableImage(content.backgroundImage || content.heroImage);
+  // A background video plays muted in the photo panel; a failed load falls back to the photo.
+  const [videoFailed, setVideoFailed] = useState(false);
+  const bgVideo = videoFailed ? null : usableBackgroundVideo(content.backgroundVideo, import.meta.env.VITE_SUPABASE_URL);
+  const heroImage = bgVideo ? bgVideo.poster || 'video' : photo;
 
   return (
     <section
@@ -147,11 +154,15 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
           {heroImage && (
             <div className="lg:col-span-5">
               <div className="relative overflow-hidden shadow-xl">
-                <TreatedImage priority
-                  src={heroImage}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
+                {bgVideo ? (
+                  <BackgroundVideo video={bgVideo} onFail={() => setVideoFailed(true)} className="w-full h-full" style={{ aspectRatio: '4 / 5' }} />
+                ) : (
+                  <TreatedImage priority
+                    src={heroImage as string}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
             </div>
           )}

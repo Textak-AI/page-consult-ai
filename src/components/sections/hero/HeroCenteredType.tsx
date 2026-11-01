@@ -1,5 +1,8 @@
 import { StatCountUp } from '@/components/motion/StatCountUp';
+import { useState } from 'react';
 import { useUsableImage } from '@/hooks/useUsableImage';
+import { usableBackgroundVideo } from '@/lib/video';
+import { BackgroundVideo } from '@/components/video/BackgroundVideo';
 import { TreatedImage } from '../TreatedImage';
 import { ChapterEyebrow, GradientPayoff } from '@/components/signature/elements';
 import { useUsableLogo } from '@/hooks/useUsableLogo';
@@ -67,7 +70,11 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
   const rawHeroSrc = content.backgroundImage || content.heroImage;
   const generatedTexture = content.imageStyle === 'ambient-texture' && !content.imageAsset
     && typeof rawHeroSrc === 'string' && rawHeroSrc.startsWith('data:');
-  const heroImage = useUsableImage(generatedTexture ? null : rawHeroSrc);
+  const usableImage = useUsableImage(generatedTexture ? null : rawHeroSrc);
+  // Background video (owner upload) takes the photo's place under the same scrim; a failed load falls back to the photo.
+  const [videoFailed, setVideoFailed] = useState(false);
+  const bgVideo = videoFailed ? null : usableBackgroundVideo(content.backgroundVideo, import.meta.env.VITE_SUPABASE_URL);
+  const heroImage = bgVideo ? null : usableImage;
 
   return (
     <>
@@ -84,6 +91,15 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
       {/* AI-generated ambient background image at low opacity */}
       {/* Image-bearing hero: a place/mood photo under a scrim. A missing or
           failing image simply hides, leaving the typographic fallback. */}
+      {bgVideo && (
+        <>
+          <BackgroundVideo video={bgVideo} onFail={() => setVideoFailed(true)} className="absolute inset-0 z-0 h-full w-full" style={{ opacity: 0.55 }} />
+          <div
+            className="absolute inset-0 z-0 pointer-events-none"
+            style={{ background: `linear-gradient(180deg, ${bgStyles.bg}cc 0%, ${bgStyles.bg}99 45%, ${bgStyles.bg} 100%)` }}
+          />
+        </>
+      )}
       {heroImage && (
         <>
           <TreatedImage background priority
@@ -114,14 +130,14 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
       {/* Typographic hero atmosphere, all brand-derived CSS: a soft light
           field from above in the primary colour, and an engineering grid that
           fades out from the headline. */}
-      {!heroImage && (
+      {!heroImage && !bgVideo && (
         <div
           aria-hidden="true"
           className="absolute inset-0 pointer-events-none z-0"
           style={{ background: `radial-gradient(ellipse 70% 55% at 50% -8%, color-mix(in srgb, ${primaryColor} 40%, transparent) 0%, transparent 70%)` }}
         />
       )}
-      {!heroImage && content.hasGridTexture && (
+      {!heroImage && !bgVideo && content.hasGridTexture && (
         <div
           aria-hidden="true"
           className="absolute inset-0 pointer-events-none z-0"

@@ -128,3 +128,9 @@
 - /wizard no longer offers the chat-vs-form either/or; it keeps its resume redirects, then sends un-onboarded accounts to /welcome and everyone else to /wizard/form. profiles.onboarded_at was backfilled for accounts with any consultation or page; a failed profile read never blocks (needsOnboarding).
 - Greetings use a stated first name only (firstNameOf), never the email prefix; with no name the dashboard says "Welcome back".
 - Page Chat may only point to the controls in EDITOR_CONTROLS (_shared/pageChat.ts). It told an owner to "upload a video in the sidebar"; there is no video support.
+
+## Video (2026-11-01)
+- `src/lib/video.ts` is the one gate: a video is an owner upload in brand-assets `${uid}/videos/` (MP4/MOV/WebM, ≤50 MB, poster frame captured client-side) or a link that re-parses to YouTube (privacy-enhanced embed), Vimeo (dnt), Loom or Wistia. `usableVideo` rebuilds embed URLs and rejects anything else, so stored URLs are never trusted.
+- Three placements, same shape: Video section (type `video`, content.video, upload-only so Page Chat can't add it; hidden on published pages until a video exists; `hiddenReason` says so), a video under any section (content.attachedVideo, rendered by AttachedVideo on the section's own surface in both renderers; toolbar Video button), and hero background (hero content.backgroundVideo, uploads only, muted loop under the scrim in centered-type, in the photo panel in split-photo; reduced motion / data saver show the poster; failure falls back to the photo).
+- Lower third (name, title/business) is the owner's own words, drawn over uploaded videos (never burned in) with the brand colour bar, brand-deep glass and the owner's heading font; shows before play and for the first 6 s.
+- Page Chat: video keys are in NON_COPY_KEY (never sent, never merged); EDITOR_CONTROLS lists the video controls.
