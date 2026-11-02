@@ -6,7 +6,7 @@ import { COPY_REGISTER_RULES, PROVENANCE_RULES, logRegisterViolations, logProven
 import { computeCommunicationStrategy, auditCommunicationStrategy } from '../_shared/communicationStrategy.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@4';
-import { guardCopyClaims } from '../_shared/copyClaims.ts';
+import { guardCopyClaims, pinStatedProof } from '../_shared/copyClaims.ts';
 import { BUYER_OBJECTION_RULES, consultationObjections, applyAnsweredObjections } from '../_shared/buyerObjections.ts';
 import { pinStatedCopy, siteCopyPromptBlock } from '../_shared/siteExtraction.ts';
 import { withCharge } from '../_shared/planLimits.ts';
@@ -460,6 +460,7 @@ Be specific. No generic advice. Everything should tie back to the actual consult
       applyBriefGuards(structuredBrief, consultationData);
       // Owner-stated CTA (typed or verbatim from their site) outranks the model's restatement.
       pinStatedCopy(structuredBrief, consultationData);
+      pinStatedProof(structuredBrief, consultationData);
       structuredBrief = guardCopyClaims(structuredBrief, consultationData, 'brief-guard');
       applyAnsweredObjections(structuredBrief, consultationData);
       // The brief records the choices it was written to, so the page and its strategy trace use the same ones.

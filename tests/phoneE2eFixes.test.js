@@ -76,3 +76,25 @@ test('stat chips keep the owner\'s count and words', async () => {
     expect(read(f)).not.toMatch(/\+ '\+'|\}\+`|value: '(?:Leader|Trusted)'/);
   }
 });
+
+test('Tallyrun run: stated proof is pinned word for word; audience ranges never become proof; counts keep their quality', async () => {
+  const { pinStatedProof, unQualifyCounts, guardCopyClaims } = await import('../supabase/functions/_shared/copyClaims');
+  const input = {
+    idealClient: 'Controllers at residential property management companies with 200 to 2,000 units.',
+    clientCount: '38 property management companies (TEST DATA)',
+    achievements: 'SOC 2 Type II report (TEST DATA)',
+    yearsInBusiness: 'Launched in 2023',
+    objections: [{ question: 'Fit?', answer: 'It reads bank feeds and exports to AppFolio, Buildium and Yardi general ledgers.' }],
+  };
+  const brief = { proofPoints: { clientCount: '38 property management companies', achievements: 'SOC 2 Type II report', yearsInBusiness: null,
+    otherStats: ['Launched in 2023', 'Exports to AppFolio, Buildium and Yardi', 'Serves portfolios from 200 to 2,000 units'] } };
+  pinStatedProof(brief, input);
+  expect(brief.proofPoints.clientCount).toBe('38 property management companies (TEST DATA)');
+  expect(brief.proofPoints.achievements).toBe('SOC 2 Type II report (TEST DATA)');
+  expect(brief.proofPoints.yearsInBusiness).toBe('Launched in 2023');
+  expect(brief.proofPoints.otherStats).toEqual(['Launched in 2023', 'Exports to AppFolio, Buildium and Yardi']);
+  expect(unQualifyCounts('Trusted by 38 live customers.', input)).toBe('Trusted by 38 customers.');
+  expect(unQualifyCounts('38 active users', { clientCount: '38 active users' })).toBe('38 active users');
+  expect(guardCopyClaims({ s: 'Used by 38 happy teams.' }, input, 't').s).toBe('Used by 38 teams.');
+  expect(read('supabase/functions/generate-strategy-brief/index.ts')).toMatch(/pinStatedProof\(structuredBrief, consultationData\)/);
+});

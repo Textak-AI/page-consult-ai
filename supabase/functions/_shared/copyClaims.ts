@@ -62,6 +62,53 @@ export function unInflateCounts(text: string, input: unknown): string {
   return text.replace(/(?<![A-Za-z\d])(\d[\d,]*)\s?\+(?![\d+])/g, (whole, n: string) =>
     said.includes(`${n.replace(/,/g, '')}+`) ? whole : n);
 }
+/** Adjectives that upgrade a stated count ("38 live customers" from "38 property management companies"). */
+const COUNT_QUALIFIERS = 'live|active|happy|satisfied|loyal|paying|enterprise|leading|trusted|thriving|delighted|repeat|returning|long-term';
+/** Removes a quality the input never gave a stated count: "38 live customers" -> "38 customers". */
+export function unQualifyCounts(text: string, input: unknown): string {
+  if (!text || !/\d/.test(text)) return text;
+  const said = inputCopyText(input).toLowerCase().replace(/,/g, '');
+  return text.replace(new RegExp(`(?<![A-Za-z\\d])(\\d[\\d,]*)\\s+(${COUNT_QUALIFIERS})\\s+`, 'gi'), (whole, n: string, adj: string) =>
+    said.includes(`${n.replace(/,/g, '')} ${adj.toLowerCase()}`) ? whole : `${n} `);
+}
+
+/** Proof fields: the only answers a proof stat may come from (audience and offer answers describe, they don't prove). */
+export const PROOF_FIELDS = ['clientCount', 'client_count', 'yearsInBusiness', 'years_in_business', 'achievements', 'credentials', 'concreteProofStory', 'caseStudyHighlight', 'case_study_highlight', 'testimonialText'];
+const tokenRun = (t: string) => (t.toLowerCase().replace(/[’']/g, "'").match(/[a-z0-9$%']+/g) || []);
+const runsOf = (t: string, n: number) => { const tk = tokenRun(t); const out = new Set<string>(); for (let i = 0; i + n <= tk.length; i++) out.add(tk.slice(i, i + n).join(' ')); return out; };
+
+/**
+ * The brief's proof points are the owner's own proof, word for word: stated
+ * counts, years and credentials replace the model's restatement (which dropped
+ * qualifiers like "About" or "(TEST DATA)"), and an extra stat survives only
+ * if it reuses a proof answer (four words in a row, or the whole answer).
+ * An audience range ("200 to 2,000 units") is never promoted to proof.
+ */
+export function pinStatedProof(brief: Record<string, any>, input: Record<string, any>): void {
+  const pp = brief?.proofPoints;
+  if (!pp || typeof pp !== 'object') return;
+  const stated = (k: string[]) => k.map((f) => input?.[f]).find((v) => typeof v === 'string' && v.trim()) as string | undefined;
+  const count = stated(['clientCount', 'client_count']);
+  const years = stated(['yearsInBusiness', 'years_in_business']);
+  const creds = stated(['achievements', 'credentials']);
+  if (count) pp.clientCount = count.trim();
+  if (years) pp.yearsInBusiness = years.trim();
+  if (creds) pp.achievements = creds.trim();
+  if (Array.isArray(pp.otherStats)) {
+    const proof = [...PROOF_FIELDS.map((f) => input?.[f]), ...(Array.isArray(input?.objections) ? input.objections.map((o: any) => o?.answer) : [])]
+      .filter((v): v is string => typeof v === 'string' && !!v.trim());
+    const proofRuns = new Set(proof.flatMap((p) => [...runsOf(p, 4)]));
+    const proofWhole = proof.map((p) => tokenRun(p).join(' '));
+    pp.otherStats = pp.otherStats.filter((stat: unknown) => {
+      if (typeof stat !== 'string') return false;
+      const whole = tokenRun(stat).join(' ');
+      const keep = proofWhole.some((p) => p.includes(whole) || whole.includes(p)) || [...runsOf(stat, 4)].some((r) => proofRuns.has(r));
+      if (!keep) console.log(`🛡️ [brief-guard] Removed proof stat not taken from a proof answer: "${stat.slice(0, 80)}"`);
+      return keep;
+    });
+  }
+}
+
 export const OFFER_TERMS = ['No credit card required', 'Free to start', 'Cancel anytime', 'Free consultation', 'No obligation', 'No commitment', 'Pay as you go', 'No contracts'];
 export function stripUnsupportedOfferTerms(text: string, input: unknown, removed: string[] = []): string {
   const source = inputCopyText(input).toLowerCase();
@@ -79,7 +126,7 @@ export function guardCopyClaims<T>(output: T, input: unknown, label = 'copy-guar
     if (structural.test(key)) return value;
     if (typeof value === 'string') {
       const removed: string[] = [];
-      const counted = unInflateCounts(value, input);
+      const counted = unQualifyCounts(unInflateCounts(value, input), input);
       if (counted !== value) console.log(`[${label}] Removed "+" from a stated count at ${path}`);
       const terms = stripUnsupportedOfferTerms(counted, input, removed);
       if (removed.length) console.log(`[${label}] Removed unsupported offer terms at ${path}`, JSON.stringify(removed));

@@ -166,3 +166,4 @@
 
 ## Migrations (2026-11-01)
 - Live migrations are `drizzle/migrations/NNNN_name.sql` (with meta/_journal.json); Lovable applies and records them. `supabase/migrations/` is historical and nothing runs from it any more: never add new files there. The owner test allowance is applied as 0013_owner_test_allowance (do not re-run).
+- Stated proof is pinned (copyClaims.pinStatedProof, run in generate-strategy-brief after pinStatedCopy): proofPoints.clientCount / yearsInBusiness / achievements are the owner's text verbatim (qualifiers like "About" or "(TEST DATA)" kept), and otherStats survive only if they reuse a proof answer (PROOF_FIELDS + objection answers; four words in a row or whole). Audience ranges are never proof. guardCopyClaims also runs unQualifyCounts ("38 live customers" -> "38 customers" unless stated).
