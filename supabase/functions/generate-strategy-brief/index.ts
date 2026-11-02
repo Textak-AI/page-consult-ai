@@ -58,6 +58,9 @@ const handle = async (req: Request): Promise<Response> => {
       return new Response(JSON.stringify({ success: true, communicationStrategy, flags }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
     const { consultationData } = body;
+    if (!consultationData || typeof consultationData !== 'object') {
+      return new Response(JSON.stringify({ success: false, error: 'consultationData is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     // Six choices scored from the owner's answers (deterministic, client-side); labels only, validated here.
     const messagingChoices = parseMessagingChoices(body.messagingChoices);
     
