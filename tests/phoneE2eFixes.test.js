@@ -98,3 +98,27 @@ test('Tallyrun run: stated proof is pinned word for word; audience ranges never 
   expect(guardCopyClaims({ s: 'Used by 38 happy teams.' }, input, 't').s).toBe('Used by 38 teams.');
   expect(read('supabase/functions/generate-strategy-brief/index.ts')).toMatch(/pinStatedProof\(structuredBrief, consultationData\)/);
 });
+
+test('three-industry run fixes: pre-launch, auto-QC, consumer questions, industry search', async () => {
+  const { upcomingQuarters } = await import('../src/components/consultation/beta/BetaTimelineStep');
+  expect(upcomingQuarters(new Date('2026-11-02')).map((q) => q.label)).toEqual(['Q4 2026', 'Q1 2027', 'Q2 2027', 'Q3 2027']);
+  const sc = read('src/components/consultation/StrategicConsultation.tsx');
+  const beta = sc.slice(sc.indexOf('const BETA_STEPS'), sc.indexOf('];', sc.indexOf('const BETA_STEPS')));
+  expect(beta).toMatch(/id: 'audience'/);
+  expect(read('src/components/consultation/beta/BetaTimelineStep.tsx')).not.toMatch(/countdown urgency/);
+  const mapper = read('src/utils/sectionMapper.ts');
+  expect(mapper).not.toMatch(/isBetaPage \? 'beta-perks' : 'features'|isBetaPage \? 'waitlist-proof'/);
+  expect(mapper).toMatch(/type: 'beta-perks'[\s\S]{0,200}perks: chosenPerks/);
+  const { ARC_SLOT_TYPES } = await import('../src/lib/composition/arc');
+  expect(ARC_SLOT_TYPES.hero).toContain('beta-hero-teaser');
+  expect(read('src/components/sections/WaitlistProofSection.tsx')).toMatch(/if \(!hasRealCount\) return null/);
+  const qc = read('src/lib/autoQCPass.ts');
+  for (const s of ["We're happy to walk through", 'Start Your Free Trial', 'Start Free Trial', 'powered by', 'Trust ${']) expect(qc).not.toContain(s);
+  const { autoQCPass } = await import('../src/lib/autoQCPass');
+  const out = autoQCPass([{ type: 'faq', content: { items: [{ question: 'Area?', answer: 'Westlake and Bay Village.' }] } }, { type: 'final-cta', content: { ctaText: 'Get Started' } }], {}, { ctaText: 'Book a Walk-Through' }, 'Brightside');
+  expect(out.sections[0].content.items[0].answer).toBe('Westlake and Bay Village.');
+  expect(out.sections[1].content.ctaText).toBe('Book a Walk-Through');
+  const { promptsFor } = await import('../supabase/functions/_shared/buyerObjections');
+  expect(promptsFor({ industryCategory: 'Consumer Apps' }).map((p) => p.topic)).toEqual(['pricing', 'timeline', 'fit']);
+  expect(read('src/components/consultation/IndustrySelector.tsx')).toMatch(/allMatches/);
+});

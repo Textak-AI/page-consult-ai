@@ -208,6 +208,8 @@ const IR_STEPS = [
 // Beta/Pre-launch specific steps
 const BETA_STEPS = [
   { id: 'beta-stage', title: 'Launch Stage', icon: Rocket },
+  // Who it's for and what it changes: without this the brief invented the audience and the problem.
+  { id: 'audience', title: 'Target Audience', icon: Users },
   { id: 'beta-timeline', title: 'Timeline', icon: Calendar },
   { id: 'beta-perks', title: 'Early Adopter Perks', icon: Gift },
   { id: 'beta-viral', title: 'Viral Referrals', icon: Share2 },
@@ -1436,7 +1438,7 @@ ${d.ctaText}
                   id="uniqueStrength"
                   placeholder={
                     data.pageType === 'beta-prelaunch'
-                      ? "e.g., AI that actually learns YOUR focus patterns, not generic productivity tips..."
+                      ? 'e.g., One photo of your shelf gives you three dinners you can make tonight'
                       : localServiceBusiness(data)
                         ? getWizardPlaceholders(data.industryCategory).uniqueStrength
                         : uniqueStrengthExample(getOfferKind(data.industryCategory || data.industry, data.industrySubcategory), data.productName)

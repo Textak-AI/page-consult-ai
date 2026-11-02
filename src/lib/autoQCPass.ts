@@ -166,6 +166,12 @@ function companyNameAlreadyPresent(text: string, companyName: string): boolean {
 // GENERIC PHRASE RULES
 // ========================
 
+/** The owner's own button text, if they gave one. */
+function statedCta(intel: any): string | null {
+  const v = intel?.ctaText || intel?.primaryCTA || intel?.primary_cta;
+  return typeof v === 'string' && v.trim() ? v.trim() : null;
+}
+
 const GENERIC_PHRASES: Array<{
   pattern: RegExp;
   replacement: (intel: any, company: string) => string | null;
@@ -174,22 +180,16 @@ const GENERIC_PHRASES: Array<{
 }> = [
   {
     pattern: /^Why Choose Us$/i,
-    replacement: (intel, co) => intel?.audience
-      ? `Why ${capitalize(intel.audience.split(',')[0].trim())} Trust ${co || 'Us'}`
-      : co ? `Why Teams Choose ${co}` : null,
-    reason: 'Generic header → audience-specific trust statement',
+    // "Why X Trust Y" claimed trust nobody stated; the business name is enough.
+    replacement: (_intel, co) => co ? `Why ${co}` : null,
+    reason: 'Generic header → the business name',
     fieldsToCheck: ['headline', 'title'],
   },
   {
     pattern: /^Get Started$/i,
-    replacement: (intel) => {
-      const goal = intel?.goal || intel?.ctaGoal || '';
-      if (goal.toLowerCase().includes('demo')) return 'Schedule Your Demo';
-      if (goal.toLowerCase().includes('consult')) return 'Book Your Consultation';
-      if (goal.toLowerCase().includes('trial')) return 'Start Your Free Trial';
-      return 'See How It Works';
-    },
-    reason: 'Generic CTA → goal-aligned action',
+    // Only the owner's own button text may replace a generic one; a demo, trial or consultation is never assumed.
+    replacement: (intel) => statedCta(intel),
+    reason: 'Generic CTA → the owner\'s stated button',
     fieldsToCheck: ['ctaText', 'secondaryCta'],
   },
   {
@@ -202,7 +202,7 @@ const GENERIC_PHRASES: Array<{
   },
   {
     pattern: /^Learn More$/i,
-    replacement: () => 'See How It Works',
+    replacement: (intel) => statedCta(intel),
     reason: 'Vague CTA → specific action',
     fieldsToCheck: ['ctaText', 'secondaryCta'],
   },
@@ -305,68 +305,19 @@ function runStructuralPass(
     const content = { ...section.content };
 
     switch (section.type) {
-      case 'hero': {
-        const headline = (content.headline || '').toLowerCase();
-        const audience = intel?.audience || consultationData?.target_audience || '';
-        const audienceKeyword = audience.split(',')[0].trim().slice(0, 20).toLowerCase();
+      // hero: no edits. Appending "for <audience>" produced ungrammatical lines and changed the owner's words.
 
-        if (audienceKeyword.length > 3 && !headline.includes(audienceKeyword)) {
-          if (content.subheadline && !content.subheadline.toLowerCase().includes(audienceKeyword) && content.subheadline.length < 120) {
-            const original = content.subheadline;
-            content.subheadline = `${original} for ${audience.split(',')[0].trim()}`;
-            improvements.push({
-              sectionType: 'hero', field: 'subheadline',
-              before: original, after: content.subheadline,
-              reason: 'Added audience specificity — visitor should know "this is for me"',
-              category: 'personalization',
-            });
-          }
-        }
-        break;
-      }
-
-      case 'faq': {
-        if (Array.isArray(content.items)) {
-          content.items = content.items.map((item: any) => {
-            const answer = item.answer || '';
-            const sentenceCount = (answer.match(/[.!?]+/g) || []).length;
-            if (sentenceCount < 2 && answer.length < 60 && answer.length > 5) {
-              const expanded = `${answer}${answer.endsWith('.') ? '' : '.'} We're happy to walk through the specifics for your situation — this is a common consideration for teams evaluating ${companyName || 'our platform'}.`;
-              improvements.push({
-                sectionType: 'faq', field: 'items[].answer',
-                before: answer, after: expanded,
-                reason: 'Expanded thin FAQ answer (was <2 sentences)',
-                category: 'specificity',
-              });
-              return { ...item, answer: expanded };
-            }
-            return item;
-          });
-        }
-        break;
-      }
+      // faq: answers are the owner's words, verbatim. The old padding appended
+      // a stock sales line to short answers.
 
       case 'final-cta': {
-        const goal = consultationData?.goal || intel?.goal || intel?.ctaGoal || '';
+        // A generic button becomes the owner's stated button, never an assumed demo, trial or call.
+        const stated = statedCta(consultationData) || statedCta(intel);
         const ctaText = (content.ctaText || '').toLowerCase();
-        if (goal && (ctaText === 'get started' || ctaText === 'learn more' || ctaText === 'contact us' || ctaText === 'sign up')) {
+        if (stated && ['get started', 'learn more', 'contact us', 'sign up'].includes(ctaText)) {
           const originalCta = content.ctaText;
-          const goalLower = goal.toLowerCase();
-          if (goalLower.includes('demo')) content.ctaText = `Schedule ${companyName ? companyName + ' ' : ''}Demo`;
-          else if (goalLower.includes('consult')) content.ctaText = 'Book Your Consultation';
-          else if (goalLower.includes('trial')) content.ctaText = 'Start Free Trial';
-          else if (goalLower.includes('assess')) content.ctaText = 'Get Your Assessment';
-          else if (goalLower.includes('call')) content.ctaText = 'Schedule a Call';
-          else content.ctaText = `Get Started with ${companyName || 'Us'}`;
-
-          if (content.ctaText !== originalCta) {
-            improvements.push({
-              sectionType: 'final-cta', field: 'ctaText',
-              before: originalCta, after: content.ctaText,
-              reason: 'Aligned CTA with stated page goal',
-              category: 'specificity',
-            });
-          }
+          content.ctaText = stated;
+          improvements.push({ sectionType: 'final-cta', field: 'ctaText', before: originalCta, after: stated, reason: 'Generic button → your stated button', category: 'specificity' });
         }
         break;
       }
@@ -467,8 +418,6 @@ function runUtilizationPass(
             improved = improved.replace(/apart$/i, `${companyName} apart`);
           } else if (/^What sets\s+apart/i.test(improved)) {
             improved = improved.replace(/^What sets\s+apart/i, `What sets ${companyName} apart`);
-          } else if (!improved.includes(companyName)) {
-            improved = `${improved} — powered by ${companyName}`;
           }
 
           if (improved !== original) {

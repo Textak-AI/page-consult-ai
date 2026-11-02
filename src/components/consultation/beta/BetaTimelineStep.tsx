@@ -21,20 +21,23 @@ interface TimelineOption {
   showDatePicker?: boolean;
 }
 
-export type TimelineId = 
-  | 'specific' 
-  | 'q1-2026' 
-  | 'q2-2026' 
-  | 'q3-2026' 
-  | 'q4-2026' 
-  | 'tbd';
+export type TimelineId = string;
+
+/** The next four calendar quarters from today ("q1-2027"), so no option is already in the past. */
+export function upcomingQuarters(now: Date = new Date()): { id: string; label: string }[] {
+  let q = Math.floor(now.getMonth() / 3) + 1;
+  let y = now.getFullYear();
+  const out: { id: string; label: string }[] = [];
+  for (let n = 0; n < 4; n++) {
+    out.push({ id: `q${q}-${y}`, label: `Q${q} ${y}` });
+    q += 1; if (q > 4) { q = 1; y += 1; }
+  }
+  return out;
+}
 
 const TIMELINE_OPTIONS: TimelineOption[] = [
   { id: 'specific', label: 'Specific date', icon: Calendar, showDatePicker: true },
-  { id: 'q1-2026', label: 'Q1 2026', icon: Clock },
-  { id: 'q2-2026', label: 'Q2 2026', icon: Clock },
-  { id: 'q3-2026', label: 'Q3 2026', icon: Clock },
-  { id: 'q4-2026', label: 'Q4 2026', icon: Clock },
+  ...upcomingQuarters().map((o) => ({ ...o, icon: Clock })),
   { id: 'tbd', label: "When it's ready", icon: HelpCircle },
 ];
 
@@ -68,7 +71,7 @@ export function BetaTimelineStep({
           When do you plan to launch?
         </h2>
         <p className="text-slate-400">
-          We'll create countdown urgency based on your timeline
+          We'll mention your launch timing on the page. No countdowns or made-up deadlines.
         </p>
       </div>
 

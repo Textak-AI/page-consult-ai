@@ -15,8 +15,14 @@ export function localServiceBusiness(input: Record<string, any>): boolean {
 }
 const LOCAL_ONLY = new Set(['area', 'access']);
 const BUSINESS_ONLY = new Set(['effort', 'fit', 'materials']);
+/** Consumer products sell to individuals: there is no "buyer's team". */
+export function consumerBusiness(input: Record<string, any>): boolean {
+  const t = ['industryCategory', 'industry'].map(k => typeof input?.[k] === 'string' ? input[k] : '').join(' ');
+  return /consumer apps|e-commerce \/ retail/i.test(t);
+}
 /** The questions to ask this business, in order. */
 export function promptsFor(input: Record<string, any>) {
+  if (consumerBusiness(input)) return BUYER_OBJECTION_PROMPTS.filter(p => !['effort', 'area', 'access', 'materials'].includes(p.topic));
   const local = localServiceBusiness(input);
   return BUYER_OBJECTION_PROMPTS.filter(p => local
     ? !BUSINESS_ONLY.has(p.topic)

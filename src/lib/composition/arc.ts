@@ -7,12 +7,12 @@ export type ArcSlot = 'hero' | 'problem' | 'guide' | 'plan' | 'outcome' | 'proof
 /** Section types that satisfy each arc slot (first entry is inserted when the slot is missing). */
 export const ARC_SLOT_TYPES: Record<ArcSlot, string[]> = {
   proof: ['work-samples', 'social-proof', 'credentials-bar', 'stats-bar'],
-  hero: ['hero'],
+  hero: ['hero', 'beta-hero-teaser'],
   problem: ['problem-solution', 'the-real-challenge', 'stakes-amplify'],
   guide: ['differentiator-callout', 'our-approach', 'expertise-areas'],
   plan: ['how-it-works', 'engagement-model'],
-  outcome: ['features', 'client-results'],
-  cta: ['final-cta'],
+  outcome: ['features', 'client-results', 'beta-perks'],
+  cta: ['final-cta', 'beta-final-cta'],
 };
 
 const ARC_ORDER: ArcSlot[] = ['hero', 'problem', 'guide', 'plan', 'outcome', 'proof', 'cta'];

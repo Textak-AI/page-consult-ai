@@ -264,6 +264,16 @@ export function IndustrySelector({ value, onChange }: IndustrySelectorProps) {
   const activeCategory = hovered
     ?? (searchQuery ? filteredCategories[0] : selectedCategory);
 
+  // While searching with nothing tapped, show every matching option from every category,
+  // so "clean" finds Cleaning / Maid Services, not just the first category's Clean Tech.
+  const q = searchQuery.toLowerCase();
+  const allMatches = searchQuery && !hovered
+    ? INDUSTRY_DATA.flatMap(cat => cat.subIndustries
+        .filter(sub => sub.label.toLowerCase().includes(q) || cat.label.toLowerCase().includes(q))
+        .map(sub => ({ cat, sub })))
+        .sort((a, b) => Number(!a.sub.label.toLowerCase().startsWith(q)) - Number(!b.sub.label.toLowerCase().startsWith(q)))
+    : null;
+
   // Filter sub-industries by search within active category (a category-name match shows all of it)
   const categoryNameMatch = !!searchQuery && !!activeCategory?.label.toLowerCase().includes(searchQuery.toLowerCase());
   const filteredSubIndustries = activeCategory?.subIndustries.filter(sub =>
@@ -380,8 +390,23 @@ export function IndustrySelector({ value, onChange }: IndustrySelectorProps) {
 
               {/* Right Column: Sub-industries */}
               <div className="w-full sm:w-1/2 overflow-y-auto">
+                {allMatches && (
+                  <div>
+                    {allMatches.map(({ cat, sub }) => (
+                      <button
+                        key={`${cat.id}-${sub.id}`}
+                        type="button"
+                        onClick={() => handleSelect(cat, sub)}
+                        className="w-full px-4 py-2 text-left text-slate-300 hover:text-white hover:bg-slate-700/30"
+                      >
+                        <span className="block truncate text-sm">{sub.label}</span>
+                        <span className="block truncate text-xs text-slate-500">{cat.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <AnimatePresence mode="wait">
-                  {activeCategory && (
+                  {!allMatches && activeCategory && (
                     <motion.div
                       key={activeCategory.id}
                       initial={{ opacity: 0 }}

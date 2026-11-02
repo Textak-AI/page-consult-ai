@@ -565,7 +565,8 @@ export function mapBriefToSections(
         );
 
         if (enhancedPillars.length > 0) {
-          const featuresType = isBetaPage ? 'beta-perks' : 'features';
+          // Pre-launch pages keep their product features; the owner's chosen perks get their own section below.
+          const featuresType = 'features';
           console.log('[sectionMapper] Features type:', featuresType);
           
           sections.push({
@@ -573,11 +574,8 @@ export function mapBriefToSections(
             order,
             visible: true,
             content: {
-              title: isBetaPage 
-                ? 'Early Adopter Perks' 
-                : arcSrc.offer?.trim() || (intelligentHeaders.features?.title || headerFor('features').title),
+              title: arcSrc.offer?.trim() || (intelligentHeaders.features?.title || headerFor('features').title),
               subtitle: (() => {
-                if (isBetaPage) return 'What you get by joining early';
                 // Outcome slot titled with the client's stated offer: no generic header copy.
                 if (arcSrc.offer?.trim()) return undefined;
                 if (intelligentHeaders.features?.subtitle) return intelligentHeaders.features.subtitle;
@@ -602,6 +600,18 @@ export function mapBriefToSections(
               businessName: businessName || '',
               mode: sdiMode,
             },
+          });
+        }
+        // Only perks the owner picked in the wizard, by id (the section maps ids to labels).
+        const chosenPerks: string[] = Array.isArray((options.consultationData as any)?.betaConfig?.perks)
+          ? (options.consultationData as any).betaConfig.perks.filter((p: unknown) => typeof p === 'string' && p)
+          : [];
+        if (isBetaPage && chosenPerks.length > 0) {
+          sections.push({
+            type: 'beta-perks',
+            order,
+            visible: true,
+            content: { headline: 'Early Adopter Perks', subheadline: 'What you get by joining early', perks: chosenPerks, mode: sdiMode },
           });
         }
         break;
@@ -673,7 +683,8 @@ export function mapBriefToSections(
           !!rankedTestimonials[0].quote && rankedTestimonials[0].quote.trim().length > 10 &&
           !isPlaceholderTestimonial(rankedTestimonials[0]);
         
-        const socialProofType = isBetaPage ? 'waitlist-proof' : 'social-proof';
+        // waitlist-proof showed signup counters with no real data; pre-launch pages use the same real-quote gate.
+        const socialProofType = 'social-proof';
         console.log('[sectionMapper] Social proof type:', socialProofType);
         console.log('[sectionMapper] Has real testimonials:', hasRealTestimonials);
         if (hasRealTestimonials) {
@@ -697,9 +708,7 @@ export function mapBriefToSections(
           order,
           visible: true,
           content: {
-            title: isBetaPage 
-              ? 'Join the Waitlist' 
-              : (intelligentHeaders.proof?.title || headerFor('testimonials').title),
+            title: intelligentHeaders.proof?.title || headerFor('testimonials').title,
             subtitle: intelligentHeaders.proof?.subtitle || headerFor('testimonials').subtitle,
             // Pass single testimonial object for component compatibility
             testimonial: primaryTestimonial,

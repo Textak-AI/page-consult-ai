@@ -61,6 +61,8 @@ function useCountUp(end: number, duration: number = 2000, startOnView: boolean =
 
 export function WaitlistProofSection({ content, recentSignups = [], styles }: Props) {
   const [currentSignupIndex, setCurrentSignupIndex] = useState(0);
+  // Counters only from real signup numbers; never "0 on the waitlist" or an invented count.
+  const hasRealCount = typeof content?.totalSignups === 'number' && content.totalSignups > 0;
   const primaryColor = styles?.primaryColor || '#06b6d4';
 
   const { count: totalCount, ref: totalRef } = useCountUp(content.totalSignups);
@@ -100,6 +102,8 @@ export function WaitlistProofSection({ content, recentSignups = [], styles }: Pr
         }]
       : []),
   ];
+
+  if (!hasRealCount) return null;
 
   return (
     <section className="py-16 bg-slate-900/50">

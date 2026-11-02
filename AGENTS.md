@@ -167,3 +167,9 @@
 ## Migrations (2026-11-01)
 - Live migrations are `drizzle/migrations/NNNN_name.sql` (with meta/_journal.json); Lovable applies and records them. `supabase/migrations/` is historical and nothing runs from it any more: never add new files there. The owner test allowance is applied as 0013_owner_test_allowance (do not re-run).
 - Stated proof is pinned (copyClaims.pinStatedProof, run in generate-strategy-brief after pinStatedCopy): proofPoints.clientCount / yearsInBusiness / achievements are the owner's text verbatim (qualifiers like "About" or "(TEST DATA)" kept), and otherStats survive only if they reuse a proof answer (PROOF_FIELDS + objection answers; four words in a row or whole). Audience ranges are never proof. guardCopyClaims also runs unQualifyCounts ("38 live customers" -> "38 customers" unless stated).
+
+## Three-industry run fixes (2026-11-02)
+- autoQCPass (runs on every built page) may only remove or substitute the owner's own words: no FAQ padding, no appended hero audience, no assumed demo/trial/consultation CTAs (generic buttons become the stated CTA or stay), no "Why X Trust Y", no "— powered by X".
+- Pre-launch (beta-prelaunch): the wizard now asks the Target Audience step; launch quarters are the next four from today (upcomingQuarters), no countdown promise; product features stay a `features` section and the owner's chosen perks (betaConfig.perks ids) get their own `beta-perks` section; waitlist-proof is no longer mapped and never renders without a real signup count; the arc treats beta-hero-teaser / beta-final-cta / beta-perks as hero / cta / outcome.
+- Buyer questions: consumerBusiness (Consumer Apps, E-commerce / Retail) asks pricing, timeline, fit only.
+- IndustrySelector search lists matching options from every category (not just the first matching category).

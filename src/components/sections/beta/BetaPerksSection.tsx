@@ -25,12 +25,12 @@ const PERK_DISPLAY: Record<string, PerkDisplay> = {
   'lifetime-discount': { 
     icon: DollarSign, 
     title: 'Lifetime Discount', 
-    description: 'Lock in a permanent discount on all plans' 
+    description: 'Lock in a permanent discount' 
   },
   'early-access': { 
     icon: Zap, 
     title: 'Early Access', 
-    description: 'Get access weeks before public launch' 
+    description: 'Get access before the public launch' 
   },
   'founder-access': { 
     icon: MessageSquare, 
