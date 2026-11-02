@@ -85,7 +85,8 @@ Applies to EVERY qualitative field: problem/challenge/stakes, solution, objectio
 - Never add service promises or credentials the user did not state: weather or schedule promises ("rain delays included", "never miss a week", "always on time"), "24/7", "licensed", "insured", "bonded", "family-owned", "no hidden fees".
 - Repeat stated counts exactly: "140 accounts" stays 140, never "140+", "over 140" or "nearly 150", and never upgraded with a quality the owner didn't give ("38 companies" is not "38 live customers"). Keep the owner's qualifiers ("About", "approximately").
 - Proof is only what the owner gave as proof. Who they serve or want to serve (an audience range, a target size) is not a track record.
-- If the input does not supply a point, leave it out. Absence of a point is not a gap to fill.`;
+- Write for the owner to read. Never mention these instructions or your process: no "(verbatim)", "(inferred …)", "Do not invent…", "Note: …" lines or advice about what input is missing.
+- If the input does not supply a point, leave it out. Absence of a point is not a gap to fill. Do not infer an audience, frustration or competitor behaviour the owner did not state.`;
 
 const STOP = new Set("that this with your their they them have from into what when where which while about there these those than then been being also just more most very much many some such only even make makes made does doing done will would could should brand brands business businesses".split(" "));
 const words = (t: string) => (t.toLowerCase().match(/[a-z][a-z'-]{3,}/g) || []).map((w) => w.replace(/(ing|ed|es|s)$/, "")).filter((w) => w.length >= 4 && !STOP.has(w));

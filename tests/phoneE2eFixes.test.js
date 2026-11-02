@@ -122,3 +122,23 @@ test('three-industry run fixes: pre-launch, auto-QC, consumer questions, industr
   expect(promptsFor({ industryCategory: 'Consumer Apps' }).map((p) => p.topic)).toEqual(['pricing', 'timeline', 'fit']);
   expect(read('src/components/consultation/IndustrySelector.tsx')).toMatch(/allMatches/);
 });
+
+test('brief working notes and unstated competitor claims never reach the owner', async () => {
+  const { stripBriefLeaks, guardCopyClaims, unsupportedComparison } = await import('../supabase/functions/_shared/copyClaims');
+  const prose = [
+    'Who: Home cooks with ingredients but no plan.',
+    'Frustration (inferred from solution): Standing in front of an open fridge.',
+    'About 120 homes on a recurring schedule (the stated client count, verbatim)',
+    'Testimonial: "Same two people." No other achievements were provided. Do not invent ratings, review counts or awards.',
+    'Note: Only three pillars are recommended due to limited stated differentiators.',
+  ].join('\n');
+  const { text } = stripBriefLeaks(prose);
+  expect(text).toContain('Who: Home cooks with ingredients but no plan.');
+  expect(text).toContain('About 120 homes on a recurring schedule');
+  for (const s of ['inferred', 'verbatim', 'Do not invent', 'Note:']) expect(text).not.toContain(s);
+  const pantry = { uniqueStrength: 'One photo of your fridge shelf gives three dinners.' };
+  expect(unsupportedComparison('Traditional meal planning apps make you enter every item.', pantry)).toBeTruthy();
+  expect(guardCopyClaims({ s: 'One photo is enough. Traditional meal planning apps make you enter every item.' }, pantry, 't').s).toBe('One photo is enough.');
+  const greenline = { uniqueStrength: 'Most outfits here rotate whoever is free.' };
+  expect(unsupportedComparison('Most lawn services rotate crews.', greenline)).toBeNull();
+});

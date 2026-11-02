@@ -32,6 +32,8 @@ export interface IntelProfile {
   tone?: string;
   valueProp?: string;
   edge?: string;
+  /** The outcome the buyer is paying for, in the owner's words. */
+  outcome?: string;
 }
 
 export type ArchetypeEvidence = "thin" | "some" | "strong";
@@ -173,7 +175,7 @@ export function inferArchetype(profile: IntelProfile): {
   matchedMarkers: string[];
 } {
   // Build text from profile fields
-  const profileText = [profile.industry, profile.audience, profile.painPoints, profile.tone, profile.valueProp, profile.edge].filter(Boolean).join(" ").toLowerCase();
+  const profileText = [profile.industry, profile.audience, profile.painPoints, profile.tone, profile.valueProp, profile.edge, profile.outcome].filter(Boolean).join(" ").toLowerCase();
 
   // Also read conversation text from localStorage for richer language analysis
   let conversationText = '';
@@ -210,8 +212,10 @@ export function inferArchetype(profile: IntelProfile): {
     "Decisive Commander": 0, "Cautious Researcher": 0,
   };
 
+  // Whole words only: "data" must not match "update", nor "api" "capital", nor "home" "homeowners".
+  const hasWord = (m: string) => new RegExp(`(^|[^a-z])${m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^a-z])`).test(text);
   for (const [arch, markers] of Object.entries(MARKERS) as [ArchetypeName, string[]][]) {
-    const matched = markers.filter(m => text.includes(m));
+    const matched = markers.filter(hasWord);
     markerCounts[arch] = matched.length;
     scores[arch] += matched.length * 2;
   }
@@ -241,11 +245,16 @@ export function inferArchetype(profile: IntelProfile): {
   }
   if (/executive|recruit|m&a|investment|private equity/.test(ind)) scores["Decisive Commander"] += 3;
   if (/legal|government/.test(ind)) scores["Cautious Researcher"] += 3;
+  // Who buys: households and individuals vs. businesses. A small nudge, not evidence.
+  if (/consumer apps|e-commerce|retail|home & local|lawn|cleaning|hvac|plumb|pet|fitness|food/.test(ind)) scores["Emotional Connector"] += 1;
+  if (/b2b|saas|software|professional services|consulting|financial|manufactur|industrial/.test(ind)) scores["Analytical Validator"] += 1;
 
-  const sorted = (Object.entries(scores) as [ArchetypeName, number][]).sort(([, a], [, b]) => b - a);
+  // Ties (often all zero on short answers) no longer fall to Analytical Validator just because it is listed first.
+  const TIE_ORDER: ArchetypeName[] = ["Emotional Connector", "Cautious Researcher", "Analytical Validator", "Decisive Commander"];
+  const sorted = (Object.entries(scores) as [ArchetypeName, number][]).sort(([an, a], [bn, b]) => (b - a) || (TIE_ORDER.indexOf(an) - TIE_ORDER.indexOf(bn)));
   const total = sorted.reduce((s, [, v]) => s + v, 0) || 1;
   // Industry/price boosts are not evidence about the buyer; only the owner's own words are.
-  const ownerText = [profile.audience, profile.painPoints, profile.tone, profile.valueProp, profile.edge, conversationText, extractedText].join(' ');
+  const ownerText = [profile.audience, profile.painPoints, profile.tone, profile.valueProp, profile.edge, profile.outcome, conversationText, extractedText].join(' ');
   const markerCount = Object.values(markerCounts).reduce((a, b) => a + b, 0);
   const { confidence, evidence } = calibrateArchetypeConfidence({
     margin: sorted[0][1] - sorted[1][1],
@@ -257,7 +266,7 @@ export function inferArchetype(profile: IntelProfile): {
   console.log('🎯 [ArchetypeOptimizer] Inference:', sorted[0][0], '| Confidence:', confidence.toFixed(2), '| Scores:', JSON.stringify(scores));
 
   const winningArchetype = sorted[0][0];
-  const matchedMarkers = MARKERS[winningArchetype].filter(m => text.includes(m));
+  const matchedMarkers = MARKERS[winningArchetype].filter(hasWord);
 
   return {
     archetype: sorted[0][0],
@@ -389,6 +398,7 @@ export function profileFromConsultation(data: Record<string, any> | null | undef
     tone: d.tone,
     valueProp: d.mainOffer,
     edge: d.uniqueStrength,
+    outcome: d.desiredOutcome,
   };
 }
 

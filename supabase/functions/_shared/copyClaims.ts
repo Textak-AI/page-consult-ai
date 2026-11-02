@@ -109,6 +109,37 @@ export function pinStatedProof(brief: Record<string, any>, input: Record<string,
   }
 }
 
+/**
+ * Comparisons with competitors ("traditional meal planning apps make you…", "most agencies…")
+ * are claims about other businesses. They stay only when the owner made a comparison themselves.
+ */
+const COMPETITOR_CLAIM = /\b(?:most|many|other|typical|traditional|generic|conventional|existing|legacy|old-school)\s+(?:[a-z-]+\s+){0,2}(?:agencies|firms|consultants|companies|providers|competitors|studios|apps|tools|platforms|services|software|solutions|vendors|crews|contractors|outfits|cleaners|teams)\b|\bcompetitors?\b|\bunlike\s+(?:other|most|typical|traditional)\b/i;
+const OWNER_COMPARED = /\b(?:competitors?|other|most|many|typical|traditional|tried|switched|unlike|instead of|rather than|before us|cheap)\b/i;
+export function unsupportedComparison(text: string, input: unknown): string | null {
+  const hit = COMPETITOR_CLAIM.exec(text || '');
+  if (!hit) return null;
+  return OWNER_COMPARED.test(inputCopyText(input)) ? null : hit[0];
+}
+
+/**
+ * The brief writer's working notes are not for the owner: "(the stated client count,
+ * verbatim)", "Do not invent ratings…", "Frustration (inferred from solution): …",
+ * "Note: Only three pillars are recommended…". Lines and sentences like these are
+ * removed from brief prose; an "inferred" line is dropped whole because it is a guess.
+ */
+const LEAK_LINE = /^.*\((?:[^)]*\b)?inferred\b[^)]*\).*$|^\s*(?:[-*•]\s*)?(?:Note|Notes)\s*:.*$/gim;
+const LEAK_SENTENCE = /(?:^|(?<=[.!?]\s))(?:Do not|Don['’]t|Never) (?:invent|fabricate|add|make up|guess)[^.!?\n]*[.!?]?/gi;
+const LEAK_PAREN = /\s*\((?:the )?(?:stated|owner['’]s|client['’]s)?[^()]{0,40}\bverbatim\)/gi;
+export function stripBriefLeaks(prose: string): { text: string; removed: string[] } {
+  const removed: string[] = [];
+  const text = (prose || '')
+    .replace(LEAK_LINE, (m) => { removed.push(m.trim()); return ''; })
+    .replace(LEAK_SENTENCE, (m) => { removed.push(m.trim()); return ''; })
+    .replace(LEAK_PAREN, (m) => { removed.push(m.trim()); return ''; })
+    .replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n');
+  return { text, removed };
+}
+
 export const OFFER_TERMS = ['No credit card required', 'Free to start', 'Cancel anytime', 'Free consultation', 'No obligation', 'No commitment', 'Pay as you go', 'No contracts'];
 export function stripUnsupportedOfferTerms(text: string, input: unknown, removed: string[] = []): string {
   const source = inputCopyText(input).toLowerCase();
@@ -139,6 +170,11 @@ export function guardCopyClaims<T>(output: T, input: unknown, label = 'copy-guar
         const promise = unsupportedCommitment(sentence, input);
         if (promise) {
           console.log(`[${label}] Removed unsupported commitment at ${path}`, JSON.stringify({ sentence: sentence.trim(), term: promise }));
+          return false;
+        }
+        const comparison = unsupportedComparison(sentence, input);
+        if (comparison) {
+          console.log(`[${label}] Removed unstated competitor claim at ${path}`, JSON.stringify({ sentence: sentence.trim(), term: comparison }));
           return false;
         }
         const unknown = numbersIn(sentence).filter(n => !allowed.has(n));

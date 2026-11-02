@@ -41,3 +41,12 @@ test('R1: the page opens the way the choice says, unless awareness was stated', 
   const stated = computeCommunicationStrategy({ ...answers, awarenessLevel: 'problem aware', messagingChoices: { headlineFocus: 'outcome-led' } }, {});
   expect(stated.arcEmphasis).toBe('problem-led');
 });
+
+test('buyer scoring: whole words only, outcome counts, and ties do not default to "wants evidence"', () => {
+  const pantry = { industry: 'Consumer Apps → Other Consumer', uniqueStrength: 'One photo of your fridge shelf gives three dinners you can make tonight.' };
+  expect(optimizeFromProfile(profileFromConsultation(pantry)).primary.archetype).not.toBe('Analytical Validator');
+  const r = optimizeFromProfile(profileFromConsultation({ industry: 'Other', idealClient: 'Homeowners who want an update.' }));
+  expect(r.inference.matchedMarkers).not.toContain('data');
+  const tally = { industry: 'B2B SaaS / Software → Finance / Accounting Tools', idealClient: 'Controllers who want an audit trail and accuracy data before they take a call.', investmentRange: '$500 - $2,000' };
+  expect(optimizeFromProfile(profileFromConsultation(tally)).primary.archetype).toBe('Analytical Validator');
+});

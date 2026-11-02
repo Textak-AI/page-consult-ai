@@ -6,7 +6,7 @@ import { COPY_REGISTER_RULES, PROVENANCE_RULES, logRegisterViolations, logProven
 import { computeCommunicationStrategy, auditCommunicationStrategy } from '../_shared/communicationStrategy.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@4';
-import { guardCopyClaims, pinStatedProof } from '../_shared/copyClaims.ts';
+import { guardCopyClaims, pinStatedProof, stripBriefLeaks } from '../_shared/copyClaims.ts';
 import { BUYER_OBJECTION_RULES, consultationObjections, applyAnsweredObjections } from '../_shared/buyerObjections.ts';
 import { pinStatedCopy, siteCopyPromptBlock } from '../_shared/siteExtraction.ts';
 import { withCharge } from '../_shared/planLimits.ts';
@@ -456,7 +456,7 @@ Be specific. No generic advice. Everything should tie back to the actual consult
     }
     if (!structuredBrief) {
       console.warn('[generate-strategy-brief] Could not parse structured JSON from brief');
-      strategyBrief = guardCopyClaims(strategyBrief, consultationData, 'brief-prose-guard');
+      strategyBrief = guardCopyClaims(stripBriefLeaks(strategyBrief).text, consultationData, 'brief-prose-guard');
     }
 
     if (structuredBrief && typeof structuredBrief === 'object') {
@@ -477,7 +477,9 @@ Be specific. No generic advice. Everything should tie back to the actual consult
       // subheadings inside it, which previously left headerless Q&A debris.
       const prose = strategyBrief.replace(/```(?:json)?\s*\n[\s\S]*?```/i, '').replace(/(?:^|\n)(?:#{1,4}\s*)?(?:\d{1,2}[.)]\s*)?(?:\*\*)?Objection[^\n]*\n[\s\S]*?(?=\n(?:#{1,2}\s|#{1,4}\s*(?:\*\*)?\d{1,2}[.)]\s|\*\*\d{1,2}[.)]\s)|$)/i, '\n').trimEnd();
       const faqProse = structuredBrief.objections.map((o: any) => `### ${o.question}\n${o.answer}`).join('\n\n');
-      strategyBrief = guardCopyClaims(prose, consultationData, 'brief-prose-guard') + (faqProse ? '\n\n## 10. Answered buyer questions\n' + faqProse : '') + '\n\n```json\n' + JSON.stringify(structuredBrief, null, 2) + '\n```';
+      const unleaked = stripBriefLeaks(prose);
+      if (unleaked.removed.length) console.log('[brief-prose-guard] Removed working notes from owner-facing brief', JSON.stringify(unleaked.removed));
+      strategyBrief = guardCopyClaims(unleaked.text, consultationData, 'brief-prose-guard') + (faqProse ? '\n\n## 10. Answered buyer questions\n' + faqProse : '') + '\n\n```json\n' + JSON.stringify(structuredBrief, null, 2) + '\n```';
       logRegisterViolations('generate-strategy-brief', structuredBrief);
     logProvenanceViolations('generate-strategy-brief', structuredBrief, JSON.stringify(consultationData));
     }
