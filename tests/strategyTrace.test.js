@@ -73,3 +73,9 @@ test('the build saves the trace with the page, and it never counts as claim evid
   const { inputCopyText } = await import('../supabase/functions/_shared/copyClaims');
   expect(inputCopyText({ strategyTrace: { note: '500 clients' } })).not.toContain('500');
 });
+
+test('a phrase the owner repeated across answers is credited once, to the answer it came from', () => {
+  const a = { processDescription: '1) A 45-minute call about where decisions get stuck. 2) Two weeks of observing.', ctaText: 'Book a 45-Minute Call' };
+  const out = sourcesFor(['Book a 45-Minute Call'], a);
+  expect(out.map((s) => s.field)).toEqual(['ctaText']);
+});

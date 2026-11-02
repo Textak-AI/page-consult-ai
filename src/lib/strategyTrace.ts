@@ -117,21 +117,30 @@ export function sourcesFor(copy: string[], answers: Record<string, any>): TraceS
   const joined = copy.join(' \n ');
   const copyRuns = shingles(joined, 4);
   const lowered = tokens(joined).join(' ');
-  const out: TraceSource[] = [];
-  for (const [field, label] of ANSWER_FIELDS) {
-    const answer = answerText(answers[field]);
-    if (!answer) continue;
+  const candidates: { source: TraceSource; runs: Set<string> }[] = [];
+  const consider = (field: string, label: string, answer: string | null) => {
+    if (!answer) return;
     const whole = tokens(answer).join(' ');
-    const verbatim = whole.length >= 6 && lowered.includes(whole);
-    const reused = [...shingles(answer, 4)].some((run) => copyRuns.has(run));
-    if (verbatim || reused) out.push({ field, label, quote: truncateAtBoundary(answer, 180) });
-  }
+    const runs = new Set([...shingles(answer, 4)].filter((run) => copyRuns.has(run)));
+    if (whole.length >= 6 && lowered.includes(whole)) runs.add(`whole:${whole}`);
+    if (runs.size) candidates.push({ source: { field, label, quote: truncateAtBoundary(answer, 180) }, runs });
+  };
+  for (const [field, label] of ANSWER_FIELDS) consider(field, label, answerText(answers[field]));
   const objections = Array.isArray(answers.objections) ? answers.objections : [];
-  objections.forEach((o: any, i: number) => {
-    const a = answerText(o?.answer);
-    if (a && (lowered.includes(tokens(a).join(' ')) || [...shingles(a, 4)].some((run) => copyRuns.has(run)))) out.push({ field: `objections.${i}`, label: `Your answer: ${o.question}`, quote: truncateAtBoundary(a, 180) });
-  });
-  return out;
+  objections.forEach((o: any, i: number) => consider(`objections.${i}`, `Your answer: ${o?.question}`, answerText(o?.answer)));
+  // The owner often repeats a phrase across answers ("a 45-minute call"): credit the answer
+  // that contributes the most, and others only for words no credited answer already explains.
+  candidates.sort((a, b) => b.runs.size - a.runs.size);
+  const covered = new Set<string>();
+  const out: TraceSource[] = [];
+  for (const c of candidates) {
+    const fresh = [...c.runs].filter((r) => !covered.has(r));
+    if (!fresh.length) continue;
+    out.push(c.source);
+    c.runs.forEach((r) => covered.add(r));
+  }
+  const order = (f: string) => { const i = ANSWER_FIELDS.findIndex(([k]) => k === f); return i < 0 ? 100 + Number(f.split('.')[1] || 0) : i; };
+  return out.sort((a, b) => order(a.field) - order(b.field));
 }
 
 export function buildStrategyTrace(input: {
