@@ -199,6 +199,9 @@ export function buildStrategyTrace(input: {
     }
     if (s.type === 'faq') decisions.push('Only questions you answered appear here, with your answers word for word.');
     if (s.type === 'how-it-works') decisions.push('The steps are the process you described.');
+    if (s.type === 'beta-perks' && Array.isArray(content.perks) && content.perks.length) {
+      decisions.push(`Only the perks you picked: ${content.perks.map((p: unknown) => String(p).replace(/-/g, ' ')).join(', ')}.`);
+    }
     return {
       index,
       type: s.type,
