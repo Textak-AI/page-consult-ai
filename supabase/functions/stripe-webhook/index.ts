@@ -119,6 +119,7 @@ serve(async (req) => {
               ai_actions_limit: actionsLimit,
               stripe_customer_id: session.customer as string,
               stripe_subscription_id: subscription.id,
+              subscription_status: subscription.status,
               updated_at: new Date().toISOString(),
             })
             .eq('user_id', userId);
@@ -162,6 +163,7 @@ serve(async (req) => {
             .update({
               plan_tier: subscription.status === 'active' ? planTier : FREE_ALLOWANCE.tier,
               ai_actions_limit: subscription.status === 'active' ? actionsLimit : FREE_ALLOWANCE.actionsLimit,
+              subscription_status: subscription.status,
               updated_at: new Date().toISOString(),
             })
             .eq('user_id', existingSub.user_id);
@@ -196,12 +198,57 @@ serve(async (req) => {
               plan_tier: FREE_ALLOWANCE.tier,
               ai_actions_limit: FREE_ALLOWANCE.actionsLimit,
               stripe_subscription_id: null,
+              subscription_status: 'canceled',
               updated_at: new Date().toISOString(),
             })
             .eq('user_id', existingSub.user_id);
         }
 
         console.log(`✅ Subscription canceled: ${subscription.id}`);
+        break;
+      }
+
+      case 'invoice.paid': {
+        // A paid subscription invoice starts the customer's monthly period: the allowance renews
+        // for the exact Stripe period. Plan-change (proration) invoices don't reset anything.
+        const invoice = event.data.object as Stripe.Invoice;
+        const reason = invoice.billing_reason;
+        if (!invoice.subscription || (reason !== 'subscription_create' && reason !== 'subscription_cycle')) {
+          console.log(`ℹ️ invoice.paid ${invoice.id} (${reason}) — no period change`);
+          break;
+        }
+        const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+        const userId = subscription.metadata?.supabase_user_id;
+        if (!userId) {
+          console.error(`❌ invoice.paid ${invoice.id}: subscription ${subscription.id} has no supabase_user_id`);
+          break;
+        }
+        const plan = getPlanFromPriceId(subscription.items.data[0].price.id);
+        const allowance = plan ? PLAN_ALLOWANCES[plan] : FREE_ALLOWANCE;
+        const { data: row } = await supabase.from('user_usage')
+          .select('plan_tier, ai_actions_limit, ai_actions_used').eq('user_id', userId).maybeSingle();
+        // Pro carries up to 50 unused actions into the next period (same rule as roll_usage_period).
+        const rollover = reason === 'subscription_cycle' && row?.plan_tier === 'pro'
+          ? Math.min(Math.max((row.ai_actions_limit ?? 150) - (row.ai_actions_used ?? 0), 0), 50)
+          : 0;
+        const period = invoice.lines?.data?.[0]?.period;
+        const start = period?.start ?? subscription.current_period_start;
+        const end = period?.end ?? subscription.current_period_end;
+        const { error: renewErr } = await supabase.from('user_usage').update({
+          plan_tier: allowance.tier,
+          ai_actions_limit: allowance.actionsLimit,
+          ai_actions_used: 0,
+          ai_actions_rollover: rollover,
+          grace_actions_given: false,
+          billing_period_start: new Date(start * 1000).toISOString(),
+          billing_period_end: new Date(end * 1000).toISOString(),
+          stripe_subscription_id: subscription.id,
+          stripe_customer_id: subscription.customer as string,
+          subscription_status: subscription.status,
+          updated_at: new Date().toISOString(),
+        }).eq('user_id', userId);
+        if (renewErr) throw renewErr;
+        console.log(`✅ Allowance renewed for ${userId} (${plan ?? 'unknown'}, ${reason}) until ${new Date(end * 1000).toISOString()}`);
         break;
       }
 
@@ -214,6 +261,9 @@ serve(async (req) => {
               status: 'past_due', 
               updated_at: new Date().toISOString() 
             })
+            .eq('stripe_subscription_id', invoice.subscription as string);
+          await supabase.from('user_usage')
+            .update({ subscription_status: 'past_due', updated_at: new Date().toISOString() })
             .eq('stripe_subscription_id', invoice.subscription as string);
         }
 

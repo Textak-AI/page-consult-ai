@@ -1,9 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { getCorsHeaders, handleCorsPreflightRequest, isAllowedOrigin } from '../_shared/cors.ts';
 
-import { ACTION_PACKS, validSubscriptionPriceIds, checkoutSessionParams } from '../_shared/planLimits.ts';
+import { ACTION_PACKS, validSubscriptionPriceIds, checkoutSessionParams, safeReturnUrl } from '../_shared/planLimits.ts';
 import { createClient as createServiceClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 serve(async (req) => {
@@ -108,8 +108,8 @@ serve(async (req) => {
       priceId,
       customerId,
       userId: user.id,
-      successUrl: successUrl || `${req.headers.get('origin')}/generate?checkout=success`,
-      cancelUrl: cancelUrl || `${req.headers.get('origin')}/generate?checkout=cancelled`,
+      successUrl: safeReturnUrl(successUrl, `${isAllowedOrigin(origin) ? origin : 'https://pageconsult.app'}/generate?checkout=success`, isAllowedOrigin),
+      cancelUrl: safeReturnUrl(cancelUrl, `${isAllowedOrigin(origin) ? origin : 'https://pageconsult.app'}/generate?checkout=cancelled`, isAllowedOrigin),
     }));
 
     console.log('✅ Created checkout session:', session.id, 'URL:', session.url);

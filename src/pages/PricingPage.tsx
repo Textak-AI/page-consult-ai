@@ -18,11 +18,10 @@ const plans = [
     icon: Zap,
     popular: false,
     features: [
-      "3 landing pages per month",
+      "100 AI actions a month (a page build is 3)",
       "AI strategy consultation",
-      "Basic templates",
+      "No PageConsult badge on your pages",
       "Email support",
-      "Standard generation speed",
     ],
     buttonText: "Get Started",
     priceId: STRIPE_PRICES.starter,

@@ -99,6 +99,13 @@
       "when": 1793575597457,
       "tag": "0013_owner_test_allowance",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793661997457,
+      "tag": "0014_monthly_allowance_renews",
+      "breakpoints": true
     }
   ]
 }

@@ -7,15 +7,17 @@ export type PlanTier = 'starter' | 'pro' | 'agency';
 
 // Monthly AI-action allowance per plan, and the plan_tier stored in user_usage.
 // 999999 = effectively unlimited (pre-existing value for founding/agency).
+// Paid Starter ($29): 100 actions and no badge (Kyle, Nov 3). Free accounts keep tier 'starter' with
+// FREE_ALLOWANCE below; the badge is decided by an active subscription, not the tier name.
 export const PLAN_ALLOWANCES: Record<PlanName, { tier: PlanTier; actionsLimit: number }> = {
-  starter: { tier: 'starter', actionsLimit: 30 },
+  starter: { tier: 'starter', actionsLimit: 100 },
   founding: { tier: 'pro', actionsLimit: 999999 },
   pro: { tier: 'pro', actionsLimit: 150 },
   agency: { tier: 'agency', actionsLimit: 999999 },
 };
 
 // Signed-up users without a subscription (set by handle_new_user_usage trigger and on cancellation).
-export const FREE_ALLOWANCE = PLAN_ALLOWANCES.starter;
+export const FREE_ALLOWANCE: { tier: PlanTier; actionsLimit: number } = { tier: 'starter', actionsLimit: 30 };
 
 // Server-charged action costs (mirror client ACTION_COSTS).
 export const ACTION_COSTS = {
@@ -51,9 +53,13 @@ export const ACTION_PACKS: Record<string, number> = {
   price_1SfXziFqTTK3LcBFw64XlRyF: 50,
 };
 
+// Live-mode prices of the PageConsult AI product (Hyperbrand Creative Stripe account), also in
+// src/lib/stripe-config.ts. STRIPE_PRICE_* secrets can add or override, but checkout never depends on them.
 const LEGACY_SUBSCRIPTION_PRICES: Record<string, PlanName> = {
   price_1SfXwOFqTTK3LcBFMXRpEVcS: 'starter',
+  price_1SjuT7FqTTK3LcBFU2DXqMXN: 'founding',
   price_1SfXziFqTTK3LcBFhv0PykBc: 'pro',
+  price_1SjuTnFqTTK3LcBFXdNBr2Oh: 'agency',
 };
 
 export function subscriptionPriceMap(): Record<string, PlanName> {
@@ -223,15 +229,25 @@ export async function withCharge(
   return runChargedWork(() => handler(user.id), (reason) => refundCharge(admin, logId, `${action}:${reason}`));
 }
 
-/** "Powered by PageConsult AI" badge: shown for free/starter owners, hidden for pro, founding (pro tier) and agency. */
-export function showsBadgeForTier(tier: string | null | undefined): boolean {
+/** "Powered by PageConsult AI" badge: shown for free accounts; hidden for any active paid plan (Starter included). */
+export function showsBadgeForTier(tier: string | null | undefined, subscriptionStatus?: string | null): boolean {
+  if (subscriptionStatus === 'active') return false;
   return !tier || tier === 'starter';
+}
+
+/** Checkout return URLs must point back at the app itself, never at a caller-chosen site. */
+export function safeReturnUrl(candidate: unknown, fallback: string, isAllowedOrigin: (o: string | null) => boolean): string {
+  if (typeof candidate !== 'string') return fallback;
+  try {
+    const u = new URL(candidate);
+    return isAllowedOrigin(u.origin) ? u.toString() : fallback;
+  } catch { return fallback; }
 }
 
 /** Looks up the page owner's plan server-side (service-role client) and returns the badge decision. */
 // deno-lint-ignore no-explicit-any
 export async function ownerShowsBadge(serviceClient: any, ownerId: string | null | undefined): Promise<boolean> {
   if (!ownerId) return true;
-  const { data } = await serviceClient.from('user_usage').select('plan_tier').eq('user_id', ownerId).maybeSingle();
-  return showsBadgeForTier(data?.plan_tier);
+  const { data } = await serviceClient.from('user_usage').select('plan_tier, subscription_status').eq('user_id', ownerId).maybeSingle();
+  return showsBadgeForTier(data?.plan_tier, data?.subscription_status);
 }

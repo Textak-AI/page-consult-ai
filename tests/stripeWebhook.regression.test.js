@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { loadEdgeSource, fakeDb } from './helpers/edgeHarness.js';
-import { customerCases, prices, subscription, event, checkout, invoiceFailed } from './fixtures/stripeEvents.js';
+import { customerCases, prices, subscription, event, checkout, invoiceFailed, invoicePaid } from './fixtures/stripeEvents.js';
 
 const env = {
   STRIPE_SECRET_KEY: 'test-only', STRIPE_WEBHOOK_SECRET: 'fixture-secret',
@@ -52,7 +52,7 @@ for (const customer of customerCases) for (const price of prices) {
       current_period_end: new Date(sub.current_period_end * 1000).toISOString(), cancel_at_period_end: false });
     expect(usageWrite.table).toBe('user_usage'); expect(usageWrite.filters).toEqual([['user_id', customer.user]]);
     expect(withoutTime(usageWrite.data)).toEqual({ plan_tier: price.tier, ai_actions_limit: price.limit,
-      stripe_customer_id: customer.customer, stripe_subscription_id: sub.id });
+      stripe_customer_id: customer.customer, stripe_subscription_id: sub.id, subscription_status: 'active' });
   });
 }
 for (const price of prices) for (const status of ['active', 'past_due']) {
@@ -66,7 +66,7 @@ for (const price of prices) for (const status of ['active', 'past_due']) {
       current_period_end: new Date(sub.current_period_end * 1000).toISOString(), cancel_at_period_end: true });
     expect(u.table).toBe('user_usage'); expect(u.filters).toEqual([['user_id', 'existing-owner']]);
     expect(withoutTime(u.data)).toEqual({ plan_tier: status === 'active' ? price.tier : 'starter',
-      ai_actions_limit: status === 'active' ? price.limit : 30 });
+      ai_actions_limit: status === 'active' ? price.limit : 30, subscription_status: status });
   });
 }
 test('subscription deleted resets only the matched owner to the free allowance', async () => {
@@ -76,15 +76,17 @@ test('subscription deleted resets only the matched owner to the free allowance',
   expect(s.table).toBe('subscriptions'); expect(s.filters).toEqual([['stripe_subscription_id', 'sub_fixture']]);
   expect(withoutTime(s.data)).toEqual({ status: 'canceled' });
   expect(u.table).toBe('user_usage'); expect(u.filters).toEqual([['user_id', 'existing-owner']]);
-  expect(withoutTime(u.data)).toEqual({ plan_tier: limits.FREE_ALLOWANCE.tier, ai_actions_limit: 30, stripe_subscription_id: null });
+  expect(withoutTime(u.data)).toEqual({ plan_tier: limits.FREE_ALLOWANCE.tier, ai_actions_limit: 30, stripe_subscription_id: null, subscription_status: 'canceled' });
 });
 test('invoice payment failure marks subscription past_due without granting or resetting usage', async () => {
   const h = harness(event('invoice.payment_failed', invoiceFailed));
   expect((await h.handler(request())).status).toBe(200);
-  expect(writes(h)).toHaveLength(1);
-  const [s] = writes(h); expect(s.table).toBe('subscriptions');
+  expect(writes(h)).toHaveLength(2);
+  const [s, u] = writes(h); expect(s.table).toBe('subscriptions');
   expect(s.filters).toEqual([['stripe_subscription_id', 'sub_fixture']]);
   expect(withoutTime(s.data)).toEqual({ status: 'past_due' });
+  // usage itself is untouched: only the status, so the badge returns and nothing is granted
+  expect(u.table).toBe('user_usage'); expect(withoutTime(u.data)).toEqual({ subscription_status: 'past_due' });
 });
 test('unmatched subscription update and invoice without subscription do not write', async () => {
   for (const fixture of [event('customer.subscription.updated', subscription(prices[0].price)), event('invoice.payment_failed', { id: 'in_none' })]) {
@@ -104,3 +106,27 @@ for (const [price, actions] of Object.entries(limits.ACTION_PACKS)) {
     expect(writes(h)).toEqual([]);
   });
 }
+for (const reason of ['subscription_create', 'subscription_cycle']) {
+  test(`invoice.paid (${reason}) renews the monthly allowance for the exact Stripe period`, async () => {
+    const h = harness(event('invoice.paid', invoicePaid(reason)), subscription('price_1SfXwOFqTTK3LcBFMXRpEVcS', 'paying-owner'),
+      { plan_tier: 'starter', ai_actions_limit: 100, ai_actions_used: 87 });
+    expect((await h.handler(request())).status).toBe(200);
+    const [u] = writes(h); expect(writes(h)).toHaveLength(1);
+    expect(u.table).toBe('user_usage'); expect(u.filters).toEqual([['user_id', 'paying-owner']]);
+    expect(withoutTime(u.data)).toEqual({ plan_tier: 'starter', ai_actions_limit: 100, ai_actions_used: 0, ai_actions_rollover: 0,
+      grace_actions_given: false, billing_period_start: new Date(1796000000 * 1000).toISOString(),
+      billing_period_end: new Date(1798592000 * 1000).toISOString(), stripe_subscription_id: 'sub_fixture',
+      stripe_customer_id: undefined, subscription_status: 'active' });
+  });
+}
+test('invoice.paid for a plan change (proration) does not reset the allowance', async () => {
+  const h = harness(event('invoice.paid', invoicePaid('subscription_update')), subscription(prices[0].price));
+  expect((await h.handler(request())).status).toBe(200);
+  expect(writes(h)).toEqual([]);
+});
+test('Pro carries up to 50 unused actions into the next period', async () => {
+  const h = harness(event('invoice.paid', invoicePaid('subscription_cycle')), subscription('price_1SfXziFqTTK3LcBFhv0PykBc', 'pro-owner'),
+    { plan_tier: 'pro', ai_actions_limit: 150, ai_actions_used: 40 });
+  await h.handler(request());
+  expect(writes(h)[0].data.ai_actions_rollover).toBe(50);
+});

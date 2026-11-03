@@ -98,6 +98,8 @@ export function useAIActions(userId: string | null, userEmail?: string | null) {
     }
 
     try {
+      // Start a new monthly period first if the last one ended, so the balance shown is the real one.
+      await supabase.rpc('refresh_my_usage' as any).then(() => undefined, () => undefined);
       const { data, error } = await supabase
         .from('user_usage')
         .select('*')
