@@ -2219,9 +2219,11 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       page_shows_badge: { Args: { page_slug: string }; Returns: boolean }
+      refresh_my_usage: { Args: never; Returns: undefined }
       refund_ai_action: { Args: { p_log_id: string }; Returns: Json }
       reset_api_calls: { Args: never; Returns: undefined }
       reset_monthly_usage: { Args: never; Returns: undefined }
+      roll_usage_period: { Args: { p_user_id: string }; Returns: undefined }
       track_ai_action: {
         Args: {
           p_action_cost: number
