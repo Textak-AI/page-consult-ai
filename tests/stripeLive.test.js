@@ -56,3 +56,9 @@ test('pricing cards describe what Starter actually gets', () => {
     expect(s).toMatch(/100 AI actions a month/);
   }
 });
+
+test('the webhook reads subscription periods on old and new Stripe API versions', () => {
+  const src = read('supabase/functions/stripe-webhook/index.ts');
+  expect(src).not.toMatch(/subscription\.current_period_(start|end) \* 1000/);
+  expect(src).toMatch(/items\?\.data\?\.\[0\]\?\.\[`current_period_\$\{which\}`\]/);
+});

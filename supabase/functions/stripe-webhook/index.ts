@@ -44,6 +44,12 @@ serve(async (req) => {
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+  // Newer Stripe API versions moved the period from the subscription onto its items; read either,
+  // so a webhook endpoint pinned to any API version writes real dates (never "Invalid Date").
+  // deno-lint-ignore no-explicit-any
+  const periodOf = (sub: any, which: 'start' | 'end'): number =>
+    sub?.[`current_period_${which}`] ?? sub?.items?.data?.[0]?.[`current_period_${which}`];
+
   const getPlanFromPriceId = (priceId: string) => {
     const plan = planFromPriceId(priceId);
     if (!plan) console.error(`❌ Unknown subscription price ${priceId} — no paid allowance granted`);
@@ -97,8 +103,8 @@ serve(async (req) => {
             stripe_price_id: priceId,
             status: subscription.status,
             plan: plan ?? 'unknown',
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_start: new Date(periodOf(subscription, 'start') * 1000).toISOString(),
+            current_period_end: new Date(periodOf(subscription, 'end') * 1000).toISOString(),
             cancel_at_period_end: subscription.cancel_at_period_end,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'user_id' });
@@ -147,7 +153,7 @@ serve(async (req) => {
               status: subscription.status,
               stripe_price_id: priceId,
               plan: plan ?? 'unknown',
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              current_period_end: new Date(periodOf(subscription, 'end') * 1000).toISOString(),
               cancel_at_period_end: subscription.cancel_at_period_end,
               updated_at: new Date().toISOString(),
             })
@@ -232,8 +238,8 @@ serve(async (req) => {
           ? Math.min(Math.max((row.ai_actions_limit ?? 150) - (row.ai_actions_used ?? 0), 0), 50)
           : 0;
         const period = invoice.lines?.data?.[0]?.period;
-        const start = period?.start ?? subscription.current_period_start;
-        const end = period?.end ?? subscription.current_period_end;
+        const start = period?.start ?? periodOf(subscription, 'start');
+        const end = period?.end ?? periodOf(subscription, 'end');
         const { error: renewErr } = await supabase.from('user_usage').update({
           plan_tier: allowance.tier,
           ai_actions_limit: allowance.actionsLimit,
