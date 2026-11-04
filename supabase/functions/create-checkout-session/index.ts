@@ -87,6 +87,8 @@ serve(async (req) => {
       allow_promotion_codes: true,
       billing_address_collection: "required",
       automatic_tax: { enabled: true },
+      // Automatic tax needs the existing customer's address; save the one typed at checkout.
+      customer_update: { address: "auto", name: "auto" },
       payment_method_collection: "always",
       subscription_data: {
         metadata: { supabase_user_id: user.id },
