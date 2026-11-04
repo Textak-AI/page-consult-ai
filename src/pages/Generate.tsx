@@ -2289,10 +2289,11 @@ function GenerateContent() {
         
         // Get brand settings for passing to sections
         // BRAND DATA PIPELINE: Check all possible paths for logoUrl and primaryColor
-        const logoUrl = brandSettings?.logoUrl 
-          || strategicData.consultationData?.websiteIntelligence?.logoUrl 
-          || strategicData.websiteIntelligence?.logoUrl
-          || null;
+        // The brand step is the owner's answer: once it exists, its logo (or none) is final and the
+        // image a site read found is never a fallback (it may be cover art, not a logo).
+        const logoUrl = brandSettings
+          ? (brandSettings.logoUrl || null)
+          : (strategicData.consultationData?.websiteIntelligence?.logoUrl || strategicData.websiteIntelligence?.logoUrl || null);
         
         // COLOR CASCADE: Generate SDI palette for brand color resolution
         const sdiPaletteForBrief = generateSDIPalette(
@@ -3037,11 +3038,12 @@ function GenerateContent() {
       || effectiveNavState?.strategicData?.brandSettings
       || effectiveNavState?.strategicData?.consultationData?.brandSettings
       || null;
-    const logoUrl = brandSettings?.logoUrl 
-      || strategicConsultation?.websiteIntelligence?.logoUrl 
-      || effectiveNavState?.strategicData?.consultationData?.websiteIntelligence?.logoUrl
-      || effectiveNavState?.strategicData?.websiteIntelligence?.logoUrl
-      || null;
+    const logoUrl = brandSettings
+      ? (brandSettings.logoUrl || null)
+      : (strategicConsultation?.websiteIntelligence?.logoUrl
+        || effectiveNavState?.strategicData?.consultationData?.websiteIntelligence?.logoUrl
+        || effectiveNavState?.strategicData?.websiteIntelligence?.logoUrl
+        || null);
     const primaryColor = brandSettings?.primaryColor 
       || strategicConsultation?.websiteIntelligence?.primaryColor
       || effectiveNavState?.strategicData?.consultationData?.websiteIntelligence?.primaryColor

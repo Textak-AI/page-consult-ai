@@ -936,7 +936,8 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
 
   // Handle brand customization completion
   const handleBrandComplete = (brandSettings: BrandSettings) => {
-    updateData({ brandSettings });
+    // The owner's logo answer is final: an image found on the site stops being a candidate anywhere downstream.
+    updateData({ brandSettings, ...(brandSettings.logoUrl ? {} : { websiteIntelligence: data.websiteIntelligence ? { ...data.websiteIntelligence, logoUrl: null } : data.websiteIntelligence }) });
     setCurrentStep(currentStep + 1);
   };
 
