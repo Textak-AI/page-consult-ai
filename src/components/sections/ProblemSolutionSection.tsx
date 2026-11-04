@@ -6,6 +6,7 @@ import { EyebrowBadge } from "@/components/ui/PremiumCard";
 import { getTypography } from "@/lib/typographyScale";
 import ProblemSolutionTwoColumn from './problem-solution/ProblemSolutionTwoColumn';
 import ProblemSolutionReliefArc from './problem-solution/ProblemSolutionReliefArc';
+import ProblemSolutionProse from './problem-solution/ProblemSolutionProse';
 
 interface CitedStat {
   statistic: string;
@@ -37,6 +38,9 @@ function ProblemSolutionSectionBase({ content, onUpdate, isEditing }: ProblemSol
   const psComposition = (content as any)?.composition;
   if (psComposition === 'two-column') {
     return <ProblemSolutionTwoColumn content={content as any} onUpdate={onUpdate} isEditing={isEditing} />;
+  }
+  if (psComposition === 'prose') {
+    return <ProblemSolutionProse content={content as any} onUpdate={onUpdate} isEditing={isEditing} />;
   }
   if (psComposition === 'challenge-then-relief') {
     return <ProblemSolutionReliefArc content={content as any} onUpdate={onUpdate} isEditing={isEditing} />;

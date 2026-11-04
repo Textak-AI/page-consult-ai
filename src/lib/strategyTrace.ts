@@ -13,6 +13,7 @@ import { missingSections } from '@/lib/sectionUnlocks';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 import { hiddenReason } from '@/lib/editor/emptySections';
 import { CHOICE_LABELS, parseMessagingChoices, type MessagingChoices } from '../../supabase/functions/_shared/messagingChoices';
+import { REGISTER_LABEL, registerBecause } from '@/lib/design/visualRegister';
 
 export const TRACE_VERSION = 1;
 
@@ -186,10 +187,15 @@ export function buildStrategyTrace(input: {
   } : null;
 
   const philosophy = choices ? ARCHETYPE_PHILOSOPHY[choices.archetype] || null : null;
+  // The reader's world can choose the look (visualRegister); the hero carries the register and the owner's cue words.
+  const heroContent = input.sections?.[0]?.content || {};
+  const register = heroContent.visualRegister === 'immersive' ? 'immersive' : null;
   const design = {
     philosophy,
-    label: philosophy ? PHILOSOPHY[philosophy] : null,
-    because: philosophy && buyer ? `Set for a buyer who ${buyer.label.charAt(0).toLowerCase()}${buyer.label.slice(1)}.` : null,
+    label: register ? REGISTER_LABEL[register] : philosophy ? PHILOSOPHY[philosophy] : null,
+    because: register
+      ? registerBecause({ register, label: REGISTER_LABEL[register], cues: Array.isArray(heroContent.registerCues) ? heroContent.registerCues.filter((c: unknown) => typeof c === 'string') : [] })
+      : philosophy && buyer ? `Set for a buyer who ${buyer.label.charAt(0).toLowerCase()}${buyer.label.slice(1)}.` : null,
     brandColor: input.brandColor || null,
   };
 

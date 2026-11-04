@@ -4416,7 +4416,7 @@ function GenerateContent() {
     }
 
     console.log(`✅ Legacy mapper built ${sections.length} sections from SDI-driven structure (isBeta: ${isBetaPage})`);
-    return applyArtDirectorDirectives(sections);
+    return applyArtDirectorDirectives(sections, null, consultationData || null);
   };
 
   // Map old generation format

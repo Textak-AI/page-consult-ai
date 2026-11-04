@@ -1,3 +1,4 @@
+import { inferVisualRegister, type VisualRegister } from '@/lib/design/visualRegister';
 /**
  * Art Director Compositional Brief
  * 
@@ -8,16 +9,18 @@
 
 export interface ArtDirectorBrief {
   designPhilosophy: 'structural' | 'atmospheric' | 'bold' | 'organic' | 'minimal';
+  /** Set when the reader's world, not the archetype, chose the look. */
+  register?: VisualRegister;
   sectionRhythm: 'dark-light-alternating' | 'all-dark' | 'all-light';
   dividerSystem: 'hairlines' | 'whitespace' | 'color-shift';
 
   hero: {
-    composition: 'centered-type' | 'split-photo' | 'minimal-bold' | 'editorial-stack';
+    composition: 'centered-type' | 'split-photo' | 'minimal-bold' | 'editorial-stack' | 'cover-immersive';
     background: 'dark' | 'light';
     hasGridTexture: boolean;
     hasAccentGlow: boolean;
     trustSignals: 'inline-checks' | 'logo-bar' | 'none';
-    imageStyle?: 'ambient-texture' | 'split-right' | 'none';
+    imageStyle?: 'ambient-texture' | 'split-right' | 'cover' | 'none';
     imagePrompt?: string;
   };
 
@@ -58,6 +61,27 @@ export interface ArtDirectorBrief {
     pairing: 'serif-sans' | 'all-sans' | 'sans-mono';
     headingWeight: number;
     trackingStyle: 'tight' | 'normal';
+  };
+}
+
+/**
+ * The immersive register: for work people listen to, watch or read for the feeling. Dark
+ * surfaces sunk from the brand colour, the cover as the picture, display type, one ask,
+ * no trust chips. Chosen by inferVisualRegister from the owner's audience answers.
+ */
+export function immersiveBrief(): ArtDirectorBrief {
+  return {
+    register: 'immersive',
+    designPhilosophy: 'atmospheric',
+    sectionRhythm: 'all-dark',
+    dividerSystem: 'whitespace',
+    hero: { composition: 'cover-immersive', background: 'dark', hasGridTexture: false, hasAccentGlow: true, trustSignals: 'none', imageStyle: 'cover' },
+    features: { layout: 'numbered-list', background: 'dark', numbering: 'none', iconStyle: 'none' },
+    stats: { presentation: 'hairline-separated', background: 'dark', numberStyle: 'large-mono', labelStyle: 'minimal-muted' },
+    process: { layout: 'minimal-list', background: 'dark', numbering: 'monospace' },
+    faq: { layout: 'accordion-hairline', background: 'dark' },
+    finalCta: { layout: 'centered-minimal', background: 'dark', hasAccentGlow: true },
+    typography: { pairing: 'serif-sans', headingWeight: 400, trackingStyle: 'tight' },
   };
 }
 
@@ -223,10 +247,13 @@ export function applyBrandDNAOverrides(
 
 export function applyArtDirectorDirectives(
   sections: any[],
-  messagingArchitecture?: { archetype?: string } | null
+  messagingArchitecture?: { archetype?: string } | null,
+  consultationData?: Record<string, any> | null
 ): any[] {
   const archetype = messagingArchitecture?.archetype || archetypeFromStorage() || 'Analytical Validator';
-  let artBrief = generateArtDirectorBrief(archetype);
+  // The reader's world outranks the archetype for the look (the archetype still owns order, voice and proof).
+  const registerDecision = inferVisualRegister(consultationData);
+  let artBrief = registerDecision ? immersiveBrief() : generateArtDirectorBrief(archetype);
 
   // Apply Brand DNA overrides if available
   try {
@@ -308,9 +335,13 @@ export function applyArtDirectorDirectives(
       };
     } else if (type === 'problem-solution') {
       directives = {
-        composition: 'two-column',
+        composition: artBrief.register === 'immersive' ? 'prose' : 'two-column',
         sectionBackground: artBrief.process.background,
       };
+    }
+    if (artBrief.register) {
+      directives.visualRegister = artBrief.register;
+      if (type === 'hero' && registerDecision) directives.registerCues = registerDecision.cues;
     }
 
     return {

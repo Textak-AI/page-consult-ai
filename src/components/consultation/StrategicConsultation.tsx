@@ -112,6 +112,8 @@ export interface ConsultationData {
   idealClient: string;
   clientFrustration: string;
   desiredOutcome: string;
+  /** Creative work: the reader's world in the owner's words; it sets the page's visual register. */
+  audienceWorld?: string;
   
   // Credibility (Customer Acquisition flow)
   clientCount: string;
@@ -1475,6 +1477,19 @@ ${d.ctaText}
                 />
                 <InlineConsultant fieldKey="desiredOutcome" fieldValue={data.desiredOutcome || ''} fieldLabel="Desired Outcome" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('desiredOutcome', handler)} />
               </div>
+              {/* Creative work: the reader's world sets the look of the page (visualRegister), so ask for it in plain words. */}
+              {offerKind === 'creative' && (
+                <div>
+                  <Label htmlFor="audienceWorld" className="text-slate-300">What does their world look and sound like? <span className="text-slate-400 font-normal">(optional, shapes the look of the page)</span></Label>
+                  <Textarea
+                    id="audienceWorld"
+                    placeholder="e.g., Headphones on the last train home. Lights low. Warm but strange. Tape hiss and a slow build."
+                    value={data.audienceWorld || ''}
+                    onChange={(e) => updateData({ audienceWorld: e.target.value })}
+                    className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[80px]"
+                  />
+                </div>
+              )}
             </div>
           </div>
         );

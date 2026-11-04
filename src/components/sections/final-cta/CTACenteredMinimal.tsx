@@ -103,6 +103,8 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
         {content.secondaryCta && <Button asChild variant="link" className="block mx-auto mt-3 text-foreground"><a href={content.secondaryCtaLink || '#contact'}>{content.secondaryCta}</a></Button>}
         {/* Stated date (release, launch, opening): a fact under the ask, not urgency */}
         {content.dateLine && <p className="mt-5 text-sm font-medium tracking-wide opacity-80">{content.dateLine}</p>}
+        {/* Creative work: the owner's stated achievements (previous releases, press) as a quiet footnote */}
+        {content.footnote && <p className="mt-8 text-xs leading-relaxed opacity-60 max-w-xl mx-auto">{content.footnote}</p>}
       </div>
     </section>
   );

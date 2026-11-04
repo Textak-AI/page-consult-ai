@@ -12,6 +12,7 @@ import { getIndustryTokens, type IndustryVariant } from "@/config/designSystem/i
 import { getArchetypeHeadingStyle, getArchetypeCtaClass, type DesignProfile } from "@/lib/archetypeProfiles";
 import HeroCenteredType from "./hero/HeroCenteredType";
 import HeroSplitPhoto from "./hero/HeroSplitPhoto";
+import HeroCoverImmersive from "./hero/HeroCoverImmersive";
 
 // Industry-aware hero icon mapping
 const heroIconMap: Record<string, { icon: LucideIcon; label: string }> = {
@@ -233,7 +234,7 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
   // Every hero style is image-bearing when a loadable image exists; a failed
   // load collapses to the typographic/gradient fallback.
   const heroImg = useUsableImage(content.backgroundImage || (content as any).heroImage);
-  const isArtDirectorComposition = content?.composition === 'centered-type' || content?.composition === 'split-photo';
+  const isArtDirectorComposition = content?.composition === 'centered-type' || content?.composition === 'split-photo' || content?.composition === 'cover-immersive';
   const hasBackgroundImage = !!heroImg;
   const showDarkOverlay = hasBackgroundImage && (content.darkOverlay !== false);
   // Use light text when: overlay is active on bg image, or when in dark mode
@@ -320,6 +321,10 @@ function HeroSectionBase({ content, onUpdate, isEditing }: HeroSectionProps) {
   if (composition === 'centered-type') {
     console.log('🎨 [ArtDirector] Hero: centered-type composition');
     return <><HeroCenteredType content={content} onUpdate={onUpdate} isEditing={isEditing} />{isEditing && <Button variant="outline" onClick={() => setImagePickerOpen(true)}><ImagePlus />Change Background</Button>}<ImagePicker open={imagePickerOpen} onClose={() => setImagePickerOpen(false)} onSelect={handleImageSelect} /></>;
+  }
+  if (composition === 'cover-immersive') {
+    console.log('🎨 [ArtDirector] Hero: cover-immersive composition');
+    return <><HeroCoverImmersive content={content} onUpdate={onUpdate} isEditing={isEditing} />{isEditing && <Button variant="outline" onClick={() => setImagePickerOpen(true)}><ImagePlus />Change Cover</Button>}<ImagePicker open={imagePickerOpen} onClose={() => setImagePickerOpen(false)} onSelect={handleImageSelect} /></>;
   }
   if (composition === 'split-photo') {
     console.log('🎨 [ArtDirector] Hero: split-photo composition');
