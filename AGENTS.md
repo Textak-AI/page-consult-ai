@@ -183,3 +183,6 @@
 - Paid Starter ($29) = 100 actions + no badge; FREE_ALLOWANCE (30) is separate from PLAN_ALLOWANCES.starter. All four live subscription price IDs are in planLimits (STRIPE_PRICE_* secrets optional).
 - Checkout success/cancel URLs pass safeReturnUrl (allowed app origins only).
 - Webhook events to register: checkout.session.completed, customer.subscription.updated, customer.subscription.deleted, invoice.paid, invoice.payment_failed.
+
+## Wizard background (2026-11-04)
+- The wizard's generated-photo slideshow/picker (AmbientHeroBackground, generateHeroImages on industry select) is gone: it produced generic industry scenes cached per industry for every owner, before the owner had said anything, and competed with the questions. The wizard background is `consultation/AmbientGradientBackground` (`.pc-ambient` in index.css): brand-derived colour fields on a deep base, CSS transform-only drift, static under reduced motion, no JS loop, no provider calls. Page photos are the editor's job (heroImagePrompt from the owner's own offer, charged). `heroBackgroundUrl` is still prefilled from a site's og:image (websiteFirst) and read by Generate. `HeroBackgroundCarousel.tsx` is unused.
