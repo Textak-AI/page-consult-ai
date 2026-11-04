@@ -1,3 +1,4 @@
+import { getOfferKind } from '@/lib/wizard/industryWording';
 import { fontIdFromStack, HERO_LAYOUTS, type PageTheme } from '@/lib/editor/pageTheme';
 import { statedStat } from '@/lib/statedStat';
 import { buildStrategyTrace } from '@/lib/strategyTrace';
@@ -5856,7 +5857,8 @@ const [showLowBalanceAlert, setShowLowBalanceAlert] = useState(false);
               sections={sections}
               onSectionsChange={setSections}
               onSave={handleSave}
-              onAddCalculator={() => setCalculatorUpgradeOpen(true)}
+              // A results calculator needs results measured across clients: services and software only.
+              onAddCalculator={['services', 'software', 'general'].includes(getOfferKind(strategicData?.consultationData?.industryCategory || consultation?.industry, strategicData?.consultationData?.industrySubcategory)) ? () => setCalculatorUpgradeOpen(true) : undefined}
               onAddSection={(at) => { setAddSectionAt(at); setAddSectionOpen(true); }}
               onRegenerateSection={handleRegenerateSectionWithUsage}
               isRegenerating={isRegenerating}

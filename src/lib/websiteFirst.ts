@@ -166,7 +166,8 @@ export function websiteFirstPrefill(analysis: WebsiteFirstAnalysis, brand: Websi
     industrySubcategory: industry.industrySubcategory || undefined,
     idealClient: analysis.targetAudience || '',
     clientFrustration: analysis.problemStatement || '',
-    uniqueStrength: analysis.uniqueDifferentiator || analysis.solutionStatement || brand?.tagline || '',
+    // Only a stated differentiator prefills this; a solution line or tagline describes the offer, not what's different.
+    uniqueStrength: analysis.uniqueDifferentiator || '',
     // Offers and CTA are the site's own words; the model's suggestions never land here.
     mainOffer: offers[0]?.name || '',
     offerIncludes: offers.length > 1 ? offerList(offers) : offers[0]?.description || '',

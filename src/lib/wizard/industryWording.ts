@@ -3,7 +3,7 @@
 // Examples model specific, checkable facts the owner can stand behind; they
 // never model guarantees, ROI multiples or results the owner may not have.
 
-export type OfferKind = 'software' | 'product' | 'services' | 'general';
+export type OfferKind = 'software' | 'product' | 'services' | 'creative' | 'general';
 
 export interface WizardPlaceholders {
   idealClient: string;
@@ -20,6 +20,8 @@ export function getOfferKind(industry?: string | null, subcategory?: string | nu
   if (!t.trim()) return 'general';
   // Category labels like "Real Estate / PropTech" or "Education / EdTech" cover
   // non-software businesses too, so only unambiguous labels count as software.
+  // Music, film, writing, games: the "buyer" is a listener, viewer or reader, not a client.
+  if (/media \/ entertainment|music|audio|streaming \/ video|gaming|publishing \/ news|podcast|film|record label|\bband\b|artist/.test(t)) return 'creative';
   if (/saas|software|consumer apps|developer tools|healthcare it|telemedicine|fintech/.test(t)) return 'software';
   if (/e-?commerce|retail|hardware|consumer electronics|devices|apparel|food \/ beverage|beauty|furniture|gadgets|subscription \/ dtc/.test(t)) return 'product';
   if (/home & local|lawn|landscap|cleaning|hvac|plumb|roof|remodel|handyman|pest|moving|hauling|auto repair|detailing|grooming|professional services|agency|creative|consult|legal|accounting|real estate|healthcare|medical|financial services|manufacturing|industrial|education|non-profit|nonprofit|coach|wellness/.test(t)) return 'services';
@@ -32,12 +34,14 @@ export function frustrationQuestion(kind: OfferKind): string {
     case 'software': return "What's their biggest frustration with the tools or workarounds they use now?";
     case 'product': return "What's their biggest frustration with what they buy now?";
     case 'services': return "What's their biggest frustration when hiring someone in your space?";
+    case 'creative': return "What's their biggest frustration with what they listen to, watch or read now?";
     default: return "What's their biggest frustration with the options they have now?";
   }
 }
 
 /** Step 3 (identity) differentiator example: a specific fact someone could check. */
 export function uniqueStrengthExample(kind: OfferKind, productName?: string | null): string {
+  if (kind === 'creative') return productName ? `e.g., ${productName} is fourteen tracks made to be played straight through, recorded over three years` : 'e.g., Fourteen tracks made to be played straight through, recorded over three years';
   if (productName) return `e.g., ${productName} imports a year of records in one step, with no manual cleanup`;
   switch (kind) {
     case 'software': return 'e.g., Imports a year of records in one step, with no manual cleanup';
@@ -104,6 +108,14 @@ const PLACEHOLDERS: Record<string, WizardPlaceholders> = {
     mainOffer: 'e.g., Weekly Lawn Care, Furnace Tune-Up, Deep House Cleaning',
     offerIncludes: 'e.g., What is done on each visit, how often, and what is extra...',
   },
+  'Media / Entertainment': {
+    idealClient: 'e.g., Someone who still listens to albums front to back, puts on headphones and wants to be taken somewhere...',
+    clientFrustration: 'e.g., Playlists that are wallpaper, tracks flattened for the algorithm, records that are collections of songs rather than one place...',
+    desiredOutcome: 'e.g., Fifty-four minutes where they don\'t have to make a decision, and come out the other side feeling they went somewhere...',
+    uniqueStrength: 'e.g., Fourteen tracks made to be played straight through, recorded over three years...',
+    mainOffer: 'e.g., Drift Off (album), Season 2, The Thursday Letter',
+    offerIncludes: 'e.g., Fourteen tracks, fifty-four minutes, on vinyl and streaming; where to get it...',
+  },
   default: {
     idealClient: 'e.g., Describe your ideal customer in detail - their role, company size, specific needs...',
     clientFrustration: 'e.g., What gets in their way today? What have they already tried that did not work?',
@@ -125,4 +137,39 @@ export function getWizardPlaceholders(industry?: string | null): WizardPlacehold
   const category = industry.split('→')[0].trim();
   const key = ALIASES[category] || category;
   return PLACEHOLDERS[key] || PLACEHOLDERS.default;
+}
+
+/** Question labels that change with what is being sold; every other kind keeps the default wording. */
+export interface WizardLabels {
+  idealClient: string;
+  desiredOutcome: string;
+  clientCount: string;
+  achievements: string;
+  testimonialText: string;
+  concreteProofStory: string;
+  offerIncludes: string;
+  processDescription: string;
+}
+const DEFAULT_LABELS: WizardLabels = {
+  idealClient: 'Describe your ideal client in detail',
+  desiredOutcome: 'What outcome are they really buying? (Not your service, the result)',
+  clientCount: 'About how many customers, clients or projects can you point to?',
+  achievements: 'Any notable achievements? (Awards, certifications, press, notable clients)',
+  testimonialText: 'Paste 1-2 real testimonials, or describe what clients typically say about you',
+  concreteProofStory: "Share ONE specific result you're proud of",
+  offerIncludes: "What's included? Key deliverables?",
+  processDescription: 'What happens after they contact you? Describe your process.',
+};
+const CREATIVE_LABELS: WizardLabels = {
+  idealClient: 'Who is this for? Describe the listener, viewer or reader',
+  desiredOutcome: 'What do they get from it? (The experience, not the format)',
+  clientCount: 'About how many listeners, readers, plays or copies can you point to?',
+  achievements: 'Any press, awards, playlist adds, shows or collaborators worth naming?',
+  testimonialText: 'Paste 1-2 real quotes from listeners, press or peers',
+  concreteProofStory: "Share ONE specific result you're proud of (a review, a chart place, a sold-out night)",
+  offerIncludes: "What's in it? Tracks or chapters, length, formats, where it's available",
+  processDescription: 'What happens after they pre-save, buy or sign up? (Leave blank if nothing in particular)',
+};
+export function wizardLabels(kind: OfferKind): WizardLabels {
+  return kind === 'creative' ? CREATIVE_LABELS : DEFAULT_LABELS;
 }

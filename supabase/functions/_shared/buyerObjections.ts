@@ -7,6 +7,8 @@ export const BUYER_OBJECTION_PROMPTS = [
   { topic: 'materials', question: 'What happens to the buyer’s data or materials?', pageQuestion: 'What happens to our data?' },
   { topic: 'area', question: 'Which areas do you serve?', pageQuestion: 'Do you serve my area?' },
   { topic: 'access', question: 'Does the customer need to be home, or do anything before you arrive?', pageQuestion: 'Do I need to be home?' },
+  { topic: 'where', question: 'Where can people get it, hear it or see it?', pageQuestion: 'Where can I get it?' },
+  { topic: 'formats', question: 'What formats or versions are there (vinyl, streaming, print, digital)?', pageQuestion: 'What formats are there?' },
 ] as const;
 /** Local trades sell to households: "the buyer's team" and "their tools" don't apply; service area and access do. */
 export function localServiceBusiness(input: Record<string, any>): boolean {
@@ -14,6 +16,12 @@ export function localServiceBusiness(input: Record<string, any>): boolean {
   return /home & local services/i.test(t);
 }
 const LOCAL_ONLY = new Set(['area', 'access']);
+const CREATIVE_ONLY = new Set(['where', 'formats']);
+/** Music, film, writing, games: the "buyer" is a listener or reader; price, where and formats are what they ask. */
+export function creativeBusiness(input: Record<string, any>): boolean {
+  const t = ['industryCategory', 'industry', 'industrySubcategory'].map(k => typeof input?.[k] === 'string' ? input[k] : '').join(' ');
+  return /media \/ entertainment|music|audio|streaming \/ video|gaming|publishing \/ news|podcast|film|record label|\bband\b/i.test(t);
+}
 const BUSINESS_ONLY = new Set(['effort', 'fit', 'materials']);
 /** Consumer products sell to individuals: there is no "buyer's team". */
 export function consumerBusiness(input: Record<string, any>): boolean {
@@ -22,11 +30,12 @@ export function consumerBusiness(input: Record<string, any>): boolean {
 }
 /** The questions to ask this business, in order. */
 export function promptsFor(input: Record<string, any>) {
-  if (consumerBusiness(input)) return BUYER_OBJECTION_PROMPTS.filter(p => !['effort', 'area', 'access', 'materials'].includes(p.topic));
+  if (creativeBusiness(input)) return BUYER_OBJECTION_PROMPTS.filter(p => ['pricing', 'where', 'formats'].includes(p.topic));
+  if (consumerBusiness(input)) return BUYER_OBJECTION_PROMPTS.filter(p => !['effort', 'area', 'access', 'materials'].includes(p.topic) && !CREATIVE_ONLY.has(p.topic));
   const local = localServiceBusiness(input);
-  return BUYER_OBJECTION_PROMPTS.filter(p => local
+  return BUYER_OBJECTION_PROMPTS.filter(p => !CREATIVE_ONLY.has(p.topic) && (local
     ? !BUSINESS_ONLY.has(p.topic)
-    : !LOCAL_ONLY.has(p.topic) && (p.topic !== 'materials' || materialsRelevant(input)));
+    : !LOCAL_ONLY.has(p.topic) && (p.topic !== 'materials' || materialsRelevant(input))));
 }
 /** Interview prompts address the owner ("the buyer's team"); the page FAQ is
  * read by the buyer, so canonical prompts swap to the buyer's own voice.

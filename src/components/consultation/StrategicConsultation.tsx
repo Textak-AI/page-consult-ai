@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { BriefProgressLoader } from './BriefProgressLoader';
-import { getWizardPlaceholders, getOfferKind, frustrationQuestion, uniqueStrengthExample } from '@/lib/wizard/industryWording';
+import { getWizardPlaceholders, getOfferKind, frustrationQuestion, uniqueStrengthExample, wizardLabels } from '@/lib/wizard/industryWording';
 import { QuestionExplainer, QUESTION_EXPLAINERS } from './QuestionExplainer';
 import type { AISeoData } from '@/services/intelligence/types';
 import { BrandCustomization, type BrandSettings, type WebsiteIntelligence } from './BrandCustomization';
@@ -271,6 +271,12 @@ const PRIMARY_GOALS = [
   { value: 'calls', label: 'Phone Calls', desc: 'Get prospects to call you' },
   { value: 'meetings', label: 'Book Meetings', desc: 'Schedule consultations/demos' },
   { value: 'sales', label: 'Direct Sales', desc: 'Sell product/service directly' },
+];
+/** Music, film, writing, games: people pre-save, listen, read or follow; they don't book a call. */
+const CREATIVE_GOALS = [
+  { value: 'follow', label: 'Pre-save, Listen or Follow', desc: 'Send people to where the work lives' },
+  { value: 'sales', label: 'Buy It', desc: 'Sell the record, book, ticket or download' },
+  { value: 'leads', label: 'Join the List', desc: 'Collect emails for releases and shows' },
 ];
 
 // Prefill data from landing demo
@@ -1134,6 +1140,8 @@ ${d.ctaText}
   };
 
   const renderStepContent = () => {
+    const stepKind = getOfferKind(data.industryCategory || data.industry, data.industrySubcategory);
+    const L = wizardLabels(stepKind);
     const step = STEPS[currentStep];
     
     // Guard against invalid step index
@@ -1421,7 +1429,7 @@ ${d.ctaText}
             <div className="space-y-5">
               <div>
                 <Label htmlFor="idealClient" className="text-slate-300 inline-flex items-center">
-                  Describe your ideal client in detail *
+                  {L.idealClient} *
                   <QuestionExplainer {...QUESTION_EXPLAINERS.idealClient} />
                 </Label>
                 <Textarea
@@ -1453,7 +1461,7 @@ ${d.ctaText}
               
               <div>
                 <Label htmlFor="desiredOutcome" className="text-slate-300 inline-flex items-center">
-                  What outcome are they really buying? (Not your service, the result) *
+                  {L.desiredOutcome} *
                   <QuestionExplainer {...QUESTION_EXPLAINERS.desiredOutcome} />
                 </Label>
                 <Textarea
@@ -1481,7 +1489,7 @@ ${d.ctaText}
             <div className="space-y-5">
               <div>
                 <Label htmlFor="clientCount" className="text-slate-300 inline-flex items-center">
-                  About how many customers, clients or projects can you point to?
+                  {L.clientCount}
                   <QuestionExplainer {...QUESTION_EXPLAINERS.clientCount} />
                 </Label>
                 <Input
@@ -1495,7 +1503,7 @@ ${d.ctaText}
               
               <div>
                 <Label htmlFor="achievements" className="text-slate-300 inline-flex items-center">
-                  Any notable achievements? (Awards, certifications, press, notable clients)
+                  {L.achievements}
                   <QuestionExplainer {...QUESTION_EXPLAINERS.achievements} />
                 </Label>
                 <Textarea
@@ -1511,7 +1519,7 @@ ${d.ctaText}
               
               <div>
                 <Label htmlFor="testimonialText" className="text-slate-300 inline-flex items-center">
-                  Paste 1-2 real testimonials, or describe what clients typically say about you
+                  {L.testimonialText}
                   <QuestionExplainer {...QUESTION_EXPLAINERS.testimonialText} />
                 </Label>
                 <Textarea
@@ -1528,7 +1536,7 @@ ${d.ctaText}
               {/* NEW: Concrete Proof Story */}
               <div className="pt-4 border-t border-slate-700">
                 <Label htmlFor="concreteProofStory" className="text-slate-300 inline-flex items-center">
-                  Share ONE specific result you're proud of
+                  {L.concreteProofStory}
                   <QuestionExplainer {...QUESTION_EXPLAINERS.concreteProofStory} />
                 </Label>
                 <p className="text-xs text-slate-400 mt-1">You can anonymize. Format: "[Type of client] achieved [specific outcome] in [timeframe]"</p>
@@ -1603,7 +1611,7 @@ ${d.ctaText}
               
               <div>
                 <Label htmlFor="offerIncludes" className="text-slate-300">
-                  What's included? Key deliverables? *
+                  {L.offerIncludes} *
                 </Label>
                 <Textarea
                   id="offerIncludes"
@@ -1635,7 +1643,7 @@ ${d.ctaText}
               
               <div>
                 <Label htmlFor="processDescription" className="text-slate-300 inline-flex items-center">
-                  What happens after they contact you? Describe your process.
+                  {L.processDescription}
                   <QuestionExplainer {...QUESTION_EXPLAINERS.processDescription} />
                 </Label>
                 <Textarea
@@ -1698,8 +1706,8 @@ ${d.ctaText}
                 <p className="text-xs text-slate-400 mt-2">Optional — helps power the "How It Works" section</p>
               </div>
               
-              {/* NEW: Calculator Context (conditional) */}
-              {data.pageType === 'customer-acquisition' && (
+              {/* Calculator context: only offers whose results are measured across clients */}
+              {data.pageType === 'customer-acquisition' && ['services', 'software', 'general'].includes(stepKind) && (
                 <div className="pt-4 border-t border-slate-700">
                   <div className="flex items-center gap-2 mb-3">
                     <TrendingUp className="w-4 h-4 text-cyan-400" />
@@ -1769,7 +1777,7 @@ ${d.ctaText}
                   <QuestionExplainer {...QUESTION_EXPLAINERS.primaryGoal} />
                 </Label>
                 <div className="grid grid-cols-2 gap-3 mt-2">
-                  {PRIMARY_GOALS.map(goal => (
+                  {(stepKind === 'creative' ? CREATIVE_GOALS : PRIMARY_GOALS).map(goal => (
                     <button
                       key={goal.value}
                       onClick={() => updateData({ primaryGoal: goal.value })}
@@ -1793,7 +1801,7 @@ ${d.ctaText}
                 </Label>
                 <Input
                   id="ctaText"
-                  placeholder="e.g., Schedule a Consultation, Book a Demo"
+                  placeholder={stepKind === 'creative' ? "e.g., Pre-save, Listen now, Read the first chapter" : "e.g., Schedule a Consultation, Book a Demo"}
                   value={data.ctaText || ''}
                   onChange={(e) => updateData({ ctaText: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
