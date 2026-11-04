@@ -24,8 +24,7 @@ import { CollapsibleBriefPanel } from './CollapsibleBriefPanel';
 import { useBrandBrief } from '@/hooks/useBrandBrief';
 import { extractStructuredBrief } from '@/lib/extractStructuredBrief';
 import { websiteFirstPrefill, type WebsiteFirstAnalysis } from '@/lib/websiteFirst';
-import { AmbientHeroBackground } from './AmbientHeroBackground';
-import { generateHeroImages, regenerateHeroImages, generateCombinedHeroImages, regenerateCombinedHeroImages, type HeroImage } from '@/lib/heroImages';
+import { AmbientGradientBackground } from './AmbientGradientBackground';
 import { 
   classifyIndustry, 
   storeClassificationOnConsultation, 
@@ -485,13 +484,6 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     consultantBlurHandlersRef.current[fieldKey]?.();
   }, []);
   
-  // Hero background state
-  const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
-  const [heroCurrentIndex, setHeroCurrentIndex] = useState(0);
-  const [isHeroLocked, setIsHeroLocked] = useState(false);
-  const [heroLockedIndex, setHeroLockedIndex] = useState(0);
-  const [isHeroGenerating, setIsHeroGenerating] = useState(false);
-  
   // Load brand brief for the panel
   const { brandBrief, isLoading: brandLoading } = useBrandBrief();
   
@@ -614,69 +606,6 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
     // With hasBrandColors false, STEPS includes 'branding' as the first step
     setCurrentStep(0);
   }, []);
-  
-  // Hero background: Auto-rotate
-  useEffect(() => {
-    if (heroImages.length <= 1 || isHeroLocked) return;
-    const interval = setInterval(() => {
-      setHeroCurrentIndex((prev) => (prev + 1) % heroImages.length);
-    }, 10000); // 10 seconds for calm, ambient feel
-    return () => clearInterval(interval);
-  }, [heroImages.length, isHeroLocked]);
-
-  // Hero background: Generate on industry select (combined: FLUX + brand scenes if logo available)
-  const logoUrl = data.brandSettings?.logoUrl || (savedBrandDismissed ? undefined : brandBrief?.logo_url);
-  
-  useEffect(() => {
-    if (data.industryCategory) {
-      setIsHeroGenerating(true);
-      
-      // Use combined generation if logo is available
-      const generateFn = logoUrl 
-        ? generateCombinedHeroImages(data.industryCategory, data.industrySubcategory, logoUrl)
-        : generateHeroImages(data.industryCategory, data.industrySubcategory, 4);
-      
-      generateFn
-        .then(result => {
-          setHeroImages(result.images);
-        })
-        .catch(console.error)
-        .finally(() => setIsHeroGenerating(false));
-    }
-  }, [data.industryCategory, data.industrySubcategory, logoUrl]);
-
-  const handleHeroSelect = useCallback(() => {
-    setIsHeroLocked(true);
-    setHeroLockedIndex(heroCurrentIndex);
-    updateData({ heroBackgroundUrl: heroImages[heroCurrentIndex]?.url });
-  }, [heroCurrentIndex, heroImages]);
-
-  const handleHeroRegenerate = useCallback(async () => {
-    if (!data.industryCategory) return;
-    setIsHeroGenerating(true);
-    try {
-      // Use combined regeneration if logo is available
-      const result = logoUrl
-        ? await regenerateCombinedHeroImages(data.industryCategory, data.industrySubcategory, logoUrl)
-        : await regenerateHeroImages(data.industryCategory, data.industrySubcategory, 4);
-      setHeroImages(result.images);
-      setHeroCurrentIndex(0);
-      setIsHeroLocked(false);
-    } finally {
-      setIsHeroGenerating(false);
-    }
-  }, [data.industryCategory, data.industrySubcategory, logoUrl]);
-
-  const handleHeroUnlock = useCallback(() => {
-    setIsHeroLocked(false);
-    updateData({ heroBackgroundUrl: '' });
-  }, []);
-
-  const handleHeroDotClick = useCallback((index: number) => {
-    if (!isHeroLocked) {
-      setHeroCurrentIndex(index);
-    }
-  }, [isHeroLocked]);
   
   // Compute STEPS dynamically based on selected page type and brand status
   // Skip branding step if brand colors are already configured
@@ -1924,20 +1853,11 @@ ${d.ctaText}
         onClose={() => setUnlockReviewOpen(false)}
         onGenerate={() => { setUnlockReviewOpen(false); void generateStrategyBrief(); }}
       />
-      {/* Ambient Hero Background */}
-      {data.industryCategory && (
-        <AmbientHeroBackground
-          images={heroImages}
-          isLocked={isHeroLocked}
-          lockedIndex={heroLockedIndex}
-          currentIndex={heroCurrentIndex}
-          isGenerating={isHeroGenerating}
-          onSelect={handleHeroSelect}
-          onRegenerate={handleHeroRegenerate}
-          onUnlock={handleHeroUnlock}
-          onDotClick={handleHeroDotClick}
-        />
-      )}
+      {/* Ambient background: brand-derived gradient, no generated photos (the editor owns page photos) */}
+      <AmbientGradientBackground
+        primaryColor={data.brandSettings?.primaryColor || (savedBrandDismissed ? null : brandBrief?.colors?.primary?.hex) || extractedBrand?.themeColor}
+        secondaryColor={data.brandSettings?.secondaryColor || (savedBrandDismissed ? null : brandBrief?.colors?.secondary?.hex)}
+      />
       
       {/* Wizard Questions - floating above background */}
       <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-8">

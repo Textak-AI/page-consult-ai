@@ -2007,3 +2007,78 @@ All colors MUST be HSL.
   border-color: color-mix(in srgb, var(--signature-primary) 14%, transparent);
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 16px -8px rgba(16, 24, 40, 0.08);
 }
+
+/* ── Wizard ambient background (consultation/AmbientGradientBackground) ──
+   Replaces the generated-photo slideshow. Brand-derived colour fields on a
+   deep base, drifting on transform only; static under reduced motion. */
+.pc-ambient {
+  background:
+    radial-gradient(120% 80% at 50% 110%, color-mix(in oklab, var(--pc-amb-a) 14%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, #0a1020 0%, #0d1428 55%, #0a0f1d 100%);
+}
+.pc-ambient-field {
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.7;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+.pc-ambient-a {
+  left: -20vmax; top: -25vmax;
+  background: radial-gradient(circle at 40% 40%, var(--pc-amb-a) 0%, transparent 62%);
+  animation: pc-amb-drift-a 38s ease-in-out infinite alternate;
+}
+.pc-ambient-b {
+  right: -25vmax; top: -10vmax;
+  background: radial-gradient(circle at 60% 50%, var(--pc-amb-b) 0%, transparent 62%);
+  opacity: 0.55;
+  animation: pc-amb-drift-b 46s ease-in-out infinite alternate;
+}
+.pc-ambient-c {
+  left: 15vmax; bottom: -40vmax;
+  background: radial-gradient(circle at 50% 50%, color-mix(in oklab, var(--pc-amb-a) 55%, var(--pc-amb-b)) 0%, transparent 62%);
+  opacity: 0.45;
+  animation: pc-amb-drift-c 54s ease-in-out infinite alternate;
+}
+@keyframes pc-amb-drift-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(14vmax, 10vmax, 0) scale(1.15); }
+}
+@keyframes pc-amb-drift-b {
+  from { transform: translate3d(0, 0, 0) scale(1.1); }
+  to   { transform: translate3d(-16vmax, 12vmax, 0) scale(0.95); }
+}
+@keyframes pc-amb-drift-c {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(10vmax, -14vmax, 0) scale(1.2); }
+}
+.pc-ambient-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(70% 60% at 50% 40%, #000 20%, transparent 100%);
+  -webkit-mask-image: radial-gradient(70% 60% at 50% 40%, #000 20%, transparent 100%);
+}
+.pc-ambient-grain {
+  position: absolute; inset: 0;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+.pc-ambient-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(90% 70% at 50% 45%, transparent 40%, rgba(5, 8, 18, 0.55) 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-ambient-field { animation: none; }
+}
+@supports not (color: color-mix(in oklab, red, blue)) {
+  .pc-ambient { background: linear-gradient(180deg, #0a1020 0%, #0d1428 55%, #0a0f1d 100%); }
+  .pc-ambient-c { background: radial-gradient(circle at 50% 50%, var(--pc-amb-b) 0%, transparent 62%); }
+}
