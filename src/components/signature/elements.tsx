@@ -7,8 +7,9 @@ import { signatureTokens } from '@/lib/design/tokens';
 import { payoffPhrase, sourced, validStat, type SignaturePlan, type SignatureStat, type SourceText } from './selection';
 import type { ArcSlot } from '@/lib/composition/arc';
 
-export function ChapterEyebrow({ slot, className = '' }: { slot: ArcSlot; className?: string }) {
-  return <p className={`signature-chapter ${className}`}>{signatureTokens.labels[slot]}</p>;
+/** The chapter label, or the owner's stated line (a release date) when the section carries one. */
+export function ChapterEyebrow({ slot, text, className = '' }: { slot: ArcSlot; text?: string | null; className?: string }) {
+  return <p className={`signature-chapter ${className}`}>{text || signatureTokens.labels[slot]}</p>;
 }
 export function GradientPayoff({ text, phrase, enabled = true }: { text: string; phrase?: string | null; enabled?: boolean }) {
   const payoff = enabled ? payoffPhrase(text, phrase) : null;

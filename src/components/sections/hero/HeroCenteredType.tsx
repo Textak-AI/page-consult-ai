@@ -177,7 +177,7 @@ export default function HeroCenteredType({ content, onUpdate, isEditing }: HeroC
         ) : null}
 
         {/* Headline */}
-        {content.signature?.elements.includes('chapter') && <ChapterEyebrow slot="hero" />}
+        {(content.dateLine || content.signature?.elements.includes('chapter')) && <ChapterEyebrow slot="hero" text={content.dateLine} />}
         <h1
           contentEditable={isEditing}
           suppressContentEditableWarning

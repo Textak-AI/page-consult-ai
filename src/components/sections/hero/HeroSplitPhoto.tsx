@@ -85,7 +85,7 @@ export default function HeroSplitPhoto({ content, onUpdate, isEditing }: HeroSpl
             ) : null}
 
             {/* Headline */}
-            {content.signature?.elements.includes('chapter') && <ChapterEyebrow slot="hero" />}
+            {(content.dateLine || content.signature?.elements.includes('chapter')) && <ChapterEyebrow slot="hero" text={content.dateLine} />}
             <h1
               contentEditable={isEditing}
               suppressContentEditableWarning

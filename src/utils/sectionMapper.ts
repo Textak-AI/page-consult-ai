@@ -5,6 +5,7 @@ import { composeArc } from '@/lib/composition/arc';
 import { applySignatureStrategy } from '@/components/signature/selection';
 import { applyCommunicationStrategy, type CommunicationStrategy } from '@/lib/composition/communicationStrategy';
 import { parseMessagingChoices } from '../../supabase/functions/_shared/messagingChoices';
+import { statedDateLine } from '@/lib/text/statedDate';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 import { answeredObjections, toPageQuestion } from '../../supabase/functions/_shared/buyerObjections';
 import { statedCtaText } from '../../supabase/functions/_shared/siteExtraction';
@@ -477,6 +478,8 @@ export function mapBriefToSections(
           content: {
             headline: headlineSelection.primary,
             subheadline: brief.subheadline,
+            // A stated release/launch/opening date leads the hero in place of the generic chapter label.
+            dateLine: statedDateLine(options.consultationData),
             ctaText: statedCtaText(options.consultationData) || brief.ctaText || (isConsulting ? industryTokens.ctaDefaults.primary : getCtaByIndustry(industry).primary),
             ctaLink: '#contact',
             backgroundImage: heroImageUrl || null,
@@ -844,6 +847,7 @@ export function mapBriefToSections(
           secondaryCta,
           urgencyText,
           guaranteeText,
+          dateLine: statedDateLine(consultation),
           trustSignal,
           trustIndicators: ctaTrustIndicators,
           primaryColor: primaryColor || null,

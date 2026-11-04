@@ -22,6 +22,7 @@ interface FinalCTASectionProps {
     mode?: 'light' | 'dark' | 'warm' | 'cold';
     secondaryCta?: string;
     urgencyText?: string;
+    dateLine?: string | null;
     guaranteeText?: string;
     // SDI Design System
     primaryColor?: string;
@@ -307,6 +308,11 @@ function FinalCTASectionBase({ content, onUpdate, isEditing }: FinalCTASectionPr
             </Button>
           )}
         </motion.div>
+
+        {/* Stated date (release, launch, opening): a fact, not an urgency banner */}
+        {content.dateLine && (
+          <p className={`mt-5 text-sm font-medium tracking-wide ${getMutedTextColorClass()}`}>{content.dateLine}</p>
+        )}
 
         {/* Guarantee */}
         {guaranteeText && (
