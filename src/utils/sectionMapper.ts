@@ -6,6 +6,7 @@ import { applySignatureStrategy } from '@/components/signature/selection';
 import { applyCommunicationStrategy, toReader, type CommunicationStrategy } from '@/lib/composition/communicationStrategy';
 import { parseMessagingChoices } from '../../supabase/functions/_shared/messagingChoices';
 import { statedDateLine } from '@/lib/text/statedDate';
+import { getOfferKind } from '@/lib/wizard/industryWording';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 import { answeredObjections, toPageQuestion } from '../../supabase/functions/_shared/buyerObjections';
 import { statedCtaText } from '../../supabase/functions/_shared/siteExtraction';
@@ -540,15 +541,18 @@ export function mapBriefToSections(
         // Owners describe their buyer in the third person ("they're tired of…"); the page speaks to that
         // buyer, so the stated challenge is re-addressed to the reader (their → your), nothing else changed.
         const statedChallenge = arcSrc.challenge?.trim() || brief.problemStatement;
+        const psCd: any = options.consultationData || {};
+        const creativeWork = getOfferKind(psCd.industryCategory || industry, psCd.industrySubcategory) === 'creative';
         if (statedChallenge && brief.solutionStatement) {
           sections.push({
             type: 'problem-solution',
             order,
             visible: true,
             content: {
-              problemTitle: 'The Challenge',
+              // Creative work isn't a "challenge" with "our solution": plainer labels, same copy.
+              problemTitle: creativeWork ? 'The problem' : 'The Challenge',
               problem: toReader(statedChallenge),
-              solutionTitle: 'Our Solution',
+              solutionTitle: creativeWork ? 'What this is' : 'Our Solution',
               solution: brief.solutionStatement,
               industryVariant: industryVariant,
               mode: sdiMode,

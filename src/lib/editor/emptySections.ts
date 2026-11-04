@@ -15,6 +15,16 @@ export function hiddenReason(section: { type: string; content?: any } | null | u
     const storageOrigin = (import.meta as any).env?.VITE_SUPABASE_URL;
     return usableVideo(c.video, storageOrigin) ? null : VIDEO_SECTION_HIDDEN;
   }
+  if (section?.type === 'client-results') {
+    // Same quality floor as LivePreview / PublicPageRenderer: at least two real numbers with a label.
+    const results = c.results || c.statistics || c.stats || [];
+    const valid = (Array.isArray(results) ? results : []).filter((s: any) => {
+      const value = String(s?.metric || s?.value || '');
+      const label = String(s?.description || s?.label || '');
+      return /\d/.test(value) && label.length >= 5 && label.trim().split(/\s+/).length <= 8;
+    });
+    return valid.length >= 2 ? null : 'Hidden until you add two real results with numbers';
+  }
   if (section?.type === 'credentials-bar') {
     const ok = (c.credentials || []).some((x: any) => typeof x?.value === 'string' && x.value.trim() && typeof x?.label === 'string' && x.label.trim());
     return ok ? null : 'Hidden until you add credentials';

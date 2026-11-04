@@ -9,7 +9,7 @@ const brief = {
   tone: 'warm', objections: [], pageStructure: ['hero', 'problem-solution', 'final-cta'], processSteps: null, testimonials: [], ctaText: 'Pre-save',
 };
 const consultationData = {
-  businessName: '4DHB', industry: 'Music / Audio', ctaText: 'Pre-save',
+  businessName: '4DHB', industry: 'Music / Audio', industryCategory: 'Media / Entertainment', industrySubcategory: 'Music / Audio', ctaText: 'Pre-save',
   clientFrustration: brief.problemStatement,
   websiteIntelligence: { description: 'The new album from 4DHB. Out October 27, 2026.' },
 };
@@ -22,5 +22,9 @@ test('the stated challenge speaks to the reader; the stated date leads the hero 
   expect(problem).toContain('You want to be held inside something.');
   expect(problem).not.toMatch(/\bthey\b/i);
   expect(sections[0].content.dateLine).toBe('Out October 27, 2026');
+  // Creative work gets plain section labels, not consulting ones.
+  const ps = sections.find(s => s.type === 'problem-solution')?.content;
+  expect(ps.problemTitle).toBe('The problem');
+  expect(ps.solutionTitle).toBe('What this is');
   expect(sections[sections.length - 1].content.dateLine).toBe('Out October 27, 2026');
 });

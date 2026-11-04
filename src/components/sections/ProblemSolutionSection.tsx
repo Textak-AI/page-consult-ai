@@ -23,6 +23,8 @@ interface ProblemSolutionSectionProps {
     solutionStat?: CitedStat;
     industryVariant?: string;
     sectionTitle?: string;
+    problemTitle?: string;
+    solutionTitle?: string;
     // SDI mode override - takes precedence over industry detection
     mode?: 'light' | 'dark' | 'warm' | 'cold';
   };
@@ -163,7 +165,7 @@ function ProblemSolutionSectionBase({ content, onUpdate, isEditing }: ProblemSol
             className="text-center mb-16"
           >
             <span className="inline-block px-4 py-1 bg-teal-100 text-teal-800 text-sm font-semibold rounded-full mb-4">
-              THE CHALLENGE
+              {(content.problemTitle || 'The Challenge').toUpperCase()}
             </span>
             <h2 
               className={`text-3xl md:text-4xl font-bold text-slate-900 ${isEditing ? 'cursor-text hover:ring-2 hover:ring-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-1' : ''}`}
@@ -323,7 +325,7 @@ function ProblemSolutionSectionBase({ content, onUpdate, isEditing }: ProblemSol
                 <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
                   <AlertTriangle className="w-6 h-6 text-red-600" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-xl font-bold text-red-900">The Challenge</h3>
+                <h3 className="text-xl font-bold text-red-900">{content.problemTitle || 'The Challenge'}</h3>
               </div>
               <p 
                 className={`text-slate-700 leading-relaxed text-lg ${
@@ -363,7 +365,7 @@ function ProblemSolutionSectionBase({ content, onUpdate, isEditing }: ProblemSol
                 <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
                   <CheckCircle className="w-6 h-6 text-emerald-600" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-xl font-bold text-emerald-900">Our Solution</h3>
+                <h3 className="text-xl font-bold text-emerald-900">{content.solutionTitle || 'Our Solution'}</h3>
               </div>
               <p 
                 className={`text-slate-700 leading-relaxed text-lg ${
@@ -496,7 +498,7 @@ function ProblemSolutionSectionBase({ content, onUpdate, isEditing }: ProblemSol
                 <AlertTriangle className="w-7 h-7 text-white" strokeWidth={1.5} />
               </div>
               <h3 className={typography.cardTitle} style={{ color: 'hsl(0, 70%, 50%)' }}>
-                The Challenge
+                {content.problemTitle || 'The Challenge'}
               </h3>
             </div>
             
@@ -562,7 +564,7 @@ function ProblemSolutionSectionBase({ content, onUpdate, isEditing }: ProblemSol
                 <CheckCircle className="w-7 h-7 text-white" strokeWidth={1.5} />
               </div>
               <h3 className={typography.cardTitle} style={{ color: 'hsl(189, 95%, 35%)' }}>
-                Our Solution
+                {content.solutionTitle || 'Our Solution'}
               </h3>
             </div>
             

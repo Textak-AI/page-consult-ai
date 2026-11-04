@@ -120,6 +120,9 @@ test('sidebar marks sections that render nothing until real proof exists', async
   expect(hiddenReason({ type: 'social-proof', content: { testimonial: { quote: '[Test quote] long enough' } } })).toBeNull();
   expect(hiddenReason({ type: 'credentials-bar', content: {} })).toMatch(/credentials/);
   expect(hiddenReason({ type: 'features', content: {} })).toBeNull();
+  // 4DHB run (Nov 4): "Client Results" sat in the sidebar with nothing on the page.
+  expect(hiddenReason({ type: 'client-results', content: { results: [] } })).toMatch(/two real results/);
+  expect(hiddenReason({ type: 'client-results', content: { results: [{ metric: '38', label: 'customers since 2020' }, { metric: '11 years', label: 'in business' }] } })).toBeNull();
   expect(src('src/components/editor/SectionManager.tsx')).toMatch(/hiddenReason\(section\)/);
 });
 

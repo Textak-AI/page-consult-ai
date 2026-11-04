@@ -301,7 +301,7 @@ Generate a STRATEGY BRIEF with these sections:
 3. **Core Value Proposition** (One plain, specific statement that captures the unique value - this becomes the hero subheadline)
 
 4. **Key Points** (3-4 main themes to emphasize - these become FEATURE CARDS)
-   - For each key point: Title, Benefit Description, Icon suggestion (Zap, Target, Shield, Award, TrendingUp, Users, CheckCircle, Clock, Heart, Star)
+   - Each key point on its own lines: a bold title line ("**Point N: Title**"), then one benefit paragraph. No "Icon:" or "Benefit:" labels in this prose; the icon goes only in the JSON (icon field: Zap, Target, Shield, Award, TrendingUp, Users, CheckCircle, Clock, Heart, Star).
 
 5. **Competitive Differentiation** (What sets this apart - use for problem/solution section)
 
@@ -314,7 +314,8 @@ Generate a STRATEGY BRIEF with these sections:
    Use THESE EXACT sections in this order:
    ${layoutResult.sections.map(s => `- ${s}`).join('\n   ')}
    
-   Provide a brief purpose statement for each section in the list.
+   Provide a brief purpose statement for each section in the list, written for the owner.
+   No working notes: never "(Adapt as…)", "omit this section", "use as space for" or "None provided". A section with nothing behind it simply says what it would hold once the owner adds it.
 
 9. **Headline Recommendations** (3 options for the main headline, derived from the value prop)
     - Option A (Direct benefit)

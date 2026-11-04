@@ -130,12 +130,21 @@ export function unsupportedComparison(text: string, input: unknown): string | nu
 const LEAK_LINE = /^.*\((?:[^)]*\b)?inferred\b[^)]*\).*$|^\s*(?:[-*•]\s*)?(?:Note|Notes)\s*:.*$/gim;
 const LEAK_SENTENCE = /(?:^|(?<=[.!?]\s))(?:Do not|Don['’]t|Never) (?:invent|fabricate|add|make up|guess)[^.!?\n]*[.!?]?/gi;
 const LEAK_PAREN = /\s*\((?:the )?(?:stated|owner['’]s|client['’]s)?[^()]{0,40}\bverbatim\)/gi;
+// Writer's working notes and structured-field labels that belong in the JSON, not in the owner's brief.
+const LEAK_LABEL = /\s*\b(?:Icon|Benefit)\s*:\s*(?=[A-Z])/g;
+const LEAK_ICON = /\s*\bIcon:\s*[A-Za-z]+\.?/g;
+const LEAK_ASIDE = /\s*\((?:adapt as|omit (?:this )?(?:section|or)|use as space|none provided|if (?:none|no) )[^()]*\)/gi;
+const LEAK_NONE = /(?:^|(?<=[.!?;:–—-]\s))(?:None provided|No [a-z-]+ (?:provided|given|answered))[^.!?\n]*(?:omit|use (?:as|for))[^.!?\n]*[.!?]?/gi;
 export function stripBriefLeaks(prose: string): { text: string; removed: string[] } {
   const removed: string[] = [];
   const text = (prose || '')
     .replace(LEAK_LINE, (m) => { removed.push(m.trim()); return ''; })
     .replace(LEAK_SENTENCE, (m) => { removed.push(m.trim()); return ''; })
     .replace(LEAK_PAREN, (m) => { removed.push(m.trim()); return ''; })
+    .replace(LEAK_ICON, (m) => { removed.push(m.trim()); return ''; })
+    .replace(LEAK_ASIDE, (m) => { removed.push(m.trim()); return ''; })
+    .replace(LEAK_NONE, (m) => { removed.push(m.trim()); return ''; })
+    .replace(LEAK_LABEL, (m) => { removed.push(m.trim()); return ' '; })
     .replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n');
   return { text, removed };
 }

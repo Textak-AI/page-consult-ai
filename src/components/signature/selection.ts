@@ -48,7 +48,9 @@ export function selectSignature(strategy: CommunicationStrategy, sections: { typ
   const stats = [...inputStats(input), ...(Array.isArray(input.signatureStats) ? (input.signatureStats as SignatureStat[]).filter(stat => validStat(stat) && fromInput(stat.evidence)) : [])];
   const terms = Array.isArray(input.ctaTerms) ? input.ctaTerms.filter(fromInput) : [];
   const microline = fromInput(input.ctaMicroline) ? input.ctaMicroline : null;
-  const candidates: SignatureElement[] = ['chapter'];
+  // "The Opportunity / The Challenge / The Next Step" are consulting furniture; a record, film or book page goes without.
+  const creative = /media \/ entertainment|music|audio|streaming \/ video|gaming|publishing \/ news|podcast|film|record label/i.test(String(input.industryCategory || input.industry || ''));
+  const candidates: SignatureElement[] = creative ? [] : ['chapter'];
   const heroHeadline = sections.find(s => s.type === 'hero')?.content?.headline;
   const payoff = typeof heroHeadline === 'string' ? payoffPhrase(heroHeadline, payoffPhrase(strategy.reframe || '')) : null;
   if (payoff) candidates.push('gradient');

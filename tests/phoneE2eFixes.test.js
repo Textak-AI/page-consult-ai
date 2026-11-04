@@ -136,6 +136,16 @@ test('brief working notes and unstated competitor claims never reach the owner',
   expect(text).toContain('Who: Home cooks with ingredients but no plan.');
   expect(text).toContain('About 120 homes on a recurring schedule');
   for (const s of ['inferred', 'verbatim', 'Do not invent', 'Note:']) expect(text).not.toContain(s);
+  // 4DHB brief (Nov 4): "Icon: TrendingUp" and "(Adapt as album journey description)" reached the owner.
+  const leaked = stripBriefLeaks([
+    'Point 1: A Single Continuous Piece',
+    'Benefit: Fourteen connected rooms. Icon: TrendingUp',
+    'case-studies – (Adapt as album journey description) Walk through the structure.',
+    'testimonials – None provided; omit this section or use as space for additional album description.',
+  ].join('\n')).text;
+  expect(leaked).toContain('Fourteen connected rooms.');
+  expect(leaked).toContain('Walk through the structure.');
+  for (const s of ['Icon:', 'Benefit:', 'Adapt as', 'omit this section', 'None provided']) expect(leaked).not.toContain(s);
   const pantry = { uniqueStrength: 'One photo of your fridge shelf gives three dinners.' };
   expect(unsupportedComparison('Traditional meal planning apps make you enter every item.', pantry)).toBeTruthy();
   expect(guardCopyClaims({ s: 'One photo is enough. Traditional meal planning apps make you enter every item.' }, pantry, 't').s).toBe('One photo is enough.');

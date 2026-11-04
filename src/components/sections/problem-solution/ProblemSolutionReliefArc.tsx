@@ -55,7 +55,7 @@ export default function ProblemSolutionReliefArc({ content, onUpdate, isEditing 
         ...spacing.section,
       }}>
         <div style={{ maxWidth: 680, ...spacing.center }}>
-          <div style={{ ...labelStyle, color: dimLabel }}>The Challenge</div>
+          <div style={{ ...labelStyle, color: dimLabel }}>{content.problemTitle || 'The Challenge'}</div>
           <p
             contentEditable={isEditing}
             suppressContentEditableWarning
