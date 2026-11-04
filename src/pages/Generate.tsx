@@ -1076,8 +1076,10 @@ function GenerateContent() {
                           localBrandData?.secondaryColor ||
                           legacyWebsiteIntel.secondaryColor ||
                           null,
-          logoUrl: pageWebsiteIntel.logoUrl ||
-                   consultationBrandSettings.logoUrl ||
+          // The brand step's answer is final: once brand settings exist, their logo (or none) wins over
+          // anything a site read found (which may be cover art, not a logo).
+          logoUrl: ('logoUrl' in consultationBrandSettings) ? (consultationBrandSettings.logoUrl || null) :
+                   pageWebsiteIntel.logoUrl ||
                    dbDesignIntel.logoUrl ||
                    localBrandData?.logoUrl ||
                    legacyWebsiteIntel.logoUrl ||
@@ -1792,8 +1794,8 @@ function GenerateContent() {
                          localBrandData?.accentColor ||
                          pageConsultationData.websiteIntelligence?.accentColor ||
                          null,
-            logoUrl: pageWebsiteIntel.logoUrl ||
-                     consultationBrandSettings.logoUrl ||
+            logoUrl: ('logoUrl' in consultationBrandSettings) ? (consultationBrandSettings.logoUrl || null) :
+                     pageWebsiteIntel.logoUrl ||
                      intel.logoUrl ||
                      localBrandData?.logoUrl ||
                      pageConsultationData.websiteIntelligence?.logoUrl ||
@@ -1834,7 +1836,8 @@ function GenerateContent() {
               mode: resolvedColorMode, // Inject colorMode into each section
               primaryColor: resolvedBrand.primaryColor, // Inject primary color for CTA buttons
               secondaryColor: resolvedBrand.secondaryColor,
-              logoUrl: section.type === 'hero' ? resolvedBrand.logoUrl : section.content?.logoUrl, // Inject logo for hero
+              // A logo the owner put on the hero (editor upload) is kept; the brand logo only fills an empty slot.
+              logoUrl: section.type === 'hero' ? (section.content?.logoUrl || resolvedBrand.logoUrl) : section.content?.logoUrl,
             }
           }));
           
