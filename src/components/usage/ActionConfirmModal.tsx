@@ -56,7 +56,7 @@ export function ActionConfirmModal({
             Confirm AI Action
           </DialogTitle>
           <DialogDescription className="text-slate-400">
-            This action will use AI credits from your account.
+            This uses AI actions from your balance.
           </DialogDescription>
         </DialogHeader>
 
@@ -93,7 +93,7 @@ export function ActionConfirmModal({
             <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <AlertCircle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-amber-200">
-                You're running low on credits. Consider upgrading for more actions.
+                You're running low on AI actions. Buy a pack or upgrade for more.
               </p>
             </div>
           )}

@@ -120,7 +120,7 @@ export function BillingSettings() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Zap className="h-5 w-5 text-primary" />
-                  <span className="font-medium">AI Credits</span>
+                  <span className="font-medium">AI actions</span>
                 </div>
                 <span className="text-sm text-muted-foreground">
                   {creditsAvailable} / {creditsTotal} remaining
@@ -165,7 +165,7 @@ export function BillingSettings() {
           <ul className="text-sm text-muted-foreground space-y-1">
             {credits?.isUnlimited ? (
               <>
-                <li>• Unlimited AI credits</li>
+                <li>• Unlimited AI actions</li>
                 <li>• Priority support</li>
                 <li>• White-label options (coming soon)</li>
                 <li>• Team collaboration (coming soon)</li>
@@ -173,14 +173,14 @@ export function BillingSettings() {
               </>
             ) : credits?.isPro ? (
               <>
-                <li>• {creditsTotal} AI credits per month</li>
-                <li>• Credit rollover (up to 50)</li>
+                <li>• {creditsTotal} AI actions a month</li>
+                <li>• Up to 50 unused actions carry over</li>
                 <li>• Priority support</li>
                 <li>• Advanced analytics (coming soon)</li>
               </>
             ) : (
               <>
-                <li>• {creditsTotal} AI credits per month</li>
+                <li>• {creditsTotal} AI actions a month</li>
                 <li>• Email support</li>
               </>
             )}
