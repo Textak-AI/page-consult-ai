@@ -15,11 +15,11 @@ function harness(fixture, retrieved, existing = null, rejectSignature = false) {
   const grants = [], verifies = [], retrieves = [];
   client.rpc = async (fn, args) => { grants.push([fn, args]); return { data: true, error: null }; };
   class Stripe {
-    webhooks = { constructEvent: (body, signature, secret) => {
+    webhooks = { constructEventAsync: async (body, signature, secret) => {
       verifies.push([body, signature, secret]);
       if (rejectSignature) throw new Error('Invalid signature');
       return fixture;
-    } };
+    }, constructEvent: () => { throw new Error('SubtleCryptoProvider cannot be used in a synchronous context'); } };
     subscriptions = { retrieve: async id => { retrieves.push(id); return retrieved; } };
   }
   const edge = loadEdgeSource('stripe-webhook/index.ts', {

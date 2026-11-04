@@ -116,6 +116,8 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/new" element={<Navigate to="/wizard/form" replace />} />
+                {/* The signed-in dashboard is "/"; checkout, the header and emails link to /dashboard. Keep the query (?checkout=success). */}
+                <Route path="/dashboard" element={<Navigate to={{ pathname: "/", search: window.location.search }} replace />} />
                 
                 {/* Brand Setup - entry point */}
                 <Route path="/brand-setup" element={<EnhancedBrandSetup />} />
