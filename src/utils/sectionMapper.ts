@@ -3,7 +3,7 @@ import { statedStat } from '@/lib/statedStat';
 import { unsupportedCommitment } from '../../supabase/functions/_shared/copyClaims';
 import { composeArc } from '@/lib/composition/arc';
 import { applySignatureStrategy } from '@/components/signature/selection';
-import { applyCommunicationStrategy, type CommunicationStrategy } from '@/lib/composition/communicationStrategy';
+import { applyCommunicationStrategy, toReader, type CommunicationStrategy } from '@/lib/composition/communicationStrategy';
 import { parseMessagingChoices } from '../../supabase/functions/_shared/messagingChoices';
 import { statedDateLine } from '@/lib/text/statedDate';
 import { truncateAtBoundary } from '@/lib/text/truncate';
@@ -537,6 +537,8 @@ export function mapBriefToSections(
 
       case 'problem-solution': {
         // Problem is named in the client's own framing when they stated it.
+        // Owners describe their buyer in the third person ("they're tired of…"); the page speaks to that
+        // buyer, so the stated challenge is re-addressed to the reader (their → your), nothing else changed.
         const statedChallenge = arcSrc.challenge?.trim() || brief.problemStatement;
         if (statedChallenge && brief.solutionStatement) {
           sections.push({
@@ -545,7 +547,7 @@ export function mapBriefToSections(
             visible: true,
             content: {
               problemTitle: 'The Challenge',
-              problem: statedChallenge,
+              problem: toReader(statedChallenge),
               solutionTitle: 'Our Solution',
               solution: brief.solutionStatement,
               industryVariant: industryVariant,
