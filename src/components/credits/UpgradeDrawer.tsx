@@ -42,7 +42,6 @@ const plans = [
     icon: Crown,
     features: [
       'Unlimited landing pages',
-      'All premium templates',
       'Priority AI generation (coming soon)',
       'Priority support',
       'Lock in price forever',

@@ -181,7 +181,6 @@ export function BillingSettings() {
             ) : (
               <>
                 <li>• {creditsTotal} AI credits per month</li>
-                <li>• Basic analytics</li>
                 <li>• Email support</li>
               </>
             )}

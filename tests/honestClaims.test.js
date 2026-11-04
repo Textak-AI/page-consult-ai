@@ -15,6 +15,8 @@ const src = (f) => readFileSync(new URL('../' + f, import.meta.url), 'utf8');
 
 // Strings that claimed work the product never does, or results it cannot show.
 const FALSE_CLAIMS = [
+  'All premium templates', // no premium template set exists
+  'Basic analytics', // no analytics built
   'competitor_landscape: mapped',
   'architectures evaluated',
   'Optimal configuration locked',
