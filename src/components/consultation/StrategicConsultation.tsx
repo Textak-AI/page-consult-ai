@@ -516,11 +516,10 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
   const [savedBrandDismissed, setSavedBrandDismissed] = useState(false);
   // Precedence: a fresh same-session extractedBrand always wins over the saved brandBrief
   const hasFreshExtractedBrand = Boolean(extractedBrand?.themeColor || extractedBrand?.logoUrl);
-  const hasBrandColors = Boolean(
-    (!savedBrandDismissed && brandBrief?.colors?.primary?.hex) ||
-    extractedBrand?.themeColor || 
-    extractedBrand?.logoUrl
-  );
+  // The brand step is skipped only for a brand the owner already set up and saved. A fresh site read
+  // is a set of guesses (colours, and an image that may be cover art, not a logo), so the owner
+  // confirms it in the brand step before it's used.
+  const hasBrandColors = Boolean(!savedBrandDismissed && brandBrief?.colors?.primary?.hex && !hasFreshExtractedBrand);
   
   // Sync extractedBrand to consultation data when available (from EnhancedBrandSetup flow)
   useEffect(() => {

@@ -173,11 +173,15 @@ export function BrandCustomization({
   );
   const [headingFont, setHeadingFont] = useState(websiteIntelligence.headingFont || 'Inter');
   const [bodyFont, setBodyFont] = useState(websiteIntelligence.bodyFont || 'Inter');
-  const [logoUrl, setLogoUrlRaw] = useState<string | null>(websiteIntelligence.logoUrl || null);
+  // Starts empty: the found image becomes the logo only after the owner says yes.
+  const [logoUrl, setLogoUrlRaw] = useState<string | null>(null);
   // Logo audit: the extracted candidate and anything uploaded/linked pass the same check.
   const [extractedLogoOk, setExtractedLogoOk] = useState<boolean | null>(websiteIntelligence.logoUrl ? null : false);
   const [logoRejection, setLogoRejection] = useState<string | null>(null);
   const [continueWithoutLogo, setContinueWithoutLogo] = useState(false);
+  // An image found on a site is only a candidate (sites hand us cover art, touch icons and
+  // product shots): the owner says whether it's their logo before it's used anywhere.
+  const [logoAnswer, setLogoAnswer] = useState<'yes' | 'no' | null>(null);
   useEffect(() => {
     const candidate = websiteIntelligence.logoUrl;
     if (!candidate) { setExtractedLogoOk(false); return; }
@@ -413,25 +417,41 @@ export function BrandCustomization({
                 Company Logo
               </Label>
               
-              {/* Extracted logo preview if available */}
+              {/* The found image: a question, not a decision */}
               {extractedLogo && (
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-24 h-16 bg-slate-700/50 rounded-lg flex items-center justify-center p-2 relative overflow-hidden">
-                    {/* Checkerboard background for transparency preview */}
-                    <div className="absolute inset-0 bg-checkerboard opacity-30" />
-                    <img 
-                      src={extractedLogo} 
-                      alt="Extracted logo"
-                      className="max-w-full max-h-full object-contain relative z-10"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
+                <div className="mb-4 rounded-xl border border-slate-700 bg-slate-900/40 p-4" data-testid="logo-question">
+                  <div className="flex items-center gap-4">
+                    <div className="w-24 h-16 bg-slate-700/50 rounded-lg flex items-center justify-center p-2 relative overflow-hidden flex-shrink-0">
+                      <div className="absolute inset-0 bg-checkerboard opacity-30" />
+                      <img
+                        src={extractedLogo}
+                        alt="Image found on your website"
+                        className="max-w-full max-h-full object-contain relative z-10"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white">Is this your logo?</p>
+                      <p className="mt-0.5 text-xs text-slate-400">We found this image on your website. It goes at the top of your page only if you say so.</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-green-400">
-                    <Check className="w-4 h-4" />
-                    Extracted from website
-                  </div>
+                  {logoAnswer === 'yes' ? (
+                    <p className="mt-3 flex items-center gap-2 text-sm text-green-400" data-testid="logo-confirmed"><Check className="w-4 h-4" /> Using it as your logo</p>
+                  ) : logoAnswer === 'no' && !logoUrl ? (
+                    <p className="mt-3 text-xs text-slate-400">Upload your logo below, or continue without one and your business name is shown instead.</p>
+                  ) : logoAnswer === 'no' ? null : (
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <Button size="sm" onClick={() => { setLogoAnswer('yes'); setLogoOption('extracted'); setLogoUrl(extractedLogo); setContinueWithoutLogo(false); }} className="bg-cyan-600 hover:bg-cyan-500 text-white" data-testid="logo-yes">
+                        Yes, that's my logo
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => { setLogoAnswer('no'); setLogoOption('upload'); setLogoUrlRaw(null); fileInputRef.current?.click(); }} className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700" data-testid="logo-upload-instead">
+                        <Upload className="w-4 h-4 mr-2" /> No, upload mine
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => { setLogoAnswer('no'); setLogoOption('upload'); setLogoUrlRaw(null); setContinueWithoutLogo(true); }} className="text-slate-300 hover:text-white" data-testid="logo-none">
+                        No logo
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -451,7 +471,7 @@ export function BrandCustomization({
                 </div>
               )}
 
-              {!logoUrl && extractedLogoOk !== null && (
+              {!logoUrl && !extractedLogo && extractedLogoOk !== null && (
                 <div className="mb-4 rounded-xl border border-slate-700 bg-slate-900/40 p-4" data-testid="no-usable-logo">
                   <p className="text-sm font-medium text-white">{logoRejection ? "We couldn't use the logo we found" : 'Add your logo'}</p>
                   {logoRejection && <p className="mt-1 text-xs text-slate-400">{logoRejection}</p>}
@@ -484,7 +504,7 @@ export function BrandCustomization({
               {/* Logo options */}
               <div className="space-y-4">
                 {/* Use extracted logo option */}
-                {extractedLogo && (
+                {extractedLogo && logoAnswer === 'yes' && (
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
@@ -985,7 +1005,9 @@ export function BrandCustomization({
           </Button>
           <Button
             onClick={handleContinue}
-            className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white px-8"
+            disabled={!!extractedLogo && logoAnswer === null}
+            title={extractedLogo && logoAnswer === null ? 'Say whether the image we found is your logo' : undefined}
+            className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white px-8 disabled:opacity-50"
           >
             Continue
             <ArrowRight className="w-4 h-4 ml-2" />
