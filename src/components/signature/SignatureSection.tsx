@@ -23,5 +23,5 @@ export function SignatureSection({ type, content, children, editing = false }: {
     body = <section className="signature-band signature-compact" data-surface={surface}><div className="signature-inner"><ChapterEyebrow slot="cta" />{content.headline && <h2>{content.headline}</h2>}<CtaFork plan={plan} primaryHref={content.ctaLink} secondaryHref={content.secondaryCtaLink} /></div></section>;
   }
   const ambient = has('ambient') && (type === 'differentiator-callout' || type === 'final-cta') && surface === 'deep';
-  return <div className="signature-scope" data-signature={type} data-intensity={plan.intensity} data-elements={plan.elements.join(' ')}>{ambient && <AmbientLayer motif={plan.intensity === 'expressive'} />}<div className="signature-content">{body}{type === 'hero' && has('stats') && <InversionStatStrip stats={plan.stats} />}</div></div>;
+  return <div className="signature-scope" data-signature={type} data-surface={surface} data-intensity={plan.intensity} data-elements={plan.elements.join(' ')}>{ambient && <AmbientLayer motif={plan.intensity === 'expressive'} />}<div className="signature-content">{body}{type === 'hero' && has('stats') && <InversionStatStrip stats={plan.stats} />}</div></div>;
 }
