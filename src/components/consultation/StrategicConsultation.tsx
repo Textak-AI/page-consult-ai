@@ -1860,7 +1860,7 @@ ${d.ctaText}
       />
       
       {/* Wizard Questions - floating above background */}
-      <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-8">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 py-5 md:px-8 md:py-6">
         <div className="max-w-2xl mx-auto">
       {/* Saved brand auto-apply notice (informational, non-blocking) */}
       {savedBrandApplied && brandBrief && (
@@ -1930,7 +1930,7 @@ ${d.ctaText}
       )}
 
       {/* Progress Bar */}
-      <div className="mb-8">
+      <div className="mb-5">
         <div className="flex justify-between items-center mb-3">
           {STEPS.map((step, index) => {
             const Icon = step.icon;
@@ -2004,7 +2004,7 @@ ${d.ctaText}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
-          className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8"
+          className="bg-slate-900/70 backdrop-blur-sm border border-slate-700 rounded-2xl p-6 md:p-7"
         >
           {renderStepContent()}
         </motion.div>

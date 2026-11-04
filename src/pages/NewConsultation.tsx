@@ -873,7 +873,7 @@ export default function NewConsultation() {
       </header>
 
       {/* Main Content */}
-      <main className="py-8 px-4 relative z-10">
+      <main className={stage === 'consultation' ? 'relative z-10' : 'py-8 px-4 relative z-10'}>
         {stage === 'consultation' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}

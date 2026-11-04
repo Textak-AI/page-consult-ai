@@ -84,7 +84,7 @@ interface Props {
 
 export function PageTypeStep({ value, onChange, onContinue, onBack }: Props) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
         <h2 className="text-2xl font-bold text-white mb-2">
@@ -95,53 +95,41 @@ export function PageTypeStep({ value, onChange, onContinue, onBack }: Props) {
         </p>
       </div>
 
-      {/* Page Type Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {PAGE_TYPES.map((type) => {
+      {/* Page types you can build today: one row, so the step fits without scrolling */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {PAGE_TYPES.filter(t => !t.comingSoon).map((type) => {
           const Icon = type.icon;
           const isSelected = value === type.id;
-          const isDisabled = type.comingSoon;
 
           return (
             <motion.button
               key={type.id}
-              onClick={() => !isDisabled && onChange(type.id)}
-              disabled={isDisabled}
+              onClick={() => onChange(type.id)}
               className={cn(
-                "relative p-6 rounded-xl border-2 text-left transition-all",
-                isSelected
-                  ? "border-cyan-500 bg-cyan-500/10"
-                  : isDisabled
-                  ? "border-slate-700/50 bg-slate-800/30 opacity-60 cursor-not-allowed"
-                  : "border-slate-700 hover:border-slate-500 bg-slate-800/50 cursor-pointer"
+                "relative p-4 rounded-xl border-2 text-left transition-all cursor-pointer",
+                isSelected ? "border-cyan-500 bg-cyan-500/10" : "border-slate-700 hover:border-slate-500 bg-slate-800/60"
               )}
-              whileHover={!isDisabled ? { scale: 1.02 } : undefined}
-              whileTap={!isDisabled ? { scale: 0.98 } : undefined}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              {type.comingSoon && (
-                <span className="absolute top-3 right-3 px-2 py-0.5 text-xs font-medium bg-slate-700 text-slate-300 rounded-full">
-                  Coming Soon
-                </span>
-              )}
-              
-              <div className="flex items-start gap-4">
-                <div className={cn(
-                  "p-3 rounded-lg",
-                  isSelected ? "bg-cyan-500/20 text-cyan-400" : "bg-slate-700 text-slate-400"
-                )}>
-                  <Icon className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-white">{type.title}</h3>
-                  <p className="text-sm text-slate-400 mt-1">{type.description}</p>
-                  <p className="text-xs text-slate-500 mt-2">e.g., {type.examples}</p>
+              <div className="flex items-center justify-between">
+                <div className={cn("p-2 rounded-lg", isSelected ? "bg-cyan-500/20 text-cyan-400" : "bg-slate-700 text-slate-300")}>
+                  <Icon className="w-5 h-5" />
                 </div>
                 {isSelected && <Check className="w-5 h-5 text-cyan-400" />}
               </div>
+              <h3 className="font-semibold text-white mt-3">{type.title}</h3>
+              <p className="text-sm text-slate-300 mt-1">{type.description}</p>
+              <p className="text-xs text-slate-400 mt-2">e.g., {type.examples}</p>
             </motion.button>
           );
         })}
       </div>
+
+      {/* Coming soon: a line, not three disabled cards */}
+      <p className="text-xs text-slate-400 text-center">
+        Coming soon: {PAGE_TYPES.filter(t => t.comingSoon).map(t => t.title).join(', ')}.
+      </p>
 
     </div>
   );

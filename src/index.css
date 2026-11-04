@@ -2014,7 +2014,7 @@ All colors MUST be HSL.
 .pc-ambient {
   background:
     radial-gradient(120% 80% at 50% 110%, color-mix(in oklab, var(--pc-amb-a) 14%, transparent) 0%, transparent 60%),
-    linear-gradient(180deg, #0a1020 0%, #0d1428 55%, #0a0f1d 100%);
+    linear-gradient(180deg, #0c1326 0%, #111a33 55%, #0b1122 100%);
 }
 .pc-ambient-field {
   position: absolute;
@@ -2073,7 +2073,7 @@ All colors MUST be HSL.
 }
 .pc-ambient-vignette {
   position: absolute; inset: 0;
-  background: radial-gradient(90% 70% at 50% 45%, transparent 40%, rgba(5, 8, 18, 0.55) 100%);
+  background: radial-gradient(90% 70% at 50% 45%, transparent 40%, rgba(5, 8, 18, 0.45) 100%);
 }
 @media (prefers-reduced-motion: reduce) {
   .pc-ambient-field { animation: none; }
