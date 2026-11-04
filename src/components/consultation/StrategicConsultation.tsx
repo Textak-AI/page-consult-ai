@@ -831,7 +831,7 @@ export function StrategicConsultation({ onComplete, onBack, prefillData, extract
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
-          <p className="text-slate-400">Loading your brand...</p>
+          <p className="text-slate-300">Loading your brand...</p>
         </div>
       </div>
     );
@@ -1286,12 +1286,12 @@ ${d.ctaText}
           <div className="space-y-6">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-white mb-2">Tell Me About Your Business</h2>
-              <p className="text-slate-400">The foundation for your landing page strategy.</p>
+              <p className="text-slate-300">The foundation for your landing page strategy.</p>
             </div>
             
             <div className="space-y-5">
               <div>
-                <Label htmlFor="businessName" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="businessName" className="text-slate-300 inline-flex items-center">
                   Business Name *
                   <QuestionExplainer {...QUESTION_EXPLAINERS.businessName} />
                 </Label>
@@ -1300,12 +1300,12 @@ ${d.ctaText}
                   placeholder="e.g., Acme Solutions"
                   value={data.businessName || ''}
                   onChange={(e) => updateData({ businessName: e.target.value })}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
               </div>
               
               <div>
-                <Label htmlFor="productName" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="productName" className="text-slate-300 inline-flex items-center">
                   Product Name
                   <QuestionExplainer {...QUESTION_EXPLAINERS.productName} />
                 </Label>
@@ -1314,13 +1314,13 @@ ${d.ctaText}
                   placeholder="e.g., Claude, Notion, Figma (leave blank if same as business)"
                   value={data.productName || ''}
                   onChange={(e) => updateData({ productName: e.target.value })}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
-                <p className="text-xs text-slate-500 mt-1.5">The name users will see on your landing page. Leave blank to use your business name.</p>
+                <p className="text-xs text-slate-400 mt-1.5">The name users will see on your landing page. Leave blank to use your business name.</p>
               </div>
               
               <div>
-                <Label htmlFor="industry" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="industry" className="text-slate-300 inline-flex items-center">
                   Industry *
                   <QuestionExplainer {...QUESTION_EXPLAINERS.industry} />
                 </Label>
@@ -1344,18 +1344,18 @@ ${d.ctaText}
               {/* Hero background is now shown as ambient background in the wrapper */}
               
               <div>
-                <Label htmlFor="yearsInBusiness" className="text-slate-400">Years in Business</Label>
+                <Label htmlFor="yearsInBusiness" className="text-slate-300">Years in Business</Label>
                 <Input
                   id="yearsInBusiness"
                   placeholder="e.g., 5 years, Since 2015, Just started"
                   value={data.yearsInBusiness || ''}
                   onChange={(e) => updateData({ yearsInBusiness: e.target.value })}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
               </div>
               
               <div>
-                <Label htmlFor="uniqueStrength" className="text-slate-400 inline-flex items-center flex-wrap">
+                <Label htmlFor="uniqueStrength" className="text-slate-300 inline-flex items-center flex-wrap">
                   {data.pageType === 'beta-prelaunch'
                     ? `What will make ${data.productName || data.businessName || 'your product'} worth the wait? *`
                     : data.productName
@@ -1375,18 +1375,18 @@ ${d.ctaText}
                   value={data.uniqueStrength || ''}
                   onChange={(e) => updateData({ uniqueStrength: e.target.value })}
                   onBlur={() => triggerConsultantBlur('uniqueStrength')}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[100px]"
                 />
                 <InlineConsultant fieldKey="uniqueStrength" fieldValue={data.uniqueStrength || ''} fieldLabel="Unique Strength" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('uniqueStrength', handler)} />
               </div>
               
               {/* NEW: Identity Sentence */}
               <div>
-                <Label htmlFor="identitySentence" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="identitySentence" className="text-slate-300 inline-flex items-center">
                   How would you describe your business in one sentence to a peer in your industry?
                   <QuestionExplainer {...QUESTION_EXPLAINERS.identitySentence} />
                 </Label>
-                <p className="text-xs text-slate-500 mt-1">Not your tagline — your honest positioning.</p>
+                <p className="text-xs text-slate-400 mt-1">Not your tagline — your honest positioning.</p>
                 <Textarea
                   id="identitySentence"
                   placeholder="e.g., Former plant operators who specialize in finding hidden capacity without capital investment"
@@ -1396,10 +1396,10 @@ ${d.ctaText}
                       updateData({ identitySentence: e.target.value });
                     }
                   }}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[80px]"
                 />
                 <div className="flex justify-between mt-1">
-                  <p className="text-xs text-slate-500">Optional but helps differentiate your page</p>
+                  <p className="text-xs text-slate-400">Optional but helps differentiate your page</p>
                   <span className={`text-xs ${(data.identitySentence?.length || 0) > 180 ? 'text-amber-400' : 'text-slate-500'}`}>
                     {data.identitySentence?.length || 0}/200
                   </span>
@@ -1416,12 +1416,12 @@ ${d.ctaText}
           <div className="space-y-6">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-white mb-2">Who Are You Trying to Reach?</h2>
-              <p className="text-slate-400">Understanding your audience shapes everything.</p>
+              <p className="text-slate-300">Understanding your audience shapes everything.</p>
             </div>
             
             <div className="space-y-5">
               <div>
-                <Label htmlFor="idealClient" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="idealClient" className="text-slate-300 inline-flex items-center">
                   Describe your ideal client in detail *
                   <QuestionExplainer {...QUESTION_EXPLAINERS.idealClient} />
                 </Label>
@@ -1431,13 +1431,13 @@ ${d.ctaText}
                   value={data.idealClient || ''}
                   onChange={(e) => updateData({ idealClient: e.target.value })}
                   onBlur={() => triggerConsultantBlur('idealClient')}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[100px]"
                 />
                 <InlineConsultant fieldKey="idealClient" fieldValue={data.idealClient || ''} fieldLabel="Ideal Client" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('idealClient', handler)} />
               </div>
               
               <div>
-                <Label htmlFor="clientFrustration" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="clientFrustration" className="text-slate-300 inline-flex items-center">
                   {frustrationQuestion(offerKind)} *
                   <QuestionExplainer {...QUESTION_EXPLAINERS.clientFrustration} />
                 </Label>
@@ -1447,13 +1447,13 @@ ${d.ctaText}
                   value={data.clientFrustration || ''}
                   onChange={(e) => updateData({ clientFrustration: e.target.value })}
                   onBlur={() => triggerConsultantBlur('clientFrustration')}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[100px]"
                 />
                 <InlineConsultant fieldKey="clientFrustration" fieldValue={data.clientFrustration || ''} fieldLabel="Client Frustration" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('clientFrustration', handler)} />
               </div>
               
               <div>
-                <Label htmlFor="desiredOutcome" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="desiredOutcome" className="text-slate-300 inline-flex items-center">
                   What outcome are they really buying? (Not your service, the result) *
                   <QuestionExplainer {...QUESTION_EXPLAINERS.desiredOutcome} />
                 </Label>
@@ -1463,7 +1463,7 @@ ${d.ctaText}
                   value={data.desiredOutcome || ''}
                   onChange={(e) => updateData({ desiredOutcome: e.target.value })}
                   onBlur={() => triggerConsultantBlur('desiredOutcome')}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[100px]"
                 />
                 <InlineConsultant fieldKey="desiredOutcome" fieldValue={data.desiredOutcome || ''} fieldLabel="Desired Outcome" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('desiredOutcome', handler)} />
               </div>
@@ -1476,12 +1476,12 @@ ${d.ctaText}
           <div className="space-y-6">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-white mb-2">Your Track Record</h2>
-              <p className="text-slate-400">Proof you can stand behind. Leave out anything you can't back up.</p>
+              <p className="text-slate-300">Proof you can stand behind. Leave out anything you can't back up.</p>
             </div>
             
             <div className="space-y-5">
               <div>
-                <Label htmlFor="clientCount" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="clientCount" className="text-slate-300 inline-flex items-center">
                   About how many customers, clients or projects can you point to?
                   <QuestionExplainer {...QUESTION_EXPLAINERS.clientCount} />
                 </Label>
@@ -1490,12 +1490,12 @@ ${d.ctaText}
                   placeholder="Only a count you can back up, e.g. the number of clients you have served"
                   value={data.clientCount || ''}
                   onChange={(e) => updateData({ clientCount: e.target.value })}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
               </div>
               
               <div>
-                <Label htmlFor="achievements" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="achievements" className="text-slate-300 inline-flex items-center">
                   Any notable achievements? (Awards, certifications, press, notable clients)
                   <QuestionExplainer {...QUESTION_EXPLAINERS.achievements} />
                 </Label>
@@ -1505,13 +1505,13 @@ ${d.ctaText}
                   value={data.achievements || ''}
                   onChange={(e) => updateData({ achievements: e.target.value })}
                   onBlur={() => triggerConsultantBlur('achievements')}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[80px]"
                 />
                 <InlineConsultant fieldKey="achievements" fieldValue={data.achievements || ''} fieldLabel="Achievements" context={coachingContext} isOptional skipCoaching={skipCoachingResult} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('achievements', handler)} />
               </div>
               
               <div>
-                <Label htmlFor="testimonialText" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="testimonialText" className="text-slate-300 inline-flex items-center">
                   Paste 1-2 real testimonials, or describe what clients typically say about you
                   <QuestionExplainer {...QUESTION_EXPLAINERS.testimonialText} />
                 </Label>
@@ -1521,18 +1521,18 @@ ${d.ctaText}
                   value={data.testimonialText || ''}
                   onChange={(e) => updateData({ testimonialText: e.target.value })}
                   onBlur={() => triggerConsultantBlur('testimonialText')}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[100px]"
                 />
                 <InlineConsultant fieldKey="testimonialText" fieldValue={data.testimonialText || ''} fieldLabel="Testimonial" context={coachingContext} isOptional skipCoaching={skipCoachingResult} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('testimonialText', handler)} />
               </div>
               
               {/* NEW: Concrete Proof Story */}
               <div className="pt-4 border-t border-slate-700">
-                <Label htmlFor="concreteProofStory" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="concreteProofStory" className="text-slate-300 inline-flex items-center">
                   Share ONE specific result you're proud of
                   <QuestionExplainer {...QUESTION_EXPLAINERS.concreteProofStory} />
                 </Label>
-                <p className="text-xs text-slate-500 mt-1">You can anonymize. Format: "[Type of client] achieved [specific outcome] in [timeframe]"</p>
+                <p className="text-xs text-slate-400 mt-1">You can anonymize. Format: "[Type of client] achieved [specific outcome] in [timeframe]"</p>
                 <Textarea
                   id="concreteProofStory"
                   placeholder="e.g., A food & beverage manufacturer found 18% idle capacity within 60 days"
@@ -1543,10 +1543,10 @@ ${d.ctaText}
                     }
                   }}
                   onBlur={() => triggerConsultantBlur('concreteProofStory')}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[80px]"
                 />
                 <div className="flex justify-between mt-1">
-                  <div className="text-xs text-slate-500 space-y-0.5">
+                  <div className="text-xs text-slate-400 space-y-0.5">
                     <p>Examples:</p>
                     <p className="text-slate-600">• "A 50-person SaaS company reduced churn from 8% to 3% in one quarter"</p>
                     <p className="text-slate-600">• "A local dental practice went from 20 to 45 new patients/month in 90 days"</p>
@@ -1561,7 +1561,7 @@ ${d.ctaText}
               {/* Proof Story Context - only show if proof story has content */}
               {data.concreteProofStory && data.concreteProofStory.length > 10 && (
                 <div>
-                  <Label htmlFor="proofStoryContext" className="text-slate-400">
+                  <Label htmlFor="proofStoryContext" className="text-slate-300">
                     What made this result possible? (One sentence)
                   </Label>
                   <Input
@@ -1569,7 +1569,7 @@ ${d.ctaText}
                     placeholder="e.g., We mapped their changeover process and found 40 minutes of waste per shift."
                     value={data.proofStoryContext || ''}
                     onChange={(e) => updateData({ proofStoryContext: e.target.value })}
-                    className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                    className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                   />
                 </div>
               )}
@@ -1582,12 +1582,12 @@ ${d.ctaText}
           <div className="space-y-6">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-white mb-2">What Are You Offering?</h2>
-              <p className="text-slate-400">The specifics of what visitors will get.</p>
+              <p className="text-slate-300">The specifics of what visitors will get.</p>
             </div>
             
             <div className="space-y-5">
               <div>
-                <Label htmlFor="mainOffer" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="mainOffer" className="text-slate-300 inline-flex items-center">
                   Main service or product name *
                   <QuestionExplainer {...QUESTION_EXPLAINERS.mainOffer} />
                 </Label>
@@ -1597,13 +1597,13 @@ ${d.ctaText}
                   value={data.mainOffer || ''}
                   onChange={(e) => updateData({ mainOffer: e.target.value })}
                   onBlur={() => triggerConsultantBlur('mainOffer')}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
                 <InlineConsultant fieldKey="mainOffer" fieldValue={data.mainOffer || ''} fieldLabel="Main Offer" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('mainOffer', handler)} />
               </div>
               
               <div>
-                <Label htmlFor="offerIncludes" className="text-slate-400">
+                <Label htmlFor="offerIncludes" className="text-slate-300">
                   What's included? Key deliverables? *
                 </Label>
                 <Textarea
@@ -1612,13 +1612,13 @@ ${d.ctaText}
                   value={data.offerIncludes || ''}
                   onChange={(e) => updateData({ offerIncludes: e.target.value })}
                   onBlur={() => triggerConsultantBlur('offerIncludes')}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[100px]"
                 />
                 <InlineConsultant fieldKey="offerIncludes" fieldValue={data.offerIncludes || ''} fieldLabel="Offer Includes" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('offerIncludes', handler)} />
               </div>
               
               <div>
-                <Label htmlFor="investmentRange" className="text-slate-400">
+                <Label htmlFor="investmentRange" className="text-slate-300">
                   Investment range
                 </Label>
                 <select
@@ -1635,7 +1635,7 @@ ${d.ctaText}
               </div>
               
               <div>
-                <Label htmlFor="processDescription" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="processDescription" className="text-slate-300 inline-flex items-center">
                   What happens after they contact you? Describe your process.
                   <QuestionExplainer {...QUESTION_EXPLAINERS.processDescription} />
                 </Label>
@@ -1645,15 +1645,15 @@ ${d.ctaText}
                   value={data.processDescription || ''}
                   onChange={(e) => updateData({ processDescription: e.target.value })}
                   onBlur={() => triggerConsultantBlur('processDescription')}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[100px]"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[100px]"
                 />
                 <InlineConsultant fieldKey="processDescription" fieldValue={data.processDescription || ''} fieldLabel="Process Description" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('processDescription', handler)} />
               </div>
               <div className="pt-4 border-t border-slate-700">
-                <Label className="text-slate-400">
+                <Label className="text-slate-300">
                   What happens in the first 30 days of working with you?
                 </Label>
-                <p className="text-xs text-slate-500 mt-1">Just the highlights — 2-3 concrete steps your clients experience</p>
+                <p className="text-xs text-slate-400 mt-1">Just the highlights — 2-3 concrete steps your clients experience</p>
                 
                 <div className="space-y-3 mt-3">
                   <div className="flex items-center gap-2">
@@ -1666,7 +1666,7 @@ ${d.ctaText}
                         steps[0] = e.target.value;
                         updateData({ methodologySteps: steps });
                       }}
-                      className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                      className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                     />
                   </div>
                   <div className="flex items-center gap-2">
@@ -1679,7 +1679,7 @@ ${d.ctaText}
                         steps[1] = e.target.value;
                         updateData({ methodologySteps: steps });
                       }}
-                      className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                      className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                     />
                   </div>
                   <div className="flex items-center gap-2">
@@ -1692,11 +1692,11 @@ ${d.ctaText}
                         steps[2] = e.target.value;
                         updateData({ methodologySteps: steps });
                       }}
-                      className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                      className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                     />
                   </div>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">Optional — helps power the "How It Works" section</p>
+                <p className="text-xs text-slate-400 mt-2">Optional — helps power the "How It Works" section</p>
               </div>
               
               {/* NEW: Calculator Context (conditional) */}
@@ -1706,7 +1706,7 @@ ${d.ctaText}
                     <TrendingUp className="w-4 h-4 text-cyan-400" />
                     <Label className="text-slate-400 font-medium">ROI Calculator Context</Label>
                   </div>
-                  <p className="text-xs text-slate-500 mb-4">Optional — If you want a calculator on your page, these fields help set expectations</p>
+                  <p className="text-xs text-slate-400 mb-4">Optional — If you want a calculator on your page, these fields help set expectations</p>
                   
                   <div className="space-y-4">
                     <div>
@@ -1718,7 +1718,7 @@ ${d.ctaText}
                         placeholder="Only a range you have measured across clients"
                         value={data.calculatorTypicalResults || ''}
                         onChange={(e) => updateData({ calculatorTypicalResults: e.target.value })}
-                        className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                        className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                       />
                     </div>
                     
@@ -1726,13 +1726,13 @@ ${d.ctaText}
                       <Label htmlFor="calculatorDisclaimer" className="text-slate-400 text-sm">
                         What's NOT included in this estimate?
                       </Label>
-                      <p className="text-xs text-slate-500 mt-0.5">Builds trust by setting expectations</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Builds trust by setting expectations</p>
                       <Input
                         id="calculatorDisclaimer"
                         placeholder="e.g., Doesn't account for implementation time or one-time costs"
                         value={data.calculatorDisclaimer || ''}
                         onChange={(e) => updateData({ calculatorDisclaimer: e.target.value })}
-                        className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                        className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                       />
                     </div>
                     
@@ -1745,7 +1745,7 @@ ${d.ctaText}
                         placeholder="e.g., Schedule a diagnostic call to validate these numbers"
                         value={data.calculatorNextStep || ''}
                         onChange={(e) => updateData({ calculatorNextStep: e.target.value })}
-                        className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                        className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                       />
                     </div>
                   </div>
@@ -1760,12 +1760,12 @@ ${d.ctaText}
           <div className="space-y-6">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-white mb-2">What Should This Page Achieve?</h2>
-              <p className="text-slate-400">Final details to optimize your conversion strategy.</p>
+              <p className="text-slate-300">Final details to optimize your conversion strategy.</p>
             </div>
             
             <div className="space-y-5">
               <div>
-                <Label className="text-slate-400 inline-flex items-center">
+                <Label className="text-slate-300 inline-flex items-center">
                   Primary goal *
                   <QuestionExplainer {...QUESTION_EXPLAINERS.primaryGoal} />
                 </Label>
@@ -1788,7 +1788,7 @@ ${d.ctaText}
               </div>
               
               <div>
-                <Label htmlFor="ctaText" className="text-slate-400 inline-flex items-center">
+                <Label htmlFor="ctaText" className="text-slate-300 inline-flex items-center">
                   What should the main button say? *
                   <QuestionExplainer {...QUESTION_EXPLAINERS.ctaText} />
                 </Label>
@@ -1797,7 +1797,7 @@ ${d.ctaText}
                   placeholder="e.g., Schedule a Consultation, Book a Demo"
                   value={data.ctaText || ''}
                   onChange={(e) => updateData({ ctaText: e.target.value })}
-                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
               </div>
               
@@ -1946,7 +1946,7 @@ ${d.ctaText}
                 className={`flex items-center gap-2 group relative ${
                   isClickable ? 'cursor-pointer' : 'cursor-not-allowed'
                 } ${
-                  index <= currentStep ? 'text-cyan-400' : 'text-slate-600'
+                  index <= currentStep ? 'text-cyan-400' : 'text-slate-300'
                 }`}
                 aria-label={`Go to step ${index + 1}: ${step.title}${isCompleted ? ' - Click to edit' : ''}`}
               >
@@ -1956,7 +1956,7 @@ ${d.ctaText}
                       ? 'bg-cyan-500 border-cyan-500 text-white hover:bg-cyan-400 hover:border-cyan-400 hover:scale-110'
                       : isCurrent
                       ? 'border-cyan-500 text-cyan-400 ring-2 ring-cyan-500/30 hover:ring-cyan-500/50'
-                      : 'border-slate-700 text-slate-600 opacity-50'
+                      : 'border-slate-500/70 text-slate-300 bg-slate-900/50'
                   }`}
                 >
                   {isCompleted ? (
@@ -1983,7 +1983,7 @@ ${d.ctaText}
             return stepButton;
           })}
         </div>
-        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+        <div className="h-2 bg-slate-700/80 rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
             initial={{ width: 0 }}
@@ -1991,7 +1991,7 @@ ${d.ctaText}
             transition={{ duration: 0.3 }}
           />
         </div>
-        <div className="text-center text-sm text-slate-400 mt-2">
+        <div className="text-center text-sm text-slate-200 mt-2">
           Step {currentStep + 1} of {STEPS.length}: {STEPS[currentStep]?.title || 'Loading...'}
         </div>
       </div>
@@ -2042,7 +2042,7 @@ ${d.ctaText}
             )}
           </Button>
           {lastSaved && (
-            <span className="text-xs text-slate-500 hidden sm:inline">
+            <span className="text-xs text-slate-400 hidden sm:inline">
               Saved {formatDistanceToNow(lastSaved, { addSuffix: true })}
             </span>
           )}

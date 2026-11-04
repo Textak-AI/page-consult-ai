@@ -67,57 +67,57 @@ export function InvestmentOpportunityStep({ data, onChange }: InvestmentOpportun
           <Label className="text-slate-400">How should investors contact you?</Label>
           
           <div>
-            <Label className="text-xs text-slate-500">IR Email *</Label>
+            <Label className="text-xs text-slate-400">IR Email *</Label>
             <Input
               type="email"
               placeholder="investors@company.com"
               value={data.irEmail || ''}
               onChange={(e) => onChange({ irEmail: e.target.value })}
-              className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
             />
           </div>
           
           <div>
-            <Label className="text-xs text-slate-500">IR Phone</Label>
+            <Label className="text-xs text-slate-400">IR Phone</Label>
             <Input
               type="tel"
               placeholder="+1 (555) 123-4567"
               value={data.irPhone || ''}
               onChange={(e) => onChange({ irPhone: e.target.value })}
-              className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
             />
           </div>
           
           <div>
-            <Label className="text-xs text-slate-500">Meeting Scheduler Link</Label>
+            <Label className="text-xs text-slate-400">Meeting Scheduler Link</Label>
             <Input
               type="url"
               placeholder="https://calendly.com/yourcompany/investor-meeting"
               value={data.schedulerLink || ''}
               onChange={(e) => onChange({ schedulerLink: e.target.value })}
-              className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
             />
           </div>
           
           <div>
-            <Label className="text-xs text-slate-500">SEC Filings Link (if public)</Label>
+            <Label className="text-xs text-slate-400">SEC Filings Link (if public)</Label>
             <Input
               type="url"
               placeholder="https://www.sec.gov/cgi-bin/browse-edgar?..."
               value={data.secFilingsLink || ''}
               onChange={(e) => onChange({ secFilingsLink: e.target.value })}
-              className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
             />
           </div>
           
           <div>
-            <Label className="text-xs text-slate-500">Press Releases / News Link</Label>
+            <Label className="text-xs text-slate-400">Press Releases / News Link</Label>
             <Input
               type="url"
               placeholder="https://yourcompany.com/news"
               value={data.pressReleasesLink || ''}
               onChange={(e) => onChange({ pressReleasesLink: e.target.value })}
-              className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
             />
           </div>
         </div>

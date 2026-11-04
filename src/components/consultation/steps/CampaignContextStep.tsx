@@ -89,7 +89,7 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-white mb-2">What's This Page For?</h2>
-        <p className="text-slate-400">
+        <p className="text-slate-300">
           Understanding the purpose helps us build a page that fits your campaign, 
           not just your brand.
         </p>
@@ -97,7 +97,7 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
 
       {/* Website context acknowledgment */}
       {websiteUrl && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 text-sm text-gray-300">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 text-sm text-slate-200">
           <span className="text-cyan-400 font-medium">We found your website:</span>{' '}
           {websiteUrl} — so this landing page isn't replacing your 
           site. It's serving a specific strategic purpose.
@@ -106,7 +106,7 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
 
       {/* Page Purpose Selection */}
       <div className="space-y-2">
-        <Label className="text-sm font-medium text-gray-300">
+        <Label className="text-sm font-medium text-slate-200">
           What's driving the need for this page?
         </Label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -125,7 +125,7 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
                 <option.Icon className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="font-medium text-white">{option.label}</div>
-                  <div className="text-xs text-gray-400 mt-1">{option.description}</div>
+                  <div className="text-xs text-slate-300 mt-1">{option.description}</div>
                 </div>
               </div>
             </button>
@@ -137,7 +137,7 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
       {data.pagePurpose === 'outbound-campaign' && (
         <div className="space-y-4 pt-2">
           <div>
-            <Label className="text-sm font-medium text-gray-300">
+            <Label className="text-sm font-medium text-slate-200">
               Who are you targeting with this campaign?
             </Label>
             <Input
@@ -145,11 +145,11 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
               placeholder="e.g., VP of Market Access at Top 20 Pharma companies"
               value={data.campaignAudienceSegment || ''}
               onChange={(e) => onChange({ campaignAudienceSegment: e.target.value })}
-              className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-300"
             />
           </div>
           <div>
-            <Label className="text-sm font-medium text-gray-300">
+            <Label className="text-sm font-medium text-slate-200">
               How will they reach this page?
             </Label>
             <Select 
@@ -173,7 +173,7 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
       {data.pagePurpose === 'event-conference' && (
         <div className="space-y-4 pt-2">
           <div>
-            <Label className="text-sm font-medium text-gray-300">
+            <Label className="text-sm font-medium text-slate-200">
               Which event or conference?
             </Label>
             <Input
@@ -181,11 +181,11 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
               placeholder="e.g., NASP Annual Meeting 2026"
               value={data.campaignTrigger || ''}
               onChange={(e) => onChange({ campaignTrigger: e.target.value })}
-              className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-300"
             />
           </div>
           <div>
-            <Label className="text-sm font-medium text-gray-300">
+            <Label className="text-sm font-medium text-slate-200">
               What's the goal?
             </Label>
             <Select 
@@ -209,7 +209,7 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
       {data.pagePurpose === 'service-spotlight' && (
         <div className="space-y-4 pt-2">
           <div>
-            <Label className="text-sm font-medium text-gray-300">
+            <Label className="text-sm font-medium text-slate-200">
               Which specific service or product are we spotlighting?
             </Label>
             <Input
@@ -217,14 +217,14 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
               placeholder="e.g., Cloud Script™ Patient Access Platform"
               value={data.spotlightService || ''}
               onChange={(e) => onChange({ spotlightService: e.target.value })}
-              className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-300"
             />
           </div>
         </div>
       )}
 
       {data.pagePurpose === 'retargeting' && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 text-sm text-gray-300 mt-2">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 text-sm text-slate-200 mt-2">
           <span className="text-cyan-400 font-medium">Got it: these visitors already know you.</span>{' '}
           Since visitors already know you, we'll skip the long intro and go 
           straight to your strongest offer. The page will be shorter and more direct.
@@ -232,7 +232,7 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
       )}
 
       {data.pagePurpose === 'primary-site' && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 text-sm text-gray-300 mt-2">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 text-sm text-slate-200 mt-2">
           <span className="text-cyan-400 font-medium">Got it: this is your main site.</span>{' '}
           The page will cover your whole story: what you do, how you work, your proof, and how to get in touch.
         </div>
@@ -241,7 +241,7 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
       {data.pagePurpose === 'lead-magnet' && (
         <div className="space-y-4 pt-2">
           <div>
-            <Label className="text-sm font-medium text-gray-300">
+            <Label className="text-sm font-medium text-slate-200">
               What's the downloadable resource?
             </Label>
             <Input
@@ -249,7 +249,7 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
               placeholder="e.g., 2026 Market Access Playbook for Specialty Pharma"
               value={data.campaignTrigger || ''}
               onChange={(e) => onChange({ campaignTrigger: e.target.value })}
-              className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-300"
             />
           </div>
         </div>
@@ -258,7 +258,7 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
       {data.pagePurpose === 'webinar-registration' && (
         <div className="space-y-4 pt-2">
           <div>
-            <Label className="text-sm font-medium text-gray-300">
+            <Label className="text-sm font-medium text-slate-200">
               What's the webinar or event topic?
             </Label>
             <Input
@@ -266,7 +266,7 @@ export function CampaignContextStep({ data, websiteUrl, onChange }: CampaignCont
               placeholder="e.g., How Top 20 Pharma Firms Cut Time-to-Market by 40%"
               value={data.campaignTrigger || ''}
               onChange={(e) => onChange({ campaignTrigger: e.target.value })}
-              className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-300"
             />
           </div>
         </div>

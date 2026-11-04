@@ -95,7 +95,7 @@ export function TractionMilestonesStep({ data, onChange }: TractionMilestonesSte
             placeholder="e.g., $2M ARR, 150% YoY growth, 50+ enterprise customers, 95% retention rate"
             value={data.keyMetrics || ''}
             onChange={(e) => onChange({ keyMetrics: e.target.value })}
-            className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
+            className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[80px]"
           />
         </div>
 
@@ -109,14 +109,14 @@ export function TractionMilestonesStep({ data, onChange }: TractionMilestonesSte
                   placeholder="Catalyst description"
                   value={catalyst.description}
                   onChange={(e) => updateCatalyst(index, 'description', e.target.value)}
-                  className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
                 <Input
                   type="text"
                   placeholder="Expected date"
                   value={catalyst.expectedDate}
                   onChange={(e) => updateCatalyst(index, 'expectedDate', e.target.value)}
-                  className="w-40 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="w-40 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
                 <Button
                   variant="ghost"
@@ -145,30 +145,30 @@ export function TractionMilestonesStep({ data, onChange }: TractionMilestonesSte
           <Label className="text-slate-400">Market size</Label>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label className="text-xs text-slate-500">TAM (Total Addressable)</Label>
+              <Label className="text-xs text-slate-400">TAM (Total Addressable)</Label>
               <Input
                 placeholder="e.g., $50B"
                 value={data.tam || ''}
                 onChange={(e) => onChange({ tam: e.target.value })}
-                className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
               />
             </div>
             <div>
-              <Label className="text-xs text-slate-500">SAM (Serviceable)</Label>
+              <Label className="text-xs text-slate-400">SAM (Serviceable)</Label>
               <Input
                 placeholder="e.g., $10B"
                 value={data.sam || ''}
                 onChange={(e) => onChange({ sam: e.target.value })}
-                className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
               />
             </div>
             <div>
-              <Label className="text-xs text-slate-500">SOM (Obtainable)</Label>
+              <Label className="text-xs text-slate-400">SOM (Obtainable)</Label>
               <Input
                 placeholder="e.g., $500M"
                 value={data.som || ''}
                 onChange={(e) => onChange({ som: e.target.value })}
-                className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                className="mt-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
               />
             </div>
           </div>

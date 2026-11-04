@@ -99,7 +99,7 @@ export function InvestorProfileStep({ data, onChange }: InvestorProfileStepProps
               placeholder="Enter ticker symbol (e.g., NASDAQ: ACME)"
               value={data.tickerSymbol || ''}
               onChange={(e) => onChange({ tickerSymbol: e.target.value })}
-              className="mt-3 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-3 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
             />
           )}
         </div>
@@ -128,7 +128,7 @@ export function InvestorProfileStep({ data, onChange }: InvestorProfileStepProps
               placeholder="Amount raising (e.g., $5M Series A)"
               value={data.amountRaising || ''}
               onChange={(e) => onChange({ amountRaising: e.target.value })}
-              className="mt-3 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+              className="mt-3 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
             />
           )}
         </div>
@@ -143,7 +143,7 @@ export function InvestorProfileStep({ data, onChange }: InvestorProfileStepProps
             placeholder="e.g., First-mover in a $50B market with breakthrough technology and FDA fast-track designation"
             value={data.investmentThesis || ''}
             onChange={(e) => onChange({ investmentThesis: e.target.value })}
-            className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
+            className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[80px]"
           />
         </div>
       </div>

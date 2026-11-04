@@ -90,7 +90,7 @@ export function PageTypeStep({ value, onChange, onContinue, onBack }: Props) {
         <h2 className="text-2xl font-bold text-white mb-2">
           What kind of page are you building?
         </h2>
-        <p className="text-slate-400">
+        <p className="text-slate-300">
           Different goals require different strategies
         </p>
       </div>
@@ -120,14 +120,14 @@ export function PageTypeStep({ value, onChange, onContinue, onBack }: Props) {
               </div>
               <h3 className="font-semibold text-white mt-3">{type.title}</h3>
               <p className="text-sm text-slate-300 mt-1">{type.description}</p>
-              <p className="text-xs text-slate-400 mt-2">e.g., {type.examples}</p>
+              <p className="text-xs text-slate-300 mt-2">e.g., {type.examples}</p>
             </motion.button>
           );
         })}
       </div>
 
       {/* Coming soon: a line, not three disabled cards */}
-      <p className="text-xs text-slate-400 text-center">
+      <p className="text-xs text-slate-300 text-center">
         Coming soon: {PAGE_TYPES.filter(t => t.comingSoon).map(t => t.title).join(', ')}.
       </p>
 

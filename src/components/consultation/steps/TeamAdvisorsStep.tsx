@@ -90,7 +90,7 @@ export function TeamAdvisorsStep({ data, onChange }: TeamAdvisorsStepProps) {
                     placeholder="Role (e.g., CEO, CTO)"
                     value={member.role}
                     onChange={(e) => updateLeadership(index, 'role', e.target.value)}
-                    className="w-40 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                    className="w-40 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                   />
                   {index >= 3 && (
                     <Button
@@ -108,20 +108,20 @@ export function TeamAdvisorsStep({ data, onChange }: TeamAdvisorsStepProps) {
                     placeholder="Full Name"
                     value={member.name}
                     onChange={(e) => updateLeadership(index, 'name', e.target.value)}
-                    className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                    className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                   />
                   <Input
                     placeholder="LinkedIn URL"
                     value={member.linkedIn || ''}
                     onChange={(e) => updateLeadership(index, 'linkedIn', e.target.value)}
-                    className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                    className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                   />
                 </div>
                 <Input
                   placeholder="Credentials / Background (e.g., Former VP at Google, 15 years in biotech)"
                   value={member.credentials}
                   onChange={(e) => updateLeadership(index, 'credentials', e.target.value)}
-                  className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
               </div>
             ))}
@@ -147,19 +147,19 @@ export function TeamAdvisorsStep({ data, onChange }: TeamAdvisorsStepProps) {
                   placeholder="Name"
                   value={advisor.name}
                   onChange={(e) => updateAdvisor(index, 'name', e.target.value)}
-                  className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
                 <Input
                   placeholder="Affiliation"
                   value={advisor.affiliation}
                   onChange={(e) => updateAdvisor(index, 'affiliation', e.target.value)}
-                  className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
                 <Input
                   placeholder="Relevance"
                   value={advisor.relevance}
                   onChange={(e) => updateAdvisor(index, 'relevance', e.target.value)}
-                  className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+                  className="flex-1 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
                 <Button
                   variant="ghost"
@@ -193,7 +193,7 @@ export function TeamAdvisorsStep({ data, onChange }: TeamAdvisorsStepProps) {
             placeholder="List board members and their affiliations..."
             value={data.boardMembers || ''}
             onChange={(e) => onChange({ boardMembers: e.target.value })}
-            className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
+            className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 min-h-[80px]"
           />
         </div>
 
@@ -207,7 +207,7 @@ export function TeamAdvisorsStep({ data, onChange }: TeamAdvisorsStepProps) {
             placeholder="e.g., 100+ years combined experience in biotech, 3 successful exits"
             value={data.combinedExperience || ''}
             onChange={(e) => onChange({ combinedExperience: e.target.value })}
-            className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-500"
+            className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
           />
         </div>
       </div>
