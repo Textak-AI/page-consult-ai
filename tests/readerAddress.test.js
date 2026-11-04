@@ -8,6 +8,7 @@ const brief = {
   solutionStatement: 'Drift Off is fourteen tracks, fifty-four minutes, meant to be played straight through.',
   tone: 'warm', objections: [], pageStructure: ['hero', 'problem-solution', 'final-cta'], processSteps: null, testimonials: [], ctaText: 'Pre-save',
 };
+const { computeCommunicationStrategy } = await import('../src/lib/composition/communicationStrategy');
 const consultationData = {
   businessName: '4DHB', industry: 'Music / Audio', industryCategory: 'Media / Entertainment', industrySubcategory: 'Music / Audio', ctaText: 'Pre-save',
   clientFrustration: brief.problemStatement,
@@ -16,7 +17,9 @@ const consultationData = {
 
 // 4DHB run (Nov 4): the owner's audience answer landed on the page in the third person.
 test('the stated challenge speaks to the reader; the stated date leads the hero and closes the page', () => {
-  const sections = mapBriefToSections(brief, { businessName: '4DHB', industry: 'Music / Audio', consultationData });
+    // The communication strategy's stakes overwrite the problem copy after the mapper (live 4DHB run #2), so the test goes through it too.
+  const strategy = computeCommunicationStrategy({ ...consultationData, idealClient: 'Album listeners', desiredOutcome: 'A continuous pass through one building.' }, {});
+  const sections = mapBriefToSections({ ...brief, communicationStrategy: strategy }, { businessName: '4DHB', industry: 'Music / Audio', consultationData });
   const problem = sections.find(s => s.type === 'problem-solution')?.content.problem;
   expect(problem).toMatch(/^You're tired of records/);
   expect(problem).toContain('You want to be held inside something.');

@@ -39,9 +39,10 @@ export function applyCommunicationStrategy<T extends { type: string; order: numb
     }
   }
   const problem = result.find(s => slotOf(s.type) === 'problem');
+  // Stakes are the owner's words about their buyer ("they're tired of…"); the page speaks to that buyer.
   if (problem && strategy.stakes) {
-    if (problem.type === 'problem-solution') problem.content.problem = strategy.stakes;
-    else problem.content.description = strategy.stakes;
+    if (problem.type === 'problem-solution') problem.content.problem = toReader(strategy.stakes);
+    else problem.content.description = toReader(strategy.stakes);
   }
   for (const s of result) {
     if (['hero', 'beta-hero-teaser', 'final-cta', 'beta-final-cta'].includes(s.type)) {
