@@ -168,12 +168,21 @@ export function buildStrategyTrace(input: {
 
   const emphasis: 'problem-led' | 'outcome-led' | null = strategy?.arcEmphasis === 'outcome-led' || strategy?.arcEmphasis === 'problem-led' ? strategy.arcEmphasis : null;
   const arcSource: string[] = strategy?.provenance?.arcEmphasis || [];
-  const opening = emphasis ? {
-    emphasis,
-    label: emphasis === 'problem-led' ? 'Opens with the problem they have now' : 'Opens with the result they want',
-    because: arcSource.includes('messagingChoices.headlineFocus') && buyer
+  // The record describes the hero that was built, never the decision alone: which brief option
+  // the headline actually is. A headline that matches none (reframe, edited) claims nothing.
+  const heroHeadline = String(input.sections?.[0]?.content?.headline || '').trim().toLowerCase();
+  const h = brief.headlines || {};
+  const same = (o: unknown) => !!heroHeadline && typeof o === 'string' && o.trim().toLowerCase() === heroHeadline;
+  const openedWith: 'problem-led' | 'outcome-led' | 'benefit' | null =
+    same(h.optionB) ? 'problem-led' : same(h.optionC) ? 'outcome-led' : same(h.optionA) ? 'benefit' : null;
+  const OPENING_LABEL = { 'problem-led': 'Opens with the problem they have now', 'outcome-led': 'Opens with the result they want', benefit: 'Opens with what they get' } as const;
+  const opening = openedWith ? {
+    emphasis: openedWith === 'benefit' ? (emphasis || 'outcome-led') : openedWith,
+    label: OPENING_LABEL[openedWith],
+    because: openedWith === emphasis && arcSource.includes('messagingChoices.headlineFocus') && buyer
       ? `Your buyer ${buyer.label.charAt(0).toLowerCase()}${buyer.label.slice(1)}.`
-      : arcSource.some((s) => /awareness/i.test(s)) ? 'You said how aware your buyers already are.' : 'No stronger signal in your answers, so the page starts where the buyer is.',
+      : openedWith === emphasis && arcSource.some((s) => /awareness/i.test(s)) ? 'You said how aware your buyers already are.'
+      : 'Chosen for the goal you set for the page.',
   } : null;
 
   const philosophy = choices ? ARCHETYPE_PHILOSOPHY[choices.archetype] || null : null;

@@ -15,7 +15,7 @@ const answers = {
   objections: [{ topic: 'area', question: 'Which areas do you serve?', answer: 'Akron, Cuyahoga Falls, Stow, Tallmadge and Hudson.' }, { topic: 'pricing', question: 'What does it cost?', answer: 'The inspection visit is a flat fee.' }],
 };
 const choices = { archetype: 'Emotional Connector', evidence: 'some', headlineFocus: 'problem-led', proofStyle: 'narrative', commitmentAsk: 'exploratory', voiceRegister: 'peer-relational', urgencySignal: 'absent', socialProofType: 'testimonial' };
-const brief = { messagingChoices: choices, communicationStrategy: computeCommunicationStrategy({ ...answers, messagingChoices: choices }, {}) };
+const brief = { headlines: { optionA: 'A Warm House This Winter', optionB: 'Get a Written Repair Price and a Written Replacement Price — Then Decide', optionC: 'Decide With the Price in Writing' }, messagingChoices: choices, communicationStrategy: computeCommunicationStrategy({ ...answers, messagingChoices: choices }, {}) };
 const sections = [
   { type: 'hero', content: { headline: 'Get a Written Repair Price and a Written Replacement Price — Then Decide', subheadline: 'A warm house this winter and an honest answer on repair versus replace, with the price in writing before anyone starts.', ctaText: 'Book a Furnace Visit', sectionBackground: 'light', composition: 'split-photo' } },
   { type: 'problem-solution', content: { problem: 'Getting three different prices from three different visits, and a salesperson who pushes the most expensive system.', solution: 'The tech who inspects the furnace writes the prices.', sectionBackground: 'tinted' } },

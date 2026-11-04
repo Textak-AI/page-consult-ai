@@ -4,6 +4,7 @@ import { unsupportedCommitment } from '../../supabase/functions/_shared/copyClai
 import { composeArc } from '@/lib/composition/arc';
 import { applySignatureStrategy } from '@/components/signature/selection';
 import { applyCommunicationStrategy, type CommunicationStrategy } from '@/lib/composition/communicationStrategy';
+import { parseMessagingChoices } from '../../supabase/functions/_shared/messagingChoices';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 import { answeredObjections, toPageQuestion } from '../../supabase/functions/_shared/buyerObjections';
 import { statedCtaText } from '../../supabase/functions/_shared/siteExtraction';
@@ -446,9 +447,14 @@ export function mapBriefToSections(
     switch (normalized) {
       case 'hero': {
         // Use intelligent headline selection based on page goal
+        const headlineFocus = parseMessagingChoices((brief as any).messagingChoices)?.headlineFocus
+          || parseMessagingChoices((options.consultationData as any)?.messagingChoices)?.headlineFocus
+          || null;
         const headlineSelection = selectBestHeadline(
           withoutUnstatedPromises(brief.headlines, options.consultationData || {}) || { optionA: '', optionB: '', optionC: '' },
-          pageGoal || 'generate-leads'
+          pageGoal || 'generate-leads',
+          undefined,
+          headlineFocus
         );
         
         // Build trust badges from top authority signals

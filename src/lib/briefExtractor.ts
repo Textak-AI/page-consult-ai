@@ -58,7 +58,9 @@ export interface EnhancedPillar {
 export function selectBestHeadline(
   headlines: { optionA: string; optionB: string; optionC: string },
   pageGoal: string,
-  audienceProfile?: string
+  audienceProfile?: string,
+  /** The scored messaging choice. When present it decides the opening; the page goal only breaks ties. */
+  headlineFocus?: 'problem-led' | 'outcome-led' | null
 ): HeadlineSelection {
   /**
    * Selection logic:
@@ -79,7 +81,13 @@ export function selectBestHeadline(
   };
 
   const normalizedGoal = pageGoal?.toLowerCase().replace(/[^a-z-]/g, '') || '';
-  const primaryKey = goalMap[normalizedGoal] || 'optionA';
+  // The six messaging choices are scored before the brief and the brief is written to them;
+  // the hero must open the same way or the strategy record would describe a page that isn't there.
+  const focusKey: 'optionB' | 'optionC' | null =
+    headlineFocus === 'problem-led' && headlines.optionB?.trim() ? 'optionB'
+    : headlineFocus === 'outcome-led' && headlines.optionC?.trim() ? 'optionC'
+    : null;
+  const primaryKey = focusKey || goalMap[normalizedGoal] || 'optionA';
   const primary = headlines[primaryKey];
   
   const secondaryKey = primaryKey === 'optionA' ? 'optionB' : 'optionA';
@@ -90,7 +98,7 @@ export function selectBestHeadline(
   return {
     primary,
     secondary,
-    reasoning: `Selected ${primaryKey} for goal: ${pageGoal}`,
+    reasoning: focusKey ? `Selected ${primaryKey} for the ${headlineFocus} opening` : `Selected ${primaryKey} for goal: ${pageGoal}`,
   };
 }
 
