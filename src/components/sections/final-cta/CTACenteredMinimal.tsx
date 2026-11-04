@@ -101,6 +101,8 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
         </MagneticCta>
         </>}
         {content.secondaryCta && <Button asChild variant="link" className="block mx-auto mt-3 text-foreground"><a href={content.secondaryCtaLink || '#contact'}>{content.secondaryCta}</a></Button>}
+        {/* Stated date (release, launch, opening): a fact under the ask, not urgency */}
+        {content.dateLine && <p className="mt-5 text-sm font-medium tracking-wide opacity-80">{content.dateLine}</p>}
       </div>
     </section>
   );
