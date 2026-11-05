@@ -26,3 +26,17 @@ export function ctaHref(raw: unknown, fallback = '#contact'): string {
 export function isExternalAsk(href: string | null | undefined): boolean {
   return !!href && /^https?:\/\//i.test(href);
 }
+
+/**
+ * When the main ask leaves the page, the close still collects an address. The words are the
+ * page's own function, not a claim: creative pages ask to be kept posted, everything else
+ * leaves an email for the business.
+ */
+export function emailLineFor(ctaLink: string | null | undefined, offerKind: string | null | undefined, businessName?: string | null): { prompt: string; buttonText: string; heroLink?: string } | null {
+  if (!isExternalAsk(ctaLink)) return null;
+  if (offerKind === 'creative') {
+    return { prompt: 'Get a note when something new is out.', buttonText: 'Keep me posted', heroLink: 'Or leave your email and get a note when something new is out.' };
+  }
+  const who = businessName?.trim() ? businessName.trim() : 'us';
+  return { prompt: `Not ready yet? Leave your email and hear from ${who}.`, buttonText: 'Keep me posted' };
+}

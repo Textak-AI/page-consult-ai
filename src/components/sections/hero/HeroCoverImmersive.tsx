@@ -98,6 +98,11 @@ export default function HeroCoverImmersive({ content, onUpdate, isEditing }: Pro
                   </Button>
                 </MagneticCta>
               )}
+              {content.emailLine?.prompt && (
+                <a href="#stay-posted" className="block text-sm underline-offset-4 hover:underline" style={{ color: bg.textMuted }}>
+                  {content.emailLine.heroLink || 'Or leave your email and get a note when something new is out.'}
+                </a>
+              )}
               {listenRow.length > 0 && (
                 <div className="pt-1">
                   <PlatformRow names={listenRow} links={content.listenLinks} color={bg.text} size={26} />

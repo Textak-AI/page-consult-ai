@@ -51,3 +51,24 @@ test('immersive features render as liner notes, not cards', () => {
   const prose = readFileSync(new URL('../src/components/sections/features/FeaturesProse.tsx', import.meta.url), 'utf8');
   expect(prose).not.toMatch(/eyebrow|PremiumCard|GradientIcon/);
 });
+
+// Kyle, Nov 4: "A landing page really should collect emails though." When the ask leaves the
+// page, the close still takes an address, and the hero offers the same in one line.
+test('an external ask brings an email line; a form-bound ask does not', async () => {
+  const { emailLineFor } = await import('../src/lib/text/ctaLink.ts');
+  expect(emailLineFor('#contact', 'creative')).toBeNull();
+  const music = emailLineFor('https://4dhb.net/', 'creative', '4DHB');
+  expect(music.prompt).toBe('Get a note when something new is out.');
+  expect(music.heroLink).toMatch(/leave your email/);
+  expect(emailLineFor('https://acme.example/book', 'services', 'Acme Plumbing').prompt).toMatch(/hear from Acme Plumbing/);
+  expect(emailLineFor('https://acme.example/book', 'services', null).prompt).toMatch(/hear from us/);
+  const gen = readFileSync(new URL('../src/pages/Generate.tsx', import.meta.url), 'utf8');
+  expect((gen.match(/emailLine: emailLineFor\(/g) || []).length).toBe(4);
+  const close = readFileSync(new URL('../src/components/sections/final-cta/CTACenteredMinimal.tsx', import.meta.url), 'utf8');
+  expect(close).toMatch(/id="stay-posted"/);
+  const hero = readFileSync(new URL('../src/components/sections/hero/HeroCoverImmersive.tsx', import.meta.url), 'utf8');
+  expect(hero).toMatch(/href="#stay-posted"/);
+  const line = readFileSync(new URL('../src/components/sections/shared/EmailLine.tsx', import.meta.url), 'utf8');
+  expect(line).toMatch(/customFields: \{ intent \}/);
+  expect(line).toMatch(/if \(!publishedPageId\)/);
+});

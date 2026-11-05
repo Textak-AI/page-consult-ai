@@ -1,5 +1,5 @@
 import { getOfferKind } from '@/lib/wizard/industryWording';
-import { ctaHref, ownerCtaLink } from '@/lib/text/ctaLink';
+import { ctaHref, ownerCtaLink, emailLineFor } from '@/lib/text/ctaLink';
 import { fontIdFromStack, HERO_LAYOUTS, type PageTheme } from '@/lib/editor/pageTheme';
 import { statedStat } from '@/lib/statedStat';
 import { buildStrategyTrace } from '@/lib/strategyTrace';
@@ -282,7 +282,8 @@ function patchSectionsWithConsultationData(
   return sections.map(section => {
     // The owner's button link (goals step) applies to the opening ask as well as the closing one.
     if (section.type === 'hero' && ownerCtaLink(consultationData.ctaLink)) {
-      return { ...section, content: { ...section.content, ctaLink: ownerCtaLink(consultationData.ctaLink) } };
+      const link = ownerCtaLink(consultationData.ctaLink);
+      return { ...section, content: { ...section.content, ctaLink: link, emailLine: emailLineFor(link, getOfferKind(consultationData.industryCategory || consultationData.industry, consultationData.industrySubcategory), consultationData.businessName) } };
     }
     // Patch Final CTA with fresh consultation data
     if (section.type === 'final-cta') {
@@ -326,6 +327,7 @@ function patchSectionsWithConsultationData(
           ...section.content,
           ctaText: derivedCta,
           ctaLink: ctaHref(consultationData.ctaLink, section.content?.ctaLink || '#contact'),
+          emailLine: emailLineFor(ctaHref(consultationData.ctaLink, section.content?.ctaLink || '#contact'), getOfferKind(consultationData.industryCategory || consultationData.industry, consultationData.industrySubcategory), consultationData.businessName),
           secondaryCta: consultationData.secondaryCTA || 
                         consultationData.secondary_cta || 
                         section.content?.secondaryCta || 
@@ -3718,6 +3720,7 @@ function GenerateContent() {
               subheadline: content.subheadline,
               ctaText: content.ctaText || "Get Started",
               ctaLink: ctaHref(strategicConsultation?.ctaLink),
+              emailLine: emailLineFor(ctaHref(strategicConsultation?.ctaLink), getOfferKind(strategicConsultation?.industryCategory || strategicConsultation?.industry, strategicConsultation?.industrySubcategory), businessName === 'Our Company' ? null : businessName),
               backgroundImage: heroImageUrl,
               logoUrl,
               primaryColor: sdi?.palette?.primary || primaryColor,
@@ -4153,6 +4156,7 @@ function GenerateContent() {
               })(),
               ctaText,
               ctaLink: ctaHref(strategicConsultation?.ctaLink),
+              emailLine: emailLineFor(ctaHref(strategicConsultation?.ctaLink), getOfferKind(strategicConsultation?.industryCategory || strategicConsultation?.industry, strategicConsultation?.industrySubcategory), businessName === 'Our Company' ? null : businessName),
               primaryColor: sdi?.palette?.primary || primaryColor,
               industryVariant,
               mode: sdiMode,

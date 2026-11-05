@@ -5,6 +5,7 @@ import { useMemo, useState, useCallback, useEffect } from 'react';
 import { LeadCaptureModal } from './LeadCaptureModal';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { isExternalAsk } from '@/lib/text/ctaLink';
+import { PublishedPageProvider } from '@/contexts/PublishedPageContext';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from '@/lib/premiumPageEffects';
@@ -484,6 +485,7 @@ export function PublicPageRenderer({
         })()}
 
         {/* Render all visible sections with tier wrappers */}
+        <PublishedPageProvider value={{ publishedPageId: publishedPageId || null, previewMode }}>
         <div 
           className="relative z-10"
           onClick={(e) => {
@@ -560,6 +562,8 @@ export function PublicPageRenderer({
           />
         </div>
         
+        </PublishedPageProvider>
+
         {/* "Built with PageConsult" badge */}
         {showPoweredBy && showBadge && (
           <a 
