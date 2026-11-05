@@ -4,6 +4,7 @@ import { GazeReveal } from '@/components/motion/GazeReveal';
 import { useMemo, useState, useCallback, useEffect } from 'react';
 import { LeadCaptureModal } from './LeadCaptureModal';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
+import { isExternalAsk } from '@/lib/text/ctaLink';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from '@/lib/premiumPageEffects';
@@ -491,6 +492,9 @@ export function PublicPageRenderer({
             const target = e.target as HTMLElement;
             const button = target.closest('button, a');
             if (!button) return;
+            // An ask the owner pointed at their own site (a pre-save, a shop, a booking page)
+            // navigates; only form-bound asks open the lead capture.
+            if (button instanceof HTMLAnchorElement && isExternalAsk(button.getAttribute('href'))) return;
             // Only intercept the page's actual asks. The previous heuristic
             // keyed on section position, which matched EVERY section (each
             // sits alone in its reveal wrapper), so FAQ toggles and every

@@ -201,6 +201,11 @@ export const QUESTION_EXPLAINERS: Record<string, QuestionMeta> = {
     }
   },
   
+  ctaLink: {
+    insight: "Points the main button somewhere real",
+    methodology: "A pre-save, shop, booking or signup page you already have. Without one, the button opens the page's own contact form and the reply lands in your leads.",
+  },
+
   objectionsToOvercome: {
     insight: "Shapes FAQ and objection-handling sections",
     methodology: "Addressing objections before they arise increases conversion. We weave answers throughout the page, not just in the FAQ.",

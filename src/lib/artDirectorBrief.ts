@@ -25,7 +25,7 @@ export interface ArtDirectorBrief {
   };
 
   features: {
-    layout: 'bento-grid' | 'numbered-list' | 'icon-cards' | 'spec-rows';
+    layout: 'bento-grid' | 'numbered-list' | 'icon-cards' | 'spec-rows' | 'prose';
     background: 'dark' | 'light' | 'tinted';
     numbering: 'monospace' | 'accent-large' | 'none';
     iconStyle: 'none' | 'monochrome-bare' | 'accent-circle';
@@ -76,7 +76,7 @@ export function immersiveBrief(): ArtDirectorBrief {
     sectionRhythm: 'all-dark',
     dividerSystem: 'whitespace',
     hero: { composition: 'cover-immersive', background: 'dark', hasGridTexture: false, hasAccentGlow: true, trustSignals: 'none', imageStyle: 'cover' },
-    features: { layout: 'numbered-list', background: 'dark', numbering: 'none', iconStyle: 'none' },
+    features: { layout: 'prose', background: 'dark', numbering: 'none', iconStyle: 'none' },
     stats: { presentation: 'hairline-separated', background: 'dark', numberStyle: 'large-mono', labelStyle: 'minimal-muted' },
     process: { layout: 'minimal-list', background: 'dark', numbering: 'monospace' },
     faq: { layout: 'accordion-hairline', background: 'dark' },

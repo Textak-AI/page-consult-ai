@@ -137,6 +137,8 @@ export interface ConsultationData {
   // Page Goals
   primaryGoal: string;
   ctaText: string;
+  /** Where the main button sends people. Blank = the page's own contact form. */
+  ctaLink?: string;
   objectionsToOvercome: string;
   objections?: BuyerObjection[];
   
@@ -1822,6 +1824,23 @@ ${d.ctaText}
                   onChange={(e) => updateData({ ctaText: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="ctaLink" className="text-slate-300 inline-flex items-center">
+                  Where should that button send people?
+                  <QuestionExplainer {...QUESTION_EXPLAINERS.ctaLink} />
+                </Label>
+                <Input
+                  id="ctaLink"
+                  type="url"
+                  inputMode="url"
+                  placeholder={stepKind === 'creative' ? "e.g., your pre-save, Bandcamp or shop link — blank opens a contact form" : "e.g., your booking or signup page — blank opens the page's contact form"}
+                  value={data.ctaLink || ''}
+                  onChange={(e) => updateData({ ctaLink: e.target.value })}
+                  className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                />
+                <p className="mt-1.5 text-xs text-slate-500">Leave it blank and the button opens a short contact form on your page; replies land in your leads.</p>
               </div>
               
               <BuyerObjectionChecklist value={data.objections} context={data} onChange={objections => updateData({ objections, objectionsToOvercome: objections.filter(o => o.answer.trim()).map(o => `${o.question}\n${o.answer}`).join('\n\n') })} />

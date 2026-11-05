@@ -14,6 +14,7 @@ import { getSectionHeader } from "@/lib/industrySectionHeaders";
 import { getArchetypeCardClass, type DesignProfile } from "@/lib/archetypeProfiles";
 import FeaturesBentoGrid from './features/FeaturesBentoGrid';
 import FeaturesStoryBlocks from './features/FeaturesStoryBlocks';
+import FeaturesProse from './features/FeaturesProse';
 import { SectionWrapper } from './shared/SectionWrapper';
 import { SectionHeader } from './shared/SectionHeader';
 import { CardGrid } from './shared/CardGrid';
@@ -68,6 +69,10 @@ const getIconComponent = (iconName: string): LucideIcon => {
 function FeaturesSectionBase({ content, onUpdate, isEditing, iconStyle = "outline" }: FeaturesSectionProps) {
   // Art Director composition check
   const featureLayout = (content as any)?.featureLayout;
+  // Immersive register (a record, a film, a book): liner notes, never cards.
+  if ((content as any)?.visualRegister === 'immersive' || featureLayout === 'prose') {
+    return <FeaturesProse content={content as any} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
+  }
   if (featureLayout === 'bento-grid') {
     return <FeaturesBentoGrid content={content as any} onUpdate={onUpdate || (() => {})} isEditing={isEditing} />;
   }
