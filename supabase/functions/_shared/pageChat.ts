@@ -27,7 +27,7 @@ export type PageChatOperation = EditOperation | AddOperation;
 export interface PageChatPlan { reply: string; operations: PageChatOperation[]; dropped: string[] }
 
 /** Keys that carry design/plumbing, never copy: kept out of the prompt and out of edits. */
-const NON_COPY_KEY = /^(designIntelligence|sdi.*|mode|pageMode|sectionBackground|industryVariant|industry|composition|imageStyle|imagePrompt|signature.*|presentation|treatment|typography|tokens|layout.*|variant|order|visible|id|primaryColor|accentColor|.*(?:Color|Colors|Font|Image|Images|Url|URL|Link|Asset|Credit|Attribution)|logo.*|avatar.*|samples|images|video|backgroundVideo|attachedVideo|lowerThird|stats|statistics|trustBadges|credibility.*|testimonials|paraphrase|score)$/;
+const NON_COPY_KEY = /^(designIntelligence|sdi.*|mode|pageMode|sectionBackground|industryVariant|industry|composition|imageStyle|imagePrompt|signature.*|presentation|treatment|typography|tokens|layout.*|variant|order|visible|id|primaryColor|accentColor|.*(?:Color|Colors|Font|Image|Images|Url|URL|Link|Asset|Credit|Attribution)|logo.*|avatar.*|samples|images|video|backgroundVideo|attachedVideo|lowerThird|stats|statistics|trustBadges|credibility.*|testimonials|paraphrase|score|listenRow|listenLinks|dateLine|registerCues|visualRegister)$/;
 const isDataUri = (v: unknown) => typeof v === 'string' && /^data:|^https?:\/\//.test(v);
 
 /** The copy-bearing subset of a section's content (strings, lists of copy). */

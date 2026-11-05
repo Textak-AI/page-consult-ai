@@ -5,6 +5,7 @@ import { MagneticCta } from '@/components/motion/MagneticCta';
 import { Button } from '@/components/ui/button';
 import { fontStacks, typeClass, typeScale } from '@/lib/design/tokens';
 import { getSectionBackgroundStyles } from '@/lib/artDirectorBrief';
+import { PlatformRow } from './PlatformRow';
 
 interface Props {
   content: Record<string, any>;
@@ -98,11 +99,31 @@ export default function HeroCoverImmersive({ content, onUpdate, isEditing }: Pro
                 </MagneticCta>
               )}
               {listenRow.length > 0 && (
-                <p className="text-sm tracking-wide" style={{ color: bg.textMuted }}>
-                  {listenRow.map((name, i) => (
-                    <span key={i}>{i > 0 && <span className="mx-2 opacity-50">·</span>}{name}</span>
-                  ))}
-                </p>
+                <div className="pt-1">
+                  <PlatformRow names={listenRow} links={content.listenLinks} color={bg.text} />
+                  {isEditing && (
+                    <div className="mt-3 grid gap-2 max-w-md rounded-lg border border-white/15 bg-black/30 p-3">
+                      <p className="text-xs opacity-70">Links for the places you named. Leave one blank and its icon shows without a link.</p>
+                      {listenRow.map((name) => (
+                        <label key={name} className="flex items-center gap-2 text-xs">
+                          <span className="w-28 shrink-0 opacity-80">{name}</span>
+                          <input
+                            type="url"
+                            placeholder="https://"
+                            defaultValue={content.listenLinks?.[name] || ''}
+                            onBlur={(e) => {
+                              const next: Record<string, string> = { ...(content.listenLinks || {}) };
+                              const v = e.currentTarget.value.trim();
+                              if (v) next[name] = v; else delete next[name];
+                              onUpdate({ ...content, listenLinks: next });
+                            }}
+                            className="flex-1 rounded border border-white/20 bg-black/40 px-2 py-1 text-xs text-white placeholder:text-white/40"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
