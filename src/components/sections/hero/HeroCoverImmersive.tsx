@@ -85,7 +85,7 @@ export default function HeroCoverImmersive({ content, onUpdate, isEditing }: Pro
               </p>
             )}
 
-            <div className="space-y-4 pt-1">
+            <div className="space-y-3 pt-1">
               {content.ctaText && (
                 <MagneticCta>
                   <Button
@@ -100,7 +100,7 @@ export default function HeroCoverImmersive({ content, onUpdate, isEditing }: Pro
               )}
               {listenRow.length > 0 && (
                 <div className="pt-1">
-                  <PlatformRow names={listenRow} links={content.listenLinks} color={bg.text} />
+                  <PlatformRow names={listenRow} links={content.listenLinks} color={bg.text} size={26} />
                   {isEditing && (
                     <div className="mt-3 grid gap-2 max-w-md rounded-lg border border-white/15 bg-black/30 p-3">
                       <p className="text-xs opacity-70">Links for the places you named. Leave one blank and its icon shows without a link.</p>
