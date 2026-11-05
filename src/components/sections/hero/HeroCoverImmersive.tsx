@@ -39,12 +39,12 @@ export default function HeroCoverImmersive({ content, onUpdate, isEditing }: Pro
       </div>
       {isEditing && <div className="absolute inset-0 border-2 border-blue-500/50 rounded-lg pointer-events-none z-20" />}
 
-      <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-16 md:py-28">
-        <div className={`grid items-center gap-10 md:gap-16 ${cover ? 'lg:grid-cols-12' : ''}`}>
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-12 md:py-28">
+        <div className={`grid items-center gap-8 md:gap-16 ${cover ? 'lg:grid-cols-12' : ''}`}>
           {/* The cover: first on phones, right on desktop */}
           {cover && (
             <div className="order-first lg:order-last lg:col-span-5">
-              <div className="relative mx-auto w-[min(72vw,340px)] lg:w-full lg:max-w-[460px]">
+              <div className="relative mx-auto w-[min(58vw,260px)] md:w-[min(50vw,360px)] lg:w-full lg:max-w-[460px]">
                 <div className="absolute -inset-6 rounded-[28px] opacity-60 blur-2xl" style={{ background: `radial-gradient(circle, ${primaryColor}66, transparent 70%)` }} aria-hidden="true" />
                 <img src={cover} alt={content.productName || content.businessName || ''} className="relative w-full rounded-2xl shadow-2xl ring-1 ring-white/10" />
               </div>

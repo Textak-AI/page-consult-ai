@@ -91,7 +91,8 @@ export default function CTACenteredMinimal({ content, onUpdate, isEditing }: CTA
           style={{
             backgroundColor: accentFor('cta', primaryColor),
             color: '#FFFFFF',
-            borderRadius: 'var(--archetype-card-radius, 8px)',
+            // Immersive register: the ask is a pill, as in the hero.
+            borderRadius: content.visualRegister === 'immersive' ? '999px' : 'var(--archetype-card-radius, 8px)',
           }}
         >
           <a href={content.ctaLink || '#contact'}>
