@@ -2,9 +2,9 @@
 // Supports production, preview, and local development origins
 
 const ALLOWED_ORIGINS = [
+  'https://pageconsult.app',
   'https://page-consult-ai.lovable.app',
   'https://preview--page-consult-ai.lovable.app',
-  'https://pageconsult.app',
   'https://www.pageconsult.app',
   'http://localhost:3000',
   'http://localhost:5173',
@@ -22,6 +22,8 @@ export function isAllowedOrigin(origin: string | null): boolean {
   if (ALLOWED_ORIGINS.includes(origin)) return true;
   if (origin.endsWith('.lovableproject.com')) return true;
   if (origin.endsWith('.lovable.app')) return true;
+  // Vercel: the project's preview deployments (cutover destination). Production is pageconsult.app above.
+  if (/^https:\/\/page-consult-ai[a-z0-9-]*\.vercel\.app$/.test(origin)) return true;
   return false;
 }
 
