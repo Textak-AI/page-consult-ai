@@ -72,3 +72,10 @@ test('an external ask brings an email line; a form-bound ask does not', async ()
   expect(line).toMatch(/customFields: \{ intent \}/);
   expect(line).toMatch(/if \(!publishedPageId\)/);
 });
+
+// The live 4DHB page still showed "THE PAYOFF" glass cards after FeaturesProse shipped: the
+// signature "glass" element wraps the section on published pages, bypassing FeaturesSection.
+test('signature overrides stand down in the immersive register', () => {
+  const sig = readFileSync(new URL('../src/components/signature/SignatureSection.tsx', import.meta.url), 'utf8');
+  expect(sig).toMatch(/content\.visualRegister === 'immersive' && type !== 'hero'\) return <>\{children\}<\/>/);
+});

@@ -7,6 +7,10 @@ import { sourced } from './selection';
 export function SignatureSection({ type, content, children, editing = false }: { type: string; content: Record<string, any>; children: ReactNode; editing?: boolean }) {
   const plan: SignaturePlan | undefined = content.signature;
   if (!plan) return <>{children}</>;
+  // The immersive register (a record, a film, a book) keeps its own layouts: no chapter
+  // eyebrows, glass cards or forks over the liner-notes sections. Only the hero payoff gradient
+  // (handled inside the hero) carries over.
+  if (content.visualRegister === 'immersive' && type !== 'hero') return <>{children}</>;
   const has = (element: SignaturePlan['elements'][number]) => plan.elements.includes(element);
   // Only dark/brand plans are deep; 'tinted' is a light surface (it rendered
   // near-black before, turning warm pages' soft payoff into a black band).
