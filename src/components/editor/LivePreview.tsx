@@ -1,5 +1,5 @@
 import { resolveColors, themeFontCss, type PageTheme } from '@/lib/editor/pageTheme';
-import { timeAwareContent } from '@/lib/text/releaseTiming';
+import { timeAwareContent, pageOutNowVerb } from '@/lib/text/releaseTiming';
 import { SignatureSection } from '@/components/signature/SignatureSection';
 import { ClientImageContext } from './ClientImageContext';
 import { collectClientImages, type ClientImage } from '@/lib/clientImages';
@@ -389,7 +389,7 @@ function LivePreviewInner({ sections: rawSections, onSectionsChange, cssVariable
       secondaryColor: pageTheme?.secondaryColor || brandSettings?.secondaryColor || section.content?.secondaryColor,
       logoUrl: section.content?.logoUrl || stableBrandLogoUrl,
       archetype: archetypeProfile, // Archetype design profile
-    });
+    }, new Date(), pageOutNowVerb(sections));
     
     if (!section.visible) return null;
 

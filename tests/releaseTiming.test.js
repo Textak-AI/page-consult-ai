@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { parseStatedDate, releaseTiming, timeAwareDateLine, timeAwareAsk, outNowAsk, timeAwareContent } from '../src/lib/text/releaseTiming.ts';
+import { parseStatedDate, releaseTiming, timeAwareDateLine, timeAwareAsk, outNowAsk, timeAwareContent, pageOutNowVerb } from '../src/lib/text/releaseTiming.ts';
 import { buildStrategyTrace } from '../src/lib/strategyTrace.ts';
 
 // Kyle, Nov 6: "there needs to be an intelligence layer that understands the release date is
@@ -73,4 +73,19 @@ test('the goals step warns before the page is built, and build time stores the v
   expect((mapper.match(/outNowAsk: outNowAsk\(/g) || []).length).toBe(2);
   expect((mapper.match(/timeAwareDateLine\(statedDateLine\(/g) || []).length).toBe(2);
   expect(mapper).toMatch(/ctaLink: ctaHref\(\(options\.consultationData as any\)\?\.ctaLink\)/);
+});
+
+// Live 4DHB after b3fe782: hero said "Listen", the close said "Get it" — the close names no platforms.
+test('the close borrows the verb from the page when it has no hint of its own', () => {
+  const sections = [
+    { type: 'hero', content: { ctaText: 'Pre-save', dateLine: 'Out October 27, 2026', listenRow: ['Spotify'] } },
+    { type: 'final-cta', content: { ctaText: 'Pre-save', dateLine: 'Out October 27, 2026' } },
+  ];
+  const verb = pageOutNowVerb(sections);
+  expect(verb).toBe('Listen');
+  expect(timeAwareContent(sections[1].content, nov6, verb).ctaText).toBe('Listen');
+  expect(timeAwareContent(sections[1].content, nov6).ctaText).toBe('Get it');
+  for (const f of ['src/components/public/PublicPageRenderer.tsx', 'src/components/editor/LivePreview.tsx']) {
+    expect(readFileSync(new URL('../' + f, import.meta.url), 'utf8')).toMatch(/pageOutNowVerb\(sections/);
+  }
 });

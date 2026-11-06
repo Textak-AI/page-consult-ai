@@ -5,7 +5,7 @@ import { useMemo, useState, useCallback, useEffect } from 'react';
 import { LeadCaptureModal } from './LeadCaptureModal';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { isExternalAsk } from '@/lib/text/ctaLink';
-import { timeAwareContent } from '@/lib/text/releaseTiming';
+import { timeAwareContent, pageOutNowVerb } from '@/lib/text/releaseTiming';
 import { PublishedPageProvider } from '@/contexts/PublishedPageContext';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -121,6 +121,7 @@ export function PublicPageRenderer({
       .map((t: string) => t.trim()),
   ), [sections]);
   const theme = useMemo(() => cleanTheme(styles?.theme), [styles]);
+  const pageVerb = useMemo(() => pageOutNowVerb(sections || []), [sections]);
   const themeCss = useMemo(() => themeFontCss('.page-theme-root', theme), [theme]);
   // One heading voice page-wide (owner theme override still wins: injected after)
   const pairing = sections?.find(s => (s.content as any)?.typographyPairing)?.content?.typographyPairing;
@@ -158,7 +159,7 @@ export function PublicPageRenderer({
       ...section.content,
       archetype: archetypeProfile,
       ...(theme.primaryColor ? { primaryColor: theme.primaryColor } : {}),
-    });
+    }, new Date(), pageVerb);
     switch (section.type) {
       case 'work-samples':
         return <WorkSamplesSection key={index} content={section.content} />;

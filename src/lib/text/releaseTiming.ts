@@ -104,14 +104,30 @@ export function timeAwareAsk(ctaText: string | null | undefined, dateLine: strin
  * right tense, a pre-release ask turned into the out-now verb once the date has passed. The
  * stored content is untouched; this runs wherever sections are drawn.
  */
-export function timeAwareContent<T extends Record<string, any>>(content: T, now: Date = new Date()): T {
+/** The out-now verb a section can vouch for on its own: stored at build, or implied by the platforms it names. */
+function sectionVerb(content: Record<string, any> | null | undefined): string | null {
+  if (!content) return null;
+  if (typeof content.outNowAsk === 'string' && content.outNowAsk) return content.outNowAsk;
+  const listenRow: string[] = Array.isArray(content.listenRow) ? content.listenRow : [];
+  if (listenRow.some((n) => /spotify|apple music|bandcamp|tidal|deezer|soundcloud|youtube music|podcast/i.test(String(n)))) return 'Listen';
+  return null;
+}
+
+/** The verb for the whole page: the first section that can say what this is (the close has no platform row of its own). */
+export function pageOutNowVerb(sections: Array<{ content?: Record<string, any> | null }> | null | undefined): string | null {
+  for (const s of sections || []) {
+    const v = sectionVerb(s?.content);
+    if (v) return v;
+  }
+  return null;
+}
+
+export function timeAwareContent<T extends Record<string, any>>(content: T, now: Date = new Date(), pageVerb?: string | null): T {
   if (!content || typeof content.dateLine !== 'string' || !content.dateLine) return content;
   const dateLine = timeAwareDateLine(content.dateLine, now);
-  // Sections don't carry the industry; the verb was stored at build time, or the named platforms say what this is.
-  const listenRow: string[] = Array.isArray(content.listenRow) ? content.listenRow : [];
-  const verb = typeof content.outNowAsk === 'string' && content.outNowAsk
-    ? content.outNowAsk
-    : listenRow.some((n) => /spotify|apple music|bandcamp|tidal|deezer|soundcloud|youtube music|podcast/i.test(String(n))) ? 'Listen' : null;
+  // Sections don't carry the industry; the verb was stored at build time, the named platforms say
+  // what this is, or another section on the page does.
+  const verb = sectionVerb(content) || pageVerb || null;
   const ask = timeAwareAsk(content.ctaText, content.dateLine, content.industryCategory || content.industry, content.industrySubcategory, now, verb);
   if (dateLine === content.dateLine && !ask.note) return content;
   return { ...content, dateLine, ...(ask.note ? { ctaText: ask.text, askNote: ask.note } : {}) };
