@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { timeAwareAsk } from '@/lib/text/releaseTiming';
+import { statedDateLine } from '@/lib/text/statedDate';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Globe, Sparkles, Building2, Users, Trophy, Target, CheckCircle2, Loader2, ExternalLink, RotateCcw, Palette, FileText, TrendingUp, UserCheck, Rocket, Calendar, Gift, Share2, Check, Save } from 'lucide-react';
 import { toast } from 'sonner';
@@ -1824,6 +1826,14 @@ ${d.ctaText}
                   onChange={(e) => updateData({ ctaText: e.target.value })}
                   className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                 />
+                {(() => {
+                  const ask = timeAwareAsk(data.ctaText, statedDateLine(data), data.industryCategory || data.industry, data.industrySubcategory);
+                  return ask.note ? (
+                    <p className="mt-2 text-xs text-amber-300/90" data-testid="ask-date-note">
+                      {ask.note} If that date is wrong, fix it where you wrote it; if it's right, consider changing the button to “{ask.text}”.
+                    </p>
+                  ) : null;
+                })()}
               </div>
 
               <div>

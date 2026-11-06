@@ -9,6 +9,7 @@
  * happened. See the project doc claude/BENCHMARK_STRATEGY_TRACE.md (R1–R8).
  */
 import { buyerTypeLabel } from '@/lib/buyerTypeLabels';
+import { timeAwareContent } from '@/lib/text/releaseTiming';
 import { missingSections } from '@/lib/sectionUnlocks';
 import { truncateAtBoundary } from '@/lib/text/truncate';
 import { hiddenReason } from '@/lib/editor/emptySections';
@@ -208,7 +209,9 @@ export function buildStrategyTrace(input: {
     const copy = sectionCopy(content);
     const decisions: string[] = [];
     if (index === 0 && opening) decisions.push(opening.label);
-    if (stated && copy.some((c) => c.trim().toLowerCase() === stated)) decisions.push('The button uses your words exactly.');
+    const timed = timeAwareContent(content);
+    if (typeof timed.askNote === 'string' && timed.askNote) decisions.push(timed.askNote);
+    else if (stated && copy.some((c) => c.trim().toLowerCase() === stated)) decisions.push('The button uses your words exactly.');
     for (const p of proofPlan) {
       if (p?.sectionType === s.type && s.type !== 'faq' && typeof p.evidence === 'string') decisions.push(`Your words back up: “${truncateAtBoundary(String(p.claim || ''), 120)}”`);
     }

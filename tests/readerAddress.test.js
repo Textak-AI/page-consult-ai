@@ -24,10 +24,13 @@ test('the stated challenge speaks to the reader; the stated date leads the hero 
   expect(problem).toMatch(/^You're tired of records/);
   expect(problem).toContain('You want to be held inside something.');
   expect(problem).not.toMatch(/\bthey\b/i);
-  expect(sections[0].content.dateLine).toBe('Out October 27, 2026');
+  // Nov 6: the date has passed, so the line is in the past tense and the pre-save ask is the out-now verb (releaseTiming).
+  expect(sections[0].content.dateLine).toBe('Released October 27, 2026');
+  expect(sections[0].content.ctaText).toBe('Listen');
+  expect(sections[0].content.askNote).toMatch(/has passed/);
   // Creative work gets plain section labels, not consulting ones.
   const ps = sections.find(s => s.type === 'problem-solution')?.content;
   expect(ps.problemTitle).toBe('The problem');
   expect(ps.solutionTitle).toBe('What this is');
-  expect(sections[sections.length - 1].content.dateLine).toBe('Out October 27, 2026');
+  expect(sections[sections.length - 1].content.dateLine).toBe('Released October 27, 2026');
 });

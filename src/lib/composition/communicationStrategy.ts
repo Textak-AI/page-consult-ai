@@ -3,6 +3,7 @@ export { computeCommunicationStrategy, auditCommunicationStrategy } from '../../
 export type { CommunicationStrategy } from '../../../supabase/functions/_shared/communicationStrategy';
 
 import type { CommunicationStrategy } from '../../../supabase/functions/_shared/communicationStrategy';
+import { timeAwareAsk } from '@/lib/text/releaseTiming';
 import { slotOf } from './arc';
 import { toPageQuestion } from '../../../supabase/functions/_shared/buyerObjections';
 
@@ -47,7 +48,10 @@ export function applyCommunicationStrategy<T extends { type: string; order: numb
   for (const s of result) {
     if (['hero', 'beta-hero-teaser', 'final-cta', 'beta-final-cta'].includes(s.type)) {
       // Null means the input supplied no ask; never invent a lighter path.
-      s.content.ctaText = strategy.ctaLadder.primary || '';
+      // The date still counts: a pre-save after the stated release date stays the out-now verb.
+      const timed = timeAwareAsk(strategy.ctaLadder.primary || '', s.content.dateLine, null, null, new Date(), s.content.outNowAsk);
+      s.content.ctaText = timed.text;
+      if (timed.note) s.content.askNote = timed.note;
       s.content.secondaryCta = strategy.ctaLadder.secondary;
       s.content.secondaryCtaText = strategy.ctaLadder.secondary;
     }

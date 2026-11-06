@@ -5,6 +5,7 @@ import { useMemo, useState, useCallback, useEffect } from 'react';
 import { LeadCaptureModal } from './LeadCaptureModal';
 import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { isExternalAsk } from '@/lib/text/ctaLink';
+import { timeAwareContent } from '@/lib/text/releaseTiming';
 import { PublishedPageProvider } from '@/contexts/PublishedPageContext';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -153,11 +154,11 @@ export function PublicPageRenderer({
     // Read-only render - no editing, no update callbacks
     const noOp = () => {};
     // Inject archetype into section content for archetype-aware rendering
-    const enrichedContent = {
+    const enrichedContent = timeAwareContent({
       ...section.content,
       archetype: archetypeProfile,
       ...(theme.primaryColor ? { primaryColor: theme.primaryColor } : {}),
-    };
+    });
     switch (section.type) {
       case 'work-samples':
         return <WorkSamplesSection key={index} content={section.content} />;

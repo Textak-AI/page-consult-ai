@@ -6,6 +6,8 @@ import { applySignatureStrategy } from '@/components/signature/selection';
 import { applyCommunicationStrategy, toReader, type CommunicationStrategy } from '@/lib/composition/communicationStrategy';
 import { parseMessagingChoices } from '../../supabase/functions/_shared/messagingChoices';
 import { statedDateLine } from '@/lib/text/statedDate';
+import { timeAwareDateLine, timeAwareAsk, outNowAsk } from '@/lib/text/releaseTiming';
+import { ctaHref } from '@/lib/text/ctaLink';
 import { getOfferKind } from '@/lib/wizard/industryWording';
 import { listenRowFrom } from '@/lib/design/visualRegister';
 import { truncateAtBoundary } from '@/lib/text/truncate';
@@ -473,6 +475,11 @@ export function mapBriefToSections(
         const heroType = isBetaPage ? 'beta-hero-teaser' : 'hero';
         console.log('[sectionMapper] Hero type:', heroType);
 
+        // The date taken into account: a pre-save after the release date becomes the out-now verb.
+        const heroAsk = timeAwareAsk(
+          statedCtaText(options.consultationData) || brief.ctaText || (isConsulting ? industryTokens.ctaDefaults.primary : getCtaByIndustry(industry).primary),
+          statedDateLine(options.consultationData), options.industryCategory || industry, options.industrySubcategory,
+        );
         sections.push({
           type: heroType,
           order,
@@ -481,11 +488,13 @@ export function mapBriefToSections(
             headline: headlineSelection.primary,
             subheadline: brief.subheadline,
             // A stated release/launch/opening date leads the hero in place of the generic chapter label.
-            dateLine: statedDateLine(options.consultationData),
+            dateLine: timeAwareDateLine(statedDateLine(options.consultationData)),
             // The owner's "where can people get it" answer, as the names they listed, under the ask.
             listenRow: listenRowFrom(answeredObjections((options.consultationData as any)?.objections).find((o: any) => o.topic === 'where')?.answer),
-            ctaText: statedCtaText(options.consultationData) || brief.ctaText || (isConsulting ? industryTokens.ctaDefaults.primary : getCtaByIndustry(industry).primary),
-            ctaLink: '#contact',
+            ctaText: heroAsk.text,
+            askNote: heroAsk.note,
+            outNowAsk: outNowAsk(options.industryCategory || industry, options.industrySubcategory),
+            ctaLink: ctaHref((options.consultationData as any)?.ctaLink),
             backgroundImage: heroImageUrl || null,
             trustBadges: trustBadges.length > 0 ? trustBadges : undefined,
             logoUrl: logoUrl || null,
@@ -848,15 +857,18 @@ export function mapBriefToSections(
         const ctaType = isBetaPage ? 'beta-final-cta' : 'final-cta';
         console.log('[sectionMapper] CTA type:', ctaType);
 
+        const closeAsk = timeAwareAsk(ctaButtonText, statedDateLine(consultation), (consultation as any).industryCategory || industry, (consultation as any).industrySubcategory);
         const ctaContent = {
           headline: ctaHeadline,
           subtext: ctaSubtext,
-          ctaText: ctaButtonText,
-          ctaLink: consultation.ctaLink || '#contact',
+          ctaText: closeAsk.text,
+          askNote: closeAsk.note,
+          outNowAsk: outNowAsk((consultation as any).industryCategory || industry, (consultation as any).industrySubcategory),
+          ctaLink: ctaHref(consultation.ctaLink),
           secondaryCta,
           urgencyText,
           guaranteeText,
-          dateLine: statedDateLine(consultation),
+          dateLine: timeAwareDateLine(statedDateLine(consultation)),
           // Creative work: the stated achievements (previous releases, press) as a quiet footnote at the close.
           footnote: getOfferKind((consultation as any).industryCategory || industry, (consultation as any).industrySubcategory) === 'creative' && typeof brief.proofPoints?.achievements === 'string' && brief.proofPoints.achievements.trim() ? brief.proofPoints.achievements.trim() : null,
           trustSignal,

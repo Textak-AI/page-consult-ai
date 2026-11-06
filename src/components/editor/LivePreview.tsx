@@ -1,4 +1,5 @@
 import { resolveColors, themeFontCss, type PageTheme } from '@/lib/editor/pageTheme';
+import { timeAwareContent } from '@/lib/text/releaseTiming';
 import { SignatureSection } from '@/components/signature/SignatureSection';
 import { ClientImageContext } from './ClientImageContext';
 import { collectClientImages, type ClientImage } from '@/lib/clientImages';
@@ -379,7 +380,7 @@ function LivePreviewInner({ sections: rawSections, onSectionsChange, cssVariable
 
   const renderSection = (section: Section, index: number) => {
     // Inject industryVariant, colorMode, and brand colors into section content if not already present
-    const sectionContent = {
+    const sectionContent = timeAwareContent({
       ...section.content,
       industryVariant: section.content?.industryVariant || industryVariant || 'default',
       mode: section.content?.mode || colorMode || 'dark',
@@ -388,7 +389,7 @@ function LivePreviewInner({ sections: rawSections, onSectionsChange, cssVariable
       secondaryColor: pageTheme?.secondaryColor || brandSettings?.secondaryColor || section.content?.secondaryColor,
       logoUrl: section.content?.logoUrl || stableBrandLogoUrl,
       archetype: archetypeProfile, // Archetype design profile
-    };
+    });
     
     if (!section.visible) return null;
 
