@@ -33,7 +33,7 @@ interface FormSubmissionRow {
 interface ProspectLeadRow {
   id: string; prospect_id: string | null; prospect_page_id: string | null;
   prospect_slug: string; page_title: string | null; name: string | null;
-  email: string; company: string | null; message: string | null; submitted_at: string;
+  email: string; company: string | null; message: string | null; submitted_at: string; custom_fields?: Record<string, unknown> | null;
 }
 
 export default function Leads() {
@@ -98,7 +98,7 @@ export default function Leads() {
       if (pageIds.length === 0) return [] as FormSubmissionRow[];
       const { data, error } = await supabase
         .from('form_submissions')
-        .select('id, published_page_id, name, email, company, message, submitted_at')
+        .select('id, published_page_id, name, email, company, message, submitted_at, custom_fields')
         .in('published_page_id', pageIds)
         .order('submitted_at', { ascending: false });
       if (error) throw error;
@@ -203,6 +203,9 @@ export default function Leads() {
                         <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                           {lead.message}
                         </p>
+                      )}
+                      {!lead.message && (lead as any).custom_fields?.intent === 'updates' && (
+                        <p className="text-sm text-muted-foreground mt-2">Asked to be kept posted.</p>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
