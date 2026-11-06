@@ -7,6 +7,8 @@ import { sanitizeFullCSS } from '@/lib/sanitizeCSS';
 import { isExternalAsk } from '@/lib/text/ctaLink';
 import { timeAwareContent, pageOutNowVerb } from '@/lib/text/releaseTiming';
 import { PublishedPageProvider } from '@/contexts/PublishedPageContext';
+import PlayerSection from '@/components/sections/release/PlayerSection';
+import TracklistSection from '@/components/sections/release/TracklistSection';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { getSectionTier, getSectionSpacing, getSectionDivider, getAmbientOrbColors } from '@/lib/premiumPageEffects';
@@ -122,6 +124,8 @@ export function PublicPageRenderer({
   ), [sections]);
   const theme = useMemo(() => cleanTheme(styles?.theme), [styles]);
   const pageVerb = useMemo(() => pageOutNowVerb(sections || []), [sections]);
+  // The links the owner pasted on the opening, for the player when it has no link of its own.
+  const pageLinks = useMemo(() => (sections || []).find((s: any) => s?.content?.listenLinks)?.content?.listenLinks || null, [sections]);
   const themeCss = useMemo(() => themeFontCss('.page-theme-root', theme), [theme]);
   // One heading voice page-wide (owner theme override still wins: injected after)
   const pairing = sections?.find(s => (s.content as any)?.typographyPairing)?.content?.typographyPairing;
@@ -198,6 +202,10 @@ export function PublicPageRenderer({
             isEditing={false}
           />
         );
+      case 'player':
+        return <PlayerSection key={index} content={{ ...enrichedContent, pageLinks }} onUpdate={noOp} isEditing={false} />;
+      case 'tracklist':
+        return <TracklistSection key={index} content={enrichedContent} onUpdate={noOp} isEditing={false} />;
       case 'calculator':
         return (
           <CalculatorSection 

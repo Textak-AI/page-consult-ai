@@ -109,6 +109,8 @@ export function SectionManager({
       hero: "Hero",
       "stats-bar": "Stats Bar",
       "problem-solution": "Problem / Solution",
+      player: "Player",
+      tracklist: "Tracklist",
       calculator: "ROI Calculator",
       features: "Features",
       "photo-gallery": "Photo Gallery",

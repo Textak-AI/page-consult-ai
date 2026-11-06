@@ -1,3 +1,4 @@
+import { pickEmbed } from '../design/releasePage';
 import { usableVideo, VIDEO_SECTION_HIDDEN } from '../video';
 /**
  * Some sections render nothing until the owner supplies real proof (zero
@@ -24,6 +25,12 @@ export function hiddenReason(section: { type: string; content?: any } | null | u
       return /\d/.test(value) && label.length >= 5 && label.trim().split(/\s+/).length <= 8;
     });
     return valid.length >= 2 ? null : 'Hidden until you add two real results with numbers';
+  }
+  if (section?.type === 'player') {
+    return pickEmbed(c.sourceUrl, c.pageLinks) ? null : 'Hidden until you paste an album link (Spotify, Apple Music, TIDAL, SoundCloud or YouTube)';
+  }
+  if (section?.type === 'tracklist') {
+    return Array.isArray(c.tracks) && c.tracks.some((t: unknown) => typeof t === 'string' && t.trim()) ? null : 'Hidden until you add the tracklist';
   }
   if (section?.type === 'credentials-bar') {
     const ok = (c.credentials || []).some((x: any) => typeof x?.value === 'string' && x.value.trim() && typeof x?.label === 'string' && x.label.trim());

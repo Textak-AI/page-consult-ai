@@ -1,5 +1,7 @@
 import { resolveColors, themeFontCss, type PageTheme } from '@/lib/editor/pageTheme';
 import { timeAwareContent, pageOutNowVerb } from '@/lib/text/releaseTiming';
+import PlayerSection from '@/components/sections/release/PlayerSection';
+import TracklistSection from '@/components/sections/release/TracklistSection';
 import { SignatureSection } from '@/components/signature/SignatureSection';
 import { ClientImageContext } from './ClientImageContext';
 import { collectClientImages, type ClientImage } from '@/lib/clientImages';
@@ -436,6 +438,10 @@ function LivePreviewInner({ sections: rawSections, onSectionsChange, cssVariable
             isEditing={editingSection === index}
           />
         );
+      case "player":
+        return renderSectionWithToolbar(section, index, <PlayerSection content={{ ...sectionContent, pageLinks: sections.find((s) => (s.content as any)?.listenLinks)?.content?.listenLinks || null }} onUpdate={updateSection} isEditing={editingSection === index} />);
+      case "tracklist":
+        return renderSectionWithToolbar(section, index, <TracklistSection content={sectionContent} onUpdate={updateSection} isEditing={editingSection === index} />);
       case "calculator":
         return renderSectionWithToolbar(
           section,

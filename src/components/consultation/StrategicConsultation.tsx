@@ -141,6 +141,8 @@ export interface ConsultationData {
   ctaText: string;
   /** Where the main button sends people. Blank = the page's own contact form. */
   ctaLink?: string;
+  /** Creative work: the tracklist (or chapters, episodes), one per line. */
+  tracklist?: string;
   objectionsToOvercome: string;
   objections?: BuyerObjection[];
   
@@ -1643,6 +1645,21 @@ ${d.ctaText}
                 />
                 <InlineConsultant fieldKey="offerIncludes" fieldValue={data.offerIncludes || ''} fieldLabel="Offer Includes" context={coachingContext} onBlurHandlerReady={(handler) => registerConsultantBlurHandler('offerIncludes', handler)} />
               </div>
+
+              {stepKind === 'creative' && (
+                <div>
+                  <Label htmlFor="tracklist" className="text-slate-300">Tracklist, chapters or episodes (optional)</Label>
+                  <Textarea
+                    id="tracklist"
+                    placeholder={"One per line, in order\n1. Lobby\n2. Stairwell\n3. Second Floor"}
+                    value={data.tracklist || ''}
+                    onChange={(e) => updateData({ tracklist: e.target.value })}
+                    rows={5}
+                    className="mt-2 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                  />
+                  <p className="mt-1.5 text-xs text-slate-500">Shows on the page as a numbered list. Leave it blank and there's no tracklist section.</p>
+                </div>
+              )}
               
               <div>
                 <Label htmlFor="investmentRange" className="text-slate-300">

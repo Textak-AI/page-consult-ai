@@ -506,6 +506,8 @@ const structureLabels: Record<string, string> = {
   'hero': 'Hero + Primary CTA',
   'stats-bar': 'Authority Bar (Stats)',
   'problem-solution': 'Problem / Solution',
+  player: 'Player',
+  tracklist: 'Tracklist',
   'features': 'Key Points',
   'how-it-works': 'How It Works',
   'testimonials': 'Social Proof',

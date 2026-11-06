@@ -8,6 +8,7 @@ import { parseMessagingChoices } from '../../supabase/functions/_shared/messagin
 import { statedDateLine } from '@/lib/text/statedDate';
 import { timeAwareDateLine, timeAwareAsk, outNowAsk } from '@/lib/text/releaseTiming';
 import { ctaHref } from '@/lib/text/ctaLink';
+import { parseTracklist, releaseStructure } from '@/lib/design/releasePage';
 import { getOfferKind } from '@/lib/wizard/industryWording';
 import { listenRowFrom } from '@/lib/design/visualRegister';
 import { truncateAtBoundary } from '@/lib/text/truncate';
@@ -375,6 +376,15 @@ export function mapBriefToSections(
   });
   console.log('📖 [sectionMapper] Arc composition log:', arc.log);
   pageStructure = arc.structure;
+  // Creative work takes the release-page shape: no product grid, the player after the opening,
+  // the tracklist after the owner's words when they gave one.
+  const releaseCd: any = options.consultationData || {};
+  const isReleasePage = getOfferKind(options.industryCategory || releaseCd.industryCategory || industry, options.industrySubcategory || releaseCd.industrySubcategory) === 'creative';
+  const tracklist = parseTracklist(releaseCd.tracklist);
+  if (isReleasePage) {
+    pageStructure = releaseStructure(pageStructure, tracklist.length > 0);
+    console.log('🎚️ [sectionMapper] Release page structure:', pageStructure);
+  }
   
   const isBetaPage = pageType === 'beta-prelaunch';
   
@@ -566,11 +576,24 @@ export function mapBriefToSections(
               problem: toReader(statedChallenge),
               solutionTitle: creativeWork ? 'What this is' : 'Our Solution',
               solution: brief.solutionStatement,
+              // A record isn't a problem with a fix: the owner's words run as one passage, unlabelled.
+              ...(creativeWork ? { labels: 'none' } : {}),
               industryVariant: industryVariant,
               mode: sdiMode,
             },
           });
         }
+        break;
+      }
+
+      case 'player': {
+        // The platform's player, from a link the owner pastes in the editor (or the opening's links).
+        sections.push({ type: 'player', order, visible: true, content: { sourceUrl: null, industryVariant, mode: sdiMode, sectionBackground: 'dark' } });
+        break;
+      }
+
+      case 'tracklist': {
+        if (tracklist.length) sections.push({ type: 'tracklist', order, visible: true, content: { tracks: tracklist, industryVariant, mode: sdiMode, sectionBackground: 'dark' } });
         break;
       }
 

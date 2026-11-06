@@ -3097,6 +3097,7 @@ function GenerateContent() {
     // SUPPORTED_SECTION_TYPES: Only section types with working renderer components
     const SUPPORTED_SECTION_TYPES = new Set([
       'hero',
+      'player', 'tracklist',
       'features',
       'stats-bar',
       'social-proof',

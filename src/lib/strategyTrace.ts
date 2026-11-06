@@ -61,7 +61,7 @@ const ANSWER_FIELDS: [string, string][] = [
 ];
 
 const SECTION_NAMES: Record<string, string> = {
-  hero: 'Opening', 'problem-solution': 'The problem and your fix', 'how-it-works': 'How it works',
+  hero: 'Opening', player: 'The player', tracklist: 'Tracklist', 'problem-solution': 'The problem and your fix', 'how-it-works': 'How it works',
   features: 'What they get', 'social-proof': 'What customers say', testimonials: 'What customers say',
   faq: 'Questions buyers ask', 'final-cta': 'The ask', 'stats-bar': 'Your numbers', 'credentials-bar': 'Credentials',
   'beta-hero-teaser': 'Opening', 'beta-perks': 'Early adopter perks', 'beta-final-cta': 'The ask', 'waitlist-proof': 'Waitlist',

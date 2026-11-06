@@ -14,6 +14,8 @@ export interface AddableSectionType {
 export const ADDABLE_SECTION_TYPES: AddableSectionType[] = [
   { type: 'work-samples', label: 'Work Samples', description: 'Show real work - uploads only' },
   { type: 'video', label: 'Video', description: 'Upload a video or paste a link' },
+  { type: 'player', label: 'Player', description: 'The platform\'s player from your album link' },
+  { type: 'tracklist', label: 'Tracklist', description: 'Your tracks, one per line' },
   { type: 'problem-solution', label: 'Problem / Solution', description: 'The problem you solve and how' },
   { type: 'features', label: 'Features', description: 'Your key benefits or points' },
   { type: 'how-it-works', label: 'How It Works', description: 'Your process, step by step' },
@@ -55,6 +57,10 @@ export function buildSectionContent(
 ): Record<string, any> {
   const b = brief || {};
   switch (type) {
+    case 'player':
+      return { sourceUrl: null, sectionBackground: 'dark' };
+    case 'tracklist':
+      return { tracks: [], sectionBackground: 'dark' };
     case 'problem-solution':
       return {
         problemTitle: 'The Challenge',

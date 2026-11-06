@@ -25,17 +25,17 @@ export default function ProblemSolutionProse({ content, onUpdate, isEditing }: P
 
   return (
     <section className="relative" style={{ backgroundColor: bg.bg }}>
-      <div className="mx-auto max-w-3xl px-6 py-20 md:py-28 space-y-14">
+      <div className={`mx-auto max-w-3xl px-6 py-20 md:py-28 ${content.labels === 'none' ? 'space-y-8' : 'space-y-14'}`}>
         {content.problem && (
           <div className="space-y-5">
-            <p style={label}>{content.problemTitle || 'The problem'}</p>
+            {content.labels !== 'none' && <p style={label}>{content.problemTitle || 'The problem'}</p>}
             <p contentEditable={isEditing} suppressContentEditableWarning onBlur={(e) => handleBlur('problem', e)} className={edit} style={body}>{content.problem}</p>
           </div>
         )}
-        {content.problem && content.solution && <hr className="border-0 h-px" style={{ background: `linear-gradient(90deg, ${primaryColor}, transparent)` }} />}
+        {content.problem && content.solution && content.labels !== 'none' && <hr className="border-0 h-px" style={{ background: `linear-gradient(90deg, ${primaryColor}, transparent)` }} />}
         {content.solution && (
           <div className="space-y-5">
-            <p style={label}>{content.solutionTitle || 'What this is'}</p>
+            {content.labels !== 'none' && <p style={label}>{content.solutionTitle || 'What this is'}</p>}
             <p contentEditable={isEditing} suppressContentEditableWarning onBlur={(e) => handleBlur('solution', e)} className={edit} style={body}>{content.solution}</p>
           </div>
         )}
