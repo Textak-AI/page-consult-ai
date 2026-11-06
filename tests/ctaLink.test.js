@@ -79,3 +79,12 @@ test('signature overrides stand down in the immersive register', () => {
   const sig = readFileSync(new URL('../src/components/signature/SignatureSection.tsx', import.meta.url), 'utf8');
   expect(sig).toMatch(/content\.visualRegister === 'immersive' && type !== 'hero'\) return <>\{children\}<\/>/);
 });
+
+// Republishing the 4DHB page did not add the line: its link was set on the sections, not in the
+// wizard answer. The sections derive the line from their own link, so no republish is needed.
+test('hero and close derive the email line from their own link', () => {
+  const close = readFileSync(new URL('../src/components/sections/final-cta/CTACenteredMinimal.tsx', import.meta.url), 'utf8');
+  expect(close).toMatch(/content\.emailLine \|\| emailLineFor\(content\.ctaLink/);
+  const hero = readFileSync(new URL('../src/components/sections/hero/HeroCoverImmersive.tsx', import.meta.url), 'utf8');
+  expect(hero).toMatch(/content\.emailLine \|\| emailLineFor\(content\.ctaLink, 'creative'/);
+});

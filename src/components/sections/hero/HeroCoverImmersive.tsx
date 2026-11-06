@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { fontStacks, typeClass, typeScale } from '@/lib/design/tokens';
 import { getSectionBackgroundStyles } from '@/lib/artDirectorBrief';
 import { PlatformRow } from './PlatformRow';
+import { emailLineFor } from '@/lib/text/ctaLink';
 
 interface Props {
   content: Record<string, any>;
@@ -24,6 +25,7 @@ export default function HeroCoverImmersive({ content, onUpdate, isEditing }: Pro
   const cover = useUsableImage(content.backgroundImage || content.heroImage);
   const logo = useUsableLogo(content.logoUrl);
   const listenRow: string[] = Array.isArray(content.listenRow) ? content.listenRow : [];
+  const emailLine = content.emailLine || emailLineFor(content.ctaLink, 'creative', content.businessName);
 
   const handleBlur = (field: string, e: React.FocusEvent<HTMLElement>) => {
     onUpdate({ ...content, [field]: e.currentTarget.textContent || content[field] });
@@ -98,9 +100,9 @@ export default function HeroCoverImmersive({ content, onUpdate, isEditing }: Pro
                   </Button>
                 </MagneticCta>
               )}
-              {content.emailLine?.prompt && (
+              {emailLine?.prompt && (
                 <a href="#stay-posted" className="block text-sm underline-offset-4 hover:underline" style={{ color: bg.textMuted }}>
-                  {content.emailLine.heroLink || 'Or leave your email and get a note when something new is out.'}
+                  {emailLine.heroLink || 'Or leave your email and get a note when something new is out.'}
                 </a>
               )}
               {listenRow.length > 0 && (
