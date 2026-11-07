@@ -204,3 +204,14 @@ verify_jwt = false
 
 [functions.get-preview-link]
 verify_jwt = false
+
+# Public endpoints that had no entry here (their setting lived in Lovable's own config).
+# Lead forms post from the public page with no token; prospect pages are read anonymously.
+[functions.submit-form]
+verify_jwt = false
+
+[functions.submit-prospect-form]
+verify_jwt = false
+
+[functions.get-prospect-page]
+verify_jwt = false
